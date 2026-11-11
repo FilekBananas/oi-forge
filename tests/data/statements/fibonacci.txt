@@ -1,0 +1,18 @@
+Fibonacci
+Ciąg Fibonacciego określamy wzorami F_0 = 0, F_1 = 1 oraz F_n = F_{n-1} + F_{n-2} dla n ≥ 2. Oblicz F_n modulo
+10^9 + 7.
+Wejście
+W pierwszym wierszu znajduje się jedna liczba całkowita n (0 ≤ n ≤ 10^18).
+Wyjście
+Wypisz F_n mod (10^9 + 7).
+Przykład 1
+Wejście:
+10
+Wyjście:
+55
+
+Przykład 2
+Wejście:
+1000000000000
+Wyjście:
+730695249

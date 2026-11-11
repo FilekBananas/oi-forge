@@ -1,0 +1,309 @@
+{
+ "chunk": "dp",
+ "templates": [
+  {
+   "id": "knapsack-01",
+   "name": "Problem plecakowy 0/1 (n W, potem waga wartość)",
+   "description": "",
+   "algos": [
+    "dp"
+   ],
+   "shapes": [
+    "NWR2"
+   ],
+   "signals": {
+    "any": [
+     "plecak\\w*",
+     "pojemnosc\\w*",
+     "udzwig\\w*",
+     "budzet\\w*",
+     "wag\\w*.{0,40}wartosc\\w*",
+     "za nie wiecej niz \\w+ (?:zlot|bajtalar|monet|pieniedz)\\w*",
+     "(?:najwieksz|maksymaln)\\w* (?:mozliw\\w* )?(?:sum\\w*|laczn\\w*) .{0,60}(?:kupujac|wybierajac|zabierajac|pakujac)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, W; cin >> n >> W;\nvector<ll> f(W + 1, 0);\nfor (ll i = 0; i < n; i++) { ll w, v; cin >> w >> v; for (ll c = W; c >= w; c--) f[c] = max(f[c], f[c - w] + v); }\ncout << f[W] << \"\\n\";",
+   "example": {
+    "input": "3 5\n2 3\n3 4\n4 5\n",
+    "output": "7\n"
+   },
+   "brute": "ll n, W; cin >> n >> W;\nvector<ll> w(n), v(n); for (ll i = 0; i < n; i++) cin >> w[i] >> v[i];\nll best = 0; for (ll mask = 0; mask < (1LL << n); mask++) { ll sw = 0, sv = 0; for (ll i = 0; i < n; i++) if (mask >> i & 1) { sw += w[i]; sv += v[i]; } if (sw <= W) best = max(best, sv); }\ncout << best << \"\\n\";",
+   "variants": [
+    {
+     "id": "knapsack-01-vw",
+     "name": "Plecak 0/1 (wartość waga)",
+     "solve": "ll n, W; cin >> n >> W;\nvector<ll> f(W + 1, 0);\nfor (ll i = 0; i < n; i++) { ll v, w; cin >> v >> w; for (ll c = W; c >= w; c--) f[c] = max(f[c], f[c - w] + v); }\ncout << f[W] << \"\\n\";"
+    },
+    {
+     "id": "knapsack-01-Wn",
+     "name": "Plecak 0/1 (W n, waga wartość)",
+     "solve": "ll W, n; cin >> W >> n;\nvector<ll> f(W + 1, 0);\nfor (ll i = 0; i < n; i++) { ll w, v; cin >> w >> v; for (ll c = W; c >= w; c--) f[c] = max(f[c], f[c - w] + v); }\ncout << f[W] << \"\\n\";"
+    },
+    {
+     "id": "knapsack-unbounded",
+     "name": "Plecak nieograniczony",
+     "solve": "ll n, W; cin >> n >> W;\nvector<ll> f(W + 1, 0);\nfor (ll i = 0; i < n; i++) { ll w, v; cin >> w >> v; for (ll c = w; c <= W; c++) f[c] = max(f[c], f[c - w] + v); }\ncout << f[W] << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "knapsack-separate",
+   "name": "Plecak 0/1 (n W, wagi w wierszu, wartości w wierszu)",
+   "description": "",
+   "algos": [
+    "dp"
+   ],
+   "shapes": [
+    "NKA-A"
+   ],
+   "signals": {
+    "any": [
+     "plecak\\w*",
+     "pojemnosc\\w*",
+     "udzwig\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, W; cin >> n >> W;\nvector<ll> w(n), v(n); for (auto &x : w) cin >> x; for (auto &x : v) cin >> x;\nvector<ll> f(W + 1, 0);\nfor (ll i = 0; i < n; i++) for (ll c = W; c >= w[i]; c--) f[c] = max(f[c], f[c - w[i]] + v[i]);\ncout << f[W] << \"\\n\";",
+   "example": {
+    "input": "3 5\n2 3 4\n3 4 5\n",
+    "output": "7\n"
+   }
+  },
+  {
+   "id": "coin-change-min",
+   "name": "Wydawanie reszty: najmniej monet (n k, nominały)",
+   "description": "",
+   "algos": [
+    "dp",
+    "greedy"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "reszt\\w*",
+     "monet\\w*",
+     "nominal\\w*",
+     "banknot\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> c(n); for (auto &x : c) cin >> x;\nconst ll INF = LLONG_MAX / 2; vector<ll> f(k + 1, INF); f[0] = 0;\nfor (ll s = 1; s <= k; s++) for (ll x : c) if (x <= s && f[s - x] + 1 < f[s]) f[s] = f[s - x] + 1;\nif (f[k] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << f[k] << \"\\n\";",
+   "example": {
+    "input": "3 11\n1 2 5\n",
+    "output": "3\n"
+   },
+   "variants": [
+    {
+     "id": "coin-change-min-kfirst",
+     "name": "Reszta: najmniej monet (kwota, potem n i nominały)",
+     "solve": "ll k, n; cin >> k >> n;\nvector<ll> c(n); for (auto &x : c) cin >> x;\nconst ll INF = LLONG_MAX / 2; vector<ll> f(k + 1, INF); f[0] = 0;\nfor (ll s = 1; s <= k; s++) for (ll x : c) if (x <= s && f[s - x] + 1 < f[s]) f[s] = f[s - x] + 1;\nif (f[k] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << f[k] << \"\\n\";"
+    },
+    {
+     "id": "coin-change-ways",
+     "name": "Reszta: liczba sposobów",
+     "solve": "ll n, k; cin >> n >> k;\nvector<ll> c(n); for (auto &x : c) cin >> x;\nvector<unsigned long long> f(k + 1, 0); f[0] = 1;\nfor (ll x : c) for (ll s = x; s <= k; s++) f[s] += f[s - x];\ncout << f[k] << \"\\n\";"
+    }
+   ],
+   "brute": "ll n, k; cin >> n >> k;\nvector<ll> c(n); for (auto &x : c) cin >> x;\n// brute: BFS po kwotach — warstwa i = kwoty osiągalne dokładnie i monetami\nvector<ll> dist(k + 1, -1); dist[0] = 0; queue<ll> q; q.push(0);\nwhile (!q.empty()) { ll s = q.front(); q.pop(); for (ll x : c) if (s + x <= k && dist[s + x] < 0) { dist[s + x] = dist[s] + 1; q.push(s + x); } }\nif (dist[k] < 0) cout << \"{{NONE}}\" << \"\\n\"; else cout << dist[k] << \"\\n\";"
+  },
+  {
+   "id": "coin-change-tail",
+   "name": "Wydawanie reszty (n, nominały, potem kwota)",
+   "description": "",
+   "algos": [
+    "dp"
+   ],
+   "shapes": [
+    "NA-S1"
+   ],
+   "signals": {
+    "any": [
+     "reszt\\w*",
+     "monet\\w*",
+     "nominal\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> c(n); for (auto &x : c) cin >> x;\nll k; cin >> k;\nconst ll INF = LLONG_MAX / 2; vector<ll> f(k + 1, INF); f[0] = 0;\nfor (ll s = 1; s <= k; s++) for (ll x : c) if (x <= s && f[s - x] + 1 < f[s]) f[s] = f[s - x] + 1;\nif (f[k] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << f[k] << \"\\n\";",
+   "example": {
+    "input": "3\n1 2 5\n11\n",
+    "output": "3\n"
+   }
+  },
+  {
+   "id": "subset-sum",
+   "name": "Czy da się wybrać podzbiór o sumie k",
+   "description": "",
+   "algos": [
+    "dp",
+    "bitset"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "podzbior\\w*",
+     "wybrac (niektore|kilka)",
+     "dokladnie [a-z]\\b"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nvector<char> f(k + 1, 0); f[0] = 1;\nfor (ll x : a) for (ll s = k; s >= x; s--) if (f[s - x]) f[s] = 1;\ncout << (f[k] ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "3 5\n1 3 4\n",
+    "output": "{{YES}}\n"
+   }
+  },
+  {
+   "id": "partition-min-diff",
+   "name": "Podział na dwie grupy o najmniejszej różnicy",
+   "description": "",
+   "algos": [
+    "dp"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "dwie (grupy|czesci|druzyny)",
+     "najmniejsz\\w* roznic",
+     "sprawiedliw\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll S = 0; for (ll x : a) S += x;\nvector<char> f(S + 1, 0); f[0] = 1; for (ll x : a) for (ll s = S; s >= x; s--) if (f[s - x]) f[s] = 1;\nll best = S; for (ll s = 0; s <= S; s++) if (f[s]) best = min(best, llabs(S - 2 * s));\ncout << best << \"\\n\";",
+   "example": {
+    "input": "4\n1 6 11 5\n",
+    "output": "1\n"
+   }
+  },
+  {
+   "id": "activity-selection",
+   "name": "Maks. liczba nienachodzących przedziałów",
+   "description": "",
+   "algos": [
+    "greedy",
+    "sorting"
+   ],
+   "shapes": [
+    "NR2"
+   ],
+   "signals": {
+    "any": [
+     "nienachodz\\w*|rozlaczn\\w*|nie nachodz",
+     "przedzial\\w*",
+     "pocz\\w* i koniec",
+     "termin\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<pair<ll,ll>> v(n); for (auto &[a, b] : v) cin >> a >> b;\nsort(v.begin(), v.end(), [](auto &x, auto &y) { return x.second < y.second; });\nll c = 0, end = LLONG_MIN; for (auto &[a, b] : v) if (a >= end) { c++; end = b; }\ncout << c << \"\\n\";",
+   "example": {
+    "input": "3\n1 3\n2 4\n3 5\n",
+    "output": "2\n"
+   },
+   "variants": [
+    {
+     "id": "activity-selection-strict",
+     "name": "Nienachodzące przedziały (ostro)",
+     "solve": "ll n; cin >> n;\nvector<pair<ll,ll>> v(n); for (auto &[a, b] : v) cin >> a >> b;\nsort(v.begin(), v.end(), [](auto &x, auto &y) { return x.second < y.second; });\nll c = 0, end = LLONG_MIN; for (auto &[a, b] : v) if (a > end) { c++; end = b; }\ncout << c << \"\\n\";"
+    },
+    {
+     "id": "intervals-union-length",
+     "name": "Długość sumy przedziałów",
+     "solve": "ll n; cin >> n;\nvector<pair<ll,ll>> v(n); for (auto &[a, b] : v) cin >> a >> b;\nsort(v.begin(), v.end());\nll tot = 0, cs = LLONG_MIN, ce = LLONG_MIN; for (auto &[a, b] : v) { if (a > ce) { if (ce > cs) tot += ce - cs; cs = a; ce = b; } else ce = max(ce, b); }\nif (ce > cs) tot += ce - cs;\ncout << tot << \"\\n\";"
+    },
+    {
+     "id": "max-overlap",
+     "name": "Maks. liczba nakładających się przedziałów",
+     "solve": "ll n; cin >> n;\nvector<pair<ll,int>> e; for (ll i = 0; i < n; i++) { ll a, b; cin >> a >> b; e.push_back({a, 1}); e.push_back({b, -1}); }\nsort(e.begin(), e.end(), [](auto &x, auto &y) { return x.first != y.first ? x.first < y.first : x.second < y.second; });\nll c = 0, b = 0; for (auto &[t, d] : e) { c += d; b = max(b, c); }\ncout << b << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "max-non-adjacent-sum",
+   "name": "Maks. suma bez sąsiednich elementów",
+   "description": "",
+   "algos": [
+    "dp"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "sasiedni\\w*",
+     "dwoch kolejnych",
+     "obok siebie",
+     "pod rzad"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll inc = 0, exc = 0; for (ll x : a) { ll ni = exc + x; exc = max(exc, inc); inc = ni; }\ncout << max(inc, exc) << \"\\n\";",
+   "example": {
+    "input": "4\n3 2 7 10\n",
+    "output": "13\n"
+   }
+  },
+  {
+   "id": "frog-jump-min-cost",
+   "name": "Żabka: min. koszt skoków o 1 lub 2",
+   "description": "",
+   "algos": [
+    "dp"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "zab\\w*",
+     "skacz\\w*|skok\\w*"
+    ],
+    "all": [
+     [
+      "koszt\\w*|wysokos\\w*|minimaln\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> h(n); for (auto &x : h) cin >> x;\nvector<ll> f(n, LLONG_MAX); f[0] = 0;\nfor (ll i = 1; i < n; i++) { f[i] = f[i-1] + llabs(h[i] - h[i-1]); if (i > 1) f[i] = min(f[i], f[i-2] + llabs(h[i] - h[i-2])); }\ncout << f[n-1] << \"\\n\";",
+   "example": {
+    "input": "4\n10 30 40 20\n",
+    "output": "30\n"
+   }
+  }
+ ]
+}

@@ -1,0 +1,775 @@
+{
+ "chunk": "games-theory",
+ "articles": [
+  {
+   "id": "game-nim",
+   "title": "Gra Nim — XOR stosów, ruch wygrywający, Misère Nim",
+   "category": "Teoria gier",
+   "tags": [
+    "nim",
+    "xor",
+    "gra",
+    "teoria gier",
+    "pozycja wygrywająca",
+    "pozycja przegrywająca",
+    "misère",
+    "Bouton"
+   ],
+   "aliases": [
+    "nim",
+    "gra nim",
+    "nim xor",
+    "nim strategia",
+    "kto wygrywa w nim",
+    "nim game",
+    "gra w zapałki",
+    "misere nim",
+    "staircase nim",
+    "nim schodkowy"
+   ],
+   "summary": "W Nimie gracz zabiera dowolną dodatnią liczbę żetonów z jednego stosu, a kto nie może ruszyć, przegrywa. Pozycja jest przegrywająca dokładnie wtedy, gdy XOR rozmiarów stosów wynosi 0 (twierdzenie Boutona).",
+   "complexity": "rozstrzygnięcie i znalezienie ruchu wygrywającego: O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Zasady:** n stosów żetonów `a₁, …, a_n`. W ruchu wybierasz jeden stos i zabierasz z niego dowolną dodatnią liczbę\nżetonów. Gracz, który nie może wykonać ruchu (wszystkie stosy puste), **przegrywa** (tzw. *normal play*).\n\n**Twierdzenie (Bouton):** niech `s = a₁ ⊕ a₂ ⊕ … ⊕ a_n` (XOR). Gracz na ruchu przegrywa (przy optymalnej grze\nprzeciwnika) ⇔ `s = 0`.\n\nSzkic dowodu — trzy fakty:\n1. Pozycja końcowa (same zera) ma `s = 0` i jest przegrywająca.\n2. Z `s = 0` każdy ruch zmienia dokładnie jeden stos, więc zmienia XOR — zawsze dajemy przeciwnikowi `s ≠ 0`.\n3. Z `s ≠ 0` istnieje ruch do `s = 0`: weź najstarszy bit `s`, wybierz stos `aᵢ` z tym bitem ustawionym\n   i zmniejsz go do `aᵢ ⊕ s` (to liczba mniejsza od `aᵢ`, bo najstarszy zmieniony bit znika)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: zwycięzca i ruch wygrywający",
+     "code": "// Nim: wejście n, potem rozmiary stosów. Wyjście: kto wygrywa i (dla pierwszego) ruch wygrywający:\n// numer stosu i jego nowy rozmiar.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> a(n);\n    long long s = 0;\n    for (auto &x : a) { cin >> x; s ^= x; }\n    if (s == 0) { cout << \"Drugi\\n\"; return 0; }      // każdy ruch psuje XOR = 0\n    cout << \"Pierwszy\\n\";\n    for (int i = 0; i < n; i++)\n        if ((a[i] ^ s) < a[i]) {                       // stos ma ustawiony najstarszy bit s\n            cout << i + 1 << \" \" << (a[i] ^ s) << \"\\n\";  // po ruchu XOR = 0\n            break;\n        }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Pozycja przegrywająca (gracz na ruchu przegrywa)",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "Nim (normal play)",
+       "a₁ ⊕ … ⊕ a_n = 0",
+       "ruch: aᵢ → aᵢ ⊕ s"
+      ],
+      [
+       "Misère Nim (kto bierze ostatni, przegrywa)",
+       "gdy wszystkie aᵢ ≤ 1: liczba jedynek nieparzysta; w przeciwnym razie XOR = 0",
+       "różnica tylko na samym końcu gry"
+      ],
+      [
+       "jeden stos, można zabrać 1..k",
+       "a mod (k+1) = 0",
+       "„gra w 21 zapałek” (k = 3): a mod 4 = 0"
+      ],
+      [
+       "wiele stosów, zabieramy 1..k",
+       "⊕ (aᵢ mod (k+1)) = 0",
+       "wartości Grundy'ego"
+      ],
+      [
+       "Nim schodkowy (staircase)",
+       "XOR stosów na stopniach nieparzystych = 0",
+       "ruch: przesunięcie żetonów o stopień niżej"
+      ],
+      [
+       "dowolna suma gier bezstronnych",
+       "XOR wartości Grundy'ego = 0",
+       "twierdzenie Sprague'a–Grundy'ego"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Na zawodach wzory na gry najłatwiej znaleźć **brute force'em**: policz dla małych stanów, które są przegrywające\n(rekurencja z memoizacją), wypisz tabelkę i szukaj wzoru (XOR, reszta modulo, okresowość). Potem sprawdź wzór\nz brute force'em na losowych danych."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "s ^= a[i]",
+     "desc": "XOR wszystkich stosów — s == 0 oznacza pozycję przegrywającą",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "(a[i] ^ s) < a[i]",
+     "desc": "czy stos i nadaje się do ruchu wygrywającego (nowy rozmiar a[i] ^ s)",
+     "complexity": "O(1)",
+     "returns": "bool"
+    }
+   ],
+   "pitfalls": [
+    "Priorytet operatorów w C++: `a ^ s < a` to `a ^ (s < a)` — zawsze nawiasy: `(a ^ s) < a`.",
+    "Misère Nim różni się od zwykłego tylko, gdy wszystkie stosy mają ≤ 1 żeton — nie stosuj XOR na ślepo.",
+    "XOR nie działa dla wariantów, w których ruch zmienia kilka stosów naraz (to inna gra — policz Grundy'ego lub brute force).",
+    "Rozmiary stosów do 10^18 — trzymaj w long long (XOR działa bitowo, bez przepełnień).",
+    "Ruch wygrywający musi zabrać co najmniej jeden żeton — warunek `(a[i] ^ s) < a[i]` to gwarantuje."
+   ],
+   "qa": [
+    {
+     "q": [
+      "nim",
+      "gra nim",
+      "nim xor",
+      "nim strategia wygrywajaca",
+      "kto wygrywa w nim",
+      "nim game who wins"
+     ],
+     "a": "Policz XOR wszystkich stosów. Jeśli wynosi 0 — gracz na ruchu przegrywa (wygrywa drugi), w przeciwnym razie wygrywa\ngracz na ruchu. To twierdzenie Boutona; rozstrzygnięcie zajmuje O(n).",
+     "code": "vector<long long> a = {3, 4, 5};\nlong long s = 0;\nfor (long long x : a) s ^= x;\ncout << (s ? \"Pierwszy\" : \"Drugi\") << \"\\n\";   // 3^4^5 = 2 -> Pierwszy"
+    },
+    {
+     "q": [
+      "dlaczego xor w nim",
+      "dowod nim xor",
+      "bouton theorem",
+      "skad xor w nimie",
+      "nim proof"
+     ],
+     "a": "(1) Pozycja końcowa ma XOR 0. (2) Z XOR = 0 każdy ruch zmienia jeden stos, więc XOR staje się ≠ 0. (3) Z XOR = s ≠ 0\nmożna wrócić do 0: weź stos z ustawionym najstarszym bitem s i zmień go na `aᵢ ⊕ s < aᵢ`. Zatem gracz przy XOR ≠ 0\nzawsze oddaje przeciwnikowi XOR = 0, aż przeciwnik dostanie pozycję końcową."
+    },
+    {
+     "q": [
+      "nim ruch wygrywajacy",
+      "jak wykonac ruch wygrywajacy w nim",
+      "nim winning move",
+      "ile zabrac w nim"
+     ],
+     "a": "Niech `s` = XOR stosów (≠ 0). Znajdź stos z `(aᵢ ^ s) < aᵢ` (ma ustawiony najstarszy bit s) i zmniejsz go do `aᵢ ^ s`,\nczyli zabierz `aᵢ − (aᵢ ^ s)` żetonów. Po ruchu XOR = 0. Np. stosy 3, 4, 5: s = 2, stos 3 → 1 (zabierz 2).",
+     "code": "vector<long long> a = {3, 4, 5};\nlong long s = 0;\nfor (long long x : a) s ^= x;\nfor (int i = 0; i < (int)a.size(); i++)\n    if ((a[i] ^ s) < a[i]) { cout << \"stos \" << i + 1 << \": zabierz \" << a[i] - (a[i] ^ s) << \"\\n\"; break; }"
+    },
+    {
+     "q": [
+      "misere nim",
+      "nim kto bierze ostatni przegrywa",
+      "nim odwrotny",
+      "misere nim strategia",
+      "nim przegrywa ten kto zabierze ostatni"
+     ],
+     "a": "Jeśli wszystkie stosy mają ≤ 1 żeton, gracz na ruchu wygrywa ⇔ liczba niepustych stosów jest parzysta. W przeciwnym\nrazie (jakiś stos ≥ 2) — jak w zwykłym Nimie: wygrywa ⇔ XOR ≠ 0. Strategia: graj jak w Nimie, ale gdy ruch zostawiłby\nsame stosy 0/1, zostaw ich **nieparzystą** liczbę. Sprawdzone brute force'em dla małych stosów.",
+     "code": "auto misereFirstWins = [](const vector<long long> &a) {\n    bool allSmall = true; long long s = 0; int ones = 0;\n    for (long long x : a) { s ^= x; if (x > 1) allSmall = false; if (x == 1) ones++; }\n    if (allSmall) return ones % 2 == 0;\n    return s != 0;\n};\ncout << misereFirstWins({1, 1}) << misereFirstWins({1}) << misereFirstWins({2, 2}) << misereFirstWins({1, 2}) << \"\\n\";   // 1001"
+    },
+    {
+     "q": [
+      "nim z ograniczeniem k",
+      "mozna wziac od 1 do k",
+      "gra w zabieranie zapalek 1 do k",
+      "subtraction game 1..k"
+     ],
+     "a": "Jeden stos, ruch = zabranie 1..k żetonów: przegrywasz ⇔ `a mod (k+1) = 0` (przeciwnik zawsze dopełnia ruch do k+1).\nDla wielu stosów wartość Grundy'ego stosu to `a mod (k+1)`, a całą grę rozstrzyga XOR tych reszt.",
+     "code": "long long k = 3;\nvector<long long> a = {5, 8, 6};\nlong long s = 0;\nfor (long long x : a) s ^= x % (k + 1);\ncout << (s ? \"Pierwszy\" : \"Drugi\") << \"\\n\";   // 1 ^ 0 ^ 2 = 3 -> Pierwszy"
+    },
+    {
+     "q": [
+      "jeden stos zapalek 1 2 3",
+      "gra 21 zapalek",
+      "kto wygra zapalki 1 2 lub 3",
+      "21 sticks game"
+     ],
+     "a": "Przy zabieraniu 1, 2 lub 3 zapałek i wygranej tego, kto weźmie ostatnią, pozycje przegrywające to wielokrotności 4.\nStrategia: zostawiaj przeciwnikowi liczbę podzielną przez 4 (gdy on weźmie x, ty bierzesz 4 − x). Dla 21 zapałek\nwygrywa zaczynający: bierze 1 i zostawia 20. Jeśli przegrywa ten, kto weźmie ostatnią — przegrywające są liczby ≡ 1 (mod 4)."
+    },
+    {
+     "q": [
+      "staircase nim",
+      "nim schodkowy",
+      "nim na schodach",
+      "przesuwanie zetonow po schodach gra"
+     ],
+     "a": "Stopnie 1..n z żetonami, ruch: przenieś dowolną dodatnią liczbę żetonów ze stopnia i na stopień i−1 (ze stopnia 1\nna podłogę). Gra jest równoważna Nimowi na stopniach **nieparzystych**: wygrywa gracz na ruchu ⇔ XOR stosów na\nstopniach 1, 3, 5, … ≠ 0. Ruch z parzystego stopnia przeciwnik „odwraca”, przesuwając te same żetony dalej.",
+     "code": "vector<long long> step = {0, 3, 1, 2, 5};   // step[i] = żetony na stopniu i (step[0] nieużywany)\nlong long s = 0;\nfor (int i = 1; i < (int)step.size(); i += 2) s ^= step[i];\ncout << (s ? \"Pierwszy\" : \"Drugi\") << \"\\n\";   // 3 ^ 2 = 1 -> Pierwszy"
+    },
+    {
+     "q": [
+      "nim przegrywajaca pozycja",
+      "kiedy drugi gracz wygrywa nim",
+      "nim xor 0",
+      "przegrywajaca pozycja nim przyklad"
+     ],
+     "a": "Gdy XOR stosów = 0 — np. dwa równe stosy, albo 1, 2, 3 (1 ⊕ 2 ⊕ 3 = 0). Wtedy wygrywa drugi gracz: na każdy ruch\nodpowiada ruchem przywracającym XOR = 0 (dla dwóch równych stosów — po prostu kopiuje ruch na drugim stosie)."
+    },
+    {
+     "q": [
+      "liczba ruchow wygrywajacych nim",
+      "ile jest ruchow wygrywajacych",
+      "count winning moves nim",
+      "na ile sposobow wygrac pierwszym ruchem"
+     ],
+     "a": "Ruch wygrywający musi doprowadzić XOR do 0, a dla stosu i jedyny taki rozmiar to `aᵢ ^ s`. Zatem liczba ruchów\nwygrywających = liczba stosów z `(aᵢ ^ s) < aᵢ`, czyli stosów z ustawionym najstarszym bitem s. O(n).",
+     "code": "vector<long long> a = {1, 2, 3, 7};\nlong long s = 0;\nfor (long long x : a) s ^= x;\nint cnt = 0;\nfor (long long x : a) if ((x ^ s) < x) cnt++;\ncout << s << \" \" << cnt << \"\\n\";   // s = 7, tylko stos 7 ma bit 4 -> 1"
+    },
+    {
+     "q": [
+      "suma gier nim",
+      "kilka roznych gier naraz",
+      "nim i inne gry razem xor",
+      "nim z wieloma stosami i roznymi zasadami"
+     ],
+     "a": "Jeśli gra rozpada się na niezależne części, a ruch wykonuje się w jednej z nich, każdą część zastąp jej wartością\nGrundy'ego (stos Nima o tym rozmiarze) i weź XOR — to twierdzenie Sprague'a–Grundy'ego. Zwykły Nim to szczególny\nprzypadek: stos o rozmiarze a ma wartość Grundy'ego a."
+    },
+    {
+     "q": [
+      "nim duze liczby",
+      "nim stosy do 10^18",
+      "nim long long",
+      "nim z ogromnymi stosami"
+     ],
+     "a": "XOR działa bitowo, więc stosy do 10^18 to żaden problem — trzymaj je w `long long` (lub `unsigned long long`)\ni licz `s ^= a[i]`. Złożoność O(n) niezależnie od rozmiarów stosów."
+    }
+   ],
+   "related": [
+    "game-sprague-grundy",
+    "game-mirror-strategy",
+    "dp-games",
+    "game-graph-games"
+   ]
+  },
+  {
+   "id": "game-sprague-grundy",
+   "title": "Twierdzenie Sprague'a–Grundy'ego — mex, wartości Grundy'ego, sumy gier",
+   "category": "Teoria gier",
+   "tags": [
+    "sprague-grundy",
+    "grundy",
+    "mex",
+    "suma gier",
+    "gry bezstronne",
+    "gra odejmowania",
+    "okresowość",
+    "kayles"
+   ],
+   "aliases": [
+    "sprague grundy",
+    "twierdzenie sprague'a-grundy'ego",
+    "grundy",
+    "liczby grundy'ego",
+    "mex",
+    "grundy mex",
+    "nimber",
+    "funkcja grundy",
+    "suma gier",
+    "gry bezstronne"
+   ],
+   "summary": "Każdej pozycji gry bezstronnej przypisujemy g(pos) = mex{g(następniki)}; pozycja jest przegrywająca ⇔ g = 0. Suma niezależnych gier ma wartość równą XOR wartości składowych — tak rozwiązuje się gry z wieloma planszami/stosami.",
+   "complexity": "O(liczba stanów × liczba ruchów); gra odejmowania ze zbiorem S: O(n·|S|)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Gra bezstronna** (impartial): obaj gracze mają te same ruchy, gra się kończy (brak cykli), kto nie może ruszyć —\nprzegrywa. **mex** zbioru liczb naturalnych = najmniejsza liczba nienależąca do zbioru (mex{0, 1, 3} = 2, mex{} = 0).\n\n**Wartość Grundy'ego:** `g(pozycja końcowa) = 0`, `g(p) = mex{ g(q) : q osiągalne z p jednym ruchem }`.\n* `g(p) = 0` ⇔ p jest przegrywająca dla gracza na ruchu; `g(p) > 0` ⇔ wygrywająca.\n* Pozycja o wartości g zachowuje się jak stos Nima o g żetonach.\n* **Suma gier** (ruch w dokładnie jednej składowej): `g(G₁ + … + G_k) = g(G₁) ⊕ … ⊕ g(G_k)`.\n* Gdy ruch **rozbija** pozycję na kilka niezależnych części (np. podział stosu, usunięcie kręgla ze środka rzędu),\n  wartość następnika to XOR wartości części.\n\nWartości liczy się DP po stanach w kolejności „od końca” (lub memoizacją). Dla gier odejmowania ze skończonym\nzbiorem S ciąg `g(n)` jest od pewnego miejsca okresowy — można go wykryć i odpowiadać dla n do 10^18."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: Grundy dla gry odejmowania + suma gier",
+     "code": "// Gra odejmowania: z dowolnego stosu wolno zabrać s żetonów, s należy do S. Wiele stosów.\n// Wejście: k, elementy S, m, rozmiary stosów (do 10^6). Wyjście: wartości Grundy'ego stosów i zwycięzca.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int k;\n    cin >> k;\n    vector<int> S(k);\n    for (auto &s : S) cin >> s;\n    int m;\n    cin >> m;\n    vector<int> piles(m);\n    for (auto &p : piles) cin >> p;\n    int N = *max_element(piles.begin(), piles.end());\n\n    vector<int> g(N + 1, 0);\n    vector<int> seenAt(k + 2, -1);                 // mex: wartości g <= k, więc wystarczy k+2 pól\n    for (int n = 1; n <= N; n++) {\n        for (int s : S) if (s <= n) seenAt[g[n - s]] = n;   // znacznik \"widziane w kroku n\"\n        int mex = 0;\n        while (seenAt[mex] == n) mex++;\n        g[n] = mex;\n    }\n    int x = 0;\n    for (int p : piles) { cout << g[p] << \" \"; x ^= g[p]; }\n    cout << \"\\n\" << (x ? \"Pierwszy\" : \"Drugi\") << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Gra",
+      "Wartość Grundy'ego",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "stos Nima o a żetonach",
+       "a",
+       "dowolna liczba żetonów z jednego stosu"
+      ],
+      [
+       "zabieranie 1..k z jednego stosu",
+       "a mod (k+1)",
+       "okres k+1"
+      ],
+      [
+       "odejmowanie ze zbioru S = {1, 3, 4}",
+       "0 1 0 1 2 3 2, okres 7",
+       "przykład z programu"
+      ],
+      [
+       "Kayles (zbij 1 lub 2 sąsiednie kręgle)",
+       "0 1 2 3 1 4 3 2 1 4 2 6 4 1 2 7 …",
+       "ruch rozbija rząd na dwa: XOR części"
+      ],
+      [
+       "suma gier G₁ + … + G_k",
+       "g(G₁) ⊕ … ⊕ g(G_k)",
+       "ruch w jednej składowej"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Twierdzenie dotyczy gier **bezstronnych** w wersji *normal play* (kto nie może ruszyć, przegrywa) i bez cykli.\nNie stosuj go do gier, w których gracze mają różne ruchy (szachy, warcaby), do wersji misère (poza prostymi\nprzypadkami jak Misère Nim) ani do gier, które mogą trwać w nieskończoność."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int mex(vector<int> v)",
+     "desc": "najmniejsza liczba naturalna nieobecna w v",
+     "complexity": "O(|v|)",
+     "returns": "int"
+    },
+    {
+     "sig": "g[n] = mex{ g[n - s] : s ∈ S, s ≤ n }",
+     "desc": "wartość Grundy'ego gry odejmowania",
+     "complexity": "O(|S|) na stan"
+    },
+    {
+     "sig": "x ^= g[p]",
+     "desc": "wartość sumy gier = XOR wartości składowych",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Mylenie wartości Grundy'ego z wynikiem W/L: przy sumie gier trzeba XOR-ować wartości g, a nie „wygrywa/przegrywa”.",
+    "Ruch rozbijający pozycję na części: następnik ma wartość XOR części, a nie sumę ani maksimum.",
+    "Tablica do mex za mała — wartość g(p) nie przekracza liczby ruchów z p, więc wystarczy rozmiar (liczba ruchów + 1).",
+    "Okresowości nie zgaduj z kilku wartości — sprawdź ją (np. powtórzone okno długości max(S)) albo porównaj z brute force'em.",
+    "Gry z cyklami (pozycje mogą się powtarzać) wymagają analizy wstecznej z remisami, nie zwykłego Grundy'ego."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sprague grundy",
+      "twierdzenie sprague'a-grundy'ego",
+      "grundy",
+      "liczby grundy'ego",
+      "sprague grundy theorem",
+      "grundy numbers"
+     ],
+     "a": "Każdej pozycji gry bezstronnej przypisz `g(p) = mex{g(q)}` po wszystkich ruchach p → q (pozycja bez ruchów ma 0).\nPozycja przegrywająca ⇔ g = 0. Najważniejsze: gra złożona z niezależnych części ma wartość równą XOR wartości części,\nwięc liczysz g dla małych składowych i XOR-ujesz. Koszt: liczba stanów × liczba ruchów."
+    },
+    {
+     "q": [
+      "mex",
+      "grundy mex",
+      "co to jest mex",
+      "minimum excludant",
+      "mex funkcja c++"
+     ],
+     "a": "mex(A) = najmniejsza liczba naturalna, której nie ma w A: mex{0, 1, 3} = 2, mex{1, 2} = 0, mex{} = 0. Liczy się\ntablicą obecności o rozmiarze |A| + 1 (mex nigdy nie przekracza |A|) — O(|A|).",
+     "code": "int mex(const vector<int> &v) {\n    vector<bool> present(v.size() + 1, false);\n    for (int x : v) if (x >= 0 && x <= (int)v.size()) present[x] = true;\n    int m = 0;\n    while (present[m]) m++;\n    return m;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "suma gier",
+      "kilka gier naraz xor grundy",
+      "gra na wielu planszach jednoczesnie",
+      "sum of games",
+      "gra z wieloma stosami roznymi zasadami"
+     ],
+     "a": "Jeśli w każdym ruchu gracz wybiera jedną z niezależnych gier i wykonuje w niej ruch, to wartość całości\n`g = g₁ ⊕ g₂ ⊕ … ⊕ g_k`; pierwszy gracz wygrywa ⇔ g ≠ 0. Każdą składową zastępujemy stosem Nima o rozmiarze gᵢ.\nRuch wygrywający: w składowej i przejdź do pozycji o wartości `gᵢ ⊕ g` (istnieje, bo jest mniejsza od gᵢ dla\nwłaściwego i)."
+    },
+    {
+     "q": [
+      "gra odejmowania",
+      "subtraction game",
+      "mozna zabrac 1 3 lub 4",
+      "grundy gra odejmowania zbior S",
+      "zabieranie zetonow ze zbioru dozwolonych"
+     ],
+     "a": "`g(n) = mex{ g(n − s) : s ∈ S, s ≤ n }`, `g(0) = 0`. Liczymy rosnąco w O(n·|S|), a przy wielu stosach XOR-ujemy\n`g(aᵢ)`. Dla S = {1, 3, 4}: 0 1 0 1 2 3 2 i dalej okresowo z okresem 7. Pełny program w treści.",
+     "code": "vector<int> S = {1, 3, 4};\nint N = 14;\nvector<int> g(N + 1, 0);\nfor (int n = 1; n <= N; n++) {\n    set<int> r;\n    for (int s : S) if (s <= n) r.insert(g[n - s]);\n    while (r.count(g[n])) g[n]++;\n}\nfor (int x : g) cout << x << \" \";\ncout << \"\\n\";   // 0 1 0 1 2 3 2 0 1 0 1 2 3 2 0"
+    },
+    {
+     "q": [
+      "okresowosc grundy",
+      "grundy okresowe",
+      "grundy dla duzych n 10^18",
+      "okres funkcji grundy",
+      "gra odejmowania n do 10^18"
+     ],
+     "a": "W grze odejmowania g(n) zależy tylko od ostatnich `max(S)` wartości. Jeśli to samo okno długości max(S) pojawi się\nna pozycjach i < j, ciąg jest okresowy od i z okresem j − i (dowód przez indukcję). Okien jest skończenie wiele\n(wartości ≤ |S|), więc powtórzenie zawsze nastąpi. Potem `g(N) = g(i + (N − i) mod (j − i))`.",
+     "code": "vector<int> S = {1, 3, 4};\nint smax = *max_element(S.begin(), S.end());\nvector<int> g;\nmap<vector<int>, int> firstWin;\nlong long start = -1, period = -1;\nfor (int n = 0; start < 0; n++) {\n    set<int> r;\n    for (int s : S) if (s <= n) r.insert(g[n - s]);\n    int m = 0; while (r.count(m)) m++;\n    g.push_back(m);\n    if (n + 1 >= smax) {\n        vector<int> win(g.end() - smax, g.end());          // g[n-smax+1 .. n]\n        int pos = n - smax + 1;\n        auto it = firstWin.find(win);\n        if (it != firstWin.end()) { start = it->second; period = pos - start; }\n        else firstWin[win] = pos;\n    }\n}\nlong long N = 1000000000000000000LL;\nint gN = (N < (long long)g.size()) ? g[N] : g[start + (N - start) % period];\ncout << start << \" \" << period << \" \" << gN << \"\\n\";   // 0 7 1"
+    },
+    {
+     "q": [
+      "gra z podzialem stosu",
+      "grundy podzial na dwie czesci",
+      "kayles",
+      "kregle kayles grundy",
+      "ruch rozbija gre na dwie"
+     ],
+     "a": "Gdy ruch dzieli pozycję na niezależne części, wartość następnika = XOR wartości części. Kayles: rząd n kręgli,\nzbijamy 1 lub 2 sąsiednie, co zostawia rzędy a i b: `g(n) = mex{ g(a) ⊕ g(b) : a + b = n − 1 lub a + b = n − 2 }`.\nO(n²). Wartości: 0 1 2 3 1 4 3 2 1 4 2 6 4 …",
+     "code": "int N = 12;\nvector<int> g(N + 1, 0);\nfor (int n = 1; n <= N; n++) {\n    set<int> r;\n    for (int take = 1; take <= 2; take++)\n        for (int a = 0; a + take <= n; a++) r.insert(g[a] ^ g[n - take - a]);\n    int m = 0; while (r.count(m)) m++;\n    g[n] = m;\n}\nfor (int x : g) cout << x << \" \";\ncout << \"\\n\";   // 0 1 2 3 1 4 3 2 1 4 2 6 4"
+    },
+    {
+     "q": [
+      "jak liczyc grundy na grafie",
+      "grundy dag",
+      "grundy dfs memo",
+      "grundy na grafie acyklicznym"
+     ],
+     "a": "Pozycje to wierzchołki DAG-u, ruchy to krawędzie. Licz g memoizacją: `g(v) = mex{ g(u) : v → u }`, wierzchołek bez\nkrawędzi wyjściowych ma 0. Każdy wierzchołek i krawędź odwiedzasz raz — O(n + m). Przy kilku pionkach na grafie\n(ruch jednym z nich) wynik to XOR g(pozycji pionków).",
+     "code": "int n = 5;\nvector<vector<int>> adj(n);\nadj[0] = {1, 2}; adj[1] = {3}; adj[2] = {3, 4}; adj[3] = {4};   // DAG\nvector<int> g(n, -1);\nfunction<int(int)> calc = [&](int v) {\n    if (g[v] != -1) return g[v];\n    set<int> r;\n    for (int u : adj[v]) r.insert(calc(u));\n    int m = 0; while (r.count(m)) m++;\n    return g[v] = m;\n};\nfor (int v = 0; v < n; v++) cout << calc(v) << \" \";\ncout << \"\\n\";   // 1 0 2 1 0:  g(4)=0, g(3)=1, g(2)=mex{1,0}=2, g(1)=mex{1}=0, g(0)=mex{0,2}=1"
+    },
+    {
+     "q": [
+      "grundy zlozonosc",
+      "jak duze moga byc wartosci grundy",
+      "ograniczenie wartosci grundy",
+      "grundy max value"
+     ],
+     "a": "`g(p) ≤ liczba ruchów z p`, bo mex zbioru k liczb jest ≤ k. Dla gry odejmowania ze zbiorem S wartości są ≤ |S|,\nwięc tablica do mex ma rozmiar |S| + 1, a całe DP to O(n·|S|). Przy ruchach rozbijających (XOR części) wartości\nmogą być większe niż liczba części, ale nadal ≤ liczby ruchów."
+    },
+    {
+     "q": [
+      "brute force gry male n",
+      "sprawdzanie wzoru gry brute force",
+      "jak znalezc wzor w grze",
+      "gra wzor z tabelki"
+     ],
+     "a": "Napisz rekurencję z memoizacją „czy pozycja jest wygrywająca” (albo g), wypisz wyniki dla małych stanów i szukaj\nwzoru: reszty modulo, okresowość, XOR, zależność od parzystości. Np. gra „zabierz kwadrat liczby” ma pozycje\nprzegrywające 0, 2, 5, 7, 10, 12, 15, 17, 20, 22, 34, … — tu wzoru nie ma, więc liczy się DP do n.",
+     "code": "int N = 25;\nvector<bool> win(N + 1, false);\nfor (int n = 1; n <= N; n++)\n    for (int k = 1; k * k <= n; k++)\n        if (!win[n - k * k]) { win[n] = true; break; }   // ruch do pozycji przegrywającej\nfor (int n = 0; n <= N; n++) if (!win[n]) cout << n << \" \";\ncout << \"\\n\";   // 0 2 5 7 10 12 15 17 20 22"
+    },
+    {
+     "q": [
+      "gra bezstronna",
+      "impartial game",
+      "kiedy mozna uzyc sprague grundy",
+      "gra partyzancka a bezstronna",
+      "kiedy nie dziala grundy"
+     ],
+     "a": "Warunki: obaj gracze mają ten sam zbiór ruchów z każdej pozycji (bezstronność), gra kończy się po skończenie wielu\nruchach, przegrywa gracz bez ruchu (normal play). Nie działa dla gier partyzanckich (różne ruchy graczy, np. szachy),\ndla misère (z wyjątkami jak Misère Nim) i gdy możliwe są cykle (wtedy remisy — analiza wsteczna)."
+    },
+    {
+     "q": [
+      "grundy wartosc 0 przegrywa",
+      "co oznacza grundy 0",
+      "grundy rowne zero",
+      "grundy a wygrana"
+     ],
+     "a": "g(p) = 0 oznacza, że z p nie ma ruchu do pozycji o wartości 0 (bo 0 ∉ zbiór następników), a z każdej pozycji\no wartości > 0 jest ruch do 0. To dokładnie definicja pozycji przegrywającej/wygrywającej. Wartość > 0 niesie więcej\ninformacji niż „wygrywa” — jest potrzebna przy łączeniu gier XOR-em."
+    }
+   ],
+   "related": [
+    "game-nim",
+    "game-graph-games",
+    "dp-games",
+    "math-pigeonhole",
+    "game-mirror-strategy"
+   ]
+  },
+  {
+   "id": "game-graph-games",
+   "title": "Gry na grafach — pozycje wygrywające, przegrywające i remisy (analiza wsteczna)",
+   "category": "Teoria gier",
+   "tags": [
+    "gra na grafie",
+    "analiza wsteczna",
+    "retrograde analysis",
+    "remis",
+    "BFS",
+    "DAG",
+    "pozycja wygrywająca"
+   ],
+   "aliases": [
+    "gra na grafie",
+    "gra na grafie wygrywajaca",
+    "game on graph",
+    "analiza wsteczna",
+    "retrograde analysis",
+    "gra z remisami",
+    "gra na grafie skierowanym",
+    "wygrywajace przegrywajace wierzcholki"
+   ],
+   "summary": "Pionek stoi w wierzchołku grafu skierowanego, gracze na zmianę przesuwają go po krawędzi, kto nie może — przegrywa. Na DAG-u wystarczy DP; przy cyklach używamy analizy wstecznej (BFS od pozycji końcowych z licznikami stopni), a nieoznaczone wierzchołki to remisy.",
+   "complexity": "O(n + m) dla DAG-u i dla analizy wstecznej",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Reguły: wierzchołek jest **przegrywający (L)**, jeśli wszystkie ruchy prowadzą do wygrywających (w szczególności gdy nie\nma ruchów), a **wygrywający (W)**, jeśli istnieje ruch do przegrywającego.\n\n**DAG:** liczymy w odwrotnym porządku topologicznym (albo DFS z memoizacją) — O(n + m).\n\n**Graf z cyklami — analiza wsteczna (retrograde analysis):**\n1. Wierzchołki bez krawędzi wyjściowych oznacz jako L i wrzuć do kolejki; `cnt[v]` = stopień wyjściowy v.\n2. Wyjmij v z kolejki; dla każdego poprzednika u (krawędź u → v), jeszcze nieoznaczonego:\n   jeśli v jest L — u staje się W; jeśli v jest W — zmniejsz `cnt[u]`, a gdy spadnie do 0 (wszystkie ruchy z u\n   prowadzą do W), u staje się L. Nowo oznaczone wierzchołki wrzuć do kolejki.\n3. Wierzchołki, które nie zostały oznaczone, to **remisy (D)**: z nich optymalna gra trwa w nieskończoność\n   (nikt nie może wymusić wygranej, a każdy może uniknąć przegranej)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: W/L/D dla każdego wierzchołka (także z cyklami)",
+     "code": "// Analiza wsteczna: n wierzchołków, m krawędzi skierowanych u -> v. Dla każdego wierzchołka W / L / D.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> radj(n + 1);           // krawędzie odwrócone: v -> poprzednicy\n    vector<int> cnt(n + 1, 0);                 // liczba jeszcze niezbadanych ruchów z u\n    for (int i = 0; i < m; i++) {\n        int u, v;\n        cin >> u >> v;\n        radj[v].push_back(u);\n        cnt[u]++;\n    }\n    vector<int> res(n + 1, 0);                 // 0 = nieznany (remis), 1 = W, -1 = L\n    queue<int> q;\n    for (int v = 1; v <= n; v++)\n        if (cnt[v] == 0) { res[v] = -1; q.push(v); }   // brak ruchu = przegrana\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int u : radj[v]) {\n            if (res[u] != 0) continue;\n            if (res[v] == -1) { res[u] = 1; q.push(u); }            // ruch do L => W\n            else if (--cnt[u] == 0) { res[u] = -1; q.push(u); }     // wszystkie ruchy do W => L\n        }\n    }\n    for (int v = 1; v <= n; v++) cout << (res[v] == 1 ? 'W' : res[v] == -1 ? 'L' : 'D') << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sytuacja",
+      "Metoda",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "jeden pionek, DAG",
+       "DP/DFS w odwrotnym porządku topologicznym",
+       "O(n + m)"
+      ],
+      [
+       "jeden pionek, cykle (remisy)",
+       "analiza wsteczna z licznikami stopni",
+       "O(n + m)"
+      ],
+      [
+       "kilka pionków, ruch jednym z nich, DAG",
+       "Grundy każdego wierzchołka, XOR po pionkach",
+       "O(n + m)"
+      ],
+      [
+       "gracze mają różne ruchy (np. kot i mysz)",
+       "stan = (pozycje, czyj ruch), analiza wsteczna",
+       "O(liczba stanów + przejść)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "cnt[u] = outdeg(u)",
+     "desc": "licznik ruchów z u, które jeszcze nie okazały się prowadzić do W",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "radj[v].push_back(u)",
+     "desc": "graf odwrócony — w analizie wstecznej idziemy od wyników do poprzedników",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Zwykły DFS z memoizacją na grafie z cyklami zapętla się albo daje błędne wyniki — przy cyklach użyj analizy wstecznej.",
+    "Wierzchołek jest L dopiero, gdy WSZYSTKIE ruchy prowadzą do W — potrzebny licznik, a nie pojedyncze sprawdzenie.",
+    "Krawędzie wielokrotne: licznik musi liczyć każdą krawędź, a lista poprzedników zawierać duplikaty (albo usuń duplikaty z obu).",
+    "Pętla własna (v → v) to ruch do pozycji nieznanej — bez innych informacji kończy się remisem lub W, nie L.",
+    "W grach partyzanckich stan musi zawierać informację, czyj jest ruch."
+   ],
+   "qa": [
+    {
+     "q": [
+      "gra na grafie wygrywajaca",
+      "gra na grafie skierowanym",
+      "pozycja wygrywajaca graf",
+      "game on graph",
+      "pionek na grafie kto wygrywa"
+     ],
+     "a": "Wierzchołek jest wygrywający (W), jeśli prowadzi z niego krawędź do przegrywającego (L), a przegrywający, jeśli\nwszystkie krawędzie prowadzą do W (w tym gdy nie ma krawędzi). Na DAG-u liczy się to DFS-em z memoizacją, przy\ncyklach — analizą wsteczną od wierzchołków bez ruchów. Obie metody działają w O(n + m)."
+    },
+    {
+     "q": [
+      "gra na dagu",
+      "gra na grafie acyklicznym dp",
+      "dfs wygrywajaca przegrywajaca",
+      "gra na dag memoizacja"
+     ],
+     "a": "W DAG-u wynik wierzchołka zależy tylko od następników, więc memoizowany DFS: `win(v) = istnieje u z v → u i !win(u)`.\nWierzchołek bez krawędzi wyjściowych przegrywa. O(n + m). Dla bardzo głębokich grafów (10^6) użyj porządku\ntopologicznego zamiast rekurencji.",
+     "code": "int n = 5;\nvector<vector<int>> adj(n);\nadj[0] = {1, 2}; adj[1] = {3}; adj[2] = {3, 4}; adj[3] = {4};\nvector<int> memo(n, -1);\nfunction<bool(int)> win = [&](int v) -> bool {\n    if (memo[v] != -1) return memo[v];\n    bool w = false;\n    for (int u : adj[v]) if (!win(u)) { w = true; break; }\n    memo[v] = w;\n    return w;\n};\nfor (int v = 0; v < n; v++) cout << (win(v) ? 'W' : 'L');\ncout << \"\\n\";   // WLWWL"
+    },
+    {
+     "q": [
+      "gra z cyklami remis",
+      "retrograde analysis",
+      "analiza wsteczna",
+      "gra nieskonczona remis",
+      "gra na grafie z cyklami"
+     ],
+     "a": "Zacznij od pozycji końcowych (bez ruchów = L) i idź wstecz po odwróconych krawędziach: poprzednik L staje się W;\npoprzednik W zmniejsza licznik ruchów i przy zerze staje się L. Czego nie oznaczysz — to remis (gra może trwać\nwiecznie, nikt nie wymusi wyniku). O(n + m). Pełny program w treści."
+    },
+    {
+     "q": [
+      "dlaczego licznik stopni w analizie wstecznej",
+      "outdegree counter game",
+      "kiedy wierzcholek jest przegrywajacy analiza wsteczna"
+     ],
+     "a": "Wierzchołek u jest L tylko wtedy, gdy KAŻDY ruch z u prowadzi do W. Licznik `cnt[u]` startuje od stopnia wyjściowego\ni maleje, gdy kolejny następnik okaże się W; zero oznacza, że wszystkie ruchy są złe. Bez licznika trzeba by\nwielokrotnie przeglądać następników (wolniej) albo błędnie oznaczyć u jako L po pierwszym W."
+    },
+    {
+     "q": [
+      "gra dwoch graczy rozne ruchy",
+      "gra partyzancka na grafie",
+      "kot i mysz gra",
+      "pogon na grafie kto wygra"
+     ],
+     "a": "Gdy gracze mają różne możliwości (np. kot i mysz), stan to `(pozycja1, pozycja2, czyj ruch)`. Stany końcowe\n(złapanie, ucieczka) oznaczasz z góry, potem analiza wsteczna jak dla jednego pionka, ale licznik `cnt` liczy ruchy\ngracza, który jest na ruchu w danym stanie. Stanów jest O(n²·2), przejść O(n·m·2)."
+    },
+    {
+     "q": [
+      "gra na grafie zlozonosc",
+      "o(n+m) gra",
+      "jak szybko policzyc gre na grafie"
+     ],
+     "a": "Zarówno DP na DAG-u, jak i analiza wsteczna przetwarzają każdy wierzchołek raz i każdą krawędź raz — O(n + m)\nczasu i pamięci. Przy grach na stanach (pary pozycji, maski) n to liczba stanów, a m — liczba wszystkich przejść."
+    },
+    {
+     "q": [
+      "gra na drzewie kto wygrywa",
+      "gra na drzewie przesuwanie pionka",
+      "pionek schodzi w dol drzewa gra",
+      "tree game winner"
+     ],
+     "a": "Jeśli pionek idzie tylko w dół (do dziecka), drzewo jest DAG-iem: liść przegrywa, a wierzchołek wygrywa, gdy któreś\ndziecko przegrywa. Jedno przejście DFS od korzenia — O(n).",
+     "code": "// drzewo: 1 -> {2, 3}, 2 -> {4}, 3 -> {5, 6}\nint n = 6;\nvector<vector<int>> ch(n + 1);\nch[1] = {2, 3}; ch[2] = {4}; ch[3] = {5, 6};\nfunction<bool(int)> win = [&](int v) -> bool {\n    for (int c : ch[v]) if (!win(c)) return true;\n    return false;\n};\ncout << win(1) << win(2) << win(3) << win(4) << \"\\n\";   // 0110: obaj synowie korzenia wygrywają"
+    },
+    {
+     "q": [
+      "grundy na grafie vs wygrana przegrana",
+      "kilka pionkow na grafie",
+      "gra wieloma pionkami na grafie",
+      "several tokens graph game"
+     ],
+     "a": "Jeden pionek — wystarczy W/L. Kilka pionków, gdy ruch wykonuje się jednym z nich, to suma gier: policz wartość\nGrundy'ego każdego wierzchołka (`g(v) = mex{g(u)}`) i weź XOR po pozycjach pionków. Działa tylko dla grafów\nacyklicznych; przy cyklach potrzebna jest ogólniejsza teoria."
+    }
+   ],
+   "related": [
+    "game-sprague-grundy",
+    "dp-games",
+    "dp-dag",
+    "graph-bfs",
+    "graph-toposort"
+   ]
+  },
+  {
+   "id": "game-mirror-strategy",
+   "title": "Strategia lustrzana (symetryczna) i kradzież strategii",
+   "category": "Teoria gier",
+   "tags": [
+    "strategia lustrzana",
+    "strategia symetryczna",
+    "mirror strategy",
+    "symetria",
+    "kradzież strategii",
+    "gry",
+    "konstrukcja"
+   ],
+   "aliases": [
+    "strategia symetryczna",
+    "strategia lustrzana",
+    "mirror strategy",
+    "symetria w grach",
+    "kopiowanie ruchów",
+    "strategy stealing",
+    "kradzież strategii",
+    "monety na stole gra"
+   ],
+   "summary": "Gracz utrzymuje symetryczną pozycję, odpowiadając na każdy ruch przeciwnika ruchem lustrzanym — wtedy zawsze ma ruch, więc to przeciwnik pierwszy go nie będzie miał. Drugi gracz kopiuje ruchy; pierwszy najpierw zajmuje środek symetrii.",
+   "complexity": "strategia działa w O(1) na ruch; dowód poprawności sprawdza się brute force'em na małych planszach",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Idea:** jeśli pozycja jest symetryczna (względem środka, osi, albo „dwa identyczne egzemplarze”), to po każdym\nruchu przeciwnika wykonujemy ruch symetryczny i znów mamy symetrię. Skoro przeciwnik miał legalny ruch, to ruch\nlustrzany też jest legalny — więc **nigdy nie zabraknie nam ruchu**, a gra się kończy, zatem przegrywa przeciwnik.\n\n* **Drugi gracz** stosuje lustro, gdy pozycja startowa jest symetryczna, a żaden ruch nie jest „sam swoim lustrem”.\n* **Pierwszy gracz** stosuje lustro, gdy istnieje ruch samosymetryczny (np. zajęcie środka) — wykonuje go jako\n  pierwszy i od tej chwili kopiuje.\n\n**Warunki poprawności** (o nich się zapomina): (1) ruch lustrzany jest legalny po ruchu przeciwnika — ruch\nprzeciwnika nie może „zepsuć” pola lustrzanego (np. zająć je albo z nim kolidować); (2) gra się kończy;\n(3) kryterium wygranej jest „kto nie może ruszyć, przegrywa”.\n\n**Przykłady:** dwa równe stosy Nima (drugi kopiuje na drugim stosie); monety kładzione na okrągłym stole bez\nnakładania (pierwszy kładzie monetę w środku, potem symetrycznie względem środka); n monet w kole, zabiera się\n1 lub 2 sąsiednie (dla n ≥ 3 wygrywa drugi: po pierwszym ruchu zostaje rząd, z którego środka zabiera 1 lub 2 monety,\ndzieląc go na dwa równe rzędy, i dalej kopiuje)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: brute force gry w domino (sprawdzenie strategii lustrzanej)",
+     "code": "// Weryfikacja brute force: gracze kładą na zmianę kostki domina 1x2 na planszy n x m (n*m <= 20);\n// kto nie może położyć, przegrywa. Hipoteza z symetrii: obie strony parzyste -> wygrywa Drugi\n// (lustro względem środka); dokładnie jedna parzysta -> Pierwszy (środkowe domino, potem lustro).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint n, m;\nvector<signed char> memo;                    // -1 nieznane, 0 przegrywa gracz na ruchu, 1 wygrywa\n\nbool win(int mask) {                         // mask = zajęte pola\n    if (memo[mask] != -1) return memo[mask];\n    bool res = false;\n    for (int a = 0; a < n * m && !res; a++) {\n        if (mask >> a & 1) continue;\n        int r = a / m, c = a % m;\n        if (c + 1 < m && !(mask >> (a + 1) & 1) && !win(mask | 1 << a | 1 << (a + 1))) res = true;\n        if (!res && r + 1 < n && !(mask >> (a + m) & 1) && !win(mask | 1 << a | 1 << (a + m))) res = true;\n    }\n    memo[mask] = res;\n    return res;\n}\n\nint main() {\n    cin >> n >> m;\n    memo.assign(1 << (n * m), -1);\n    cout << (win(0) ? \"Pierwszy\" : \"Drugi\") << \"\\n\";\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Dlaczego to działa dla domina:** przy obu wymiarach parzystych żadne pole nie jest swoim własnym obrazem w symetrii\nśrodkowej i żadne domino nie zawiera pary „pole + jego obraz” (te pola nigdy nie sąsiadują), więc domino lustrzane\njest zawsze wolne — wygrywa drugi. Przy jednym wymiarze nieparzystym istnieje domino samosymetryczne (dwa środkowe\npola w środkowej kolumnie/wierszu) — pierwszy kładzie je na start i dalej kopiuje."
+    },
+    {
+     "type": "tip",
+     "md": "**Kradzież strategii** (strategy stealing) to inny argument: jeśli dodatkowy ruch nigdy nie szkodzi, a drugi gracz\nmiałby strategię wygrywającą, pierwszy mógłby wykonać dowolny ruch i „ukraść” tę strategię — sprzeczność. Dowodzi,\nże pierwszy gracz wygrywa (np. Chomp, Hex), ale nie mówi jak — w zadaniu i tak trzeba znaleźć konkretną strategię."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "(r, c) -> (n-1-r, m-1-c)",
+     "desc": "symetria środkowa pola na planszy n × m",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "a[1 - i] = a[i]",
+     "desc": "lustro dla dwóch identycznych składowych (np. dwa stosy) — powtórz ruch na drugiej",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Ruch samosymetryczny (np. środkowe pole) psuje strategię drugiego gracza — wtedy to pierwszy gracz zajmuje środek i kopiuje.",
+    "Ruch przeciwnika może kolidować ze swoim obrazem (np. król i jego lustrzane odbicie na sąsiednich polach się szachują) — sprawdź, czy ruch lustrzany jest zawsze legalny.",
+    "Strategia lustrzana działa przy zasadzie „kto nie może ruszyć, przegrywa”; przy innym kryterium wygranej (punkty, misère) trzeba osobnego dowodu.",
+    "Każdą hipotezę z symetrii zweryfikuj brute force'em na małych planszach przed wysłaniem rozwiązania."
+   ],
+   "qa": [
+    {
+     "q": [
+      "strategia symetryczna",
+      "strategia lustrzana",
+      "mirror strategy",
+      "symetria w grach",
+      "jak dziala strategia lustrzana"
+     ],
+     "a": "Utrzymuj pozycję symetryczną: na każdy ruch przeciwnika odpowiadaj jego lustrzanym odbiciem. Skoro jego ruch był\nlegalny, lustrzany też jest (o ile nie koliduje z jego ruchem), więc nigdy nie zostaniesz bez ruchu — przegra\nprzeciwnik. Drugi gracz kopiuje od początku; pierwszy najpierw wykonuje ruch samosymetryczny (np. zajmuje środek)."
+    },
+    {
+     "q": [
+      "monety na okraglym stole",
+      "kladzenie monet na stol kto wygrywa",
+      "coins on round table",
+      "gra w monety na stole"
+     ],
+     "a": "Gracze kładą na zmianę identyczne monety na okrągłym stole tak, by się nie nakładały; kto nie może położyć, przegrywa.\nWygrywa pierwszy: kładzie monetę dokładnie w środku stołu, a potem każdą monetę przeciwnika odbija symetrycznie\nwzględem środka. Miejsce lustrzane jest zawsze wolne, bo pozycja przed ruchem przeciwnika była symetryczna."
+    },
+    {
+     "q": [
+      "dwa rowne stosy nim",
+      "kopiowanie ruchow przeciwnika",
+      "drugi gracz kopiuje",
+      "strategia kopiowania dwa stosy"
+     ],
+     "a": "Przy dwóch równych stosach drugi gracz po każdym ruchu przeciwnika zabiera tyle samo żetonów z drugiego stosu —\nstosy znowu są równe, a ostatni ruch należy do niego. To zgodne z Nimem: a ⊕ a = 0, więc pozycja jest przegrywająca\ndla zaczynającego."
+    },
+    {
+     "q": [
+      "monety w kole zabieranie 1 lub 2",
+      "gra monety po okregu",
+      "circle coins game",
+      "monety w kolku zabierz jedna lub dwie sasiednie"
+     ],
+     "a": "n monet w kole, ruch: zabierz 1 lub 2 sąsiednie, kto zabierze ostatnią — wygrywa. Dla n ≤ 2 wygrywa pierwszy (zabiera\nwszystko). Dla n ≥ 3 wygrywa drugi: po pierwszym ruchu koło staje się rzędem; drugi zabiera 1 lub 2 środkowe monety\ntak, by zostały dwa równe rzędy, i dalej kopiuje ruchy na drugim rzędzie. Potwierdzone brute force'em (Grundy Kayles).",
+     "code": "// Kayles: rząd n monet, zabierz 1 lub 2 sąsiednie. Koło n => pierwszy ruch daje rząd n-1 lub n-2.\nint N = 30;\nvector<int> g(N + 1, 0);\nfor (int n = 1; n <= N; n++) {\n    set<int> r;\n    for (int t = 1; t <= 2; t++)\n        for (int a = 0; a + t <= n; a++) r.insert(g[a] ^ g[n - t - a]);\n    while (r.count(g[n])) g[n]++;\n}\nfor (int n = 1; n <= 10; n++) {\n    bool firstWins = (n <= 2) || g[n - 1] == 0 || g[n - 2] == 0;   // ruch do pozycji o g = 0\n    cout << (firstWins ? 'P' : 'D');\n}\ncout << \"\\n\";   // PPDDDDDDDD"
+    },
+    {
+     "q": [
+      "kiedy strategia lustrzana nie dziala",
+      "pulapki strategii symetrycznej",
+      "strategia symetryczna blad",
+      "mirror strategy fails"
+     ],
+     "a": "Nie działa, gdy (1) istnieje ruch będący swoim własnym odbiciem (środkowe pole, środkowe domino) — wtedy drugi\ngracz nie ma odpowiedzi, (2) ruch przeciwnika koliduje ze swoim odbiciem (np. kładzenie nieszachujących się królów\nna 8×8: pola (3,3) i (4,4) są lustrzane i sąsiednie), (3) kryterium wygranej nie jest „kto nie ma ruchu, przegrywa”.\nZawsze sprawdź hipotezę brute force'em na małych danych."
+    },
+    {
+     "q": [
+      "domino na szachownicy gra",
+      "ukladanie domino kto wygrywa",
+      "gra w kladzenie domina na planszy",
+      "domino placement game"
+     ],
+     "a": "Kładzenie domina 1×2 na planszy n×m (kto nie może, przegrywa): gdy n i m są parzyste, wygrywa drugi (symetria\nśrodkowa — domino nigdy nie zawiera pola i jego obrazu). Gdy dokładnie jeden wymiar jest parzysty, wygrywa\npierwszy: kładzie środkowe, samosymetryczne domino i kopiuje. Przypadek obu wymiarów nieparzystych wymaga osobnej\nanalizy. Brute force weryfikujący jest w treści."
+    },
+    {
+     "q": [
+      "kradziez strategii",
+      "strategy stealing argument",
+      "chomp kto wygrywa",
+      "dowod ze pierwszy gracz wygrywa"
+     ],
+     "a": "Jeśli dodatkowy ruch nigdy nie szkodzi, a gra nie ma remisów, to pierwszy gracz wygrywa: gdyby drugi miał strategię\nwygrywającą, pierwszy wykonałby dowolny ruch i grałby dalej tą strategią jako „drugi”. Przykład: Chomp (prostokątna\nczekolada, kto zje zatrutą kostkę w rogu, przegrywa) — pierwszy wygrywa dla każdej planszy większej niż 1×1.\nArgument nie daje konkretnej strategii."
+    },
+    {
+     "q": [
+      "jak znalezc strategie w grze olimpiada",
+      "gra interaktywna oi",
+      "zadanie z gra jak podejsc",
+      "gra dwoch graczy oi strategia"
+     ],
+     "a": "(1) Napisz brute force (memoizacja po stanach) i wypisz zwycięzców dla małych danych. (2) Szukaj wzoru: parzystość,\nreszta modulo, XOR, symetria planszy. (3) Jeśli pozycja startowa jest symetryczna — sprawdź strategię lustrzaną;\njeśli gra rozpada się na niezależne części — wartości Grundy'ego i XOR. (4) W zadaniu interaktywnym zaimplementuj\nstrategię jako funkcję „odpowiedz na ruch”, a brute force'em sprawdź, że zawsze wygrywa."
+    }
+   ],
+   "related": [
+    "game-nim",
+    "game-sprague-grundy",
+    "math-parity-invariants",
+    "dp-games"
+   ]
+  }
+ ]
+}

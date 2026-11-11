@@ -1,0 +1,2118 @@
+{
+ "version": 1,
+ "description": "Wzorce komunikatów kompilatorów (GCC, Clang, linker, Python) → polskie wyjaśnienia. Kolejność ma znaczenie: pierwszy pasujący wygrywa. Placeholdery {nazwa} = grupy regexu.",
+ "patterns": [
+  {
+   "id": "undefined-main",
+   "match": [
+    "undefined reference to ['‘`](?:WinMain(?:@16)?|main)['’]",
+    "\"_main\", referenced from",
+    "undefined symbol: _?main\\b"
+   ],
+   "title": "Brak funkcji main",
+   "explanation": "Linker nie znalazł funkcji `main` — programu nie ma od czego zacząć.",
+   "fix": "Upewnij się, że jest dokładnie `int main()` (małymi literami, bez literówki typu `mian`), i że nie jest zakomentowana ani wewnątrz innej funkcji/struktury.",
+   "kb": "cpp-references",
+   "compilers": [
+    "ld"
+   ]
+  },
+  {
+   "id": "undeclared",
+   "match": [
+    "['‘`](?P<name>[^'’]+)['’] was not declared in this scope(?:; did you mean ['‘`](?P<sug>[^'’]+)['’])?",
+    "use of undeclared identifier ['‘`](?P<name>[^'’]+)['’](?:; did you mean ['‘`](?P<sug>[^'’]+)['’])?",
+    "['‘`](?P<name>[^'’]+)['’] undeclared(?: \\(first use in this function\\))?"
+   ],
+   "title": "Nieznana nazwa `{name}`",
+   "explanation": "Kompilator nie zna nazwy `{name}` w tym miejscu. Albo jej nigdzie nie zadeklarowałeś, albo jest literówka, albo zmienna istnieje tylko w innym bloku `{ }` (np. zadeklarowana w pętli), albo brakuje nagłówka / `std::`.",
+   "fix": "Zadeklaruj zmienną przed użyciem (np. `int {name} = 0;`) lub popraw pisownię.",
+   "kb": "cpp-global-vs-local",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "undeclared-type",
+   "match": [
+    "['‘`](?P<name>[^'’]+)['’] does not name a type(?:; did you mean ['‘`](?P<sug>[^'’]+)['’])?",
+    "unknown type name ['‘`](?P<name>[^'’]+)['’]",
+    "['‘`](?P<name>[^'’]+)['’] has not been declared"
+   ],
+   "title": "`{name}` nie jest nazwą typu",
+   "explanation": "W tym miejscu kompilator spodziewał się typu (int, vector<int>, nazwa struktury…), a `{name}` nie jest mu znany jako typ. Często: brak `#include`, brak `std::`, literówka w nazwie typu albo struktura zdefiniowana NIŻEJ niż jej użycie.",
+   "fix": "Dołącz nagłówek / dodaj `using namespace std;` / przenieś definicję struktury wyżej.",
+   "kb": "cpp-global-vs-local",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "not-member-std",
+   "match": [
+    "['‘`](?P<name>[^'’]+)['’] is not a member of ['‘`]std['’]",
+    "no (?:member|type) named ['‘`](?P<name>[^'’]+)['’] in namespace ['‘`]std['’]"
+   ],
+   "title": "`std::{name}` nie istnieje (albo brak nagłówka)",
+   "explanation": "W przestrzeni std nie ma `{name}` — albo nie dołączyłeś odpowiedniego nagłówka, albo ta funkcja wymaga nowszego standardu (np. C++20: `std::ranges`, `contains`), albo jest literówka.",
+   "fix": "Dołącz `#include <bits/stdc++.h>` i kompiluj z `-std=c++20`; sprawdź pisownię.",
+   "kb": "cpp-bits-stdcpp",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "not-member-ns",
+   "match": [
+    "['‘`](?P<name>[^'’]+)['’] is not a member of ['‘`](?P<ns>[^'’]+)['’]",
+    "no member named ['‘`](?P<name>[^'’]+)['’] in namespace ['‘`](?P<ns>[^'’]+)['’]"
+   ],
+   "title": "`{ns}` nie ma `{name}`",
+   "explanation": "W przestrzeni nazw / klasie `{ns}` nie ma elementu `{name}`.",
+   "fix": "Sprawdź pisownię i nagłówki.",
+   "kb": "cpp-bits-stdcpp",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "redeclared-kind",
+   "match": [
+    "['‘`](?P<decl>[^'’]+)['’] redeclared as different kind of (?:entity|symbol)",
+    "redefinition of ['‘`](?P<decl>[^'’]+)['’] as different kind of symbol"
+   ],
+   "title": "Nazwa `{decl}` jest już zajęta przez coś innego",
+   "explanation": "Deklarujesz `{decl}`, ale ta nazwa jest już używana przez funkcję/zmienną innego rodzaju — bardzo często przez funkcję z biblioteki C dołączanej przez bits/stdc++.h (np. `y1`, `y0`, `j1`, `index`, `time`, `exp`, `log`).",
+   "fix": "Zmień nazwę swojej zmiennej (np. `y1` → `ya`, `index` → `idx`, `time` → `czas`).",
+   "kb": "pit-name-collisions",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "ambiguous-ref",
+   "match": [
+    "reference to ['‘`](?P<name>[^'’]+)['’] is ambiguous"
+   ],
+   "title": "Niejednoznaczna nazwa `{name}` (kolizja z std)",
+   "explanation": "Masz własną zmienną/funkcję `{name}` i jednocześnie `using namespace std;`, w którym istnieje `std::{name}`. Kompilator nie wie, o którą chodzi.",
+   "fix": "Zmień nazwę swojej zmiennej.",
+   "kb": "pit-name-collisions",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "redeclaration",
+   "match": [
+    "redeclaration of ['‘`](?P<decl>[^'’]+)['’]",
+    "conflicting declaration ['‘`](?P<decl>[^'’]+)['’]",
+    "conflicting types for ['‘`](?P<decl>[^'’]+)['’]"
+   ],
+   "title": "Ta sama zmienna zadeklarowana dwa razy: `{decl}`",
+   "explanation": "W tym samym bloku zadeklarowałeś zmienną o tej samej nazwie drugi raz (np. dwa razy `int i` w main).",
+   "fix": "Usuń drugą deklarację (zostaw samo przypisanie `i = ...`) albo nadaj inną nazwę.",
+   "kb": "cpp-global-vs-local",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "redefinition",
+   "match": [
+    "redefinition of ['‘`](?P<decl>[^'’]+)['’]",
+    "['‘`](?P<decl>[^'’]+)['’] previously defined here"
+   ],
+   "title": "Podwójna definicja: `{decl}`",
+   "explanation": "`{decl}` zdefiniowano więcej niż raz (dwie funkcje o tej samej sygnaturze, dwie struktury albo dwie zmienne o tej samej nazwie w jednym zasięgu).",
+   "fix": "Usuń duplikat albo zmień nazwę.",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "main-return-int",
+   "match": [
+    "['‘`]::main['’] must return ['‘`]int['’]",
+    "['‘`]main['’] must return ['‘`]int['’]"
+   ],
+   "title": "main musi zwracać int",
+   "explanation": "Funkcja main musi mieć typ `int`. Najczęstsza przyczyna na OI: `#define int long long` zamienia `int main()` na `long long main()`.",
+   "fix": "Napisz `signed main()` (albo `int32_t main()`), gdy używasz `#define int long long`.",
+   "level": "error",
+   "kb": "cpp-macros-typedef",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-return-type",
+   "match": [
+    "ISO C\\+\\+ forbids declaration of ['‘`](?P<name>[^'’]+)['’] with no type",
+    "C\\+\\+ requires a type specifier for all declarations",
+    "a type specifier is required for all declarations"
+   ],
+   "title": "Brak typu w deklaracji `{name}`",
+   "explanation": "Każda funkcja i zmienna musi mieć typ — tu go brakuje (np. `f() {...}` zamiast `int f() {...}`).",
+   "fix": "Dopisz typ: `int`, `void`, `long long`…",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "private",
+   "match": [
+    "['‘`](?P<name>[^'’]+)['’] is private within this context",
+    "['‘`](?P<name>[^'’]+)['’] is a private member of ['‘`](?P<cls>[^'’]+)['’]",
+    "['‘`](?P<name>[^'’]+)['’] is protected within this context",
+    "['‘`](?P<name>[^'’]+)['’] is a protected member of"
+   ],
+   "title": "Pole/metoda `{name}` jest prywatna",
+   "explanation": "W `class` wszystko jest domyślnie prywatne — z zewnątrz nie masz dostępu do `{name}`.",
+   "fix": "Użyj `struct` zamiast `class` (domyślnie publiczne) albo dopisz `public:` przed polami.",
+   "kb": "cpp-struct",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "incomplete-type",
+   "match": [
+    "invalid use of incomplete type ['‘`](?P<t>[^'’]+)['’]",
+    "variable has incomplete type ['‘`](?P<t>[^'’]+)['’]",
+    "aggregate ['‘`](?P<t>[^'’]+)['’] has incomplete type and cannot be defined",
+    "field ['‘`](?P<f>[^'’]+)['’] has incomplete type",
+    "incomplete type ['‘`](?P<t>[^'’]+)['’]"
+   ],
+   "title": "Niepełny typ `{t}`",
+   "explanation": "Typ `{t}` jest tylko zapowiedziany (np. `struct A;`), ale jego pełna definicja pojawia się później albo wcale — albo struktura zawiera pole swojego własnego typu.",
+   "fix": "Przenieś pełną definicję struktury przed miejsce użycia; w strukturze rekurencyjnej używaj wskaźnika/vectora (`vector<Node> dzieci`).",
+   "kb": "cpp-struct",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "missing-template-args",
+   "match": [
+    "missing template arguments before ['‘`](?P<tok>[^'’]+)['’]",
+    "use of class template ['‘`](?P<name>[^'’]+)['’] requires template arguments",
+    "class template argument deduction failed",
+    "no viable constructor or deduction guide for deduction of template arguments of ['‘`](?P<name>[^'’]+)['’]",
+    "invalid use of template-name ['‘`](?P<name>[^'’]+)['’] without an argument list"
+   ],
+   "title": "Brak typu elementów w szablonie",
+   "explanation": "Kontener szablonowy (vector, set, map, pair…) potrzebuje typu w nawiasach ostrych — np. `vector<int>`, a nie samo `vector`.",
+   "fix": "Dopisz typ: `vector<int> v;`, `map<string, int> m;`, `pair<int, int> p;`.",
+   "kb": "stl-vector",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "not-template",
+   "match": [
+    "['‘`](?P<name>[^'’]+)['’] is not a template",
+    "(?P<name>\\w+) is not a template"
+   ],
+   "title": "`{name}` nie jest szablonem",
+   "explanation": "Użyłeś `{name}<...>`, ale `{name}` nie przyjmuje argumentów szablonu (albo przesłoniłeś nazwę własną zmienną).",
+   "fix": "Usuń `<...>` albo zmień nazwę kolidującej zmiennej.",
+   "kb": "cpp-templates",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "template-args-wrong",
+   "match": [
+    "wrong number of template arguments",
+    "too few template arguments for class template ['‘`](?P<name>[^'’]+)['’]",
+    "too many template arguments for class template ['‘`](?P<name>[^'’]+)['’]",
+    "template argument (?P<n>\\d+) is invalid",
+    "type/value mismatch at argument (?P<n>\\d+) in template parameter list",
+    "template argument for template type parameter must be a type"
+   ],
+   "title": "Złe argumenty szablonu",
+   "explanation": "Liczba albo rodzaj argumentów w `<...>` nie pasuje (np. `vector<n>` zamiast `vector<int> v(n)`, `pair<int>` zamiast `pair<int, int>`, nieznany typ w środku).",
+   "fix": "Rozmiar podajesz w nawiasach okrągłych: `vector<int> v(n);`; pair potrzebuje dwóch typów.",
+   "kb": "stl-vector",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "stray",
+   "match": [
+    "stray '\\\\(?P<code>\\d{3})' in program",
+    "stray ['‘`](?P<ch>[^'’])['’] in program",
+    "extended character (?P<ch>\\S) is not valid in an identifier",
+    "non-ASCII characters are not allowed outside of literals and identifiers",
+    "unexpected character <U\\+(?P<hex>[0-9A-Fa-f]+)>",
+    "character <U\\+(?P<hex>[0-9A-Fa-f]+)> not allowed"
+   ],
+   "title": "Niedozwolony znak w kodzie (np. polskie cudzysłowy „ ”)",
+   "explanation": "W kodzie jest znak spoza ASCII poza napisem — najczęściej skopiowany z PDF/Worda/strony: cudzysłowy „ ” “ ‘ ’, półpauza – zamiast minusa, twarda spacja albo litera z ogonkiem w nazwie zmiennej.",
+   "fix": "Przepisz tę linię ręcznie z klawiatury; cudzysłowy muszą być proste: `\"`, a minus to `-`.",
+   "kb": "oi-sio2",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "missing-terminating",
+   "match": [
+    "missing terminating (?P<q>['\\\"]) character",
+    "unterminated (?:string|character)"
+   ],
+   "title": "Niezamknięty napis/znak",
+   "explanation": "Napis zaczyna się od cudzysłowu, ale nie ma zamykającego w tej samej linii.",
+   "fix": "Zamknij napis `\"...\"` / znak `'x'`; znak nowej linii w napisie zapisuj jako `\\n`.",
+   "kb": "stl-string",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "multichar",
+   "match": [
+    "multi-character character constant",
+    "character too large for enclosing character literal type",
+    "multi-character character constant \\[-Wmultichar\\]"
+   ],
+   "title": "Kilka znaków w apostrofach",
+   "explanation": "Apostrofy `'a'` są na JEDEN znak. `'ab'` albo `'TAK'` to błąd — napisy zapisuje się w cudzysłowach.",
+   "fix": "Użyj `\"TAK\"` (cudzysłów) dla napisów.",
+   "level": "error",
+   "kb": "stl-string",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "expected-semicolon",
+   "match": [
+    "expected '(?P<tok>[;,])' before",
+    "expected ';' (?:after|at end of) (?P<what>[\\w/ -]+)",
+    "expected ',' or ';' before",
+    "expected ';' before",
+    "expected ';'"
+   ],
+   "title": "Brakuje średnika `;`",
+   "explanation": "Kompilator doszedł do miejsca, w którym powinna się skończyć instrukcja. Średnik zwykle brakuje na końcu POPRZEDNIEJ linii (błąd zgłaszany jest przy następnym tokenie).",
+   "fix": "Dopisz `;` na końcu poprzedniej instrukcji.",
+   "kb": "oi-debugging",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "expected-paren",
+   "match": [
+    "expected '\\)' before",
+    "expected '\\)'",
+    "expected '\\(' before",
+    "expected '\\('",
+    "expected '\\)' (?:after|in)"
+   ],
+   "title": "Brakuje nawiasu `(` lub `)`",
+   "explanation": "Nawiasy okrągłe się nie domykają — np. w warunku `if (a > (b + c)` albo wywołaniu funkcji.",
+   "fix": "Policz nawiasy w tej linii; edytor podświetla parę nawiasów.",
+   "kb": "oi-debugging",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "expected-bracket",
+   "match": [
+    "expected '\\]' before",
+    "expected '\\]'"
+   ],
+   "title": "Brakuje nawiasu `]`",
+   "explanation": "Nawias kwadratowy nie jest domknięty.",
+   "fix": "Domknij `]` w indeksie tablicy.",
+   "kb": "oi-debugging",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "expected-brace-end",
+   "match": [
+    "expected '\\}' at end of input",
+    "expected '\\}'",
+    "expected '\\{'"
+   ],
+   "title": "Brakuje klamry `}`",
+   "explanation": "Na końcu pliku zostały niedomknięte bloki `{` — brakuje co najmniej jednego `}` (funkcji, pętli albo if).",
+   "fix": "Dopisz brakujące `}`. Formatowanie kodu (Ctrl+Shift+F) pokaże, gdzie wcięcia się rozjeżdżają.",
+   "kb": "oi-debugging",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "extra-brace",
+   "match": [
+    "expected declaration before '\\}' token",
+    "extraneous closing brace",
+    "expected unqualified-id before '\\}' token"
+   ],
+   "title": "Nadmiarowa klamra `}`",
+   "explanation": "Jest o jedną klamrę zamykającą za dużo — kod po niej jest „poza” funkcją.",
+   "fix": "Usuń nadmiarowe `}` albo dopisz brakujące `{` wcześniej (np. po `if (...)`).",
+   "kb": "oi-debugging",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "expected-primary",
+   "match": [
+    "expected primary-expression before ['‘`](?P<tok>[^'’]+)['’](?: token)?",
+    "expected expression"
+   ],
+   "title": "Niepełne wyrażenie (przed `{tok}`)",
+   "explanation": "W tym miejscu powinno być wyrażenie (liczba, zmienna, wywołanie), a jest coś innego — np. `int a = ;`, podwójny operator, typ w środku wyrażenia (`f(int x)` przy wywołaniu) albo `else` po średniku.",
+   "fix": "Uzupełnij brakującą wartość; przy wywołaniu funkcji podawaj same wartości: `f(x)`, nie `f(int x)`.",
+   "kb": "oi-debugging",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "expected-unqualified",
+   "match": [
+    "expected unqualified-id before ['‘`](?P<tok>[^'’]+)['’]",
+    "expected unqualified-id",
+    "expected member name or ';' after declaration specifiers",
+    "expected identifier"
+   ],
+   "title": "Oczekiwano nazwy (przed `{tok}`)",
+   "explanation": "Kompilator czekał na nazwę zmiennej/funkcji. Częste przyczyny: kod poza funkcją (np. instrukcja przed main), nadmiarowe `}` , słowo kluczowe użyte jako nazwa, średnik po nagłówku funkcji.",
+   "fix": "Sprawdź klamry i to, czy instrukcje są wewnątrz funkcji.",
+   "kb": "oi-debugging",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "expected-initializer",
+   "match": [
+    "expected initializer before ['‘`](?P<tok>[^'’]+)['’]"
+   ],
+   "title": "Błąd w deklaracji (przed `{tok}`)",
+   "explanation": "Po nazwie zmiennej/funkcji jest coś nieoczekiwanego — zwykle brakujący średnik w poprzedniej linii albo literówka w typie.",
+   "fix": "Sprawdź poprzednią linię i pisownię typu.",
+   "kb": "oi-debugging",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "expected-before",
+   "match": [
+    "expected ['‘`](?P<tok>[^'’]+)['’] before ['‘`](?P<before>[^'’]+)['’]",
+    "expected ['‘`](?P<tok>[^'’]+)['’]"
+   ],
+   "title": "Oczekiwano `{tok}`",
+   "explanation": "Składnia jest niepełna — kompilator spodziewał się `{tok}`.",
+   "fix": "Dopisz brakujący symbol.",
+   "kb": "oi-debugging",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "else-without-if",
+   "match": [
+    "['‘`]else['’] without a previous ['‘`]if['’]"
+   ],
+   "title": "`else` bez `if`",
+   "explanation": "`else` musi być bezpośrednio po bloku if. Najczęściej: średnik po `if (...);` albo brak klamer przy kilku instrukcjach w if.",
+   "fix": "Usuń średnik po `if (...)` i weź instrukcje w `{ }`.",
+   "kb": "pit-assign-vs-compare",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "break-outside",
+   "match": [
+    "break statement not within loop or switch",
+    "'break' statement not in loop or switch statement",
+    "continue statement not within a loop",
+    "'continue' statement not in loop statement"
+   ],
+   "title": "break/continue poza pętlą",
+   "explanation": "`break`/`continue` działają tylko w pętli (lub break w switch).",
+   "fix": "Sprawdź klamry — być może pętla zamknęła się wcześniej niż myślisz.",
+   "kb": "pit-assign-vs-compare",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "jump-to-case",
+   "match": [
+    "jump to case label",
+    "cannot jump from switch statement to this case label",
+    "crosses initialization of",
+    "jump bypasses variable initialization"
+   ],
+   "title": "Deklaracja zmiennej w case bez klamer",
+   "explanation": "W `switch` nie można przeskoczyć do `case`, omijając deklarację zmiennej z inicjalizacją w poprzednim case.",
+   "fix": "Weź ciało case w klamry: `case 1: { int x = 5; ... break; }`.",
+   "kb": "pit-assign-vs-compare",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "switch-type",
+   "match": [
+    "switch quantity not an integer",
+    "statement requires expression of integer type",
+    "case label does not reduce to an integer constant",
+    "expression is not an integral constant expression"
+   ],
+   "title": "switch tylko na liczbach całkowitych",
+   "explanation": "`switch` działa na int/char/enum ze stałymi w case — nie na stringach i nie na zmiennych w case.",
+   "fix": "Dla napisów użyj `if (s == \"abc\") ... else if ...` albo mapy.",
+   "kb": "pit-assign-vs-compare",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-matching-maxmin",
+   "match": [
+    "no matching function for call to ['‘`](?P<fn>(?:std::)?(?:max|min))\\((?P<args>[^)]*)\\)['’]",
+    "no matching function for call to ['‘`](?P<fn>(?:std::)?(?:max|min))['’]"
+   ],
+   "title": "max/min z argumentami różnych typów",
+   "explanation": "std::max i std::min wymagają dwóch argumentów DOKŁADNIE tego samego typu (np. oba long long). Tu typy się różnią (np. long long i int, int i double, int i size_t z .size()).",
+   "fix": "`max<long long>(a, b)` albo `max(a, (long long)b)`; dla size(): `max(x, (int)v.size())`.",
+   "kb": "stl-min-max",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-matching-function",
+   "match": [
+    "no matching function for call to ['‘`](?P<fn>[^'’]+)['’]",
+    "no matching (?:member )?function for call to ['‘`](?P<fn>[^'’]+)['’]",
+    "no matching constructor for initialization of ['‘`](?P<fn>[^'’]+)['’]"
+   ],
+   "title": "Brak pasującej wersji funkcji `{fn}`",
+   "explanation": "Funkcja `{fn}` istnieje, ale żadna jej wersja nie przyjmuje argumentów takich typów/ilości, jakie podałeś. Poniżej kompilator wypisuje „kandydatów” — porównaj typy parametrów z argumentami.",
+   "fix": "Sprawdź liczbę i typy argumentów (const, referencje, int vs long long).",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "unordered-hash",
+   "match": [
+    "use of deleted function ['‘`][^'’]*unordered_(?:map|set)[^'’]*['’]",
+    "call to implicitly-deleted default constructor of ['‘`][^'’]*unordered[^'’]*['’]",
+    "static assertion failed: hash function must be (?:copy constructible|invocable)",
+    "the specified hash does not meet the Hash requirements",
+    "implicit instantiation of undefined template ['‘`]std::(?:__1::)?hash<"
+   ],
+   "title": "unordered_map/set bez funkcji haszującej dla tego typu",
+   "explanation": "unordered_map/unordered_set umieją haszować tylko proste typy (int, long long, string…). Dla pair, tuple, vector czy struktur hasza nie ma — stąd lawina błędów z „deleted function”.",
+   "fix": "Użyj `map`/`set` albo dopisz własny hash.",
+   "kb": "stl-unordered-map",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "deleted-function",
+   "match": [
+    "use of deleted function ['‘`](?P<fn>[^'’]+)['’]",
+    "call to deleted (?:function|constructor|member function) ['‘`](?P<fn>[^'’]+)['’]",
+    "attempt to use a deleted function",
+    "call to implicitly-deleted (?:copy |default )?constructor of ['‘`](?P<fn>[^'’]+)['’]"
+   ],
+   "title": "Użycie usuniętej funkcji",
+   "explanation": "Ta operacja jest zablokowana (np. kopiowanie strumienia `cin`, kopiowanie unique_ptr, konstruktor domyślny niedostępny).",
+   "fix": "Przekazuj strumienie i duże obiekty przez referencję (`istream& in`).",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-match-shl",
+   "match": [
+    "no match for ['‘`]operator<<['’] \\(operand types are ['‘`][^'’]*['’](?: \\{aka [^}]*\\})? and ['‘`](?P<type>[^'’]+)['’]",
+    "invalid operands to binary expression \\(['‘`](?:std::)?(?:__1::)?(?:basic_)?ostream[^'’]*['’] and ['‘`](?P<type>[^'’]+)['’]\\)",
+    "invalid operands to binary expression \\(['‘`]ostream[^'’]*['’][^)]* and ['‘`](?P<type>[^'’]+)['’]\\)"
+   ],
+   "title": "cout nie umie wypisać typu `{type}`",
+   "explanation": "Operator `<<` strumienia umie wypisać liczby, znaki i napisy — ale nie całe kontenery (vector, set, map), pary ani Twoje struktury.",
+   "fix": "Wypisz elementy w pętli albo pola osobno.",
+   "kb": "io-print-separators",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-match-shr",
+   "match": [
+    "no match for ['‘`]operator>>['’] \\(operand types are ['‘`][^'’]*['’](?: \\{aka [^}]*\\})? and ['‘`](?P<type>[^'’]+)['’]",
+    "invalid operands to binary expression \\(['‘`](?:std::)?(?:__1::)?(?:basic_)?istream[^'’]*['’] and ['‘`](?P<type>[^'’]+)['’]\\)"
+   ],
+   "title": "cin nie umie wczytać `{type}`",
+   "explanation": "`cin >>` wczytuje pojedyncze liczby/znaki/napisy do ZMIENNYCH. Nie wczyta całego vectora ani pary, a wczytywanie do wyrażenia (np. `cin >> a + 1` albo `cin >> 5`) jest niemożliwe.",
+   "fix": "Wczytuj w pętli: `for (auto& x : v) cin >> x;`, pary: `cin >> p.first >> p.second;`.",
+   "kb": "pit-input-format",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-match-lt",
+   "match": [
+    "no match for ['‘`]operator<['’] \\(operand types are ['‘`](?P<a>[^'’]+)['’] and ['‘`](?P<b>[^'’]+)['’]\\)",
+    "invalid operands to binary expression \\(['‘`]const (?P<a>[^'’]+)['’] and ['‘`]const (?P<b>[^'’]+)['’]\\)"
+   ],
+   "title": "Brak porównania `<` dla `{a}` (sort/set/map)",
+   "explanation": "sort, set, map, priority_queue i lower_bound porównują elementy operatorem `<`. Twój typ `{a}` (np. struktura) go nie ma, więc kompilator nie wie, jak go uporządkować.",
+   "fix": "Dopisz w strukturze `bool operator<(const {a}& o) const { return x < o.x; }` albo podaj komparator: `sort(v.begin(), v.end(), [](const {a}& p, const {a}& q){ return p.x < q.x; });`.",
+   "kb": "stl-sort",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-match-less-call",
+   "match": [
+    "no match for call to ['‘`]\\((?:std::)?(?:less|greater)<[^'’]*>\\) \\((?P<a>[^&,)]+)&?, (?P<b>[^&,)]+)&?\\)['’]",
+    "no match for call to ['‘`]\\((?:std::)?(?:less|greater)<[^'’]*>\\) \\((?P<a>[^'’]+)\\)['’]"
+   ],
+   "title": "Brak porównania `<` dla `{a}` (sort/set/map)",
+   "explanation": "sort, set, map, priority_queue i lower_bound porównują elementy operatorem `<` (std::less). Typ `{a}` (np. Twoja struktura) go nie ma, więc kompilator nie wie, jak go uporządkować.",
+   "fix": "Dopisz w strukturze `bool operator<(const {a}& o) const { return x < o.x; }` albo podaj komparator jako trzeci argument sort: `[](const {a}& p, const {a}& q){ return p.x < q.x; }`.",
+   "kb": "stl-sort",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "template-deduction",
+   "match": [
+    "template argument deduction/substitution failed",
+    "candidate template ignored: (?P<why>.+)",
+    "couldn't deduce template parameter '(?P<p>[^']+)'"
+   ],
+   "title": "Nie udało się dobrać typów szablonu",
+   "explanation": "Funkcja szablonowa (np. max, min, swap, sort, lower_bound) dostała argumenty, z których kompilator nie potrafi wywnioskować jednego typu — najczęściej dwa różne typy tam, gdzie wymagany jest ten sam (int i long long, int i double).",
+   "fix": "Ujednolić typy argumentów albo podaj typ jawnie, np. `max<long long>(a, b)`.",
+   "kb": "cpp-templates",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "string-char-compare",
+   "match": [
+    "no match for ['‘`]operator==?['’] \\(operand types are ['‘`](?:std::)?(?:__cxx11::)?(?:basic_)?string[^'’]*['’](?: \\{aka [^}]*\\})? and ['‘`]char['’]\\)",
+    "invalid operands to binary expression \\(['‘`](?:std::)?(?:__1::)?(?:basic_)?string[^'’]*['’] and ['‘`]char['’]\\)"
+   ],
+   "title": "Porównanie stringa ze znakiem",
+   "explanation": "`s == 'a'` porównuje cały napis ze znakiem — tak się nie da. `'a'` to znak (char), `\"a\"` to napis.",
+   "fix": "Porównuj napis z napisem `s == \"a\"` albo znak ze znakiem `s[i] == 'a'`.",
+   "kb": "stl-string",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "pointer-int-compare",
+   "match": [
+    "ISO C\\+\\+ forbids comparison between pointer and integer",
+    "comparison between pointer and integer \\(['‘`](?P<a>[^'’]+)['’] and ['‘`](?P<b>[^'’]+)['’]\\)",
+    "result of comparison against a string literal is unspecified"
+   ],
+   "title": "Porównanie znaku z napisem (\"a\" zamiast 'a')",
+   "explanation": "Porównujesz znak (np. `s[i]`) z napisem w cudzysłowach `\"a\"` — napis to wskaźnik, więc porównanie nie ma sensu.",
+   "fix": "Dla pojedynczego znaku używaj apostrofów: `s[i] == 'a'`.",
+   "kb": "stl-string",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-match-index",
+   "match": [
+    "no match for ['‘`]operator\\[\\]['’] \\(operand types are ['‘`](?P<a>[^'’]+)['’]",
+    "type ['‘`](?P<a>[^'’]+)['’] does not provide a subscript operator",
+    "no viable overloaded operator\\[\\] for type ['‘`](?P<a>[^'’]+)['’]"
+   ],
+   "title": "Nie można indeksować `{a}` przez []",
+   "explanation": "Operator `[]` mają vector, string, deque, array i map. Nie mają go set, multiset, queue, stack, priority_queue ani list. Dla `const map` operator[] też jest niedostępny (bo mógłby wstawić klucz).",
+   "fix": "set: iteruj albo użyj `*s.begin()`, `s.find(x)`; queue: `q.front()`; const map: `m.at(k)` albo `m.find(k)`.",
+   "kb": "stl-set",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "string-plus-literals",
+   "match": [
+    "invalid operands of types 'const char \\[\\d+\\]' and 'const char \\[\\d+\\]' to binary 'operator\\+'",
+    "invalid operands to binary expression \\('const char \\*' and 'const char \\*'\\)",
+    "invalid operands to binary expression \\('const char\\[\\d+\\]' and 'const char\\[\\d+\\]'\\)"
+   ],
+   "title": "Dodawanie dwóch napisów w cudzysłowach",
+   "explanation": "`\"abc\" + \"def\"` nie działa — literały to tablice char, a nie std::string.",
+   "fix": "Zamień jeden na string: `string(\"abc\") + \"def\"` albo `\"abc\"s + \"def\"`.",
+   "kb": "stl-string",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "invalid-operands",
+   "match": [
+    "invalid operands of types ['‘`](?P<a>[^'’]+)['’] and ['‘`](?P<b>[^'’]+)['’] to binary ['‘`]operator(?P<op>[^'’]+)['’]",
+    "invalid operands to binary expression \\(['‘`](?P<a>[^'’]+)['’] and ['‘`](?P<b>[^'’]+)['’]\\)",
+    "no match for ['‘`]operator(?P<op>[^'’]+)['’] \\(operand types are ['‘`](?P<a>[^'’]+)['’](?: \\{aka [^}]*\\})? and ['‘`](?P<b>[^'’]+)['’]"
+   ],
+   "title": "Nieprawidłowe działanie `{op}` na typach `{a}` i `{b}`",
+   "explanation": "Tego operatora nie da się użyć z tymi typami. Typowe: `%` na double (użyj fmod), `^` na double, dodawanie wskaźników, porównywanie struktur bez operatora, działania na wynikach funkcji void.",
+   "fix": "Sprawdź typy obu stron; dla double zamiast `%` użyj `fmod(a, b)`, potęgi to `pow`, nie `^`.",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-match-operator",
+   "match": [
+    "no match for ['‘`]operator(?P<op>[^'’]+)['’]"
+   ],
+   "title": "Brak operatora `{op}` dla tych typów",
+   "explanation": "Dla tych typów nie istnieje operator `{op}`.",
+   "fix": "Sprawdź typy argumentów; dla struktur zdefiniuj operator.",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "invalid-conversion",
+   "match": [
+    "invalid conversion from ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’]"
+   ],
+   "title": "Niedozwolona konwersja `{from}` → `{to}`",
+   "explanation": "Wartości typu `{from}` nie można niejawnie zamienić na `{to}` — zwykle int ↔ wskaźnik (brak `&` albo `*`), const char* → char*, albo przekazanie tablicy tam, gdzie oczekiwana jest liczba.",
+   "fix": "Sprawdź, czy nie brakuje `&`/`*` albo indeksu `[i]`; dla napisów używaj `string`.",
+   "kb": "num-int-types",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "cannot-convert",
+   "match": [
+    "cannot convert ['‘`](?P<from>[^'’]+)['’](?: \\{aka [^}]*\\})? to ['‘`](?P<to>[^'’]+)['’]",
+    "no viable conversion from ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’]",
+    "no viable conversion from returned value of type ['‘`](?P<from>[^'’]+)['’] to function return type ['‘`](?P<to>[^'’]+)['’]",
+    "cannot initialize a (?:variable|parameter|return object) of type ['‘`](?P<to>[^'’]+)['’] with an (?:l|r)value of type ['‘`](?P<from>[^'’]+)['’]",
+    "assigning to ['‘`](?P<to>[^'’]+)['’] from incompatible type ['‘`](?P<from>[^'’]+)['’]",
+    "conversion from ['‘`](?P<from>[^'’]+)['’] to non-scalar type ['‘`](?P<to>[^'’]+)['’] requested"
+   ],
+   "title": "Nie można zamienić `{from}` na `{to}`",
+   "explanation": "Próbujesz przypisać/przekazać wartość typu `{from}` tam, gdzie wymagany jest `{to}`. Typowe pomyłki: iterator zamiast wartości (`int x = v.begin()` → `*v.begin()`), string zamiast int (użyj `stoi`), znak zamiast napisu, vector zamiast elementu.",
+   "fix": "Dopasuj typy: `*it` dla wartości iteratora, `stoi(s)` dla liczby z napisu, `to_string(x)` dla napisu z liczby.",
+   "kb": "num-int-types",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "lvalue-required",
+   "match": [
+    "lvalue required as (?P<what>left operand of assignment|increment operand|decrement operand|unary '&' operand)",
+    "expression is not assignable",
+    "using an rvalue as an lvalue",
+    "cannot increment value of type",
+    "cannot take the address of an rvalue"
+   ],
+   "title": "Nie można przypisać do tego wyrażenia",
+   "explanation": "Po lewej stronie `=` (albo przy `++`) musi stać zmienna. Typowe: `if (a + b = c)` zamiast `==`, `5 = x`, `f() = 3`, `++(a + b)`.",
+   "fix": "Użyj `==` w warunkach; przypisuj tylko do zmiennych.",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "read-only",
+   "match": [
+    "assignment of read-only (?:variable|location|reference|member|parameter) ['‘`](?P<name>[^'’]+)['’]",
+    "cannot assign to (?:variable|non-static data member|return value) ['‘`]?(?P<name>[^'’ ]+)['’]? with const-qualified type",
+    "read-only variable is not assignable",
+    "increment of read-only (?:variable|location) ['‘`](?P<name>[^'’]+)['’]",
+    "decrement of read-only (?:variable|location) ['‘`](?P<name>[^'’]+)['’]"
+   ],
+   "title": "Zmiana stałej `{name}`",
+   "explanation": "`{name}` jest `const` (albo jest elementem przekazanym jako `const&`, albo zmienną pętli `for (const auto& x : v)`) — nie można jej zmieniać.",
+   "fix": "Usuń `const` albo pracuj na kopii; w pętli użyj `auto& x`.",
+   "kb": "num-int-types",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "discards-qualifiers",
+   "match": [
+    "passing ['‘`](?P<t>[^'’]+)['’](?: \\{aka [^}]*\\})? as ['‘`]this['’] argument discards qualifiers",
+    "['‘`]this['’] argument to member function ['‘`](?P<fn>[^'’]+)['’] has type ['‘`](?P<t>[^'’]+)['’], but function is not marked const",
+    "binding reference of type .* discards qualifiers",
+    "drops 'const' qualifier",
+    "candidate function not viable: 'this' argument has type '(?P<t>[^']+)', but method is not marked const"
+   ],
+   "title": "Metoda bez const na stałym obiekcie (`{t}`)",
+   "explanation": "Obiekt jest const (np. parametr `const map<...>& m` albo element w `set`), a wołasz na nim metodę, która może go zmienić (np. `m[k]` na mapie albo swoją metodę bez `const`).",
+   "fix": "Dla map używaj `m.at(k)`/`m.find(k)`; w swoich strukturach dopisz `const` do metod tylko-do-odczytu: `int f() const {...}`.",
+   "kb": "stl-map",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-member",
+   "match": [
+    "['‘`](?P<t>[^'’]+)['’](?: \\{aka [^}]*\\})? has no member named ['‘`](?P<mem>[^'’]+)['’](?:; did you mean ['‘`](?P<sug>[^'’]+)['’])?",
+    "no member named ['‘`](?P<mem>[^'’]+)['’] in ['‘`](?P<t>[^'’]+)['’](?:; did you mean ['‘`](?P<sug>[^'’]+)['’])?"
+   ],
+   "title": "`{t}` nie ma metody/pola `{mem}`",
+   "explanation": "Typ `{t}` nie ma składowej `{mem}`. Typowe pomyłki: `v.push()` (vector ma push_back), `q.push_back` (queue ma push), `s.length` bez nawiasów, `pq.front()` (priority_queue ma top), `st.top()` na queue, literówka w polu struktury.",
+   "fix": "Sprawdź nazwę metody w dokumentacji danego kontenera.",
+   "kb": "stl-vector",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "member-non-class",
+   "match": [
+    "request for member ['‘`](?P<mem>[^'’]+)['’] in ['‘`]?(?P<obj>[^'’]+)['’]?, which is of non-class type ['‘`](?P<t>[^'’]+)['’]",
+    "member reference base type ['‘`](?P<t>[^'’]+)['’] is not a structure or union"
+   ],
+   "title": "`.{mem}` na czymś, co nie jest obiektem (typ `{t}`)",
+   "explanation": "Kropki używasz na liczbie/wskaźniku/funkcji. Klasyczna pułapka: `vector<int> v();` to deklaracja FUNKCJI, nie vectora; albo `int n; n.size()`, albo wskaźnik (wtedy `->`).",
+   "fix": "Usuń puste nawiasy: `vector<int> v;`; dla wskaźnika: `p->x`.",
+   "kb": "stl-vector",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "arrow-non-pointer",
+   "match": [
+    "base operand of '->' has non-pointer type",
+    "member reference type ['‘`](?P<t>[^'’]+)['’] is not a pointer",
+    "base operand of '->' is not a pointer"
+   ],
+   "title": "`->` na obiekcie, który nie jest wskaźnikiem",
+   "explanation": "`a->x` jest dla wskaźników; dla zwykłego obiektu/iteratora pary używaj `a.x`.",
+   "fix": "Zamień `->` na `.` (albo `(*it).x` / `it->x` dla iteratorów).",
+   "kb": "cpp-pointers-vs-indices",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "nonstatic-member-call",
+   "match": [
+    "invalid use of non-static member function",
+    "reference to non-static member function must be called",
+    "invalid use of member function .* \\(did you forget the '\\(\\)' \\?\\)"
+   ],
+   "title": "Brak nawiasów `()` przy wywołaniu metody",
+   "explanation": "Napisałeś np. `v.size` zamiast `v.size()` — bez nawiasów to nazwa metody, a nie jej wynik.",
+   "fix": "Dopisz `()`: `v.size()`, `s.length()`, `q.empty()`.",
+   "kb": "stl-vector",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "invalid-subscript",
+   "match": [
+    "invalid types ['‘`](?P<t>[^'’]+)['’] for array subscript",
+    "subscripted value is not an array, pointer, or vector"
+   ],
+   "title": "Indeksowanie czegoś, co nie jest tablicą",
+   "explanation": "Używasz `x[i]` na zwykłej liczbie (np. zmienna przesłoniła tablicę, za dużo wymiarów `a[i][j]` dla tablicy 1D, albo zapomniałeś, że to int).",
+   "fix": "Sprawdź deklarację: czy to na pewno tablica/vector i ile ma wymiarów.",
+   "kb": "pit-out-of-bounds",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "not-a-function",
+   "match": [
+    "['‘`](?P<name>[^'’]+)['’] cannot be used as a function",
+    "called object type ['‘`](?P<t>[^'’]+)['’] is not a function or function pointer",
+    "expression cannot be used as a function"
+   ],
+   "title": "`{name}` nie jest funkcją",
+   "explanation": "Wywołujesz `{name}(...)`, ale `{name}` to zmienna (często zmienna przesłania funkcję, np. `int max = 0;` a potem `max(a, b)`, albo `int sum; sum(…)`). Albo brakuje operatora: `2(x+1)` zamiast `2*(x+1)`.",
+   "fix": "Zmień nazwę zmiennej albo dopisz brakujący `*`.",
+   "kb": "pit-name-collisions",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "too-many-args",
+   "match": [
+    "too many arguments to function ['‘`](?P<fn>[^'’]+)['’]",
+    "too many arguments to function call, expected (?P<n>\\d+), have (?P<m>\\d+)",
+    "too many arguments provided to function-like macro invocation"
+   ],
+   "title": "Za dużo argumentów w wywołaniu",
+   "explanation": "Funkcja przyjmuje mniej parametrów, niż jej podajesz.",
+   "fix": "Porównaj wywołanie z deklaracją funkcji.",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "too-few-args",
+   "match": [
+    "too few arguments to function ['‘`](?P<fn>[^'’]+)['’]",
+    "too few arguments to function call, (?:single argument|expected)",
+    "too few arguments provided to function-like macro invocation"
+   ],
+   "title": "Za mało argumentów w wywołaniu",
+   "explanation": "Funkcja wymaga więcej parametrów, niż podałeś.",
+   "fix": "Dopisz brakujące argumenty (albo nadaj parametrom wartości domyślne).",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "ambiguous-call",
+   "match": [
+    "call of overloaded ['‘`](?P<fn>[^'’]+)['’] is ambiguous",
+    "call to ['‘`](?P<fn>[^'’]+)['’] is ambiguous"
+   ],
+   "title": "Niejednoznaczne wywołanie `{fn}`",
+   "explanation": "Pasuje kilka wersji funkcji naraz — np. `abs(x)` dla unsigned/size_t, `pow(int, int)` na starych kompilatorach, `sqrt` z liczbą całkowitą w niektórych bibliotekach.",
+   "fix": "Rzutuj argument na konkretny typ: `abs((long long)x)`, `sqrt((double)n)`.",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "void-value",
+   "match": [
+    "void value not ignored as it ought to be",
+    "variable has incomplete type 'void'",
+    "cannot initialize a variable of type ['‘`](?P<t>[^'’]+)['’] with an rvalue of type 'void'"
+   ],
+   "title": "Używasz wyniku funkcji void",
+   "explanation": "Funkcja zwraca `void` (nic), a próbujesz użyć jej wyniku — np. `int x = v.push_back(1);` albo `cout << sortuj(v)`.",
+   "fix": "Wywołaj funkcję osobno, bez używania wyniku, albo zmień jej typ zwracany.",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "void-return-value",
+   "match": [
+    "return-statement with a value, in function returning 'void'",
+    "void function ['‘`](?P<fn>[^'’]+)['’] should not return a value"
+   ],
+   "title": "return z wartością w funkcji void",
+   "explanation": "Funkcja jest `void`, a zwracasz z niej wartość.",
+   "fix": "Zmień typ funkcji na `int`/`long long`/… albo napisz samo `return;`.",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "return-no-value",
+   "match": [
+    "return-statement with no value, in function returning ['‘`](?P<t>[^'’]+)['’]",
+    "non-void function ['‘`](?P<fn>[^'’]+)['’] should return a value"
+   ],
+   "title": "Pusty return w funkcji zwracającej wartość",
+   "explanation": "Funkcja ma zwracać wartość, a `return;` nic nie zwraca.",
+   "fix": "Napisz `return wartość;`.",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "bind-rvalue",
+   "match": [
+    "cannot bind non-const lvalue reference of type ['‘`](?P<t>[^'’]+)['’] to an rvalue of type ['‘`](?P<f>[^'’]+)['’]",
+    "non-const lvalue reference to type ['‘`](?P<t>[^'’]+)['’] cannot bind to a temporary of type ['‘`](?P<f>[^'’]+)['’]",
+    "invalid initialization of non-const reference of type ['‘`](?P<t>[^'’]+)['’]"
+   ],
+   "title": "Referencja do wartości tymczasowej",
+   "explanation": "Funkcja przyjmuje `T&` (referencję do zmiennej), a przekazujesz wyrażenie tymczasowe (np. `f(a + 1)`, `f(5)`, `swap(v[i], 3)`).",
+   "fix": "Zmień parametr na `const T&` albo `T` (przez wartość) albo przekaż zmienną.",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "array-size-not-const",
+   "match": [
+    "array bound is not an integer constant",
+    "size of array ['‘`](?P<name>[^'’]+)['’] is not an integral constant-expression",
+    "variable-sized object may not be initialized",
+    "variable-sized object ['‘`](?P<name>[^'’]+)['’] may not be initialized",
+    "variable-sized object of type .* may not be initialized"
+   ],
+   "title": "Tablica o zmiennym rozmiarze nie może mieć inicjalizacji",
+   "explanation": "`int a[n] = {0};` jest niedozwolone, bo n nie jest stałą (to VLA). Takiej tablicy nie da się wyzerować przy deklaracji.",
+   "fix": "Użyj `vector<int> a(n, 0);` albo stałego rozmiaru `int a[MAXN] = {};` (globalnie).",
+   "kb": "cpp-global-vs-local",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "array-too-large",
+   "match": [
+    "size of array ['‘`](?P<name>[^'’]+)['’] is (?:negative|too large)",
+    "array is too large",
+    "size ['‘`]?(?P<sz>\\d+)['’]? of array ['‘`](?P<name>[^'’]+)['’] exceeds maximum object size",
+    "total size of array must not exceed"
+   ],
+   "title": "Tablica za duża (lub ujemny rozmiar)",
+   "explanation": "Rozmiar tablicy przekracza możliwości (np. `int a[100000][100000]` = 40 GB) albo jest ujemny (przepełnienie w wyrażeniu stałym).",
+   "fix": "Policz pamięć: 10⁸ intów to 400 MB. Zmień algorytm albo typ.",
+   "kb": "pit-out-of-bounds",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "excess-init",
+   "match": [
+    "excess elements in (?:array|scalar|struct) initializer",
+    "too many initializers for"
+   ],
+   "title": "Za dużo wartości w inicjalizacji",
+   "explanation": "Podałeś więcej wartości w `{...}`, niż tablica/struktura może pomieścić.",
+   "fix": "Powiększ tablicę albo usuń nadmiarowe wartości.",
+   "kb": "pit-out-of-bounds",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "narrowing-error",
+   "match": [
+    "narrowing conversion of ['‘`](?P<e>[^'’]+)['’] from ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’]",
+    "non-constant-expression cannot be narrowed from type ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’]",
+    "constant expression evaluates to (?P<v>-?\\d+) which cannot be narrowed to type ['‘`](?P<to>[^'’]+)['’]",
+    "type ['‘`](?P<from>[^'’]+)['’] cannot be narrowed to ['‘`](?P<to>[^'’]+)['’]"
+   ],
+   "title": "Zawężająca konwersja w klamrach `{from}` → `{to}`",
+   "explanation": "Inicjalizacja klamrowa `{...}` zabrania utraty danych: wartość `{from}` może się nie zmieścić w `{to}` (np. `int a{llvar}`, `vector<int> v = {x}` z long long, `pair<int,int>{a, b}` z long long).",
+   "fix": "Ujednolić typy (np. wszędzie long long) albo rzutuj jawnie `(int)x`.",
+   "level": "warning",
+   "kb": "num-int-types",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "file-not-found",
+   "match": [
+    "(?P<hdr>[\\w./+\\-]+\\.h(?:pp)?|[\\w./+\\-]+): No such file or directory",
+    "['‘`](?P<hdr>[^'’]+)['’] file not found",
+    "cannot open source file \\\"(?P<hdr>[^\\\"]+)\\\""
+   ],
+   "title": "Nie znaleziono pliku `{hdr}`",
+   "explanation": "Kompilator nie może znaleźć dołączanego pliku — literówka w nazwie nagłówka, nagłówek tylko z Windows (conio.h) albo `bits/stdc++.h` na kompilatorze, który go nie ma (clang/MSVC na macOS/Windows).",
+   "fix": "Popraw nazwę (np. `<iostream>`, `<vector>`, `<algorithm>`).",
+   "kb": "oi-sio2",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "undefined-reference",
+   "match": [
+    "undefined reference to ['‘`](?P<sym>[^'’]+)['’]",
+    "Undefined symbols",
+    "symbol\\(s\\) not found",
+    "undefined symbol: (?P<sym>.+)",
+    "unresolved external symbol (?P<sym>\\S+)"
+   ],
+   "title": "Funkcja zadeklarowana, ale nie zdefiniowana (linker)",
+   "explanation": "Kod się skompilował, ale linker nie znalazł CIAŁA funkcji/zmiennej `{sym}`. Typowo: napisałeś tylko nagłówek `int f(int);` bez definicji, definicja ma inne parametry/nazwę niż deklaracja (np. `f(int)` vs `f(long long)`), metoda struktury bez ciała albo zmienna `extern`/`static` w strukturze bez definicji.",
+   "fix": "Dopisz definicję funkcji (z identycznymi typami parametrów) albo popraw literówkę w nazwie.",
+   "kb": "cpp-references",
+   "compilers": [
+    "ld"
+   ]
+  },
+  {
+   "id": "multiple-definition",
+   "match": [
+    "multiple definition of ['‘`](?P<sym>[^'’]+)['’]",
+    "duplicate symbol ['‘`]?(?P<sym>[^'’\\s]+)"
+   ],
+   "title": "Podwójna definicja `{sym}` (linker)",
+   "explanation": "Ta sama funkcja/zmienna globalna jest zdefiniowana w dwóch miejscach (np. dwa pliki .cpp kompilowane razem albo definicja w nagłówku dołączanym dwa razy).",
+   "fix": "Zostaw jedną definicję; w nagłówkach używaj `inline` albo deklaracji `extern`.",
+   "kb": "cpp-references",
+   "compilers": [
+    "ld"
+   ]
+  },
+  {
+   "id": "ld-failed",
+   "match": [
+    "ld returned \\d+ exit status",
+    "linker command failed with exit code",
+    "error: linker command failed"
+   ],
+   "title": "Linkowanie nie powiodło się",
+   "explanation": "To skutek wcześniejszego błędu linkera (zobacz wyżej: undefined reference / multiple definition).",
+   "fix": "Napraw pierwszy błąd linkera.",
+   "kb": "cpp-references",
+   "compilers": [
+    "ld"
+   ]
+  },
+  {
+   "id": "relocation",
+   "match": [
+    "relocation truncated to fit",
+    "relocation R_X86_64_PC32 against",
+    "too large for the memory model"
+   ],
+   "title": "Za duże tablice globalne (relocation truncated)",
+   "explanation": "Łączny rozmiar tablic globalnych przekracza ~2 GB — linker nie potrafi ich zaadresować.",
+   "fix": "Zmniejsz tablice (sprawdź rozmiary i typy) albo użyj vectora.",
+   "kb": "pit-out-of-bounds",
+   "compilers": [
+    "ld"
+   ]
+  },
+  {
+   "id": "control-reaches-end",
+   "match": [
+    "control reaches end of non-void function",
+    "non-void function does not return a value(?: in all control paths)?",
+    "control may reach end of non-void function",
+    "no return statement in function returning non-void"
+   ],
+   "title": "Funkcja może nie zwrócić wartości",
+   "explanation": "Wykonanie może dojść do końca funkcji nie-void bez `return`. To niezdefiniowane zachowanie — przy -O2 program potrafi zwrócić śmieci, wpaść w pętlę albo się wysypać (na sprawdzarce inaczej niż u Ciebie).",
+   "fix": "Dodaj `return ...;` na końcu funkcji (również dla przypadku „nie znaleziono”).",
+   "level": "error",
+   "kb": "oi-compile-flags",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "uninitialized",
+   "match": [
+    "['‘`](?P<name>[^'’]+)['’] is used uninitialized",
+    "variable ['‘`](?P<name>[^'’]+)['’] is uninitialized when used here",
+    "variable ['‘`](?P<name>[^'’]+)['’] is used uninitialized whenever",
+    "['‘`](?P<name>[^'’]+)['’] may be used uninitialized",
+    "variable ['‘`](?P<name>[^'’]+)['’] is uninitialized when (?:passed as a const reference argument|used within its own initialization)"
+   ],
+   "title": "Zmienna `{name}` użyta bez wartości początkowej",
+   "explanation": "`{name}` jest zmienną lokalną bez inicjalizacji — zawiera przypadkowe śmieci z pamięci (lokalne zmienne NIE są zerowane, tylko globalne). Wynik może być inny przy każdym uruchomieniu i na sprawdzarce.",
+   "fix": "Nadaj wartość przy deklaracji: `int {name} = 0;`.",
+   "level": "error",
+   "kb": "pit-uninitialized",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "array-bounds",
+   "match": [
+    "array subscript (?P<idx>-?\\d+) is (?:above|below|outside) array bounds of (?P<t>.+)",
+    "array subscript (?P<idx>-?\\d+) is (?:above|below|outside) array bounds",
+    "array index (?P<idx>-?\\d+) is past the end of the array",
+    "array index (?P<idx>-?\\d+) is before the beginning of the array",
+    "array subscript is (?:above|below) array bounds"
+   ],
+   "title": "Indeks {idx} poza tablicą (wykryte przy kompilacji)",
+   "explanation": "Kompilator widzi, że indeks {idx} wychodzi poza rozmiar tablicy. To niezdefiniowane zachowanie: nadpisanie innych zmiennych albo crash.",
+   "fix": "Powiększ tablicę (np. o 1–5 elementów zapasu) albo popraw granice pętli (`<` zamiast `<=`).",
+   "level": "error",
+   "kb": "pit-out-of-bounds",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "aggressive-loop",
+   "match": [
+    "iteration (?P<it>\\d+) invokes undefined behavior"
+   ],
+   "title": "Pętla wychodzi poza tablicę w iteracji {it}",
+   "explanation": "Kompilator wyliczył, że w {it}. obrocie pętli dochodzi do UB (zwykle indeks = rozmiar tablicy albo przepełnienie). Przy -O2 może przez to „wyciąć” warunek pętli — program zachowuje się absurdalnie (np. pętla nieskończona).",
+   "fix": "Sprawdź warunek pętli (`i < n` zamiast `i <= n`) i rozmiar tablicy.",
+   "level": "error",
+   "kb": "pit-out-of-bounds",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "overflow-const",
+   "match": [
+    "integer overflow in expression of type ['‘`](?P<t>[^'’]+)['’] results in ['‘`](?P<v>[^'’]+)['’]",
+    "overflow in expression; result is (?P<v>-?\\d+) with type ['‘`](?P<t>[^'’]+)['’]",
+    "overflow in conversion from ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’] changes value from ['‘`]?(?P<a>[^'’ ]+)['’]? to ['‘`]?(?P<b>[^'’ ]+)['’]?",
+    "implicit conversion from ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’] changes value from (?P<a>\\S+) to (?P<b>\\S+)",
+    "integer overflow in expression",
+    "overflow in constant expression"
+   ],
+   "title": "Przepełnienie liczby w wyrażeniu stałym",
+   "explanation": "Kompilator policzył stałe wyrażenie i wynik nie mieści się w typie (np. `1000000 * 1000000` w int, `int x = 1e10`). Dostaniesz zupełnie inną liczbę (często ujemną).",
+   "fix": "Użyj long long: dopisz `LL` do stałej (`1000000LL * 1000000`).",
+   "level": "error",
+   "kb": "pit-int-overflow",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "shift-count",
+   "match": [
+    "left shift count >= width of type",
+    "shift count >= width of type",
+    "left shift count is negative",
+    "shift count is negative",
+    "result of ['‘`](?P<e>[^'’]+)['’] requires (?P<bits>\\d+) bits to represent, but ['‘`](?P<t>[^'’]+)['’] only has (?P<have>\\d+) bits",
+    "signed shift result \\((?P<v>[^)]+)\\) requires (?P<bits>\\d+) bits to represent, but ['‘`](?P<t>[^'’]+)['’] only has (?P<have>\\d+) bits"
+   ],
+   "title": "Przesunięcie bitowe poza zakres typu",
+   "explanation": "`1 << k` dla k ≥ 31 przepełnia int (literał 1 ma typ int). Wynik jest niezdefiniowany.",
+   "fix": "Pisz `1LL << k` (long long, do 62) albo `1ULL << k`.",
+   "level": "error",
+   "kb": "pit-int-overflow",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "div-by-zero",
+   "match": [
+    "division by zero",
+    "remainder by zero",
+    "division by zero is undefined",
+    "remainder by zero is undefined"
+   ],
+   "title": "Dzielenie przez zero",
+   "explanation": "Kompilator widzi stałe dzielenie przez 0 — w czasie działania to crash (SIGFPE).",
+   "fix": "Sprawdź dzielnik.",
+   "level": "error",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "format",
+   "match": [
+    "format ['‘`](?P<spec>%[^'’]+)['’] expects argument of type ['‘`](?P<want>[^'’]+)['’], but argument (?P<n>\\d+) has type ['‘`](?P<got>[^'’]+)['’]",
+    "format specifies type ['‘`](?P<want>[^'’]+)['’] but the argument has type ['‘`](?P<got>[^'’]+)['’]"
+   ],
+   "title": "Zły specyfikator formatu printf/scanf (`{want}` ≠ `{got}`)",
+   "explanation": "Format nie pasuje do typu argumentu: oczekiwany `{want}`, podany `{got}`. printf wypisze śmieci, scanf zapisze złą liczbę bajtów (nadpisze pamięć).",
+   "fix": "int: `%d`, long long: `%lld`, unsigned long long/size_t: `%llu`/`%zu`, double: `%lf` (scanf) / `%f` (printf), char: `%c`, napis char[]: `%s` (dla string: `.c_str()`).",
+   "level": "error",
+   "kb": "io-printf-formats",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "format-args",
+   "match": [
+    "too many arguments for format",
+    "data argument not used by format string",
+    "format ['‘`](?P<spec>[^'’]+)['’] expects a matching ['‘`](?P<want>[^'’]+)['’] argument",
+    "more '%' conversions than data arguments"
+   ],
+   "title": "Liczba argumentów nie pasuje do formatu",
+   "explanation": "Liczba specyfikatorów `%` różni się od liczby podanych argumentów.",
+   "fix": "Dopasuj liczbę `%…` do liczby argumentów.",
+   "level": "error",
+   "kb": "io-printf-formats",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "return-local-addr",
+   "match": [
+    "reference to local variable ['‘`](?P<name>[^'’]+)['’] returned",
+    "address of local variable ['‘`](?P<name>[^'’]+)['’] returned",
+    "reference to stack memory associated with local variable ['‘`](?P<name>[^'’]+)['’] returned",
+    "address of stack memory associated with local variable ['‘`](?P<name>[^'’]+)['’] returned",
+    "function returns address of local variable"
+   ],
+   "title": "Zwracasz referencję/adres zmiennej lokalnej `{name}`",
+   "explanation": "Zmienna lokalna znika po wyjściu z funkcji — zwrócona referencja/wskaźnik wskazuje na nieistniejącą pamięć (UB).",
+   "fix": "Zwracaj przez wartość (`int f()`, `vector<int> f()`), nie przez `&`.",
+   "level": "error",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "sequence-point",
+   "match": [
+    "operation on ['‘`](?P<name>[^'’]+)['’] may be undefined",
+    "multiple unsequenced modifications to ['‘`](?P<name>[^'’]+)['’]",
+    "unsequenced modification and access to ['‘`](?P<name>[^'’]+)['’]"
+   ],
+   "title": "Niezdefiniowana kolejność operacji na `{name}`",
+   "explanation": "W jednym wyrażeniu zmieniasz `{name}` i jednocześnie go używasz (np. `i = i++ + 1`, `a[i] = i++`, `f(i++, i)`). Wynik zależy od kompilatora.",
+   "fix": "Rozbij na osobne instrukcje: najpierw `i++;`, potem reszta.",
+   "level": "error",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "type-limits",
+   "match": [
+    "comparison of unsigned expression in ['‘`](?P<cmp>[^'’]+)['’] is always (?P<v>true|false)",
+    "comparison is always (?P<v>true|false) due to limited range of data type",
+    "result of comparison of unsigned expression (?P<cmp>\\S+ \\d+) is always (?P<v>true|false)",
+    "comparison of unsigned expression (?P<cmp>\\S+ \\d+) is always (?P<v>true|false)",
+    "result of comparison of constant (?P<c>\\S+) with expression of type '(?P<t>[^']+)' is always (?P<v>true|false)"
+   ],
+   "title": "Porównanie zawsze daje {v} (typ bez znaku)",
+   "explanation": "Zmienna bez znaku (unsigned, size_t, wynik .size()) nigdy nie jest ujemna, więc `x >= 0` jest zawsze prawdą — pętla w dół `for (unsigned i = n; i >= 0; i--)` nigdy się nie skończy.",
+   "fix": "Użyj `int` dla liczników pętli w dół.",
+   "level": "error",
+   "kb": "pit-unsigned-size",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "sizeof-array-arg",
+   "match": [
+    "['‘`]sizeof['’] on array function parameter ['‘`](?P<name>[^'’]+)['’] will return size of ['‘`](?P<t>[^'’]+)['’]",
+    "sizeof on array function parameter will return size of ['‘`](?P<t>[^'’]+)['’]",
+    "argument to 'sizeof' in '[^']*' call is the same expression as the destination"
+   ],
+   "title": "sizeof na parametrze-tablicy = rozmiar wskaźnika",
+   "explanation": "W funkcji parametr `int a[]` to wskaźnik — `sizeof(a)` zwraca 8, a nie rozmiar tablicy. memset wyczyści tylko 8 bajtów.",
+   "fix": "Przekazuj rozmiar osobno albo używaj vectora.",
+   "level": "error",
+   "kb": "pit-memset",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "class-memaccess",
+   "match": [
+    "clearing an object of (?:non-trivial )?type '(?P<t>[^']+)'",
+    "'(?:void\\* )?memset[^']*' clearing an object of",
+    "destination for this 'memset' call is a pointer to"
+   ],
+   "title": "memset na obiekcie klasy (vector/string)",
+   "explanation": "memset nadpisuje surowe bajty — dla vectora/stringa niszczy jego wewnętrzne pola.",
+   "fix": "Użyj `fill`, `assign` albo przypisz nowy obiekt: `v.assign(n, 0);`.",
+   "level": "error",
+   "kb": "pit-memset",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "null-deref",
+   "match": [
+    "potential null pointer dereference",
+    "null passed to a callee that requires a non-null argument",
+    "binding dereferenced null pointer to reference has undefined behavior"
+   ],
+   "title": "Możliwa dereferencja nullptr",
+   "explanation": "Wskaźnik może być pusty w miejscu użycia.",
+   "fix": "Sprawdź `if (p)` przed użyciem.",
+   "level": "warning",
+   "kb": "cpp-pointers-vs-indices",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "stringop-overflow",
+   "match": [
+    "writing (?P<n>\\d+) bytes? into a region of size (?P<m>\\d+)",
+    "'(?:memcpy|memset|strcpy)' writing (?P<n>\\d+) bytes into a region of size (?P<m>\\d+)"
+   ],
+   "title": "Zapis poza bufor ({n} B do obszaru {m} B)",
+   "explanation": "Kompilator wykrył zapis większej liczby bajtów niż pomieści cel.",
+   "fix": "Powiększ bufor albo popraw rozmiar w memcpy/memset.",
+   "level": "error",
+   "kb": "pit-memset",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "infinite-recursion",
+   "match": [
+    "infinite recursion detected",
+    "all paths through this function will call itself"
+   ],
+   "title": "Nieskończona rekurencja",
+   "explanation": "Każda ścieżka w tej funkcji wywołuje ją ponownie — brak warunku stopu. Program przepełni stos (crash) albo — po optymalizacji — zawiśnie.",
+   "fix": "Dodaj przypadek bazowy (`if (n == 0) return ...;`) przed wywołaniem rekurencyjnym.",
+   "level": "error",
+   "kb": "pit-stack-overflow",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "dangling-pointer",
+   "match": [
+    "dangling pointer",
+    "possibly dangling reference to a temporary",
+    "temporary whose address is used"
+   ],
+   "title": "Wskaźnik/referencja do nieistniejącego obiektu",
+   "explanation": "Referencja lub wskaźnik pokazuje na obiekt tymczasowy, który już nie istnieje.",
+   "fix": "Przechowuj kopię wartości zamiast referencji.",
+   "level": "error",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "range-loop-copy",
+   "match": [
+    "loop variable '(?P<name>[^']+)' (?:creates a copy from type|of type .* binds to a temporary)",
+    "loop variable '(?P<name>[^']+)' is always a copy"
+   ],
+   "title": "Pętla for kopiuje elementy (`{name}`)",
+   "explanation": "Zmienna pętli range-for jest kopią — przy dużych elementach to wolne, a zmiany nie trafiają do kontenera.",
+   "fix": "Użyj `const auto& x` (odczyt) albo `auto& x` (modyfikacja).",
+   "level": "perf",
+   "kb": "stl-vector",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "free-nonheap",
+   "match": [
+    "'free' called on|'operator delete' called on (?:unallocated|a pointer to an unallocated) object",
+    "attempt to free a non-heap object"
+   ],
+   "title": "delete/free na pamięci spoza new/malloc",
+   "explanation": "Zwalniasz pamięć, która nie pochodzi z new/malloc (np. tablicę lokalną).",
+   "fix": "Usuń delete/free dla takich obiektów.",
+   "level": "error",
+   "kb": "cpp-pointers-vs-indices",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "parentheses-assign",
+   "match": [
+    "suggest parentheses around assignment used as truth value",
+    "using the result of an assignment as a condition without parentheses"
+   ],
+   "title": "`=` w warunku (czy chodziło o `==`?)",
+   "explanation": "W warunku jest przypisanie — zmienia wartość zmiennej, a warunek jest prawdziwy, gdy przypisana wartość ≠ 0.",
+   "fix": "Porównanie to `==`; jeśli przypisanie jest celowe — dodatkowe nawiasy `if ((x = f()))`.",
+   "level": "error",
+   "kb": "pit-assign-vs-compare",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "parentheses-bitwise",
+   "match": [
+    "suggest parentheses around comparison in operand of '(?P<op>[&|^])'",
+    "(?P<op>[&|^]) has lower precedence than (?P<op2>==|!=|<|>|<=|>=); (?P<e>.+) will be evaluated first"
+   ],
+   "title": "Priorytet operatora `{op}` (np. x & 1 == 0)",
+   "explanation": "`==` wiąże mocniej niż `&`, `|`, `^`: `x & 1 == 0` to `x & (1 == 0)` = 0. Wynik jest inny, niż zamierzasz.",
+   "fix": "Dodaj nawiasy: `(x & 1) == 0`.",
+   "level": "error",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "parentheses-andor",
+   "match": [
+    "suggest parentheses around '&&' within '\\|\\|'",
+    "'&&' within '\\|\\|'"
+   ],
+   "title": "Mieszanie && i || bez nawiasów",
+   "explanation": "`&&` ma wyższy priorytet niż `||` — upewnij się, że kolejność jest taka, jak chcesz.",
+   "fix": "Dodaj nawiasy, żeby było jasne, co się wykonuje najpierw.",
+   "level": "style",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "parentheses-shift",
+   "match": [
+    "suggest parentheses around '[+-]' inside '<<'",
+    "operator '<<' has lower precedence than '[+-]'"
+   ],
+   "title": "Priorytet `<<` i `+`/`-`",
+   "explanation": "`1 << n - 1` to `1 << (n - 1)` — `+`/`-` wiążą mocniej niż `<<`.",
+   "fix": "Dodaj nawiasy zgodnie z intencją.",
+   "level": "warning",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "misleading-indentation",
+   "match": [
+    "this ['‘`](?P<kw>if|for|while|else)['’] clause does not guard",
+    "misleading indentation; statement is not part of the previous ['‘`](?P<kw>[^'’]+)['’]"
+   ],
+   "title": "Mylące wcięcie (instrukcja nie należy do `{kw}`)",
+   "explanation": "Bez klamer `{ }` do `{kw}` należy tylko JEDNA następna instrukcja — kolejna, choć wcięta, wykonuje się zawsze.",
+   "fix": "Weź obie instrukcje w klamry `{ ... }`.",
+   "level": "error",
+   "kb": "pit-assign-vs-compare",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "empty-body",
+   "match": [
+    "suggest braces around empty body in an? '(?P<kw>if|else|for|while|do)' statement",
+    "(?P<kw>if|for|while) statement has empty body",
+    "for loop has empty body",
+    "while loop has empty body"
+   ],
+   "title": "Puste ciało `{kw}` (średnik po nawiasie?)",
+   "explanation": "Średnik zaraz po `{kw} (...)` kończy instrukcję — blok poniżej nie należy do niej.",
+   "fix": "Usuń średnik po nawiasie.",
+   "level": "error",
+   "kb": "pit-assign-vs-compare",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "fallthrough",
+   "match": [
+    "this statement may fall through",
+    "unannotated fall-through between switch labels"
+   ],
+   "title": "Brak `break` w case",
+   "explanation": "Po tym case wykonanie przechodzi do następnego, bo brakuje `break;`.",
+   "fix": "Dopisz `break;` (albo `[[fallthrough]];`, jeśli to zamierzone).",
+   "level": "warning",
+   "kb": "pit-assign-vs-compare",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "dangling-else",
+   "match": [
+    "suggest explicit braces to avoid ambiguous 'else'",
+    "add explicit braces to avoid dangling else"
+   ],
+   "title": "Niejednoznaczne `else`",
+   "explanation": "`else` należy do NAJBLIŻSZEGO `if` — przy zagnieżdżonych if bez klamer łatwo o pomyłkę.",
+   "fix": "Dodaj klamry.",
+   "level": "warning",
+   "kb": "pit-assign-vs-compare",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "self-compare",
+   "match": [
+    "self-comparison always evaluates to (?P<v>true|false)",
+    "comparison of array '(?P<name>[^']+)' equal to a null pointer is always false",
+    "address of array '(?P<name>[^']+)' will always evaluate to 'true'",
+    "logical '(?:or|and)' of (?:collectively exhaustive|mutually exclusive) tests is always (?P<v>true|false)",
+    "duplicated 'if' condition",
+    "overlapping comparisons always evaluate to (?P<v>true|false)"
+   ],
+   "title": "Warunek ma zawsze tę samą wartość",
+   "explanation": "Wyrażenie jest zawsze prawdziwe albo zawsze fałszywe — np. `x == x`, `a > 5 || a < 10`, `if (tab)` dla tablicy, zduplikowany warunek w else-if.",
+   "fix": "Popraw warunek (literówka w nazwie zmiennej?).",
+   "level": "error",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "bool-context",
+   "match": [
+    "'\\*' in boolean context, suggest '&&' instead",
+    "\\?: using integer constants in boolean context",
+    "enum constant in boolean context",
+    "converting the result of '<<' to a boolean"
+   ],
+   "title": "Liczba w kontekście logicznym",
+   "explanation": "Wyrażenie arytmetyczne użyte jako warunek — prawdopodobnie pomyłka (np. `*` zamiast `&&`).",
+   "fix": "Sprawdź operator w warunku.",
+   "level": "warning",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "float-equal",
+   "match": [
+    "comparing floating-?point with '?==?'? or '?!='? is unsafe",
+    "comparing floating point with == or != is unsafe"
+   ],
+   "title": "Porównanie double przez ==",
+   "explanation": "Liczby zmiennoprzecinkowe mają błędy zaokrągleń — `0.1 + 0.2 == 0.3` jest fałszem.",
+   "fix": "Porównuj z tolerancją: `fabs(a - b) < 1e-9`.",
+   "level": "warning",
+   "kb": "num-floating",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "no-effect",
+   "match": [
+    "statement has no effect",
+    "expression result unused",
+    "left operand of comma operator has no effect",
+    "value computed is not used",
+    "equality comparison result unused",
+    "relational comparison result unused"
+   ],
+   "title": "Instrukcja nic nie robi",
+   "explanation": "Wynik wyrażenia jest wyrzucany — np. `x == 5;` (miało być `=`), `a[i, j]` (przecinek!), `v.size();`, `x + 1;`.",
+   "fix": "Przy przypisaniu użyj `=`; tablicę 2D indeksuj `a[i][j]`.",
+   "level": "warning",
+   "kb": "pit-bit-ops",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "char-subscripts",
+   "match": [
+    "array subscript has type 'char'",
+    "array subscript is of type 'char'"
+   ],
+   "title": "Indeks tablicy typu char",
+   "explanation": "char może być ujemny (dla znaków spoza ASCII) — wtedy indeks wychodzi przed tablicę.",
+   "fix": "Rzutuj: `cnt[(unsigned char)c]` albo `cnt[c - 'a']`.",
+   "level": "warning",
+   "kb": "pit-out-of-bounds",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "vla-warning",
+   "match": [
+    "ISO C\\+\\+ forbids variable length array ['‘`](?P<name>[^'’]+)['’]",
+    "variable length arrays (?:in C\\+\\+ )?are a (?:C99 feature|Clang extension)",
+    "ISO C\\+\\+ forbids variable length array"
+   ],
+   "title": "Tablica o zmiennej długości (VLA)",
+   "explanation": "`int a[n]` z n znanym dopiero w czasie działania to rozszerzenie kompilatora — leży na stosie i nie jest zerowane.",
+   "fix": "Użyj `vector<int> a(n);`.",
+   "level": "warning",
+   "kb": "cpp-global-vs-local",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "reorder",
+   "match": [
+    "['‘`](?P<a>[^'’]+)['’] will be initialized after",
+    "field '(?P<a>[^']+)' will be initialized after field"
+   ],
+   "title": "Kolejność inicjalizacji pól",
+   "explanation": "Pola struktury są inicjalizowane w kolejności deklaracji, nie w kolejności listy inicjalizacyjnej.",
+   "fix": "Ustaw listę inicjalizacyjną w tej samej kolejności co pola.",
+   "level": "style",
+   "kb": "cpp-struct",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "pessimizing-move",
+   "match": [
+    "moving a local object in a return statement prevents copy elision",
+    "redundant move in return statement"
+   ],
+   "title": "Zbędne std::move w return",
+   "explanation": "Kompilator i tak przenosi zwracany obiekt; move tylko przeszkadza optymalizacji.",
+   "fix": "Usuń `std::move` w return.",
+   "level": "style",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "sign-compare",
+   "match": [
+    "comparison of integer expressions of different signedness: ['‘`](?P<a>[^'’]+)['’] and ['‘`](?P<b>[^'’]+)['’]",
+    "comparison of integers of different signs: ['‘`](?P<a>[^'’]+)['’] and ['‘`](?P<b>[^'’]+)['’]",
+    "comparison between signed and unsigned integer expressions"
+   ],
+   "title": "Porównanie liczby ze znakiem i bez znaku",
+   "explanation": "Porównujesz `{a}` z `{b}` (np. `int i` z `v.size()`). Gdy liczba ze znakiem jest ujemna, zostaje zamieniona na ogromną dodatnią i wynik porównania się odwraca. Dla nieujemnych i to tylko ostrzeżenie.",
+   "fix": "`i < (int)v.size()` albo licznik typu `size_t` (tylko gdy nie schodzisz poniżej 0).",
+   "level": "style",
+   "kb": "pit-unsigned-size",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "conversion-float",
+   "match": [
+    "conversion from ['‘`](?P<from>double|float|long double)['’] to ['‘`](?P<to>[^'’]+)['’] may change value",
+    "conversion to ['‘`](?P<to>[^'’]+)['’] from ['‘`](?P<from>double|float|long double)['’] may alter its value",
+    "implicit conversion turns floating-point number into integer: ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’]"
+   ],
+   "title": "Liczba rzeczywista obcinana do całkowitej",
+   "explanation": "`{from}` → `{to}` obcina część ułamkową (2.99 → 2, nie zaokrągla!).",
+   "fix": "Jeśli chcesz zaokrąglić: `llround(x)`; jeśli obciąć — rzutuj jawnie `(long long)x`.",
+   "level": "warning",
+   "kb": "num-floating",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "conversion",
+   "match": [
+    "conversion from ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’] may change value",
+    "conversion to ['‘`](?P<to>[^'’]+)['’] from ['‘`](?P<from>[^'’]+)['’] may alter its value",
+    "implicit conversion loses integer precision: ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’]",
+    "implicit conversion loses floating-point precision: ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’]"
+   ],
+   "title": "Konwersja `{from}` → `{to}` może zgubić dane",
+   "explanation": "Wartość typu `{from}` trafia do mniejszego typu `{to}` — jeśli jest za duża, zostanie obcięta (np. long long → int powyżej 2,1·10⁹).",
+   "fix": "Zmień typ zmiennej docelowej na `{from}` albo rzutuj jawnie, jeśli wiesz, że się mieści.",
+   "level": "warning",
+   "kb": "num-int-types",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "sign-conversion",
+   "match": [
+    "conversion to ['‘`](?P<to>[^'’]+)['’] from ['‘`](?P<from>[^'’]+)['’] may change the sign of the result",
+    "implicit conversion changes signedness: ['‘`](?P<from>[^'’]+)['’] to ['‘`](?P<to>[^'’]+)['’]"
+   ],
+   "title": "Zmiana znaku przy konwersji `{from}` → `{to}`",
+   "explanation": "Liczba ujemna zamieniona na typ bez znaku staje się ogromna (-1 → 4294967295).",
+   "fix": "Używaj tych samych typów lub rzutuj jawnie.",
+   "level": "style",
+   "kb": "pit-unsigned-size",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "shadow",
+   "match": [
+    "declaration of ['‘`](?P<name>[^'’]+)['’] shadows a (?P<what>previous local|global declaration|parameter|member of)",
+    "declaration shadows a (?P<what>local variable|variable in the global namespace|field of|static data member)"
+   ],
+   "title": "Zmienna `{name}` przesłania inną o tej samej nazwie",
+   "explanation": "Nowa deklaracja ukrywa wcześniejszą zmienną ({what}). Typowa pułapka: lokalne `n` w main przesłania globalne `n`, którego używają inne funkcje (zostaje 0).",
+   "fix": "Zmień nazwę albo usuń zbędną deklarację (przypisz do istniejącej zmiennej).",
+   "level": "warning",
+   "kb": "cpp-global-vs-local",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "unused-variable",
+   "match": [
+    "unused variable ['‘`](?P<name>[^'’]+)['’]"
+   ],
+   "title": "Nieużywana zmienna `{name}`",
+   "explanation": "Zmienna jest zadeklarowana, ale nigdzie nie użyta.",
+   "fix": "Usuń ją (albo sprawdź, czy nie miałeś jej użyć zamiast innej).",
+   "level": "style",
+   "kb": "pit-uninitialized",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "unused-but-set",
+   "match": [
+    "variable ['‘`](?P<name>[^'’]+)['’] set but not used"
+   ],
+   "title": "Zmienna `{name}` ustawiana, ale nieczytana",
+   "explanation": "Przypisujesz wartość, ale nigdzie jej nie odczytujesz — może zapomniałeś ją wypisać?",
+   "fix": "Usuń zmienną albo wykorzystaj wynik.",
+   "level": "style",
+   "kb": "pit-uninitialized",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "unused-parameter",
+   "match": [
+    "unused parameter ['‘`](?P<name>[^'’]+)['’]"
+   ],
+   "title": "Nieużywany parametr `{name}`",
+   "explanation": "Parametr funkcji nie jest używany.",
+   "fix": "Usuń go albo pomiń nazwę.",
+   "level": "style",
+   "kb": "cpp-references",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "unused-result",
+   "match": [
+    "ignoring return value of",
+    "ignoring return value of function declared with"
+   ],
+   "title": "Zignorowany wynik funkcji",
+   "explanation": "Wynik funkcji (np. scanf) nie jest sprawdzany.",
+   "fix": "Na OI to zwykle niegroźne.",
+   "level": "info",
+   "kb": "io-printf-formats",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "deprecated",
+   "match": [
+    "is deprecated",
+    "deprecated conversion from string constant"
+   ],
+   "title": "Przestarzała konstrukcja",
+   "explanation": "Użyta funkcja/konstrukcja jest przestarzała w nowym standardzie.",
+   "fix": "Zamień na nowszy odpowiednik (np. `const char*` dla napisów).",
+   "level": "info",
+   "kb": "oi-debugging",
+   "compilers": [
+    "gcc",
+    "clang"
+   ]
+  },
+  {
+   "id": "py-indent",
+   "match": [
+    "IndentationError: (?P<msg>.*)",
+    "TabError: (?P<msg>.*)"
+   ],
+   "title": "Python: złe wcięcia",
+   "explanation": "Wcięcia nie pasują do bloków (`if`, `for`, `def`) — Python używa ich zamiast klamer.",
+   "fix": "Używaj konsekwentnie 4 spacji (nie mieszaj z tabulatorami).",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-syntax",
+   "match": [
+    "SyntaxError: (?P<msg>.*)"
+   ],
+   "title": "Python: błąd składni ({msg})",
+   "explanation": "Kod nie jest poprawnym Pythonem: brak dwukropka po if/for/def, niedomknięty nawias, `=` zamiast `==` w warunku, C++-owe `i++`.",
+   "fix": "Sprawdź wskazaną linię i poprzednią.",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-name",
+   "match": [
+    "NameError: name ['‘`](?P<name>[^'’]+)['’] is not defined"
+   ],
+   "title": "Python: nieznana nazwa `{name}`",
+   "explanation": "Zmienna/funkcja `{name}` nie została zdefiniowana przed użyciem (albo literówka).",
+   "fix": "Zdefiniuj ją wcześniej lub popraw nazwę.",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-index",
+   "match": [
+    "IndexError: (?P<msg>.*)"
+   ],
+   "title": "Python: indeks poza zakresem",
+   "explanation": "Odwołanie do nieistniejącego elementu listy/napisu.",
+   "fix": "Indeksy: 0 … len(a) - 1.",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-value",
+   "match": [
+    "ValueError: invalid literal for int\\(\\) with base 10: (?P<v>.*)",
+    "ValueError: (?P<msg>.*)"
+   ],
+   "title": "Python: zła wartość ({v})",
+   "explanation": "int() dostał napis, który nie jest liczbą (np. pusta linia, kilka liczb w jednej linii, '3.5').",
+   "fix": "Dla kilku liczb w linii: `a, b = map(int, input().split())`.",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-type",
+   "match": [
+    "TypeError: (?P<msg>.*)"
+   ],
+   "title": "Python: zły typ ({msg})",
+   "explanation": "Działanie na wartościach niepasujących typów (np. str + int, wywołanie liczby).",
+   "fix": "Zamień typy: `int(x)`, `str(x)`.",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-recursion",
+   "match": [
+    "RecursionError: maximum recursion depth exceeded"
+   ],
+   "title": "Python: za głęboka rekurencja",
+   "explanation": "Python domyślnie pozwala na ~1000 poziomów rekurencji.",
+   "fix": "`import sys; sys.setrecursionlimit(10**6)` albo przepisz na pętlę.",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-zero",
+   "match": [
+    "ZeroDivisionError: (?P<msg>.*)"
+   ],
+   "title": "Python: dzielenie przez zero",
+   "explanation": "Dzielnik był równy 0.",
+   "fix": "Sprawdź dzielnik przed dzieleniem.",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-key",
+   "match": [
+    "KeyError: (?P<k>.*)"
+   ],
+   "title": "Python: brak klucza {k}",
+   "explanation": "Słownik nie ma takiego klucza.",
+   "fix": "`d.get(k, 0)` albo `defaultdict(int)`.",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-eof",
+   "match": [
+    "EOFError: (?P<msg>.*)"
+   ],
+   "title": "Python: koniec danych",
+   "explanation": "input() nie ma już czego czytać.",
+   "fix": "Wczytujesz za dużo linii — sprawdź format wejścia; szybciej: `sys.stdin.read().split()`.",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-attr",
+   "match": [
+    "AttributeError: ['‘`](?P<t>[^'’]+)['’] object has no attribute ['‘`](?P<a>[^'’]+)['’]"
+   ],
+   "title": "Python: `{t}` nie ma `{a}`",
+   "explanation": "Obiekt nie ma takiej metody/pola (np. list.push zamiast append).",
+   "fix": "Sprawdź nazwę metody (lista: append, pop; napis: split, strip).",
+   "compilers": [
+    "python"
+   ]
+  },
+  {
+   "id": "py-module",
+   "match": [
+    "ModuleNotFoundError: No module named ['‘`](?P<m>[^'’]+)['’]"
+   ],
+   "title": "Python: brak modułu `{m}`",
+   "explanation": "Moduł nie jest zainstalowany — na OI dostępna jest tylko biblioteka standardowa.",
+   "fix": "Użyj modułów standardowych (sys, math, collections, heapq, bisect).",
+   "compilers": [
+    "python"
+   ]
+  }
+ ]
+}

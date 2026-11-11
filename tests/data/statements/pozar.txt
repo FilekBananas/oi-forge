@@ -1,0 +1,25 @@
+Pożar lasu
+Las przedstawiamy jako planszę n × m. Pole „D” to drzewo, pole „.” to polana (ogień się przez nią nie przenosi),
+a pole „P” to drzewo, które już płonie. W każdej minucie ogień przenosi się z każdego płonącego drzewa na drzewa
+sąsiadujące z nim bokiem. Po ilu minutach spłoną wszystkie drzewa?
+Wejście
+Pierwszy wiersz zawiera liczby n i m (1 ≤ n, m ≤ 1000). Każdy z następnych n wierszy zawiera m znaków ze zbioru
+{D, ., P}. Na planszy jest co najmniej jedno pole P.
+Wyjście
+Wypisz liczbę minut, po której wszystkie drzewa będą płonąć, albo -1, jeśli któreś drzewo nigdy się nie zapali.
+Przykład 1
+Wejście:
+3 4
+DDD.
+P.DD
+DD.P
+Wyjście:
+3
+
+Przykład 2
+Wejście:
+2 3
+PD.
+..D
+Wyjście:
+-1

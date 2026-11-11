@@ -1,0 +1,1772 @@
+{
+ "chunk": "ds-basic",
+ "articles": [
+  {
+   "id": "ds-prefix-sums",
+   "title": "Sumy prefiksowe (1D)",
+   "category": "Struktury danych",
+   "tags": [
+    "sumy prefiksowe",
+    "prefix sums",
+    "suma na przedziale",
+    "range sum",
+    "tablica prefiksowa",
+    "statyczne zapytania"
+   ],
+   "aliases": [
+    "sumy prefiksowe",
+    "suma prefiksowa",
+    "prefix sum",
+    "prefix sums c++",
+    "sumy prefixowe",
+    "prefiksy",
+    "sumy czesciowe",
+    "suma na przedziale",
+    "suma od l do r",
+    "pref sum",
+    "sumy prefiksowe kod",
+    "tablica sum prefiksowych"
+   ],
+   "summary": "Tablica `pref[i] = a[1] + … + a[i]` pozwala po przetworzeniu w O(n) odpowiadać na pytanie o sumę dowolnego przedziału w O(1): `pref[r] - pref[l-1]`. Działa, gdy tablica się nie zmienia.",
+   "complexity": "budowa O(n), zapytanie o sumę przedziału O(1), pamięć O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Zamiast przy każdym pytaniu sumować elementy od `l` do `r` (O(n) na zapytanie), raz liczymy sumy wszystkich prefiksów. Suma przedziału `[l, r]` to „prefiks do `r`” minus „prefiks do `l-1`” — wszystko, co jest przed `l`, się skraca.\n\n`pref[0] = 0`, `pref[i] = pref[i-1] + a[i]`, więc `sum(l, r) = pref[r] - pref[l-1]`."
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy używać — sygnały w treści zadania:**\n- „odpowiedz na *q* zapytań o sumę elementów od *l* do *r*”, a tablica **się nie zmienia** między zapytaniami,\n- „ile jest liczb parzystych / jedynek / liter `a` w przedziale” — sumy prefiksowe z tablicy 0/1,\n- „ile podtablic ma sumę *k*” / „sumę podzielną przez *k*” — sumy prefiksowe + licznik (mapa) wartości prefiksów,\n- „średnia / suma na każdym oknie długości *k*”.\n\nJeśli między zapytaniami są **zmiany** wartości, potrzebujesz drzewa Fenwicka albo drzewa przedziałowego."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: q zapytań o sumę na przedziale",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> pref(n + 1, 0);   // pref[i] = a[1] + ... + a[i], pref[0] = 0\n    for (int i = 1; i <= n; i++) {\n        long long x;\n        cin >> x;\n        pref[i] = pref[i - 1] + x;\n    }\n    while (q--) {\n        int l, r;                        // 1 <= l <= r <= n\n        cin >> l >> r;\n        cout << pref[r] - pref[l - 1] << '\\n';\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wyrażenie",
+      "Znaczenie"
+     ],
+     "rows": [
+      [
+       "pref[0] = 0",
+       "suma pustego prefiksu — dzięki temu wzór działa też dla l = 1"
+      ],
+      [
+       "pref[i] = pref[i-1] + a[i]",
+       "budowa w O(n)"
+      ],
+      [
+       "pref[r] - pref[l-1]",
+       "suma a[l..r] w O(1)"
+      ],
+      [
+       "pref[i+k] - pref[i]",
+       "suma okna długości k zaczynającego się za i"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wariant półotwarty [l, r) — wygodny przy indeksowaniu od 0",
+     "code": "// Wersja 0-indeksowana: a[0..n-1], pref ma n+1 elementów, suma [l, r) = pref[r] - pref[l]\nvector<long long> a = {3, 1, 4, 1, 5};\nint n = a.size();\nvector<long long> pref(n + 1, 0);\nfor (int i = 0; i < n; i++) pref[i + 1] = pref[i] + a[i];\nlong long s = pref[4] - pref[1];   // a[1] + a[2] + a[3] = 1 + 4 + 1 = 6\ncout << s << '\\n';"
+    },
+    {
+     "type": "tip",
+     "md": "Trzymaj się jednej konwencji: albo **1-indeksowanie** i `pref[r] - pref[l-1]`, albo **0-indeksowanie** z przedziałami półotwartymi `[l, r)` i `pref[r] - pref[l]`. Mieszanie konwencji to najczęstsze źródło błędów o jeden."
+    },
+    {
+     "type": "warn",
+     "md": "Sumy rosną szybko: 2·10^5 liczb po 10^9 daje 2·10^14 — to nie mieści się w `int`. Tablicę `pref` zawsze deklaruj jako `long long`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "pref[i] = pref[i-1] + a[i]",
+     "desc": "budowa tablicy prefiksowej (pref[0] = 0)",
+     "complexity": "O(n) łącznie"
+    },
+    {
+     "sig": "pref[r] - pref[l-1]",
+     "desc": "suma elementów a[l..r] (1-indeksowanie)",
+     "complexity": "O(1)",
+     "returns": "long long"
+    },
+    {
+     "sig": "partial_sum(a.begin(), a.end(), pref.begin() + 1)",
+     "desc": "gotowa funkcja z <numeric> liczy sumy prefiksowe",
+     "complexity": "O(n)",
+     "example": "vector<long long> pref(n + 1); partial_sum(a.begin(), a.end(), pref.begin() + 1);"
+    }
+   ],
+   "pitfalls": [
+    "Brak `pref[0] = 0` albo indeksowanie od 0 przy wzorze `pref[l-1]` — dla `l = 0` czytasz `pref[-1]` (UB).",
+    "`int` zamiast `long long` — przepełnienie przy dużych sumach daje ujemne wyniki.",
+    "Sumy prefiksowe nie obsługują zmian: po `a[i] = x` trzeba by przebudować O(n). Przy zmianach użyj Fenwicka.",
+    "`partial_sum` na `vector<int>` sumuje w typie `int` (typ elementów wejścia), więc przepełni się, nawet jeśli wynik zapisujesz do `vector<long long>` — użyj `inclusive_scan` z wartością początkową `0LL` albo zwykłej pętli.",
+    "Przy pytaniach o liczbę elementów spełniających warunek sumuj tablicę 0/1, a nie same wartości."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak zrobić sumy prefiksowe",
+      "sumy prefiksowe c++",
+      "prefix sum c++",
+      "sumy prefiksowe kod",
+      "sumy prefixowe jak napisac"
+     ],
+     "a": "Tworzysz tablicę `pref` o rozmiarze `n+1`, `pref[0] = 0` i `pref[i] = pref[i-1] + a[i]`. Suma przedziału `[l, r]` to `pref[r] - pref[l-1]` — wszystko przed `l` się skraca. Budowa kosztuje O(n), każde zapytanie O(1).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, q;\n    cin >> n >> q;\n    vector<long long> pref(n + 1, 0);\n    for (int i = 1; i <= n; i++) {\n        long long x;\n        cin >> x;\n        pref[i] = pref[i - 1] + x;\n    }\n    while (q--) {\n        int l, r;\n        cin >> l >> r;\n        cout << pref[r] - pref[l - 1] << '\\n';\n    }\n}"
+    },
+    {
+     "q": [
+      "suma na przedziale l r",
+      "jak szybko policzyć sumę od l do r",
+      "q zapytań o sumę przedziału",
+      "range sum query",
+      "suma przedzialu szybko",
+      "suma na przedziale wiele zapytań bez zmian",
+      "suma fragmentu tablicy wiele razy"
+     ],
+     "a": "Jeśli tablica się nie zmienia — sumy prefiksowe: O(n) przygotowania i O(1) na zapytanie (`pref[r] - pref[l-1]`). Liczenie pętlą za każdym razem to O(n·q), czyli przy n = q = 2·10^5 aż 4·10^10 operacji — TLE. Gdy są też zmiany elementów, użyj drzewa Fenwicka lub drzewa przedziałowego (O(log n) na operację).",
+     "code": "vector<long long> a = {0, 5, 2, 7, 1};   // a[1..4], a[0] nieużywane\nint n = 4;\nvector<long long> pref(n + 1, 0);\nfor (int i = 1; i <= n; i++) pref[i] = pref[i - 1] + a[i];\nint l = 2, r = 4;\ncout << pref[r] - pref[l - 1] << '\\n';   // 2 + 7 + 1 = 10"
+    },
+    {
+     "q": [
+      "dlaczego pref[0] = 0",
+      "sumy prefiksowe indeksowanie od 0 czy od 1",
+      "pref[l-1] gdy l = 0",
+      "sumy prefiksowe off by one"
+     ],
+     "a": "`pref[0] = 0` to suma pustego prefiksu — dzięki niemu wzór `pref[r] - pref[l-1]` działa także dla `l = 1` bez żadnego `if`. Przy indeksowaniu od 0 najwygodniej mieć `pref` długości `n+1`, `pref[i+1] = pref[i] + a[i]` i liczyć przedział półotwarty `[l, r)` jako `pref[r] - pref[l]`. Nigdy nie odwołuj się do `pref[-1]` — to niezdefiniowane zachowanie.",
+     "code": "vector<int> a = {4, 2, 9};          // indeksy 0..2\nvector<long long> pref(a.size() + 1, 0);\nfor (size_t i = 0; i < a.size(); i++) pref[i + 1] = pref[i] + a[i];\n// suma a[0..2] (włącznie) = pref[3] - pref[0]\ncout << pref[3] - pref[0] << '\\n';  // 15"
+    },
+    {
+     "q": [
+      "sumy prefiksowe przepełnienie",
+      "suma wychodzi ujemna",
+      "long long w sumach prefiksowych",
+      "overflow prefix sum"
+     ],
+     "a": "Suma wielu dużych liczb przekracza zakres `int` (ok. 2,1·10^9): już 3 liczby po 10^9 się nie mieszczą. Gdy wynik „magicznie” wychodzi ujemny, prawie zawsze jest to przepełnienie. Deklaruj `pref` jako `vector<long long>` i wczytuj elementy do `long long` (albo rzutuj przed dodaniem).",
+     "code": "int n = 3;\nvector<int> a = {1000000000, 1000000000, 1000000000};\nvector<long long> pref(n + 1, 0);\nfor (int i = 1; i <= n; i++) pref[i] = pref[i - 1] + a[i - 1];   // dodawanie w long long\ncout << pref[n] << '\\n';   // 3000000000"
+    },
+    {
+     "q": [
+      "partial_sum c++",
+      "std::partial_sum jak użyć",
+      "inclusive_scan",
+      "gotowa funkcja na sumy prefiksowe"
+     ],
+     "a": "`partial_sum(first, last, out)` z `<numeric>` zapisuje sumy prefiksowe: `out[i] = a[0] + … + a[i]`. Pisząc do `pref.begin() + 1` dostajesz od razu konwencję z `pref[0] = 0`. Uwaga: akumulator ma typ elementów wejścia, więc dla `vector<int>` z dużymi liczbami bezpieczniej użyć `inclusive_scan(…, plus<>(), 0LL)` lub zwykłej pętli. Złożoność O(n).",
+     "code": "vector<int> a = {1, 2, 3, 4};\nvector<long long> pref(a.size() + 1, 0);\npartial_sum(a.begin(), a.end(), pref.begin() + 1);\n// pref = {0, 1, 3, 6, 10}\nvector<long long> big(a.size());\ninclusive_scan(a.begin(), a.end(), big.begin(), plus<>(), 0LL);   // akumulator long long\nfor (long long x : pref) cout << x << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "ile podtablic ma sumę k",
+      "liczba przedziałów o sumie k",
+      "subarray sum equals k",
+      "ile spojnych fragmentow ma sume k",
+      "podciągi spójne o sumie k"
+     ],
+     "a": "Przedział `(j, i]` ma sumę `k` dokładnie wtedy, gdy `pref[i] - pref[j] = k`, czyli `pref[j] = pref[i] - k`. Idziemy od lewej i trzymamy w mapie, ile razy wystąpiła każda wartość prefiksu (na start `cnt[0] = 1` — pusty prefiks). Dla każdego `i` dodajemy `cnt[pref[i] - k]`. Działa też dla liczb ujemnych; złożoność O(n log n) z `map` (O(n) średnio z `unordered_map`).",
+     "code": "long long countSubarraysWithSum(const vector<long long>& a, long long k) {\n    map<long long, long long> cnt;   // cnt[s] = ile prefiksów ma sumę s\n    cnt[0] = 1;                      // pusty prefiks\n    long long pref = 0, result = 0;\n    for (long long x : a) {\n        pref += x;\n        auto it = cnt.find(pref - k);\n        if (it != cnt.end()) result += it->second;\n        cnt[pref]++;\n    }\n    return result;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "podtablica o sumie podzielnej przez k",
+      "ile przedziałów ma sumę podzielną przez k",
+      "suma przedzialu modulo k",
+      "subarray sum divisible by k"
+     ],
+     "a": "Suma `(j, i]` dzieli się przez `k` ⇔ `pref[i] ≡ pref[j] (mod k)`. Liczymy, ile prefiksów (łącznie z pustym) ma każdą resztę, i dla każdej reszty dodajemy liczbę par `c·(c-1)/2`. Przy ujemnych liczbach normalizuj resztę: `((s % k) + k) % k`, bo w C++ `-3 % 5 == -3`. Złożoność O(n + k).",
+     "code": "long long countDivisible(const vector<long long>& a, int k) {\n    vector<long long> cnt(k, 0);\n    cnt[0] = 1;                       // pusty prefiks\n    long long s = 0;\n    for (long long x : a) {\n        s = ((s + x) % k + k) % k;    // reszta zawsze w [0, k)\n        cnt[s]++;\n    }\n    long long result = 0;\n    for (long long c : cnt) result += c * (c - 1) / 2;\n    return result;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "maksymalna suma podtablicy",
+      "max subarray sum",
+      "kadane sumy prefiksowe",
+      "największa suma spójnego fragmentu"
+     ],
+     "a": "Suma `(j, i]` to `pref[i] - pref[j]`, więc dla ustalonego końca `i` opłaca się odjąć **najmniejszy** wcześniejszy prefiks. Idąc od lewej, trzymasz minimum prefiksów i aktualizujesz wynik — to jest dokładnie algorytm Kadane’a w wersji prefiksowej. O(n) czasu, O(1) pamięci; przy samych ujemnych liczbach wynik to największy element (niepusty fragment).",
+     "code": "long long maxSubarraySum(const vector<long long>& a) {\n    long long best = LLONG_MIN, pref = 0, minPref = 0;   // minPref = min(pref[0..i-1])\n    for (long long x : a) {\n        pref += x;\n        best = max(best, pref - minPref);\n        minPref = min(minPref, pref);\n    }\n    return best;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile liter a w przedziale",
+      "sumy prefiksowe na stringu",
+      "liczba wystąpień znaku w przedziale",
+      "prefix count characters"
+     ],
+     "a": "Dla każdej litery trzymaj osobne sumy prefiksowe liczby jej wystąpień: `cnt[i][c]` = ile razy znak `c` wystąpił w `s[0..i-1]`. Odpowiedź dla przedziału `[l, r)` to `cnt[r][c] - cnt[l][c]`. Pamięć O(26·n), zapytanie O(1). Ten sam trik działa dla dowolnego warunku („ile liczb pierwszych w przedziale”) — sumujesz tablicę 0/1.",
+     "code": "string s = \"abracadabra\";\nint n = s.size();\nvector<array<int, 26>> cnt(n + 1);\ncnt[0].fill(0);\nfor (int i = 0; i < n; i++) {\n    cnt[i + 1] = cnt[i];\n    cnt[i + 1][s[i] - 'a']++;\n}\nint l = 0, r = 5;                                // \"abrac\"\ncout << cnt[r]['a' - 'a'] - cnt[l]['a' - 'a'] << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "sumy prefiksowe a zmiany w tablicy",
+      "co jak tablica się zmienia sumy prefiksowe",
+      "update i suma przedzialu",
+      "sumy prefiksowe z aktualizacją"
+     ],
+     "a": "Sumy prefiksowe są statyczne: po zmianie `a[i]` trzeba poprawić wszystkie `pref[j]` dla `j ≥ i`, czyli O(n). Przy przeplatanych zmianach i zapytaniach użyj **drzewa Fenwicka** (dodanie w punkcie i suma prefiksu w O(log n)) albo **drzewa przedziałowego**. Jeśli wszystkie zmiany są przed wszystkimi zapytaniami, wystarczy tablica różnicowa i potem sumy prefiksowe."
+    },
+    {
+     "q": [
+      "suma każdego okna długości k",
+      "suma okna przesuwnego",
+      "średnia z k kolejnych elementów",
+      "sliding window sum"
+     ],
+     "a": "Suma okna `[i, i+k-1]` (1-indeksowanie) to `pref[i+k-1] - pref[i-1]`, więc wszystkie okna liczysz w O(n). Alternatywa bez dodatkowej tablicy: trzymaj bieżącą sumę, dodawaj wchodzący element i odejmuj wychodzący. Średnią licz dopiero na końcu (dzielenie `long long` lub `double`), żeby nie gubić precyzji.",
+     "code": "vector<long long> a = {1, 3, 2, 6, -1, 4, 1, 8, 2};\nint k = 5;\nlong long window = 0;\nfor (int i = 0; i < (int)a.size(); i++) {\n    window += a[i];\n    if (i >= k) window -= a[i - k];\n    if (i >= k - 1) cout << window << ' ';   // 11 14 12 18 14\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "sumy prefiksowe python",
+      "prefix sum python",
+      "itertools accumulate"
+     ],
+     "a": "W Pythonie najprościej użyć `itertools.accumulate` z `initial=0` — dostajesz od razu listę z `pref[0] = 0`. Liczby w Pythonie nie przepełniają się, ale wczytuj dane przez `sys.stdin`, bo `input()` jest wolne przy dużych danych. Złożoność taka sama: O(n) budowa, O(1) zapytanie.",
+     "code": "import sys\nfrom itertools import accumulate\n\ndata = sys.stdin.buffer.read().split()\nn, q = int(data[0]), int(data[1])\na = list(map(int, data[2:2 + n]))\npref = list(accumulate(a, initial=0))\nout = []\nidx = 2 + n\nfor _ in range(q):\n    l, r = int(data[idx]), int(data[idx + 1])\n    idx += 2\n    out.append(pref[r] - pref[l - 1])\nprint(\"\\n\".join(map(str, out)))",
+     "lang": "python"
+    }
+   ],
+   "related": [
+    "ds-prefix-sums-2d",
+    "ds-difference-array",
+    "tech-prefix-xor",
+    "ds-fenwick",
+    "tech-two-sum-hashmap",
+    "tech-sliding-window",
+    "stl-partial-sum",
+    "stl-ref-numeric",
+    "tech-kadane"
+   ]
+  },
+  {
+   "id": "ds-prefix-sums-2d",
+   "title": "Sumy prefiksowe 2D (suma w prostokącie)",
+   "category": "Struktury danych",
+   "tags": [
+    "sumy prefiksowe 2d",
+    "prefix sums 2d",
+    "suma prostokąta",
+    "macierz",
+    "włączanie-wyłączanie",
+    "plansza"
+   ],
+   "aliases": [
+    "sumy prefiksowe 2d",
+    "sumy prefiksowe dwuwymiarowe",
+    "prefix sum 2d",
+    "2d prefix sum",
+    "suma w prostokacie",
+    "suma podmacierzy",
+    "sumy prefiksowe na planszy",
+    "sumy prefiksowe macierz",
+    "2d prefiksy"
+   ],
+   "summary": "Tablica `P[i][j]` = suma prostokąta od (1,1) do (i,j). Po budowie w O(n·m) suma dowolnego prostokąta to cztery odczyty (włączanie-wyłączanie) w O(1).",
+   "complexity": "budowa O(n·m), zapytanie o prostokąt O(1), pamięć O(n·m)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** `P[i][j]` to suma wszystkich pól w lewym górnym prostokącie kończącym się w `(i, j)`. Budujemy ją z włączania-wyłączania:\n\n`P[i][j] = a[i][j] + P[i-1][j] + P[i][j-1] - P[i-1][j-1]` — prostokąt nad i prostokąt po lewej zawierają wspólny kawałek `P[i-1][j-1]`, który policzyliśmy dwa razy.\n\nSuma prostokąta od `(x1, y1)` do `(x2, y2)`:\n`P[x2][y2] - P[x1-1][y2] - P[x2][y1-1] + P[x1-1][y1-1]`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „plansza n×m”, „ile drzew / jedynek / punktów jest w prostokącie”, „suma w kwadracie k×k”, „znajdź kwadrat o największej sumie”, wiele zapytań o prostokąty na niezmiennej planszy."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: zapytania o sumę w prostokącie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m, q;\n    cin >> n >> m >> q;\n    // P[i][j] = suma a[1..i][1..j]; wiersz i kolumna 0 to zera\n    vector<vector<long long>> P(n + 1, vector<long long>(m + 1, 0));\n    for (int i = 1; i <= n; i++) {\n        for (int j = 1; j <= m; j++) {\n            long long x;\n            cin >> x;\n            P[i][j] = x + P[i - 1][j] + P[i][j - 1] - P[i - 1][j - 1];\n        }\n    }\n    while (q--) {\n        int x1, y1, x2, y2;   // lewy górny (x1, y1), prawy dolny (x2, y2), 1-indeksowane\n        cin >> x1 >> y1 >> x2 >> y2;\n        long long s = P[x2][y2] - P[x1 - 1][y2] - P[x2][y1 - 1] + P[x1 - 1][y1 - 1];\n        cout << s << '\\n';\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Fragment wzoru",
+      "Co oznacza"
+     ],
+     "rows": [
+      [
+       "P[x2][y2]",
+       "cały prostokąt od (1,1) do (x2,y2)"
+      ],
+      [
+       "- P[x1-1][y2]",
+       "odcinamy pas nad prostokątem"
+      ],
+      [
+       "- P[x2][y1-1]",
+       "odcinamy pas na lewo od prostokąta"
+      ],
+      [
+       "+ P[x1-1][y1-1]",
+       "róg odjęliśmy dwa razy — dodajemy raz z powrotem"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Pamięć: `long long` zajmuje 8 bajtów, więc tablica 5000×5000 to 200 MB — za dużo przy typowym limicie 256 MB razem z resztą programu. Jeśli sumy mieszczą się w `int` (np. zliczasz jedynki), użyj `int` (100 MB), a planszę wczytuj bezpośrednio do `P`, bez osobnej tablicy `a`."
+    },
+    {
+     "type": "tip",
+     "md": "Plansza podana jako napisy (`'#'` i `'.'`)? Buduj `P` z warunku: `P[i][j] = (s[i-1][j-1] == '#') + P[i-1][j] + P[i][j-1] - P[i-1][j-1]`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "P[i][j] = a[i][j] + P[i-1][j] + P[i][j-1] - P[i-1][j-1]",
+     "desc": "budowa sum 2D (włączanie-wyłączanie)",
+     "complexity": "O(n·m) łącznie"
+    },
+    {
+     "sig": "P[x2][y2] - P[x1-1][y2] - P[x2][y1-1] + P[x1-1][y1-1]",
+     "desc": "suma prostokąta [x1..x2]×[y1..y2]",
+     "complexity": "O(1)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Zapomniany składnik `- P[i-1][j-1]` przy budowie albo `+ P[x1-1][y1-1]` przy zapytaniu — wynik zawyżony/zaniżony o róg.",
+    "Pomylone osie: `x` to wiersz, `y` to kolumna — sprawdź, w jakiej kolejności zadanie podaje współrzędne.",
+    "Brak zerowego wiersza i kolumny (tablica (n+1)×(m+1)) — odczyt `P[-1][...]`.",
+    "Za duża pamięć przy `long long` dla dużych plansz — liczyć, czy `int` wystarczy.",
+    "Zamienione x1 z x2 (zadanie może podać rogi w dowolnej kolejności) — zrób `if (x1 > x2) swap(x1, x2);`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sumy prefiksowe 2d",
+      "sumy prefiksowe 2d kod",
+      "prefix sum 2d c++",
+      "2d prefix sums",
+      "sumy prefiksowe dwuwymiarowe jak"
+     ],
+     "a": "Budujesz `P` o wymiarach `(n+1)×(m+1)` z zerowym wierszem i kolumną: `P[i][j] = a[i][j] + P[i-1][j] + P[i][j-1] - P[i-1][j-1]`. Suma prostokąta to `P[x2][y2] - P[x1-1][y2] - P[x2][y1-1] + P[x1-1][y1-1]`. Budowa O(n·m), każde zapytanie O(1).",
+     "code": "int n = 2, m = 3;\nint a[3][4] = {{0, 0, 0, 0}, {0, 1, 2, 3}, {0, 4, 5, 6}};   // a[1..2][1..3]\nvector<vector<long long>> P(n + 1, vector<long long>(m + 1, 0));\nfor (int i = 1; i <= n; i++)\n    for (int j = 1; j <= m; j++)\n        P[i][j] = a[i][j] + P[i - 1][j] + P[i][j - 1] - P[i - 1][j - 1];\n// suma prostokąta (1,2)-(2,3) = 2 + 3 + 5 + 6 = 16\ncout << P[2][3] - P[0][3] - P[2][1] + P[0][1] << '\\n';"
+    },
+    {
+     "q": [
+      "suma w prostokącie",
+      "jak policzyć sumę podmacierzy",
+      "suma prostokata na planszy szybko",
+      "rectangle sum query"
+     ],
+     "a": "Ze wzoru włączania-wyłączania: `P[x2][y2] - P[x1-1][y2] - P[x2][y1-1] + P[x1-1][y1-1]`. Odejmujemy pas nad prostokątem i pas po lewej; róg `P[x1-1][y1-1]` został odjęty dwa razy, więc dodajemy go z powrotem. Każde zapytanie O(1) po budowie O(n·m).",
+     "code": "long long rect(const vector<vector<long long>>& P, int x1, int y1, int x2, int y2) {\n    if (x1 > x2) swap(x1, x2);\n    if (y1 > y2) swap(y1, y2);\n    return P[x2][y2] - P[x1 - 1][y2] - P[x2][y1 - 1] + P[x1 - 1][y1 - 1];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dlaczego odejmujemy P[i-1][j-1]",
+      "skąd minus w sumach prefiksowych 2d",
+      "wlaczanie wylaczanie 2d prefiksy"
+     ],
+     "a": "`P[i-1][j]` (prostokąt nad polem) i `P[i][j-1]` (prostokąt na lewo) oba zawierają prostokąt `P[i-1][j-1]`. Dodając je, liczymy ten wspólny fragment dwa razy, więc raz go odejmujemy. To ta sama zasada włączania-wyłączania, co przy zapytaniu o prostokąt — tam róg odejmujemy dwa razy, więc dodajemy go raz."
+    },
+    {
+     "q": [
+      "kwadrat k na k o największej sumie",
+      "maksymalna suma kwadratu k x k",
+      "najlepszy kwadrat na planszy",
+      "max sum k by k square"
+     ],
+     "a": "Zbuduj sumy 2D, a potem sprawdź każdy możliwy prawy dolny róg `(i, j)` z `i, j ≥ k`: suma kwadratu to `rect(i-k+1, j-k+1, i, j)`. Łącznie O(n·m) zamiast O(n·m·k²). Wynik trzymaj w `long long`, a start ustaw na `LLONG_MIN`, jeśli liczby mogą być ujemne.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, m, k;\n    cin >> n >> m >> k;\n    vector<vector<long long>> P(n + 1, vector<long long>(m + 1, 0));\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++) {\n            long long x;\n            cin >> x;\n            P[i][j] = x + P[i - 1][j] + P[i][j - 1] - P[i - 1][j - 1];\n        }\n    long long best = LLONG_MIN;\n    for (int i = k; i <= n; i++)\n        for (int j = k; j <= m; j++)\n            best = max(best, P[i][j] - P[i - k][j] - P[i][j - k] + P[i - k][j - k]);\n    cout << best << '\\n';\n}"
+    },
+    {
+     "q": [
+      "ile jedynek w prostokącie",
+      "ile drzew w prostokacie plansza",
+      "liczba pól # w prostokącie",
+      "zliczanie punktów w prostokącie"
+     ],
+     "a": "Zamień planszę na 0/1 (1 = pole, które liczysz) i zbuduj sumy prefiksowe 2D od razu z warunku. Liczba jedynek w prostokącie to zwykła suma prostokąta. Jeśli punkty mają ogromne współrzędne (np. do 10^9), najpierw kompresja współrzędnych albo sweep line z Fenwickiem.",
+     "code": "vector<string> g = {\"#..#\", \".##.\", \"#...\"};\nint n = g.size(), m = g[0].size();\nvector<vector<int>> P(n + 1, vector<int>(m + 1, 0));\nfor (int i = 1; i <= n; i++)\n    for (int j = 1; j <= m; j++)\n        P[i][j] = (g[i - 1][j - 1] == '#') + P[i - 1][j] + P[i][j - 1] - P[i - 1][j - 1];\n// ile '#' w wierszach 1..2 i kolumnach 1..3\ncout << P[2][3] - P[0][3] - P[2][0] + P[0][0] << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "sumy prefiksowe 2d za dużo pamięci",
+      "tablica 5000x5000 long long memory limit",
+      "mle sumy prefiksowe 2d"
+     ],
+     "a": "Policz: 5000·5000·8 B = 200 MB dla `long long`, a dla `int` 100 MB. Jeśli wartości są małe (np. zliczanie pól), użyj `int` lub nawet `short` dla małych zakresów. Nie trzymaj osobno planszy i sum — wczytuj bezpośrednio do `P`. Statyczna tablica globalna `static int P[5001][5001]` unika też narzutu wielu wektorów."
+    },
+    {
+     "q": [
+      "sumy prefiksowe 3d",
+      "prefix sum 3d",
+      "sumy prefiksowe w trzech wymiarach"
+     ],
+     "a": "Wzór uogólnia się przez włączanie-wyłączanie: w 3D dodajesz 3 sąsiednie prefiksy, odejmujesz 3 „krawędziowe” i dodajesz 1 narożny. Zapytanie o prostopadłościan ma 8 składników ze znakami zależnymi od parzystości liczby „-1” w indeksach. Budowa O(n·m·k), zapytanie O(1).",
+     "code": "const int N = 4;\nstatic long long P[N + 1][N + 1][N + 1];\n// budowa: P[i][j][k] = a + P[i-1][j][k] + P[i][j-1][k] + P[i][j][k-1]\n//                        - P[i-1][j-1][k] - P[i-1][j][k-1] - P[i][j-1][k-1] + P[i-1][j-1][k-1]\nfor (int i = 1; i <= N; i++)\n    for (int j = 1; j <= N; j++)\n        for (int k = 1; k <= N; k++) {\n            long long a = 1;   // każde pole = 1\n            P[i][j][k] = a + P[i-1][j][k] + P[i][j-1][k] + P[i][j][k-1]\n                       - P[i-1][j-1][k] - P[i-1][j][k-1] - P[i][j-1][k-1] + P[i-1][j-1][k-1];\n        }\ncout << P[N][N][N] << '\\n';   // 64"
+    },
+    {
+     "q": [
+      "maksymalna suma podmacierzy",
+      "max sum submatrix",
+      "prostokąt o największej sumie w macierzy"
+     ],
+     "a": "Ustal parę wierszy `top ≤ bottom`, a każdą kolumnę zamień na sumę jej fragmentu między nimi (sumy prefiksowe po kolumnach dają to w O(1)). Wtedy problem staje się jednowymiarową maksymalną sumą podtablicy (Kadane) w O(m). Łącznie O(n²·m) — warto ustawić mniejszy wymiar jako `n`.",
+     "code": "long long maxSubmatrix(const vector<vector<long long>>& a) {\n    int n = a.size(), m = a[0].size();\n    // col[i][j] = suma a[0..i-1][j]\n    vector<vector<long long>> col(n + 1, vector<long long>(m, 0));\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++) col[i + 1][j] = col[i][j] + a[i][j];\n    long long best = LLONG_MIN;\n    for (int top = 0; top < n; top++)\n        for (int bottom = top; bottom < n; bottom++) {\n            long long cur = 0, minPref = 0;\n            for (int j = 0; j < m; j++) {\n                cur += col[bottom + 1][j] - col[top][j];\n                best = max(best, cur - minPref);\n                minPref = min(minPref, cur);\n            }\n        }\n    return best;\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "ds-prefix-sums",
+    "ds-difference-array",
+    "ds-fenwick-2d",
+    "tech-coordinate-compression",
+    "tech-sweep-line",
+    "geo-distances",
+    "tech-kadane"
+   ]
+  },
+  {
+   "id": "ds-difference-array",
+   "title": "Tablica różnicowa (1D i 2D)",
+   "category": "Struktury danych",
+   "tags": [
+    "tablica różnicowa",
+    "difference array",
+    "dodawanie na przedziale",
+    "offline",
+    "imos",
+    "pokrycie odcinkami"
+   ],
+   "aliases": [
+    "tablica roznicowa",
+    "tablica różnicowa",
+    "difference array",
+    "roznice",
+    "dodaj na przedziale",
+    "range add offline",
+    "tablica różnic 2d",
+    "imos",
+    "ile razy pokryty punkt",
+    "tablica roznicowa 2d"
+   ],
+   "summary": "Dodanie wartości `v` na przedziale `[l, r]` zapisujesz jako `d[l] += v`, `d[r+1] -= v` w O(1); po wszystkich operacjach jedna suma prefiksowa odtwarza tablicę. Odwrotność sum prefiksowych.",
+   "complexity": "operacja dodania O(1), odtworzenie tablicy O(n); w 2D: operacja O(1), odtworzenie O(n·m)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Tablica różnicowa `d[i] = a[i] - a[i-1]` zapamiętuje tylko „skoki” między sąsiednimi elementami. Dodanie `v` na całym przedziale `[l, r]` zmienia tylko dwa skoki: przy wejściu do przedziału (`d[l] += v`) i przy wyjściu (`d[r+1] -= v`). Sumy prefiksowe z `d` odtwarzają `a`.\n\nTo działa **offline**: najpierw wszystkie operacje, potem odczyt. Jeśli zapytania o wartości przeplatają się z dodawaniem, użyj Fenwicka na tablicy różnicowej (dodanie na przedziale, zapytanie o punkt)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „*m* razy dodaj *v* do elementów od *l* do *r*, na końcu wypisz tablicę”, „ile odcinków pokrywa każdy punkt”, „po ilu dniach / ile osób jest w danym momencie”, „zamaluj prostokąty, policz ile razy każde pole zostało zamalowane”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: m operacji dodania na przedziale, potem wypisanie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<long long> a(n + 1);\n    for (int i = 1; i <= n; i++) cin >> a[i];\n    vector<long long> d(n + 2, 0);        // n + 2, bo zapisujemy d[r + 1] dla r = n\n    while (m--) {\n        int l, r;\n        long long v;\n        cin >> l >> r >> v;               // dodaj v do a[l..r]\n        d[l] += v;\n        d[r + 1] -= v;\n    }\n    long long add = 0;\n    for (int i = 1; i <= n; i++) {\n        add += d[i];                      // suma prefiksowa różnic = łączny dodatek w punkcie i\n        cout << a[i] + add << \" \\n\"[i == n];\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Tablica różnicowa 2D: dodawanie na prostokątach",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, m, k;\n    cin >> n >> m >> k;\n    vector<vector<long long>> d(n + 2, vector<long long>(m + 2, 0));\n    while (k--) {\n        int x1, y1, x2, y2;\n        long long v;\n        cin >> x1 >> y1 >> x2 >> y2 >> v;   // dodaj v na prostokącie [x1..x2] x [y1..y2]\n        d[x1][y1] += v;\n        d[x1][y2 + 1] -= v;\n        d[x2 + 1][y1] -= v;\n        d[x2 + 1][y2 + 1] += v;\n    }\n    // sumy prefiksowe 2D z d odtwarzają wartości\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++)\n            d[i][j] += d[i - 1][j] + d[i][j - 1] - d[i - 1][j - 1];\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++)\n            cout << d[i][j] << \" \\n\"[j == m];\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "1D",
+      "2D"
+     ],
+     "rows": [
+      [
+       "dodaj v na przedziale/prostokącie",
+       "d[l] += v; d[r+1] -= v",
+       "4 zmiany w rogach (+, -, -, +)"
+      ],
+      [
+       "odtworzenie wartości",
+       "sumy prefiksowe d",
+       "sumy prefiksowe 2D z d"
+      ],
+      [
+       "rozmiar tablicy",
+       "n + 2",
+       "(n + 2) × (m + 2)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Pokrycie punktów odcinkami o współrzędnych do 10^9: nie twórz tablicy 10^9. Zrób zdarzenia `(l, +1)` i `(r+1, -1)`, posortuj i przejdź po nich (sweep line) albo skompresuj współrzędne i użyj tablicy różnicowej na skompresowanych indeksach."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "d[l] += v; d[r + 1] -= v;",
+     "desc": "dodanie v na przedziale [l, r]",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "add += d[i]; a[i] += add;",
+     "desc": "odtworzenie wartości po wszystkich operacjach",
+     "complexity": "O(n) łącznie"
+    },
+    {
+     "sig": "d[x1][y1] += v; d[x1][y2+1] -= v; d[x2+1][y1] -= v; d[x2+1][y2+1] += v;",
+     "desc": "dodanie v na prostokącie (2D)",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Tablica rozmiaru `n + 1` zamiast `n + 2` — zapis `d[r + 1]` dla `r = n` wychodzi poza zakres.",
+    "Odczyt wartości w trakcie operacji (online) — tablica różnicowa wymaga, żeby wszystkie dodawania były przed odczytami; inaczej Fenwick.",
+    "Zapomniane dodanie początkowych wartości `a[i]` do zsumowanych różnic.",
+    "W 2D zły znak w jednym z czterech rogów — rysuj prostokąt i sprawdzaj na małym przykładzie.",
+    "Współrzędne do 10^9 — tablica nie zmieści się w pamięci; potrzebna kompresja albo sortowanie zdarzeń."
+   ],
+   "qa": [
+    {
+     "q": [
+      "tablica różnicowa",
+      "tablica roznicowa jak dziala",
+      "difference array c++",
+      "co to tablica różnicowa",
+      "tablica roznic kod"
+     ],
+     "a": "Tablica różnicowa zapisuje różnice sąsiednich elementów, dzięki czemu dodanie `v` na przedziale `[l, r]` to tylko `d[l] += v` i `d[r+1] -= v` (O(1)). Po wszystkich operacjach liczysz sumy prefiksowe `d` i dostajesz łączny dodatek w każdym punkcie (O(n)). To odwrotność sum prefiksowych: tamte dają szybkie zapytania, ta — szybkie aktualizacje.",
+     "code": "int n = 6;\nvector<long long> d(n + 2, 0);\nauto rangeAdd = [&](int l, int r, long long v) { d[l] += v; d[r + 1] -= v; };\nrangeAdd(1, 3, 5);\nrangeAdd(2, 6, 1);\nlong long cur = 0;\nfor (int i = 1; i <= n; i++) {\n    cur += d[i];\n    cout << cur << ' ';     // 5 6 6 1 1 1\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "dodaj wartość na przedziale offline",
+      "m operacji dodaj na przedziale potem wypisz",
+      "range update offline",
+      "wiele dodawan na przedzialach",
+      "dodawanie wartości na przedziałach a na końcu wypisanie tablicy",
+      "dodaj x na przedziale wiele razy potem wypisz tablicę"
+     ],
+     "a": "Gdy wszystkie operacje są znane przed pierwszym odczytem, każda kosztuje O(1) w tablicy różnicowej, a odtworzenie O(n): łącznie O(n + m) zamiast O(n·m). Pamiętaj o rozmiarze `n + 2` i o dodaniu wartości początkowych.",
+     "code": "vector<long long> a = {0, 1, 1, 1, 1, 1};       // a[1..5]\nint n = 5;\nvector<long long> d(n + 2, 0);\nvector<array<long long, 3>> ops = {{1, 3, 2}, {2, 5, 10}, {5, 5, -1}};\nfor (auto [l, r, v] : ops) { d[l] += v; d[r + 1] -= v; }\nlong long add = 0;\nfor (int i = 1; i <= n; i++) {\n    add += d[i];\n    cout << a[i] + add << ' ';   // 3 13 13 11 10\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "ile odcinków pokrywa punkt",
+      "ile razy każdy punkt jest pokryty",
+      "pokrycie przedziałami",
+      "maksymalne pokrycie odcinkami",
+      "ile osob jest jednoczesnie"
+     ],
+     "a": "Każdy odcinek `[l, r]` to `+1` w `l` i `-1` w `r+1`; suma prefiksowa daje liczbę odcinków nad każdym punktem, a jej maksimum — maksymalne pokrycie. Przy dużych współrzędnych posortuj zdarzenia `(pozycja, ±1)`. Gdy `-1` wstawiasz w `r+1`, przy równej pozycji `-1` musi być przed `+1` (odcinek `[.., r]` i odcinek `[r+1, ..]` się nie stykają) — sortowanie par robi to samo. Złożoność O(n log n).",
+     "code": "int maxCoverage(vector<pair<int, int>> segs) {   // odcinki domknięte [l, r]\n    vector<pair<long long, int>> ev;\n    for (auto [l, r] : segs) {\n        ev.push_back({l, +1});\n        ev.push_back({(long long)r + 1, -1});\n    }\n    sort(ev.begin(), ev.end());                  // przy równej pozycji -1 przed +1 (pair sortuje po drugim)\n    int cur = 0, best = 0;\n    for (auto [x, t] : ev) {\n        cur += t;\n        best = max(best, cur);\n    }\n    return best;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "tablica różnicowa 2d",
+      "tablica roznicowa 2d",
+      "dodawanie na prostokącie",
+      "2d difference array",
+      "zamalowanie prostokątów ile razy"
+     ],
+     "a": "Dodanie `v` na prostokącie `[x1..x2]×[y1..y2]` to cztery zmiany: `+v` w `(x1, y1)`, `-v` w `(x1, y2+1)` i `(x2+1, y1)`, `+v` w `(x2+1, y2+1)`. Po wszystkich operacjach sumy prefiksowe 2D z tej tablicy dają wartości pól. O(1) na operację i O(n·m) na końcu.",
+     "code": "int n = 3, m = 3;\nvector<vector<int>> d(n + 2, vector<int>(m + 2, 0));\nauto addRect = [&](int x1, int y1, int x2, int y2, int v) {\n    d[x1][y1] += v; d[x1][y2 + 1] -= v; d[x2 + 1][y1] -= v; d[x2 + 1][y2 + 1] += v;\n};\naddRect(1, 1, 2, 2, 1);\naddRect(2, 2, 3, 3, 1);\nfor (int i = 1; i <= n; i++)\n    for (int j = 1; j <= m; j++)\n        d[i][j] += d[i - 1][j] + d[i][j - 1] - d[i - 1][j - 1];\ncout << d[2][2] << '\\n';   // 2 — pole pokryte dwa razy"
+    },
+    {
+     "q": [
+      "dodawanie ciągu arytmetycznego na przedziale",
+      "dodaj 1 2 3 ... na przedziale",
+      "tablica roznicowa drugiego rzedu",
+      "dodaj postęp arytmetyczny"
+     ],
+     "a": "Dodanie `1, 2, …, len` na `[l, r]` (gdzie `len = r - l + 1`) robi się różnicą **drugiego rzędu**: `d2[l] += 1`, `d2[r+1] -= len + 1`, `d2[r+2] += len`. Dwukrotne liczenie sum prefiksowych odtwarza dodatki. Każda operacja O(1), odtworzenie O(n); tablica musi mieć rozmiar `n + 3`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n = 7;\n    vector<long long> d2(n + 3, 0);\n    auto addProgression = [&](int l, int r) {   // dodaje 1, 2, ..., r-l+1 na [l, r]\n        long long len = r - l + 1;\n        d2[l] += 1;\n        d2[r + 1] -= len + 1;\n        d2[r + 2] += len;\n    };\n    addProgression(2, 5);\n    addProgression(4, 7);\n    vector<long long> d1(n + 1, 0), val(n + 1, 0);\n    for (int i = 1; i <= n; i++) d1[i] = d1[i - 1] + d2[i];   // pierwsza suma prefiksowa\n    for (int i = 1; i <= n; i++) val[i] = val[i - 1] + d1[i]; // druga\n    for (int i = 1; i <= n; i++) cout << val[i] << \" \\n\"[i == n];\n}"
+    },
+    {
+     "q": [
+      "tablica różnicowa online",
+      "dodaj na przedziale i pytaj o punkt",
+      "range update point query",
+      "zmiany i zapytania na przemian przedzial"
+     ],
+     "a": "Gdy odczyty przeplatają się z dodawaniem, trzymaj tablicę różnicową w drzewie Fenwicka: dodanie na `[l, r]` to `add(l, v)` i `add(r+1, -v)`, a wartość `a[i]` to suma prefiksu `sum(i)` (plus wartość początkowa). Obie operacje O(log n). Dla sum na przedziale przy dodawaniu na przedziale potrzebne są dwa Fenwicki albo lazy segment tree.",
+     "code": "struct Fenwick {\n    int n;\n    vector<long long> t;\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, long long v) { for (; i <= n; i += i & -i) t[i] += v; }\n    long long sum(int i) { long long s = 0; for (; i > 0; i -= i & -i) s += t[i]; return s; }\n    void rangeAdd(int l, int r, long long v) { add(l, v); if (r + 1 <= n) add(r + 1, -v); }\n    long long pointQuery(int i) { return sum(i); }   // łączny dodatek w punkcie i\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "różnica między sumami prefiksowymi a tablicą różnicową",
+      "sumy prefiksowe vs tablica roznicowa",
+      "kiedy tablica roznicowa a kiedy prefiksy"
+     ],
+     "a": "Sumy prefiksowe: tablica stała, dużo **zapytań o przedział** (O(1) każde). Tablica różnicowa: dużo **aktualizacji na przedziale**, odczyt dopiero na końcu (O(1) każda). Są wzajemnie odwrotne: suma prefiksowa z tablicy różnicowej daje tablicę, a różnice sum prefiksowych dają z powrotem elementy. Gdy potrzebujesz jednego i drugiego online — Fenwick albo drzewo przedziałowe."
+    }
+   ],
+   "related": [
+    "ds-prefix-sums",
+    "ds-prefix-sums-2d",
+    "ds-fenwick-range",
+    "ds-lazy-propagation",
+    "tech-sweep-line",
+    "tech-coordinate-compression",
+    "stl-ref-numeric",
+    "tech-intervals"
+   ]
+  },
+  {
+   "id": "ds-sparse-table",
+   "title": "Sparse table — RMQ w O(1)",
+   "category": "Struktury danych",
+   "tags": [
+    "sparse table",
+    "rmq",
+    "minimum na przedziale",
+    "range minimum query",
+    "idempotentne",
+    "potęgi dwójki"
+   ],
+   "aliases": [
+    "sparse table",
+    "sparse tablica",
+    "rmq",
+    "range minimum query",
+    "minimum na przedziale o(1)",
+    "tablica rzadka",
+    "st tablica",
+    "min na przedziale bez zmian",
+    "sparse table c++",
+    "spars table"
+   ],
+   "summary": "`st[k][i]` = minimum z przedziału długości 2^k zaczynającego się w `i`. Po budowie w O(n log n) minimum (maksimum, gcd) dowolnego przedziału liczy się w O(1) z dwóch nakładających się kawałków. Tylko dla tablic bez zmian.",
+   "complexity": "budowa O(n log n), zapytanie min/max/gcd O(1) (gcd: O(log C)), pamięć O(n log n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Każdy przedział `[l, r]` da się pokryć **dwoma** przedziałami o długości `2^k`, gdzie `k = ⌊log2(r - l + 1)⌋`: jednym zaczynającym się w `l`, drugim kończącym się w `r`. Nakładają się, ale dla minimum to nie przeszkadza (`min(x, x) = x` — operacja **idempotentna**). Wystarczy więc znać minima wszystkich przedziałów o długościach będących potęgami dwójki: `st[k][i] = min(st[k-1][i], st[k-1][i + 2^(k-1)])`."
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy używać:** tablica **się nie zmienia**, a zapytań o min/max/gcd na przedziale jest bardzo dużo (np. 10^6) — wtedy O(1) na zapytanie wygrywa z O(log n) drzewa przedziałowego. Klasyczne użycie: LCA przez Euler tour + RMQ, sufiksy i LCP, „najmniejszy element w każdym z q przedziałów”.\n\n**Kiedy nie:** suma (nie jest idempotentna — nakładanie liczy elementy podwójnie), zmiany w tablicy (wtedy drzewo przedziałowe)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: q zapytań o minimum na przedziale",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct SparseTable {\n    vector<vector<int>> st;   // st[k][i] = min(a[i .. i + 2^k - 1])\n\n    SparseTable(const vector<int>& a) {\n        int n = a.size();\n        int levels = __lg(max(n, 1)) + 1;\n        st.assign(levels, vector<int>(n));\n        st[0] = a;\n        for (int k = 1; k < levels; k++)\n            for (int i = 0; i + (1 << k) <= n; i++)\n                st[k][i] = min(st[k - 1][i], st[k - 1][i + (1 << (k - 1))]);\n    }\n\n    int query(int l, int r) const {   // min na [l, r], 0-indeksowane, l <= r\n        int k = __lg(r - l + 1);\n        return min(st[k][l], st[k][r - (1 << k) + 1]);\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<int> a(n);\n    for (int& x : a) cin >> x;\n    SparseTable st(a);\n    while (q--) {\n        int l, r;               // 1-indeksowane w wejściu\n        cin >> l >> r;\n        cout << st.query(l - 1, r - 1) << '\\n';\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Idempotentna?",
+      "Sparse table O(1)?"
+     ],
+     "rows": [
+      [
+       "min, max",
+       "tak",
+       "tak"
+      ],
+      [
+       "gcd",
+       "tak",
+       "tak (każde gcd kosztuje O(log C))"
+      ],
+      [
+       "AND, OR",
+       "tak",
+       "tak"
+      ],
+      [
+       "suma, XOR, iloczyn",
+       "nie",
+       "nie — tylko O(log n) przez rozkład na rozłączne potęgi dwójki"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "`__lg(x)` (GCC) zwraca numer najstarszego zapalonego bitu, czyli `⌊log2 x⌋` dla `x > 0`, w O(1). Alternatywnie preliczona tablica `lg[i] = lg[i/2] + 1`. Nie używaj `log2()` z `double` — błędy zaokrągleń przy potęgach dwójki."
+    },
+    {
+     "type": "warn",
+     "md": "Pamięć: dla n = 10^6 i 20 poziomów `int` to 80 MB. Przy ciasnym limicie trzymaj poziomy jako `vector<vector<int>>` przycięte do długości `n - 2^k + 1` albo zmień strukturę."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "SparseTable(const vector<int>& a)",
+     "desc": "budowa tablicy poziomów",
+     "complexity": "O(n log n)"
+    },
+    {
+     "sig": "query(l, r)",
+     "desc": "minimum na [l, r] (0-indeksowane, l ≤ r)",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "int m = st.query(2, 7);"
+    },
+    {
+     "sig": "__lg(x)",
+     "desc": "⌊log2 x⌋ dla x > 0 (wbudowana funkcja GCC)",
+     "complexity": "O(1)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Użycie sparse table do sumy z dwoma nakładającymi się kawałkami — elementy wspólne liczone dwa razy.",
+    "`__lg(0)` jest niezdefiniowane — zapytanie z `l > r` lub budowa dla pustej tablicy.",
+    "Pomylenie indeksowania: `st[k][r - (1 << k) + 1]`, a nie `st[k][r - (1 << k)]`.",
+    "Zbyt mała liczba poziomów (np. stałe LOG = 17 dla n = 2·10^5 — potrzeba 18, bo 2^17 < 2·10^5).",
+    "Kolejność wymiarów `st[i][k]` zamiast `st[k][i]` działa, ale gorzej wykorzystuje cache."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sparse table",
+      "sparse table c++",
+      "sparse table jak działa",
+      "rmq o(1)",
+      "sparse tablica kod"
+     ],
+     "a": "Sparse table trzyma minima przedziałów o długości 2^k: `st[k][i] = min(st[k-1][i], st[k-1][i + 2^(k-1)])`. Zapytanie `[l, r]` pokrywa dwoma nakładającymi się blokami długości `2^k`, `k = __lg(r-l+1)`, co dla min jest poprawne, bo `min` jest idempotentne. Budowa O(n log n), zapytanie O(1), brak zmian w tablicy.",
+     "code": "struct SparseTable {\n    vector<vector<int>> st;\n    SparseTable(const vector<int>& a) {\n        int n = a.size(), levels = __lg(max(n, 1)) + 1;\n        st.assign(levels, vector<int>(n));\n        st[0] = a;\n        for (int k = 1; k < levels; k++)\n            for (int i = 0; i + (1 << k) <= n; i++)\n                st[k][i] = min(st[k - 1][i], st[k - 1][i + (1 << (k - 1))]);\n    }\n    int query(int l, int r) const {   // [l, r], 0-indeksowane\n        int k = __lg(r - l + 1);\n        return min(st[k][l], st[k][r - (1 << k) + 1]);\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "minimum na przedziale bez zmian",
+      "min na przedziale szybko",
+      "range minimum query statyczne",
+      "minimum z przedzialu wiele zapytan"
+     ],
+     "a": "Dla tablicy bez zmian najszybsza jest sparse table: O(n log n) budowy i O(1) na zapytanie. Gdy tablica się zmienia, użyj drzewa przedziałowego (O(log n) na operację). Gdy zapytania są offline i jest ich mało, można też posortować je i użyć stosu monotonicznego, ale sparse table jest najprostsza."
+    },
+    {
+     "q": [
+      "dlaczego sparse table nie działa dla sumy",
+      "sparse table suma",
+      "sparse table sum o(1)",
+      "sparse table xor"
+     ],
+     "a": "Dwa bloki długości `2^k` w zapytaniu O(1) się nakładają — dla minimum to nieszkodliwe, ale suma policzyłaby wspólne elementy dwa razy. Dla sumy możesz rozłożyć `[l, r]` na rozłączne bloki potęg dwójki (O(log n) na zapytanie), ale to gorsze od zwykłych sum prefiksowych, które dają O(1). Dla XOR analogicznie wystarczą prefiksowe XOR-y.",
+     "code": "// suma na [l, r] w O(log n) przez rozłączne bloki (dla porównania; w praktyce użyj sum prefiksowych)\nlong long sumQuery(const vector<vector<long long>>& st, int l, int r) {\n    long long s = 0;\n    for (int k = (int)st.size() - 1; k >= 0; k--)\n        if (l + (1 << k) - 1 <= r) {\n            s += st[k][l];\n            l += 1 << k;\n        }\n    return s;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "gcd na przedziale",
+      "nwd na przedziale sparse table",
+      "gcd range query",
+      "sparse table gcd"
+     ],
+     "a": "`gcd` jest idempotentne (`gcd(x, x) = x`), więc sparse table działa bez zmian — zamieniasz `min` na `gcd`. Zapytanie kosztuje dwa odczyty i jedno `gcd`, czyli O(log C). Przydatne np. w „ile podtablic ma gcd równe 1” razem z wyszukiwaniem binarnym lub dwoma wskaźnikami.",
+     "code": "struct GcdTable {\n    vector<vector<long long>> st;\n    GcdTable(const vector<long long>& a) {\n        int n = a.size(), levels = __lg(max(n, 1)) + 1;\n        st.assign(levels, vector<long long>(n));\n        st[0] = a;\n        for (int k = 1; k < levels; k++)\n            for (int i = 0; i + (1 << k) <= n; i++)\n                st[k][i] = gcd(st[k - 1][i], st[k - 1][i + (1 << (k - 1))]);\n    }\n    long long query(int l, int r) const {\n        int k = __lg(r - l + 1);\n        return gcd(st[k][l], st[k][r - (1 << k) + 1]);\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "__lg co to",
+      "__lg c++",
+      "jak policzyć log2 w c++ szybko",
+      "log2 int c++"
+     ],
+     "a": "`__lg(x)` to wbudowana funkcja GCC zwracająca indeks najstarszego zapalonego bitu, czyli `⌊log2 x⌋` dla `x > 0` (dla `long long` też działa). Jest O(1) i nie ma błędów zaokrągleń jak `log2()` na `double`. W C++20 możesz też użyć `std::bit_width(x) - 1` z `<bit>` (dla typów bez znaku).",
+     "code": "cout << __lg(1) << ' ' << __lg(8) << ' ' << __lg(9) << '\\n';   // 0 3 3\nunsigned x = 1000;\ncout << bit_width(x) - 1 << '\\n';                             // 9"
+    },
+    {
+     "q": [
+      "indeks minimum na przedziale",
+      "argmin sparse table",
+      "pozycja najmniejszego elementu w przedziale"
+     ],
+     "a": "Trzymaj w tablicy indeksy zamiast wartości i porównuj `a[i]` z `a[j]`. Przy remisie wybierz konsekwentnie mniejszy indeks, żeby wynik był jednoznaczny. Złożoność bez zmian: O(n log n) budowy i O(1) zapytania.",
+     "code": "struct ArgMinTable {\n    vector<int> a;\n    vector<vector<int>> st;   // indeksy\n    int better(int i, int j) const { return (a[j] < a[i] || (a[j] == a[i] && j < i)) ? j : i; }\n    ArgMinTable(const vector<int>& v) : a(v) {\n        int n = a.size(), levels = __lg(max(n, 1)) + 1;\n        st.assign(levels, vector<int>(n));\n        for (int i = 0; i < n; i++) st[0][i] = i;\n        for (int k = 1; k < levels; k++)\n            for (int i = 0; i + (1 << k) <= n; i++)\n                st[k][i] = better(st[k - 1][i], st[k - 1][i + (1 << (k - 1))]);\n    }\n    int query(int l, int r) const {\n        int k = __lg(r - l + 1);\n        return better(st[k][l], st[k][r - (1 << k) + 1]);\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sparse table vs drzewo przedziałowe",
+      "co lepsze sparse table czy segment tree",
+      "kiedy sparse table"
+     ],
+     "a": "Sparse table: tylko statyczna tablica i operacje idempotentne, ale zapytanie O(1) i bardzo prosty kod; pamięć O(n log n). Drzewo przedziałowe: obsługuje zmiany i dowolne łączne operacje (suma, min, własne struktury), zapytanie O(log n), pamięć O(n). Przy 10^6 zapytań o min na stałej tablicy wybierz sparse table, przy jakichkolwiek zmianach — drzewo."
+    },
+    {
+     "q": [
+      "lca sparse table",
+      "lca przez rmq",
+      "euler tour + sparse table"
+     ],
+     "a": "LCA dwóch wierzchołków to wierzchołek o najmniejszej głębokości na odcinku trasy Eulera między ich pierwszymi wystąpieniami. Budujesz trasę Eulera (2n-1 wpisów), sparse table po głębokościach (z indeksami jak w argmin) i odpowiadasz w O(1) na zapytanie po O(n log n) budowy. To szybsze od binary lifting przy bardzo wielu zapytaniach."
+    },
+    {
+     "q": [
+      "ile poziomów sparse table",
+      "LOG sparse table ile",
+      "sparse table rozmiar tablicy"
+     ],
+     "a": "Potrzebujesz `⌊log2 n⌋ + 1` poziomów — np. dla n = 2·10^5 jest to 18 (bo 2^17 = 131072 < 2·10^5 ≤ 2^18). Bezpiecznie licz `levels = __lg(n) + 1` dynamicznie albo przyjmij stałą z zapasem (np. 20 dla n ≤ 10^6). Za mało poziomów daje błędne odpowiedzi dla długich przedziałów."
+    }
+   ],
+   "related": [
+    "ds-segment-tree",
+    "ds-monotonic-stack",
+    "tech-euler-tour",
+    "tree-lca",
+    "ds-sqrt-decomposition",
+    "tree-lca-euler",
+    "ds-cartesian-tree",
+    "ds-min-stack-queue"
+   ]
+  },
+  {
+   "id": "ds-monotonic-stack",
+   "title": "Stos monotoniczny (najbliższy większy/mniejszy element)",
+   "category": "Struktury danych",
+   "tags": [
+    "stos monotoniczny",
+    "monotonic stack",
+    "next greater element",
+    "najbliższy większy",
+    "histogram",
+    "stack"
+   ],
+   "aliases": [
+    "stos monotoniczny",
+    "monotonic stack",
+    "next greater element",
+    "najbliższy większy element",
+    "najblizszy wiekszy",
+    "najbliższy mniejszy z lewej",
+    "nge",
+    "largest rectangle in histogram",
+    "stos monotoniczny c++",
+    "monostack"
+   ],
+   "summary": "Stos trzymający indeksy w kolejności monotonicznej wartości pozwala w O(n) łącznie znaleźć dla każdego elementu najbliższy większy (lub mniejszy) element z lewej albo prawej strony.",
+   "complexity": "O(n) łącznie (każdy indeks raz wchodzi i raz wychodzi ze stosu), pamięć O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Idziemy od lewej i trzymamy na stosie indeksy elementów, które **jeszcze nie znalazły** swojego większego następnika. Wartości na stosie maleją od dołu do góry. Gdy przychodzi `a[i]`, zdejmujemy wszystkie mniejsze elementy — to właśnie `a[i]` jest dla nich najbliższym większym z prawej. Każdy indeks wchodzi i wychodzi co najwyżej raz, więc łącznie O(n), mimo pętli `while` w środku."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „dla każdego elementu znajdź najbliższy większy/mniejszy”, „kto kogo widzi / ile budynków jest widocznych”, „największy prostokąt w histogramie”, „suma minimów wszystkich podtablic”, „dla każdego dnia: ile dni czekać na wyższą temperaturę”, „zasięg w lewo, dopóki elementy są mniejsze”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: najbliższy większy z prawej i najbliższy mniejszy z lewej",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n\n    // nextGreater[i] = indeks najbliższego elementu > a[i] po prawej (albo -1)\n    vector<int> nextGreater(n, -1);\n    vector<int> st;                       // indeksy, a[st] malejąco od dołu\n    for (int i = 0; i < n; i++) {\n        while (!st.empty() && a[st.back()] < a[i]) {\n            nextGreater[st.back()] = i;   // a[i] jest pierwszym większym dla zdejmowanego\n            st.pop_back();\n        }\n        st.push_back(i);\n    }\n\n    // prevSmaller[i] = indeks najbliższego elementu < a[i] po lewej (albo -1)\n    vector<int> prevSmaller(n, -1);\n    st.clear();\n    for (int i = 0; i < n; i++) {\n        while (!st.empty() && a[st.back()] >= a[i]) st.pop_back();\n        prevSmaller[i] = st.empty() ? -1 : st.back();\n        st.push_back(i);\n    }\n\n    for (int i = 0; i < n; i++) cout << (nextGreater[i] == -1 ? -1 : a[nextGreater[i]]) << \" \\n\"[i == n - 1];\n    for (int i = 0; i < n; i++) cout << (prevSmaller[i] == -1 ? -1 : a[prevSmaller[i]]) << \" \\n\"[i == n - 1];\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Czego szukasz",
+      "Kierunek pętli",
+      "Warunek zdejmowania"
+     ],
+     "rows": [
+      [
+       "najbliższy większy z prawej",
+       "od lewej (przypisz przy zdejmowaniu)",
+       "a[top] < a[i]"
+      ],
+      [
+       "najbliższy większy z lewej",
+       "od lewej (odczytaj top po zdjęciu)",
+       "a[top] <= a[i]"
+      ],
+      [
+       "najbliższy mniejszy z lewej",
+       "od lewej",
+       "a[top] >= a[i]"
+      ],
+      [
+       "najbliższy mniejszy z prawej",
+       "od lewej (przypisz przy zdejmowaniu)",
+       "a[top] > a[i]"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Trzymaj na stosie **indeksy**, nie wartości — z indeksu odczytasz wartość, a dodatkowo policzysz odległości i długości przedziałów (`i - st.back()`)."
+    },
+    {
+     "type": "warn",
+     "md": "Przy zadaniach typu „suma minimów wszystkich podtablic” remisy trzeba rozstrzygać asymetrycznie (z jednej strony `<`, z drugiej `<=`), inaczej podtablice z równymi minimami policzysz dwa razy."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "while (!st.empty() && a[st.back()] < a[i]) st.pop_back();",
+     "desc": "zdejmij elementy mniejsze od bieżącego",
+     "complexity": "O(1) zamortyzowane"
+    },
+    {
+     "sig": "st.empty() ? -1 : st.back()",
+     "desc": "najbliższy element spełniający warunek po lewej",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Pomylenie `<` z `<=` w warunku — przy równych wartościach zmienia się, czy szukasz „ściśle większego”, czy „większego lub równego”.",
+    "Trzymanie wartości zamiast indeksów — tracisz informację o pozycji.",
+    "Zapomniany element na stosie po końcu pętli — te indeksy nie mają większego następnika (zostaw -1 albo n).",
+    "Myślenie, że to O(n²) przez zagnieżdżoną pętlę — jest O(n) zamortyzowane, nie szukaj na siłę innego rozwiązania."
+   ],
+   "qa": [
+    {
+     "q": [
+      "stos monotoniczny",
+      "monotonic stack c++",
+      "stos monotoniczny jak dziala",
+      "monostack kod"
+     ],
+     "a": "Stos monotoniczny trzyma indeksy, których wartości są uporządkowane (np. malejąco od dołu). Nowy element zdejmuje ze szczytu wszystko, co łamie porządek — dla zdjętych to on jest „najbliższym większym z prawej”. Każdy indeks wchodzi i wychodzi raz, więc całość działa w O(n).",
+     "code": "vector<int> a = {2, 7, 3, 5, 4, 6, 8};\nint n = a.size();\nvector<int> nge(n, -1), st;\nfor (int i = 0; i < n; i++) {\n    while (!st.empty() && a[st.back()] < a[i]) { nge[st.back()] = a[i]; st.pop_back(); }\n    st.push_back(i);\n}\nfor (int x : nge) cout << x << ' ';   // 7 8 5 6 6 8 -1\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "najbliższy większy element",
+      "next greater element",
+      "najblizszy wiekszy po prawej",
+      "dla każdego elementu pierwszy większy"
+     ],
+     "a": "Idź od lewej, trzymaj stos indeksów o malejących wartościach. Gdy `a[i]` jest większe od szczytu, szczyt dostaje odpowiedź `i` i jest zdejmowany; potem wrzucasz `i`. Indeksy, które zostaną na stosie, nie mają większego następnika. O(n) czasu i pamięci."
+    },
+    {
+     "q": [
+      "najbliższy mniejszy z lewej",
+      "previous smaller element",
+      "pierwszy mniejszy po lewej stronie",
+      "najblizszy mniejszy na lewo"
+     ],
+     "a": "Idź od lewej; przed wrzuceniem `i` zdejmij wszystkie indeksy z `a[top] >= a[i]` — nie będą już nikomu odpowiedzią, bo `a[i]` jest bliżej i nie większe. Szczyt po zdejmowaniu (albo brak) to odpowiedź dla `i`. Złożoność O(n).",
+     "code": "vector<int> prevSmaller(const vector<int>& a) {\n    int n = a.size();\n    vector<int> res(n, -1), st;\n    for (int i = 0; i < n; i++) {\n        while (!st.empty() && a[st.back()] >= a[i]) st.pop_back();\n        res[i] = st.empty() ? -1 : st.back();   // indeks albo -1\n        st.push_back(i);\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "największy prostokąt w histogramie",
+      "largest rectangle in histogram",
+      "prostokat w histogramie stos",
+      "maksymalny prostokąt histogram"
+     ],
+     "a": "Dla każdego słupka `i` prostokąt o wysokości `h[i]` rozciąga się od najbliższego niższego z lewej do najbliższego niższego z prawej (wyłącznie). Oba policzysz stosem monotonicznym w O(n), a pole to `h[i] · (right[i] - left[i] - 1)`. Wynik w `long long`. To też baza dla „największy prostokąt z samych jedynek w macierzy” (histogram dla każdego wiersza, O(n·m)).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> h(n);\n    for (auto& x : h) cin >> x;\n    vector<int> left(n), right(n), st;\n    for (int i = 0; i < n; i++) {\n        while (!st.empty() && h[st.back()] >= h[i]) st.pop_back();\n        left[i] = st.empty() ? -1 : st.back();\n        st.push_back(i);\n    }\n    st.clear();\n    for (int i = n - 1; i >= 0; i--) {\n        while (!st.empty() && h[st.back()] >= h[i]) st.pop_back();\n        right[i] = st.empty() ? n : st.back();\n        st.push_back(i);\n    }\n    long long best = 0;\n    for (int i = 0; i < n; i++) best = max(best, h[i] * (right[i] - left[i] - 1));\n    cout << best << '\\n';\n}"
+    },
+    {
+     "q": [
+      "suma minimów wszystkich podtablic",
+      "sum of subarray minimums",
+      "suma minimow podciagow spojnych",
+      "ile razy element jest minimum"
+     ],
+     "a": "Element `a[i]` jest minimum w `(i - L) · (R - i)` podtablicach, gdzie `L` to najbliższy mniejszy z lewej, a `R` najbliższy mniejszy-lub-równy z prawej. Asymetria `<` / `<=` sprawia, że podtablica z kilkoma równymi minimami jest przypisana dokładnie jednemu z nich. Dwa przejścia stosem — O(n).",
+     "code": "long long sumOfMinimums(const vector<long long>& a) {\n    int n = a.size();\n    vector<int> L(n), R(n), st;\n    for (int i = 0; i < n; i++) {               // L: ściśle mniejszy z lewej\n        while (!st.empty() && a[st.back()] >= a[i]) st.pop_back();\n        L[i] = st.empty() ? -1 : st.back();\n        st.push_back(i);\n    }\n    st.clear();\n    for (int i = n - 1; i >= 0; i--) {          // R: mniejszy lub równy z prawej\n        while (!st.empty() && a[st.back()] > a[i]) st.pop_back();\n        R[i] = st.empty() ? n : st.back();\n        st.push_back(i);\n    }\n    long long total = 0;\n    for (int i = 0; i < n; i++) total += a[i] * (i - L[i]) * (R[i] - i);\n    return total;   // dla {3, 1, 2, 4} wynik 17\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile dni do cieplejszego dnia",
+      "daily temperatures",
+      "za ile dni większa wartość",
+      "odleglosc do najblizszego wiekszego"
+     ],
+     "a": "To najbliższy większy z prawej, tylko zamiast wartości zapisujesz odległość `i - top`. Stos indeksów o malejących wartościach, O(n). Elementy, które nie doczekały się większego, mają odpowiedź 0 (lub -1 — zgodnie z treścią).",
+     "code": "vector<int> t = {73, 74, 75, 71, 69, 72, 76, 73};\nint n = t.size();\nvector<int> wait(n, 0), st;\nfor (int i = 0; i < n; i++) {\n    while (!st.empty() && t[st.back()] < t[i]) { wait[st.back()] = i - st.back(); st.pop_back(); }\n    st.push_back(i);\n}\nfor (int x : wait) cout << x << ' ';   // 1 1 4 2 1 1 0 0\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "dlaczego stos monotoniczny jest O(n)",
+      "while w forze to n^2?",
+      "złożoność stosu monotonicznego",
+      "amortyzacja stos"
+     ],
+     "a": "Choć w pętli `for` jest `while`, każdy indeks zostaje wrzucony na stos dokładnie raz i zdjęty co najwyżej raz. Łączna liczba wykonań wnętrza `while` to więc co najwyżej `n`, a całość O(n) — to analiza zamortyzowana. Nie myl tego z pętlą, która za każdym razem przegląda cały stos."
+    },
+    {
+     "q": [
+      "ile budynków widać",
+      "ile osób widzi każda osoba w kolejce",
+      "widoczność w prawo stos",
+      "ile wyzszych widac"
+     ],
+     "a": "Typowa definicja: osoba `i` widzi osobę `j > i`, gdy wszyscy stojący pomiędzy są niżsi od obu. Idąc od prawej, trzymaj stos indeksów; osoby niższe od `h[i]` zdejmujesz i każda z nich jest widoczna, a dodatkowo widoczna jest pierwsza nie niższa (szczyt stosu po zdejmowaniu). Każdy element zdejmujesz raz — O(n). Remisy (czy równy zasłania) rozstrzygasz wyborem `<` lub `<=` zgodnie z treścią.",
+     "code": "vector<int> h = {10, 6, 8, 5, 11, 9};\nint n = h.size();\nvector<int> sees(n, 0), st;   // stos indeksów na prawo od i, wartości rosną od szczytu\nfor (int i = n - 1; i >= 0; i--) {\n    int cnt = 0;\n    while (!st.empty() && h[st.back()] < h[i]) { st.pop_back(); cnt++; }\n    if (!st.empty()) cnt++;   // pierwszy nie niższy też jest widoczny\n    sees[i] = cnt;\n    st.push_back(i);\n}\nfor (int x : sees) cout << x << ' ';   // 3 1 2 1 1 0\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "ds-monotonic-queue",
+    "ds-sparse-table",
+    "tech-two-pointers",
+    "stl-stack",
+    "ds-cartesian-tree",
+    "ds-min-stack-queue",
+    "ds-segment-tree-descent"
+   ]
+  },
+  {
+   "id": "ds-monotonic-queue",
+   "title": "Kolejka monotoniczna (minimum w oknie przesuwnym)",
+   "category": "Struktury danych",
+   "tags": [
+    "kolejka monotoniczna",
+    "monotonic queue",
+    "deque",
+    "minimum w oknie",
+    "sliding window minimum",
+    "optymalizacja dp"
+   ],
+   "aliases": [
+    "kolejka monotoniczna",
+    "monotonic queue",
+    "monotonic deque",
+    "minimum w oknie",
+    "min w oknie przesuwnym",
+    "sliding window maximum",
+    "max w oknie",
+    "deque minimum",
+    "monoqueue",
+    "kolejka monotoniczna dp"
+   ],
+   "summary": "Deque indeksów o rosnących wartościach daje minimum każdego okna długości k w O(n) łącznie. Ten sam mechanizm przyspiesza dynamiki typu `dp[i] = min(dp[j]) + c` dla `j` z przesuwnego zakresu.",
+   "complexity": "O(n) łącznie dla wszystkich okien, O(1) zamortyzowane na krok, pamięć O(k)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** W kolejce (deque) trzymamy indeksy kandydatów na minimum okna, w kolejności rosnących wartości. Gdy przychodzi `a[i]`, usuwamy z **tyłu** wszystkie elementy `≥ a[i]` — są starsze i nie mniejsze, więc już nigdy nie będą minimum. Z **przodu** usuwamy indeks, który wypadł z okna. Minimum okna jest zawsze na przodzie."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „dla każdego spójnego fragmentu długości *k* podaj minimum/maksimum”, „najdłuższy fragment, w którym max − min ≤ *d*” (dwa wskaźniki + dwie kolejki), dynamika `dp[i] = min(dp[i-k..i-1]) + koszt[i]` („skok o co najwyżej *k* pól”)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: minimum i maksimum każdego okna długości k",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, k;\n    cin >> n >> k;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n\n    deque<int> mn, mx;   // indeksy; a[mn] rośnie od przodu, a[mx] maleje od przodu\n    vector<long long> mins, maxs;\n    for (int i = 0; i < n; i++) {\n        while (!mn.empty() && a[mn.back()] >= a[i]) mn.pop_back();\n        mn.push_back(i);\n        while (!mx.empty() && a[mx.back()] <= a[i]) mx.pop_back();\n        mx.push_back(i);\n        if (mn.front() <= i - k) mn.pop_front();   // wypadł z okna [i-k+1, i]\n        if (mx.front() <= i - k) mx.pop_front();\n        if (i >= k - 1) {\n            mins.push_back(a[mn.front()]);\n            maxs.push_back(a[mx.front()]);\n        }\n    }\n    for (size_t i = 0; i < mins.size(); i++) cout << mins[i] << \" \\n\"[i + 1 == mins.size()];\n    for (size_t i = 0; i < maxs.size(); i++) cout << maxs[i] << \" \\n\"[i + 1 == maxs.size()];\n}"
+    },
+    {
+     "type": "tip",
+     "md": "W zadaniach dynamicznych (`dp[i] = min(dp[j] : i-k ≤ j < i) + c[i]`) zasada jest ta sama: przed policzeniem `dp[i]` usuń z przodu indeksy `< i-k`, odczytaj minimum z przodu, a po policzeniu wrzuć `i` od tyłu, usuwając gorszych kandydatów. Całość O(n) zamiast O(n·k)."
+    },
+    {
+     "type": "warn",
+     "md": "Sprawdzaj `empty()` przed `front()`/`back()`. W dynamice z ograniczonym skokiem kolejka może się opróżnić (np. gdy żadna pozycja nie jest osiągalna) — wtedy `front()` to niezdefiniowane zachowanie."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "while (!dq.empty() && a[dq.back()] >= a[i]) dq.pop_back(); dq.push_back(i);",
+     "desc": "wstawienie nowego elementu, usunięcie zdominowanych",
+     "complexity": "O(1) zamortyzowane"
+    },
+    {
+     "sig": "if (dq.front() <= i - k) dq.pop_front();",
+     "desc": "usunięcie elementu, który wypadł z okna",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "a[dq.front()]",
+     "desc": "minimum bieżącego okna",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Trzymanie wartości zamiast indeksów — nie da się wtedy stwierdzić, czy przód wypadł z okna.",
+    "Zły warunek wypadania: okno `[i-k+1, i]` oznacza usuwanie `front() <= i - k`.",
+    "Wypisywanie wyniku przed zapełnieniem pierwszego okna (`i < k - 1`).",
+    "Do maksimum odwróć nierówność (`<=` przy zdejmowaniu z tyłu), a nie kolejność wstawiania.",
+    "`multiset` też działa (O(n log n)), ale jest kilka razy wolniejszy — przy n = 10^6 może nie wejść."
+   ],
+   "qa": [
+    {
+     "q": [
+      "kolejka monotoniczna",
+      "monotonic queue c++",
+      "kolejka monotoniczna jak dziala",
+      "monotonic deque kod"
+     ],
+     "a": "Kolejka monotoniczna to `deque` indeksów, w której wartości rosną od przodu do tyłu. Nowy element usuwa z tyłu wszystkich nie lepszych kandydatów, a z przodu usuwamy indeks spoza okna; minimum jest na przodzie. Każdy indeks wchodzi i wychodzi raz, więc całość jest O(n).",
+     "code": "vector<int> a = {4, 2, 12, 3, 8, 1, 7};\nint k = 3;\ndeque<int> dq;\nfor (int i = 0; i < (int)a.size(); i++) {\n    while (!dq.empty() && a[dq.back()] >= a[i]) dq.pop_back();\n    dq.push_back(i);\n    if (dq.front() <= i - k) dq.pop_front();\n    if (i >= k - 1) cout << a[dq.front()] << ' ';   // 2 2 3 1 1\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "minimum w oknie przesuwnym",
+      "sliding window minimum",
+      "min z każdych k kolejnych",
+      "minimum okna dlugosci k",
+      "min w oknie"
+     ],
+     "a": "Użyj kolejki monotonicznej: O(n) dla wszystkich okien, zamiast O(n·k) przy liczeniu każdego okna od nowa. Alternatywy: `multiset` (O(n log n), prościej, ale wolniej) albo sparse table (O(n log n) pamięci). Dla sumy okna wystarczy zwykła bieżąca suma."
+    },
+    {
+     "q": [
+      "maksimum w oknie",
+      "sliding window maximum",
+      "max z k kolejnych elementów",
+      "max w oknie deque"
+     ],
+     "a": "To samo co minimum, tylko z tyłu zdejmujesz elementy `≤ a[i]` (wartości maleją od przodu). Maksimum okna jest na przodzie. Złożoność O(n).",
+     "code": "vector<long long> windowMax(const vector<long long>& a, int k) {\n    deque<int> dq;\n    vector<long long> res;\n    for (int i = 0; i < (int)a.size(); i++) {\n        while (!dq.empty() && a[dq.back()] <= a[i]) dq.pop_back();\n        dq.push_back(i);\n        if (dq.front() <= i - k) dq.pop_front();\n        if (i >= k - 1) res.push_back(a[dq.front()]);\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kolejka monotoniczna dp",
+      "optymalizacja dp deque",
+      "dp[i] = min dp[j] w oknie",
+      "skok o co najwyżej k pól dp",
+      "dp z oknem przesuwnym"
+     ],
+     "a": "Gdy `dp[i] = min(dp[j]) + c[i]` dla `j ∈ [i-k, i-1]`, minimum z przesuwającego się zakresu bierzesz z kolejki monotonicznej. Przed obliczeniem `dp[i]` usuwasz z przodu indeksy `< i-k`, potem wstawiasz `i` od tyłu. Zamiast O(n·k) masz O(n).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Żaba stoi na polu 0, może skoczyć o 1..k pól do przodu, wejście na pole i kosztuje c[i].\n// Minimalny koszt dotarcia do pola n-1.\nint main() {\n    int n, k;\n    cin >> n >> k;\n    vector<long long> c(n), dp(n);\n    for (auto& x : c) cin >> x;\n    deque<int> dq;\n    dp[0] = c[0];\n    dq.push_back(0);\n    for (int i = 1; i < n; i++) {\n        while (!dq.empty() && dq.front() < i - k) dq.pop_front();\n        dp[i] = dp[dq.front()] + c[i];\n        while (!dq.empty() && dp[dq.back()] >= dp[i]) dq.pop_back();\n        dq.push_back(i);\n    }\n    cout << dp[n - 1] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "najdłuższy fragment gdzie max - min <= k",
+      "najdluzszy podciag spojny roznica max min",
+      "longest subarray max min difference",
+      "dwa wskazniki i deque"
+     ],
+     "a": "Dwa wskaźniki: przesuwasz prawy koniec, a lewy przesuwasz, dopóki `max - min > k`. Maksimum i minimum okna trzymasz w dwóch kolejkach monotonicznych (z przodu usuwasz indeksy `< lewy`). Każdy wskaźnik przesuwa się tylko do przodu, więc całość O(n).",
+     "code": "int longestWithin(const vector<int>& a, int k) {\n    deque<int> mx, mn;\n    int best = 0, left = 0;\n    for (int right = 0; right < (int)a.size(); right++) {\n        while (!mx.empty() && a[mx.back()] <= a[right]) mx.pop_back();\n        mx.push_back(right);\n        while (!mn.empty() && a[mn.back()] >= a[right]) mn.pop_back();\n        mn.push_back(right);\n        while (a[mx.front()] - a[mn.front()] > k) {\n            left++;\n            if (mx.front() < left) mx.pop_front();\n            if (mn.front() < left) mn.pop_front();\n        }\n        best = max(best, right - left + 1);\n    }\n    return best;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kolejka z minimum na dwóch stosach",
+      "queue with min",
+      "kolejka fifo z operacją min",
+      "min queue two stacks"
+     ],
+     "a": "Gdy elementy nie wypadają według indeksu, tylko zwykłym `pop` z przodu, zrób kolejkę z dwóch stosów, gdzie każdy element stosu pamięta minimum poniżej siebie. `push` idzie na stos wejściowy, `pop` zdejmuje z wyjściowego (przelewając wejściowy, gdy wyjściowy pusty). Minimum to min ze szczytów obu stosów. Wszystko O(1) zamortyzowane.",
+     "code": "struct MinQueue {\n    vector<pair<long long, long long>> in, out;   // (wartość, minimum na stosie do tego miejsca)\n    static void pushTo(vector<pair<long long, long long>>& s, long long x) {\n        s.push_back({x, s.empty() ? x : min(x, s.back().second)});\n    }\n    void push(long long x) { pushTo(in, x); }\n    void pop() {\n        if (out.empty())\n            while (!in.empty()) { pushTo(out, in.back().first); in.pop_back(); }\n        out.pop_back();\n    }\n    long long getMin() const {\n        if (in.empty()) return out.back().second;\n        if (out.empty()) return in.back().second;\n        return min(in.back().second, out.back().second);\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "multiset zamiast deque w oknie",
+      "okno przesuwne multiset",
+      "czy mogę użyć multiset do minimum w oknie"
+     ],
+     "a": "Tak: wstawiasz `a[i]`, usuwasz jedną kopię `a[i-k]` przez `ms.erase(ms.find(x))` i czytasz `*ms.begin()`. To O(n log n) i jest prostsze, ale ma dużą stałą — przy n ≈ 10^6 i ciasnym limicie czasu kolejka monotoniczna (O(n)) jest bezpieczniejsza. Uwaga: `ms.erase(x)` usunęłoby wszystkie kopie.",
+     "code": "vector<int> a = {5, 1, 4, 2, 8};\nint k = 2;\nmultiset<int> ms;\nfor (int i = 0; i < (int)a.size(); i++) {\n    ms.insert(a[i]);\n    if (i >= k) ms.erase(ms.find(a[i - k]));\n    if (i >= k - 1) cout << *ms.begin() << ' ';   // 1 1 2 2\n}\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "ds-monotonic-stack",
+    "tech-sliding-window",
+    "tech-two-pointers",
+    "dp-intro",
+    "stl-deque",
+    "dp-monotonic-queue",
+    "ds-min-stack-queue",
+    "tech-kadane"
+   ]
+  },
+  {
+   "id": "ds-heap",
+   "title": "Kopiec i priority_queue",
+   "category": "Struktury danych",
+   "tags": [
+    "kopiec",
+    "heap",
+    "priority_queue",
+    "kolejka priorytetowa",
+    "min-heap",
+    "max-heap",
+    "binary heap"
+   ],
+   "aliases": [
+    "kopiec",
+    "heap",
+    "priority queue",
+    "priority_queue",
+    "kolejka priorytetowa",
+    "min heap",
+    "max heap",
+    "kopiec binarny",
+    "kopiec minimum",
+    "pq c++",
+    "kopiec implementacja",
+    "kolejka priorytetowa odwrotna"
+   ],
+   "summary": "Kopiec binarny trzyma element największy (lub najmniejszy) na szczycie: wstawienie i usunięcie szczytu w O(log n), odczyt szczytu w O(1). W C++ to `priority_queue` — domyślnie max-heap.",
+   "complexity": "push/pop O(log n), top O(1), budowa z n elementów O(n), pamięć O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Kopiec to pełne drzewo binarne zapisane w tablicy (dzieci węzła `i` to `2i+1` i `2i+2`), w którym każdy rodzic jest nie mniejszy od dzieci (max-heap). Dzięki temu maksimum jest w korzeniu, a po wstawieniu/usunięciu wystarczy „przepchnąć” jeden element w górę lub w dół — O(log n), bo drzewo ma wysokość log n.\n\n`priority_queue<T>` w C++ to gotowy max-heap. Min-heap: `priority_queue<T, vector<T>, greater<T>>`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „wielokrotnie wybierz najmniejszy/największy element i go usuń/zmień”, „łącz dwa najmniejsze” (Huffman), „k największych”, „mediana strumienia”, „zdarzenia w kolejności czasu”, Dijkstra, Prim, symulacja z najbliższym zdarzeniem."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "priority_queue: max-heap, min-heap, pary",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    priority_queue<int> maxHeap;                              // największy na szczycie\n    priority_queue<int, vector<int>, greater<int>> minHeap;   // najmniejszy na szczycie\n    for (int x : {5, 1, 8, 3, 9, 2}) {\n        maxHeap.push(x);\n        minHeap.push(x);\n    }\n    cout << maxHeap.top() << ' ' << minHeap.top() << '\\n';    // 9 1\n    while (!minHeap.empty()) {\n        cout << minHeap.top() << ' ';                         // 1 2 3 5 8 9\n        minHeap.pop();\n    }\n    cout << '\\n';\n\n    // pary: sortowanie po pierwszym, potem po drugim polu\n    priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;\n    pq.push({7, 1});\n    pq.push({3, 2});\n    pq.push({3, 0});\n    auto [dist, v] = pq.top();\n    cout << dist << ' ' << v << '\\n';                         // 3 0\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Ręczna implementacja kopca (push / pop / top)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Ręczny kopiec minimum na tablicy: dzieci i to 2i+1 i 2i+2, rodzic to (i-1)/2.\nstruct MinHeap {\n    vector<long long> h;\n\n    void push(long long x) {          // O(log n): wstaw na koniec i przepychaj w górę\n        h.push_back(x);\n        int i = h.size() - 1;\n        while (i > 0) {\n            int parent = (i - 1) / 2;\n            if (h[parent] <= h[i]) break;\n            swap(h[parent], h[i]);\n            i = parent;\n        }\n    }\n    long long top() const { return h[0]; }\n    void pop() {                      // O(log n): ostatni na miejsce korzenia i w dół\n        h[0] = h.back();\n        h.pop_back();\n        int i = 0, n = h.size();\n        while (true) {\n            int l = 2 * i + 1, r = 2 * i + 2, smallest = i;\n            if (l < n && h[l] < h[smallest]) smallest = l;\n            if (r < n && h[r] < h[smallest]) smallest = r;\n            if (smallest == i) break;\n            swap(h[i], h[smallest]);\n            i = smallest;\n        }\n    }\n    bool empty() const { return h.empty(); }\n    int size() const { return h.size(); }\n};\n\nint main() {\n    int q;\n    cin >> q;\n    MinHeap heap;\n    while (q--) {\n        int type;\n        cin >> type;\n        if (type == 1) {              // 1 x — dodaj x\n            long long x;\n            cin >> x;\n            heap.push(x);\n        } else {                      // 2 — wypisz i usuń minimum\n            cout << heap.top() << '\\n';\n            heap.pop();\n        }\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "priority_queue",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "wstaw",
+       "pq.push(x) / pq.emplace(...)",
+       "O(log n)"
+      ],
+      [
+       "odczyt szczytu",
+       "pq.top()",
+       "O(1)"
+      ],
+      [
+       "usuń szczyt",
+       "pq.pop()",
+       "O(log n)"
+      ],
+      [
+       "rozmiar / pusty",
+       "pq.size() / pq.empty()",
+       "O(1)"
+      ],
+      [
+       "budowa z wektora",
+       "priority_queue<int> pq(v.begin(), v.end())",
+       "O(n)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`pq.top()` i `pq.pop()` na pustej kolejce to niezdefiniowane zachowanie (zwykle crash). `priority_queue` nie ma iteratorów, `find` ani usuwania dowolnego elementu — do tego służy `set`/`multiset` albo „leniwe usuwanie”."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "priority_queue<T> pq",
+     "desc": "max-heap (największy na szczycie)",
+     "complexity": "—"
+    },
+    {
+     "sig": "priority_queue<T, vector<T>, greater<T>> pq",
+     "desc": "min-heap (najmniejszy na szczycie)",
+     "complexity": "—"
+    },
+    {
+     "sig": "pq.push(x)",
+     "desc": "wstawienie",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "pq.top()",
+     "desc": "największy (w min-heap: najmniejszy) element",
+     "complexity": "O(1)",
+     "returns": "const T&"
+    },
+    {
+     "sig": "pq.pop()",
+     "desc": "usunięcie szczytu (nic nie zwraca)",
+     "complexity": "O(log n)",
+     "returns": "void"
+    },
+    {
+     "sig": "make_heap / push_heap / pop_heap",
+     "desc": "operacje kopca na zwykłym wektorze z <algorithm>",
+     "complexity": "O(n) / O(log n) / O(log n)"
+    }
+   ],
+   "pitfalls": [
+    "Domyślna `priority_queue` jest **max**-heapem — dla Dijkstry potrzebujesz `greater<>` albo wstawiania ujemnych odległości.",
+    "Komparator działa „odwrotnie”: `greater` daje najmniejszy na szczycie, bo kopiec trzyma na górze element, który jest „największy” względem komparatora.",
+    "`pq.pop()` nie zwraca wartości — najpierw `top()`, potem `pop()`.",
+    "Brak usuwania dowolnego elementu: trzeba leniwego usuwania (licznik / sprawdzanie aktualności przy `top`) albo `multiset`.",
+    "Duże struktury w kolejce kopiowane przy każdym przesunięciu — trzymaj indeksy lub pary liczb."
+   ],
+   "qa": [
+    {
+     "q": [
+      "priority queue c++",
+      "kolejka priorytetowa c++",
+      "jak używać priority_queue",
+      "priority_queue przyklad",
+      "kopiec c++ stl"
+     ],
+     "a": "`priority_queue<int> pq;` to max-heap: `push(x)` i `pop()` w O(log n), `top()` w O(1). `pop()` niczego nie zwraca, więc najpierw czytasz `top()`. Do najmniejszego elementu na szczycie użyj `priority_queue<int, vector<int>, greater<int>>`.",
+     "code": "priority_queue<int> pq;\npq.push(4);\npq.push(10);\npq.push(1);\nwhile (!pq.empty()) {\n    cout << pq.top() << ' ';   // 10 4 1\n    pq.pop();\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "min heap c++",
+      "priority_queue najmniejszy na górze",
+      "odwrotna kolejka priorytetowa",
+      "priority queue greater",
+      "kopiec minimum stl"
+     ],
+     "a": "Podaj trzy parametry szablonu: `priority_queue<T, vector<T>, greater<T>>` — wtedy na szczycie jest najmniejszy element. Szybki trik dla liczb: wstawiaj `-x` do zwykłej kolejki i odczytuj `-pq.top()`, ale łatwo o pomyłkę, więc wersja z `greater` jest czytelniejsza. Złożoność taka sama: O(log n) na `push`/`pop`.",
+     "code": "priority_queue<long long, vector<long long>, greater<long long>> mn;\nfor (long long x : {5LL, 2LL, 9LL}) mn.push(x);\ncout << mn.top() << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "priority_queue własny komparator",
+      "priority queue lambda comparator",
+      "kolejka priorytetowa po drugim elemencie pary",
+      "custom comparator pq"
+     ],
+     "a": "Komparator zwraca `true`, gdy pierwszy argument ma być **niżej** w kopcu (dalej od szczytu). Dla struktury napisz `struct Cmp { bool operator()(...) const }` albo lambdę z `decltype`. Przykład: najmniejszy koszt na górze → `return a.cost > b.cost;`.",
+     "code": "struct Item {\n    int id;\n    long long cost;\n};\nstruct ByCost {\n    bool operator()(const Item& a, const Item& b) const { return a.cost > b.cost; }   // mniejszy koszt na szczycie\n};\n\nvoid demo() {\n    priority_queue<Item, vector<Item>, ByCost> pq;\n    pq.push({1, 50});\n    pq.push({2, 10});\n    cout << pq.top().id << '\\n';   // 2\n\n    auto cmp = [](const pair<int, int>& a, const pair<int, int>& b) { return a.second < b.second; };\n    priority_queue<pair<int, int>, vector<pair<int, int>>, decltype(cmp)> bySecond(cmp);\n    bySecond.push({1, 3});\n    bySecond.push({2, 7});\n    cout << bySecond.top().first << '\\n';   // 2 (największy drugi element)\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kopiec implementacja",
+      "jak napisać kopiec ręcznie",
+      "heap implementation c++",
+      "kopiec binarny w tablicy",
+      "sift up sift down"
+     ],
+     "a": "Kopiec w tablicy: dzieci węzła `i` to `2i+1` i `2i+2`, rodzic to `(i-1)/2`. `push` dopisuje element na koniec i zamienia go z rodzicem, dopóki jest mniejszy (sift up); `pop` przenosi ostatni element do korzenia i zamienia z mniejszym dzieckiem, dopóki trzeba (sift down). Obie operacje O(log n), bo wysokość drzewa to log n.",
+     "code": "struct MinHeap {\n    vector<int> h;\n    void push(int x) {\n        h.push_back(x);\n        for (int i = h.size() - 1; i > 0 && h[(i - 1) / 2] > h[i]; i = (i - 1) / 2)\n            swap(h[i], h[(i - 1) / 2]);\n    }\n    void pop() {\n        h[0] = h.back();\n        h.pop_back();\n        for (int i = 0;;) {\n            int s = i, l = 2 * i + 1, r = l + 1;\n            if (l < (int)h.size() && h[l] < h[s]) s = l;\n            if (r < (int)h.size() && h[r] < h[s]) s = r;\n            if (s == i) break;\n            swap(h[i], h[s]);\n            i = s;\n        }\n    }\n    int top() const { return h[0]; }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "k największych elementów",
+      "k-ty największy element kopiec",
+      "top k elements heap",
+      "k najwiekszych liczb"
+     ],
+     "a": "Trzymaj min-heap o rozmiarze co najwyżej `k`: wstawiaj każdy element, a gdy rozmiar przekroczy `k`, usuń najmniejszy. Na końcu kopiec zawiera `k` największych, a jego szczyt to k-ty największy. Złożoność O(n log k), pamięć O(k). Jednorazowo można też użyć `nth_element` w O(n).",
+     "code": "vector<int> a = {7, 2, 9, 4, 11, 5, 1};\nint k = 3;\npriority_queue<int, vector<int>, greater<int>> pq;\nfor (int x : a) {\n    pq.push(x);\n    if ((int)pq.size() > k) pq.pop();\n}\ncout << pq.top() << '\\n';   // 7 — trzeci największy (11, 9, 7)"
+    },
+    {
+     "q": [
+      "mediana strumienia",
+      "mediana dwa kopce",
+      "running median",
+      "mediana na bieżąco"
+     ],
+     "a": "Dwa kopce: max-heap `low` z mniejszą połową i min-heap `high` z większą. Po każdym wstawieniu przerzucasz szczyt, żeby rozmiary różniły się o co najwyżej 1 i `low.top() ≤ high.top()`. Mediana to szczyt większego kopca (lub średnia szczytów). Każda operacja O(log n).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    priority_queue<long long> low;                                     // mniejsza połowa\n    priority_queue<long long, vector<long long>, greater<long long>> high;  // większa połowa\n    for (int i = 0; i < n; i++) {\n        long long x;\n        cin >> x;\n        if (low.empty() || x <= low.top()) low.push(x);\n        else high.push(x);\n        if (low.size() > high.size() + 1) { high.push(low.top()); low.pop(); }\n        else if (high.size() > low.size()) { low.push(high.top()); high.pop(); }\n        cout << low.top() << \" \\n\"[i == n - 1];   // dolna mediana\n    }\n}"
+    },
+    {
+     "q": [
+      "usuwanie dowolnego elementu z priority_queue",
+      "priority queue erase",
+      "leniwe usuwanie kopiec",
+      "lazy deletion heap"
+     ],
+     "a": "`priority_queue` nie umie usunąć dowolnego elementu. Rozwiązanie: **leniwe usuwanie** — zapisujesz, co zostało usunięte (np. drugi kopiec lub licznik), a przy odczycie `top()` zdejmujesz ze szczytu elementy już usunięte. Zamortyzowanie O(log n). Jeśli potrzebujesz też minimum i maksimum lub `find`, prościej użyć `multiset`.",
+     "code": "struct ErasableHeap {\n    priority_queue<int> pq, removed;\n    void push(int x) { pq.push(x); }\n    void erase(int x) { removed.push(x); }        // x musi być w kopcu\n    void clean() {\n        while (!removed.empty() && !pq.empty() && pq.top() == removed.top()) { pq.pop(); removed.pop(); }\n    }\n    int top() { clean(); return pq.top(); }\n    void pop() { clean(); pq.pop(); }\n    int size() const { return pq.size() - removed.size(); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "łączenie dwóch najmniejszych",
+      "huffman kopiec",
+      "zlacz dwa najmniejsze koszt",
+      "minimalny koszt łączenia"
+     ],
+     "a": "Klasyczny problem zachłanny (kodowanie Huffmana, łączenie lin): zawsze bierzesz dwa najmniejsze elementy, płacisz ich sumę i wstawiasz sumę z powrotem. Min-heap robi to w O(n log n). Wynik często przekracza `int` — używaj `long long`.",
+     "code": "long long mergeCost(const vector<long long>& a) {\n    priority_queue<long long, vector<long long>, greater<long long>> pq(a.begin(), a.end());\n    long long total = 0;\n    while (pq.size() > 1) {\n        long long x = pq.top(); pq.pop();\n        long long y = pq.top(); pq.pop();\n        total += x + y;\n        pq.push(x + y);\n    }\n    return total;   // dla {4, 3, 2, 6}: 29\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "scalanie k posortowanych list",
+      "merge k sorted arrays",
+      "łączenie k posortowanych ciągów kopiec"
+     ],
+     "a": "Wstaw do min-heapa pierwszy element każdej listy jako `(wartość, numer listy, indeks)`. Wyjmujesz najmniejszy, dopisujesz do wyniku i wstawiasz następny element z tej samej listy. Każdy z N elementów przechodzi przez kopiec o rozmiarze ≤ k, więc O(N log k).",
+     "code": "vector<int> mergeK(const vector<vector<int>>& lists) {\n    using T = tuple<int, int, int>;                 // wartość, lista, indeks\n    priority_queue<T, vector<T>, greater<T>> pq;\n    for (int i = 0; i < (int)lists.size(); i++)\n        if (!lists[i].empty()) pq.push({lists[i][0], i, 0});\n    vector<int> out;\n    while (!pq.empty()) {\n        auto [v, li, idx] = pq.top();\n        pq.pop();\n        out.push_back(v);\n        if (idx + 1 < (int)lists[li].size()) pq.push({lists[li][idx + 1], li, idx + 1});\n    }\n    return out;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "make_heap push_heap",
+      "kopiec na wektorze algorithm",
+      "heap na vectorze bez priority_queue"
+     ],
+     "a": "Funkcje z `<algorithm>` zamieniają zwykły wektor w kopiec: `make_heap` (O(n)), `push_heap` po `push_back` (O(log n)), `pop_heap` przesuwa szczyt na koniec, a potem `pop_back` (O(log n)). Przydaje się, gdy chcesz mieć dostęp do wszystkich elementów kopca (np. iterować). Domyślnie to max-heap; dla min-heapa podaj `greater<>()` we wszystkich trzech funkcjach.",
+     "code": "vector<int> v = {3, 1, 4, 1, 5};\nmake_heap(v.begin(), v.end());          // v.front() = 5\nv.push_back(9);\npush_heap(v.begin(), v.end());          // v.front() = 9\npop_heap(v.begin(), v.end());           // 9 na końcu\ncout << v.back() << ' ' << v.front() << '\\n';   // 9 5\nv.pop_back();"
+    },
+    {
+     "q": [
+      "co to jest kopiec",
+      "kopiec co to",
+      "czym jest kopiec",
+      "na czym polega kopiec",
+      "what is a heap"
+     ],
+     "a": "**Kopiec** (heap) to drzewo binarne, w którym każdy rodzic jest ≥ swoich dzieci (kopiec maksymalny) — dlatego na szczycie zawsze leży największy element. Trzyma się go w tablicy (synowie `i` to `2i` i `2i+1`). Wstawienie i zdjęcie szczytu kosztują **O(log n)**, odczyt szczytu **O(1)**. W C++ gotowy kopiec to `priority_queue`.",
+     "code": "priority_queue<int> pq;          // kopiec maksymalny\npq.push(5); pq.push(1); pq.push(8);\ncout << pq.top() << '\\n';       // 8 — największy\npq.pop();                         // zdejmuje 8 w O(log n)\ncout << pq.top() << '\\n';       // 5"
+    }
+   ],
+   "related": [
+    "stl-priority-queue",
+    "graph-dijkstra",
+    "tech-greedy",
+    "stl-set",
+    "ds-treap",
+    "tree-heap-array",
+    "ds-lazy-deletion-heap",
+    "graph-k-shortest",
+    "oi-py-collections",
+    "stl-ref-adaptors-all",
+    "stl-ref-heap",
+    "tech-huffman"
+   ]
+  },
+  {
+   "id": "ds-sqrt-decomposition",
+   "title": "Dekompozycja pierwiastkowa (bloki √n)",
+   "category": "Struktury danych",
+   "tags": [
+    "dekompozycja pierwiastkowa",
+    "sqrt decomposition",
+    "bloki",
+    "pierwiastek",
+    "lazy na blokach"
+   ],
+   "aliases": [
+    "dekompozycja pierwiastkowa",
+    "sqrt decomposition",
+    "pierwiastkowa",
+    "bloki sqrt",
+    "podział na bloki",
+    "sqrt dekompozycja",
+    "dekompozycja na bloki",
+    "sqrt c++",
+    "pierwiastek z n bloki"
+   ],
+   "summary": "Dzielimy tablicę na bloki długości ok. √n i dla każdego trzymamy podsumowanie (sumę, min, posortowaną kopię, dodatek lazy). Zapytanie obsługuje O(√n) pełnych bloków i O(√n) pojedynczych elementów.",
+   "complexity": "zapytanie i aktualizacja O(√n) (zwykle), budowa O(n), pamięć O(n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Przedział `[l, r]` składa się z: niepełnego kawałka bloku na początku, kilku **pełnych** bloków i niepełnego kawałka na końcu. Kawałki obsługujemy element po elemencie (≤ 2√n), a pełne bloki — gotowym podsumowaniem (≤ √n). Gdy `B ≈ √n`, obie części kosztują O(√n).\n\nDekompozycja jest wolniejsza od drzewa przedziałowego (O(√n) zamiast O(log n)), ale **znacznie elastyczniejsza**: w bloku możesz trzymać posortowaną kopię, tablicę zliczeń, bitset itp. — rzeczy, których nie da się łatwo łączyć w drzewie."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** dziwne zapytania na przedziałach („ile elementów mniejszych od *x* w przedziale *[l, r]*” z aktualizacjami), operacje, które trudno łączyć, n, q ≤ 10^5 i limit kilku sekund; także technika „przebuduj strukturę co √q zapytań” oraz podział na elementy „lekkie” i „ciężkie” (np. wierzchołki o stopniu ≥ √m)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: zmiana w punkcie + suma na przedziale",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Bloki z sumą: zmiana wartości w punkcie O(1), suma na przedziale O(sqrt n).\nstruct SqrtDecomposition {\n    int n, B;\n    vector<long long> a, blockSum;\n\n    SqrtDecomposition(const vector<long long>& init) : n(init.size()), a(init) {\n        B = max(1, (int)sqrt(n));\n        blockSum.assign(n / B + 1, 0);\n        for (int i = 0; i < n; i++) blockSum[i / B] += a[i];\n    }\n    void assign(int i, long long v) {     // a[i] = v\n        blockSum[i / B] += v - a[i];\n        a[i] = v;\n    }\n    long long query(int l, int r) const { // suma a[l..r], 0-indeksowane\n        long long s = 0;\n        while (l <= r && l % B != 0) s += a[l++];               // początek niepełnego bloku\n        while (l + B - 1 <= r) { s += blockSum[l / B]; l += B; } // pełne bloki\n        while (l <= r) s += a[l++];                              // końcówka\n        return s;\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    SqrtDecomposition sd(a);\n    while (q--) {\n        int type;\n        cin >> type;\n        if (type == 1) {          // 1 i v: a[i] = v\n            int i;\n            long long v;\n            cin >> i >> v;\n            sd.assign(i - 1, v);\n        } else {                  // 2 l r: suma\n            int l, r;\n            cin >> l >> r;\n            cout << sd.query(l - 1, r - 1) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wariant: dodawanie na przedziale (lazy w blokach)",
+     "code": "// Dodawanie na przedziale + suma na przedziale: lazy na pełnych blokach.\nstruct SqrtRangeAdd {\n    int n, B;\n    vector<long long> a, sum, lazy;   // a[i] bez lazy swojego bloku\n    SqrtRangeAdd(int n) : n(n), B(max(1, (int)sqrt(n))), a(n, 0), sum(n / B + 1, 0), lazy(n / B + 1, 0) {}\n    void add(int l, int r, long long v) {\n        while (l <= r && l % B != 0) { a[l] += v; sum[l / B] += v; l++; }\n        while (l + B - 1 <= r) { lazy[l / B] += v; l += B; }\n        while (l <= r) { a[l] += v; sum[l / B] += v; l++; }\n    }\n    long long query(int l, int r) const {\n        long long s = 0;\n        while (l <= r && l % B != 0) { s += a[l] + lazy[l / B]; l++; }\n        while (l + B - 1 <= r) { s += sum[l / B] + lazy[l / B] * B; l += B; }\n        while (l <= r) { s += a[l] + lazy[l / B]; l++; }\n        return s;\n    }\n};",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Rozmiar bloku nie musi być dokładnie √n. Jeśli operacja na pełnym bloku kosztuje O(log B) (np. `upper_bound` w posortowanej kopii), opłaca się większy blok, np. `B ≈ √(n log n)`. Przy problemach z czasem przetestuj kilka wartości B."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "B = max(1, (int)sqrt(n))",
+     "desc": "rozmiar bloku",
+     "complexity": "—"
+    },
+    {
+     "sig": "i / B",
+     "desc": "numer bloku elementu i (0-indeksowanie)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "query(l, r)",
+     "desc": "przejście: kawałek bloku + pełne bloki + kawałek bloku",
+     "complexity": "O(n/B + B)"
+    }
+   ],
+   "pitfalls": [
+    "`B = 0` dla małego `n` (np. `sqrt(0)`) — dzielenie przez zero; zawsze `max(1, ...)`.",
+    "Zła liczba bloków: tablica podsumowań musi mieć `n / B + 1` elementów.",
+    "Przy lazy w blokach zapomniane uwzględnienie `lazy[blok]` przy odczycie pojedynczych elementów.",
+    "Dekompozycja tam, gdzie wystarczy Fenwick — niepotrzebnie wolniej i więcej kodu.",
+    "Przebudowa całego bloku przy każdej zmianie, gdy struktura bloku jest kosztowna (np. sortowanie O(B log B)) — policz łączny koszt."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dekompozycja pierwiastkowa",
+      "sqrt decomposition c++",
+      "dekompozycja pierwiastkowa jak dziala",
+      "bloki pierwiastek z n",
+      "sqrt dekompozycja kod"
+     ],
+     "a": "Dzielisz tablicę na bloki długości `B ≈ √n` i dla każdego bloku trzymasz podsumowanie (np. sumę). Zapytanie przechodzi po pojedynczych elementach w niepełnych blokach na brzegach i po podsumowaniach pełnych bloków — razem O(√n). Zmiana w punkcie poprawia tylko podsumowanie jednego bloku.",
+     "code": "int n = 10, B = max(1, (int)sqrt(n));\nvector<long long> a(n, 1), blockSum(n / B + 1, 0);\nfor (int i = 0; i < n; i++) blockSum[i / B] += a[i];\nauto query = [&](int l, int r) {\n    long long s = 0;\n    while (l <= r && l % B != 0) s += a[l++];\n    while (l + B - 1 <= r) { s += blockSum[l / B]; l += B; }\n    while (l <= r) s += a[l++];\n    return s;\n};\ncout << query(2, 8) << '\\n';   // 7"
+    },
+    {
+     "q": [
+      "jaki rozmiar bloku sqrt",
+      "rozmiar bloku dekompozycja",
+      "block size sqrt decomposition",
+      "ile wynosi B"
+     ],
+     "a": "Koszt zapytania to `O(n/B + B)`: `n/B` pełnych bloków i do `2B` pojedynczych elementów. Minimum osiąga się dla `B ≈ √n` (np. ~450 dla n = 2·10^5). Gdy obsługa pełnego bloku jest droższa (np. `O(log B)`), zwiększ B; gdy aktualizacja bloku jest droga (przebudowa O(B log B)), czasem lepiej B mniejsze — liczy się łączny koszt."
+    },
+    {
+     "q": [
+      "ile elementów mniejszych od x w przedziale z aktualizacjami",
+      "count less than x in range with updates",
+      "posortowane bloki sqrt",
+      "zapytanie ile mniejszych sqrt"
+     ],
+     "a": "W każdym bloku trzymasz posortowaną kopię jego elementów. Zapytanie: dla pełnych bloków `lower_bound` w kopii (O(log B)), dla brzegów zwykłe porównania — razem O(√n log n). Zmiana `a[i]`: popraw kopię bloku (usuń starą wartość, wstaw nową) w O(B). Offline bez aktualizacji lepszy jest Fenwick z sortowaniem zapytań lub merge sort tree.",
+     "code": "struct BlockCounter {\n    int n, B;\n    vector<int> a;\n    vector<vector<int>> sorted;   // posortowane kopie bloków\n    BlockCounter(const vector<int>& v) : n(v.size()), B(max(1, (int)sqrt(v.size()))), a(v) {\n        sorted.assign(n / B + 1, {});\n        for (int i = 0; i < n; i++) sorted[i / B].push_back(a[i]);\n        for (auto& s : sorted) sort(s.begin(), s.end());\n    }\n    void assign(int i, int v) {\n        auto& s = sorted[i / B];\n        s.erase(lower_bound(s.begin(), s.end(), a[i]));\n        s.insert(lower_bound(s.begin(), s.end(), v), v);\n        a[i] = v;\n    }\n    int countLess(int l, int r, int x) const {    // ile a[l..r] < x\n        int cnt = 0;\n        while (l <= r && l % B != 0) cnt += a[l++] < x;\n        while (l + B - 1 <= r) {\n            const auto& s = sorted[l / B];\n            cnt += lower_bound(s.begin(), s.end(), x) - s.begin();\n            l += B;\n        }\n        while (l <= r) cnt += a[l++] < x;\n        return cnt;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dodawanie na przedziale sqrt",
+      "range add sqrt decomposition",
+      "lazy w blokach",
+      "dekompozycja pierwiastkowa dodaj na przedziale"
+     ],
+     "a": "Pełnym blokom dopisujesz dodatek do `lazy[blok]` (O(1) na blok), a elementom w niepełnych blokach zmieniasz wartości bezpośrednio, poprawiając też sumę bloku. Przy zapytaniu suma pełnego bloku to `sum[b] + lazy[b]·B`, a pojedynczy element to `a[i] + lazy[i/B]`. Obie operacje O(√n)."
+    },
+    {
+     "q": [
+      "sqrt vs drzewo przedziałowe",
+      "dekompozycja czy segment tree",
+      "kiedy pierwiastkowa a kiedy drzewo"
+     ],
+     "a": "Gdy operację da się łączyć (suma, min, max, dodawanie z lazy) — drzewo przedziałowe jest szybsze: O(log n). Dekompozycja wygrywa prostotą przy „dziwnych” zapytaniach, których podsumowań nie da się łatwo połączyć (np. ile elementów < x z aktualizacjami, liczenie wystąpień, bitsety w blokach). Przy n, q ≈ 10^5 O(√n) to ok. 3·10^7 operacji — zwykle mieści się w limicie."
+    },
+    {
+     "q": [
+      "przebudowa co sqrt zapytań",
+      "sqrt decomposition on queries",
+      "rebuild every sqrt q",
+      "buforowanie zmian sqrt"
+     ],
+     "a": "Trzymasz statyczną, szybką strukturę (np. posortowaną tablicę albo sumy prefiksowe) i bufor ostatnich zmian. Zapytanie = odpowiedź ze struktury + poprawka z bufora (O(rozmiar bufora)). Gdy bufor osiągnie ~√q, przebudowujesz strukturę od zera (O(n) lub O(n log n)). Łącznie ok. O(q·√q + √q·n) — przydatne, gdy aktualizacje są trudne, a przebudowa prosta."
+    },
+    {
+     "q": [
+      "lekkie i ciężkie wierzchołki",
+      "heavy light sqrt stopnie",
+      "wierzcholki o duzym stopniu sqrt",
+      "trick z pierwiastkiem na grafie"
+     ],
+     "a": "Wierzchołków o stopniu ≥ √m jest co najwyżej `2√m` (bo suma stopni to `2m`). Dla „ciężkich” trzymasz odpowiedzi przeliczane z góry albo aktualizowane od razu, dla „lekkich” przeglądasz sąsiadów przy zapytaniu (≤ √m). Dzięki temu każda operacja kosztuje O(√m) zamiast O(m). Klasyka: zliczanie trójkątów w grafie w O(m√m)."
+    }
+   ],
+   "related": [
+    "ds-mo",
+    "ds-segment-tree",
+    "ds-fenwick",
+    "ds-merge-sort-tree",
+    "ds-bitset",
+    "ds-segment-tree-beats"
+   ]
+  },
+  {
+   "id": "ds-mo",
+   "title": "Algorytm Mo (zapytania offline na przedziałach)",
+   "category": "Struktury danych",
+   "tags": [
+    "algorytm mo",
+    "mo's algorithm",
+    "zapytania offline",
+    "liczba różnych elementów",
+    "sqrt",
+    "sortowanie zapytań"
+   ],
+   "aliases": [
+    "algorytm mo",
+    "mo algorithm",
+    "mo's algorithm",
+    "algorytm mo c++",
+    "mo kod",
+    "zapytania offline sqrt",
+    "liczba różnych liczb w przedziale",
+    "distinct elements in range",
+    "mo na przedziałach",
+    "algorytm mo jak działa"
+   ],
+   "summary": "Sortujemy zapytania o przedziały tak, by przejście od jednego do kolejnego wymagało mało przesunięć końców, i utrzymujemy odpowiedź przy dodawaniu/usuwaniu pojedynczych elementów. Łącznie O((n + q)·√n) wywołań add/remove.",
+   "complexity": "O((n + q)·√n · koszt add/remove) + O(q log q) sortowanie, pamięć O(n + q)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Trzymamy bieżący przedział `[curL, curR]` i odpowiedź dla niego. Żeby przejść do kolejnego zapytania `[l, r]`, przesuwamy końce o jeden, wywołując `add(i)` lub `remove(i)`. Jeśli posortujemy zapytania po bloku lewego końca (`l / B`), a w obrębie bloku po `r`, to:\n- prawy koniec w jednym bloku przesuwa się monotonicznie: O(n) na blok, O(n·n/B) łącznie,\n- lewy koniec skacze w obrębie bloku: O(B) na zapytanie, O(q·B) łącznie.\n\nDla `B ≈ n/√q` (lub po prostu √n) daje to O((n + q)√n)."
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy używać:** zapytania o przedziały **znane z góry** (offline), brak zmian w tablicy, a odpowiedź łatwo poprawić po dodaniu/usunięciu jednego elementu, ale trudno łączyć dwa przedziały: liczba różnych wartości, liczba par równych elementów, najczęstszy element (z trikami), suma `cnt[x]² · x`.\n\n**Kiedy nie:** zapytania online (wymuszone, np. „l = l' xor ostatnia_odpowiedź”), n, q ≈ 10^6 przy ciężkim add/remove."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba różnych wartości w przedziałach",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint n, q, blockSize;\nvector<int> a, cnt;\nint distinctNow = 0;\n\nvoid addPos(int i) {\n    if (cnt[a[i]]++ == 0) distinctNow++;\n}\nvoid removePos(int i) {\n    if (--cnt[a[i]] == 0) distinctNow--;\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    cin >> n >> q;\n    a.resize(n);\n    for (auto& x : a) cin >> x;\n\n    // kompresja wartości, żeby cnt miało rozmiar n\n    vector<int> vals(a);\n    sort(vals.begin(), vals.end());\n    vals.erase(unique(vals.begin(), vals.end()), vals.end());\n    for (auto& x : a) x = lower_bound(vals.begin(), vals.end(), x) - vals.begin();\n    cnt.assign(vals.size(), 0);\n\n    struct Query { int l, r, idx; };\n    vector<Query> qs(q);\n    for (int i = 0; i < q; i++) {\n        cin >> qs[i].l >> qs[i].r;\n        qs[i].l--, qs[i].r--;          // 0-indeksowane, domknięte\n        qs[i].idx = i;\n    }\n    blockSize = max(1, (int)(n / sqrt(max(q, 1))));\n    sort(qs.begin(), qs.end(), [](const Query& x, const Query& y) {\n        int bx = x.l / blockSize, by = y.l / blockSize;\n        if (bx != by) return bx < by;\n        return (bx & 1) ? x.r > y.r : x.r < y.r;   // „parzysto-nieparzyste” sortowanie przyspiesza ~2x\n    });\n\n    vector<int> answer(q);\n    int curL = 0, curR = -1;           // pusty przedział\n    for (const auto& qu : qs) {\n        while (curL > qu.l) addPos(--curL);   // najpierw rozszerzamy...\n        while (curR < qu.r) addPos(++curR);\n        while (curL < qu.l) removePos(curL++); // ...potem zwężamy\n        while (curR > qu.r) removePos(curR--);\n        answer[qu.idx] = distinctNow;\n    }\n    for (int x : answer) cout << x << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Kolejność pętli ma znaczenie: najpierw rozszerzaj przedział (`curL--`, `curR++`), dopiero potem zwężaj. Wtedy przedział nigdy nie staje się „ujemny” (curL > curR + 1), co przy niektórych licznikach daje ujemne `cnt` i błędne wyniki."
+    },
+    {
+     "type": "warn",
+     "md": "Add/remove wywołuje się rzędu 10^8 razy przy n = q = 2·10^5 — musi być O(1) i bez `map`. Skompresuj wartości do zakresu `[0, n)` i trzymaj liczniki w zwykłej tablicy."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "sort(qs, by (l / B, r))",
+     "desc": "kolejność zapytań minimalizująca ruchy końców",
+     "complexity": "O(q log q)"
+    },
+    {
+     "sig": "add(i) / remove(i)",
+     "desc": "dodanie/usunięcie elementu i z bieżącego przedziału, poprawka odpowiedzi",
+     "complexity": "O(1) (powinno)"
+    },
+    {
+     "sig": "B = n / sqrt(q)",
+     "desc": "rozmiar bloku (wystarczy też sqrt(n))",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "Zła kolejność przesuwania końców (najpierw zwężanie) — chwilowo ujemne liczniki.",
+    "`map`/`unordered_map` jako licznik — stała jest zbyt duża; kompresuj wartości.",
+    "Zapomniane zapamiętanie oryginalnego indeksu zapytania — odpowiedzi w złej kolejności.",
+    "Start `curL = 0, curR = -1` (pusty przedział), a nie `curR = 0`.",
+    "Zapytania online (zależne od poprzedniej odpowiedzi) — Mo nie zadziała."
+   ],
+   "qa": [
+    {
+     "q": [
+      "algorytm mo",
+      "mo's algorithm c++",
+      "algorytm mo jak dziala",
+      "mo kod",
+      "algorytm mo przyklad"
+     ],
+     "a": "Algorytm Mo odpowiada offline na zapytania o przedziały: sortuje je po `(l / B, r)` i przesuwa końce bieżącego przedziału, wywołując `add`/`remove` dla pojedynczych elementów. Prawy koniec przesuwa się monotonicznie w każdym bloku, lewy o co najwyżej B na zapytanie, więc łącznie O((n + q)√n) operacji. Wymaga, żeby poprawienie odpowiedzi po dodaniu/usunięciu elementu było tanie."
+    },
+    {
+     "q": [
+      "liczba różnych elementów w przedziale",
+      "ile różnych liczb w przedziale",
+      "distinct elements in range query",
+      "ile roznych wartosci od l do r"
+     ],
+     "a": "Offline: algorytm Mo z licznikiem wystąpień (`add`: jeśli licznik był 0, zwiększ wynik) w O((n+q)√n), albo szybciej — sortujesz zapytania po `r` i trzymasz w Fenwicku jedynkę tylko na **ostatnim** wystąpieniu każdej wartości; odpowiedź to suma na `[l, r]`, łącznie O((n + q) log n). Online potrzebne byłoby trwałe drzewo przedziałowe.",
+     "code": "// Wersja O((n + q) log n): zapytania posortowane po r, Fenwick na ostatnich wystąpieniach.\nvector<int> distinctOffline(const vector<int>& a, vector<array<int, 3>> qs) {   // qs: {l, r, idx}, 0-indeksowane\n    int n = a.size();\n    vector<int> bit(n + 1, 0), ans(qs.size());\n    auto add = [&](int i, int v) { for (i++; i <= n; i += i & -i) bit[i] += v; };\n    auto sum = [&](int i) { int s = 0; for (i++; i > 0; i -= i & -i) s += bit[i]; return s; };\n    sort(qs.begin(), qs.end(), [](const array<int, 3>& x, const array<int, 3>& y) { return x[1] < y[1]; });\n    map<int, int> last;\n    int j = 0;\n    for (auto [l, r, idx] : qs) {\n        for (; j <= r; j++) {\n            auto it = last.find(a[j]);\n            if (it != last.end()) add(it->second, -1);\n            last[a[j]] = j;\n            add(j, +1);\n        }\n        ans[idx] = sum(r) - (l > 0 ? sum(l - 1) : 0);\n    }\n    return ans;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "jak posortować zapytania w mo",
+      "sortowanie zapytan mo",
+      "mo comparator",
+      "mo parzyste nieparzyste bloki"
+     ],
+     "a": "Sortuj po numerze bloku `l / B`, a w obrębie bloku po `r`. Popularna optymalizacja: w blokach o nieparzystym numerze sortuj `r` malejąco — wtedy prawy wskaźnik nie wraca na początek przy przejściu do kolejnego bloku, co daje ok. 2× mniej ruchów. Złożoność asymptotyczna bez zmian.",
+     "code": "struct Query { int l, r, idx; };\nint B = 450;\nbool moCompare(const Query& x, const Query& y) {\n    int bx = x.l / B, by = y.l / B;\n    if (bx != by) return bx < by;\n    return (bx & 1) ? x.r > y.r : x.r < y.r;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "rozmiar bloku w mo",
+      "jakie B w algorytmie mo",
+      "block size mo",
+      "mo sqrt n czy n/sqrt q"
+     ],
+     "a": "Koszt to ok. `n·(n/B)` ruchów prawego końca plus `q·B` ruchów lewego. Minimum daje `B ≈ n/√q`; gdy `q ≈ n`, to po prostu `√n`. Zawsze zabezpiecz `B ≥ 1`. W praktyce różnice kilkunastoprocentowe, ważniejsze jest szybkie `add`/`remove`."
+    },
+    {
+     "q": [
+      "mo z aktualizacjami",
+      "mo with updates",
+      "algorytm mo ze zmianami",
+      "mo trzy wymiary czas"
+     ],
+     "a": "Gdy są zmiany wartości, dodajesz trzeci wymiar — czas (liczba zmian wykonanych przed zapytaniem). Sortujesz po `(l / B, r / B, t)` z `B ≈ n^(2/3)` i przy przejściu między zapytaniami nakładasz/cofasz zmiany (jeśli zmieniana pozycja jest w bieżącym przedziale, robisz `remove` starej i `add` nowej wartości). Złożoność O(n^(5/3)) — przy n = 10^5 to ok. 2·10^8, na granicy."
+    },
+    {
+     "q": [
+      "mo na drzewie",
+      "mo on trees",
+      "zapytania o ścieżki mo",
+      "algorytm mo dla sciezek w drzewie"
+     ],
+     "a": "Ścieżkę w drzewie zamieniasz na przedział trasy Eulera z wejściami i wyjściami (każdy wierzchołek występuje dwa razy). Wierzchołki występujące w przedziale dwa razy się „znoszą” (przełączasz stan wierzchołka przy każdym napotkaniu), a LCA trzeba czasem dodać osobno. Potem zwykły Mo na tej tablicy długości 2n."
+    },
+    {
+     "q": [
+      "dlaczego mo jest o n sqrt n",
+      "złożoność algorytmu mo",
+      "mo complexity"
+     ],
+     "a": "W każdym z `n/B` bloków prawy koniec przesuwa się monotonicznie, czyli O(n) na blok i O(n²/B) łącznie. Lewy koniec między dwoma kolejnymi zapytaniami z jednego bloku przesuwa się o ≤ B, a przy zmianie bloku o ≤ 2B — razem O(q·B). Dla `B = √n` i `q ≈ n` daje to O(n√n), czyli rzędu 10^8 prostych operacji dla n = q = 2·10^5."
+    },
+    {
+     "q": [
+      "liczba par równych elementów w przedziale",
+      "ile par i<j z a[i]=a[j] w przedziale",
+      "mo pary rownych"
+     ],
+     "a": "Klasyczne zastosowanie Mo. Przy dodaniu wartości `x` liczba nowych par to obecne `cnt[x]` (przed zwiększeniem), przy usunięciu odejmujesz `cnt[x] - 1` (po zmniejszeniu: nowe `cnt[x]`). Odpowiedź trzymaj w `long long` — może sięgać n²/2.",
+     "code": "vector<int> cntv(200000, 0);\nlong long pairs = 0;\nvoid addValue(int x) { pairs += cntv[x]; cntv[x]++; }\nvoid removeValue(int x) { cntv[x]--; pairs -= cntv[x]; }",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "ds-sqrt-decomposition",
+    "tech-offline-queries",
+    "tech-coordinate-compression",
+    "ds-fenwick",
+    "tech-euler-tour",
+    "ds-wavelet-tree"
+   ]
+  }
+ ]
+}

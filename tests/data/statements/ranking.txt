@@ -1,0 +1,24 @@
+Ranking
+Po zawodach programistycznych znamy imiona zawodników i liczby zdobytych przez nich punktów. Ułóż ranking: zawodnicy
+z większą liczbą punktów są wyżej, a przy równej liczbie punktów wyżej jest ten, którego imię jest wcześniej w porządku
+alfabetycznym.
+Wejście
+W pierwszym wierszu znajduje się liczba zawodników n (1 ≤ n ≤ 100 000). W każdym z kolejnych n wierszy znajduje się
+imię zawodnika (napis złożony z liter, długości co najwyżej 20) oraz liczba całkowita p (0 ≤ p ≤ 10^9) — jego punkty.
+Imiona są parami różne.
+Wyjście
+Wypisz n wierszy — imiona zawodników w kolejności z rankingu.
+Przykład
+Wejście:
+5
+Ola 30
+Jan 45
+Ala 30
+Piotr 10
+Ewa 45
+Wyjście:
+Ewa
+Jan
+Ala
+Ola
+Piotr

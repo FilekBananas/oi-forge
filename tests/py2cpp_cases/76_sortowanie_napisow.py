@@ -1,0 +1,8 @@
+words = input().split()
+print(sorted(words))
+print(sorted(words, key=len))
+print(sorted(words, key=lambda w: (len(w), w), reverse=True))
+print(sorted(words, key=str.lower) if False else sorted(w.lower() for w in words))
+print(max(words, key=lambda w: w[-1]))
+print(" ".join(w[::-1] for w in words))
+print(sorted(set("".join(words))))

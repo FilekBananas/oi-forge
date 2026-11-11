@@ -1,0 +1,1940 @@
+{
+ "chunk": "ds-trees",
+ "articles": [
+  {
+   "id": "ds-fenwick",
+   "title": "Drzewo Fenwicka (BIT) — punkt-przedział",
+   "category": "Struktury danych",
+   "tags": [
+    "fenwick",
+    "bit",
+    "binary indexed tree",
+    "drzewo potęgowe",
+    "suma prefiksowa z aktualizacją",
+    "inwersje",
+    "k-ty element"
+   ],
+   "aliases": [
+    "fenwick",
+    "drzewo fenwicka",
+    "bit",
+    "binary indexed tree",
+    "drzewo potegowe",
+    "fenwick tree c++",
+    "fenwick jak dziala",
+    "drzewo fenwika",
+    "fenwik",
+    "bit c++",
+    "fenwick kod",
+    "lowbit"
+   ],
+   "summary": "Drzewo Fenwicka trzyma sumy częściowe w tablicy rozmiaru n+1 i pozwala w O(log n) dodać wartość w punkcie oraz policzyć sumę prefiksu (a więc i przedziału). Krótsze i szybsze od drzewa przedziałowego tam, gdzie wystarcza.",
+   "complexity": "add O(log n), sum prefiksu/przedziału O(log n), budowa O(n) lub O(n log n), k-ty element O(log n), pamięć O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Komórka `t[i]` przechowuje sumę `lowbit(i)` elementów kończących się na `i`, gdzie `lowbit(i) = i & -i` to najmłodszy zapalony bit (np. `t[12]` = suma `a[9..12]`, bo `lowbit(12) = 4`). Każdy prefiks `[1, i]` rozkłada się na co najwyżej log n takich kawałków — skacząc `i -= i & -i`. Przy dodawaniu do `a[i]` poprawiamy wszystkie komórki, które zawierają `i` — skacząc `i += i & -i`."
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy używać — sygnały w treści:**\n- „zmień element *i*” + „podaj sumę od *l* do *r*” przeplatane (q ≤ 10^6),\n- liczenie **inwersji** / „ile wcześniejszych elementów jest większych od bieżącego”,\n- zliczanie punktów na prostej z aktualizacjami, „ile liczb ≤ x w zbiorze” (Fenwick po wartościach),\n- *k*-ty najmniejszy element w dynamicznym zbiorze liczb z małego zakresu.\n\nFenwick działa dla operacji **odwracalnych** (suma, XOR). Do minimum na dowolnym przedziale potrzebujesz drzewa przedziałowego (Fenwick obsłuży tylko minimum na prefiksie i tylko wtedy, gdy wartości wyłącznie maleją — aktualizacje typu `a[i] = min(a[i], v)`)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: dodawanie w punkcie i suma na przedziale",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Fenwick {\n    int n;\n    vector<long long> t;   // t[i] = suma a[i - lowbit(i) + 1 .. i]\n\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n\n    void add(int i, long long v) {          // a[i] += v, 1 <= i <= n\n        for (; i <= n; i += i & -i) t[i] += v;\n    }\n    long long sum(int i) const {            // a[1] + ... + a[i]\n        long long s = 0;\n        for (; i > 0; i -= i & -i) s += t[i];\n        return s;\n    }\n    long long sum(int l, int r) const {     // a[l] + ... + a[r]\n        return sum(r) - sum(l - 1);\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    Fenwick fw(n);\n    for (int i = 1; i <= n; i++) {\n        long long x;\n        cin >> x;\n        fw.add(i, x);\n    }\n    while (q--) {\n        int type;\n        cin >> type;\n        if (type == 1) {             // 1 i v: a[i] += v\n            int i;\n            long long v;\n            cin >> i >> v;\n            fw.add(i, v);\n        } else {                     // 2 l r: suma a[l..r]\n            int l, r;\n            cin >> l >> r;\n            cout << fw.sum(l, r) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "i (binarnie)",
+      "lowbit(i)",
+      "t[i] obejmuje"
+     ],
+     "rows": [
+      [
+       "1 (0001)",
+       "1",
+       "a[1]"
+      ],
+      [
+       "2 (0010)",
+       "2",
+       "a[1..2]"
+      ],
+      [
+       "3 (0011)",
+       "1",
+       "a[3]"
+      ],
+      [
+       "4 (0100)",
+       "4",
+       "a[1..4]"
+      ],
+      [
+       "6 (0110)",
+       "2",
+       "a[5..6]"
+      ],
+      [
+       "8 (1000)",
+       "8",
+       "a[1..8]"
+      ],
+      [
+       "12 (1100)",
+       "4",
+       "a[9..12]"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szukanie k-tego elementu (zejście po bitach)",
+     "code": "// k-ty element: najmniejsze i, dla którego sum(i) >= k (wszystkie a[i] >= 0). O(log n).\nint kth(const vector<long long>& t, int n, long long k) {\n    int pos = 0;\n    int step = 1;\n    while (step * 2 <= n) step *= 2;\n    for (; step > 0; step /= 2) {\n        if (pos + step <= n && t[pos + step] < k) {\n            pos += step;\n            k -= t[pos];\n        }\n    }\n    return pos + 1;   // n + 1, jeśli suma wszystkich < k\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Fenwick jest **1-indeksowany** — indeks 0 nie istnieje (pętla `i += i & -i` przy `i = 0` kręciłaby się w nieskończoność). Dane 0-indeksowane przesuń o jeden: `fw.add(i + 1, v)`."
+    },
+    {
+     "type": "warn",
+     "md": "Wartości do 10^9 jako indeksy? Najpierw **kompresja współrzędnych** — Fenwick potrzebuje tablicy o rozmiarze równym największemu indeksowi."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "Fenwick fw(n)",
+     "desc": "drzewo na indeksach 1..n wypełnione zerami",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "fw.add(i, v)",
+     "desc": "a[i] += v",
+     "complexity": "O(log n)",
+     "returns": "void",
+     "example": "fw.add(3, 5);"
+    },
+    {
+     "sig": "fw.sum(i)",
+     "desc": "suma a[1..i] (sum(0) = 0)",
+     "complexity": "O(log n)",
+     "returns": "long long"
+    },
+    {
+     "sig": "fw.sum(l, r)",
+     "desc": "suma a[l..r]",
+     "complexity": "O(log n)",
+     "returns": "long long",
+     "example": "long long s = fw.sum(2, 7);"
+    },
+    {
+     "sig": "kth(k)",
+     "desc": "najmniejsze i z sum(i) ≥ k (dla nieujemnych wartości)",
+     "complexity": "O(log n)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Indeks 0 — `add(0, v)` to nieskończona pętla. Fenwick jest 1-indeksowany.",
+    "Ustawienie wartości `a[i] = v` przez `add(i, v)` zamiast `add(i, v - a[i])` — trzeba pamiętać starą wartość w osobnej tablicy.",
+    "`int` w tablicy `t` przy dużych sumach — używaj `long long`.",
+    "Fenwick do minimum/maksimum na dowolnym przedziale — nie działa (min nie jest odwracalne); użyj drzewa przedziałowego lub sparse table.",
+    "Rozmiar `n` za mały przy indeksach po kompresji (liczba różnych wartości) albo przy indeksach do `n + 1` w tablicy różnicowej."
+   ],
+   "qa": [
+    {
+     "q": [
+      "fenwick jak działa",
+      "drzewo fenwicka",
+      "fenwick tree c++",
+      "bit c++ kod",
+      "fenwick kod",
+      "drzewo potęgowe"
+     ],
+     "a": "`t[i]` trzyma sumę `i & -i` ostatnich elementów kończących się na `i`. Suma prefiksu to skakanie `i -= i & -i` (zbieramy ≤ log n kawałków), a dodanie w punkcie to `i += i & -i` (poprawiamy wszystkie komórki obejmujące `i`). Obie operacje O(log n), kod ma kilka linijek, a stała jest mniejsza niż w drzewie przedziałowym.",
+     "code": "struct Fenwick {\n    int n;\n    vector<long long> t;   // t[i] = suma a[i - lowbit(i) + 1 .. i]\n\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n\n    void add(int i, long long v) {          // a[i] += v, 1 <= i <= n\n        for (; i <= n; i += i & -i) t[i] += v;\n    }\n    long long sum(int i) const {            // a[1] + ... + a[i]\n        long long s = 0;\n        for (; i > 0; i -= i & -i) s += t[i];\n        return s;\n    }\n    long long sum(int l, int r) const {     // a[l] + ... + a[r]\n        return sum(r) - sum(l - 1);\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "co to i & -i",
+      "lowbit",
+      "i & (-i) fenwick",
+      "najmłodszy bit",
+      "dlaczego i += i & -i"
+     ],
+     "a": "`i & -i` to wartość najmłodszego zapalonego bitu `i` (np. 12 = 1100₂ → 4), bo `-i` w kodzie U2 to `~i + 1`. W Fenwicku określa długość przedziału, za który odpowiada `t[i]`. Odejmowanie lowbitu przechodzi do kolejnego rozłącznego kawałka prefiksu, a dodawanie — do następnej komórki, która zawiera `i`.",
+     "code": "for (int i : {1, 6, 12, 40}) cout << i << \" -> \" << (i & -i) << '\\n';   // 1, 2, 4, 8"
+    },
+    {
+     "q": [
+      "suma na przedziale z aktualizacją",
+      "zmiana elementu i suma przedziału",
+      "point update range query",
+      "update i suma od l do r szybko",
+      "dynamiczne sumy prefiksowe",
+      "struktura do sumy na przedziale i zmiany elementu",
+      "jaka struktura do zmiany elementu i sumy przedziału"
+     ],
+     "a": "To klasyczne zastosowanie Fenwicka: `add(i, v)` i `sum(l, r) = sum(r) - sum(l-1)`, obie w O(log n). Jeżeli operacja to przypisanie `a[i] = v`, trzymaj kopię tablicy i dodawaj różnicę `v - a[i]`. Drzewo przedziałowe też to zrobi, ale Fenwick jest krótszy i szybszy.",
+     "code": "int n = 5;\nvector<long long> a(n + 1, 0), t(n + 1, 0);\nauto add = [&](int i, long long v) { for (; i <= n; i += i & -i) t[i] += v; };\nauto sum = [&](int i) { long long s = 0; for (; i > 0; i -= i & -i) s += t[i]; return s; };\nauto assign = [&](int i, long long v) { add(i, v - a[i]); a[i] = v; };\nassign(2, 7);\nassign(4, 3);\nassign(2, 1);\ncout << sum(5) - sum(1) << '\\n';   // a[2..5] = 1 + 0 + 3 + 0 = 4"
+    },
+    {
+     "q": [
+      "liczenie inwersji fenwick",
+      "ile inwersji w tablicy",
+      "count inversions bit",
+      "inwersje n log n",
+      "liczba inwersji c++"
+     ],
+     "a": "Idziesz od lewej i dla `a[i]` liczysz, ile wcześniej wstawionych wartości jest **większych** — to `i - sum(a[i])` w Fenwicku po wartościach. Potem `add(a[i], 1)`. Wartości trzeba skompresować do `1..n`. Wynik może sięgać n²/2 ≈ 2·10^10, więc `long long`. Złożoność O(n log n).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    vector<long long> vals(a);\n    sort(vals.begin(), vals.end());\n    vals.erase(unique(vals.begin(), vals.end()), vals.end());\n    int m = vals.size();\n    vector<int> t(m + 1, 0);\n    long long inversions = 0;\n    for (int i = 0; i < n; i++) {\n        int pos = lower_bound(vals.begin(), vals.end(), a[i]) - vals.begin() + 1;   // 1..m\n        int notGreater = 0;                           // ile wcześniejszych <= a[i]\n        for (int j = pos; j > 0; j -= j & -j) notGreater += t[j];\n        inversions += i - notGreater;                 // reszta jest > a[i]\n        for (int j = pos; j <= m; j += j & -j) t[j]++;\n    }\n    cout << inversions << '\\n';\n}"
+    },
+    {
+     "q": [
+      "k-ty element fenwick",
+      "fenwick kth",
+      "szukanie k-tego najmniejszego bit",
+      "binary lifting na fenwicku",
+      "fenwick lower bound sumy"
+     ],
+     "a": "Gdy Fenwick trzyma liczności wartości (`add(x, 1)` = wstaw x), k-ty najmniejszy to najmniejsze `i` z `sum(i) ≥ k`. Zamiast binsearcha po `sum` (O(log² n)) schodzisz po bitach od największej potęgi dwójki: jeśli `t[pos + step] < k`, przesuwasz `pos` i odejmujesz. Działa w O(log n), wymaga nieujemnych wartości.",
+     "code": "struct FenwickCount {\n    int n;\n    vector<int> t;\n    FenwickCount(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, int v) { for (; i <= n; i += i & -i) t[i] += v; }\n    int kth(int k) const {                 // k-ty najmniejszy wstawiony (1-indeksowany k)\n        int pos = 0, step = 1;\n        while (step * 2 <= n) step *= 2;\n        for (; step > 0; step /= 2)\n            if (pos + step <= n && t[pos + step] < k) {\n                pos += step;\n                k -= t[pos];\n            }\n        return pos + 1;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "budowa fenwicka w o(n)",
+      "fenwick build linear",
+      "jak szybko zbudować bit z tablicy"
+     ],
+     "a": "Zamiast n razy `add` (O(n log n)) przepisz `t[i] = a[i]`, a potem dla każdego `i` dodaj `t[i]` do rodzica `i + (i & -i)`. Każda komórka przekazuje swoją sumę dokładnie raz, więc O(n). W praktyce różnica rzadko decyduje, ale przy n = 10^6 i wielu testach się przydaje.",
+     "code": "vector<long long> buildFenwick(const vector<long long>& a) {   // a[1..n], a[0] nieużywane\n    int n = a.size() - 1;\n    vector<long long> t(a);\n    t[0] = 0;\n    for (int i = 1; i <= n; i++) {\n        int parent = i + (i & -i);\n        if (parent <= n) t[parent] += t[i];\n    }\n    return t;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "fenwick czy drzewo przedziałowe",
+      "bit vs segment tree",
+      "kiedy fenwick a kiedy segment tree",
+      "fenwick a drzewo przedzialowe roznica"
+     ],
+     "a": "Fenwick: krótki kod, mała stała, pamięć n+1, ale tylko operacje odwracalne (suma, XOR) na przedziałach i zapytania przez prefiksy. Drzewo przedziałowe: dowolna łączna operacja (min, max, gcd, własne węzły), lazy propagation, schodzenie po drzewie. Jeśli zadanie to „suma + zmiana w punkcie” albo inwersje — Fenwick; jeśli min/max na przedziale lub skomplikowane aktualizacje — drzewo przedziałowe."
+    },
+    {
+     "q": [
+      "fenwick indeksowanie od zera",
+      "fenwick 0-indexed",
+      "fenwick nieskończona pętla",
+      "bit zawiesza się"
+     ],
+     "a": "Fenwick wymaga indeksów od 1: przy `i = 0` pętla `i += i & -i` nie zmienia `i` (bo `0 & -0 = 0`) i kręci się bez końca. Przesuwaj indeksy o jeden przy wywołaniach (`add(i + 1, v)`, `sum(r + 1)`). Istnieje też wariant 0-indeksowany z `i = (i & (i + 1)) - 1` i `i |= i + 1`, ale łatwiej trzymać się 1-indeksowania."
+    },
+    {
+     "q": [
+      "ile liczb mniejszych od x w zbiorze",
+      "fenwick po wartościach",
+      "zliczanie liczb mniejszych dynamicznie",
+      "rank elementu fenwick"
+     ],
+     "a": "Fenwick indeksowany **wartościami** (po kompresji): `add(x, 1)` wstawia liczbę, `add(x, -1)` usuwa, a `sum(x - 1)` mówi, ile wstawionych liczb jest mniejszych od `x`. Każda operacja O(log n). Gdy wartości są duże i nieznane z góry, rozważ `ordered_set` z pb_ds albo Fenwick na `unordered_map`."
+    },
+    {
+     "q": [
+      "fenwick xor",
+      "xor na przedziale z aktualizacją",
+      "bit z xor zamiast sumy"
+     ],
+     "a": "Wystarczy zamienić `+=` na `^=`: XOR jest odwracalny (`x ^ x = 0`), więc `xor(l, r) = pref(r) ^ pref(l-1)`. Złożoność O(log n). Tak samo można robić sumy modulo, ale nie min/max.",
+     "code": "struct FenwickXor {\n    int n;\n    vector<int> t;\n    FenwickXor(int n) : n(n), t(n + 1, 0) {}\n    void apply(int i, int v) { for (; i <= n; i += i & -i) t[i] ^= v; }   // a[i] ^= v\n    int pref(int i) const { int s = 0; for (; i > 0; i -= i & -i) s ^= t[i]; return s; }\n    int query(int l, int r) const { return pref(r) ^ pref(l - 1); }\n};",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "ds-fenwick-range",
+    "ds-fenwick-2d",
+    "ds-segment-tree",
+    "ds-prefix-sums",
+    "tech-coordinate-compression",
+    "tech-bit-tricks",
+    "ds-ordered-set",
+    "cpp-ref-bit",
+    "ds-fenwick-kth",
+    "tech-elementary-sorts",
+    "tech-josephus",
+    "tech-median-stream"
+   ]
+  },
+  {
+   "id": "ds-fenwick-range",
+   "title": "Fenwick: przedział-punkt i przedział-przedział",
+   "category": "Struktury danych",
+   "tags": [
+    "fenwick",
+    "range update",
+    "dodawanie na przedziale",
+    "dwa fenwicki",
+    "range update range query",
+    "tablica różnicowa"
+   ],
+   "aliases": [
+    "fenwick range update",
+    "fenwick dodawanie na przedziale",
+    "bit range update range query",
+    "dwa fenwicki",
+    "fenwick przedział przedział",
+    "fenwick przedzial punkt",
+    "range add point query",
+    "range update fenwick",
+    "fenwick z dodawaniem na przedziale"
+   ],
+   "summary": "Fenwick na tablicy różnicowej obsługuje dodawanie na przedziale i odczyt punktu; dwa Fenwicki obsługują dodawanie na przedziale i sumę na przedziale — wszystko w O(log n), bez lazy propagation.",
+   "complexity": "dodanie na przedziale O(log n), zapytanie o punkt O(log n), suma przedziału O(log n), pamięć O(n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Przedział-punkt.** Trzymaj w Fenwicku tablicę różnicową `d`: dodanie `v` na `[l, r]` to `add(l, v)` i `add(r+1, -v)`, a wartość `a[i]` to `sum(i)` (plus wartość początkowa).\n\n**Przedział-przedział.** Suma prefiksu `[1, i]` po dodaniu `v` na `[l, r]` rośnie o `v·(i - l + 1)` dla `l ≤ i ≤ r` i o `v·(r - l + 1)` dla `i > r`. Rozpisując to jako `B1(i)·i - B2(i)`, gdzie `B1`, `B2` to dwa Fenwicki:\n- `B1.add(l, v)`, `B1.add(r+1, -v)`,\n- `B2.add(l, v·(l-1))`, `B2.add(r+1, -v·r)`,\n- `prefix(i) = B1.sum(i)·i - B2.sum(i)`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „dodaj *v* do wszystkich elementów od *l* do *r*” i „podaj sumę / wartość” przeplatane online. Wersja z dwoma Fenwickami jest krótsza i szybsza od drzewa z lazy propagation, ale umie tylko dodawanie + sumę (nie przypisanie, nie minimum)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: dodawanie na przedziale i suma na przedziale (dwa Fenwicki)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Fenwick {\n    int n;\n    vector<long long> t;\n    Fenwick(int n) : n(n), t(n + 2, 0) {}\n    void add(int i, long long v) { for (; i <= n; i += i & -i) t[i] += v; }\n    long long sum(int i) const { long long s = 0; for (; i > 0; i -= i & -i) s += t[i]; return s; }\n};\n\n// Dodawanie na przedziale + suma na przedziale (1-indeksowane).\nstruct RangeFenwick {\n    int n;\n    Fenwick b1, b2;\n    RangeFenwick(int n) : n(n), b1(n), b2(n) {}\n    void rangeAdd(int l, int r, long long v) {\n        b1.add(l, v);\n        b1.add(r + 1, -v);          // dla r = n add jest no-op (i > n)\n        b2.add(l, v * (l - 1));\n        b2.add(r + 1, -v * r);\n    }\n    long long prefix(int i) const { return b1.sum(i) * i - b2.sum(i); }\n    long long rangeSum(int l, int r) const { return prefix(r) - prefix(l - 1); }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    RangeFenwick fw(n);\n    for (int i = 1; i <= n; i++) {\n        long long x;\n        cin >> x;\n        fw.rangeAdd(i, i, x);\n    }\n    while (q--) {\n        int type, l, r;\n        cin >> type >> l >> r;\n        if (type == 1) {                // 1 l r v: dodaj v na [l, r]\n            long long v;\n            cin >> v;\n            fw.rangeAdd(l, r, v);\n        } else {                        // 2 l r: suma\n            cout << fw.rangeSum(l, r) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Przedział-punkt (Fenwick na tablicy różnicowej)",
+     "code": "// Przedział-punkt: dodaj v na [l, r], odczytaj a[i].\nstruct RangeAddPointQuery {\n    int n;\n    vector<long long> t;\n    RangeAddPointQuery(int n) : n(n), t(n + 2, 0) {}\n    void add(int i, long long v) { for (; i <= n; i += i & -i) t[i] += v; }\n    void rangeAdd(int l, int r, long long v) { add(l, v); add(r + 1, -v); }\n    long long get(int i) const { long long s = 0; for (; i > 0; i -= i & -i) s += t[i]; return s; }\n};",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Aktualizacja",
+      "Zapytanie"
+     ],
+     "rows": [
+      [
+       "punkt-przedział",
+       "add(i, v)",
+       "sum(r) - sum(l-1)"
+      ],
+      [
+       "przedział-punkt",
+       "add(l, v); add(r+1, -v)",
+       "sum(i)"
+      ],
+      [
+       "przedział-przedział",
+       "B1, B2 jak wyżej",
+       "prefix(r) - prefix(l-1), prefix(i) = B1(i)·i - B2(i)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Iloczyny `v * r` i `B1.sum(i) * i` łatwo przekraczają `int` — wszystko w `long long`. Przy wartościach rzędu 10^9 i n = 10^6 nawet `long long` może nie wystarczyć dla sum pośrednich; wtedy licz modulo albo w `__int128`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "rangeAdd(l, r, v)",
+     "desc": "dodanie v na [l, r]",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "get(i)",
+     "desc": "wartość a[i] (wariant przedział-punkt)",
+     "complexity": "O(log n)",
+     "returns": "long long"
+    },
+    {
+     "sig": "rangeSum(l, r)",
+     "desc": "suma na [l, r] (wariant z dwoma Fenwickami)",
+     "complexity": "O(log n)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Tablica `t` za mała na indeks `r + 1` — dawaj `n + 2` albo pomijaj `add`, gdy `r + 1 > n`.",
+    "Pomylone znaki w `B2`: `+v·(l-1)` w `l` i `-v·r` w `r+1`.",
+    "Przekazywanie `l - 1` jako `int` przy mnożeniu przez `long long` jest OK, ale `v` musi być `long long` przed mnożeniem.",
+    "Próba obsłużenia przypisania na przedziale dwoma Fenwickami — nie da się; użyj lazy segment tree."
+   ],
+   "qa": [
+    {
+     "q": [
+      "fenwick dodawanie na przedziale",
+      "fenwick range update",
+      "bit range update point query",
+      "dodaj na przedziale i odczytaj element"
+     ],
+     "a": "Trzymaj w Fenwicku tablicę różnicową: dodanie `v` na `[l, r]` to `add(l, v)` i `add(r+1, -v)`, a wartość elementu `i` to `sum(i)` — suma różnic do `i`. Obie operacje O(log n). Wartości początkowe dodaj na końcu z osobnej tablicy albo wstaw na starcie jako `rangeAdd(i, i, a[i])`.",
+     "code": "int n = 6;\nvector<long long> t(n + 2, 0);\nauto add = [&](int i, long long v) { for (; i <= n; i += i & -i) t[i] += v; };\nauto get = [&](int i) { long long s = 0; for (; i > 0; i -= i & -i) s += t[i]; return s; };\nadd(2, 5); add(5, -5);   // +5 na [2, 4]\nadd(3, 1); add(7, -1);   // +1 na [3, 6] (add(7) to no-op)\ncout << get(1) << ' ' << get(3) << ' ' << get(6) << '\\n';   // 0 6 1"
+    },
+    {
+     "q": [
+      "range update range query fenwick",
+      "dwa fenwicki",
+      "fenwick przedział przedział",
+      "suma na przedziale i dodawanie na przedziale bez lazy"
+     ],
+     "a": "Dwa Fenwicki `B1` i `B2`: przy `rangeAdd(l, r, v)` robisz `B1.add(l, v)`, `B1.add(r+1, -v)`, `B2.add(l, v·(l-1))`, `B2.add(r+1, -v·r)`. Suma prefiksu to `B1.sum(i)·i - B2.sum(i)`, więc suma przedziału to różnica dwóch prefiksów. Wszystko O(log n), kod krótszy niż lazy propagation.",
+     "code": "struct RangeFenwick {\n    int n;\n    vector<long long> b1, b2;\n    RangeFenwick(int n) : n(n), b1(n + 2, 0), b2(n + 2, 0) {}\n    static void add(vector<long long>& t, int n, int i, long long v) { for (; i <= n; i += i & -i) t[i] += v; }\n    static long long sum(const vector<long long>& t, int i) { long long s = 0; for (; i > 0; i -= i & -i) s += t[i]; return s; }\n    void rangeAdd(int l, int r, long long v) {\n        add(b1, n, l, v); add(b1, n, r + 1, -v);\n        add(b2, n, l, v * (l - 1)); add(b2, n, r + 1, -v * r);\n    }\n    long long prefix(int i) const { return sum(b1, i) * i - sum(b2, i); }\n    long long rangeSum(int l, int r) const { return prefix(r) - prefix(l - 1); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "skąd wzór B1*i - B2",
+      "dlaczego dwa fenwicki działają",
+      "wyprowadzenie range update range query"
+     ],
+     "a": "Po dodaniu `v` na `[l, r]` suma prefiksu `[1, i]` rośnie o: 0 dla `i < l`, `v·i - v·(l-1)` dla `l ≤ i ≤ r`, oraz `v·r - v·(l-1)` dla `i > r`. Pierwszy człon to `v·i`, gdy `l ≤ i ≤ r` — dlatego `B1` trzyma `v` na przedziale (tablica różnicowa) i mnożymy przez `i`. `B2` koryguje stałą: `v·(l-1)` od `l`, a od `r+1` zamienia `v·i` na stałe `v·r` (stąd `-v·r`)."
+    },
+    {
+     "q": [
+      "fenwick czy lazy segment tree",
+      "kiedy dwa fenwicki a kiedy lazy",
+      "range add range sum co wybrać"
+     ],
+     "a": "Dla samego „dodaj na przedziale + suma na przedziale” dwa Fenwicki są krótsze, szybsze (mała stała) i trudniej w nich o błąd. Lazy segment tree potrzebujesz przy przypisaniu na przedziale, minimum/maksimum z dodawaniem, kilku rodzajach operacji naraz albo przy schodzeniu po drzewie (szukanie pierwszej pozycji spełniającej warunek)."
+    },
+    {
+     "q": [
+      "ile razy punkt był pokryty online",
+      "dodawanie odcinków i pytanie o punkt",
+      "malowanie przedziałów i zapytania"
+     ],
+     "a": "Każde dodanie odcinka `[l, r]` to `rangeAdd(l, r, 1)` w Fenwicku przedział-punkt, a pytanie „ile odcinków pokrywa punkt `x`” to `get(x)`. Usunięcie odcinka to `rangeAdd(l, r, -1)`. Obie operacje O(log n); duże współrzędne skompresuj offline."
+    },
+    {
+     "q": [
+      "fenwick przedział przedział modulo",
+      "range add range sum modulo",
+      "fenwick z modulo"
+     ],
+     "a": "Wzory są liniowe, więc działają modulo `p`: każde dodawanie i mnożenie bierz `% p`, a wynik różnicy normalizuj `((x % p) + p) % p`. Uważaj na `v * r` — przed mnożeniem zredukuj `v` modulo `p`, żeby iloczyn mieścił się w `long long` (p ≤ ~3·10^9)."
+    }
+   ],
+   "related": [
+    "ds-fenwick",
+    "ds-difference-array",
+    "ds-lazy-propagation",
+    "ds-fenwick-2d"
+   ]
+  },
+  {
+   "id": "ds-fenwick-2d",
+   "title": "Fenwick 2D (sumy w prostokącie z aktualizacjami)",
+   "category": "Struktury danych",
+   "tags": [
+    "fenwick 2d",
+    "bit 2d",
+    "drzewo fenwicka dwuwymiarowe",
+    "suma w prostokącie",
+    "aktualizacja punktu",
+    "plansza"
+   ],
+   "aliases": [
+    "fenwick 2d",
+    "bit 2d",
+    "dwuwymiarowy fenwick",
+    "fenwick dwuwymiarowy",
+    "2d binary indexed tree",
+    "suma w prostokącie z aktualizacją",
+    "fenwick na planszy",
+    "drzewo fenwicka 2d",
+    "fen2d"
+   ],
+   "summary": "Fenwick w Fenwicku: dodanie w punkcie (x, y) i suma prostokąta w O(log n · log m). Dla planszy do ok. 2000×2000 z aktualizacjami.",
+   "complexity": "add O(log n · log m), suma prostokąta O(log n · log m), pamięć O(n·m)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Wiersz `i` drzewa Fenwicka to cały Fenwick po kolumnach. Dodanie w `(x, y)` poprawia O(log n) wierszy, a w każdym O(log m) komórek. Suma prefiksu `[1..x]×[1..y]` analogicznie. Sumę prostokąta liczysz włączaniem-wyłączaniem jak w sumach prefiksowych 2D."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** plansza z **aktualizacjami** pól i zapytaniami o prostokąty (gdyby nie było aktualizacji — wystarczą sumy prefiksowe 2D); zliczanie punktów w prostokątach online; dominacja punktów w 2D. Gdy współrzędne są duże, a zapytania offline, lepiej sweep line + Fenwick 1D."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: aktualizacje pól i sumy w prostokątach",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Fenwick2D {\n    int n, m;\n    vector<vector<long long>> t;\n    Fenwick2D(int n, int m) : n(n), m(m), t(n + 1, vector<long long>(m + 1, 0)) {}\n\n    void add(int x, int y, long long v) {          // a[x][y] += v, 1-indeksowane\n        for (int i = x; i <= n; i += i & -i)\n            for (int j = y; j <= m; j += j & -j) t[i][j] += v;\n    }\n    long long sum(int x, int y) const {            // suma a[1..x][1..y]\n        long long s = 0;\n        for (int i = x; i > 0; i -= i & -i)\n            for (int j = y; j > 0; j -= j & -j) s += t[i][j];\n        return s;\n    }\n    long long sum(int x1, int y1, int x2, int y2) const {   // prostokąt [x1..x2] x [y1..y2]\n        return sum(x2, y2) - sum(x1 - 1, y2) - sum(x2, y1 - 1) + sum(x1 - 1, y1 - 1);\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m, q;\n    cin >> n >> m >> q;\n    Fenwick2D fw(n, m);\n    while (q--) {\n        int type;\n        cin >> type;\n        if (type == 1) {                 // 1 x y v\n            int x, y;\n            long long v;\n            cin >> x >> y >> v;\n            fw.add(x, y, v);\n        } else {                         // 2 x1 y1 x2 y2\n            int x1, y1, x2, y2;\n            cin >> x1 >> y1 >> x2 >> y2;\n            cout << fw.sum(x1, y1, x2, y2) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Pamięć to n·m komórek `long long`: 4000×4000 to już 128 MB. Przy większych planszach z rzadkimi punktami użyj offline (sweep line po x + Fenwick po y) albo Fenwicka z `unordered_map`/posortowanymi listami współrzędnych w każdym wierszu."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "Fenwick2D fw(n, m)",
+     "desc": "plansza n×m zer",
+     "complexity": "O(n·m)"
+    },
+    {
+     "sig": "fw.add(x, y, v)",
+     "desc": "a[x][y] += v",
+     "complexity": "O(log n · log m)"
+    },
+    {
+     "sig": "fw.sum(x, y)",
+     "desc": "suma prostokąta [1..x]×[1..y]",
+     "complexity": "O(log n · log m)",
+     "returns": "long long"
+    },
+    {
+     "sig": "fw.sum(x1, y1, x2, y2)",
+     "desc": "suma dowolnego prostokąta",
+     "complexity": "O(log n · log m)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Indeksy od 0 — tak jak w 1D, `x = 0` lub `y = 0` w `add` to nieskończona pętla.",
+    "Za dużo pamięci przy dużej planszy — policz n·m·8 bajtów.",
+    "Pomylona kolejność wymiarów w pętlach (n dla x, m dla y).",
+    "Ustawienie wartości zamiast dodania — trzymaj kopię planszy i dodawaj różnicę."
+   ],
+   "qa": [
+    {
+     "q": [
+      "fenwick 2d",
+      "bit 2d c++",
+      "fenwick dwuwymiarowy",
+      "2d fenwick tree",
+      "drzewo fenwicka 2d kod"
+     ],
+     "a": "Fenwick 2D to dwie zagnieżdżone pętle Fenwicka: zewnętrzna po wierszach (`i += i & -i`), wewnętrzna po kolumnach. Dodanie w punkcie i suma prefiksu kosztują O(log n · log m), a sumę prostokąta liczysz z czterech prefiksów (włączanie-wyłączanie).",
+     "code": "const int N = 1000, M = 1000;\nlong long t2[N + 1][M + 1];\nvoid add2(int x, int y, long long v) {\n    for (int i = x; i <= N; i += i & -i)\n        for (int j = y; j <= M; j += j & -j) t2[i][j] += v;\n}\nlong long sum2(int x, int y) {\n    long long s = 0;\n    for (int i = x; i > 0; i -= i & -i)\n        for (int j = y; j > 0; j -= j & -j) s += t2[i][j];\n    return s;\n}\nlong long rect2(int x1, int y1, int x2, int y2) {\n    return sum2(x2, y2) - sum2(x1 - 1, y2) - sum2(x2, y1 - 1) + sum2(x1 - 1, y1 - 1);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "suma w prostokącie z aktualizacjami",
+      "zmiana pola planszy i suma prostokąta",
+      "2d range sum with updates"
+     ],
+     "a": "Gdy pola planszy się zmieniają, sumy prefiksowe 2D trzeba by przebudowywać w O(n·m). Fenwick 2D robi zmianę i zapytanie w O(log n · log m). Jeśli zadanie to przypisanie, trzymaj kopię planszy i dodawaj `v - a[x][y]`."
+    },
+    {
+     "q": [
+      "fenwick 2d za dużo pamięci",
+      "fenwick 2d memory limit",
+      "plansza 10^5 x 10^5 punkty prostokąty"
+     ],
+     "a": "Fenwick 2D potrzebuje n·m komórek, więc przy współrzędnych do 10^5 lub 10^9 się nie zmieści. Gdy zapytania są offline, użyj sweep line: posortuj punkty i zapytania po x, a po y trzymaj zwykły Fenwick 1D (prostokąt = różnica dwóch zapytań prefiksowych po x). Złożoność O((n + q) log n) i pamięć O(n)."
+    },
+    {
+     "q": [
+      "dodawanie na prostokącie fenwick 2d",
+      "range update 2d fenwick",
+      "dodaj na prostokacie zapytanie o punkt"
+     ],
+     "a": "To tablica różnicowa 2D w Fenwicku 2D: dodanie `v` na prostokącie to `add` w czterech rogach (`+v` w `(x1,y1)`, `-v` w `(x1,y2+1)` i `(x2+1,y1)`, `+v` w `(x2+1,y2+1)`), a wartość pola to `sum(x, y)`. Każda operacja O(log n · log m); rozmiar tablicy `(n+2)×(m+2)` albo pomijanie indeksów poza zakresem.",
+     "code": "struct Fenwick2DRange {\n    int n, m;\n    vector<vector<long long>> t;\n    Fenwick2DRange(int n, int m) : n(n), m(m), t(n + 2, vector<long long>(m + 2, 0)) {}\n    void add(int x, int y, long long v) {\n        for (int i = x; i <= n; i += i & -i)\n            for (int j = y; j <= m; j += j & -j) t[i][j] += v;\n    }\n    void rectAdd(int x1, int y1, int x2, int y2, long long v) {\n        add(x1, y1, v); add(x1, y2 + 1, -v); add(x2 + 1, y1, -v); add(x2 + 1, y2 + 1, v);\n    }\n    long long get(int x, int y) const {\n        long long s = 0;\n        for (int i = x; i > 0; i -= i & -i)\n            for (int j = y; j > 0; j -= j & -j) s += t[i][j];\n        return s;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "zliczanie punktów w prostokątach offline",
+      "ile punktow w prostokacie sweep",
+      "points in rectangle queries"
+     ],
+     "a": "Rozbij każde zapytanie o prostokąt `[x1, x2]×[y1, y2]` na dwa zapytania prefiksowe po x: `F(x2) - F(x1-1)`, gdzie `F(X)` = liczba punktów z `x ≤ X` i `y ∈ [y1, y2]`. Sortujesz punkty i zapytania po x, przechodzisz miotłą, wstawiasz punkty do Fenwicka po y (skompresowanym) i odpowiadasz sumą przedziału. O((n + q) log n)."
+    },
+    {
+     "q": [
+      "fenwick 2d złożoność",
+      "jak szybki jest fenwick 2d",
+      "fenwick 2d n=2000 ile operacji"
+     ],
+     "a": "Każda operacja to około log₂n · log₂m obrotów pętli, np. dla 2000×2000 ok. 11·11 = 121. Przy 10^6 operacji daje to ~1,2·10^8 prostych dodawań — mieści się w sekundzie lub dwóch. Główny limit to pamięć: 2000×2000 `long long` to 32 MB."
+    }
+   ],
+   "related": [
+    "ds-fenwick",
+    "ds-prefix-sums-2d",
+    "ds-fenwick-range",
+    "tech-sweep-line",
+    "tech-offline-queries"
+   ]
+  },
+  {
+   "id": "ds-segment-tree",
+   "title": "Drzewo przedziałowe (segment tree) — punkt-przedział",
+   "category": "Struktury danych",
+   "tags": [
+    "drzewo przedziałowe",
+    "segment tree",
+    "suma na przedziale",
+    "minimum na przedziale",
+    "maksimum",
+    "punkt-przedział",
+    "rekurencja"
+   ],
+   "aliases": [
+    "drzewo przedzialowe",
+    "drzewo przedziałowe",
+    "segment tree",
+    "segtree",
+    "drzewo przedziałowe kod",
+    "segment tree c++",
+    "drzewo przedzialowe c++",
+    "drzewo przedziałowe min",
+    "drzewo przedziałowe suma",
+    "drzewko przedzialowe",
+    "segment tree jak dziala",
+    "dp przedziałowe drzewo",
+    "interval tree"
+   ],
+   "summary": "Drzewo binarne nad tablicą, w którym każdy węzeł trzyma wynik (sumę, min, max…) dla swojego przedziału. Zmiana elementu i zapytanie o dowolny przedział w O(log n) dla każdej łącznej operacji.",
+   "complexity": "budowa O(n), update w punkcie O(log n), zapytanie o przedział O(log n), pamięć O(4n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Korzeń odpowiada całej tablicy `[0, n-1]`, jego dzieci połówkom, wnuki ćwiartkom itd., a liście pojedynczym elementom. Każdy węzeł trzyma „podsumowanie” swojego przedziału, policzone z dzieci (np. `t[v] = t[2v] + t[2v+1]`). Każdy przedział `[l, r]` rozkłada się na O(log n) węzłów (co najwyżej 2 na poziom), a zmiana jednego elementu dotyka tylko ścieżki od liścia do korzenia.\n\nDziała dla każdej operacji **łącznej** z elementem neutralnym: suma (0), min (+∞), max (−∞), gcd (0), XOR (0), iloczyn macierzy, własne struktury."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:**\n- „zmień element” + „podaj min/max/sumę na przedziale” przeplatane online,\n- „znajdź pierwszy element ≥ x na prawo od pozycji p” (schodzenie po drzewie),\n- dynamika, w której `dp[i]` to max po wcześniejszych stanach z zakresu wartości (LIS z wagami, „najlepszy wynik dla wartości < x”),\n- operacje, których Fenwick nie umie (min, max, łączenie struktur)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: przypisanie w punkcie i suma na przedziale (rekurencyjnie)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct SegTree {\n    int n;\n    vector<long long> t;   // t[v] = suma przedziału węzła v; korzeń = 1, dzieci 2v i 2v+1\n\n    SegTree(const vector<long long>& a) : n(a.size()), t(4 * a.size(), 0) { build(1, 0, n - 1, a); }\n\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { t[v] = a[tl]; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        t[v] = t[2 * v] + t[2 * v + 1];\n    }\n    void update(int v, int tl, int tr, int pos, long long val) {   // a[pos] = val\n        if (tl == tr) { t[v] = val; return; }\n        int tm = (tl + tr) / 2;\n        if (pos <= tm) update(2 * v, tl, tm, pos, val);\n        else update(2 * v + 1, tm + 1, tr, pos, val);\n        t[v] = t[2 * v] + t[2 * v + 1];\n    }\n    long long query(int v, int tl, int tr, int l, int r) const {   // suma a[l..r]\n        if (r < tl || tr < l) return 0;                  // rozłączne\n        if (l <= tl && tr <= r) return t[v];             // całkowicie w środku\n        int tm = (tl + tr) / 2;\n        return query(2 * v, tl, tm, l, r) + query(2 * v + 1, tm + 1, tr, l, r);\n    }\n    void update(int pos, long long val) { update(1, 0, n - 1, pos, val); }\n    long long query(int l, int r) const { return query(1, 0, n - 1, l, r); }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    SegTree st(a);\n    while (q--) {\n        int type;\n        cin >> type;\n        if (type == 1) {            // 1 i v: a[i] = v (1-indeksowane)\n            int i;\n            long long v;\n            cin >> i >> v;\n            st.update(i - 1, v);\n        } else {                    // 2 l r: suma a[l..r]\n            int l, r;\n            cin >> l >> r;\n            cout << st.query(l - 1, r - 1) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Węzeł ze strukturą: suma i minimum naraz (zapytania 1/2/3)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Węzeł trzyma sumę i minimum naraz — łączenie dzieci w jednej funkcji.\nstruct Node {\n    long long sum, mn;\n};\nNode combine(const Node& a, const Node& b) { return {a.sum + b.sum, min(a.mn, b.mn)}; }\nconst Node NEUTRAL = {0, LLONG_MAX};\n\nstruct SegTree {\n    int n;\n    vector<Node> t;\n    SegTree(const vector<long long>& a) : n(a.size()), t(4 * a.size()) { build(1, 0, n - 1, a); }\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { t[v] = {a[tl], a[tl]}; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        t[v] = combine(t[2 * v], t[2 * v + 1]);\n    }\n    void update(int v, int tl, int tr, int pos, long long val) {\n        if (tl == tr) { t[v] = {val, val}; return; }\n        int tm = (tl + tr) / 2;\n        if (pos <= tm) update(2 * v, tl, tm, pos, val);\n        else update(2 * v + 1, tm + 1, tr, pos, val);\n        t[v] = combine(t[2 * v], t[2 * v + 1]);\n    }\n    Node query(int v, int tl, int tr, int l, int r) const {\n        if (r < tl || tr < l) return NEUTRAL;\n        if (l <= tl && tr <= r) return t[v];\n        int tm = (tl + tr) / 2;\n        return combine(query(2 * v, tl, tm, l, r), query(2 * v + 1, tm + 1, tr, l, r));\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    SegTree st(a);\n    while (q--) {\n        int type, x, y;\n        cin >> type >> x >> y;\n        if (type == 1) st.update(1, 0, n - 1, x - 1, y);                  // a[x] = y\n        else if (type == 2) cout << st.query(1, 0, n - 1, x - 1, y - 1).sum << '\\n';\n        else cout << st.query(1, 0, n - 1, x - 1, y - 1).mn << '\\n';\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Element neutralny",
+      "Łączenie"
+     ],
+     "rows": [
+      [
+       "suma",
+       "0",
+       "a + b"
+      ],
+      [
+       "minimum",
+       "LLONG_MAX (lub INF)",
+       "min(a, b)"
+      ],
+      [
+       "maksimum",
+       "LLONG_MIN (lub -INF)",
+       "max(a, b)"
+      ],
+      [
+       "gcd",
+       "0",
+       "gcd(a, b)"
+      ],
+      [
+       "XOR",
+       "0",
+       "a ^ b"
+      ],
+      [
+       "min z indeksem",
+       "{INF, -1}",
+       "min(pair, pair)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Rozmiar tablicy `4n` wystarcza zawsze (dla n będącego potęgą dwójki potrzeba 2n, w najgorszym przypadku mniej niż 4n). Nie zgaduj `2n` w wersji rekurencyjnej z korzeniem 1 — to wyjście poza tablicę dla niektórych n."
+    },
+    {
+     "type": "warn",
+     "md": "Najczęstsze błędy: zły warunek rozłączności (`r < tl || tr < l`), zapomniane `t[v] = combine(...)` po aktualizacji dziecka, mieszanie indeksowania od 0 i od 1 między wejściem a drzewem, element neutralny `0` dla minimum."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "SegTree st(a)",
+     "desc": "budowa na wektorze a (0-indeksowane)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "st.update(pos, val)",
+     "desc": "a[pos] = val",
+     "complexity": "O(log n)",
+     "returns": "void",
+     "example": "st.update(3, 10);"
+    },
+    {
+     "sig": "st.query(l, r)",
+     "desc": "wynik operacji na a[l..r] (domknięty przedział)",
+     "complexity": "O(log n)",
+     "returns": "long long",
+     "example": "long long s = st.query(0, n - 1);"
+    },
+    {
+     "sig": "combine(a, b)",
+     "desc": "łączenie wyników dzieci — jedyne miejsce, które zmieniasz dla innej operacji",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Tablica `2n` zamiast `4n` w wersji rekurencyjnej — wyjście poza zakres.",
+    "Element neutralny niepasujący do operacji (0 dla min, 0 dla iloczynu).",
+    "Brak `t[v] = combine(t[2v], t[2v+1])` po rekurencyjnym update.",
+    "Przekazywanie wektora `a` przez wartość do `build` — kopia w każdym wywołaniu, O(n²) pamięci/czasu. Zawsze `const vector<...>&`.",
+    "Indeksy 1-indeksowane z wejścia przekazane bez `-1` do drzewa 0-indeksowanego.",
+    "Dodawanie zamiast przypisania w liściu (`t[v] += val` vs `t[v] = val`) — zgodnie z treścią zadania."
+   ],
+   "qa": [
+    {
+     "q": [
+      "drzewo przedziałowe kod",
+      "segment tree c++",
+      "drzewo przedzialowe c++",
+      "jak napisać drzewo przedziałowe",
+      "segtree kod"
+     ],
+     "a": "Rekurencyjne drzewo: węzeł `v` odpowiada przedziałowi `[tl, tr]`, dzieci to `2v` i `2v+1` z połówkami. `build` liczy wartości od liści w górę, `update` schodzi do liścia i poprawia ścieżkę, `query` zwraca 0 dla rozłącznych węzłów, `t[v]` dla zawartych i łączy wyniki dzieci w pozostałych. Każda operacja O(log n), pamięć 4n.",
+     "code": "struct SegTree {\n    int n;\n    vector<long long> t;   // t[v] = suma przedziału węzła v; korzeń = 1, dzieci 2v i 2v+1\n\n    SegTree(const vector<long long>& a) : n(a.size()), t(4 * a.size(), 0) { build(1, 0, n - 1, a); }\n\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { t[v] = a[tl]; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        t[v] = t[2 * v] + t[2 * v + 1];\n    }\n    void update(int v, int tl, int tr, int pos, long long val) {   // a[pos] = val\n        if (tl == tr) { t[v] = val; return; }\n        int tm = (tl + tr) / 2;\n        if (pos <= tm) update(2 * v, tl, tm, pos, val);\n        else update(2 * v + 1, tm + 1, tr, pos, val);\n        t[v] = t[2 * v] + t[2 * v + 1];\n    }\n    long long query(int v, int tl, int tr, int l, int r) const {   // suma a[l..r]\n        if (r < tl || tr < l) return 0;                  // rozłączne\n        if (l <= tl && tr <= r) return t[v];             // całkowicie w środku\n        int tm = (tl + tr) / 2;\n        return query(2 * v, tl, tm, l, r) + query(2 * v + 1, tm + 1, tr, l, r);\n    }\n    void update(int pos, long long val) { update(1, 0, n - 1, pos, val); }\n    long long query(int l, int r) const { return query(1, 0, n - 1, l, r); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "drzewo przedziałowe jak działa",
+      "segment tree jak dziala",
+      "o co chodzi w drzewie przedzialowym",
+      "dlaczego drzewo przedziałowe jest log n"
+     ],
+     "a": "Każdy węzeł pamięta wynik dla swojego przedziału, a przedziały dzielą się na połowy aż do pojedynczych elementów. Zapytanie `[l, r]` rozkłada się na co najwyżej 2 węzły na każdym z log n poziomów, a zmiana elementu poprawia tylko log n przodków liścia. Dlatego obie operacje kosztują O(log n), a nie O(n) jak przy przeglądaniu tablicy."
+    },
+    {
+     "q": [
+      "drzewo przedziałowe minimum",
+      "segment tree min",
+      "minimum na przedziale z aktualizacją",
+      "range minimum query z update",
+      "drzewo przedzialowe min kod",
+      "minimum na przedziale ze zmianami elementów",
+      "min na przedziale z aktualizacjami"
+     ],
+     "a": "Ta sama struktura co dla sumy, tylko łączenie to `min(a, b)`, a dla przedziałów rozłącznych zwracasz element neutralny `LLONG_MAX` (nie 0!). Update i zapytanie w O(log n). Dla tablicy bez zmian szybsza jest sparse table (O(1) na zapytanie).",
+     "code": "struct SegMin {\n    int n;\n    vector<long long> t;\n    SegMin(int n) : n(n), t(4 * n, LLONG_MAX) {}\n    void update(int v, int tl, int tr, int pos, long long val) {\n        if (tl == tr) { t[v] = val; return; }\n        int tm = (tl + tr) / 2;\n        if (pos <= tm) update(2 * v, tl, tm, pos, val);\n        else update(2 * v + 1, tm + 1, tr, pos, val);\n        t[v] = min(t[2 * v], t[2 * v + 1]);\n    }\n    long long query(int v, int tl, int tr, int l, int r) const {\n        if (r < tl || tr < l) return LLONG_MAX;\n        if (l <= tl && tr <= r) return t[v];\n        int tm = (tl + tr) / 2;\n        return min(query(2 * v, tl, tm, l, r), query(2 * v + 1, tm + 1, tr, l, r));\n    }\n    void update(int pos, long long val) { update(1, 0, n - 1, pos, val); }\n    long long query(int l, int r) const { return query(1, 0, n - 1, l, r); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "drzewo przedziałowe maksimum z indeksem",
+      "segment tree max i pozycja",
+      "argmax na przedziale",
+      "gdzie jest maksimum w przedziale"
+     ],
+     "a": "Trzymaj w węźle parę `(wartość, indeks)` i łącz przez `max` par — przy remisie para porównuje indeksy, więc dostaniesz największy indeks; jeśli chcesz najmniejszy, trzymaj `(wartość, -indeks)` albo napisz własne porównanie. Element neutralny to `{LLONG_MIN, -1}`. Złożoność bez zmian: O(log n).",
+     "code": "using P = pair<long long, int>;   // (wartość, -indeks) -> przy remisie wygrywa mniejszy indeks\nstruct SegArgMax {\n    int n;\n    vector<P> t;\n    SegArgMax(const vector<long long>& a) : n(a.size()), t(4 * a.size()) { build(1, 0, n - 1, a); }\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { t[v] = {a[tl], -tl}; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a); build(2 * v + 1, tm + 1, tr, a);\n        t[v] = max(t[2 * v], t[2 * v + 1]);\n    }\n    P query(int v, int tl, int tr, int l, int r) const {\n        if (r < tl || tr < l) return {LLONG_MIN, 0};\n        if (l <= tl && tr <= r) return t[v];\n        int tm = (tl + tr) / 2;\n        return max(query(2 * v, tl, tm, l, r), query(2 * v + 1, tm + 1, tr, l, r));\n    }\n    int argmax(int l, int r) const { return -query(1, 0, n - 1, l, r).second; }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "pierwszy element większy od x drzewo przedziałowe",
+      "segment tree descent",
+      "schodzenie po drzewie przedziałowym",
+      "find first element >= x",
+      "pierwsza pozycja >= x od lewej"
+     ],
+     "a": "W drzewie maksimów schodzisz od korzenia: jeśli max lewego dziecka ≥ x, idziesz w lewo, w przeciwnym razie w prawo — O(log n). Gdy szukasz pierwszej pozycji `≥ x` na prawo od `l`, pomijasz węzły w całości na lewo od `l` i węzły z maksimum `< x`. To jedna z rzeczy, których nie da się łatwo zrobić Fenwickiem.",
+     "code": "struct SegMax {\n    int n;\n    vector<long long> t;\n    SegMax(const vector<long long>& a) : n(a.size()), t(4 * a.size()) { build(1, 0, n - 1, a); }\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { t[v] = a[tl]; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a); build(2 * v + 1, tm + 1, tr, a);\n        t[v] = max(t[2 * v], t[2 * v + 1]);\n    }\n    // pierwszy indeks i >= l z a[i] >= x, albo -1\n    int firstAtLeast(int v, int tl, int tr, int l, long long x) const {\n        if (tr < l || t[v] < x) return -1;\n        if (tl == tr) return tl;\n        int tm = (tl + tr) / 2;\n        int res = firstAtLeast(2 * v, tl, tm, l, x);\n        if (res == -1) res = firstAtLeast(2 * v + 1, tm + 1, tr, l, x);\n        return res;\n    }\n    int firstAtLeast(int l, long long x) const { return firstAtLeast(1, 0, n - 1, l, x); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dlaczego 4n w drzewie przedziałowym",
+      "rozmiar tablicy segment tree",
+      "ile pamięci drzewo przedziałowe",
+      "4*n czy 2*n"
+     ],
+     "a": "Przy numeracji z korzeniem 1 i dziećmi `2v`, `2v+1` drzewo ma głębokość ⌈log₂ n⌉, więc największy indeks to mniej niż `2·2^⌈log₂ n⌉ ≤ 4n`. `2n` wystarcza tylko dla wersji iteracyjnej (bottom-up) albo gdy n jest potęgą dwójki. Pamięć to więc O(n), np. 4·2·10^5 `long long` = 6,4 MB."
+    },
+    {
+     "q": [
+      "maksymalna suma podtablicy na przedziale",
+      "segment tree max subarray sum",
+      "najwieksza suma spojnego fragmentu w przedziale z aktualizacja",
+      "gss drzewo przedzialowe"
+     ],
+     "a": "Węzeł trzyma cztery wartości: `sum`, najlepszy prefiks `pref`, najlepszy sufiks `suf` i najlepszy fragment `best`. Łączenie: `pref = max(L.pref, L.sum + R.pref)`, `suf = max(R.suf, R.sum + L.suf)`, `best = max(L.best, R.best, L.suf + R.pref)`. Kolejność łączenia ma znaczenie (operacja nie jest przemienna), więc w zapytaniu łącz lewy wynik z prawym. O(log n) na operację.",
+     "code": "struct Info {\n    long long sum, pref, suf, best;\n};\nInfo makeLeaf(long long x) { return {x, x, x, x}; }\nInfo combine(const Info& L, const Info& R) {\n    return {L.sum + R.sum,\n            max(L.pref, L.sum + R.pref),\n            max(R.suf, R.sum + L.suf),\n            max({L.best, R.best, L.suf + R.pref})};\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "drzewo przedziałowe 1-indeksowane czy 0",
+      "segment tree indeksowanie",
+      "drzewo przedzialowe od 1 do n"
+     ],
+     "a": "Obojętne, byle konsekwentnie: korzeń obejmuje `[0, n-1]` albo `[1, n]`, a zapytania przekazujesz w tej samej konwencji. Najczęstszy błąd to czytanie `l, r` od 1 z wejścia i przekazanie ich do drzewa na `[0, n-1]` bez odjęcia jedynki — wtedy ostatni element jest pomijany, a `r = n` wychodzi poza zakres."
+    },
+    {
+     "q": [
+      "drzewo przedziałowe na wartościach",
+      "segment tree dp po wartościach",
+      "lis z drzewem przedzialowym",
+      "najlepszy wynik dla wartości mniejszych od x"
+     ],
+     "a": "Indeksujesz drzewo **wartościami** (po kompresji), a nie pozycjami: przetwarzając elementy po kolei, `dp[i] = query(0, val[i]-1) + w[i]`, potem `update(val[i], dp[i])` (z max). Tak liczysz np. najcięższy rosnący podciąg w O(n log n). Do samego max na prefiksie wartości wystarczy też Fenwick z maksimum.",
+     "code": "// Najcięższy ściśle rosnący podciąg: maksymalna suma wag w[i] po rosnących a[i].\nlong long heaviestIncreasing(const vector<int>& a, const vector<long long>& w) {\n    vector<int> vals(a.begin(), a.end());\n    sort(vals.begin(), vals.end());\n    vals.erase(unique(vals.begin(), vals.end()), vals.end());\n    int m = vals.size();\n    vector<long long> t(2 * m, 0);   // iteracyjne drzewo maksimów\n    auto update = [&](int p, long long v) {\n        p += m;\n        t[p] = max(t[p], v);\n        for (; p > 1; p >>= 1) t[p >> 1] = max(t[p], t[p ^ 1]);\n    };\n    auto query = [&](int l, int r) {  // max na [l, r)\n        long long res = 0;\n        for (l += m, r += m; l < r; l >>= 1, r >>= 1) {\n            if (l & 1) res = max(res, t[l++]);\n            if (r & 1) res = max(res, t[--r]);\n        }\n        return res;\n    };\n    long long best = 0;\n    for (size_t i = 0; i < a.size(); i++) {\n        int v = lower_bound(vals.begin(), vals.end(), a[i]) - vals.begin();\n        long long cur = query(0, v) + w[i];\n        update(v, cur);\n        best = max(best, cur);\n    }\n    return best;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "drzewo przedziałowe wolne",
+      "segment tree tle",
+      "jak przyspieszyć drzewo przedziałowe",
+      "segment tree za wolno"
+     ],
+     "a": "Sprawdź po kolei: szybkie wejście (`ios::sync_with_stdio(false); cin.tie(nullptr);`), przekazywanie wektorów przez referencję, brak `endl` przy wypisywaniu. Potem rozważ wersję iteracyjną (bottom-up) — 2–3 razy szybszą — albo Fenwicka, jeśli wystarczy suma. Przy 10^6 operacji rekurencyjne drzewo z `long long` zwykle mieści się w 1–2 s."
+    },
+    {
+     "q": [
+      "drzewo przedziałowe gcd",
+      "nwd na przedziale z aktualizacją",
+      "segment tree gcd"
+     ],
+     "a": "Łączenie to `gcd(a, b)`, a element neutralny to 0 (bo `gcd(0, x) = x`). Każde zapytanie to O(log n) węzłów, a każde `gcd` O(log C), ale w praktyce łącznie ok. O(log n + log C). Bez aktualizacji wystarczy sparse table."
+    }
+   ],
+   "related": [
+    "ds-segment-tree-iterative",
+    "ds-lazy-propagation",
+    "ds-fenwick",
+    "ds-sparse-table",
+    "ds-dynamic-segment-tree",
+    "ds-persistent-segment-tree",
+    "ds-merge-sort-tree",
+    "ds-segment-tree-beats",
+    "ds-segment-tree-descent",
+    "tech-kadane"
+   ]
+  },
+  {
+   "id": "ds-segment-tree-iterative",
+   "title": "Drzewo przedziałowe iteracyjne (bottom-up)",
+   "category": "Struktury danych",
+   "tags": [
+    "drzewo przedziałowe",
+    "segment tree",
+    "iteracyjne",
+    "bottom-up",
+    "bez rekurencji",
+    "szybkie"
+   ],
+   "aliases": [
+    "drzewo przedzialowe iteracyjne",
+    "segment tree iterative",
+    "bottom up segment tree",
+    "drzewo przedziałowe bez rekurencji",
+    "segment tree 2n",
+    "nierekurencyjne drzewo przedzialowe",
+    "szybkie drzewo przedziałowe",
+    "efficient segment tree"
+   ],
+   "summary": "Wersja drzewa przedziałowego bez rekurencji: liście w `t[n..2n-1]`, węzeł `i` ma dzieci `2i` i `2i+1`. Krótki kod, pamięć 2n i 2–3× szybsza od rekurencyjnej. Idealna do punkt-przedział.",
+   "complexity": "budowa O(n), update O(log n), zapytanie O(log n), pamięć 2n",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Wstawiamy elementy jako liście na pozycjach `n..2n-1`, a każdy węzeł wewnętrzny `i` to połączenie `t[2i]` i `t[2i+1]`. Update: zmień liść i idź do korzenia (`p >>= 1`). Zapytanie o `[l, r)`: przesuwamy oba końce w górę; jeśli lewy koniec jest prawym dzieckiem (`l & 1`), jego węzeł w całości należy do przedziału — bierzemy go i przesuwamy `l` w prawo; symetrycznie dla `r`.\n\nDziała dla **dowolnego n** (nie trzeba dopełniać do potęgi dwójki), o ile operacja jest przemienna. Dla operacji nieprzemiennych (np. łączenie macierzy, maksymalna suma podtablicy) trzymaj osobno wynik lewy i prawy."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: dodawanie w punkcie i suma (bottom-up)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Iteracyjne drzewo przedziałowe (bottom-up): liście w t[n..2n-1], korzeń t[1].\nstruct SegTreeIter {\n    int n;\n    vector<long long> t;\n    SegTreeIter(const vector<long long>& a) : n(a.size()), t(2 * a.size()) {\n        for (int i = 0; i < n; i++) t[n + i] = a[i];\n        for (int i = n - 1; i > 0; i--) t[i] = t[2 * i] + t[2 * i + 1];\n    }\n    void update(int p, long long val) {        // a[p] = val, 0-indeksowane\n        for (t[p += n] = val; p > 1; p >>= 1) t[p >> 1] = t[p] + t[p ^ 1];\n    }\n    long long query(int l, int r) const {      // suma na [l, r) — półotwarty!\n        long long res = 0;\n        for (l += n, r += n; l < r; l >>= 1, r >>= 1) {\n            if (l & 1) res += t[l++];\n            if (r & 1) res += t[--r];\n        }\n        return res;\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    SegTreeIter st(a);\n    while (q--) {\n        int type;\n        cin >> type;\n        if (type == 1) {                   // 1 i v: a[i] += v\n            int i;\n            long long v;\n            cin >> i >> v;\n            a[i - 1] += v;\n            st.update(i - 1, a[i - 1]);\n        } else {                           // 2 l r: suma a[l..r] (1-indeksowane, domknięte)\n            int l, r;\n            cin >> l >> r;\n            cout << st.query(l - 1, r) << '\\n';   // [l-1, r) w 0-indeksowaniu\n        }\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wariant: minimum",
+     "code": "// Minimum na przedziale, bottom-up. Element neutralny = INF.\nstruct SegMinIter {\n    int n;\n    vector<int> t;\n    SegMinIter(const vector<int>& a) : n(a.size()), t(2 * a.size(), INT_MAX) {\n        for (int i = 0; i < n; i++) t[n + i] = a[i];\n        for (int i = n - 1; i > 0; i--) t[i] = min(t[2 * i], t[2 * i + 1]);\n    }\n    void update(int p, int val) {\n        for (t[p += n] = val; p > 1; p >>= 1) t[p >> 1] = min(t[p], t[p ^ 1]);\n    }\n    int query(int l, int r) const {             // min na [l, r)\n        int res = INT_MAX;\n        for (l += n, r += n; l < r; l >>= 1, r >>= 1) {\n            if (l & 1) res = min(res, t[l++]);\n            if (r & 1) res = min(res, t[--r]);\n        }\n        return res;\n    }\n};",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Zapytanie jest **półotwarte** `[l, r)`. Dla domkniętego przedziału `[l, r]` wołaj `query(l, r + 1)`. To najczęstsza pomyłka przy przepisywaniu tego drzewa."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "SegTreeIter st(a)",
+     "desc": "budowa w O(n)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "st.update(p, val)",
+     "desc": "a[p] = val (0-indeksowane)",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "st.query(l, r)",
+     "desc": "wynik na [l, r) — półotwarty",
+     "complexity": "O(log n)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Zapytanie domknięte zamiast półotwartego (`query(l, r)` zamiast `query(l, r + 1)`).",
+    "Operacja nieprzemienna łączona w złej kolejności — trzeba osobnych akumulatorów `resL` i `resR`.",
+    "Schodzenie po drzewie (szukanie k-tego, pierwszego ≥ x) w tej wersji jest kłopotliwe dla n niebędącego potęgą dwójki — wtedy dopełnij n do potęgi dwójki albo użyj wersji rekurencyjnej.",
+    "Lazy propagation w wersji bottom-up jest możliwa, ale skomplikowana — do dodawania na przedziale łatwiej użyć wersji rekurencyjnej."
+   ],
+   "qa": [
+    {
+     "q": [
+      "drzewo przedziałowe iteracyjne",
+      "segment tree bottom up",
+      "iterative segment tree c++",
+      "drzewo przedzialowe bez rekurencji",
+      "segment tree 2n kod"
+     ],
+     "a": "Liście są w `t[n..2n-1]`, węzeł `i` łączy `t[2i]` i `t[2i+1]`. `update` zmienia liść i idzie w górę `p >>= 1`, a `query(l, r)` dla półotwartego `[l, r)` przesuwa oba końce w górę, zbierając węzły, gdy `l` jest nieparzyste lub `r` jest nieparzyste. Pamięć 2n, O(log n) na operację, zwykle 2–3× szybsze od rekurencji.",
+     "code": "// Iteracyjne drzewo przedziałowe (bottom-up): liście w t[n..2n-1], korzeń t[1].\nstruct SegTreeIter {\n    int n;\n    vector<long long> t;\n    SegTreeIter(const vector<long long>& a) : n(a.size()), t(2 * a.size()) {\n        for (int i = 0; i < n; i++) t[n + i] = a[i];\n        for (int i = n - 1; i > 0; i--) t[i] = t[2 * i] + t[2 * i + 1];\n    }\n    void update(int p, long long val) {        // a[p] = val, 0-indeksowane\n        for (t[p += n] = val; p > 1; p >>= 1) t[p >> 1] = t[p] + t[p ^ 1];\n    }\n    long long query(int l, int r) const {      // suma na [l, r) — półotwarty!\n        long long res = 0;\n        for (l += n, r += n; l < r; l >>= 1, r >>= 1) {\n            if (l & 1) res += t[l++];\n            if (r & 1) res += t[--r];\n        }\n        return res;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dlaczego l & 1 w segment tree",
+      "jak działa query w drzewie bottom up",
+      "co oznacza l&1 r&1"
+     ],
+     "a": "Jeśli `l` jest nieparzyste, to `l` jest prawym dzieckiem — jego rodzic obejmuje też element na lewo od przedziału, więc nie możemy wejść do rodzica. Bierzemy więc węzeł `l` w całości i przesuwamy `l++`. Analogicznie dla prawego końca (półotwartego): gdy `r` jest nieparzyste, węzeł `r-1` należy do przedziału, więc bierzemy `t[--r]`. Potem oba końce idą poziom wyżej."
+    },
+    {
+     "q": [
+      "iteracyjne drzewo przedziałowe operacja nieprzemienna",
+      "bottom up segment tree kolejność",
+      "segment tree non commutative iterative"
+     ],
+     "a": "Zbieraj dwa wyniki: `resL` (węzły z lewej strony, doklejane z prawej: `resL = f(resL, t[l++])`) i `resR` (węzły z prawej, doklejane z lewej: `resR = f(t[--r], resR)`). Na końcu `f(resL, resR)`. Dzięki temu kolejność elementów jest zachowana, np. dla iloczynu macierzy lub maksymalnej sumy podtablicy.",
+     "code": "struct Mat { long long a, b, c, d; };   // macierz 2x2, mnożenie nieprzemienne\nMat mul(const Mat& x, const Mat& y) {\n    return {x.a * y.a + x.b * y.c, x.a * y.b + x.b * y.d, x.c * y.a + x.d * y.c, x.c * y.b + x.d * y.d};\n}\nconst Mat ID = {1, 0, 0, 1};\nMat queryOrdered(const vector<Mat>& t, int n, int l, int r) {   // iloczyn a[l] * ... * a[r-1]\n    Mat resL = ID, resR = ID;\n    for (l += n, r += n; l < r; l >>= 1, r >>= 1) {\n        if (l & 1) resL = mul(resL, t[l++]);\n        if (r & 1) resR = mul(t[--r], resR);\n    }\n    return mul(resL, resR);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "drzewo przedziałowe iteracyjne min",
+      "segment tree min iteracyjnie",
+      "bottom up min query"
+     ],
+     "a": "Zamieniasz sumę na `min`, a początkowy wynik zapytania na `INT_MAX` (lub `LLONG_MAX`). Nieużywane komórki też inicjuj elementem neutralnym. Złożoność O(log n), pamięć 2n."
+    },
+    {
+     "q": [
+      "rekurencyjne czy iteracyjne drzewo przedziałowe",
+      "które drzewo przedziałowe wybrać",
+      "segment tree recursive vs iterative"
+     ],
+     "a": "Iteracyjne: krótsze, szybsze, 2n pamięci — świetne do punkt-przedział (suma, min, max). Rekurencyjne: łatwiej dodać lazy propagation, schodzenie po drzewie (k-ty element, pierwszy ≥ x), drzewa dynamiczne i trwałe. Na zawodach warto znać oba i wybierać według potrzeb."
+    },
+    {
+     "q": [
+      "segment tree przypisanie a dodawanie iteracyjne",
+      "update dodaj do elementu bottom up",
+      "segment tree add point"
+     ],
+     "a": "Wersja bottom-up najprościej obsługuje przypisanie liścia `t[p+n] = val`. Dodawanie to `t[p+n] += v`, a potem ta sama pętla w górę przeliczająca rodziców — albo, przy sumie, po prostu dodawanie `v` do wszystkich przodków: `for (p += n; p > 0; p >>= 1) t[p] += v;`. O(log n).",
+     "code": "void addPoint(vector<long long>& t, int n, int p, long long v) {\n    for (p += n; p > 0; p >>= 1) t[p] += v;   // każdy przodek liścia zawiera ten element\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "ds-segment-tree",
+    "ds-lazy-propagation",
+    "ds-fenwick",
+    "tech-bit-tricks",
+    "cpp-ref-bit",
+    "ds-segment-tree-descent"
+   ]
+  },
+  {
+   "id": "ds-lazy-propagation",
+   "title": "Lazy propagation — drzewo przedziałowe przedział-przedział",
+   "category": "Struktury danych",
+   "tags": [
+    "lazy propagation",
+    "leniwa propagacja",
+    "drzewo przedziałowe",
+    "dodawanie na przedziale",
+    "przypisanie na przedziale",
+    "range update range query"
+   ],
+   "aliases": [
+    "lazy propagation",
+    "segment tree lazy",
+    "leniwa propagacja",
+    "drzewo przedziałowe lazy",
+    "drzewo przedzialowe przedzial przedzial",
+    "lazy segment tree c++",
+    "dodawanie na przedziale suma na przedziale",
+    "range add range sum",
+    "range assign",
+    "lazy kod",
+    "drzewo przedzialowe z lazy",
+    "przedział przedział drzewo"
+   ],
+   "summary": "Węzeł całkowicie pokryty aktualizacją dostaje tylko znacznik „zaległej operacji” (lazy), który spychamy do dzieci dopiero, gdy trzeba do nich zejść. Dzięki temu dodawanie/przypisanie na przedziale i zapytania o przedział działają w O(log n).",
+   "complexity": "aktualizacja przedziału O(log n), zapytanie O(log n), budowa O(n), pamięć O(4n) na każdą tablicę",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Bez lazy aktualizacja przedziału długości k dotyka k liści. Z lazy: gdy przedział węzła w całości mieści się w aktualizacji, poprawiamy tylko jego wartość (np. `sum += add · długość`) i zapisujemy w `lazy[v]`, że dzieci „mają zaległe” `+add`. Zanim kiedykolwiek zejdziemy do dzieci (w update albo query), wywołujemy `push(v)`, który przekazuje zaległość dzieciom. Każda operacja odwiedza O(log n) węzłów — tak jak zapytanie w zwykłym drzewie.\n\nTrzy kluczowe funkcje: **apply** (nałóż operację na cały węzeł: wartość + lazy), **push** (zepchnij lazy do dzieci), **pull** (przelicz węzeł z dzieci)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „dodaj *v* do wszystkich elementów od *l* do *r*” / „ustaw wszystkie na *x*” / „odwróć bity na przedziale” **i** pytania „suma / min / max na przedziale” — przeplatane online. Jeśli wystarczy dodawanie + suma, prostsze są dwa Fenwicki; jeśli aktualizacje są przed zapytaniami — tablica różnicowa."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: dodawanie na przedziale + suma i minimum",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Dodawanie na przedziale + suma i minimum na przedziale (lazy propagation), 0-indeksowane.\nstruct LazySegTree {\n    int n;\n    vector<long long> sum, mn, lazy;   // lazy[v] = dodatek do zepchnięcia do dzieci\n\n    LazySegTree(const vector<long long>& a) : n(a.size()), sum(4 * n), mn(4 * n), lazy(4 * n, 0) {\n        build(1, 0, n - 1, a);\n    }\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { sum[v] = mn[v] = a[tl]; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        pull(v);\n    }\n    void pull(int v) {\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n        mn[v] = min(mn[2 * v], mn[2 * v + 1]);\n    }\n    void apply(int v, int tl, int tr, long long add) {   // dodaj add do całego węzła\n        sum[v] += add * (tr - tl + 1);\n        mn[v] += add;\n        lazy[v] += add;\n    }\n    void push(int v, int tl, int tr) {                   // zepchnij zaległy dodatek do dzieci\n        if (lazy[v] != 0) {\n            int tm = (tl + tr) / 2;\n            apply(2 * v, tl, tm, lazy[v]);\n            apply(2 * v + 1, tm + 1, tr, lazy[v]);\n            lazy[v] = 0;\n        }\n    }\n    void update(int v, int tl, int tr, int l, int r, long long add) {\n        if (r < tl || tr < l) return;\n        if (l <= tl && tr <= r) { apply(v, tl, tr, add); return; }\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        update(2 * v, tl, tm, l, r, add);\n        update(2 * v + 1, tm + 1, tr, l, r, add);\n        pull(v);\n    }\n    long long querySum(int v, int tl, int tr, int l, int r) {\n        if (r < tl || tr < l) return 0;\n        if (l <= tl && tr <= r) return sum[v];\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        return querySum(2 * v, tl, tm, l, r) + querySum(2 * v + 1, tm + 1, tr, l, r);\n    }\n    long long queryMin(int v, int tl, int tr, int l, int r) {\n        if (r < tl || tr < l) return LLONG_MAX;\n        if (l <= tl && tr <= r) return mn[v];\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        return min(queryMin(2 * v, tl, tm, l, r), queryMin(2 * v + 1, tm + 1, tr, l, r));\n    }\n    void update(int l, int r, long long add) { update(1, 0, n - 1, l, r, add); }\n    long long querySum(int l, int r) { return querySum(1, 0, n - 1, l, r); }\n    long long queryMin(int l, int r) { return queryMin(1, 0, n - 1, l, r); }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    LazySegTree st(a);\n    while (q--) {\n        int type, l, r;\n        cin >> type >> l >> r;\n        l--, r--;                                   // na 0-indeksowanie\n        if (type == 1) {                            // 1 l r v: dodaj v na [l, r]\n            long long v;\n            cin >> v;\n            st.update(l, r, v);\n        } else if (type == 2) {                     // 2 l r: suma\n            cout << st.querySum(l, r) << '\\n';\n        } else {                                    // 3 l r: minimum\n            cout << st.queryMin(l, r) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: przypisanie na przedziale + suma",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Przypisanie na przedziale + suma na przedziale.\nstruct AssignSegTree {\n    int n;\n    vector<long long> sum, val;\n    vector<char> has;                  // has[v] = czy w węźle czeka przypisanie val[v]\n\n    AssignSegTree(const vector<long long>& a) : n(a.size()), sum(4 * n), val(4 * n), has(4 * n, 0) {\n        build(1, 0, n - 1, a);\n    }\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { sum[v] = a[tl]; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n    }\n    void apply(int v, int tl, int tr, long long x) {\n        sum[v] = x * (tr - tl + 1);\n        val[v] = x;\n        has[v] = 1;                    // nowe przypisanie nadpisuje stare\n    }\n    void push(int v, int tl, int tr) {\n        if (has[v]) {\n            int tm = (tl + tr) / 2;\n            apply(2 * v, tl, tm, val[v]);\n            apply(2 * v + 1, tm + 1, tr, val[v]);\n            has[v] = 0;\n        }\n    }\n    void assign(int v, int tl, int tr, int l, int r, long long x) {\n        if (r < tl || tr < l) return;\n        if (l <= tl && tr <= r) { apply(v, tl, tr, x); return; }\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        assign(2 * v, tl, tm, l, r, x);\n        assign(2 * v + 1, tm + 1, tr, l, r, x);\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n    }\n    long long query(int v, int tl, int tr, int l, int r) {\n        if (r < tl || tr < l) return 0;\n        if (l <= tl && tr <= r) return sum[v];\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        return query(2 * v, tl, tm, l, r) + query(2 * v + 1, tm + 1, tr, l, r);\n    }\n    void assign(int l, int r, long long x) { assign(1, 0, n - 1, l, r, x); }\n    long long query(int l, int r) { return query(1, 0, n - 1, l, r); }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    AssignSegTree st(a);\n    while (q--) {\n        int type, l, r;\n        cin >> type >> l >> r;\n        if (type == 1) {                 // 1 l r x: a[l..r] = x\n            long long x;\n            cin >> x;\n            st.assign(l - 1, r - 1, x);\n        } else {                         // 2 l r: suma\n            cout << st.query(l - 1, r - 1) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Aktualizacja",
+      "Zapytanie",
+      "apply(v, x) na węźle długości len",
+      "Łączenie lazy"
+     ],
+     "rows": [
+      [
+       "dodaj x",
+       "suma",
+       "sum += x·len; lazy += x",
+       "lazy_dziecka += lazy"
+      ],
+      [
+       "dodaj x",
+       "min / max",
+       "mn += x; lazy += x",
+       "lazy_dziecka += lazy"
+      ],
+      [
+       "przypisz x",
+       "suma",
+       "sum = x·len; val = x; has = 1",
+       "nowe przypisanie nadpisuje"
+      ],
+      [
+       "przypisz x",
+       "min / max",
+       "mn = x; val = x; has = 1",
+       "nadpisuje"
+      ],
+      [
+       "odwróć bity (XOR 1)",
+       "liczba jedynek",
+       "ones = len - ones; flip ^= 1",
+       "flip_dziecka ^= flip"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Przypisanie i dodawanie naraz: trzymaj parę `(set, add)`. Nałożenie przypisania zeruje `add`; nałożenie dodawania na węzeł z aktywnym przypisaniem zwiększa `set` (albo `add`, jeśli przypisania nie ma). Przy `push` najpierw przekaż przypisanie, potem dodawanie."
+    },
+    {
+     "type": "warn",
+     "md": "`push` musi być wywołane **przed** zejściem do dzieci w obu funkcjach (update i query), a `pull` po powrocie z dzieci w update. Zapomniany `push` w query to klasyczny błąd: wyniki są złe tylko dla niektórych kolejności operacji, więc testuj z brutem na losowych danych."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "update(l, r, add)",
+     "desc": "dodaj add do a[l..r]",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "querySum(l, r) / queryMin(l, r)",
+     "desc": "suma / minimum na a[l..r]",
+     "complexity": "O(log n)",
+     "returns": "long long"
+    },
+    {
+     "sig": "apply(v, tl, tr, x)",
+     "desc": "nałożenie operacji na cały węzeł (wartość + lazy)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "push(v, tl, tr)",
+     "desc": "zepchnięcie zaległej operacji do dzieci",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "pull(v)",
+     "desc": "przeliczenie węzła z dzieci",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "assign(l, r, x)",
+     "desc": "przypisanie a[l..r] = x (wariant AssignSegTree)",
+     "complexity": "O(log n)"
+    }
+   ],
+   "pitfalls": [
+    "Brak `push` w zapytaniu albo w aktualizacji przed zejściem do dzieci.",
+    "Dla sumy zapomniane mnożenie przez długość węzła: `sum += add * (tr - tl + 1)`.",
+    "Przypisanie z wartością 0 oznaczane jako „brak lazy” (`lazy == 0`) — dla przypisania potrzebna osobna flaga.",
+    "`push` w liściu — przy tablicach 4n zwykle nieszkodliwe, ale lepiej nie schodzić niżej niż liść (warunki w update/query to gwarantują).",
+    "`int` w `lazy` lub `sum` przy dużych wartościach — `long long`.",
+    "Kolejność złożenia operacji (przypisanie vs dodawanie) — źle złożone lazy daje błędy trudne do wyłapania."
+   ],
+   "qa": [
+    {
+     "q": [
+      "lazy propagation",
+      "segment tree lazy",
+      "lazy propagation c++",
+      "drzewo przedziałowe lazy kod",
+      "leniwa propagacja jak dziala"
+     ],
+     "a": "Węzeł, którego przedział w całości mieści się w aktualizacji, dostaje zmianę od razu (np. `sum += add·len`) i znacznik `lazy[v] += add` dla dzieci. Gdy potem musisz zejść do dzieci (w update lub query), najpierw `push(v)` przekazuje znacznik dzieciom. Każda operacja odwiedza O(log n) węzłów, więc dodawanie na przedziale i suma działają w O(log n).",
+     "code": "// Dodawanie na przedziale + suma i minimum na przedziale (lazy propagation), 0-indeksowane.\nstruct LazySegTree {\n    int n;\n    vector<long long> sum, mn, lazy;   // lazy[v] = dodatek do zepchnięcia do dzieci\n\n    LazySegTree(const vector<long long>& a) : n(a.size()), sum(4 * n), mn(4 * n), lazy(4 * n, 0) {\n        build(1, 0, n - 1, a);\n    }\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { sum[v] = mn[v] = a[tl]; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        pull(v);\n    }\n    void pull(int v) {\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n        mn[v] = min(mn[2 * v], mn[2 * v + 1]);\n    }\n    void apply(int v, int tl, int tr, long long add) {   // dodaj add do całego węzła\n        sum[v] += add * (tr - tl + 1);\n        mn[v] += add;\n        lazy[v] += add;\n    }\n    void push(int v, int tl, int tr) {                   // zepchnij zaległy dodatek do dzieci\n        if (lazy[v] != 0) {\n            int tm = (tl + tr) / 2;\n            apply(2 * v, tl, tm, lazy[v]);\n            apply(2 * v + 1, tm + 1, tr, lazy[v]);\n            lazy[v] = 0;\n        }\n    }\n    void update(int v, int tl, int tr, int l, int r, long long add) {\n        if (r < tl || tr < l) return;\n        if (l <= tl && tr <= r) { apply(v, tl, tr, add); return; }\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        update(2 * v, tl, tm, l, r, add);\n        update(2 * v + 1, tm + 1, tr, l, r, add);\n        pull(v);\n    }\n    long long querySum(int v, int tl, int tr, int l, int r) {\n        if (r < tl || tr < l) return 0;\n        if (l <= tl && tr <= r) return sum[v];\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        return querySum(2 * v, tl, tm, l, r) + querySum(2 * v + 1, tm + 1, tr, l, r);\n    }\n    long long queryMin(int v, int tl, int tr, int l, int r) {\n        if (r < tl || tr < l) return LLONG_MAX;\n        if (l <= tl && tr <= r) return mn[v];\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        return min(queryMin(2 * v, tl, tm, l, r), queryMin(2 * v + 1, tm + 1, tr, l, r));\n    }\n    void update(int l, int r, long long add) { update(1, 0, n - 1, l, r, add); }\n    long long querySum(int l, int r) { return querySum(1, 0, n - 1, l, r); }\n    long long queryMin(int l, int r) { return queryMin(1, 0, n - 1, l, r); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dodawanie na przedziale i suma na przedziale",
+      "range add range sum",
+      "dodaj na przedziale i suma drzewo",
+      "przedział przedział suma",
+      "dodaj na przedziale i zapytaj o sumę",
+      "dodawanie do przedziału i pytanie o sumę przedziału"
+     ],
+     "a": "Lazy segment tree: `apply` dodaje `add·długość` do sumy węzła i `add` do jego `lazy`, `push` przekazuje `lazy` dzieciom, a `pull` liczy sumę z dzieci. Obie operacje O(log n). Jeśli nie potrzebujesz minimum ani innych operacji, krótsze są dwa Fenwicki (B1·i − B2)."
+    },
+    {
+     "q": [
+      "dodawanie na przedziale i minimum",
+      "range add range min",
+      "lazy min",
+      "dodaj na przedziale minimum na przedziale"
+     ],
+     "a": "Przy dodaniu `x` do całego węzła jego minimum rośnie dokładnie o `x` (wszystkie elementy rosną), więc `apply`: `mn += x; lazy += x` — bez mnożenia przez długość. Zapytanie zwraca `LLONG_MAX` dla rozłącznych węzłów. Złożoność O(log n). To typowe np. w „ile wolnych miejsc w pociągu na odcinku” (rezerwacja = dodaj −k, sprawdź min ≥ 0)."
+    },
+    {
+     "q": [
+      "przypisanie na przedziale",
+      "range assign segment tree",
+      "ustaw wszystkie na x w przedziale",
+      "lazy przypisanie",
+      "range set query sum"
+     ],
+     "a": "Lazy przechowuje wartość do przypisania i **flagę**, czy przypisanie czeka (bo przypisanie zera to też operacja). `apply`: `sum = x·len`, `val = x`, `has = 1`; nowsze przypisanie nadpisuje starsze, więc w `push` po prostu nakładasz `val` na oba dzieci. O(log n) na operację.",
+     "code": "// Przypisanie na przedziale + suma na przedziale.\nstruct AssignSegTree {\n    int n;\n    vector<long long> sum, val;\n    vector<char> has;                  // has[v] = czy w węźle czeka przypisanie val[v]\n\n    AssignSegTree(const vector<long long>& a) : n(a.size()), sum(4 * n), val(4 * n), has(4 * n, 0) {\n        build(1, 0, n - 1, a);\n    }\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { sum[v] = a[tl]; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n    }\n    void apply(int v, int tl, int tr, long long x) {\n        sum[v] = x * (tr - tl + 1);\n        val[v] = x;\n        has[v] = 1;                    // nowe przypisanie nadpisuje stare\n    }\n    void push(int v, int tl, int tr) {\n        if (has[v]) {\n            int tm = (tl + tr) / 2;\n            apply(2 * v, tl, tm, val[v]);\n            apply(2 * v + 1, tm + 1, tr, val[v]);\n            has[v] = 0;\n        }\n    }\n    void assign(int v, int tl, int tr, int l, int r, long long x) {\n        if (r < tl || tr < l) return;\n        if (l <= tl && tr <= r) { apply(v, tl, tr, x); return; }\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        assign(2 * v, tl, tm, l, r, x);\n        assign(2 * v + 1, tm + 1, tr, l, r, x);\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n    }\n    long long query(int v, int tl, int tr, int l, int r) {\n        if (r < tl || tr < l) return 0;\n        if (l <= tl && tr <= r) return sum[v];\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        return query(2 * v, tl, tm, l, r) + query(2 * v + 1, tm + 1, tr, l, r);\n    }\n    void assign(int l, int r, long long x) { assign(1, 0, n - 1, l, r, x); }\n    long long query(int l, int r) { return query(1, 0, n - 1, l, r); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "przypisanie i dodawanie naraz lazy",
+      "lazy dwa rodzaje operacji",
+      "set i add na przedziale",
+      "assign i add segment tree"
+     ],
+     "a": "Trzymaj w węźle `(hasSet, setVal, add)`. Nałożenie przypisania `x`: `hasSet = 1, setVal = x, add = 0`. Nałożenie dodawania `d`: jeśli `hasSet`, to `setVal += d`, w przeciwnym razie `add += d`. `push` nakłada na dzieci najpierw przypisanie (jeśli jest), potem dodawanie. Wartość węzła liczysz zgodnie z tą samą kolejnością.",
+     "code": "struct Tag {\n    bool hasSet = false;\n    long long setVal = 0, add = 0;\n};\n// złożenie: najpierw stary tag, potem nowy\nTag compose(Tag old, const Tag& nw) {\n    if (nw.hasSet) return nw;                 // przypisanie kasuje wszystko wcześniej\n    if (old.hasSet) old.setVal += nw.add;     // dodawanie po przypisaniu\n    else old.add += nw.add;\n    return old;\n}\n// nałożenie tagu na sumę węzła o długości len\nlong long applyToSum(long long sum, long long len, const Tag& t) {\n    if (t.hasSet) return t.setVal * len;\n    return sum + t.add * len;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "po co push w lazy",
+      "co robi push",
+      "push i pull segment tree",
+      "kiedy wywolac push"
+     ],
+     "a": "`push(v)` przekazuje zaległą operację z węzła do jego dzieci (nakłada ją na nie przez `apply`) i czyści znacznik. Wywołujesz go zawsze, zanim zejdziesz do dzieci — w aktualizacji i w zapytaniu. `pull(v)` robi odwrotnie: po powrocie z dzieci przelicza wartość węzła. Bez `push` dzieci miałyby nieaktualne wartości."
+    },
+    {
+     "q": [
+      "lazy propagation zły wynik",
+      "lazy segment tree nie działa",
+      "segment tree lazy bug",
+      "lazy daje zle odpowiedzi"
+     ],
+     "a": "Sprawdź: (1) `push` przed zejściem do dzieci w **obu** funkcjach, (2) `pull` po aktualizacji dzieci, (3) mnożenie przez długość przy sumie, (4) element neutralny w zapytaniu (0 dla sumy, `LLONG_MAX` dla min), (5) czy `apply` aktualizuje i wartość, i `lazy`. Najpewniej: porównaj z brutem O(n·q) na tysiącach losowych małych testów."
+    },
+    {
+     "q": [
+      "odwracanie bitów na przedziale",
+      "flip na przedziale lazy",
+      "xor na przedziale liczba jedynek",
+      "range flip count ones"
+     ],
+     "a": "Węzeł trzyma liczbę jedynek `ones` i flagę `flip`. `apply`: `ones = len - ones; flip ^= 1` (dwa odwrócenia się znoszą). `push` przekazuje flip dzieciom, jeśli `flip == 1`. Zapytanie o liczbę jedynek to suma `ones` — O(log n)."
+    },
+    {
+     "q": [
+      "lazy propagation złożoność",
+      "dlaczego lazy jest log n",
+      "ile wezlow odwiedza lazy"
+     ],
+     "a": "Aktualizacja przedziału zatrzymuje się na węzłach w całości pokrytych — jest ich O(log n), jak w zwykłym zapytaniu (co najwyżej 2 na poziom, plus ich przodkowie). `push` i `apply` są O(1), więc cała operacja to O(log n). Bez lazy aktualizacja przedziału długości k kosztowałaby O(k log n)."
+    },
+    {
+     "q": [
+      "arytmetyczny ciąg na przedziale drzewo",
+      "dodaj ciąg arytmetyczny online",
+      "range add arithmetic progression segment tree"
+     ],
+     "a": "Lazy może przechowywać ciąg arytmetyczny `(a, d)` — pierwszy wyraz i różnicę. Nałożenie na węzeł `[tl, tr]` zwiększa sumę o `a·len + d·len·(len-1)/2`; przy pushu prawe dziecko dostaje `(a + d·(tm+1-tl), d)`. Dwa ciągi się sumują (`a1+a2`, `d1+d2`). O(log n) na operację."
+    }
+   ],
+   "related": [
+    "ds-segment-tree",
+    "ds-fenwick-range",
+    "ds-difference-array",
+    "ds-dynamic-segment-tree",
+    "ds-segment-tree-beats",
+    "ds-segment-tree-descent"
+   ]
+  },
+  {
+   "id": "ds-dynamic-segment-tree",
+   "title": "Dynamiczne drzewo przedziałowe (na wskaźnikach / puli węzłów)",
+   "category": "Struktury danych",
+   "tags": [
+    "dynamiczne drzewo przedziałowe",
+    "dynamic segment tree",
+    "drzewo na wskaźnikach",
+    "duże współrzędne",
+    "online",
+    "pula węzłów"
+   ],
+   "aliases": [
+    "dynamiczne drzewo przedzialowe",
+    "dynamic segment tree",
+    "drzewo przedziałowe na wskaźnikach",
+    "sparse segment tree",
+    "drzewo przedzialowe 10^9",
+    "segment tree duże indeksy",
+    "implicit segment tree",
+    "drzewo przedziałowe bez kompresji",
+    "dynamiczny segment tree"
+   ],
+   "summary": "Drzewo przedziałowe nad ogromnym zakresem (np. [0, 10^9]), w którym węzły tworzymy dopiero, gdy są potrzebne. Każda operacja tworzy co najwyżej O(log C) węzłów, więc pamięć to O(q log C). Alternatywa dla kompresji, gdy zapytania są online.",
+   "complexity": "update i zapytanie O(log C), pamięć O(q · log C) węzłów (C = rozmiar zakresu)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Zwykłe drzewo na zakresie 10^9 miałoby 4·10^9 węzłów. Ale po q aktualizacjach istnieją tylko węzły na ścieżkach od korzenia do zmienianych liści — co najwyżej `q · (log₂ C + 1)` ≈ 31q. Tworzymy je więc „na żądanie”: węzeł pamięta indeksy dzieci w puli (`vector<Node>`), a brak dziecka (0) oznacza poddrzewo samych zer.\n\n**Kiedy używać:** współrzędne do 10^9 (lub 10^18) i zapytania **online** (nie da się zebrać wszystkich współrzędnych z góry). Gdy zapytania są offline, zwykle prościej i szybciej skompresować współrzędne i użyć zwykłego drzewa."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: dodawanie w punkcie i suma na [0, 10^9] online",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Dynamiczne drzewo przedziałowe na zakresie [lo, hi] (np. 0..1e9): węzły tworzone przy pierwszym użyciu.\nstruct DynamicSegTree {\n    struct Node {\n        long long sum = 0;\n        int left = 0, right = 0;          // 0 = brak dziecka\n    };\n    vector<Node> t;\n    long long lo, hi;\n\n    DynamicSegTree(long long lo, long long hi, int reserveNodes = 0) : lo(lo), hi(hi) {\n        t.reserve(reserveNodes + 2);\n        t.push_back(Node());              // węzeł 0 = „pusty”\n        t.push_back(Node());              // węzeł 1 = korzeń\n    }\n    int newNode() {\n        t.push_back(Node());\n        return (int)t.size() - 1;\n    }\n    void add(int v, long long tl, long long tr, long long pos, long long val) {\n        t[v].sum += val;\n        if (tl == tr) return;\n        long long tm = tl + (tr - tl) / 2;          // bezpieczne także dla ujemnych\n        if (pos <= tm) {\n            if (t[v].left == 0) { int c = newNode(); t[v].left = c; }   // newNode może przenieść t!\n            add(t[v].left, tl, tm, pos, val);\n        } else {\n            if (t[v].right == 0) { int c = newNode(); t[v].right = c; }\n            add(t[v].right, tm + 1, tr, pos, val);\n        }\n    }\n    long long query(int v, long long tl, long long tr, long long l, long long r) const {\n        if (v == 0 || r < tl || tr < l) return 0;\n        if (l <= tl && tr <= r) return t[v].sum;\n        long long tm = tl + (tr - tl) / 2;\n        return query(t[v].left, tl, tm, l, r) + query(t[v].right, tm + 1, tr, l, r);\n    }\n    void add(long long pos, long long val) { add(1, lo, hi, pos, val); }\n    long long query(long long l, long long r) const { return query(1, lo, hi, l, r); }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> q;\n    DynamicSegTree st(0, 1000000000, q * 31);\n    while (q--) {\n        int type;\n        long long x, y;\n        cin >> type >> x >> y;\n        if (type == 1) st.add(x, y);                   // 1 pos v: a[pos] += v\n        else cout << st.query(x, y) << '\\n';           // 2 l r: suma a[l..r]\n    }\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`t[v].left = newNode();` jest bezpieczne dopiero od C++17 (prawa strona przypisania liczona przed lewą). W starszych standardach `t[v]` może wskazywać na pamięć sprzed realokacji wektora — dlatego w kodzie najpierw zapisujemy wynik do zmiennej. Jeszcze bezpieczniej: `reserve` z zapasem albo statyczna tablica węzłów."
+    },
+    {
+     "type": "tip",
+     "md": "Dynamiczne drzewo łączy się z lazy propagation (tworzysz dzieci w `push`) oraz z trwałością (zamiast modyfikować węzeł, kopiujesz go). Pamięć szacuj z góry: 2·10^5 operacji × 31 węzłów × 16 bajtów ≈ 100 MB — czasem trzeba zmniejszyć węzeł (np. `int` zamiast `long long`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "DynamicSegTree st(lo, hi, reserve)",
+     "desc": "puste drzewo na zakresie [lo, hi]",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "st.add(pos, val)",
+     "desc": "a[pos] += val, tworzy brakujące węzły",
+     "complexity": "O(log C)"
+    },
+    {
+     "sig": "st.query(l, r)",
+     "desc": "suma a[l..r]; brak węzła = 0",
+     "complexity": "O(log C)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Referencja `Node& node = t[v]` trzymana przez `newNode()` — realokacja wektora unieważnia referencję (UB).",
+    "`(tl + tr) / 2` dla ujemnych zakresów zaokrągla w stronę zera — dla `[-1, 0]` daje 0 i nieskończoną rekurencję. Używaj `tl + (tr - tl) / 2`.",
+    "Za mała pula przy statycznej tablicy — szacuj `q · (log₂ C + 2)` węzłów.",
+    "Zakres `hi` w `int` przy 10^9 jest OK, ale przy sumie `lo + hi` może się przepełnić — używaj `long long`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dynamiczne drzewo przedziałowe",
+      "dynamic segment tree c++",
+      "drzewo przedzialowe na wskaznikach",
+      "sparse segment tree kod",
+      "implicit segment tree"
+     ],
+     "a": "Węzły trzymasz w puli (`vector<Node>`), każdy pamięta indeksy dzieci, a 0 oznacza „brak dziecka = same zera”. Przy aktualizacji tworzysz brakujące węzły na ścieżce, przy zapytaniu brak węzła zwraca 0. Każda operacja dotyka O(log C) węzłów, więc pamięć to O(q log C) zamiast O(C).",
+     "code": "// Dynamiczne drzewo przedziałowe na zakresie [lo, hi] (np. 0..1e9): węzły tworzone przy pierwszym użyciu.\nstruct DynamicSegTree {\n    struct Node {\n        long long sum = 0;\n        int left = 0, right = 0;          // 0 = brak dziecka\n    };\n    vector<Node> t;\n    long long lo, hi;\n\n    DynamicSegTree(long long lo, long long hi, int reserveNodes = 0) : lo(lo), hi(hi) {\n        t.reserve(reserveNodes + 2);\n        t.push_back(Node());              // węzeł 0 = „pusty”\n        t.push_back(Node());              // węzeł 1 = korzeń\n    }\n    int newNode() {\n        t.push_back(Node());\n        return (int)t.size() - 1;\n    }\n    void add(int v, long long tl, long long tr, long long pos, long long val) {\n        t[v].sum += val;\n        if (tl == tr) return;\n        long long tm = tl + (tr - tl) / 2;          // bezpieczne także dla ujemnych\n        if (pos <= tm) {\n            if (t[v].left == 0) { int c = newNode(); t[v].left = c; }   // newNode może przenieść t!\n            add(t[v].left, tl, tm, pos, val);\n        } else {\n            if (t[v].right == 0) { int c = newNode(); t[v].right = c; }\n            add(t[v].right, tm + 1, tr, pos, val);\n        }\n    }\n    long long query(int v, long long tl, long long tr, long long l, long long r) const {\n        if (v == 0 || r < tl || tr < l) return 0;\n        if (l <= tl && tr <= r) return t[v].sum;\n        long long tm = tl + (tr - tl) / 2;\n        return query(t[v].left, tl, tm, l, r) + query(t[v].right, tm + 1, tr, l, r);\n    }\n    void add(long long pos, long long val) { add(1, lo, hi, pos, val); }\n    long long query(long long l, long long r) const { return query(1, lo, hi, l, r); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "drzewo przedziałowe 10^9",
+      "segment tree indeksy do 1e9",
+      "drzewo przedzialowe na duzych wspolrzednych",
+      "za duży zakres drzewo przedziałowe"
+     ],
+     "a": "Dwie drogi: (1) **offline** — zbierz wszystkie współrzędne z zapytań, skompresuj je do `0..k-1` i zbuduj zwykłe drzewo na k elementach; (2) **online** — dynamiczne drzewo przedziałowe, które tworzy węzły tylko na odwiedzanych ścieżkach (O(log C) na operację, ok. 31 węzłów na update dla C = 10^9). Kompresja jest szybsza i lżejsza, dynamiczne drzewo działa bez znajomości przyszłych zapytań."
+    },
+    {
+     "q": [
+      "drzewo na wskaźnikach new",
+      "segment tree pointers new node",
+      "drzewo przedzialowe new Node",
+      "czy używać new w drzewie"
+     ],
+     "a": "Można pisać `Node* left = nullptr` i `new Node()`, ale każde `new` jest wolne (alokator) i rozprasza pamięć. Lepiej pula w `vector` z indeksami (albo statyczna tablica `Node pool[MAXN]` z licznikiem). Indeksy `int` zajmują też mniej pamięci niż wskaźniki (4 vs 8 bajtów)."
+    },
+    {
+     "q": [
+      "dynamiczne drzewo ile pamięci",
+      "ile węzłów dynamic segment tree",
+      "dynamic segment tree memory limit"
+     ],
+     "a": "Każdy update tworzy co najwyżej `⌈log₂ C⌉ + 1` nowych węzłów (ok. 31 dla C = 10^9, 61 dla 10^18). Przy q = 2·10^5 to ~6·10^6 węzłów; węzeł z `long long sum` i dwoma `int` to 16 bajtów, razem ~100 MB. Gdy brakuje pamięci: kompresja offline, mniejsze typy albo Fenwick na `unordered_map` (każde `add` to tylko O(log C) wpisów w mapie)."
+    },
+    {
+     "q": [
+      "fenwick na mapie",
+      "bit z unordered_map",
+      "fenwick dla dużych indeksów",
+      "sparse fenwick"
+     ],
+     "a": "Fenwick, w którym zamiast tablicy jest `unordered_map<long long, long long>` (albo `gp_hash_table`): `add` i `sum` dotykają O(log C) kluczy, nie trzeba kompresji ani znajomości zapytań z góry. Jest wolniejszy od tablicy (hashowanie) i nie robi min/max, ale to najkrótszy kod dla „suma na przedziale, indeksy do 10^9, online”. Użyj własnego hasha, żeby uniknąć anty-testów.",
+     "code": "struct MapFenwick {\n    long long n;                                   // indeksy 1..n, n może być 1e9\n    unordered_map<long long, long long> t;\n    MapFenwick(long long n) : n(n) {}\n    void add(long long i, long long v) { for (; i <= n; i += i & -i) t[i] += v; }\n    long long sum(long long i) const {\n        long long s = 0;\n        for (; i > 0; i -= i & -i) {\n            auto it = t.find(i);\n            if (it != t.end()) s += it->second;\n        }\n        return s;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ujemne współrzędne dynamiczne drzewo",
+      "dynamic segment tree negative",
+      "nieskonczona rekurencja drzewo przedzialowe ujemne"
+     ],
+     "a": "Dla ujemnych końców `(tl + tr) / 2` w C++ zaokrągla w stronę zera, np. dla `[-1, 0]` daje 0 i lewe dziecko jest tym samym przedziałem — nieskończona rekurencja. Licz środek jako `tl + (tr - tl) / 2` (zaokrągla w dół, bo `tr - tl ≥ 0`), albo przesuń wszystkie współrzędne o stałą, żeby były nieujemne."
+    }
+   ],
+   "related": [
+    "ds-segment-tree",
+    "ds-persistent-segment-tree",
+    "ds-segment-tree-compressed",
+    "tech-coordinate-compression",
+    "ds-custom-hash"
+   ]
+  },
+  {
+   "id": "ds-persistent-segment-tree",
+   "title": "Trwałe drzewo przedziałowe (persistent segment tree)",
+   "category": "Struktury danych",
+   "tags": [
+    "trwałe drzewo przedziałowe",
+    "persistent segment tree",
+    "wersje",
+    "k-ty najmniejszy w przedziale",
+    "path copying",
+    "online"
+   ],
+   "aliases": [
+    "trwałe drzewo przedziałowe",
+    "trwale drzewo przedzialowe",
+    "persistent segment tree",
+    "persistent",
+    "drzewo z historią",
+    "k-ty najmniejszy na przedziale",
+    "kth smallest in range",
+    "drzewo przedziałowe wersje",
+    "chairman tree",
+    "persystentne drzewo"
+   ],
+   "summary": "Zamiast modyfikować węzły, przy każdej aktualizacji kopiujemy tylko ścieżkę od korzenia do liścia (O(log n) nowych węzłów). Każda wersja ma swój korzeń, a stare wersje zostają nietknięte — np. „k-ty najmniejszy w a[l..r]” online w O(log n).",
+   "complexity": "aktualizacja O(log n) czasu i O(log n) nowych węzłów, zapytanie O(log n), pamięć O(n + q log n)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja (path copying).** Aktualizacja w punkcie zmienia tylko węzły na ścieżce korzeń–liść. Tworzymy ich kopie (log n nowych węzłów), a wszystkie pozostałe poddrzewa współdzielimy ze starą wersją. Nowy korzeń = nowa wersja; stary korzeń dalej opisuje stan sprzed zmiany.\n\n**Klasyczne zastosowanie — k-ty najmniejszy w przedziale.** Wersja `root[i]` to drzewo licznikowe po wartościach (skompresowanych) zawierające `a[0..i-1]`. Elementy z `a[l..r]` to „różnica” wersji `root[r+1]` i `root[l]` — liczniki w odpowiadających sobie węzłach można odejmować. Schodzimy z obu korzeni naraz: jeśli w lewym dziecku różnica liczników ≥ k, idziemy w lewo, inaczej w prawo z `k -= lewa`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** zapytania o „stan po *k*-tej operacji”, „cofnij do wersji *v*”, k-ty najmniejszy / liczba elementów ≤ x w przedziale **online** (wymuszone przez `xor` z poprzednią odpowiedzią). Offline te same zapytania rozwiązuje się prościej (Fenwick + sortowanie, merge sort tree, równoległy binsearch)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: k-ty najmniejszy element w przedziale (online)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Trwałe drzewo przedziałowe licznikowe: wersja root[i] zawiera a[0..i-1] (wartości skompresowane do [0, m)).\nstruct PersistentSegTree {\n    vector<int> leftChild, rightChild, cnt;   // węzeł 0 = puste drzewo (wskazuje sam na siebie)\n    int m;\n\n    PersistentSegTree(int m, int reserveNodes) : m(m) {\n        leftChild.reserve(reserveNodes); rightChild.reserve(reserveNodes); cnt.reserve(reserveNodes);\n        leftChild.push_back(0); rightChild.push_back(0); cnt.push_back(0);\n    }\n    int clone(int v) {\n        leftChild.push_back(leftChild[v]);\n        rightChild.push_back(rightChild[v]);\n        cnt.push_back(cnt[v]);\n        return (int)cnt.size() - 1;\n    }\n    int insert(int prev, int tl, int tr, int pos) {   // zwraca korzeń nowej wersji\n        int cur = clone(prev);\n        cnt[cur]++;\n        if (tl == tr) return cur;\n        int tm = (tl + tr) / 2;\n        if (pos <= tm) { int c = insert(leftChild[prev], tl, tm, pos); leftChild[cur] = c; }\n        else { int c = insert(rightChild[prev], tm + 1, tr, pos); rightChild[cur] = c; }\n        return cur;\n    }\n    // k-ty najmniejszy (k od 1) w różnicy wersji hi - lo\n    int kth(int hi, int lo, int tl, int tr, int k) const {\n        if (tl == tr) return tl;\n        int tm = (tl + tr) / 2;\n        int inLeft = cnt[leftChild[hi]] - cnt[leftChild[lo]];\n        if (k <= inLeft) return kth(leftChild[hi], leftChild[lo], tl, tm, k);\n        return kth(rightChild[hi], rightChild[lo], tm + 1, tr, k - inLeft);\n    }\n    // ile wartości < pos w różnicy wersji hi - lo\n    int countLess(int hi, int lo, int tl, int tr, int pos) const {\n        if (pos <= tl || cnt[hi] - cnt[lo] == 0) return 0;\n        if (tr < pos) return cnt[hi] - cnt[lo];\n        int tm = (tl + tr) / 2;\n        return countLess(leftChild[hi], leftChild[lo], tl, tm, pos) +\n               countLess(rightChild[hi], rightChild[lo], tm + 1, tr, pos);\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    vector<long long> vals(a);\n    sort(vals.begin(), vals.end());\n    vals.erase(unique(vals.begin(), vals.end()), vals.end());\n    int m = vals.size();\n\n    PersistentSegTree pst(m, 1 + n * (__lg(max(m, 1)) + 2));\n    vector<int> root(n + 1, 0);              // root[0] = puste drzewo\n    for (int i = 0; i < n; i++) {\n        int pos = lower_bound(vals.begin(), vals.end(), a[i]) - vals.begin();\n        root[i + 1] = pst.insert(root[i], 0, m - 1, pos);\n    }\n    while (q--) {\n        int l, r, k;                         // k-ty najmniejszy w a[l..r], 1-indeksowane\n        cin >> l >> r >> k;\n        int pos = pst.kth(root[r], root[l - 1], 0, m - 1, k);\n        cout << vals[pos] << '\\n';\n    }\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Pamięć: każda wersja dodaje `⌈log₂ m⌉ + 1` węzłów, więc dla n = 2·10^5 to ok. 3,8·10^6 węzłów × 12 bajtów ≈ 46 MB. Trzymaj węzły w osobnych wektorach `int` (struct-of-arrays) i rezerwuj miejsce z góry."
+    },
+    {
+     "type": "warn",
+     "md": "Podczas rekurencji `insert` wektory rosną (`push_back`), więc nie trzymaj referencji do ich elementów przez wywołanie rekurencyjne — przypisuj wynik przez zmienną pomocniczą (`int c = insert(...); leftChild[cur] = c;`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "insert(prevRoot, 0, m-1, pos)",
+     "desc": "nowa wersja z dodanym elementem o wartości pos; zwraca nowy korzeń",
+     "complexity": "O(log m)",
+     "returns": "int"
+    },
+    {
+     "sig": "kth(root[r], root[l-1], 0, m-1, k)",
+     "desc": "k-ta najmniejsza wartość (skompresowana) w a[l..r]",
+     "complexity": "O(log m)",
+     "returns": "int"
+    },
+    {
+     "sig": "countLess(root[r], root[l-1], 0, m-1, x)",
+     "desc": "ile elementów a[l..r] ma wartość < x",
+     "complexity": "O(log m)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Modyfikowanie węzła zamiast jego kopii — psuje wszystkie starsze wersje, które go współdzielą.",
+    "Referencje/iteratory do wektora puli trzymane przez rekurencję (realokacja).",
+    "Za mała rezerwa pamięci lub limit pamięci przy statycznej tablicy węzłów.",
+    "Zapomniana kompresja wartości — drzewo po wartościach do 10^9 bez kompresji wymaga dynamicznego wariantu.",
+    "Pomylenie wersji: elementy a[l..r] (1-indeksowane) to `root[r]` minus `root[l-1]`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "trwałe drzewo przedziałowe",
+      "persistent segment tree c++",
+      "trwale drzewo przedzialowe kod",
+      "persistent segment tree jak dziala"
+     ],
+     "a": "Przy każdej zmianie kopiujesz tylko węzły na ścieżce od korzenia do zmienianego liścia (O(log n) nowych węzłów), a resztę poddrzew współdzielisz z poprzednią wersją. Każda wersja ma własny korzeń, więc możesz pytać o dowolny stan z przeszłości w O(log n). Pamięć rośnie o O(log n) na aktualizację.",
+     "code": "// Trwałe drzewo przedziałowe licznikowe: wersja root[i] zawiera a[0..i-1] (wartości skompresowane do [0, m)).\nstruct PersistentSegTree {\n    vector<int> leftChild, rightChild, cnt;   // węzeł 0 = puste drzewo (wskazuje sam na siebie)\n    int m;\n\n    PersistentSegTree(int m, int reserveNodes) : m(m) {\n        leftChild.reserve(reserveNodes); rightChild.reserve(reserveNodes); cnt.reserve(reserveNodes);\n        leftChild.push_back(0); rightChild.push_back(0); cnt.push_back(0);\n    }\n    int clone(int v) {\n        leftChild.push_back(leftChild[v]);\n        rightChild.push_back(rightChild[v]);\n        cnt.push_back(cnt[v]);\n        return (int)cnt.size() - 1;\n    }\n    int insert(int prev, int tl, int tr, int pos) {   // zwraca korzeń nowej wersji\n        int cur = clone(prev);\n        cnt[cur]++;\n        if (tl == tr) return cur;\n        int tm = (tl + tr) / 2;\n        if (pos <= tm) { int c = insert(leftChild[prev], tl, tm, pos); leftChild[cur] = c; }\n        else { int c = insert(rightChild[prev], tm + 1, tr, pos); rightChild[cur] = c; }\n        return cur;\n    }\n    // k-ty najmniejszy (k od 1) w różnicy wersji hi - lo\n    int kth(int hi, int lo, int tl, int tr, int k) const {\n        if (tl == tr) return tl;\n        int tm = (tl + tr) / 2;\n        int inLeft = cnt[leftChild[hi]] - cnt[leftChild[lo]];\n        if (k <= inLeft) return kth(leftChild[hi], leftChild[lo], tl, tm, k);\n        return kth(rightChild[hi], rightChild[lo], tm + 1, tr, k - inLeft);\n    }\n    // ile wartości < pos w różnicy wersji hi - lo\n    int countLess(int hi, int lo, int tl, int tr, int pos) const {\n        if (pos <= tl || cnt[hi] - cnt[lo] == 0) return 0;\n        if (tr < pos) return cnt[hi] - cnt[lo];\n        int tm = (tl + tr) / 2;\n        return countLess(leftChild[hi], leftChild[lo], tl, tm, pos) +\n               countLess(rightChild[hi], rightChild[lo], tm + 1, tr, pos);\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "k-ty najmniejszy w przedziale",
+      "kth smallest in range",
+      "k-ty element na przedziale online",
+      "mediana przedziału zapytania"
+     ],
+     "a": "Zbuduj trwałe drzewo licznikowe po wartościach: wersja `root[i]` zawiera `a[1..i]`. Elementy przedziału `[l, r]` to różnica liczników wersji `root[r]` i `root[l-1]`; schodzisz z obu korzeni naraz i wybierasz lewe dziecko, gdy różnica jego liczników ≥ k. Budowa O(n log n), zapytanie O(log n), działa online. Offline alternatywą jest równoległy binsearch lub merge sort tree z binsearchem (O(log³ n))."
+    },
+    {
+     "q": [
+      "ile liczb mniejszych od x w przedziale online",
+      "count less than x in range online",
+      "liczba elementow <= x w przedziale trwale drzewo"
+     ],
+     "a": "Z tymi samymi wersjami `root[i]` liczysz sumę liczników wartości `< x` w różnicy `root[r] - root[l-1]` — zwykłe zapytanie o prefiks wartości w O(log n). Wartość `x` zamieniasz na pozycję przez `lower_bound` na skompresowanych wartościach. Offline prościej: zapytania posortowane po x i Fenwick po pozycjach."
+    },
+    {
+     "q": [
+      "drzewo przedziałowe z historią",
+      "cofanie zmian segment tree",
+      "stan po k-tej operacji",
+      "wersje drzewa przedzialowego"
+     ],
+     "a": "Trzymaj tablicę korzeni `root[v]` — wersja `v` to korzeń po `v` operacjach. Aktualizacja tworzy nową wersję z poprzedniej (path copying), zapytanie o stan po k-tej operacji to zwykłe zapytanie z korzenia `root[k]`. Cofnięcie do wersji `k` to po prostu `cur = root[k]` w O(1)."
+    },
+    {
+     "q": [
+      "persistent segment tree pamięć",
+      "ile węzłów trwałe drzewo",
+      "persistent memory limit"
+     ],
+     "a": "Budowa przez n wstawień tworzy n·(⌈log₂ m⌉ + 1) węzłów, plus tyle samo na każdą dodatkową aktualizację. Dla 2·10^5 elementów to ok. 3,8·10^6 węzłów; trzy tablice `int` dają ~46 MB. Zmniejszysz pamięć, trzymając liczniki w `int` i rezerwując dokładnie tyle, ile trzeba (unikasz podwajania pojemności wektora)."
+    },
+    {
+     "q": [
+      "persistent segment tree z lazy",
+      "trwałe drzewo z dodawaniem na przedziale",
+      "persistent lazy"
+     ],
+     "a": "Da się: przy `push` trzeba kopiować dzieci przed nałożeniem na nie zaległej operacji (bo są współdzielone z innymi wersjami), co zwiększa zużycie pamięci. Prostsza alternatywa przy dodawaniu na przedziale i sumie: nie spychaj lazy, tylko trzymaj w węźle sumę dodatków dla całego węzła i doliczaj je przy zapytaniu (`add·długość części wspólnej`) — wtedy aktualizacja kopiuje O(log n) węzłów bez pushy."
+    }
+   ],
+   "related": [
+    "ds-segment-tree",
+    "ds-dynamic-segment-tree",
+    "ds-merge-sort-tree",
+    "tech-coordinate-compression",
+    "tech-offline-queries",
+    "ds-wavelet-tree"
+   ]
+  },
+  {
+   "id": "ds-merge-sort-tree",
+   "title": "Merge sort tree (drzewo posortowanych list)",
+   "category": "Struktury danych",
+   "tags": [
+    "merge sort tree",
+    "drzewo przedziałowe",
+    "posortowane listy",
+    "ile mniejszych w przedziale",
+    "binsearch w węzłach"
+   ],
+   "aliases": [
+    "merge sort tree",
+    "drzewo sortowania przez scalanie",
+    "drzewo z posortowanymi wektorami",
+    "ile mniejszych od x w przedziale",
+    "count less than x in range",
+    "merge tree",
+    "mst struktura",
+    "drzewo przedziałowe z vectorami"
+   ],
+   "summary": "Drzewo przedziałowe, w którym każdy węzeł trzyma posortowaną kopię swojego przedziału (jak etapy sortowania przez scalanie). Pozwala online liczyć „ile elementów a[l..r] jest < x” w O(log² n), bez aktualizacji.",
+   "complexity": "budowa O(n log n), zapytanie O(log² n), pamięć O(n log n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Węzeł obejmujący `[tl, tr]` przechowuje posortowane `a[tl..tr]` — powstaje przez scalenie list dzieci, tak jak w merge sorcie. Przedział zapytania rozkłada się na O(log n) węzłów, a w każdym liczymy elementy `< x` binsearchem (`lower_bound`) w O(log n). Łącznie O(log² n).\n\nKażdy element występuje raz na każdym poziomie, więc pamięć to n·(log n + 1)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „ile liczb z przedziału *[l, r]* jest mniejszych od *x*” / „w zakresie wartości *[a, b]*”, online, bez zmian w tablicy. Z binsearchem po odpowiedzi daje k-ty najmniejszy w przedziale w O(log³ n) (zwykle trwałe drzewo jest szybsze). Offline lepszy bywa Fenwick z sortowaniem zapytań."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: ile elementów przedziału jest mniejszych od x",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Merge sort tree: węzeł trzyma posortowane elementy swojego przedziału.\nstruct MergeSortTree {\n    int n;\n    vector<vector<int>> t;\n\n    MergeSortTree(const vector<int>& a) : n(a.size()), t(4 * a.size()) { build(1, 0, n - 1, a); }\n    void build(int v, int tl, int tr, const vector<int>& a) {\n        if (tl == tr) { t[v] = {a[tl]}; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        merge(t[2 * v].begin(), t[2 * v].end(), t[2 * v + 1].begin(), t[2 * v + 1].end(), back_inserter(t[v]));\n    }\n    // ile elementów a[l..r] jest < x\n    int countLess(int v, int tl, int tr, int l, int r, int x) const {\n        if (r < tl || tr < l) return 0;\n        if (l <= tl && tr <= r) return lower_bound(t[v].begin(), t[v].end(), x) - t[v].begin();\n        int tm = (tl + tr) / 2;\n        return countLess(2 * v, tl, tm, l, r, x) + countLess(2 * v + 1, tm + 1, tr, l, r, x);\n    }\n    int countLess(int l, int r, int x) const { return countLess(1, 0, n - 1, l, r, x); }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<int> a(n);\n    for (auto& x : a) cin >> x;\n    MergeSortTree mst(a);\n    while (q--) {\n        int l, r, x;                         // ile a[l..r] < x (1-indeksowane)\n        cin >> l >> r >> x;\n        cout << mst.countLess(l - 1, r - 1, x) << '\\n';\n    }\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Przyspieszenie *fractional cascading* zmniejsza zapytanie do O(log n), ale na zawodach rzadko warto — prościej użyć trwałego drzewa lub podejścia offline."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "MergeSortTree mst(a)",
+     "desc": "budowa przez scalanie list dzieci",
+     "complexity": "O(n log n)"
+    },
+    {
+     "sig": "mst.countLess(l, r, x)",
+     "desc": "liczba elementów a[l..r] mniejszych od x",
+     "complexity": "O(log² n)",
+     "returns": "int"
+    },
+    {
+     "sig": "countLess(l, r, b + 1) - countLess(l, r, a)",
+     "desc": "liczba elementów z wartością w [a, b]",
+     "complexity": "O(log² n)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Brak zmian w tablicy — aktualizacja wymagałaby przebudowy list (O(n)); przy zmianach użyj np. sqrt dekompozycji lub drzewa z `ordered_set` w węzłach.",
+    "Pamięć O(n log n): dla n = 10^6 to ok. 20·10^6 intów = 80 MB plus narzut wektorów.",
+    "`lower_bound` vs `upper_bound`: `< x` to `lower_bound`, `≤ x` to `upper_bound`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "merge sort tree",
+      "merge sort tree c++",
+      "drzewo z posortowanymi listami",
+      "merge sort tree kod"
+     ],
+     "a": "Drzewo przedziałowe, gdzie węzeł trzyma posortowane elementy swojego przedziału (scalone z dzieci funkcją `merge`). Zapytanie dzieli `[l, r]` na O(log n) węzłów i w każdym robi `lower_bound` — razem O(log² n). Budowa O(n log n) czasu i pamięci; brak aktualizacji.",
+     "code": "// Merge sort tree: węzeł trzyma posortowane elementy swojego przedziału.\nstruct MergeSortTree {\n    int n;\n    vector<vector<int>> t;\n\n    MergeSortTree(const vector<int>& a) : n(a.size()), t(4 * a.size()) { build(1, 0, n - 1, a); }\n    void build(int v, int tl, int tr, const vector<int>& a) {\n        if (tl == tr) { t[v] = {a[tl]}; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        merge(t[2 * v].begin(), t[2 * v].end(), t[2 * v + 1].begin(), t[2 * v + 1].end(), back_inserter(t[v]));\n    }\n    // ile elementów a[l..r] jest < x\n    int countLess(int v, int tl, int tr, int l, int r, int x) const {\n        if (r < tl || tr < l) return 0;\n        if (l <= tl && tr <= r) return lower_bound(t[v].begin(), t[v].end(), x) - t[v].begin();\n        int tm = (tl + tr) / 2;\n        return countLess(2 * v, tl, tm, l, r, x) + countLess(2 * v + 1, tm + 1, tr, l, r, x);\n    }\n    int countLess(int l, int r, int x) const { return countLess(1, 0, n - 1, l, r, x); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile elementów mniejszych od x w przedziale",
+      "ile liczb w przedziale jest mniejszych od x",
+      "count less than k in range",
+      "zliczanie mniejszych na przedziale"
+     ],
+     "a": "Online bez zmian: merge sort tree (O(log² n)) albo trwałe drzewo (O(log n)). Offline: posortuj zapytania po `x` i elementy po wartości, wstawiaj do Fenwicka po pozycjach elementy `< x` i odpowiadaj sumą na `[l, r]` — O((n + q) log n). Z aktualizacjami: dekompozycja pierwiastkowa z posortowanymi blokami.",
+     "code": "// Offline: zapytania (l, r, x) — ile a[l..r] < x; 0-indeksowane.\nvector<int> countLessOffline(const vector<int>& a, const vector<array<int, 3>>& qs) {\n    int n = a.size();\n    vector<int> order(n), qord(qs.size()), ans(qs.size()), bit(n + 1, 0);\n    iota(order.begin(), order.end(), 0);\n    iota(qord.begin(), qord.end(), 0);\n    sort(order.begin(), order.end(), [&](int i, int j) { return a[i] < a[j]; });\n    sort(qord.begin(), qord.end(), [&](int i, int j) { return qs[i][2] < qs[j][2]; });\n    int p = 0;\n    for (int qi : qord) {\n        auto [l, r, x] = qs[qi];\n        for (; p < n && a[order[p]] < x; p++)\n            for (int i = order[p] + 1; i <= n; i += i & -i) bit[i]++;\n        int s = 0;\n        for (int i = r + 1; i > 0; i -= i & -i) s += bit[i];\n        for (int i = l; i > 0; i -= i & -i) s -= bit[i];\n        ans[qi] = s;\n    }\n    return ans;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile elementów w przedziale w zakresie wartości",
+      "liczby z przedzialu wartosci [a b] w przedziale [l r]",
+      "range count values between"
+     ],
+     "a": "To różnica dwóch zapytań: `countLess(l, r, b + 1) - countLess(l, r, a)` (liczby `≥ a` i `≤ b`). W merge sort tree każde z nich O(log² n). Przy `b = 10^9` pamiętaj o przepełnieniu `b + 1` w `int` przy wartościach bliskich `INT_MAX` — wtedy użyj `upper_bound`."
+    },
+    {
+     "q": [
+      "k-ty najmniejszy merge sort tree",
+      "kth smallest merge sort tree binsearch",
+      "mediana przedzialu merge sort tree"
+     ],
+     "a": "Binsearch po odpowiedzi: najmniejsze `x` z posortowanych wartości, dla którego `countLess(l, r, x + 1) ≥ k`. Każdy krok to zapytanie O(log² n), więc całość O(log³ n) na zapytanie. Działa, ale trwałe drzewo przedziałowe daje O(log n)."
+    },
+    {
+     "q": [
+      "merge sort tree pamięć",
+      "merge sort tree memory",
+      "merge sort tree n=10^6"
+     ],
+     "a": "Każdy element trafia do jednego węzła na każdym z ⌈log₂ n⌉+1 poziomów, więc łącznie n·(log n + 1) liczb: dla n = 2·10^5 ok. 3,8·10^6 intów (15 MB), dla 10^6 ok. 80 MB plus narzut `vector` (24 B na węzeł). Przy dużym n rozważ podejście offline z Fenwickiem."
+    },
+    {
+     "q": [
+      "merge sort tree z aktualizacjami",
+      "merge sort tree update",
+      "drzewo posortowanych list zmiana elementu"
+     ],
+     "a": "Zwykły merge sort tree nie obsługuje zmian (trzeba by wstawiać i usuwać w wektorach O(n)). Zamiast wektorów możesz trzymać w węzłach `ordered_set` z pb_ds — aktualizacja O(log² n), zapytanie O(log² n), ale duża stała i pamięć. Często prościej: sqrt dekompozycja z posortowanymi blokami albo Fenwick 2D offline."
+    }
+   ],
+   "related": [
+    "ds-segment-tree",
+    "ds-persistent-segment-tree",
+    "tech-divide-and-conquer",
+    "ds-sqrt-decomposition",
+    "tech-offline-queries",
+    "ds-wavelet-tree"
+   ]
+  },
+  {
+   "id": "ds-segment-tree-compressed",
+   "title": "Drzewo przedziałowe na skompresowanych współrzędnych",
+   "category": "Struktury danych",
+   "tags": [
+    "kompresja współrzędnych",
+    "drzewo przedziałowe",
+    "offline",
+    "duże współrzędne",
+    "fenwick",
+    "współrzędne do 10^9"
+   ],
+   "aliases": [
+    "drzewo przedzialowe na wspolrzednych",
+    "segment tree coordinate compression",
+    "drzewo przedziałowe kompresja",
+    "segment tree duże wartości offline",
+    "fenwick po skompresowanych wartościach",
+    "drzewo przedziałowe na mapie",
+    "kompresja i drzewo przedzialowe",
+    "segment tree on values"
+   ],
+   "summary": "Gdy indeksy są duże (do 10^9), ale znamy je z góry, zbieramy wszystkie współrzędne z wejścia i zapytań, sortujemy, usuwamy duplikaty i zamieniamy każdą na jej numer. Na numerach budujemy zwykłe drzewo przedziałowe lub Fenwicka.",
+   "complexity": "kompresja O(k log k), każda operacja O(log k), pamięć O(k) (k = liczba różnych współrzędnych)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Drzewu nie zależy na wartościach indeksów, tylko na ich **kolejności**. Jeśli w całym zadaniu pojawia się tylko k różnych współrzędnych, możemy je ponumerować `0..k-1` z zachowaniem porządku. Przedział współrzędnych `[L, R]` zamienia się na przedział numerów `[lower_bound(L), upper_bound(R) - 1]` — nawet jeśli `L` i `R` same nie występują wśród punktów.\n\nTo wymaga, by wszystkie współrzędne były znane z góry (**offline**). Gdy zapytania są online — dynamiczne drzewo przedziałowe lub Fenwick na mapie."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: punkty o współrzędnych do ±10^9, sumy na przedziałach współrzędnych (offline)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Fenwick {\n    int n;\n    vector<long long> t;\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, long long v) { for (i++; i <= n; i += i & -i) t[i] += v; }   // i 0-indeksowane\n    long long prefix(int i) const { long long s = 0; for (i++; i > 0; i -= i & -i) s += t[i]; return s; }  // [0, i]\n    long long sum(int l, int r) const { return l > r ? 0 : prefix(r) - (l > 0 ? prefix(l - 1) : 0); }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> q;\n    vector<array<long long, 3>> ops(q);          // {typ, x, y}\n    vector<long long> coords;\n    for (auto& [type, x, y] : ops) {\n        cin >> type >> x >> y;\n        if (type == 1) coords.push_back(x);      // tylko punkty, które dostają wartości\n    }\n    sort(coords.begin(), coords.end());\n    coords.erase(unique(coords.begin(), coords.end()), coords.end());\n    int k = coords.size();\n    Fenwick fw(max(k, 1));\n    for (auto [type, x, y] : ops) {\n        if (type == 1) {                         // 1 x v: punkt x dostaje +v\n            int idx = lower_bound(coords.begin(), coords.end(), x) - coords.begin();\n            fw.add(idx, y);\n        } else {                                 // 2 L R: suma wartości punktów z x w [L, R]\n            int l = lower_bound(coords.begin(), coords.end(), x) - coords.begin();\n            int r = upper_bound(coords.begin(), coords.end(), y) - coords.begin() - 1;\n            cout << fw.sum(l, r) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zapytanie o współrzędne",
+      "Numer w drzewie"
+     ],
+     "rows": [
+      [
+       "dokładnie x (punkt)",
+       "lower_bound(x) (x musi być w coords)"
+      ],
+      [
+       "pierwszy ≥ L",
+       "lower_bound(L)"
+      ],
+      [
+       "ostatni ≤ R",
+       "upper_bound(R) - 1"
+      ],
+      [
+       "pusty przedział",
+       "gdy l > r — zwróć 0"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Jeśli zapytanie dotyczy **odcinków ciągłych** (np. długość sumy przedziałów, malowanie osi), kompresja gubi odległości — wtedy węzeł musi pamiętać rzeczywistą długość `coords[i+1] - coords[i]` i trzeba uważać na końce półotwarte."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "sort + unique + erase",
+     "desc": "lista różnych współrzędnych",
+     "complexity": "O(k log k)"
+    },
+    {
+     "sig": "lower_bound(coords, x) - coords.begin()",
+     "desc": "numer współrzędnej x",
+     "complexity": "O(log k)",
+     "returns": "int"
+    },
+    {
+     "sig": "upper_bound(coords, R) - coords.begin() - 1",
+     "desc": "numer ostatniej współrzędnej ≤ R",
+     "complexity": "O(log k)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Zbieranie współrzędnych tylko z danych wejściowych, a nie z zapytań/aktualizacji — `lower_bound` znajdzie złą pozycję dla nowego punktu.",
+    "Pusty przedział po kompresji (`l > r`) nieobsłużony — Fenwick/drzewo dostaje odwrócone końce.",
+    "Kompresja do `int`, gdy współrzędne są `long long` — przy wczytywaniu trzymaj oryginały w `long long`.",
+    "Drzewo budowane na `n` zamiast na liczbie różnych współrzędnych `k`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "drzewo przedziałowe duże współrzędne",
+      "segment tree coordinates 1e9",
+      "drzewo przedzialowe na wspolrzednych do miliarda",
+      "kompresja do drzewa przedziałowego"
+     ],
+     "a": "Jeśli wszystkie współrzędne są znane z góry, zbierz je (z danych i z zapytań), posortuj, usuń duplikaty i zamień każdą na indeks przez `lower_bound`. Drzewo budujesz na k ≤ n + q pozycjach, więc pamięć O(k), a każda operacja O(log k). Gdy zapytania są online, potrzebne jest dynamiczne drzewo przedziałowe.",
+     "code": "vector<long long> xs = {1000000000, -7, 42, 42, 5};\nvector<long long> coords(xs);\nsort(coords.begin(), coords.end());\ncoords.erase(unique(coords.begin(), coords.end()), coords.end());   // -7 5 42 1e9\nauto id = [&](long long x) { return int(lower_bound(coords.begin(), coords.end(), x) - coords.begin()); };\ncout << id(42) << ' ' << id(1000000000) << '\\n';   // 2 3"
+    },
+    {
+     "q": [
+      "przedział współrzędnych po kompresji",
+      "jak zamienić przedział L R na indeksy",
+      "lower_bound upper_bound kompresja przedział"
+     ],
+     "a": "Pierwszy indeks to `lower_bound(L)` (pierwsza współrzędna ≥ L), ostatni to `upper_bound(R) - 1` (ostatnia ≤ R). Jeśli wyjdzie `l > r`, w przedziale nie ma żadnego punktu i odpowiedź to element neutralny. Dzięki temu `L` i `R` nie muszą należeć do skompresowanej listy."
+    },
+    {
+     "q": [
+      "drzewo przedziałowe po wartościach",
+      "segment tree on values",
+      "fenwick po wartościach skompresowanych",
+      "indeksowanie drzewa wartościami"
+     ],
+     "a": "Zamiast indeksować drzewo pozycjami w tablicy, indeksujesz je skompresowanymi **wartościami** elementów. Pozwala to np. liczyć inwersje, LIS z wagami, „ile wcześniejszych elementów ma wartość w zakresie”, k-ty najmniejszy w zbiorze. Rozmiar drzewa = liczba różnych wartości."
+    },
+    {
+     "q": [
+      "kompresja online",
+      "nie znam zapytań z góry duże indeksy",
+      "online duze wspolrzedne bez kompresji"
+     ],
+     "a": "Kompresja wymaga wszystkich współrzędnych z góry. Jeśli zadanie wymusza online (np. kolejne zapytanie zależy od poprzedniej odpowiedzi), użyj dynamicznego drzewa przedziałowego (węzły tworzone na żądanie), Fenwicka na `unordered_map` albo `ordered_set` z pb_ds, gdy chodzi o rangi."
+    },
+    {
+     "q": [
+      "suma długości przedziałów kompresja",
+      "długość sumy odcinków drzewo przedziałowe",
+      "union of segments length"
+     ],
+     "a": "Przy odcinkach ciągłych każdy liść skompresowanego drzewa reprezentuje kawałek osi `[coords[i], coords[i+1])` o długości `coords[i+1] - coords[i]`. Odcinek `[a, b)` to liście od `id(a)` do `id(b) - 1`. W drzewie trzymasz licznik pokryć i pokrytą długość — klasyka sweep line dla pola sumy prostokątów (O(n log n))."
+    },
+    {
+     "q": [
+      "map zamiast kompresji",
+      "czy mogę użyć map do kompresji",
+      "kompresja przez map"
+     ],
+     "a": "Tak: `map<long long, int> id;` — wstaw wszystkie współrzędne, potem przejdź po mapie i nadaj kolejne numery (mapa jest posortowana). To O(k log k), jak sort + unique, ale wolniej w praktyce. Zaletą jest wygodne `id[x]`; do przedziałów `[L, R]` nadal potrzebujesz `lower_bound` na mapie.",
+     "code": "vector<long long> xs = {50, -3, 50, 10};\nmap<long long, int> id;\nfor (long long x : xs) id[x];\nint k = 0;\nfor (auto& [x, idx] : id) idx = k++;\ncout << id[-3] << ' ' << id[10] << ' ' << id[50] << '\\n';   // 0 1 2"
+    }
+   ],
+   "related": [
+    "tech-coordinate-compression",
+    "ds-segment-tree",
+    "ds-fenwick",
+    "ds-dynamic-segment-tree",
+    "tech-sweep-line",
+    "tech-offline-queries"
+   ]
+  },
+  {
+   "id": "ds-li-chao",
+   "title": "Li Chao tree (minimum z prostych w punkcie)",
+   "category": "Struktury danych",
+   "tags": [
+    "li chao",
+    "li chao tree",
+    "convex hull trick",
+    "proste",
+    "optymalizacja dp",
+    "minimum funkcji liniowych"
+   ],
+   "aliases": [
+    "li chao",
+    "li chao tree",
+    "drzewo li chao",
+    "lichao",
+    "li-chao",
+    "lichao tree c++",
+    "minimum prostych w punkcie",
+    "dodawanie prostych zapytanie o minimum",
+    "cht li chao",
+    "convex hull trick drzewo"
+   ],
+   "summary": "Drzewo przedziałowe po współrzędnej x, w którym każdy węzeł trzyma jedną prostą. Dodanie prostej `y = kx + b` i zapytanie „min (lub max) ze wszystkich prostych w punkcie x” w O(log C), w dowolnej kolejności — prostsze i ogólniejsze niż convex hull trick.",
+   "complexity": "dodanie prostej O(log C), zapytanie O(log C), pamięć O(liczba prostych)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Węzeł `[l, r]` ze środkiem `m` trzyma prostą, która jest najlepsza w `m` spośród prostych, które do niego „dotarły”. Gdy wstawiamy nową prostą, porównujemy ją w `m` i ewentualnie zamieniamy. Przegrana prosta może być lepsza tylko po jednej stronie środka (dwie proste przecinają się co najwyżej raz) — sprawdzamy to porównaniem w `l` i schodzimy tylko do jednego dziecka. Zapytanie w `x` idzie ścieżką do liścia `x` i bierze minimum ze wszystkich prostych na ścieżce."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** dynamika `dp[i] = min_j (dp[j] + b[j]·a[i]) + c[i]` — każde `j` wyznacza prostą o współczynniku `b[j]` i wyrazie wolnym `dp[j]`, a zapytanie jest w punkcie `a[i]`. Gdy współczynniki i zapytania nie są monotoniczne (zwykły CHT z kolejką nie działa), Li Chao jest najprostszym wyborem. Dla maksimum wstaw proste `(-k, -b)` i zaneguj wynik."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: dodawanie prostych i minimum w punkcie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Li Chao tree: zbiór prostych y = k*x + b, zapytanie o minimum w punkcie x z [lo, hi].\nstruct LiChao {\n    struct Line {\n        long long k, b;\n        long long eval(long long x) const { return k * x + b; }\n    };\n    struct Node {\n        Line line;\n        int left = -1, right = -1;\n    };\n    vector<Node> t;\n    long long lo, hi;\n\n    LiChao(long long lo, long long hi) : lo(lo), hi(hi) {}\n\n    void addLine(long long k, long long b) {\n        Line nw{k, b};\n        if (t.empty()) { t.push_back({nw}); return; }\n        int v = 0;\n        long long l = lo, r = hi;\n        while (true) {\n            long long m = l + (r - l) / 2;\n            bool betterLeft = nw.eval(l) < t[v].line.eval(l);\n            bool betterMid = nw.eval(m) < t[v].line.eval(m);\n            if (betterMid) swap(t[v].line, nw);          // w węźle zostaje lepsza w środku\n            if (l == r) return;\n            if (betterLeft != betterMid) {               // przecięcie w [l, m]\n                if (t[v].left == -1) { t[v].left = t.size(); t.push_back({nw}); return; }\n                v = t[v].left; r = m;\n            } else {                                     // przecięcie w (m, r]\n                if (t[v].right == -1) { t[v].right = t.size(); t.push_back({nw}); return; }\n                v = t[v].right; l = m + 1;\n            }\n        }\n    }\n    long long query(long long x) const {                 // wymaga co najmniej jednej prostej\n        long long res = LLONG_MAX;\n        int v = 0;\n        long long l = lo, r = hi;\n        while (v != -1) {\n            res = min(res, t[v].line.eval(x));\n            long long m = l + (r - l) / 2;\n            if (x <= m) { v = t[v].left; r = m; }\n            else { v = t[v].right; l = m + 1; }\n        }\n        return res;\n    }\n    bool empty() const { return t.empty(); }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> q;\n    LiChao lc(-1000000, 1000000);              // zakres x z zapytań\n    while (q--) {\n        int type;\n        cin >> type;\n        if (type == 1) {                       // 1 k b: dodaj prostą y = kx + b\n            long long k, b;\n            cin >> k >> b;\n            lc.addLine(k, b);\n        } else {                               // 2 x: minimum w punkcie x\n            long long x;\n            cin >> x;\n            if (lc.empty()) cout << \"BRAK\\n\";\n            else cout << lc.query(x) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Zakres `[lo, hi]` to zakres **zapytań x**, a nie współczynników. Jeśli x jest duży (10^9), drzewo i tak ma tylko tyle węzłów, ile prostych (wersja z dziećmi tworzonymi na żądanie, jak w kodzie). Gdy znasz wszystkie x z góry, możesz też zbudować drzewo na posortowanej liście x."
+    },
+    {
+     "type": "warn",
+     "md": "`k·x + b` przy |k|, |x| ≤ 10^9 i |b| ≤ 10^18 przekracza `long long`. Szacuj zakresy; w razie potrzeby licz w `__int128` albo zmniejsz zakres zapytań."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "LiChao lc(lo, hi)",
+     "desc": "puste drzewo dla zapytań x ∈ [lo, hi]",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "lc.addLine(k, b)",
+     "desc": "dodanie prostej y = kx + b",
+     "complexity": "O(log(hi - lo))"
+    },
+    {
+     "sig": "lc.query(x)",
+     "desc": "min po wszystkich prostych w punkcie x",
+     "complexity": "O(log(hi - lo))",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Zapytanie przy pustym drzewie — zwróć/obsłuż osobno.",
+    "Przepełnienie `k * x + b` w `long long`.",
+    "Środek `(l + r) / 2` przy ujemnych x — używaj `l + (r - l) / 2`.",
+    "Maksimum zamiast minimum: zaneguj proste (wstaw `-k, -b`) i wynik, zamiast przerabiać porównania w wielu miejscach.",
+    "Zakres x zbyt mały — zapytanie spoza `[lo, hi]` schodzi złą ścieżką."
+   ],
+   "qa": [
+    {
+     "q": [
+      "li chao tree",
+      "li chao c++",
+      "drzewo li chao kod",
+      "lichao jak dziala",
+      "li chao tree implementacja"
+     ],
+     "a": "Każdy węzeł drzewa po x trzyma prostą najlepszą w swoim środku. Nowa prosta jest porównywana w środku (lepsza zostaje w węźle), a przegrana schodzi tylko do jednego dziecka — tego, po którego stronie może jeszcze wygrywać (proste przecinają się co najwyżej raz). Zapytanie bierze minimum z prostych na ścieżce do x. Obie operacje O(log C).",
+     "code": "// Li Chao tree: zbiór prostych y = k*x + b, zapytanie o minimum w punkcie x z [lo, hi].\nstruct LiChao {\n    struct Line {\n        long long k, b;\n        long long eval(long long x) const { return k * x + b; }\n    };\n    struct Node {\n        Line line;\n        int left = -1, right = -1;\n    };\n    vector<Node> t;\n    long long lo, hi;\n\n    LiChao(long long lo, long long hi) : lo(lo), hi(hi) {}\n\n    void addLine(long long k, long long b) {\n        Line nw{k, b};\n        if (t.empty()) { t.push_back({nw}); return; }\n        int v = 0;\n        long long l = lo, r = hi;\n        while (true) {\n            long long m = l + (r - l) / 2;\n            bool betterLeft = nw.eval(l) < t[v].line.eval(l);\n            bool betterMid = nw.eval(m) < t[v].line.eval(m);\n            if (betterMid) swap(t[v].line, nw);          // w węźle zostaje lepsza w środku\n            if (l == r) return;\n            if (betterLeft != betterMid) {               // przecięcie w [l, m]\n                if (t[v].left == -1) { t[v].left = t.size(); t.push_back({nw}); return; }\n                v = t[v].left; r = m;\n            } else {                                     // przecięcie w (m, r]\n                if (t[v].right == -1) { t[v].right = t.size(); t.push_back({nw}); return; }\n                v = t[v].right; l = m + 1;\n            }\n        }\n    }\n    long long query(long long x) const {                 // wymaga co najmniej jednej prostej\n        long long res = LLONG_MAX;\n        int v = 0;\n        long long l = lo, r = hi;\n        while (v != -1) {\n            res = min(res, t[v].line.eval(x));\n            long long m = l + (r - l) / 2;\n            if (x <= m) { v = t[v].left; r = m; }\n            else { v = t[v].right; l = m + 1; }\n        }\n        return res;\n    }\n    bool empty() const { return t.empty(); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "convex hull trick czy li chao",
+      "cht vs li chao",
+      "kiedy li chao a kiedy cht",
+      "cht bez monotoniczności"
+     ],
+     "a": "Klasyczny CHT z kolejką wymaga, by współczynniki kierunkowe dochodziły posortowane (a dla O(1) także zapytania); działa w O(1) zamortyzowanym. Li Chao działa dla dowolnej kolejności prostych i zapytań w O(log C) i ma prostszy, mniej podatny na błędy kod (bez porównań przecięć na ułamkach). Na zawodach Li Chao jest bezpiecznym domyślnym wyborem."
+    },
+    {
+     "q": [
+      "li chao maksimum",
+      "li chao max zamiast min",
+      "maksimum z prostych w punkcie"
+     ],
+     "a": "Najprościej: wstawiaj proste `(-k, -b)` i zwracaj `-query(x)`, bo `max(f) = -min(-f)`. Alternatywnie zamień wszystkie `<` na `>` i `LLONG_MAX` na `LLONG_MIN`. Złożoność bez zmian.",
+     "code": "// użycie istniejącego drzewa minimum do maksimum:\n// lc.addLine(-k, -b);   long long best = -lc.query(x);"
+    },
+    {
+     "q": [
+      "optymalizacja dp li chao",
+      "dp[i] = min dp[j] + b[j]*a[i]",
+      "dp z prostymi",
+      "dp convex hull optimization"
+     ],
+     "a": "Rozpisz przejście tak, by część zależna od `j` była prostą w zmiennej zależnej od `i`: `dp[j] + b[j]·a[i]` to prosta o współczynniku `b[j]` i wyrazie wolnym `dp[j]`, obliczona w `x = a[i]`. Dla każdego `i` najpierw `dp[i] = lc.query(a[i]) + c[i]`, potem `lc.addLine(b[i], dp[i])`. Z O(n²) robi się O(n log C).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Li Chao tree: zbiór prostych y = k*x + b, zapytanie o minimum w punkcie x z [lo, hi].\nstruct LiChao {\n    struct Line {\n        long long k, b;\n        long long eval(long long x) const { return k * x + b; }\n    };\n    struct Node {\n        Line line;\n        int left = -1, right = -1;\n    };\n    vector<Node> t;\n    long long lo, hi;\n\n    LiChao(long long lo, long long hi) : lo(lo), hi(hi) {}\n\n    void addLine(long long k, long long b) {\n        Line nw{k, b};\n        if (t.empty()) { t.push_back({nw}); return; }\n        int v = 0;\n        long long l = lo, r = hi;\n        while (true) {\n            long long m = l + (r - l) / 2;\n            bool betterLeft = nw.eval(l) < t[v].line.eval(l);\n            bool betterMid = nw.eval(m) < t[v].line.eval(m);\n            if (betterMid) swap(t[v].line, nw);          // w węźle zostaje lepsza w środku\n            if (l == r) return;\n            if (betterLeft != betterMid) {               // przecięcie w [l, m]\n                if (t[v].left == -1) { t[v].left = t.size(); t.push_back({nw}); return; }\n                v = t[v].left; r = m;\n            } else {                                     // przecięcie w (m, r]\n                if (t[v].right == -1) { t[v].right = t.size(); t.push_back({nw}); return; }\n                v = t[v].right; l = m + 1;\n            }\n        }\n    }\n    long long query(long long x) const {                 // wymaga co najmniej jednej prostej\n        long long res = LLONG_MAX;\n        int v = 0;\n        long long l = lo, r = hi;\n        while (v != -1) {\n            res = min(res, t[v].line.eval(x));\n            long long m = l + (r - l) / 2;\n            if (x <= m) { v = t[v].left; r = m; }\n            else { v = t[v].right; l = m + 1; }\n        }\n        return res;\n    }\n    bool empty() const { return t.empty(); }\n};\n\n// dp[0] = 0, dp[i] = min_{j<i} (dp[j] + h[j] * h[i]) + c[i], 0 <= h[i] <= 10^6\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> h(n), c(n), dp(n);\n    for (auto& x : h) cin >> x;\n    for (auto& x : c) cin >> x;\n    LiChao lc(0, 1000000);\n    dp[0] = 0;\n    lc.addLine(h[0], dp[0]);                    // prosta stanu j: k = h[j], b = dp[j]\n    for (int i = 1; i < n; i++) {\n        dp[i] = lc.query(h[i]) + c[i];          // min po j < i w punkcie x = h[i]\n        lc.addLine(h[i], dp[i]);\n    }\n    cout << dp[n - 1] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "li chao dodawanie odcinka",
+      "li chao segment insertion",
+      "li chao odcinki zamiast prostych"
+     ],
+     "a": "Odcinek (prosta tylko dla x ∈ [x1, x2]) wstawiasz jak w drzewie przedziałowym: schodzisz do O(log C) węzłów w całości zawartych w `[x1, x2]` i w każdym wykonujesz zwykłe wstawienie prostej w jego poddrzewie. Daje to O(log² C) na odcinek, zapytanie bez zmian O(log C)."
+    },
+    {
+     "q": [
+      "li chao przepełnienie",
+      "li chao overflow long long",
+      "k*x+b za duże"
+     ],
+     "a": "Wartość prostej liczy się w każdym węźle na ścieżce, także w krańcach `l`, `r` zakresu — nie tylko w punktach zapytań. Jeśli `|k|·|x|` może przekroczyć ~9·10^18, licz `eval` w `__int128` albo ogranicz zakres `[lo, hi]` do faktycznie potrzebnych x (np. drzewo na posortowanej liście współrzędnych zapytań)."
+    }
+   ],
+   "related": [
+    "dp-cht",
+    "ds-segment-tree",
+    "ds-dynamic-segment-tree",
+    "dp-intro"
+   ]
+  }
+ ]
+}

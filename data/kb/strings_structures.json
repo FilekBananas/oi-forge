@@ -1,0 +1,1092 @@
+{
+ "chunk": "strings-structures",
+ "articles": [
+  {
+   "id": "str-manacher",
+   "title": "Algorytm Manachera — wszystkie palindromy w O(n)",
+   "category": "Teksty",
+   "tags": [
+    "manacher",
+    "palindrom",
+    "palindromy",
+    "najdłuższy palindrom",
+    "liczba palindromów",
+    "d1 d2"
+   ],
+   "aliases": [
+    "manacher",
+    "algorytm manachera",
+    "palindromy manacher",
+    "manacher c++",
+    "najdłuższy palindrom",
+    "longest palindromic substring",
+    "liczba podsłów palindromicznych",
+    "manacher algorithm",
+    "manaher"
+   ],
+   "summary": "Manacher wyznacza dla każdego środka promień najdłuższego palindromu (d1 — nieparzyste, d2 — parzyste) w czasie O(n). Daje najdłuższy palindrom, liczbę podsłów palindromicznych i sprawdzanie „czy s[l..r] jest palindromem” w O(1).",
+   "complexity": "O(n) czasu i pamięci",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "Dla każdej pozycji `i` liczymy:\n* `d1[i]` — ile jest palindromów **nieparzystej** długości o środku w `i` (najdłuższy: `s[i−d1+1 .. i+d1−1]`,\n  długość `2·d1[i] − 1`);\n* `d2[i]` — ile jest palindromów **parzystej** długości o środku między `i−1` a `i` (najdłuższy:\n  `s[i−d2 .. i+d2−1]`, długość `2·d2[i]`).\n\nTrik jak w Z-funkcji: trzymamy najbardziej wysunięty w prawo znaleziony palindrom `[l, r]`. Dla `i ≤ r` jego\nlustrzane odbicie `j = l + r − i` ma już policzony promień, więc startujemy od `min(d1[j], r − i + 1)` i dalej\nrozszerzamy naiwnie. Każde udane rozszerzenie przesuwa `r`, więc łącznie O(n).\n\n**Sygnały w treści:** „najdłuższy spójny fragment będący palindromem”, „ile podsłów jest palindromami”,\n„czy fragment [l, r] czyta się tak samo od tyłu” (dużo zapytań), n do 10^6."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: najdłuższy palindrom i liczba palindromów",
+     "code": "// Wejście: słowo s. Wyjście: długość najdłuższego palindromu, sam palindrom (najbardziej na lewo)\n// i liczba wszystkich podsłów palindromicznych (liczonych z pozycjami).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s;\n    cin >> s;\n    int n = s.size();\n    vector<int> d1(n), d2(n);\n    for (int i = 0, l = 0, r = -1; i < n; i++) {          // palindromy nieparzyste\n        int k = (i > r) ? 1 : min(d1[l + r - i], r - i + 1);\n        while (i - k >= 0 && i + k < n && s[i - k] == s[i + k]) k++;\n        d1[i] = k--;\n        if (i + k > r) { l = i - k; r = i + k; }\n    }\n    for (int i = 0, l = 0, r = -1; i < n; i++) {          // palindromy parzyste\n        int k = (i > r) ? 0 : min(d2[l + r - i + 1], r - i + 1);\n        while (i - k - 1 >= 0 && i + k < n && s[i - k - 1] == s[i + k]) k++;\n        d2[i] = k--;\n        if (i + k > r) { l = i - k - 1; r = i + k; }\n    }\n    int bestLen = 0, bestStart = 0;\n    long long count = 0;\n    for (int i = 0; i < n; i++) {\n        count += d1[i] + d2[i];\n        if (2 * d1[i] - 1 > bestLen) { bestLen = 2 * d1[i] - 1; bestStart = i - d1[i] + 1; }\n        if (2 * d2[i] > bestLen) { bestLen = 2 * d2[i]; bestStart = i - d2[i]; }\n    }\n    cout << bestLen << \"\\n\" << s.substr(bestStart, bestLen) << \"\\n\" << count << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Funkcja manacher (d1, d2) + test na brute force",
+     "code": "// d1[i] = liczba palindromów nieparzystych o środku i (promień ze środkiem): najdłuższy ma długość 2*d1[i]-1\n// d2[i] = liczba palindromów parzystych o środku między i-1 a i: najdłuższy ma długość 2*d2[i]\nvoid manacher(const string& s, vector<int>& d1, vector<int>& d2) {\n    int n = s.size();\n    d1.assign(n, 0);\n    d2.assign(n, 0);\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 1 : min(d1[l + r - i], r - i + 1);\n        while (i - k >= 0 && i + k < n && s[i - k] == s[i + k]) k++;\n        d1[i] = k--;\n        if (i + k > r) { l = i - k; r = i + k; }\n    }\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 0 : min(d2[l + r - i + 1], r - i + 1);\n        while (i - k - 1 >= 0 && i + k < n && s[i - k - 1] == s[i + k]) k++;\n        d2[i] = k--;\n        if (i + k > r) { l = i - k - 1; r = i + k; }\n    }\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Pytanie",
+      "Wzór po Manacherze"
+     ],
+     "rows": [
+      [
+       "najdłuższy palindrom",
+       "max(2·d1[i] − 1, 2·d2[i])"
+      ],
+      [
+       "liczba podsłów palindromicznych",
+       "Σ (d1[i] + d2[i]) — w long long (do ~n²/2)"
+      ],
+      [
+       "czy s[l..r] palindrom, długość nieparzysta",
+       "d1[(l+r)/2] ≥ (len+1)/2"
+      ],
+      [
+       "czy s[l..r] palindrom, długość parzysta",
+       "d2[(l+r+1)/2] ≥ len/2"
+      ],
+      [
+       "palindromy kończące/zaczynające się w i",
+       "różnicowo (tablica różnic) z przedziałów każdego środka"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Wersja z jedną tablicą: wstaw separator między znaki (`#a#b#a#`) — wtedy wszystkie palindromy mają nieparzystą\ndługość i wystarczy jedna pętla. Kod jest w pytaniach poniżej."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "void manacher(const string& s, vector<int>& d1, vector<int>& d2)",
+     "desc": "promienie palindromów nieparzystych (d1) i parzystych (d2)",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Liczba podsłów palindromicznych dla n = 10^6 może sięgać ~5·10^11 — sumuj w long long.",
+    "Mylenie d2: środek jest MIĘDZY i−1 a i, palindrom to s[i−d2 .. i+d2−1].",
+    "Inicjalizacja: dla d1 startujemy od k = 1 (sam środek), dla d2 od k = 0.",
+    "Wersja z '#' daje promienie w przekształconym słowie — długość palindromu w s to p[i] (nie 2·p[i]+1).",
+    "Naiwne rozszerzanie od każdego środka bez lustra to O(n²) — TLE dla n = 10^6 (ale OK dla n ≤ 5000)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "manacher",
+      "algorytm manachera",
+      "palindromy manacher",
+      "manacher c++",
+      "manacher jak dziala",
+      "manaher"
+     ],
+     "a": "Manacher dla każdego środka liczy promień najdłuższego palindromu: `d1` (długość nieparzysta) i `d2` (parzysta).\nWykorzystuje najdalej sięgający znaleziony palindrom `[l, r]`: dla `i` wewnątrz niego promień jest co najmniej\ntaki, jak dla lustrzanej pozycji `l + r − i` (przyciętej do `r`), więc nie trzeba porównywać od zera. Każde\nudane porównanie przesuwa `r` w prawo ⇒ O(n).",
+     "code": "// d1[i] = liczba palindromów nieparzystych o środku i (promień ze środkiem): najdłuższy ma długość 2*d1[i]-1\n// d2[i] = liczba palindromów parzystych o środku między i-1 a i: najdłuższy ma długość 2*d2[i]\nvoid manacher(const string& s, vector<int>& d1, vector<int>& d2) {\n    int n = s.size();\n    d1.assign(n, 0);\n    d2.assign(n, 0);\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 1 : min(d1[l + r - i], r - i + 1);\n        while (i - k >= 0 && i + k < n && s[i - k] == s[i + k]) k++;\n        d1[i] = k--;\n        if (i + k > r) { l = i - k; r = i + k; }\n    }\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 0 : min(d2[l + r - i + 1], r - i + 1);\n        while (i - k - 1 >= 0 && i + k < n && s[i - k - 1] == s[i + k]) k++;\n        d2[i] = k--;\n        if (i + k > r) { l = i - k - 1; r = i + k; }\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najdłuższy podsłowo palindromiczne",
+      "longest palindromic substring",
+      "najdluzszy palindrom w napisie",
+      "najdłuższy spójny palindrom",
+      "longest palindrome c++"
+     ],
+     "a": "Po Manacherze odpowiedź to maksimum z `2·d1[i] − 1` (początek `i − d1[i] + 1`) i `2·d2[i]` (początek `i − d2[i]`)\n— O(n). Dla n ≤ 5000 wystarczy też rozszerzanie od każdego środka w O(n²). Pełny program w treści wypisuje\ndługość i sam palindrom."
+    },
+    {
+     "q": [
+      "liczba podsłów palindromicznych",
+      "ile palindromów w napisie",
+      "count palindromic substrings",
+      "ile jest fragmentow bedacych palindromami"
+     ],
+     "a": "Każdy środek `i` daje dokładnie `d1[i]` palindromów nieparzystych i `d2[i]` parzystych (wszystkie „krótsze\npromienie” też są palindromami). Wynik: `Σ (d1[i] + d2[i])`, liczony w `long long`. Liczymy podsłowa z pozycjami —\n`aa` w `aaa` liczy się dwa razy. Czas O(n).",
+     "code": "// d1[i] = liczba palindromów nieparzystych o środku i (promień ze środkiem): najdłuższy ma długość 2*d1[i]-1\n// d2[i] = liczba palindromów parzystych o środku między i-1 a i: najdłuższy ma długość 2*d2[i]\nvoid manacher(const string& s, vector<int>& d1, vector<int>& d2) {\n    int n = s.size();\n    d1.assign(n, 0);\n    d2.assign(n, 0);\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 1 : min(d1[l + r - i], r - i + 1);\n        while (i - k >= 0 && i + k < n && s[i - k] == s[i + k]) k++;\n        d1[i] = k--;\n        if (i + k > r) { l = i - k; r = i + k; }\n    }\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 0 : min(d2[l + r - i + 1], r - i + 1);\n        while (i - k - 1 >= 0 && i + k < n && s[i - k - 1] == s[i + k]) k++;\n        d2[i] = k--;\n        if (i + k > r) { l = i - k - 1; r = i + k; }\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "manacher z #",
+      "manacher wersja z separatorem",
+      "manacher jedna tablica",
+      "manacher with hashes between chars"
+     ],
+     "a": "Przekształć `s` w `#s0#s1#…#` — wtedy każdy palindrom ma nieparzystą długość i wystarczy jedna tablica `p`\n(promień bez środka). Długość odpowiadającego palindromu w `s` to dokładnie `p[i]`, a liczba palindromów\no środku `i` to `(p[i] + 1) / 2`. Czas O(n), pamięć 2n+1.",
+     "code": "string s = \"abacaba\";\nstring t = \"#\";\nfor (char c : s) { t += c; t += '#'; }\nint m = t.size();\nvector<int> p(m, 0);\nfor (int i = 0, l = 0, r = -1; i < m; i++) {\n    int k = (i > r) ? 0 : min(p[l + r - i], r - i);\n    while (i - k - 1 >= 0 && i + k + 1 < m && t[i - k - 1] == t[i + k + 1]) k++;\n    p[i] = k;\n    if (i + k > r) { l = i - k; r = i + k; }\n}\nint best = 0; long long cnt = 0;\nfor (int i = 0; i < m; i++) { best = max(best, p[i]); cnt += (p[i] + 1) / 2; }\ncout << best << \" \" << cnt << \"\\n\";   // 7 12"
+    },
+    {
+     "q": [
+      "d1 d2 manacher co oznacza",
+      "palindromy parzyste i nieparzyste",
+      "manacher d2 indeks",
+      "dlaczego dwie tablice w manacherze"
+     ],
+     "a": "Palindrom nieparzysty ma środek na znaku (`aba`), parzysty — między znakami (`abba`). `d1[i]` dotyczy środka na\n`s[i]`: najdłuższy to `s[i−d1+1 .. i+d1−1]`. `d2[i]` dotyczy środka między `s[i−1]` i `s[i]`: najdłuższy to\n`s[i−d2 .. i+d2−1]`. Dla `abba`: `d2 = 0 0 2 0` (środek między dwoma `b`).",
+     "code": "// d1[i] = liczba palindromów nieparzystych o środku i (promień ze środkiem): najdłuższy ma długość 2*d1[i]-1\n// d2[i] = liczba palindromów parzystych o środku między i-1 a i: najdłuższy ma długość 2*d2[i]\nvoid manacher(const string& s, vector<int>& d1, vector<int>& d2) {\n    int n = s.size();\n    d1.assign(n, 0);\n    d2.assign(n, 0);\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 1 : min(d1[l + r - i], r - i + 1);\n        while (i - k >= 0 && i + k < n && s[i - k] == s[i + k]) k++;\n        d1[i] = k--;\n        if (i + k > r) { l = i - k; r = i + k; }\n    }\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 0 : min(d2[l + r - i + 1], r - i + 1);\n        while (i - k - 1 >= 0 && i + k < n && s[i - k - 1] == s[i + k]) k++;\n        d2[i] = k--;\n        if (i + k > r) { l = i - k - 1; r = i + k; }\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy fragment jest palindromem zapytania",
+      "palindrom query O(1)",
+      "czy s[l..r] jest palindromem szybko",
+      "wiele zapytan palindrom"
+     ],
+     "a": "Po Manacherze każde zapytanie to O(1). Dla `len = r − l + 1` nieparzystego: palindrom ⇔ `d1[(l+r)/2] ≥ (len+1)/2`.\nDla parzystego: ⇔ `d2[(l+r+1)/2] ≥ len/2`. Alternatywa: hashe słowa i jego odwrócenia.",
+     "code": "// d1[i] = liczba palindromów nieparzystych o środku i (promień ze środkiem): najdłuższy ma długość 2*d1[i]-1\n// d2[i] = liczba palindromów parzystych o środku między i-1 a i: najdłuższy ma długość 2*d2[i]\nvoid manacher(const string& s, vector<int>& d1, vector<int>& d2) {\n    int n = s.size();\n    d1.assign(n, 0);\n    d2.assign(n, 0);\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 1 : min(d1[l + r - i], r - i + 1);\n        while (i - k >= 0 && i + k < n && s[i - k] == s[i + k]) k++;\n        d1[i] = k--;\n        if (i + k > r) { l = i - k; r = i + k; }\n    }\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 0 : min(d2[l + r - i + 1], r - i + 1);\n        while (i - k - 1 >= 0 && i + k < n && s[i - k - 1] == s[i + k]) k++;\n        d2[i] = k--;\n        if (i + k > r) { l = i - k - 1; r = i + k; }\n    }\n}\n\n           bool isPal(const vector<int>& d1, const vector<int>& d2, int l, int r) {   // 0-based, włącznie\n               int len = r - l + 1;\n               if (len % 2 == 1) return d1[(l + r) / 2] >= (len + 1) / 2;\n               return d2[(l + r + 1) / 2] >= len / 2;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "manacher złożoność dlaczego liniowa",
+      "manacher complexity",
+      "dlaczego manacher jest o(n)"
+     ],
+     "a": "Gdy `i` leży wewnątrz `[l, r]` i lustrzany palindrom mieści się w środku, wynik jest od razu znany (bez porównań).\nW przeciwnym razie rozszerzamy od `r` w prawo i każde udane porównanie zwiększa `r`, które nigdy nie maleje\ni jest ≤ n. Nieudanych porównań jest ≤ 1 na pozycję. Razem O(n)."
+    },
+    {
+     "q": [
+      "liczba różnych palindromów",
+      "ile roznych palindromow w slowie",
+      "distinct palindromic substrings",
+      "drzewo palindromow eertree"
+     ],
+     "a": "Słowo długości n ma co najwyżej n różnych niepustych podsłów palindromicznych (każdy znak dodaje ≤ 1 nowy).\nLiczy je drzewo palindromów (eertree) w O(n·Σ) lub O(n log Σ). Prostsza alternatywa: dla każdego nowego\nznaku tylko najdłuższy palindrom kończący się na nim może być nowy — sprawdzasz go hashem w secie (O(n) oczekiwanie\npo Manacherze)."
+    },
+    {
+     "q": [
+      "manacher long long",
+      "liczba palindromów przepełnienie",
+      "manacher overflow int"
+     ],
+     "a": "Dla słowa `aaa…a` długości n liczba podsłów palindromicznych to n(n+1)/2 — dla n = 10^6 to ok. 5·10^11,\nwięcej niż `int` (2,1·10^9). Sumuj `d1[i] + d2[i]` w `long long`."
+    },
+    {
+     "q": [
+      "palindromy rozszerzanie od środka n^2",
+      "expand around center czy manacher",
+      "kiedy wystarczy n^2 palindromy"
+     ],
+     "a": "Rozszerzanie od każdego z 2n−1 środków to O(n²) w najgorszym razie (`aaaa…`), ale O(1) pamięci i krótki kod —\ndla n ≤ 5000 w zupełności wystarcza. Manachera potrzebujesz przy n rzędu 10^5–10^6 albo gdy wyniki dla\nwszystkich środków są potrzebne do dalszych obliczeń."
+    }
+   ],
+   "related": [
+    "str-palindromes",
+    "str-hashing",
+    "str-z-function",
+    "str-kmp"
+   ]
+  },
+  {
+   "id": "str-palindromes",
+   "title": "Palindromy: sprawdzanie, DP is_pal[l][r], rozszerzanie od środka, podciągi i podziały",
+   "category": "Teksty",
+   "tags": [
+    "palindrom",
+    "palindromy",
+    "dp",
+    "is_pal",
+    "podciąg palindromiczny",
+    "podział na palindromy",
+    "expand around center"
+   ],
+   "aliases": [
+    "palindrom",
+    "palindromy",
+    "czy napis jest palindromem",
+    "palindrom c++",
+    "palindrom dp",
+    "najdłuższy podciąg palindromiczny",
+    "longest palindromic subsequence",
+    "palindrome partitioning",
+    "palindrome"
+   ],
+   "summary": "Przegląd technik na palindromy: sprawdzenie dwoma wskaźnikami O(n), tablica is_pal[l][r] O(n²), rozszerzanie od środka O(n²)/O(1) pamięci, najdłuższy podciąg palindromiczny (DP na przedziałach) i minimalny podział na palindromy.",
+   "complexity": "sprawdzenie O(n); is_pal / rozszerzanie / LPS / min-cut: O(n²); wszystkie palindromy-podsłowa w O(n): Manacher",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Palindrom** czyta się tak samo od przodu i od tyłu (`kajak`, `abba`). Rozróżniaj:\n* **podsłowo** (spójny fragment) — techniki: rozszerzanie od środka, `is_pal[l][r]`, Manacher, hashe;\n* **podciąg** (niekoniecznie spójny) — DP na przedziałach: `lps[l][r]`.\n\n**Tablica `is_pal[l][r]`:** `s[l..r]` jest palindromem ⇔ `s[l] == s[r]` i (`r − l < 2` lub `is_pal[l+1][r−1]`).\nLiczymy z `l` malejącym (albo po długości), bo zależymy od krótszego przedziału w środku. Tablica pozwala potem\nodpowiadać na zapytania w O(1) i liczyć DP po palindromach (np. minimalny podział).\n\n**Najdłuższy podciąg palindromiczny (LPS):** `lps[l][r] = lps[l+1][r−1] + 2`, gdy `s[l] == s[r]`, wpp.\n`max(lps[l+1][r], lps[l][r−1])`. Równoważnie: LCS(s, odwrócone s). Minimalna liczba wstawień, by słowo stało\nsię palindromem = `n − LPS`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: cztery klasyczne zadania na palindromy",
+     "code": "// Wejście: słowo s (n do kilku tysięcy). Wyjście: najdłuższy palindrom-podsłowo (najbardziej na lewo),\n// liczba podsłów palindromicznych, najdłuższy podciąg palindromiczny, minimalna liczba cięć na palindromy.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s;\n    cin >> s;\n    int n = s.size();\n\n    // 1) rozszerzanie od środka: O(n^2) czasu, O(1) pamięci\n    int bestL = 0, bestLen = 1;\n    for (int c = 0; c < n; c++)\n        for (int even = 0; even <= 1; even++) {\n            int l = c, r = c + even;\n            while (l >= 0 && r < n && s[l] == s[r]) { l--; r++; }\n            int len = r - l - 1;\n            if (len > bestLen) { bestLen = len; bestL = l + 1; }\n        }\n\n    // 2) is_pal[l][r] i liczba palindromów-podsłów\n    vector<vector<char>> pal(n, vector<char>(n, 0));\n    long long cnt = 0;\n    for (int l = n - 1; l >= 0; l--)\n        for (int r = l; r < n; r++) {\n            pal[l][r] = (s[l] == s[r]) && (r - l < 2 || pal[l + 1][r - 1]);\n            cnt += pal[l][r];\n        }\n\n    // 3) najdłuższy podciąg palindromiczny\n    vector<vector<int>> lps(n, vector<int>(n, 0));\n    for (int l = n - 1; l >= 0; l--) {\n        lps[l][l] = 1;\n        for (int r = l + 1; r < n; r++)\n            lps[l][r] = (s[l] == s[r]) ? lps[l + 1][r - 1] + 2 : max(lps[l + 1][r], lps[l][r - 1]);\n    }\n\n    // 4) minimalna liczba cięć: cut[j] = min cięć dla s[0..j]\n    vector<int> cut(n, INT_MAX);\n    for (int j = 0; j < n; j++)\n        for (int i = 0; i <= j; i++)\n            if (pal[i][j]) cut[j] = min(cut[j], i == 0 ? 0 : cut[i - 1] + 1);\n\n    cout << s.substr(bestL, bestLen) << \"\\n\" << cnt << \"\\n\" << lps[0][n - 1] << \"\\n\" << cut[n - 1] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zadanie",
+      "Technika",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "czy s jest palindromem",
+       "dwa wskaźniki od końców",
+       "O(n)"
+      ],
+      [
+       "najdłuższy palindrom-podsłowo",
+       "rozszerzanie od środka / Manacher",
+       "O(n²) / O(n)"
+      ],
+      [
+       "zapytania „czy s[l..r] palindrom”",
+       "is_pal[l][r] / Manacher / hashe",
+       "O(n²) prep. / O(n) / O(n)"
+      ],
+      [
+       "najdłuższy podciąg palindromiczny",
+       "DP na przedziałach (lub LCS z odwróceniem)",
+       "O(n²)"
+      ],
+      [
+       "min. wstawień do palindromu",
+       "n − LPS",
+       "O(n²)"
+      ],
+      [
+       "min. podział na palindromy",
+       "cut[j] = min(cut[i−1] + 1) po is_pal[i][j]",
+       "O(n²)"
+      ],
+      [
+       "liczba podciągów palindromicznych",
+       "DP z włączeniami-wyłączeniami na przedziałach",
+       "O(n²)"
+      ],
+      [
+       "czy da się ułożyć palindrom z liter",
+       "co najwyżej jedna litera o nieparzystej liczności",
+       "O(n)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "pal[l][r] = s[l] == s[r] && (r - l < 2 || pal[l+1][r-1])",
+     "desc": "DP palindromów-podsłów (l malejąco)",
+     "complexity": "O(n²)"
+    },
+    {
+     "sig": "lps[l][r] = s[l]==s[r] ? lps[l+1][r-1] + 2 : max(lps[l+1][r], lps[l][r-1])",
+     "desc": "najdłuższy podciąg palindromiczny",
+     "complexity": "O(n²)"
+    }
+   ],
+   "pitfalls": [
+    "Zła kolejność w is_pal: pętla po l rosnąco czyta jeszcze niepoliczone pal[l+1][r−1] — iteruj l od n−1 w dół (albo po długości).",
+    "Mylenie podsłowa (spójnego) z podciągiem — to zupełnie inne algorytmy.",
+    "Tablica `int pal[5000][5000]` to 100 MB — używaj `char`/`bool` (25 MB) albo `vector<vector<char>>`.",
+    "Liczba palindromów-podsłów rośnie jak n²/2 — sumuj w long long.",
+    "Wielkie/małe litery i spacje: jeśli zadanie każe je ignorować, najpierw znormalizuj napis."
+   ],
+   "qa": [
+    {
+     "q": [
+      "czy napis jest palindromem",
+      "sprawdzenie palindromu c++",
+      "palindrom c++",
+      "is palindrome",
+      "jak sprawdzic czy slowo jest palindromem"
+     ],
+     "a": "Porównuj znaki parami od końców: `s[i]` z `s[n−1−i]` dla `i < n/2` — O(n), O(1) pamięci. Krócej:\n`equal(s.begin(), s.begin() + s.size()/2, s.rbegin())` albo `s == string(s.rbegin(), s.rend())` (to drugie\ntworzy kopię).",
+     "code": "auto isPal = [](const string& s) {\n    int i = 0, j = (int)s.size() - 1;\n    while (i < j) if (s[i++] != s[j--]) return false;\n    return true;\n};\ncout << isPal(\"kajak\") << isPal(\"abba\") << isPal(\"abc\") << \"\\n\";   // 110"
+    },
+    {
+     "q": [
+      "palindrom dp",
+      "is_pal[l][r]",
+      "tablica palindromów dp",
+      "dp palindromy n^2",
+      "palindromy na przedzialach dp"
+     ],
+     "a": "`pal[l][r] = (s[l] == s[r]) && (r − l < 2 || pal[l+1][r−1])`, liczone z `l` od `n−1` w dół, a `r` od `l` w górę.\nWypełnienie O(n²), potem każde zapytanie O(1). Używaj typu `char`/`bool`, bo przy n = 5000 tablica ma 25·10^6 pól.",
+     "code": "string s = \"abba\";\nint n = s.size();\nvector<vector<char>> pal(n, vector<char>(n, 0));\nfor (int l = n - 1; l >= 0; l--)\n    for (int r = l; r < n; r++)\n        pal[l][r] = (s[l] == s[r]) && (r - l < 2 || pal[l + 1][r - 1]);\ncout << (int)pal[0][3] << (int)pal[1][2] << (int)pal[0][2] << \"\\n\";   // 110"
+    },
+    {
+     "q": [
+      "expand around center",
+      "rozszerzanie od środka palindrom",
+      "palindrom od srodka",
+      "najdluzszy palindrom n^2 prosto"
+     ],
+     "a": "Dla każdego z 2n−1 środków (znak lub przerwa między znakami) rozszerzaj `l--`, `r++`, dopóki `s[l] == s[r]`.\nNajdłuższy palindrom to maksimum `r − l − 1`. Czas O(n²) w najgorszym przypadku, O(1) pamięci — najkrótszy\nkod do n ≈ 5000; dla większych n — Manacher.",
+     "code": "string s = \"babad\";\nint n = s.size(), bestL = 0, bestLen = 1;\nfor (int c = 0; c < n; c++)\n    for (int e = 0; e <= 1; e++) {\n        int l = c, r = c + e;\n        while (l >= 0 && r < n && s[l] == s[r]) { l--; r++; }\n        if (r - l - 1 > bestLen) { bestLen = r - l - 1; bestL = l + 1; }\n    }\ncout << s.substr(bestL, bestLen) << \"\\n\";   // bab"
+    },
+    {
+     "q": [
+      "najdłuższy podciąg palindromiczny",
+      "longest palindromic subsequence",
+      "lps dp",
+      "najdluzszy podciag palindrom",
+      "podciąg palindromiczny dp"
+     ],
+     "a": "DP na przedziałach: `lps[l][r] = lps[l+1][r−1] + 2`, gdy `s[l] == s[r]`, wpp. `max(lps[l+1][r], lps[l][r−1])`,\n`lps[l][l] = 1`. Wynik `lps[0][n−1]`, czas i pamięć O(n²). Równoważnie LCS słowa i jego odwrócenia.",
+     "code": "string s = \"bbbab\";\nint n = s.size();\nvector<vector<int>> dp(n, vector<int>(n, 0));\nfor (int l = n - 1; l >= 0; l--) {\n    dp[l][l] = 1;\n    for (int r = l + 1; r < n; r++)\n        dp[l][r] = (s[l] == s[r]) ? dp[l + 1][r - 1] + 2 : max(dp[l + 1][r], dp[l][r - 1]);\n}\ncout << dp[0][n - 1] << \"\\n\";   // 4 (bbbb)"
+    },
+    {
+     "q": [
+      "minimalna liczba wstawień żeby był palindrom",
+      "min insertions palindrome",
+      "ile liter dopisac zeby byl palindrom",
+      "minimalna liczba usuniec palindrom"
+     ],
+     "a": "Znaki należące do najdłuższego podciągu palindromicznego zostawiamy, a każdemu pozostałemu dopisujemy „parę”\npo drugiej stronie: odpowiedź `n − LPS`. To samo jest minimalną liczbą **usunięć**, po których zostaje palindrom.\nCzas O(n²). Gdy wolno dopisywać tylko na początku — patrz KMP (najdłuższy prefiks-palindrom)."
+    },
+    {
+     "q": [
+      "podział na palindromy minimalna liczba cięć",
+      "palindrome partitioning",
+      "min cut palindrome",
+      "podzial napisu na palindromy"
+     ],
+     "a": "Najpierw `pal[i][j]`, potem `cut[j]` = minimalna liczba cięć prefiksu `s[0..j]`: `cut[j] = 0`, gdy `pal[0][j]`,\nwpp. `min(cut[i−1] + 1)` po `i` z `pal[i][j]`. Czas O(n²). Liczba kawałków = `cut[n−1] + 1`.",
+     "code": "string s = \"aab\";\nint n = s.size();\nvector<vector<char>> pal(n, vector<char>(n, 0));\nfor (int l = n - 1; l >= 0; l--)\n    for (int r = l; r < n; r++) pal[l][r] = s[l] == s[r] && (r - l < 2 || pal[l + 1][r - 1]);\nvector<int> cut(n, INT_MAX);\nfor (int j = 0; j < n; j++)\n    for (int i = 0; i <= j; i++)\n        if (pal[i][j]) cut[j] = min(cut[j], i == 0 ? 0 : cut[i - 1] + 1);\ncout << cut[n - 1] << \"\\n\";   // 1: \"aa\" | \"b\""
+    },
+    {
+     "q": [
+      "liczba podciągów palindromicznych",
+      "ile podciagow jest palindromami",
+      "count palindromic subsequences",
+      "palindromic subsequences count dp"
+     ],
+     "a": "`c[l][r]` = liczba niepustych podciągów palindromicznych (liczonych po zbiorach indeksów) w `s[l..r]`:\n`c[l][r] = c[l+1][r] + c[l][r−1] − c[l+1][r−1]` (włączenia-wyłączenia), a gdy `s[l] == s[r]` dodaj\n`c[l+1][r−1] + 1` (palindromy wewnątrz obłożone parą oraz sama para). Modulo — pamiętaj o `+ MOD` przy odejmowaniu.\nCzas O(n²).",
+     "code": "const long long MOD = 1'000'000'007;\nstring s = \"abacaba\";\nint n = s.size();\nvector<vector<long long>> c(n + 1, vector<long long>(n + 1, 0));\nauto get = [&](int l, int r) -> long long { return l > r ? 0 : c[l][r]; };\nfor (int l = n - 1; l >= 0; l--)\n    for (int r = l; r < n; r++) {\n        if (l == r) { c[l][r] = 1; continue; }\n        long long v = (get(l + 1, r) + get(l, r - 1) - get(l + 1, r - 1) + MOD) % MOD;\n        if (s[l] == s[r]) v = (v + get(l + 1, r - 1) + 1) % MOD;\n        c[l][r] = v;\n    }\ncout << c[0][n - 1] << \"\\n\";   // 41"
+    },
+    {
+     "q": [
+      "permutacja palindromu",
+      "czy da się ułożyć palindrom z liter",
+      "anagram palindromu",
+      "czy mozna przestawic litery zeby byl palindrom"
+     ],
+     "a": "Z liter da się ułożyć palindrom ⇔ co najwyżej jedna litera występuje nieparzystą liczbę razy (ona trafia na środek).\nPolicz wystąpienia w tablicy `cnt[26]` — O(n). Aby zbudować palindrom: połowa każdej litery po lewej, litera\nnieparzysta w środku, odbicie po prawej.",
+     "code": "auto canPal = [](const string& s) {\n    int cnt[26] = {0};\n    for (char ch : s) cnt[ch - 'a']++;\n    int odd = 0;\n    for (int x : cnt) odd += x % 2;\n    return odd <= 1;\n};\ncout << canPal(\"aabbc\") << canPal(\"abc\") << canPal(\"carrace\") << \"\\n\";   // 101"
+    },
+    {
+     "q": [
+      "czy liczba jest palindromem",
+      "palindrom liczbowy",
+      "number palindrome c++",
+      "liczba palindromiczna"
+     ],
+     "a": "Odwróć cyfry arytmetycznie (`rev = rev*10 + x%10`) i porównaj z oryginałem, albo zamień na napis\n(`to_string`) i sprawdź dwoma wskaźnikami. Odwrócona liczba może przekroczyć `int` — używaj `long long`.",
+     "code": "long long x = 12321, y = x, rev = 0;\nwhile (y > 0) { rev = rev * 10 + y % 10; y /= 10; }\ncout << (rev == x) << \"\\n\";   // 1"
+    }
+   ],
+   "related": [
+    "str-manacher",
+    "str-hashing",
+    "str-kmp",
+    "dp-interval",
+    "dp-lcs"
+   ]
+  },
+  {
+   "id": "str-suffix-array",
+   "title": "Tablica sufiksowa O(n log n) i tablica LCP (algorytm Kasaia)",
+   "category": "Teksty",
+   "tags": [
+    "tablica sufiksowa",
+    "suffix array",
+    "lcp",
+    "kasai",
+    "sufiksy",
+    "różne podsłowa",
+    "podwajanie prefiksów"
+   ],
+   "aliases": [
+    "tablica sufiksowa",
+    "suffix array",
+    "sa",
+    "suffix array c++",
+    "tablica sufiksów",
+    "lcp",
+    "kasai",
+    "suffix array kasai",
+    "tablica lcp",
+    "lcp array",
+    "liczba różnych podsłów",
+    "sufiksy posortowane"
+   ],
+   "summary": "Tablica sufiksowa to indeksy początków sufiksów słowa posortowane leksykograficznie; tablica LCP trzyma długości wspólnych prefiksów sąsiednich sufiksów. Razem rozwiązują: liczbę różnych podsłów, najdłuższe powtórzenie, najdłuższe wspólne podsłowo dwóch napisów, wyszukiwanie wzorców.",
+   "complexity": "budowa O(n log n) (podwajanie + sortowanie przez zliczanie) lub O(n log² n) (std::sort); LCP Kasai O(n); wyszukiwanie wzorca O(m log n)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "`sa[i]` = indeks początku `i`-tego co do wielkości sufiksu. Dla `banana`: sufiksy posortowane to\n`a, ana, anana, banana, na, nana`, więc `sa = 5 3 1 0 4 2`.\n\n**Budowa przez podwajanie:** po kroku `h` mamy posortowane wszystkie przesunięcia cykliczne słowa `s + strażnik`\nwedług pierwszych `2^h` znaków i nadane im klasy równoważności `c[i]`. Przesunięcie o długości `2^(h+1)` to para\n(klasa pierwszej połowy, klasa drugiej połowy) — sortujemy pary przez zliczanie w O(n). `log n` kroków ⇒ O(n log n).\nStrażnik (znak mniejszy od wszystkich) sprawia, że kolejność przesunięć cyklicznych = kolejność sufiksów.\n\n**LCP (Kasai):** `lcp[i]` = długość wspólnego prefiksu sufiksów `sa[i]` i `sa[i+1]`. Idziemy po sufiksach\nw kolejności w słowie (`i = 0, 1, …`); jeśli sufiks `i` miał z sąsiadem LCP = `k`, to sufiks `i+1` ma ze swoim\nsąsiadem LCP ≥ `k − 1`. Dlatego `k` maleje o ≤ 1 na krok i całość to O(n)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „liczba różnych podsłów”, „najdłuższy fragment występujący co najmniej dwa (k) razy”,\n„najdłuższe wspólne podsłowo”, „k-te leksykograficznie podsłowo”, wiele zapytań o wzorce w jednym tekście,\nn do 10^5–10^6."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: SA + LCP + liczba różnych podsłów",
+     "code": "// Wejście: słowo s. Wyjście: tablica sufiksowa (od 0), tablica LCP, liczba różnych podsłów.\n#include <bits/stdc++.h>\nusing namespace std;\n\nvector<int> suffixArray(string s) {\n    s += char(0);\n    int n = s.size();\n    const int ALPHA = 256;\n    vector<int> p(n), c(n), cnt(max(ALPHA, n), 0);\n    for (int i = 0; i < n; i++) cnt[(unsigned char)s[i]]++;\n    for (int i = 1; i < ALPHA; i++) cnt[i] += cnt[i - 1];\n    for (int i = 0; i < n; i++) p[--cnt[(unsigned char)s[i]]] = i;\n    c[p[0]] = 0;\n    int classes = 1;\n    for (int i = 1; i < n; i++) {\n        if (s[p[i]] != s[p[i - 1]]) classes++;\n        c[p[i]] = classes - 1;\n    }\n    vector<int> pn(n), cn(n);\n    for (int h = 0; (1 << h) < n; h++) {\n        for (int i = 0; i < n; i++) {\n            pn[i] = p[i] - (1 << h);\n            if (pn[i] < 0) pn[i] += n;\n        }\n        fill(cnt.begin(), cnt.begin() + classes, 0);\n        for (int i = 0; i < n; i++) cnt[c[pn[i]]]++;\n        for (int i = 1; i < classes; i++) cnt[i] += cnt[i - 1];\n        for (int i = n - 1; i >= 0; i--) p[--cnt[c[pn[i]]]] = pn[i];\n        cn[p[0]] = 0;\n        classes = 1;\n        for (int i = 1; i < n; i++) {\n            pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};\n            pair<int, int> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << h)) % n]};\n            if (cur != prev) classes++;\n            cn[p[i]] = classes - 1;\n        }\n        c.swap(cn);\n        if (classes == n) break;\n    }\n    p.erase(p.begin());\n    return p;\n}\n\nvector<int> lcpKasai(const string& s, const vector<int>& sa) {\n    int n = s.size();\n    vector<int> rk(n), lcp(max(n - 1, 0), 0);\n    for (int i = 0; i < n; i++) rk[sa[i]] = i;\n    for (int i = 0, k = 0; i < n; i++) {\n        if (rk[i] == n - 1) { k = 0; continue; }\n        int j = sa[rk[i] + 1];\n        while (i + k < n && j + k < n && s[i + k] == s[j + k]) k++;\n        lcp[rk[i]] = k;\n        if (k > 0) k--;\n    }\n    return lcp;\n}\n\nint main() {\n    string s;\n    cin >> s;\n    vector<int> sa = suffixArray(s);\n    vector<int> lcp = lcpKasai(s, sa);\n    long long n = s.size(), distinct = n * (n + 1) / 2;\n    for (int x : lcp) distinct -= x;\n    for (int x : sa) cout << x << \" \";\n    cout << \"\\n\";\n    for (int x : lcp) cout << x << \" \";\n    cout << \"\\n\" << distinct << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szablon: suffixArray + lcpKasai (test na brute force)",
+     "code": "vector<int> suffixArray(string s) {           // O(n log n), sufiksy posortowane leksykograficznie (indeksy od 0)\n    s += char(0);                             // strażnik mniejszy od wszystkich znaków\n    int n = s.size();\n    const int ALPHA = 256;\n    vector<int> p(n), c(n), cnt(max(ALPHA, n), 0);\n    for (int i = 0; i < n; i++) cnt[(unsigned char)s[i]]++;\n    for (int i = 1; i < ALPHA; i++) cnt[i] += cnt[i - 1];\n    for (int i = 0; i < n; i++) p[--cnt[(unsigned char)s[i]]] = i;\n    c[p[0]] = 0;\n    int classes = 1;\n    for (int i = 1; i < n; i++) {\n        if (s[p[i]] != s[p[i - 1]]) classes++;\n        c[p[i]] = classes - 1;\n    }\n    vector<int> pn(n), cn(n);\n    for (int h = 0; (1 << h) < n; h++) {      // sortujemy przesunięcia cykliczne długości 2^(h+1)\n        for (int i = 0; i < n; i++) {\n            pn[i] = p[i] - (1 << h);\n            if (pn[i] < 0) pn[i] += n;\n        }\n        fill(cnt.begin(), cnt.begin() + classes, 0);\n        for (int i = 0; i < n; i++) cnt[c[pn[i]]]++;\n        for (int i = 1; i < classes; i++) cnt[i] += cnt[i - 1];\n        for (int i = n - 1; i >= 0; i--) p[--cnt[c[pn[i]]]] = pn[i];   // sortowanie przez zliczanie\n        cn[p[0]] = 0;\n        classes = 1;\n        for (int i = 1; i < n; i++) {\n            pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};\n            pair<int, int> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << h)) % n]};\n            if (cur != prev) classes++;\n            cn[p[i]] = classes - 1;\n        }\n        c.swap(cn);\n        if (classes == n) break;              // wszystkie klasy różne — gotowe\n    }\n    p.erase(p.begin());                       // usuwamy sufiks złożony z samego strażnika\n    return p;\n}\n\nvector<int> lcpKasai(const string& s, const vector<int>& sa) {   // lcp[i] = LCP(sa[i], sa[i+1])\n    int n = s.size();\n    vector<int> rk(n), lcp(max(n - 1, 0), 0);\n    for (int i = 0; i < n; i++) rk[sa[i]] = i;\n    for (int i = 0, k = 0; i < n; i++) {\n        if (rk[i] == n - 1) { k = 0; continue; }\n        int j = sa[rk[i] + 1];\n        while (i + k < n && j + k < n && s[i + k] == s[j + k]) k++;\n        lcp[rk[i]] = k;\n        if (k > 0) k--;                       // kluczowa obserwacja Kasaia: lcp spada co najwyżej o 1\n    }\n    return lcp;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Problem",
+      "Rozwiązanie z SA + LCP",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "liczba różnych podsłów",
+       "n(n+1)/2 − Σ lcp",
+       "O(n log n)"
+      ],
+      [
+       "najdłuższe podsłowo występujące ≥ 2 razy",
+       "max lcp",
+       "O(n log n)"
+      ],
+      [
+       "… występujące ≥ k razy",
+       "max po oknach k−1 kolejnych lcp z minimum (kolejka monotoniczna)",
+       "O(n log n)"
+      ],
+      [
+       "najdłuższe wspólne podsłowo s i t",
+       "SA dla s + '#' + t; max lcp sąsiadów z różnych słów",
+       "O((n+m) log)"
+      ],
+      [
+       "wystąpienia wzorca p",
+       "dwa wyszukiwania binarne po SA",
+       "O(m log n)"
+      ],
+      [
+       "LCP dowolnych dwóch sufiksów",
+       "min na lcp między ich rangami (sparse table)",
+       "O(1) po O(n log n)"
+      ],
+      [
+       "k-te podsłowo leksykograficznie",
+       "sufiks sa[i] wnosi n − sa[i] − lcp[i−1] nowych podsłów",
+       "O(n)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Strażnik musi być mniejszy od wszystkich znaków słowa i nie może w nim występować (tu `char(0)`). Jeśli łączysz\nkilka słów separatorami (`s + '#' + t`), separatory też muszą być unikalne i większe od strażnika."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "vector<int> suffixArray(string s)",
+     "desc": "indeksy sufiksów posortowanych leksykograficznie",
+     "complexity": "O(n log n)",
+     "returns": "vector<int>"
+    },
+    {
+     "sig": "vector<int> lcpKasai(const string& s, const vector<int>& sa)",
+     "desc": "lcp[i] = LCP(sa[i], sa[i+1]), długość n−1",
+     "complexity": "O(n)",
+     "returns": "vector<int>"
+    }
+   ],
+   "pitfalls": [
+    "Strażnik musi być najmniejszym znakiem (char(0)); z '$' algorytm psuje się, gdy słowo zawiera znaki mniejsze od '$' (np. '#', '!').",
+    "`cnt[s[i]]` przy `char` ze znakiem (polskie litery w UTF-8) daje ujemny indeks — rzutuj na `unsigned char`.",
+    "Tablica LCP ma n−1 elementów: lcp[i] dotyczy pary (sa[i], sa[i+1]), nie (sa[i−1], sa[i]) — trzymaj się jednej konwencji.",
+    "Liczba różnych podsłów n(n+1)/2 dla n = 10^6 to ~5·10^11 — long long.",
+    "Sortowanie sufiksów przez `sort` z porównywaniem `substr` to O(n² log n) — tylko jako brute force.",
+    "W najdłuższym wspólnym podsłowie dwóch napisów sprawdzaj, czy sąsiednie sufiksy pochodzą z RÓŻNYCH słów."
+   ],
+   "qa": [
+    {
+     "q": [
+      "tablica sufiksowa",
+      "suffix array",
+      "suffix array c++",
+      "tablica sufiksów",
+      "sa nlogn",
+      "jak zbudowac tablice sufiksowa"
+     ],
+     "a": "Tablica sufiksowa to indeksy sufiksów posortowanych leksykograficznie. Budujemy ją podwajaniem: sortujemy\nprzesunięcia cykliczne `s + strażnik` po pierwszych 1, 2, 4, … znakach, za każdym razem sortując przez zliczanie\npary klas (pierwsza połowa, druga połowa). log n faz po O(n) ⇒ O(n log n). Szablon `suffixArray` jest w treści.",
+     "code": "vector<int> suffixArray(string s) {           // O(n log n), sufiksy posortowane leksykograficznie (indeksy od 0)\n    s += char(0);                             // strażnik mniejszy od wszystkich znaków\n    int n = s.size();\n    const int ALPHA = 256;\n    vector<int> p(n), c(n), cnt(max(ALPHA, n), 0);\n    for (int i = 0; i < n; i++) cnt[(unsigned char)s[i]]++;\n    for (int i = 1; i < ALPHA; i++) cnt[i] += cnt[i - 1];\n    for (int i = 0; i < n; i++) p[--cnt[(unsigned char)s[i]]] = i;\n    c[p[0]] = 0;\n    int classes = 1;\n    for (int i = 1; i < n; i++) {\n        if (s[p[i]] != s[p[i - 1]]) classes++;\n        c[p[i]] = classes - 1;\n    }\n    vector<int> pn(n), cn(n);\n    for (int h = 0; (1 << h) < n; h++) {      // sortujemy przesunięcia cykliczne długości 2^(h+1)\n        for (int i = 0; i < n; i++) {\n            pn[i] = p[i] - (1 << h);\n            if (pn[i] < 0) pn[i] += n;\n        }\n        fill(cnt.begin(), cnt.begin() + classes, 0);\n        for (int i = 0; i < n; i++) cnt[c[pn[i]]]++;\n        for (int i = 1; i < classes; i++) cnt[i] += cnt[i - 1];\n        for (int i = n - 1; i >= 0; i--) p[--cnt[c[pn[i]]]] = pn[i];   // sortowanie przez zliczanie\n        cn[p[0]] = 0;\n        classes = 1;\n        for (int i = 1; i < n; i++) {\n            pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};\n            pair<int, int> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << h)) % n]};\n            if (cur != prev) classes++;\n            cn[p[i]] = classes - 1;\n        }\n        c.swap(cn);\n        if (classes == n) break;              // wszystkie klasy różne — gotowe\n    }\n    p.erase(p.begin());                       // usuwamy sufiks złożony z samego strażnika\n    return p;\n}\n\nvector<int> lcpKasai(const string& s, const vector<int>& sa) {   // lcp[i] = LCP(sa[i], sa[i+1])\n    int n = s.size();\n    vector<int> rk(n), lcp(max(n - 1, 0), 0);\n    for (int i = 0; i < n; i++) rk[sa[i]] = i;\n    for (int i = 0, k = 0; i < n; i++) {\n        if (rk[i] == n - 1) { k = 0; continue; }\n        int j = sa[rk[i] + 1];\n        while (i + k < n && j + k < n && s[i + k] == s[j + k]) k++;\n        lcp[rk[i]] = k;\n        if (k > 0) k--;                       // kluczowa obserwacja Kasaia: lcp spada co najwyżej o 1\n    }\n    return lcp;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "lcp kasai",
+      "suffix array kasai",
+      "tablica lcp",
+      "lcp array",
+      "algorytm kasaia",
+      "kasai c++"
+     ],
+     "a": "`lcp[i]` = długość wspólnego prefiksu sufiksów `sa[i]` i `sa[i+1]`. Kasai przegląda sufiksy w kolejności\nw słowie: znając `k` dla sufiksu `i`, dla sufiksu `i+1` zaczyna od `k − 1` (usunięcie pierwszego znaku zachowuje\nwspólny prefiks bez jednego znaku). Licznik `k` rośnie łącznie ≤ 2n razy ⇒ O(n).",
+     "code": "vector<int> suffixArray(string s) {           // O(n log n), sufiksy posortowane leksykograficznie (indeksy od 0)\n    s += char(0);                             // strażnik mniejszy od wszystkich znaków\n    int n = s.size();\n    const int ALPHA = 256;\n    vector<int> p(n), c(n), cnt(max(ALPHA, n), 0);\n    for (int i = 0; i < n; i++) cnt[(unsigned char)s[i]]++;\n    for (int i = 1; i < ALPHA; i++) cnt[i] += cnt[i - 1];\n    for (int i = 0; i < n; i++) p[--cnt[(unsigned char)s[i]]] = i;\n    c[p[0]] = 0;\n    int classes = 1;\n    for (int i = 1; i < n; i++) {\n        if (s[p[i]] != s[p[i - 1]]) classes++;\n        c[p[i]] = classes - 1;\n    }\n    vector<int> pn(n), cn(n);\n    for (int h = 0; (1 << h) < n; h++) {      // sortujemy przesunięcia cykliczne długości 2^(h+1)\n        for (int i = 0; i < n; i++) {\n            pn[i] = p[i] - (1 << h);\n            if (pn[i] < 0) pn[i] += n;\n        }\n        fill(cnt.begin(), cnt.begin() + classes, 0);\n        for (int i = 0; i < n; i++) cnt[c[pn[i]]]++;\n        for (int i = 1; i < classes; i++) cnt[i] += cnt[i - 1];\n        for (int i = n - 1; i >= 0; i--) p[--cnt[c[pn[i]]]] = pn[i];   // sortowanie przez zliczanie\n        cn[p[0]] = 0;\n        classes = 1;\n        for (int i = 1; i < n; i++) {\n            pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};\n            pair<int, int> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << h)) % n]};\n            if (cur != prev) classes++;\n            cn[p[i]] = classes - 1;\n        }\n        c.swap(cn);\n        if (classes == n) break;              // wszystkie klasy różne — gotowe\n    }\n    p.erase(p.begin());                       // usuwamy sufiks złożony z samego strażnika\n    return p;\n}\n\nvector<int> lcpKasai(const string& s, const vector<int>& sa) {   // lcp[i] = LCP(sa[i], sa[i+1])\n    int n = s.size();\n    vector<int> rk(n), lcp(max(n - 1, 0), 0);\n    for (int i = 0; i < n; i++) rk[sa[i]] = i;\n    for (int i = 0, k = 0; i < n; i++) {\n        if (rk[i] == n - 1) { k = 0; continue; }\n        int j = sa[rk[i] + 1];\n        while (i + k < n && j + k < n && s[i + k] == s[j + k]) k++;\n        lcp[rk[i]] = k;\n        if (k > 0) k--;                       // kluczowa obserwacja Kasaia: lcp spada co najwyżej o 1\n    }\n    return lcp;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liczba różnych podsłów",
+      "ile różnych podciągów spójnych",
+      "count distinct substrings",
+      "ile roznych podslow ma slowo",
+      "distinct substrings suffix array"
+     ],
+     "a": "Każde podsłowo to prefiks jakiegoś sufiksu. Sufiks `sa[i]` ma `n − sa[i]` prefiksów, z czego `lcp[i−1]`\nwystąpiło już jako prefiksy poprzedniego sufiksu w kolejności. Suma: `n(n+1)/2 − Σ lcp`. Czas O(n log n),\nwynik w `long long`. Np. `banana` → 21 − 6 = 15."
+    },
+    {
+     "q": [
+      "najdłuższe powtarzające się podsłowo",
+      "longest repeated substring",
+      "najdluzszy fragment wystepujacy dwa razy suffix array",
+      "max lcp"
+     ],
+     "a": "Dwa wystąpienia tego samego podsłowa to wspólny prefiks dwóch sufiksów, a najdłuższy wspólny prefiks dwóch\nsufiksów jest osiągany dla sąsiadów w SA. Odpowiedź: `max(lcp)`, podsłowo zaczyna się w `sa[i]` dla argmax.\nDla „≥ k razy”: maksimum po oknach `k−1` kolejnych `lcp` z ich minimum.",
+     "code": "vector<int> suffixArray(string s) {           // O(n log n), sufiksy posortowane leksykograficznie (indeksy od 0)\n    s += char(0);                             // strażnik mniejszy od wszystkich znaków\n    int n = s.size();\n    const int ALPHA = 256;\n    vector<int> p(n), c(n), cnt(max(ALPHA, n), 0);\n    for (int i = 0; i < n; i++) cnt[(unsigned char)s[i]]++;\n    for (int i = 1; i < ALPHA; i++) cnt[i] += cnt[i - 1];\n    for (int i = 0; i < n; i++) p[--cnt[(unsigned char)s[i]]] = i;\n    c[p[0]] = 0;\n    int classes = 1;\n    for (int i = 1; i < n; i++) {\n        if (s[p[i]] != s[p[i - 1]]) classes++;\n        c[p[i]] = classes - 1;\n    }\n    vector<int> pn(n), cn(n);\n    for (int h = 0; (1 << h) < n; h++) {      // sortujemy przesunięcia cykliczne długości 2^(h+1)\n        for (int i = 0; i < n; i++) {\n            pn[i] = p[i] - (1 << h);\n            if (pn[i] < 0) pn[i] += n;\n        }\n        fill(cnt.begin(), cnt.begin() + classes, 0);\n        for (int i = 0; i < n; i++) cnt[c[pn[i]]]++;\n        for (int i = 1; i < classes; i++) cnt[i] += cnt[i - 1];\n        for (int i = n - 1; i >= 0; i--) p[--cnt[c[pn[i]]]] = pn[i];   // sortowanie przez zliczanie\n        cn[p[0]] = 0;\n        classes = 1;\n        for (int i = 1; i < n; i++) {\n            pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};\n            pair<int, int> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << h)) % n]};\n            if (cur != prev) classes++;\n            cn[p[i]] = classes - 1;\n        }\n        c.swap(cn);\n        if (classes == n) break;              // wszystkie klasy różne — gotowe\n    }\n    p.erase(p.begin());                       // usuwamy sufiks złożony z samego strażnika\n    return p;\n}\n\nvector<int> lcpKasai(const string& s, const vector<int>& sa) {   // lcp[i] = LCP(sa[i], sa[i+1])\n    int n = s.size();\n    vector<int> rk(n), lcp(max(n - 1, 0), 0);\n    for (int i = 0; i < n; i++) rk[sa[i]] = i;\n    for (int i = 0, k = 0; i < n; i++) {\n        if (rk[i] == n - 1) { k = 0; continue; }\n        int j = sa[rk[i] + 1];\n        while (i + k < n && j + k < n && s[i + k] == s[j + k]) k++;\n        lcp[rk[i]] = k;\n        if (k > 0) k--;                       // kluczowa obserwacja Kasaia: lcp spada co najwyżej o 1\n    }\n    return lcp;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najdłuższe wspólne podsłowo dwóch napisów",
+      "longest common substring",
+      "najdluzszy wspolny fragment dwoch slow",
+      "lcs substring suffix array"
+     ],
+     "a": "Zbuduj SA dla `s + '#' + t` (separator spoza alfabetu). Najdłuższe wspólne podsłowo to maksimum `lcp[i]` po\nparach sąsiadów, z których jeden zaczyna się w `s` (indeks < |s|), a drugi w `t` (indeks > |s|). Czas\nO((n+m) log(n+m)). Uwaga: to **podsłowo** (spójne); najdłuższy wspólny **podciąg** to DP (LCS).",
+     "code": "vector<int> suffixArray(string s) {           // O(n log n), sufiksy posortowane leksykograficznie (indeksy od 0)\n    s += char(0);                             // strażnik mniejszy od wszystkich znaków\n    int n = s.size();\n    const int ALPHA = 256;\n    vector<int> p(n), c(n), cnt(max(ALPHA, n), 0);\n    for (int i = 0; i < n; i++) cnt[(unsigned char)s[i]]++;\n    for (int i = 1; i < ALPHA; i++) cnt[i] += cnt[i - 1];\n    for (int i = 0; i < n; i++) p[--cnt[(unsigned char)s[i]]] = i;\n    c[p[0]] = 0;\n    int classes = 1;\n    for (int i = 1; i < n; i++) {\n        if (s[p[i]] != s[p[i - 1]]) classes++;\n        c[p[i]] = classes - 1;\n    }\n    vector<int> pn(n), cn(n);\n    for (int h = 0; (1 << h) < n; h++) {      // sortujemy przesunięcia cykliczne długości 2^(h+1)\n        for (int i = 0; i < n; i++) {\n            pn[i] = p[i] - (1 << h);\n            if (pn[i] < 0) pn[i] += n;\n        }\n        fill(cnt.begin(), cnt.begin() + classes, 0);\n        for (int i = 0; i < n; i++) cnt[c[pn[i]]]++;\n        for (int i = 1; i < classes; i++) cnt[i] += cnt[i - 1];\n        for (int i = n - 1; i >= 0; i--) p[--cnt[c[pn[i]]]] = pn[i];   // sortowanie przez zliczanie\n        cn[p[0]] = 0;\n        classes = 1;\n        for (int i = 1; i < n; i++) {\n            pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};\n            pair<int, int> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << h)) % n]};\n            if (cur != prev) classes++;\n            cn[p[i]] = classes - 1;\n        }\n        c.swap(cn);\n        if (classes == n) break;              // wszystkie klasy różne — gotowe\n    }\n    p.erase(p.begin());                       // usuwamy sufiks złożony z samego strażnika\n    return p;\n}\n\nvector<int> lcpKasai(const string& s, const vector<int>& sa) {   // lcp[i] = LCP(sa[i], sa[i+1])\n    int n = s.size();\n    vector<int> rk(n), lcp(max(n - 1, 0), 0);\n    for (int i = 0; i < n; i++) rk[sa[i]] = i;\n    for (int i = 0, k = 0; i < n; i++) {\n        if (rk[i] == n - 1) { k = 0; continue; }\n        int j = sa[rk[i] + 1];\n        while (i + k < n && j + k < n && s[i + k] == s[j + k]) k++;\n        lcp[rk[i]] = k;\n        if (k > 0) k--;                       // kluczowa obserwacja Kasaia: lcp spada co najwyżej o 1\n    }\n    return lcp;\n}\n\n           int longestCommonSubstring(const string& a, const string& b) {\n               string s = a + \"#\" + b;\n               vector<int> sa = suffixArray(s), lcp = lcpKasai(s, sa);\n               int n1 = a.size(), best = 0;\n               for (int i = 0; i + 1 < (int)sa.size(); i++) {\n                   bool x = sa[i] < n1, y = sa[i + 1] < n1;\n                   if (x != y && sa[i] != n1 && sa[i + 1] != n1) best = max(best, lcp[i]);\n               }\n               return best;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wyszukiwanie wzorca tablica sufiksowa",
+      "binsearch po tablicy sufiksowej",
+      "ile razy wzorzec suffix array",
+      "pattern search suffix array"
+     ],
+     "a": "Sufiksy zaczynające się od `p` tworzą spójny przedział w SA. Znajdź go dwoma wyszukiwaniami binarnymi,\nporównując `s.compare(sa[i], m, p)` — O(m log n) na wzorzec. Liczba wystąpień = długość przedziału, pozycje =\nwartości `sa` w przedziale. Opłaca się, gdy jeden tekst i bardzo wiele zapytań.",
+     "code": "vector<int> suffixArray(string s) {           // O(n log n), sufiksy posortowane leksykograficznie (indeksy od 0)\n    s += char(0);                             // strażnik mniejszy od wszystkich znaków\n    int n = s.size();\n    const int ALPHA = 256;\n    vector<int> p(n), c(n), cnt(max(ALPHA, n), 0);\n    for (int i = 0; i < n; i++) cnt[(unsigned char)s[i]]++;\n    for (int i = 1; i < ALPHA; i++) cnt[i] += cnt[i - 1];\n    for (int i = 0; i < n; i++) p[--cnt[(unsigned char)s[i]]] = i;\n    c[p[0]] = 0;\n    int classes = 1;\n    for (int i = 1; i < n; i++) {\n        if (s[p[i]] != s[p[i - 1]]) classes++;\n        c[p[i]] = classes - 1;\n    }\n    vector<int> pn(n), cn(n);\n    for (int h = 0; (1 << h) < n; h++) {      // sortujemy przesunięcia cykliczne długości 2^(h+1)\n        for (int i = 0; i < n; i++) {\n            pn[i] = p[i] - (1 << h);\n            if (pn[i] < 0) pn[i] += n;\n        }\n        fill(cnt.begin(), cnt.begin() + classes, 0);\n        for (int i = 0; i < n; i++) cnt[c[pn[i]]]++;\n        for (int i = 1; i < classes; i++) cnt[i] += cnt[i - 1];\n        for (int i = n - 1; i >= 0; i--) p[--cnt[c[pn[i]]]] = pn[i];   // sortowanie przez zliczanie\n        cn[p[0]] = 0;\n        classes = 1;\n        for (int i = 1; i < n; i++) {\n            pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};\n            pair<int, int> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << h)) % n]};\n            if (cur != prev) classes++;\n            cn[p[i]] = classes - 1;\n        }\n        c.swap(cn);\n        if (classes == n) break;              // wszystkie klasy różne — gotowe\n    }\n    p.erase(p.begin());                       // usuwamy sufiks złożony z samego strażnika\n    return p;\n}\n\nvector<int> lcpKasai(const string& s, const vector<int>& sa) {   // lcp[i] = LCP(sa[i], sa[i+1])\n    int n = s.size();\n    vector<int> rk(n), lcp(max(n - 1, 0), 0);\n    for (int i = 0; i < n; i++) rk[sa[i]] = i;\n    for (int i = 0, k = 0; i < n; i++) {\n        if (rk[i] == n - 1) { k = 0; continue; }\n        int j = sa[rk[i] + 1];\n        while (i + k < n && j + k < n && s[i + k] == s[j + k]) k++;\n        lcp[rk[i]] = k;\n        if (k > 0) k--;                       // kluczowa obserwacja Kasaia: lcp spada co najwyżej o 1\n    }\n    return lcp;\n}\n\n           int countOcc(const string& s, const vector<int>& sa, const string& p) {\n               int m = p.size();\n               auto lo = lower_bound(sa.begin(), sa.end(), p, [&](int i, const string& q) {\n                   return s.compare(i, m, q) < 0; });\n               auto hi = upper_bound(sa.begin(), sa.end(), p, [&](const string& q, int i) {\n                   return s.compare(i, m, q) > 0; });\n               return hi - lo;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "suffix array n log^2 n prosto",
+      "tablica sufiksowa sort",
+      "prosta tablica sufiksowa",
+      "suffix array easy implementation"
+     ],
+     "a": "Prostsza wersja: rangi `rk` i w każdej fazie `sort` po parach `(rk[i], rk[i+k] lub −1)`. Faz jest O(log n),\nkażda O(n log n) ⇒ O(n log² n) — zwykle wystarcza dla n ≤ 2·10^5. Kod krótszy, ale ok. 3–5× wolniejszy od wersji\nze zliczaniem.",
+     "code": "vector<int> suffixArraySlow(const string& s) {\n    int n = s.size();\n    vector<int> sa(n), rk(n), tmp(n);\n    for (int i = 0; i < n; i++) { sa[i] = i; rk[i] = (unsigned char)s[i]; }\n    for (int k = 1; ; k <<= 1) {\n        auto cmp = [&](int a, int b) {\n            if (rk[a] != rk[b]) return rk[a] < rk[b];\n            int ra = a + k < n ? rk[a + k] : -1, rb = b + k < n ? rk[b + k] : -1;\n            return ra < rb;\n        };\n        sort(sa.begin(), sa.end(), cmp);\n        tmp[sa[0]] = 0;\n        for (int i = 1; i < n; i++) tmp[sa[i]] = tmp[sa[i - 1]] + cmp(sa[i - 1], sa[i]);\n        rk = tmp;\n        if (rk[sa[n - 1]] == n - 1) break;     // wszystkie rangi różne\n    }\n    return sa;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "lcp dowolnych dwóch sufiksów",
+      "lcp query sparse table",
+      "najdluzszy wspolny prefiks dwoch sufiksow zapytania",
+      "lcp rmq"
+     ],
+     "a": "LCP sufiksów `i` i `j` (i ≠ j) to minimum z `lcp[k]` dla `k` od `min(rk[i], rk[j])` do `max(rk[i], rk[j]) − 1`.\nZbuduj sparse table na tablicy `lcp` (O(n log n)) i odpowiadaj w O(1). Pozwala to np. porównywać dowolne podsłowa\nleksykograficznie bez hashy."
+    },
+    {
+     "q": [
+      "dlaczego dodajemy $",
+      "znak strażnik suffix array",
+      "po co strażnik w tablicy sufiksowej",
+      "sentinel suffix array"
+     ],
+     "a": "Algorytm sortuje przesunięcia cykliczne. Gdy na końcu jest unikalny znak mniejszy od wszystkich, porównanie\nprzesunięć cyklicznych kończy się najpóźniej na strażniku i daje dokładnie porządek sufiksów (krótszy sufiks\nbędący prefiksem dłuższego wypada wcześniej). Bez strażnika np. dla `aa` przesunięcia są równe i kolejność\nbyłaby niejednoznaczna."
+    },
+    {
+     "q": [
+      "k-te leksykograficznie podsłowo",
+      "k-ty podciąg spójny w kolejności",
+      "kth distinct substring",
+      "k-te najmniejsze podslowo"
+     ],
+     "a": "Przeglądaj SA w kolejności: sufiks `sa[i]` wnosi `n − sa[i] − lcp[i−1]` nowych podsłów (dla `i = 0` — `n − sa[0]`),\nsą to jego prefiksy o długościach `lcp[i−1]+1 … n−sa[i]`, uporządkowane rosnąco. Odejmuj liczności od `k`, aż\ntrafisz do właściwego sufiksu. Czas O(n) po zbudowaniu SA i LCP.",
+     "code": "vector<int> suffixArray(string s) {           // O(n log n), sufiksy posortowane leksykograficznie (indeksy od 0)\n    s += char(0);                             // strażnik mniejszy od wszystkich znaków\n    int n = s.size();\n    const int ALPHA = 256;\n    vector<int> p(n), c(n), cnt(max(ALPHA, n), 0);\n    for (int i = 0; i < n; i++) cnt[(unsigned char)s[i]]++;\n    for (int i = 1; i < ALPHA; i++) cnt[i] += cnt[i - 1];\n    for (int i = 0; i < n; i++) p[--cnt[(unsigned char)s[i]]] = i;\n    c[p[0]] = 0;\n    int classes = 1;\n    for (int i = 1; i < n; i++) {\n        if (s[p[i]] != s[p[i - 1]]) classes++;\n        c[p[i]] = classes - 1;\n    }\n    vector<int> pn(n), cn(n);\n    for (int h = 0; (1 << h) < n; h++) {      // sortujemy przesunięcia cykliczne długości 2^(h+1)\n        for (int i = 0; i < n; i++) {\n            pn[i] = p[i] - (1 << h);\n            if (pn[i] < 0) pn[i] += n;\n        }\n        fill(cnt.begin(), cnt.begin() + classes, 0);\n        for (int i = 0; i < n; i++) cnt[c[pn[i]]]++;\n        for (int i = 1; i < classes; i++) cnt[i] += cnt[i - 1];\n        for (int i = n - 1; i >= 0; i--) p[--cnt[c[pn[i]]]] = pn[i];   // sortowanie przez zliczanie\n        cn[p[0]] = 0;\n        classes = 1;\n        for (int i = 1; i < n; i++) {\n            pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};\n            pair<int, int> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << h)) % n]};\n            if (cur != prev) classes++;\n            cn[p[i]] = classes - 1;\n        }\n        c.swap(cn);\n        if (classes == n) break;              // wszystkie klasy różne — gotowe\n    }\n    p.erase(p.begin());                       // usuwamy sufiks złożony z samego strażnika\n    return p;\n}\n\nvector<int> lcpKasai(const string& s, const vector<int>& sa) {   // lcp[i] = LCP(sa[i], sa[i+1])\n    int n = s.size();\n    vector<int> rk(n), lcp(max(n - 1, 0), 0);\n    for (int i = 0; i < n; i++) rk[sa[i]] = i;\n    for (int i = 0, k = 0; i < n; i++) {\n        if (rk[i] == n - 1) { k = 0; continue; }\n        int j = sa[rk[i] + 1];\n        while (i + k < n && j + k < n && s[i + k] == s[j + k]) k++;\n        lcp[rk[i]] = k;\n        if (k > 0) k--;                       // kluczowa obserwacja Kasaia: lcp spada co najwyżej o 1\n    }\n    return lcp;\n}\n\n           string kthSubstring(const string& s, long long k) {   // k od 1, różne podsłowa\n               vector<int> sa = suffixArray(s), lcp = lcpKasai(s, sa);\n               int n = s.size();\n               for (int i = 0; i < n; i++) {\n                   int common = (i == 0 ? 0 : lcp[i - 1]);\n                   long long fresh = n - sa[i] - common;\n                   if (k <= fresh) return s.substr(sa[i], common + k);\n                   k -= fresh;\n               }\n               return \"\";\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kasai dlaczego O(n)",
+      "dlaczego k-- w kasai",
+      "kasai complexity proof"
+     ],
+     "a": "Jeśli sufiks `i` ma z następnym w SA wspólny prefiks długości `k > 0`, to po odcięciu pierwszego znaku sufiks\n`i+1` ma z pewnym większym sufiksem wspólny prefiks `k − 1`, więc jego LCP z bezpośrednim następnikiem jest ≥ `k − 1`.\nDlatego `k` zmniejszamy tylko o 1. Licznik maleje łącznie ≤ n razy i nie przekracza n, więc rośnie ≤ 2n razy — O(n)."
+    },
+    {
+     "q": [
+      "suffix array czy suffix automaton",
+      "drzewo sufiksowe vs tablica sufiksowa",
+      "suffix tree",
+      "automat sufiksowy"
+     ],
+     "a": "Drzewo sufiksowe i automat sufiksowy (SAM) działają w O(n) i potrafią więcej (np. liczba wystąpień każdego podsłowa\nonline), ale są trudniejsze w implementacji. Tablica sufiksowa + LCP rozwiązuje większość zadań olimpijskich\n(różne podsłowa, powtórzenia, wspólne podsłowa) z prostszym, dobrze testowalnym kodem."
+    }
+   ],
+   "related": [
+    "str-hashing",
+    "str-z-function",
+    "str-kmp",
+    "dp-lcs",
+    "ds-sparse-table",
+    "tech-counting-sort"
+   ]
+  },
+  {
+   "id": "str-aho-corasick",
+   "title": "Algorytm Aho-Corasick — wiele wzorców naraz",
+   "category": "Teksty",
+   "tags": [
+    "aho-corasick",
+    "automat",
+    "wiele wzorców",
+    "linki sufiksowe",
+    "fail links",
+    "trie",
+    "słownik"
+   ],
+   "aliases": [
+    "aho corasick",
+    "aho-corasick",
+    "algorytm aho corasick",
+    "aho korasik",
+    "wiele wzorców w tekście",
+    "automat aho",
+    "multiple pattern matching",
+    "aho corasick c++",
+    "linki sufiksowe"
+   ],
+   "summary": "Aho-Corasick to trie wzorców uzupełnione linkami sufiksowymi (fail) i pełną tabelą przejść. Jedno przejście po tekście znajduje wystąpienia wszystkich wzorców; automat służy też do DP „słowa bez zakazanych podsłów”.",
+   "complexity": "budowa O(Σ|p|·A) (A — rozmiar alfabetu); przejście po tekście O(n); zliczenie wystąpień wszystkich wzorców O(n + Σ|p|·A)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "1. **Trie wzorców** — każdy węzeł to prefiks któregoś wzorca.\n2. **Link sufiksowy** `fail[v]` — węzeł odpowiadający najdłuższemu właściwemu sufiksowi słowa `v`, który też jest\n   w trie (uogólnienie funkcji prefiksowej z KMP na wiele wzorców). Liczymy BFS-em: `fail[dziecko(v, c)] = go[fail[v]][c]`.\n3. **Pełne przejścia** `go[v][c]` — gdy nie ma krawędzi `c`, kopiujemy `go[fail[v]][c]`. Wtedy przejście po tekście\n   to po prostu `v = go[v][c]`, bez pętli `while`.\n\nStan po przeczytaniu prefiksu tekstu = najdłuższy sufiks tego prefiksu, który jest prefiksem jakiegoś wzorca.\nWzorzec kończy się w bieżącej pozycji ⇔ jego węzeł leży na ścieżce linków `v, fail[v], fail[fail[v]], …`.\n\n**Zliczanie wystąpień wszystkich wzorców:** `hit[v]++` dla każdego odwiedzonego stanu, a potem w odwrotnej\nkolejności BFS `hit[fail[v]] += hit[v]` (sumowanie w drzewie linków). Liczba wystąpień wzorca = `hit[koniec wzorca]`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „dany jest słownik k słów i tekst”, „ile razy każde ze słów występuje”, „czy tekst zawiera\nktóreś z zakazanych słów”, „ile jest słów długości n niezawierających żadnego z zakazanych podsłów” (DP po\nautomacie), suma długości wzorców do 10^5–10^6."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba wystąpień każdego wzorca",
+     "code": "// Wejście: k, potem k wzorców (małe litery), potem tekst. Wyjście: liczba wystąpień każdego wzorca.\n#include <bits/stdc++.h>\nusing namespace std;\n\nstruct AhoCorasick {\n    vector<array<int, 26>> go;\n    vector<int> fail, order;\n    AhoCorasick() { addNode(); }\n    int addNode() {\n        go.emplace_back();\n        go.back().fill(-1);\n        fail.push_back(0);\n        return go.size() - 1;\n    }\n    int insert(const string& p) {\n        int v = 0;\n        for (char ch : p) {\n            int c = ch - 'a';\n            if (go[v][c] == -1) { int u = addNode(); go[v][c] = u; }\n            v = go[v][c];\n        }\n        return v;\n    }\n    void build() {\n        queue<int> q;\n        for (int c = 0; c < 26; c++) {\n            if (go[0][c] == -1) go[0][c] = 0;\n            else { fail[go[0][c]] = 0; q.push(go[0][c]); }\n        }\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            order.push_back(v);\n            for (int c = 0; c < 26; c++) {\n                int u = go[v][c];\n                if (u == -1) go[v][c] = go[fail[v]][c];\n                else { fail[u] = go[fail[v]][c]; q.push(u); }\n            }\n        }\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int k;\n    cin >> k;\n    AhoCorasick ac;\n    vector<int> endNode(k);\n    for (int i = 0; i < k; i++) {\n        string p;\n        cin >> p;\n        endNode[i] = ac.insert(p);\n    }\n    ac.build();\n    string t;\n    cin >> t;\n    vector<long long> hit(ac.go.size(), 0);\n    int v = 0;\n    for (char ch : t) { v = ac.go[v][ch - 'a']; hit[v]++; }\n    for (int i = (int)ac.order.size() - 1; i >= 0; i--) {     // od najgłębszych: sumy w drzewie linków\n        int u = ac.order[i];\n        hit[ac.fail[u]] += hit[u];\n    }\n    for (int i = 0; i < k; i++) cout << hit[endNode[i]] << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szablon AhoCorasick + test na brute force",
+     "code": "struct AhoCorasick {\n    vector<array<int, 26>> go;               // przejścia automatu (po build() — pełne)\n    vector<int> fail, order;                 // link sufiksowy, węzły w kolejności BFS\n    AhoCorasick() { addNode(); }             // węzeł 0 = korzeń\n    int addNode() {\n        go.emplace_back();\n        go.back().fill(-1);\n        fail.push_back(0);\n        return go.size() - 1;\n    }\n    int insert(const string& p) {            // zwraca węzeł końca wzorca\n        int v = 0;\n        for (char ch : p) {\n            int c = ch - 'a';\n            if (go[v][c] == -1) { int u = addNode(); go[v][c] = u; }\n            v = go[v][c];\n        }\n        return v;\n    }\n    void build() {\n        queue<int> q;\n        for (int c = 0; c < 26; c++) {\n            if (go[0][c] == -1) go[0][c] = 0;\n            else { fail[go[0][c]] = 0; q.push(go[0][c]); }\n        }\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            order.push_back(v);\n            for (int c = 0; c < 26; c++) {\n                int u = go[v][c];\n                if (u == -1) go[v][c] = go[fail[v]][c];          // brak krawędzi: przejście jak z linku\n                else { fail[u] = go[fail[v]][c]; q.push(u); }    // link dziecka\n            }\n        }\n    }\n};",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Element",
+      "Znaczenie"
+     ],
+     "rows": [
+      [
+       "węzeł v",
+       "prefiks któregoś wzorca"
+      ],
+      [
+       "fail[v]",
+       "najdłuższy właściwy sufiks v będący węzłem trie"
+      ],
+      [
+       "go[v][c]",
+       "stan po dopisaniu c (z uwzględnieniem linków) — O(1)"
+      ],
+      [
+       "drzewo linków",
+       "krawędzie v → fail[v]; wzorce kończące się w pozycji = przodkowie stanu w tym drzewie"
+      ],
+      [
+       "bad[v]",
+       "czy jakiś wzorzec jest sufiksem v: end[v] || bad[fail[v]] (liczone w kolejności BFS)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int AhoCorasick::insert(const string& p)",
+     "desc": "dodaje wzorzec do trie, zwraca węzeł jego końca",
+     "complexity": "O(|p|)",
+     "returns": "int"
+    },
+    {
+     "sig": "void AhoCorasick::build()",
+     "desc": "BFS: linki sufiksowe i pełne przejścia",
+     "complexity": "O(węzły · 26)"
+    },
+    {
+     "sig": "v = ac.go[v][c]",
+     "desc": "krok automatu po znaku tekstu",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Chodzenie po linkach fail od każdego stanu, by wypisać pasujące wzorce, daje O(n·długość łańcucha) — zliczaj przez sumy w drzewie linków albo używaj linków „słownikowych”.",
+    "Pamięć: węzłów jest do Σ|p| + 1, każdy ma 26 intów — dla 10^6 węzłów to 104 MB. Przy dużym alfabecie / małej pamięci użyj map albo kompresji.",
+    "Linki trzeba liczyć BFS-em (po głębokości), nie DFS-em — fail[v] musi być gotowy przed dziećmi v.",
+    "Duplikaty wzorców mają ten sam węzeł końca — liczba wystąpień jest wtedy wspólna (to poprawne, ale pamiętaj przy oznaczaniu).",
+    "Liczba wystąpień wszystkich wzorców razem może być rzędu n·k — sumuj w long long.",
+    "Znaki spoza 'a'..'z' (wielkie litery, cyfry) dadzą indeks poza tablicą — dostosuj alfabet."
+   ],
+   "qa": [
+    {
+     "q": [
+      "aho corasick",
+      "aho-corasick c++",
+      "algorytm aho corasick",
+      "wiele wzorców w tekście",
+      "aho korasik",
+      "aho corasick jak dziala"
+     ],
+     "a": "Budujesz trie ze wszystkich wzorców, BFS-em liczysz linki sufiksowe `fail` (jak funkcja prefiksowa, ale na drzewie)\ni uzupełniasz brakujące przejścia `go[v][c] = go[fail[v]][c]`. Potem jeden przebieg po tekście `v = go[v][c]`\nśledzi najdłuższe dopasowanie. Budowa O(Σ|p|·26), przejście O(n). Szablon w treści.",
+     "code": "struct AhoCorasick {\n    vector<array<int, 26>> go;               // przejścia automatu (po build() — pełne)\n    vector<int> fail, order;                 // link sufiksowy, węzły w kolejności BFS\n    AhoCorasick() { addNode(); }             // węzeł 0 = korzeń\n    int addNode() {\n        go.emplace_back();\n        go.back().fill(-1);\n        fail.push_back(0);\n        return go.size() - 1;\n    }\n    int insert(const string& p) {            // zwraca węzeł końca wzorca\n        int v = 0;\n        for (char ch : p) {\n            int c = ch - 'a';\n            if (go[v][c] == -1) { int u = addNode(); go[v][c] = u; }\n            v = go[v][c];\n        }\n        return v;\n    }\n    void build() {\n        queue<int> q;\n        for (int c = 0; c < 26; c++) {\n            if (go[0][c] == -1) go[0][c] = 0;\n            else { fail[go[0][c]] = 0; q.push(go[0][c]); }\n        }\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            order.push_back(v);\n            for (int c = 0; c < 26; c++) {\n                int u = go[v][c];\n                if (u == -1) go[v][c] = go[fail[v]][c];          // brak krawędzi: przejście jak z linku\n                else { fail[u] = go[fail[v]][c]; q.push(u); }    // link dziecka\n            }\n        }\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "linki sufiksowe aho",
+      "fail links",
+      "funkcja porażki aho",
+      "suffix link aho corasick",
+      "jak policzyc fail"
+     ],
+     "a": "`fail[v]` wskazuje węzeł najdłuższego właściwego sufiksu słowa `v`, który też jest w trie. Dla dzieci korzenia\n`fail = 0`; dla dziecka `u = go[v][c]`: `fail[u] = go[fail[v]][c]` (przy pełnych przejściach to O(1)).\nLiczy się BFS-em, bo `fail[u]` jest płytszy niż `u`."
+    },
+    {
+     "q": [
+      "ile razy każdy wzorzec występuje",
+      "count occurrences of multiple patterns",
+      "liczba wystapien wielu slow w tekscie",
+      "aho corasick zliczanie wystapien"
+     ],
+     "a": "Przejdź po tekście, zwiększając `hit[v]` dla każdego stanu. Wzorzec kończący się w danej pozycji odpowiada\nprzodkowi stanu w drzewie linków, więc zsumuj `hit` w poddrzewach: w odwrotnej kolejności BFS\n`hit[fail[v]] += hit[v]`. Wynik dla wzorca = `hit[jego węzeł]`. Całość O(n + Σ|p|·26)."
+    },
+    {
+     "q": [
+      "czy tekst zawiera któreś z zakazanych słów",
+      "zakazane słowa aho",
+      "forbidden words",
+      "czy tekst zawiera ktorys wzorzec"
+     ],
+     "a": "Oznacz `bad[v] = true` w węzłach końca wzorców, potem w kolejności BFS `bad[v] |= bad[fail[v]]` (wzorzec może być\nsufiksem bieżącego stanu). Tekst zawiera zakazane słowo ⇔ po którymś znaku stan ma `bad`. O(n) po zbudowaniu.",
+     "code": "struct AhoCorasick {\n    vector<array<int, 26>> go;               // przejścia automatu (po build() — pełne)\n    vector<int> fail, order;                 // link sufiksowy, węzły w kolejności BFS\n    AhoCorasick() { addNode(); }             // węzeł 0 = korzeń\n    int addNode() {\n        go.emplace_back();\n        go.back().fill(-1);\n        fail.push_back(0);\n        return go.size() - 1;\n    }\n    int insert(const string& p) {            // zwraca węzeł końca wzorca\n        int v = 0;\n        for (char ch : p) {\n            int c = ch - 'a';\n            if (go[v][c] == -1) { int u = addNode(); go[v][c] = u; }\n            v = go[v][c];\n        }\n        return v;\n    }\n    void build() {\n        queue<int> q;\n        for (int c = 0; c < 26; c++) {\n            if (go[0][c] == -1) go[0][c] = 0;\n            else { fail[go[0][c]] = 0; q.push(go[0][c]); }\n        }\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            order.push_back(v);\n            for (int c = 0; c < 26; c++) {\n                int u = go[v][c];\n                if (u == -1) go[v][c] = go[fail[v]][c];          // brak krawędzi: przejście jak z linku\n                else { fail[u] = go[fail[v]][c]; q.push(u); }    // link dziecka\n            }\n        }\n    }\n};\n\n           bool containsAny(const vector<string>& pats, const string& t) {\n               AhoCorasick ac;\n               vector<int> ends;\n               for (auto& p : pats) ends.push_back(ac.insert(p));\n               ac.build();\n               vector<char> bad(ac.go.size(), 0);\n               for (int e : ends) bad[e] = 1;\n               for (int v : ac.order) bad[v] |= bad[ac.fail[v]];\n               int v = 0;\n               for (char ch : t) { v = ac.go[v][ch - 'a']; if (bad[v]) return true; }\n               return false;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dp na automacie aho corasick",
+      "liczba słów długości n bez zakazanych podsłów",
+      "ile jest napisow nie zawierajacych wzorcow",
+      "aho corasick dp"
+     ],
+     "a": "Stan DP = (długość, stan automatu): `dp[i+1][go[v][c]] += dp[i][v]` dla stanów `v` bez `bad`. Odpowiedź: suma\n`dp[n][v]` po dobrych stanach. Czas O(n · węzły · A); dla n do 10^18 — potęgowanie macierzy przejść.",
+     "code": "struct AhoCorasick {\n    vector<array<int, 26>> go;               // przejścia automatu (po build() — pełne)\n    vector<int> fail, order;                 // link sufiksowy, węzły w kolejności BFS\n    AhoCorasick() { addNode(); }             // węzeł 0 = korzeń\n    int addNode() {\n        go.emplace_back();\n        go.back().fill(-1);\n        fail.push_back(0);\n        return go.size() - 1;\n    }\n    int insert(const string& p) {            // zwraca węzeł końca wzorca\n        int v = 0;\n        for (char ch : p) {\n            int c = ch - 'a';\n            if (go[v][c] == -1) { int u = addNode(); go[v][c] = u; }\n            v = go[v][c];\n        }\n        return v;\n    }\n    void build() {\n        queue<int> q;\n        for (int c = 0; c < 26; c++) {\n            if (go[0][c] == -1) go[0][c] = 0;\n            else { fail[go[0][c]] = 0; q.push(go[0][c]); }\n        }\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            order.push_back(v);\n            for (int c = 0; c < 26; c++) {\n                int u = go[v][c];\n                if (u == -1) go[v][c] = go[fail[v]][c];          // brak krawędzi: przejście jak z linku\n                else { fail[u] = go[fail[v]][c]; q.push(u); }    // link dziecka\n            }\n        }\n    }\n};\n\n           long long countGood(const vector<string>& pats, int L, int alpha) {   // słowa nad 'a'..'a'+alpha-1\n               const long long MOD = 1'000'000'007;\n               AhoCorasick ac;\n               vector<int> ends;\n               for (auto& p : pats) ends.push_back(ac.insert(p));\n               ac.build();\n               int S = ac.go.size();\n               vector<char> bad(S, 0);\n               for (int e : ends) bad[e] = 1;\n               for (int v : ac.order) bad[v] |= bad[ac.fail[v]];\n               vector<long long> dp(S, 0), nd(S);\n               dp[0] = 1;\n               for (int i = 0; i < L; i++) {\n                   fill(nd.begin(), nd.end(), 0);\n                   for (int v = 0; v < S; v++) if (dp[v] && !bad[v])\n                       for (int c = 0; c < alpha; c++) {\n                           int u = ac.go[v][c];\n                           if (!bad[u]) nd[u] = (nd[u] + dp[v]) % MOD;\n                       }\n                   swap(dp, nd);\n               }\n               long long res = 0;\n               for (int v = 0; v < S; v++) if (!bad[v]) res = (res + dp[v]) % MOD;\n               return res;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "aho corasick złożoność",
+      "aho memory",
+      "aho corasick pamiec",
+      "ile pamieci zajmuje aho"
+     ],
+     "a": "Węzłów jest co najwyżej `Σ|p| + 1`. Budowa pełnych przejść kosztuje O(węzły · A) czasu i pamięci (A — alfabet).\nPrzejście po tekście O(n). Przy 10^6 węzłów i A = 26 tablica `int go[][26]` to ~104 MB — sprawdź limit\npamięci; ewentualnie trzymaj tylko krawędzie trie w `map` i licz przejścia `while`-em po linkach (jak KMP)."
+    },
+    {
+     "q": [
+      "aho vs kmp",
+      "kmp dla kazdego wzorca czy aho",
+      "kiedy aho corasick a kiedy kmp",
+      "aho corasick czy hash"
+     ],
+     "a": "KMP osobno dla każdego z k wzorców to O(k·n + Σ|p|) — przy k = 10^4 i n = 10^5 za wolno. Aho-Corasick robi\nto w jednym przebiegu: O(n + Σ|p|·A). Dla jednego wzorca KMP jest prostszy. Gdy wszystkie wzorce mają tę samą\ndługość, alternatywą jest hashowanie (set hashy wzorców)."
+    },
+    {
+     "q": [
+      "dictionary link aho",
+      "output link",
+      "wypisanie wszystkich wystapien aho corasick",
+      "dict links"
+     ],
+     "a": "Link słownikowy `dict[v]` wskazuje najbliższy węzeł na ścieżce linków `fail`, w którym kończy się wzorzec. Aby\nwypisać wszystkie wystąpienia, z każdego stanu skacz po `dict` — każdy skok to jedno wystąpienie, więc czas\nO(n + liczba wystąpień). Liczymy w BFS: `dict[v] = end[fail[v]] ? fail[v] : dict[fail[v]]`."
+    }
+   ],
+   "related": [
+    "str-trie",
+    "str-kmp",
+    "str-hashing",
+    "dp-intro",
+    "math-matrix-pow"
+   ]
+  },
+  {
+   "id": "str-trie",
+   "title": "Trie (drzewo prefiksowe) i trie binarne do XOR",
+   "category": "Teksty",
+   "tags": [
+    "trie",
+    "drzewo prefiksowe",
+    "prefix tree",
+    "słownik",
+    "prefiksy",
+    "xor trie",
+    "trie binarne"
+   ],
+   "aliases": [
+    "trie",
+    "drzewo trie",
+    "drzewo prefiksowe",
+    "prefix tree",
+    "trie c++",
+    "xor trie",
+    "trie binarne",
+    "maksymalny xor pary",
+    "drzewo słownikowe",
+    "trie strukturka"
+   ],
+   "summary": "Trie przechowuje zbiór słów jako drzewo, w którym każda krawędź to litera, a każdy węzeł — prefiks. Wstawianie i wyszukiwanie słowa kosztuje O(długość); liczniki w węzłach odpowiadają na pytania o prefiksy. Trie bitowe znajduje maksymalny XOR.",
+   "complexity": "insert / contains / countPrefix: O(|w|); pamięć O(Σ|w| · A); trie XOR: O(log C) na operację",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Każdy węzeł trie odpowiada prefiksowi któregoś słowa; korzeń to pusty prefiks, a krawędź `c` z węzła `v`\nprowadzi do prefiksu `v + c`. W węzłach trzymamy liczniki:\n* `ends[v]` — ile słów kończy się w `v` (czy słowo jest w zbiorze, ile razy);\n* `pass[v]` — ile słów przechodzi przez `v` (ile słów ma ten prefiks).\n\nImplementacja na tablicy `vector<array<int,26>>` jest najszybsza; indeks 0 (korzeń) służy jako „brak dziecka”,\nbo korzeń nie jest niczyim dzieckiem.\n\n**Sygnały w treści:** „ile słów zaczyna się od…”, autouzupełnianie, słownik + wiele zapytań o prefiksy,\n„maksymalny XOR dwóch liczb / podtablicy” (trie bitowe), baza do Aho-Corasick. Szczegóły struktury: `ds-trie`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: trie z licznikami (wstaw, usuń, szukaj, prefiksy)",
+     "code": "// Operacje: \"+ w\" wstaw, \"- w\" usuń jedno wystąpienie, \"? w\" czy jest (TAK/NIE), \"# p\" ile słów ma prefiks p.\n#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Trie {\n    vector<array<int, 26>> nxt;\n    vector<int> pass, ends;\n    Trie() { addNode(); }\n    int addNode() {\n        nxt.emplace_back();\n        nxt.back().fill(0);\n        pass.push_back(0);\n        ends.push_back(0);\n        return nxt.size() - 1;\n    }\n    void insert(const string& w) {\n        int v = 0;\n        pass[v]++;\n        for (char ch : w) {\n            int c = ch - 'a';\n            if (!nxt[v][c]) { int u = addNode(); nxt[v][c] = u; }\n            v = nxt[v][c];\n            pass[v]++;\n        }\n        ends[v]++;\n    }\n    int walk(const string& w) const {\n        int v = 0;\n        for (char ch : w) {\n            v = nxt[v][ch - 'a'];\n            if (!v) return -1;\n        }\n        return v;\n    }\n    bool contains(const string& w) const { int v = walk(w); return v != -1 && ends[v] > 0; }\n    int countPrefix(const string& p) const { int v = walk(p); return v == -1 ? 0 : pass[v]; }\n    void erase(const string& w) {\n        if (!contains(w)) return;\n        int v = 0;\n        pass[v]--;\n        for (char ch : w) { v = nxt[v][ch - 'a']; pass[v]--; }\n        ends[v]--;\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> q;\n    Trie t;\n    while (q--) {\n        char op;\n        string w;\n        cin >> op >> w;\n        if (op == '+') t.insert(w);\n        else if (op == '-') t.erase(w);\n        else if (op == '?') cout << (t.contains(w) ? \"TAK\" : \"NIE\") << \"\\n\";\n        else cout << t.countPrefix(w) << \"\\n\";\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Trie binarne: maksymalny XOR",
+     "code": "struct XorTrie {\n    static const int B = 30;                 // liczby z zakresu [0, 2^31)\n    vector<array<int, 2>> nx;\n    XorTrie() { nx.push_back({0, 0}); }\n    void insert(int x) {\n        int v = 0;\n        for (int b = B; b >= 0; b--) {\n            int bit = (x >> b) & 1;\n            if (!nx[v][bit]) { int u = nx.size(); nx.push_back({0, 0}); nx[v][bit] = u; }\n            v = nx[v][bit];\n        }\n    }\n    int maxXor(int x) const {                // max x ^ y po y w trie (trie niepuste)\n        int v = 0, r = 0;\n        for (int b = B; b >= 0; b--) {\n            int bit = (x >> b) & 1;\n            if (nx[v][bit ^ 1]) { r |= 1 << b; v = nx[v][bit ^ 1]; }   // zachłannie: przeciwny bit daje 1\n            else v = nx[v][bit];\n        }\n        return r;\n    }\n};",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Jak",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "wstaw słowo",
+       "idź po literach, twórz brakujące węzły, pass++ / ends++",
+       "O(|w|)"
+      ],
+      [
+       "czy słowo jest",
+       "zejście po literach, ends[v] > 0",
+       "O(|w|)"
+      ],
+      [
+       "ile słów z prefiksem",
+       "pass[węzeł prefiksu]",
+       "O(|p|)"
+      ],
+      [
+       "usuń słowo",
+       "zmniejsz pass na ścieżce i ends",
+       "O(|w|)"
+      ],
+      [
+       "słowa w porządku leksykograficznym",
+       "DFS po dzieciach od 'a' do 'z'",
+       "O(rozmiar trie)"
+      ],
+      [
+       "max XOR z x (trie bitowe)",
+       "zachłannie wybieraj przeciwny bit",
+       "O(log C)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "void Trie::insert(const string& w)",
+     "desc": "dodaje słowo, aktualizuje liczniki",
+     "complexity": "O(|w|)"
+    },
+    {
+     "sig": "bool Trie::contains(const string& w)",
+     "desc": "czy słowo jest w zbiorze",
+     "complexity": "O(|w|)",
+     "returns": "bool"
+    },
+    {
+     "sig": "int Trie::countPrefix(const string& p)",
+     "desc": "ile słów (z krotnościami) zaczyna się od p",
+     "complexity": "O(|p|)",
+     "returns": "int"
+    },
+    {
+     "sig": "int XorTrie::maxXor(int x)",
+     "desc": "maksimum x ^ y po wstawionych y",
+     "complexity": "O(31)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Pamięć: liczba węzłów to do Σ|w| + 1; przy 26 intach na węzeł 10^6 węzłów = 104 MB. Zarezerwuj (`reserve`) i sprawdź limit.",
+    "`int u = addNode(); nxt[v][c] = u;` — nie pisz `nxt[v][c] = addNode();` przy referencjach do elementów vectora (realokacja w trakcie).",
+    "Znaki spoza 'a'..'z' dają indeks poza tablicą — dla dowolnych znaków użyj `map<char,int>` albo większego alfabetu.",
+    "Trie XOR: liczba bitów B musi obejmować największą wartość (dla 10^9 — bity 29..0, dla long long — 62..0).",
+    "contains() musi sprawdzać ends[v] > 0 — samo dojście do węzła oznacza tylko, że to prefiks jakiegoś słowa."
+   ],
+   "qa": [
+    {
+     "q": [
+      "trie",
+      "drzewo trie",
+      "drzewo prefiksowe",
+      "trie c++",
+      "prefix tree",
+      "jak zaimplementowac trie"
+     ],
+     "a": "Trie to drzewo, w którym każdy węzeł to prefiks, a krawędź to litera. Najprościej: `vector<array<int,26>> nxt`\n(0 = brak dziecka), plus liczniki `ends` (słowa kończące się w węźle) i `pass` (słowa przechodzące). Wstawianie\ni szukanie słowa to zejście po literach — O(|w|). Szablon `Trie` jest w treści.",
+     "code": "struct Trie {\n    vector<array<int, 26>> nxt;              // nxt[v][c] = dziecko (0 = brak; korzeń 0 nie jest niczyim dzieckiem)\n    vector<int> pass, ends;                  // pass = ile słów przechodzi przez węzeł, ends = ile kończy się w nim\n    Trie() { addNode(); }\n    int addNode() {\n        nxt.emplace_back();\n        nxt.back().fill(0);\n        pass.push_back(0);\n        ends.push_back(0);\n        return nxt.size() - 1;\n    }\n    void insert(const string& w) {\n        int v = 0;\n        pass[v]++;\n        for (char ch : w) {\n            int c = ch - 'a';\n            if (!nxt[v][c]) { int u = addNode(); nxt[v][c] = u; }\n            v = nxt[v][c];\n            pass[v]++;\n        }\n        ends[v]++;\n    }\n    int walk(const string& w) const {        // węzeł słowa w albo -1\n        int v = 0;\n        for (char ch : w) {\n            v = nxt[v][ch - 'a'];\n            if (!v) return -1;\n        }\n        return v;\n    }\n    bool contains(const string& w) const { int v = walk(w); return v != -1 && ends[v] > 0; }\n    int countPrefix(const string& p) const { int v = walk(p); return v == -1 ? 0 : pass[v]; }\n    void erase(const string& w) {            // usuwa jedno wystąpienie słowa (jeśli jest)\n        if (!contains(w)) return;\n        int v = 0;\n        pass[v]--;\n        for (char ch : w) { v = nxt[v][ch - 'a']; pass[v]--; }\n        ends[v]--;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile słów zaczyna się od prefiksu",
+      "count words with prefix",
+      "trie prefiks licznik",
+      "liczba slow z danym prefiksem",
+      "autouzupelnianie trie"
+     ],
+     "a": "Przy wstawianiu zwiększaj `pass[v]` w każdym węźle na ścieżce. Liczba słów z prefiksem `p` to `pass` węzła,\ndo którego prowadzi `p` (0, jeśli ścieżka się urywa). Każde zapytanie O(|p|), niezależnie od liczby słów.\nAlternatywa bez trie: posortowana lista słów i dwa `lower_bound`."
+    },
+    {
+     "q": [
+      "xor trie",
+      "maksymalny xor pary",
+      "max xor pair",
+      "trie binarne",
+      "najwiekszy xor dwoch liczb"
+     ],
+     "a": "Wstaw liczby do trie po bitach od najstarszego. Dla zapytania `x` idź zachłannie: na każdym bicie wybierz gałąź\nz bitem przeciwnym do bitu `x` (daje 1 w wyniku na najstarszej możliwej pozycji), jeśli istnieje. Maksymalny XOR\npary: dla kolejnych elementów najpierw zapytaj, potem wstaw — O(n · 31).",
+     "code": "struct XorTrie {\n    static const int B = 30;                 // liczby z zakresu [0, 2^31)\n    vector<array<int, 2>> nx;\n    XorTrie() { nx.push_back({0, 0}); }\n    void insert(int x) {\n        int v = 0;\n        for (int b = B; b >= 0; b--) {\n            int bit = (x >> b) & 1;\n            if (!nx[v][bit]) { int u = nx.size(); nx.push_back({0, 0}); nx[v][bit] = u; }\n            v = nx[v][bit];\n        }\n    }\n    int maxXor(int x) const {                // max x ^ y po y w trie (trie niepuste)\n        int v = 0, r = 0;\n        for (int b = B; b >= 0; b--) {\n            int bit = (x >> b) & 1;\n            if (nx[v][bit ^ 1]) { r |= 1 << b; v = nx[v][bit ^ 1]; }   // zachłannie: przeciwny bit daje 1\n            else v = nx[v][bit];\n        }\n        return r;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "xor podtablicy maksymalny",
+      "maximum subarray xor",
+      "najwiekszy xor spojnego fragmentu",
+      "max xor podciagu spojnego"
+     ],
+     "a": "XOR fragmentu `a[l..r]` = `P[r+1] ^ P[l]`, gdzie `P` to prefiksowe XOR-y. Szukamy więc maksymalnego XOR pary\nprefiksów: wstaw `P[0] = 0`, potem dla każdego kolejnego prefiksu zapytaj trie i wstaw go. O(n · log C).",
+     "code": "struct XorTrie {\n    static const int B = 30;                 // liczby z zakresu [0, 2^31)\n    vector<array<int, 2>> nx;\n    XorTrie() { nx.push_back({0, 0}); }\n    void insert(int x) {\n        int v = 0;\n        for (int b = B; b >= 0; b--) {\n            int bit = (x >> b) & 1;\n            if (!nx[v][bit]) { int u = nx.size(); nx.push_back({0, 0}); nx[v][bit] = u; }\n            v = nx[v][bit];\n        }\n    }\n    int maxXor(int x) const {                // max x ^ y po y w trie (trie niepuste)\n        int v = 0, r = 0;\n        for (int b = B; b >= 0; b--) {\n            int bit = (x >> b) & 1;\n            if (nx[v][bit ^ 1]) { r |= 1 << b; v = nx[v][bit ^ 1]; }   // zachłannie: przeciwny bit daje 1\n            else v = nx[v][bit];\n        }\n        return r;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "trie pamięć",
+      "ile węzłów trie",
+      "trie memory limit",
+      "trie za duzo pamieci"
+     ],
+     "a": "Węzłów jest co najwyżej `1 + Σ|w|` (suma długości słów). Każdy węzeł z tablicą 26 intów zajmuje 104 bajty,\nwięc 10^6 węzłów to ~104 MB — często za dużo. Ratunek: `map`/`unordered_map` dzieci (wolniej, mniej pamięci),\nlista krawędzi, mniejszy alfabet albo przetwarzanie offline (sortowanie słów)."
+    },
+    {
+     "q": [
+      "trie usuwanie",
+      "trie delete",
+      "usuwanie slowa z trie",
+      "trie erase"
+     ],
+     "a": "Najprościej nie usuwać węzłów, tylko zmniejszać liczniki: `pass[v]--` na całej ścieżce i `ends[koniec]--`\n(najpierw sprawdź, czy słowo jest). Węzły z `pass == 0` są wtedy „martwe” i nie wpływają na wyniki zapytań.\nW trie XOR do zapytań przy usuwaniu sprawdzaj `pass[dziecko] > 0` zamiast samego istnienia dziecka."
+    },
+    {
+     "q": [
+      "trie map czy tablica",
+      "trie duży alfabet",
+      "trie unordered_map dzieci",
+      "trie dowolne znaki"
+     ],
+     "a": "Tablica `array<int,26>` — najszybsza, ale pamięć 26 intów na węzeł i tylko małe litery. `map<char,int>` —\ndowolny alfabet, pamięć proporcjonalna do krawędzi, O(log A) na krok. `unordered_map` — średnio O(1), ale duży\nnarzut pamięci. Na OI przy małych literach i Σ|w| ≤ 10^6 zwykle tablica."
+    },
+    {
+     "q": [
+      "leksykograficzne sortowanie trie",
+      "wypisz slowa z trie po kolei",
+      "trie dfs kolejnosc alfabetyczna",
+      "k-te slowo w trie"
+     ],
+     "a": "DFS z korzenia, odwiedzając dzieci od `a` do `z`, wypisuje słowa w porządku leksykograficznym (słowo w węźle\nprzed jego przedłużeniami). Z licznikami `pass` można zejść do k-tego słowa w O(26 · długość) bez pełnego DFS.",
+     "code": "struct Trie {\n    vector<array<int, 26>> nxt;              // nxt[v][c] = dziecko (0 = brak; korzeń 0 nie jest niczyim dzieckiem)\n    vector<int> pass, ends;                  // pass = ile słów przechodzi przez węzeł, ends = ile kończy się w nim\n    Trie() { addNode(); }\n    int addNode() {\n        nxt.emplace_back();\n        nxt.back().fill(0);\n        pass.push_back(0);\n        ends.push_back(0);\n        return nxt.size() - 1;\n    }\n    void insert(const string& w) {\n        int v = 0;\n        pass[v]++;\n        for (char ch : w) {\n            int c = ch - 'a';\n            if (!nxt[v][c]) { int u = addNode(); nxt[v][c] = u; }\n            v = nxt[v][c];\n            pass[v]++;\n        }\n        ends[v]++;\n    }\n    int walk(const string& w) const {        // węzeł słowa w albo -1\n        int v = 0;\n        for (char ch : w) {\n            v = nxt[v][ch - 'a'];\n            if (!v) return -1;\n        }\n        return v;\n    }\n    bool contains(const string& w) const { int v = walk(w); return v != -1 && ends[v] > 0; }\n    int countPrefix(const string& p) const { int v = walk(p); return v == -1 ? 0 : pass[v]; }\n    void erase(const string& w) {            // usuwa jedno wystąpienie słowa (jeśli jest)\n        if (!contains(w)) return;\n        int v = 0;\n        pass[v]--;\n        for (char ch : w) { v = nxt[v][ch - 'a']; pass[v]--; }\n        ends[v]--;\n    }\n};\n\n           void dfs(const Trie& t, int v, string& cur, vector<string>& out) {\n               for (int k = 0; k < t.ends[v]; k++) out.push_back(cur);\n               for (int c = 0; c < 26; c++)\n                   if (t.nxt[v][c]) { cur += char('a' + c); dfs(t, t.nxt[v][c], cur, out); cur.pop_back(); }\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "trie vs set<string>",
+      "trie czy set",
+      "kiedy trie a kiedy set stringow"
+     ],
+     "a": "`set<string>` daje O(|w| log n) na operację i łatwe zapytania o porządek; prefiksy obsłużysz `lower_bound`-em.\nTrie daje O(|w|) niezależnie od n i naturalne liczniki prefiksów, ale zużywa więcej pamięci. Trie jest też\nbazą dla Aho-Corasick i trików z XOR."
+    }
+   ],
+   "related": [
+    "ds-trie",
+    "str-aho-corasick",
+    "str-hashing",
+    "stl-set"
+   ]
+  }
+ ]
+}

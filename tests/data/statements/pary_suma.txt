@@ -1,0 +1,22 @@
+Pary o zadanej sumie
+Bajtek dostał od nauczyciela ciąg liczb oraz liczbę k. Chce wiedzieć, na ile sposobów można wybrać z ciągu dwa
+elementy stojące na różnych pozycjach tak, aby ich suma wynosiła dokładnie k.
+Wejście
+W pierwszym wierszu wejścia znajdują się dwie liczby całkowite n i k (1 ≤ n ≤ 100 000, 1 ≤ k ≤ 10^9) — długość ciągu
+oraz szukana suma. W drugim wierszu znajduje się n liczb całkowitych a_1, a_2, ..., a_n (1 ≤ a_i ≤ 10^9) oddzielonych
+pojedynczymi odstępami.
+Wyjście
+Wypisz jedną liczbę całkowitą — liczbę par indeksów (i, j) takich, że 1 ≤ i < j ≤ n oraz a_i + a_j = k.
+Przykład 1
+Wejście:
+6 7
+1 6 3 4 2 5
+Wyjście:
+3
+
+Przykład 2
+Wejście:
+4 10
+5 5 5 5
+Wyjście:
+6

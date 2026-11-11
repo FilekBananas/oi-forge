@@ -1,0 +1,1108 @@
+{
+ "chunk": "numbers-types",
+ "articles": [
+  {
+   "id": "num-int-types",
+   "title": "Typy całkowite: int, long long, unsigned i ich zakresy",
+   "category": "Liczby i typy",
+   "tags": [
+    "int",
+    "long long",
+    "unsigned",
+    "zakres",
+    "typy całkowite",
+    "INT_MAX",
+    "LLONG_MAX",
+    "int64_t",
+    "short",
+    "char"
+   ],
+   "aliases": [
+    "long long czy int",
+    "zakres int",
+    "zakres long long",
+    "ile miesci int",
+    "max int c++",
+    "jaki typ wybrac",
+    "int range c++",
+    "long long range",
+    "unsigned long long zakres",
+    "kiedy uzywac long long",
+    "2^31-1"
+   ],
+   "summary": "`int` mieści ok. ±2,1·10^9 (2^31−1), `long long` ok. ±9,2·10^18 (2^63−1). Jeśli wynik (albo wynik pośredni, np. iloczyn, suma n liczb) może przekroczyć ~2·10^9 — używaj `long long`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Typ",
+      "Bajty",
+      "Zakres",
+      "W przybliżeniu"
+     ],
+     "rows": [
+      [
+       "`char`",
+       "1",
+       "−128 … 127 (lub 0 … 255)",
+       "znakowość zależy od platformy"
+      ],
+      [
+       "`short`",
+       "2",
+       "−32 768 … 32 767",
+       "3,2·10^4"
+      ],
+      [
+       "`int`",
+       "4",
+       "−2 147 483 648 … 2 147 483 647",
+       "±2,1·10^9"
+      ],
+      [
+       "`unsigned int`",
+       "4",
+       "0 … 4 294 967 295",
+       "4,3·10^9"
+      ],
+      [
+       "`long`",
+       "4 lub 8",
+       "Windows: jak int; Linux/macOS: jak long long",
+       "nie używaj — nieprzenośny"
+      ],
+      [
+       "`long long`",
+       "8",
+       "−9 223 372 036 854 775 808 … 9 223 372 036 854 775 807",
+       "±9,2·10^18"
+      ],
+      [
+       "`unsigned long long`",
+       "8",
+       "0 … 18 446 744 073 709 551 615",
+       "1,8·10^19"
+      ],
+      [
+       "`__int128` (GCC/Clang)",
+       "16",
+       "±1,7·10^38",
+       "brak cin/cout — patrz num-int128"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Zakresy i typowy przypadek wymagający long long",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    cout << INT_MAX << ' ' << INT_MIN << '\\n';       // 2147483647 -2147483648\n    cout << LLONG_MAX << '\\n';                        // 9223372036854775807\n    cout << numeric_limits<unsigned long long>::max() << '\\n';\n    int n = 100000;\n    long long pary = 1LL * n * (n - 1) / 2;          // 4999950000 > INT_MAX\n    cout << pary << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Reguła kciuka: n ≤ 10^5 i wartości ≤ 10^9 → sumy i iloczyny par wymagają `long long`. Na OI dawanie `long long`\n„wszędzie” jest bezpieczne (koszt: 2× więcej pamięci na tablice, minimalnie wolniej)."
+    }
+   ],
+   "pitfalls": [
+    "`int * int` przypisane do `long long` przepełnia się przed przypisaniem.",
+    "`long` ma 32 bity na Windows.",
+    "Mieszanie `unsigned` i `signed` w porównaniach.",
+    "`1 << 40` zamiast `1LL << 40`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "long long czy int",
+      "kiedy uzywac long long",
+      "int czy long long",
+      "czy dac long long",
+      "when to use long long c++",
+      "jaki typ dla duzych liczb"
+     ],
+     "a": "`int` mieści do ~2,1·10^9. Jeśli jakakolwiek wartość — także **pośrednia**, np. `a * b`, suma n elementów, liczba par\n`n*(n-1)/2` — może przekroczyć tę granicę, użyj `long long` (do ~9,2·10^18). Przykład: suma 10^5 liczb po 10^9 to 10^14\n— w `int` się nie zmieści. W razie wątpliwości bierz `long long`: kosztuje tylko pamięć.",
+     "code": "int n = 200000;\nvector<long long> a(n, 1000000000);\nlong long suma = 0;\nfor (long long x : a) suma += x;   // 2e14 — tylko long long\ncout << suma << '\\n';"
+    },
+    {
+     "q": [
+      "zakres int",
+      "ile miesci int",
+      "max wartosc int",
+      "int max value",
+      "2^31-1 ile to",
+      "INT_MAX"
+     ],
+     "a": "`int` (32 bity ze znakiem): od −2 147 483 648 do 2 147 483 647, czyli 2^31−1 ≈ 2,1·10^9. Stałe: `INT_MAX`,\n`INT_MIN` albo `numeric_limits<int>::max()`. Zapamiętaj: „int to trochę ponad 2 miliardy”.",
+     "code": "cout << INT_MAX << ' ' << INT_MIN << '\\n';"
+    },
+    {
+     "q": [
+      "zakres long long",
+      "ile miesci long long",
+      "long long max",
+      "LLONG_MAX",
+      "2^63-1"
+     ],
+     "a": "`long long` (64 bity ze znakiem): od −2^63 do 2^63−1 = 9 223 372 036 854 775 807 ≈ 9,2·10^18. Stała `LLONG_MAX`.\nUwaga: iloczyn dwóch liczb rzędu 10^10 (10^20) już się nie mieści.",
+     "code": "cout << LLONG_MAX << ' ' << LLONG_MIN << '\\n';"
+    },
+    {
+     "q": [
+      "unsigned co to",
+      "unsigned int zakres",
+      "unsigned long long",
+      "liczby bez znaku",
+      "kiedy unsigned"
+     ],
+     "a": "Typy `unsigned` nie mają liczb ujemnych, za to sięgają 2× wyżej (`unsigned long long` do ~1,8·10^19). Arytmetyka jest\n„modulo 2^k”: `0u - 1` to 4 294 967 295, a nie −1. Przydatne do haszowania i operacji bitowych; do zwykłych obliczeń\nlepiej `long long` — mieszanie `signed` i `unsigned` w porównaniach daje podstępne błędy.",
+     "code": "unsigned int u = 0;\nu--;\ncout << u << '\\n';   // 4294967295"
+    },
+    {
+     "q": [
+      "long a long long",
+      "czy long to to samo co long long",
+      "sizeof long windows",
+      "long 32 bity"
+     ],
+     "a": "Nie zawsze! Na Linuksie i macOS `long` ma 64 bity, ale na **Windows** tylko 32 (jak `int`). Kod działający lokalnie\nmoże się przepełnić na innej platformie. Używaj `long long` (zawsze ≥ 64 bity) albo `int64_t`.",
+     "code": "cout << sizeof(int) << ' ' << sizeof(long) << ' ' << sizeof(long long) << '\\n';"
+    },
+    {
+     "q": [
+      "int64_t",
+      "int32_t co to",
+      "typy o stalym rozmiarze",
+      "uint64_t"
+     ],
+     "a": "`int32_t`, `int64_t`, `uint64_t` (nagłówek `<cstdint>`) mają gwarantowany rozmiar bitowy. `int64_t` to w praktyce\n`long long` (albo `long`) — w zadaniach można używać zamiennie. Popularny skrót: `using ll = long long;`.",
+     "code": "int64_t a = 1LL << 40;\nuint64_t h = 1469598103934665603ULL;\ncout << a << ' ' << h << '\\n';"
+    },
+    {
+     "q": [
+      "co to LL na koncu liczby",
+      "1LL",
+      "przyrostek LL",
+      "literal long long",
+      "1e18 czy 1000000000000000000LL"
+     ],
+     "a": "Przyrostek `LL` robi z literału `long long` (`ULL` — `unsigned long long`). Ważne przy przesunięciach i mnożeniu:\n`1 << 40` to błąd (int), a `1LL << 40` jest poprawne. `1e18` to `double` — przy przypisaniu do `long long` daje\ndokładnie 10^18, ale np. `1e18 + 1` w `double` traci jedynkę.",
+     "code": "long long a = 1LL << 40;\nlong long b = 1000000000000000000LL;\ncout << a << ' ' << b << '\\n';"
+    },
+    {
+     "q": [
+      "using ll = long long",
+      "typedef long long ll",
+      "skrot ll",
+      "#define ll long long"
+     ],
+     "a": "Popularny skrót w szablonach. Najlepiej `using ll = long long;` (albo `typedef long long ll;`). `#define int long long`\nteż się spotyka, ale wtedy `main` musi być zadeklarowany `signed main()` i łatwo o niespodzianki — lepiej unikać.",
+     "code": "using ll = long long;\nll f(ll a, ll b) { return a * b; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "int x = 1e10",
+      "przypisanie za duzej liczby do int",
+      "warning overflow in conversion",
+      "1e10 do int"
+     ],
+     "a": "`1e10` to `double`, a przypisanie wartości spoza zakresu do `int` daje niezdefiniowane zachowanie (zwykle śmieci).\nKompilator ostrzega (`-Woverflow`). Użyj `long long x = 1e10;` albo `10000000000LL`.",
+     "code": "long long x = 1e10;\ncout << x << '\\n';"
+    },
+    {
+     "q": [
+      "char jako liczba",
+      "zakres char",
+      "signed char unsigned char",
+      "char ujemny"
+     ],
+     "a": "`char` to 1 bajt: `signed char` −128…127, `unsigned char` 0…255; czy zwykły `char` ma znak, zależy od platformy\n(na x86 zwykle ma, na części ARM nie). Funkcje z `<cctype>` (`isdigit`, `isalpha`) wywołuj z `(unsigned char)c`, żeby\nnie dostać UB dla bajtów > 127 (np. polskich znaków w UTF-8).",
+     "code": "char c = 'A';\ncout << (int)c << ' ' << isalpha((unsigned char)c) << '\\n';"
+    },
+    {
+     "q": [
+      "ile pamieci zajmuje long long",
+      "sizeof int",
+      "rozmiar typow c++",
+      "ile bajtow ma int"
+     ],
+     "a": "Typowo: `char` 1 B, `short` 2 B, `int` 4 B, `long long` 8 B, `double` 8 B, `bool` 1 B, wskaźnik 8 B (system 64-bit).\nTablica 10^7 `int` zajmuje ~40 MB, a 10^7 `long long` ~80 MB — to ma znaczenie przy limicie pamięci.",
+     "code": "cout << sizeof(char) << sizeof(short) << sizeof(int) << sizeof(long long) << sizeof(double) << '\\n';"
+    },
+    {
+     "q": [
+      "numeric_limits",
+      "numeric_limits max min",
+      "jak sprawdzic zakres typu"
+     ],
+     "a": "`numeric_limits<T>::max()`, `::min()` (dla typów zmiennoprzecinkowych `min()` to najmniejsza dodatnia — dla\nnajmniejszej ujemnej użyj `lowest()`), `::digits` (liczba bitów mantysy/wartości).",
+     "code": "cout << numeric_limits<int>::max() << ' ' << numeric_limits<double>::lowest() << '\\n';"
+    },
+    {
+     "q": [
+      "czy long long jest wolniejszy",
+      "long long a szybkosc",
+      "long long performance"
+     ],
+     "a": "Na procesorach 64-bitowych dodawanie i mnożenie `long long` jest praktycznie tak samo szybkie jak `int`. Dzielenie\ni modulo 64-bitowe bywa wolniejsze (do ~2–3×), a tablice zajmują 2× więcej pamięci (gorzej dla cache). Rzadko ma to\nznaczenie — poprawność ważniejsza."
+    },
+    {
+     "q": [
+      "wynik sie nie zgadza dla duzych testow",
+      "dla malych dziala dla duzych zle",
+      "zla odpowiedz duze n"
+     ],
+     "a": "Klasyczny objaw przepełnienia `int`. Sprawdź wszystkie sumy, iloczyny i liczniki — czy mogą przekroczyć 2,1·10^9.\nZmień typ na `long long` i pamiętaj, że `int * int` liczy się w `int` nawet przy przypisaniu do `long long`\n(`long long w = a * b;` — źle; `1LL * a * b` — dobrze).",
+     "code": "int a = 100000, b = 100000;\nlong long zle = a * b;        // przepełnienie przed przypisaniem\nlong long dobrze = 1LL * a * b;\ncout << zle << ' ' << dobrze << '\\n';"
+    },
+    {
+     "q": [
+      "jaki typ dla 10^18",
+      "liczba do 10^18 typ",
+      "1e18 miesci sie w long long"
+     ],
+     "a": "10^18 mieści się w `long long` (limit ~9,2·10^18). Ale już suma dwóch liczb 5·10^18 albo iloczyn dwóch 10^10 — nie;\nwtedy `unsigned long long` (do 1,8·10^19) albo `__int128`.",
+     "code": "long long x = 1000000000000000000LL;\ncout << x << ' ' << (x < LLONG_MAX) << '\\n';"
+    }
+   ],
+   "related": [
+    "num-overflow",
+    "num-int128",
+    "pit-int-overflow",
+    "num-inf-constants",
+    "oi-memory",
+    "cpp-casting",
+    "cpp-ref-climits-cfloat",
+    "cpp-variables-types-intro",
+    "oi-py-cpp-equivalents",
+    "oi-py-numbers"
+   ]
+  },
+  {
+   "id": "num-int128",
+   "title": "__int128 — liczby 128-bitowe (wypisywanie i wczytywanie)",
+   "category": "Liczby i typy",
+   "tags": [
+    "__int128",
+    "int128",
+    "128 bitów",
+    "duże liczby",
+    "mnożenie modulo"
+   ],
+   "aliases": [
+    "__int128",
+    "int128 c++",
+    "jak wypisac __int128",
+    "cout __int128 nie dziala",
+    "liczby wieksze niz long long",
+    "128 bit integer c++",
+    "wczytaj __int128"
+   ],
+   "summary": "`__int128` (rozszerzenie GCC/Clang) mieści ±1,7·10^38. Przydaje się do mnożenia dwóch `long long` bez przepełnienia. `cin`/`cout` go nie obsługują — trzeba napisać własne wypisywanie.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wypisywanie i wczytywanie __int128",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvoid print128(__int128 x) {\n    if (x == 0) { cout << 0; return; }\n    if (x < 0) { cout << '-'; x = -x; }\n    string s;\n    while (x > 0) { s += char('0' + (int)(x % 10)); x /= 10; }\n    reverse(s.begin(), s.end());\n    cout << s;\n}\n\n__int128 read128() {\n    string s;\n    cin >> s;\n    __int128 x = 0;\n    size_t i = (s[0] == '-');\n    for (; i < s.size(); i++) x = x * 10 + (s[i] - '0');\n    return s[0] == '-' ? -x : x;\n}\n\nint main() {\n    long long a = 3000000000000000000LL, b = 5;\n    __int128 p = (__int128)a * b;     // 1.5e19 — nie mieści się w long long\n    print128(p);\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`__int128` nie jest standardem C++. Działa na GCC i Clang dla platform 64-bitowych (Linux, macOS, MinGW-w64),\nale **nie** w MSVC (Visual Studio). Literałów 128-bitowych nie ma — buduj duże wartości z mniejszych."
+    }
+   ],
+   "pitfalls": [
+    "`cout << (__int128)x` — błąd kompilacji.",
+    "`(__int128)(a * b)` — mnożenie już się przepełniło w `long long`; rzutuj argument: `(__int128)a * b`.",
+    "Brak w MSVC."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wypisac __int128",
+      "cout __int128 nie dziala",
+      "print int128 c++",
+      "wypisanie int128",
+      "__int128 cout error"
+     ],
+     "a": "`cout << x` dla `__int128` się nie skompiluje (brak operatora). Zamieniaj liczbę na cyfry: bierz `x % 10`, dziel przez 10,\nodwróć napis. Pamiętaj o zerze i liczbach ujemnych. Gotowa funkcja `print128` jest w treści artykułu.",
+     "code": "string to_string128(__int128 x) {\n    if (x == 0) return \"0\";\n    bool neg = x < 0;\n    if (neg) x = -x;\n    string s;\n    while (x > 0) { s += char('0' + (int)(x % 10)); x /= 10; }\n    if (neg) s += '-';\n    reverse(s.begin(), s.end());\n    return s;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "mnozenie long long bez przepelnienia",
+      "a*b mod m dla duzych",
+      "mulmod 1e18",
+      "mnozenie modulo 64 bit"
+     ],
+     "a": "Gdy `a, b < m ≤ ~9·10^18`, iloczyn `a*b` nie mieści się w `long long`. Rzutuj na `__int128`:\n`(__int128)a * b % m` i wynik z powrotem na `long long`. To typowe przy testach pierwszości Millera–Rabina i haszowaniu.",
+     "code": "long long mulmod(long long a, long long b, long long m) {\n    return (long long)((__int128)a * b % m);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wczytaj __int128",
+      "cin __int128",
+      "jak wczytac int128"
+     ],
+     "a": "Wczytaj liczbę jako `string` i zbuduj ją cyfra po cyfrze: `x = x * 10 + (c - '0')`. Obsłuż minus na początku.",
+     "code": "string s = \"123456789012345678901234567890\";\n__int128 x = 0;\nfor (char c : s) x = x * 10 + (c - '0');"
+    },
+    {
+     "q": [
+      "zakres __int128",
+      "ile miesci int128",
+      "max __int128",
+      "liczba większa niż 10^18",
+      "liczby większe od long long",
+      "wynik nie mieści się w long long"
+     ],
+     "a": "`__int128`: od −2^127 do 2^127−1 ≈ ±1,7·10^38; `unsigned __int128` do ~3,4·10^38. Iloczyn dwóch `long long`\nzawsze się mieści.",
+     "code": "__int128 mx = ((__int128)1 << 126) - 1 + ((__int128)1 << 126);   // 2^127 - 1\n(void)mx;"
+    },
+    {
+     "q": [
+      "czy __int128 dziala na oi",
+      "int128 na sprawdzarce",
+      "__int128 visual studio"
+     ],
+     "a": "Na sprawdzarkach z GCC (jak na OI) — działa. Nie działa w MSVC. Jeśli piszesz w Visual Studio, testuj w MinGW/WSL\nalbo unikaj `__int128` (np. mnożenie modulo przez dodawanie „po bitach”)."
+    },
+    {
+     "q": [
+      "czy __int128 jest wolny",
+      "szybkosc int128",
+      "int128 dzielenie wolne"
+     ],
+     "a": "Dodawanie i mnożenie są szybkie (kilka instrukcji), ale **dzielenie i modulo** `__int128` jest wywołaniem funkcji\nbibliotecznej i jest kilkukrotnie wolniejsze od 64-bitowego. W gorących pętlach to zauważalne."
+    },
+    {
+     "q": [
+      "sprawdz czy iloczyn sie miesci",
+      "czy a*b przekroczy 1e18",
+      "porownanie iloczynu bez przepelnienia"
+     ],
+     "a": "Policz iloczyn w `__int128` i porównaj z limitem. Alternatywa bez `__int128`: `a > LIMIT / b` (dla dodatnich).",
+     "code": "long long a = 3000000000LL, b = 4000000000LL, LIMIT = 1000000000000000000LL;\nbool zaDuzo = (__int128)a * b > LIMIT;\nbool zaDuzo2 = a > LIMIT / b;\ncout << zaDuzo << zaDuzo2 << '\\n';"
+    },
+    {
+     "q": [
+      "abs dla __int128",
+      "__int128 funkcje matematyczne",
+      "sqrt int128"
+     ],
+     "a": "Funkcje z `<cmath>` i `std::abs` mogą nie mieć przeciążeń dla `__int128` (zależy od wersji biblioteki). Pisz\nproste rzeczy ręcznie: `x < 0 ? -x : x`.",
+     "code": "__int128 x = -5;\n__int128 ax = x < 0 ? -x : x;\ncout << (long long)ax << '\\n';"
+    }
+   ],
+   "related": [
+    "num-int-types",
+    "num-overflow",
+    "num-mod-arithmetic",
+    "num-bigint-strings",
+    "cpp-ref-climits-cfloat",
+    "tech-hanoi"
+   ]
+  },
+  {
+   "id": "num-overflow",
+   "title": "Przepełnienie liczb całkowitych — jak go uniknąć i wykryć",
+   "category": "Liczby i typy",
+   "tags": [
+    "overflow",
+    "przepełnienie",
+    "1LL",
+    "__builtin_mul_overflow",
+    "UB",
+    "sanitizer",
+    "long long"
+   ],
+   "aliases": [
+    "przepelnienie int",
+    "overflow c++",
+    "jak wykryc przepelnienie",
+    "1LL*a*b",
+    "integer overflow c++",
+    "wynik ujemny zamiast dodatniego",
+    "__builtin_mul_overflow",
+    "dlaczego wychodzi liczba ujemna"
+   ],
+   "summary": "Przepełnienie typu ze znakiem to niezdefiniowane zachowanie — zwykle „zawija się” do liczb ujemnych. Najczęstszy błąd: `int * int` liczone w `int`. Pisz `1LL * a * b`, a do wykrywania używaj `__builtin_mul_overflow` lub sanitizera `-fsanitize=undefined`.",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Typ wyniku operacji zależy od typów **argumentów**, a nie od zmiennej, do której przypisujesz. `long long w = a * b;`\nprzy `int a, b` najpierw liczy `a * b` w `int` (przepełnienie!), a dopiero potem rozszerza do `long long`.\nWystarczy, że jeden argument jest `long long`: `1LL * a * b` albo `(long long)a * b`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Typowy błąd i wykrywanie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int a = 100000, b = 300000;\n    long long zle = a * b;             // przepełnienie int (UB)\n    long long dobrze = 1LL * a * b;    // 30000000000\n    cout << zle << ' ' << dobrze << '\\n';\n\n    long long x = 4000000000LL, y = 3000000000LL, r;\n    if (__builtin_mul_overflow(x, y, &r)) cout << \"przepelnienie!\\n\";\n    else cout << r << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sytuacja",
+      "Ryzyko",
+      "Rozwiązanie"
+     ],
+     "rows": [
+      [
+       "`a * b`, a,b ≤ 10^9",
+       "10^18 > int",
+       "`1LL * a * b`"
+      ],
+      [
+       "suma n ≤ 10^5 liczb ≤ 10^9",
+       "10^14",
+       "akumulator `long long`"
+      ],
+      [
+       "`n * (n - 1) / 2`, n = 10^5",
+       "5·10^9",
+       "`1LL * n * (n - 1) / 2`"
+      ],
+      [
+       "`(a * b) % MOD`",
+       "a,b < 10^9+7 → 10^18",
+       "`1LL * a * b % MOD`"
+      ],
+      [
+       "`a * b` dla long long ≤ 10^18",
+       "10^36",
+       "`__int128` albo test `a > LIM / b`"
+      ],
+      [
+       "`dist[u] + w` przy dist = LLONG_MAX",
+       "zawinięcie",
+       "INF = 1e18 zamiast LLONG_MAX"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Kompilacja z `-fsanitize=undefined` (Clang lub GCC na Linuksie/macOS) zatrzyma program z komunikatem\n„signed integer overflow” dokładnie w linii, gdzie przepełnienie nastąpiło."
+    }
+   ],
+   "pitfalls": [
+    "`a * b * 1LL` — mnożenie w `int` już się przepełniło.",
+    "`accumulate(..., 0)` zamiast `0LL`.",
+    "Sprawdzanie overflow przez `a + b < a` dla typów ze znakiem — UB, kompilator może je usunąć."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dlaczego wychodzi liczba ujemna",
+      "suma wychodzi ujemna",
+      "wynik ujemny zamiast dodatniego",
+      "dziwne ujemne liczby w wyniku",
+      "overflow wynik ujemny"
+     ],
+     "a": "Prawie na pewno przepełnienie `int`: wynik przekroczył 2 147 483 647 i „zawinął się” na liczby ujemne. Zmień typy\nna `long long` — także zmiennej sumy, licznika i każdego wyrażenia pośredniego (`a * b` liczone w `int` przepełnia się\nprzed przypisaniem).",
+     "code": "int a = 50000;\nlong long s = 1LL * a * a;   // 2500000000\ncout << s << '\\n';"
+    },
+    {
+     "q": [
+      "1LL*a*b",
+      "po co 1LL",
+      "co to 1ll * a * b",
+      "dlaczego mnozyc przez 1LL",
+      "rzutowanie na long long mnozenie"
+     ],
+     "a": "`1LL` to jedynka typu `long long`. W wyrażeniu `1LL * a * b` mnożenie liczy się od lewej: `1LL * a` jest już\n`long long`, więc i `(1LL * a) * b` liczy się w 64 bitach. Zapis `a * b * 1LL` **nie** działa — `a * b` przepełni się\npierwsze. Równoważnie: `(long long)a * b`.",
+     "code": "int a = 1000000, b = 1000000;\nlong long ok1 = 1LL * a * b;\nlong long ok2 = (long long)a * b;\nlong long zle = a * b * 1LL;   // a*b już się przepełniło\ncout << ok1 << ' ' << ok2 << ' ' << zle << '\\n';"
+    },
+    {
+     "q": [
+      "jak wykryc przepelnienie",
+      "sprawdzenie overflow c++",
+      "__builtin_mul_overflow",
+      "__builtin_add_overflow",
+      "detect overflow c++"
+     ],
+     "a": "GCC/Clang mają `__builtin_add_overflow(a, b, &r)`, `__builtin_sub_overflow`, `__builtin_mul_overflow` — zwracają\n`true`, jeśli wynik nie zmieścił się w typie `r`. Bez builtinów dla dodatnich: mnożenie przepełni się, gdy `a > LIM / b`,\ndodawanie — gdy `a > LIM - b`.",
+     "code": "long long a = 3000000000LL, b = 4000000000LL, r;\nif (__builtin_mul_overflow(a, b, &r)) cout << \"za duzo\\n\";\nelse cout << r << '\\n';"
+    },
+    {
+     "q": [
+      "przepelnienie przy modulo",
+      "a*b%mod przepelnienie",
+      "mnozenie modulo 1e9+7 overflow"
+     ],
+     "a": "Gdy `a, b < 10^9+7`, iloczyn może mieć ~10^18 — nie mieści się w `int`. Pisz `1LL * a * b % MOD`. Jeśli trzymasz\nwszystko w `long long` i każdą wartość redukujesz `% MOD`, iloczyn dwóch takich liczb mieści się w `long long`.",
+     "code": "const int MOD = 1000000007;\nint a = 999999999, b = 999999999;\nint c = 1LL * a * b % MOD;\ncout << c << '\\n';"
+    },
+    {
+     "q": [
+      "przepelnienie unsigned",
+      "unsigned overflow",
+      "czy unsigned sie przepelnia"
+     ],
+     "a": "Dla `unsigned` przepełnienie jest **zdefiniowane**: liczy się modulo 2^k (np. `UINT_MAX + 1 == 0`). Dla typów\nze znakiem (`int`, `long long`) to niezdefiniowane zachowanie — kompilator może nawet wyrzucić Twoje sprawdzenie\n`if (a + b < a)`, bo „zakłada”, że overflow się nie zdarza.",
+     "code": "unsigned long long u = ULLONG_MAX;\nu = u + 1;\ncout << u << '\\n';   // 0"
+    },
+    {
+     "q": [
+      "sanitizer overflow",
+      "fsanitize undefined overflow",
+      "jak znalezc gdzie jest przepelnienie",
+      "ftrapv"
+     ],
+     "a": "Skompiluj z `-fsanitize=undefined` (najlepiej z `-g`) — przy przepełnieniu dostaniesz komunikat z numerem linii\n„runtime error: signed integer overflow”. Na MinGW (Windows) sanitizery zwykle nie działają; alternatywa to `-ftrapv`\n(program przerywa się przy przepełnieniu, bez wskazania linii).",
+     "code": "g++ -std=c++20 -g -fsanitize=undefined,address prog.cpp -o prog && ./prog < in.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "n*(n-1)/2 przepelnienie",
+      "liczba par overflow",
+      "ile par n=100000"
+     ],
+     "a": "Dla n = 10^5 liczba par to ~5·10^9 > INT_MAX. Licz `1LL * n * (n - 1) / 2`. Kolejność jest ważna: najpierw\nmnożenie w `long long`, potem dzielenie (iloczyn kolejnych liczb jest parzysty, więc dzielenie jest dokładne).",
+     "code": "int n = 100000;\nlong long pary = 1LL * n * (n - 1) / 2;\ncout << pary << '\\n';"
+    },
+    {
+     "q": [
+      "przepelnienie w petli for",
+      "licznik petli overflow",
+      "i*i <= n przepelnienie"
+     ],
+     "a": "Warunek `i * i <= n` przy `int i` i `n` blisko 2^31 przepełni się dla `i` ≈ 46341. Pisz `1LL * i * i <= n` albo\n`i <= n / i`.",
+     "code": "int n = 2147483647;\nint dz = 0;\nfor (int i = 1; 1LL * i * i <= n; i++) dz++;\ncout << dz << '\\n';"
+    },
+    {
+     "q": [
+      "przepelnienie long long",
+      "long long tez sie przepelnia",
+      "co gdy nie miesci sie w long long"
+     ],
+     "a": "Tak — powyżej ~9,2·10^18. Iloczyn dwóch liczb ~10^10 już się nie mieści. Opcje: `__int128` (do ~1,7·10^38),\n`unsigned long long` (do 1,8·10^19), zmiana kolejności działań (najpierw dziel), arytmetyka modulo albo duże liczby na\nstringach.",
+     "code": "long long a = 10000000000LL, b = 10000000000LL;\n__int128 p = (__int128)a * b;\ncout << (long long)(p / 1000000000000LL) << '\\n';"
+    },
+    {
+     "q": [
+      "abs(INT_MIN)",
+      "-INT_MIN przepelnienie",
+      "negacja najmniejszej liczby"
+     ],
+     "a": "`-INT_MIN` nie mieści się w `int` (zakres jest asymetryczny: −2^31…2^31−1), więc `abs(INT_MIN)` to UB. Jeśli dane mogą\nzawierać skrajne wartości, przejdź na `long long` przed negacją.",
+     "code": "int x = INT_MIN;\nlong long ax = llabs((long long)x);\ncout << ax << '\\n';"
+    },
+    {
+     "q": [
+      "suma tablicy overflow",
+      "accumulate przepelnienie",
+      "accumulate long long"
+     ],
+     "a": "`accumulate(v.begin(), v.end(), 0)` liczy w `int`, bo typ wyniku bierze się z wartości początkowej `0`. Pisz `0LL`.",
+     "code": "vector<int> v(200000, 1000000000);\nlong long s = accumulate(v.begin(), v.end(), 0LL);\ncout << s << '\\n';"
+    }
+   ],
+   "related": [
+    "num-int-types",
+    "num-int128",
+    "pit-int-overflow",
+    "num-mod-arithmetic",
+    "oi-compile-flags",
+    "cpp-ref-climits-cfloat",
+    "oi-py-numbers",
+    "stl-ref-numeric"
+   ]
+  },
+  {
+   "id": "num-floating",
+   "title": "Liczby zmiennoprzecinkowe: double, long double, precyzja i porównywanie z epsilonem",
+   "category": "Liczby i typy",
+   "tags": [
+    "double",
+    "long double",
+    "float",
+    "precyzja",
+    "epsilon",
+    "eps",
+    "porównywanie",
+    "0.1+0.2"
+   ],
+   "aliases": [
+    "double vs long double",
+    "porownywanie double",
+    "epsilon c++",
+    "0.1 + 0.2 != 0.3",
+    "precyzja double",
+    "float czy double",
+    "dlaczego double jest niedokladny",
+    "floating point comparison c++",
+    "eps 1e-9"
+   ],
+   "summary": "`double` ma ok. 15–16 cyfr znaczących. Wyniki obliczeń rzadko są dokładne (`0.1 + 0.2 != 0.3`), więc porównuj z tolerancją: `fabs(a - b) < 1e-9`. Jeśli się da, licz na liczbach całkowitych.",
+   "level": 2,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Typ",
+      "Bajty",
+      "Cyfry znaczące",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`float`",
+       "4",
+       "~7",
+       "za mało do większości zadań — nie używaj"
+      ],
+      [
+       "`double`",
+       "8",
+       "~15–16",
+       "standard; liczby całkowite dokładne do 2^53 ≈ 9·10^15"
+      ],
+      [
+       "`long double`",
+       "8–16",
+       "~18–19 na x86 (Linux, MinGW)",
+       "na MSVC i macOS z Apple Silicon = `double`!"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Porównywanie z epsilonem",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst double EPS = 1e-9;\n\nbool rowne(double a, double b) { return fabs(a - b) < EPS; }\nbool mniejsze(double a, double b) { return a < b - EPS; }\n\nint main() {\n    double x = 0.1 + 0.2;\n    cout << (x == 0.3) << ' ' << rowne(x, 0.3) << '\\n';   // 0 1\n    cout << setprecision(17) << x << '\\n';                 // 0.30000000000000004\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Jak dobrać EPS?** Typowo `1e-9` dla wartości rzędu 1–10^3. Gdy liczby są duże (np. 10^9), błąd bezwzględny też\nrośnie (`double` ma ~16 cyfr), więc 1e-9 może być za małe — wtedy porównuj błąd względny:\n`fabs(a - b) <= EPS * max(1.0, max(fabs(a), fabs(b)))`."
+    },
+    {
+     "type": "warn",
+     "md": "Gdy dane są całkowite, unikaj `double`: zamiast `a / b < c / d` porównuj `a * d < c * b` (dla dodatnich mianowników),\nzamiast `sqrt(x) == k` sprawdzaj `k * k == x`. Porównania całkowite są dokładne."
+    }
+   ],
+   "pitfalls": [
+    "`a == b` dla wyników obliczeń zmiennoprzecinkowych.",
+    "`long double` na macOS ARM/MSVC nie daje dodatkowej precyzji.",
+    "`(int)(x)` dla `x = 28.999999999999996` daje 28.",
+    "`sqrt` z liczby ujemnej (np. `-1e-17`) daje `nan`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "porownywanie double",
+      "jak porownac dwa double",
+      "double == nie dziala",
+      "floating point comparison c++",
+      "czy mozna porownac double ==",
+      "porownanie liczb zmiennoprzecinkowych"
+     ],
+     "a": "Nie używaj `==` dla wyników obliczeń: małe błędy zaokrągleń sprawiają, że `0.1 + 0.2 == 0.3` jest fałszem. Porównuj\nz tolerancją: `fabs(a - b) < EPS`, np. `EPS = 1e-9`. Dla „mniejsze” — `a < b - EPS`. Dla dużych wartości lepszy błąd\nwzględny.",
+     "code": "double a = 0.1 + 0.2, b = 0.3;\nconst double EPS = 1e-9;\nif (fabs(a - b) < EPS) cout << \"rowne\\n\";"
+    },
+    {
+     "q": [
+      "dlaczego 0.1 + 0.2 != 0.3",
+      "0.1+0.2=0.30000000000000004",
+      "double niedokladny dlaczego",
+      "bledy zaokraglen double"
+     ],
+     "a": "`double` przechowuje liczby w systemie dwójkowym. Ułamki takie jak 0.1 mają w nim nieskończone rozwinięcie (jak 1/3\nw dziesiętnym), więc są zaokrąglane. Suma dwóch zaokrąglonych wartości daje `0.30000000000000004`. To nie błąd\nkompilatora — tak działa arytmetyka IEEE 754.",
+     "code": "cout << setprecision(17) << 0.1 + 0.2 << '\\n';"
+    },
+    {
+     "q": [
+      "double czy long double",
+      "double vs long double",
+      "kiedy long double",
+      "czy long double jest dokladniejszy"
+     ],
+     "a": "Na Linuksie/MinGW (x86) `long double` ma 80 bitów (~18–19 cyfr) i bywa ratunkiem przy ciasnej precyzji. Ale w MSVC\ni na macOS z procesorem Apple (ARM) `long double` jest **tym samym** co `double`. Jest też wolniejszy. Zwykle wystarczy\n`double`; jeśli precyzja to problem, lepiej przerobić algorytm na liczby całkowite.",
+     "code": "cout << sizeof(double) << ' ' << sizeof(long double) << ' ' << numeric_limits<long double>::digits << '\\n';"
+    },
+    {
+     "q": [
+      "float czy double",
+      "czy uzywac float",
+      "float za malo precyzji"
+     ],
+     "a": "Używaj `double`. `float` ma tylko ~7 cyfr znaczących — już suma kilku tysięcy liczb gubi dokładność. Na OI nie ma\npowodu oszczędzać tych 4 bajtów (chyba że tablica ma 10^8 elementów)."
+    },
+    {
+     "q": [
+      "ile wynosi epsilon",
+      "jakie eps wybrac",
+      "eps 1e-9 czy 1e-6",
+      "jak dobrac epsilon"
+     ],
+     "a": "Zasada: EPS musi być większe niż spodziewany błąd obliczeń, ale mniejsze niż najmniejsza istotna różnica w zadaniu.\nDla wartości rzędu 1…10^4 zwykle `1e-9`. Dla wartości ~10^9 błąd `double` to ok. 10^-7, więc lepiej `1e-6` albo błąd\nwzględny. W geometrii na współrzędnych całkowitych często da się liczyć dokładnie na `long long`.",
+     "code": "auto rowneWzgl = [](double a, double b) {\n    return fabs(a - b) <= 1e-9 * max(1.0, max(fabs(a), fabs(b)));\n};\ncout << rowneWzgl(1e12 + 0.0001, 1e12) << '\\n';"
+    },
+    {
+     "q": [
+      "duze liczby calkowite w double",
+      "double traci cyfry",
+      "long long do double niedokladnie",
+      "2^53"
+     ],
+     "a": "`double` reprezentuje dokładnie liczby całkowite tylko do 2^53 ≈ 9·10^15. Powyżej traci najmłodsze cyfry\n(np. 10^18 − 1 zamienia się na 10^18). Nie trzymaj dużych liczb całkowitych w `double`, nie używaj `pow`, `sqrt`,\n`ceil` dla wartości `long long` bez korekty.",
+     "code": "long long x = 999999999999999999LL;\ndouble d = x;\ncout << fixed << setprecision(0) << d << '\\n';   // 1000000000000000000"
+    },
+    {
+     "q": [
+      "porownanie ulamkow bez double",
+      "a/b < c/d bez dzielenia",
+      "mnozenie na krzyz"
+     ],
+     "a": "Dla dodatnich `b, d`: `a/b < c/d` ⇔ `a*d < c*b` — porównanie dokładne na liczbach całkowitych (uważaj na przepełnienie:\n`1LL *` albo `__int128`).",
+     "code": "long long a = 1, b = 3, c = 333333, d = 1000000;\nbool mniej = (__int128)a * d < (__int128)c * b;\ncout << mniej << '\\n';   // 0, bo 1/3 > 0.333333"
+    },
+    {
+     "q": [
+      "double na int obciecie",
+      "(int) z double",
+      "zamiana double na int zaokragla w dol",
+      "konwersja double int"
+     ],
+     "a": "`(int)x` obcina część ułamkową w stronę zera: `(int)3.99 == 3`, `(int)-3.99 == -3`. Uwaga na błędy: `(int)(0.29 * 100)`\ndaje `28`, bo iloczyn to `28.999999999999996`. Jeśli wynik ma być całkowity, dodaj epsilon (`(int)(x + 1e-9)`) albo\nużyj `llround(x)`.",
+     "code": "double x = 0.29 * 100;\ncout << (int)x << ' ' << (int)(x + 1e-9) << ' ' << llround(x) << '\\n';   // 28 29 29"
+    },
+    {
+     "q": [
+      "nan c++",
+      "inf double",
+      "dzielenie przez zero double",
+      "isnan isinf"
+     ],
+     "a": "Dzielenie przez zero w `double` daje `inf` (lub `nan` dla 0/0), a `sqrt(-1)` daje `nan`. `nan` jest różne od\nwszystkiego, nawet od siebie. Sprawdzasz `isnan(x)`, `isinf(x)`. Jeśli w wyniku widzisz `nan`, szukaj `sqrt` z liczby\nujemnej (np. `-1e-17` przez błąd zaokrąglenia) albo `acos` argumentu > 1 — przytnij: `max(0.0, x)`.",
+     "code": "double v = -1e-17;\ndouble r = sqrt(max(0.0, v));\ncout << r << ' ' << isnan(sqrt(-1.0)) << '\\n';"
+    },
+    {
+     "q": [
+      "pi w c++",
+      "stala pi",
+      "M_PI",
+      "acos(-1)"
+     ],
+     "a": "`M_PI` nie jest w standardzie (na niektórych kompilatorach wymaga `_USE_MATH_DEFINES`). Przenośnie: `const double PI = acos(-1.0);`.\nW C++20 jest też `std::numbers::pi` (nagłówek `<numbers>`).",
+     "code": "const double PI = acos(-1.0);\ncout << fixed << setprecision(10) << PI << ' ' << numbers::pi << '\\n';"
+    },
+    {
+     "q": [
+      "sumowanie wielu double blad",
+      "suma double niedokladna",
+      "kahan summation"
+     ],
+     "a": "Przy sumowaniu milionów liczb błędy się kumulują. Pomaga: sumowanie w `long double`, sortowanie od najmniejszych,\nalbo algorytm Kahana. Najlepiej — jeśli dane mają stałą liczbę miejsc po przecinku — zamień je na liczby całkowite\n(np. grosze).",
+     "code": "vector<double> v(1000000, 0.1);\ndouble s = 0, c = 0;\nfor (double x : v) { double y = x - c; double t = s + y; c = (t - s) - y; s = t; }\ncout << setprecision(15) << s << '\\n';"
+    }
+   ],
+   "related": [
+    "num-rounding",
+    "pit-double-equal",
+    "io-precision",
+    "num-sqrt-pow",
+    "cpp-ref-climits-cfloat",
+    "cpp-ref-cmath",
+    "cpp-variables-types-intro",
+    "oi-py-numbers"
+   ]
+  },
+  {
+   "id": "num-sqrt-pow",
+   "title": "sqrt, cbrt i pow na liczbach całkowitych — pułapki i poprawne wersje",
+   "category": "Liczby i typy",
+   "tags": [
+    "sqrt",
+    "pierwiastek",
+    "isqrt",
+    "cbrt",
+    "pow",
+    "potęga",
+    "kwadrat doskonały",
+    "potęgowanie całkowite"
+   ],
+   "aliases": [
+    "pierwiastek z long long",
+    "isqrt c++",
+    "sqrt niedokladny",
+    "pow(10,2)=99",
+    "pow zle wyniki",
+    "potega calkowita c++",
+    "czy liczba jest kwadratem",
+    "integer sqrt c++",
+    "pierwiastek szescienny",
+    "pow long long"
+   ],
+   "summary": "`sqrt` i `pow` działają na `double`, więc dla dużych liczb całkowitych bywają o 1 za duże/za małe. Poprawny pierwiastek całkowity: policz `sqrtl(x)` i skoryguj pętlą. Potęgę całkowitą licz pętlą lub szybkim potęgowaniem, nie `pow`.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "isqrt, icbrt, ipow",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// floor(sqrt(x)) dla 0 <= x <= LLONG_MAX, zawsze poprawne\nlong long isqrt(long long x) {\n    long long r = (long long)sqrtl((long double)x);\n    while (r > 0 && r > x / r) r--;            // r*r > x\n    while (r + 1 <= x / (r + 1)) r++;          // (r+1)^2 <= x\n    return r;\n}\n\n// floor(cbrt(x)) dla x >= 0\nlong long icbrt(long long x) {\n    long long r = (long long)cbrtl((long double)x);\n    while (r > 0 && (__int128)r * r * r > x) r--;\n    while ((__int128)(r + 1) * (r + 1) * (r + 1) <= x) r++;\n    return r;\n}\n\n// a^b bez modulo (uważaj na przepełnienie!)\nlong long ipow(long long a, int b) {\n    long long r = 1;\n    while (b--) r *= a;\n    return r;\n}\n\nint main() {\n    long long x = 999999999999999999LL;\n    cout << (long long)sqrt(x) << ' ' << isqrt(x) << '\\n';   // 1000000000 999999999\n    cout << icbrt(1000000000000000000LL) << '\\n';            // 1000000\n    cout << ipow(5, 25) << ' ' << (long long)pow(5, 25) << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`pow(5, 25)` zwraca `double` 298023223876953152 zamiast dokładnego 298023223876953125 (double ma tylko ~16 cyfr).\nNa starszych kompilatorach MinGW `(int)pow(10, 2)` dawało nawet `99`. Dla liczb całkowitych **nie używaj `pow`**."
+    }
+   ],
+   "pitfalls": [
+    "`(long long)sqrt(x)` dla x ≈ 10^18 bywa o 1 za duże.",
+    "`pow` dla liczb całkowitych — niedokładny wynik.",
+    "`2^n` to XOR, nie potęga.",
+    "`pow(x, 1.0/3)` dla ujemnych zwraca `nan`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "pierwiastek z long long",
+      "isqrt c++",
+      "integer sqrt c++",
+      "sqrt z duzej liczby niedokladny",
+      "pierwiastek calkowity",
+      "pierwiastek z dużej liczby dokładnie",
+      "dokładny pierwiastek z dużej liczby"
+     ],
+     "a": "`sqrt` liczy w `double` (~16 cyfr), więc dla `x` ≈ 10^18 wynik może być o 1 za duży (np. `sqrt(10^18 − 1)` daje\n`10^9`). Poprawnie: weź przybliżenie `sqrtl(x)` i skoryguj pętlą `while`, porównując przez dzielenie (bez przepełnienia).\nC++20 nie ma `std::isqrt` — pisz własny.",
+     "code": "long long isqrt(long long x) {\n    long long r = (long long)sqrtl((long double)x);\n    while (r > 0 && r > x / r) r--;\n    while (r + 1 <= x / (r + 1)) r++;\n    return r;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy liczba jest kwadratem",
+      "kwadrat doskonaly c++",
+      "perfect square check",
+      "sprawdz czy x jest kwadratem liczby"
+     ],
+     "a": "Policz `r = isqrt(x)` i sprawdź `r * r == x`. Nie porównuj `sqrt(x) == (int)sqrt(x)` — dla dużych liczb błędy\nzaokrągleń dają fałszywe wyniki.",
+     "code": "long long x = 999999998000000001LL;   // 999999999^2\nlong long r = (long long)sqrtl((long double)x);\nwhile (r > 0 && r > x / r) r--;\nwhile (r + 1 <= x / (r + 1)) r++;\ncout << (r * r == x ? \"kwadrat\" : \"nie\") << '\\n';"
+    },
+    {
+     "q": [
+      "pow(10,2)=99",
+      "pow zwraca 99",
+      "pow daje zly wynik",
+      "dlaczego pow jest niedokladny",
+      "pow int c++"
+     ],
+     "a": "`pow` działa na `double` i zwraca przybliżenie. Na niektórych kompilatorach (znany przypadek: starsze MinGW)\n`pow(10, 2)` dawało `99.99999999999999`, a `(int)` obcina do `99`. Dla dużych wykładników wynik traci cyfry. Dla potęg\ncałkowitych pisz pętlę albo szybkie potęgowanie; jeśli już musisz użyć `pow`, zaokrąglaj `llround(pow(a, b))`.",
+     "code": "long long p = 1;\nfor (int i = 0; i < 18; i++) p *= 10;   // 10^18 dokładnie\ncout << p << ' ' << llround(pow(10, 2)) << '\\n';"
+    },
+    {
+     "q": [
+      "potega calkowita c++",
+      "jak policzyc a do potegi b",
+      "potegowanie w c++",
+      "integer power c++",
+      "a^b c++"
+     ],
+     "a": "W C++ `^` to XOR, nie potęga! Dla małych wykładników — pętla mnożąca. Dla dużych (np. modulo 10^9+7) — szybkie\npotęgowanie w O(log b). Uważaj, żeby wynik zmieścił się w typie.",
+     "code": "long long fastpow(long long a, long long b) {   // bez modulo — tylko gdy wynik się mieści\n    long long r = 1;\n    while (b > 0) {\n        if (b & 1) r *= a;\n        a *= a;\n        b >>= 1;\n    }\n    return r;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "2^n w c++",
+      "jak policzyc 2 do potegi n",
+      "potega dwojki",
+      "1 << n"
+     ],
+     "a": "Potęga dwójki to przesunięcie bitowe: `1 << n` (dla `n < 31`) albo `1LL << n` (dla `n < 63`). Nie `2^n` (to XOR)\ni nie `pow(2, n)` (double).",
+     "code": "int n = 40;\nlong long p = 1LL << n;\ncout << p << '\\n';"
+    },
+    {
+     "q": [
+      "^ to nie potega",
+      "2^3 daje 1",
+      "operator potegi c++",
+      "dlaczego 2^3 = 1"
+     ],
+     "a": "W C++ `^` to bitowa alternatywa wykluczająca (XOR): `2 ^ 3` = `0b10 ^ 0b11` = `0b01` = 1. C++ nie ma operatora\npotęgowania — użyj pętli, `1LL << k` dla potęg dwójki lub funkcji `pow` (double).",
+     "code": "cout << (2 ^ 3) << ' ' << (1 << 3) << '\\n';   // 1 8"
+    },
+    {
+     "q": [
+      "pierwiastek szescienny c++",
+      "cbrt",
+      "pierwiastek trzeciego stopnia",
+      "cube root c++"
+     ],
+     "a": "`cbrt(x)` liczy pierwiastek sześcienny w `double` (działa też dla ujemnych). Dla całkowitych zrób korektę jak przy\n`isqrt` — `icbrt` jest w treści artykułu. Nie używaj `pow(x, 1.0/3)`: dla ujemnych zwraca `nan`, a dla `x = 27` może\ndać 2.9999999.",
+     "code": "double y = cbrt(-27.0);\nlong long x = 1000000000000LL;\nlong long r = llround(cbrt((double)x));\nwhile (r * r * r > x) r--;\nwhile ((r + 1) * (r + 1) * (r + 1) <= x) r++;\ncout << y << ' ' << r << '\\n';   // -3 10000"
+    },
+    {
+     "q": [
+      "sqrt z int",
+      "sqrt zwraca double",
+      "(int)sqrt(n)",
+      "petla do pierwiastka z n"
+     ],
+     "a": "`sqrt` zwraca `double`. W pętlach typu „do pierwiastka” zamiast liczyć `sqrt(n)` pisz warunek całkowity:\n`for (long long d = 1; d * d <= n; d++)` — dokładny i nie wymaga konwersji.",
+     "code": "long long n = 1000000007;\nbool pierwsza = n >= 2;\nfor (long long d = 2; d * d <= n; d++)\n    if (n % d == 0) { pierwsza = false; break; }\ncout << pierwsza << '\\n';"
+    },
+    {
+     "q": [
+      "hypot",
+      "odleglosc euklidesowa c++",
+      "sqrt(x*x+y*y)"
+     ],
+     "a": "Odległość: `sqrt(dx*dx + dy*dy)` albo `hypot(dx, dy)` (odporny na przepełnienie, nieco wolniejszy). Do **porównywania**\nodległości nie licz pierwiastka — porównuj kwadraty na `long long`.",
+     "code": "long long dx = 3, dy = 4;\ndouble d = hypot((double)dx, (double)dy);\nlong long d2 = dx * dx + dy * dy;   // porównuj d2, nie d\ncout << d << ' ' << d2 << '\\n';"
+    },
+    {
+     "q": [
+      "pow z modulo",
+      "pow(a,b)%mod",
+      "potega modulo 1e9+7"
+     ],
+     "a": "Nigdy `pow(a, b) % MOD` — `pow` zwraca `double`, które dla dużych `b` jest ogromne i niedokładne, a `%` na `double`\nsię nie skompiluje. Użyj szybkiego potęgowania modulo (patrz artykuł o arytmetyce modulo).",
+     "code": "long long powmod(long long a, long long b, long long m) {\n    long long r = 1;\n    a %= m;\n    while (b > 0) {\n        if (b & 1) r = r * a % m;\n        a = a * a % m;\n        b >>= 1;\n    }\n    return r;\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "num-floating",
+    "num-mod-arithmetic",
+    "num-log2",
+    "pit-bit-ops",
+    "cpp-ref-cmath",
+    "oi-py-numbers"
+   ]
+  },
+  {
+   "id": "num-log2",
+   "title": "Logarytmy i liczba cyfr: log2, __lg, bit_width, log10",
+   "category": "Liczby i typy",
+   "tags": [
+    "log2",
+    "__lg",
+    "logarytm",
+    "bit_width",
+    "liczba cyfr",
+    "log10",
+    "najwyższy bit"
+   ],
+   "aliases": [
+    "log2 c++",
+    "__lg",
+    "logarytm dwojkowy calkowity",
+    "ile cyfr ma liczba",
+    "liczba cyfr c++",
+    "floor log2",
+    "najstarszy bit",
+    "count digits c++",
+    "log o podstawie k"
+   ],
+   "summary": "Całkowity logarytm dwójkowy `floor(log2(x))` dla `x > 0`: `__lg(x)` (GCC) albo `bit_width((unsigned)x) - 1` (C++20). Liczbę cyfr licz pętlą albo `to_string(x).size()` — `log10` bywa o 1 błędny.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Logarytmy całkowite i liczba cyfr",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint cyfry(long long x) {          // liczba cyfr dziesiętnych, x >= 0\n    int c = 1;\n    while (x >= 10) { x /= 10; c++; }\n    return c;\n}\n\nint main() {\n    long long x = 1000000000000LL;\n    cout << __lg(x) << '\\n';                                   // 39 = floor(log2(10^12))\n    cout << bit_width((unsigned long long)x) - 1 << '\\n';      // 39 (C++20, <bit>)\n    cout << 63 - __builtin_clzll(x) << '\\n';                   // 39\n    cout << cyfry(999999999999999999LL) << ' '\n         << (int)log10(999999999999999999LL) + 1 << '\\n';      // 18 19 (!)\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`__lg(0)` i `__builtin_clz(0)` są niezdefiniowane — sprawdź `x > 0`. `log10(x)` dla `x = 0` daje `-inf`."
+    }
+   ],
+   "pitfalls": [
+    "`__lg(0)` — niezdefiniowane.",
+    "`(int)log10(x) + 1` dla dużych liczb i dla 0.",
+    "`bit_width` wymaga typu bez znaku."
+   ],
+   "qa": [
+    {
+     "q": [
+      "log2 c++",
+      "logarytm dwojkowy calkowity",
+      "floor log2 c++",
+      "__lg co to",
+      "jak policzyc log2 z inta"
+     ],
+     "a": "Dla liczb całkowitych `x > 0` użyj `__lg(x)` (GCC/Clang) — zwraca numer najstarszego zapalonego bitu, czyli\n`floor(log2(x))`, bez żadnych błędów zaokrągleń. Przenośnie w C++20: `bit_width((unsigned)x) - 1`. Funkcja `log2` z\n`<cmath>` liczy w `double` i dla dużych liczb potrafi się pomylić przy potęgach dwójki.",
+     "code": "int x = 1000;\ncout << __lg(x) << ' ' << bit_width((unsigned)x) - 1 << '\\n';   // 9 9"
+    },
+    {
+     "q": [
+      "ile cyfr ma liczba",
+      "liczba cyfr c++",
+      "count digits c++",
+      "dlugosc liczby",
+      "ile cyfr w long long"
+     ],
+     "a": "Najpewniej pętlą: dziel przez 10, aż zostanie 0 (pamiętaj, że 0 ma 1 cyfrę). Krócej: `to_string(x).size()`\n(dla ujemnych odejmij 1 za minus). `(int)log10(x) + 1` bywa błędne dla dużych liczb (np. `999…9` z 18 dziewiątek\ndaje 19) i nie działa dla 0.",
+     "code": "long long x = 987654321;\ncout << to_string(x).size() << '\\n';   // 9"
+    },
+    {
+     "q": [
+      "najstarszy bit liczby",
+      "highest set bit",
+      "najwieksza potega dwojki nie wieksza od x",
+      "bit_floor"
+     ],
+     "a": "Najwyższa potęga dwójki ≤ x: `1LL << __lg(x)` albo `bit_floor((unsigned long long)x)` (C++20). Najmniejsza ≥ x:\n`bit_ceil(x)`.",
+     "code": "unsigned long long x = 100;\ncout << (1ULL << __lg(x)) << ' ' << bit_floor(x) << ' ' << bit_ceil(x) << '\\n';   // 64 64 128"
+    },
+    {
+     "q": [
+      "__builtin_clz",
+      "clz c++",
+      "count leading zeros",
+      "countl_zero"
+     ],
+     "a": "`__builtin_clz(x)` — liczba zer wiodących w 32-bitowym `unsigned` (dla `long long`: `__builtin_clzll`). Wtedy\n`floor(log2(x)) = 31 - __builtin_clz(x)`. W C++20: `countl_zero(x)` z `<bit>`. Dla `x = 0` builtin jest niezdefiniowany.",
+     "code": "unsigned x = 16;\ncout << __builtin_clz(x) << ' ' << 31 - __builtin_clz(x) << ' ' << countl_zero(x) << '\\n';   // 27 4 27"
+    },
+    {
+     "q": [
+      "logarytm o podstawie k",
+      "log o dowolnej podstawie",
+      "log_b x c++"
+     ],
+     "a": "`log(x) / log(b)` (wzór na zmianę podstawy) — ale wynik jest `double` i dla potęg `b` może wyjść 2.9999. Dla liczb\ncałkowitych licz pętlą: ile razy można pomnożyć przez `b`, nie przekraczając `x`.",
+     "code": "long long x = 1000, b = 10;\nint k = 0;\nlong long p = 1;\nwhile (p <= x / b) { p *= b; k++; }   // floor(log_b(x))\ncout << k << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "log2 z double niedokladny",
+      "log2(8) daje 2.9999",
+      "floor(log2(x)) zle"
+     ],
+     "a": "`log2` liczy w `double`. Dla dokładnych potęg dwójki wynik jest zwykle poprawny, ale dla liczb bliskich potęgom\n(np. 2^50 − 1) `floor(log2(x))` może dać o 1 za dużo. Dla liczb całkowitych zawsze `__lg`.",
+     "code": "long long x = (1LL << 50) - 1;\ncout << __lg(x) << '\\n';   // 49"
+    },
+    {
+     "q": [
+      "ile razy mozna podzielic przez 2",
+      "glebokosc drzewa log n",
+      "ile poziomow ma sparse table"
+     ],
+     "a": "Liczba poziomów sparse table / skoków w LCA to `__lg(n) + 1`. Liczba dzieleń przez 2, aż zostanie 1, to `__lg(n)`.",
+     "code": "int n = 100000;\nint LOG = __lg(n) + 1;   // 17\ncout << LOG << '\\n';"
+    },
+    {
+     "q": [
+      "suma cyfr liczby",
+      "cyfry liczby po kolei",
+      "rozbij liczbe na cyfry"
+     ],
+     "a": "Pętla: `x % 10` to ostatnia cyfra, `x /= 10` ją usuwa. Cyfry wychodzą od końca.",
+     "code": "long long x = 90210;\nint suma = 0;\nwhile (x > 0) { suma += x % 10; x /= 10; }\ncout << suma << '\\n';   // 12"
+    }
+   ],
+   "related": [
+    "num-sqrt-pow",
+    "num-int-types",
+    "io-hex-bin",
+    "cpp-ref-bit",
+    "cpp-ref-cmath"
+   ]
+  }
+ ]
+}

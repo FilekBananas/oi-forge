@@ -1,0 +1,29 @@
+/* Auto-solver. Tylko zmienne motywu. */
+.as-live { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow: auto; }
+.as-live-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 4px 8px; border-radius: 7px; color: var(--text-2);
+  background: var(--panel-2); animation: as-in .2s var(--ease); }
+.as-live-item.ok { color: var(--success); background: var(--success-bg); }
+.as-live-item svg { flex: none; }
+@keyframes as-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+.as-verdict .card-body { gap: 14px; padding: 16px 18px; }
+.as-verdict.ok { border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+  background: radial-gradient(130% 160% at 0% 0%, var(--success-bg), transparent 60%), var(--panel); }
+.as-verdict.no { border-color: color-mix(in srgb, var(--warn) 40%, var(--border));
+  background: radial-gradient(130% 160% at 0% 0%, var(--warn-bg), transparent 60%), var(--panel); }
+.as-v-icon { flex: none; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; }
+.as-verdict.ok .as-v-icon { color: var(--success); background: var(--success-bg); }
+.as-verdict.no .as-v-icon { color: var(--warn); background: var(--warn-bg); }
+/* „weak”: przechodzi przykłady, ale dowód jest za słaby (jeden mały wynik / tylko kształt wejścia) — ostrzeżenie */
+.as-verdict.weak { border-color: color-mix(in srgb, var(--warn) 70%, var(--border));
+  background: repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in srgb, var(--warn-bg) 55%, transparent) 14px 28px),
+  radial-gradient(130% 160% at 0% 0%, var(--warn-bg), transparent 60%), var(--panel); }
+.as-verdict.weak .as-v-icon { color: var(--warn); background: var(--warn-bg); }
+.as-verdict.weak .as-v-title { color: var(--warn); }
+.as-v-title { font-size: 17px; font-weight: 700; color: var(--text); }
+.as-editor { min-height: 200px; }
+.as-editor .editor { border: 0; border-radius: 0 0 var(--radius) var(--radius); }
+/* gotowe wczytywanie, wskazówki, konkurencyjne programy z syntezy */
+.as-hints { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-2); }
+.as-comp { padding: 8px 10px; border-radius: var(--radius-s); border: 1px solid var(--border); background: var(--panel-2); }
+.as-comp-diff { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+.as-comp-diff pre { margin: 0; padding: 6px 8px; border-radius: 6px; background: var(--bg-2); max-height: 120px; overflow: auto; font-size: 12px; }

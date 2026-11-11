@@ -1,0 +1,20 @@
+Egzamin
+Po egzaminie znane są wyniki n uczniów. Nauczyciel zadaje q pytań postaci: ilu uczniów zdobyło co najmniej x punktów?
+Wejście
+W pierwszym wierszu liczba uczniów n (1 ≤ n ≤ 200 000). W drugim wierszu n liczb całkowitych p_1, ..., p_n
+(0 ≤ p_i ≤ 10^9) — wyniki uczniów. W trzecim wierszu liczba pytań q (1 ≤ q ≤ 200 000). W każdym z kolejnych q wierszy
+jedna liczba całkowita x (0 ≤ x ≤ 10^9).
+Wyjście
+Dla każdego pytania wypisz w osobnym wierszu liczbę uczniów, którzy zdobyli co najmniej x punktów.
+Przykład
+Wejście:
+5
+10 40 20 40 30
+3
+25
+41
+0
+Wyjście:
+3
+0
+5

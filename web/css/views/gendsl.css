@@ -1,0 +1,64 @@
+/* Generator testów (DSL) */
+.gd-body { flex: 1; min-height: 0; display: flex; }
+.gd-body > .split { flex: 1; }
+.gd-left { display: flex; flex-direction: column; min-height: 0; height: 100%; gap: 8px; }
+.gd-editor-host { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.gd-status { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: var(--radius-s); border: 1px solid var(--border);
+  background: var(--panel-2); font-size: 12.5px; min-height: 36px; flex: none; }
+.gd-status.ok svg { color: var(--success); flex: none; }
+.gd-status.err { background: var(--danger-bg); border-color: color-mix(in srgb, var(--danger) 35%, transparent); color: var(--text); }
+.gd-status.err svg { color: var(--danger); flex: none; }
+.gd-status kbd { font-size: 10.5px; }
+
+.gd-right { height: 100%; min-height: 0; display: flex; flex-direction: column; padding-left: 4px; }
+.gd-tabs { flex: 1; min-height: 0; }
+.gd-tabs .tab-panels { flex: 1; min-height: 0; overflow: auto; }
+.gd-tabs .tab-panel { padding-top: 12px; }
+.gd-pane { display: flex; flex-direction: column; gap: 12px; padding-right: 6px; padding-bottom: 12px; }
+.gd-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.gd-toolbar .input { width: auto; }
+.gd-lbl { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-weight: 500; }
+.gd-lbl code { font-family: var(--mono); color: var(--tok-def); }
+.gd-seed { width: 118px !important; }
+.gd-size { width: 86px !important; }
+.gd-busy { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.gd-busy[hidden] { display: none; }
+
+.gd-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.gd-stats:empty { display: none; }
+.gd-stats .stat { padding: 10px 12px; }
+.gd-stats .stat .s-value { font-size: 18px; }
+@media (max-width: 1400px) { .gd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.gd-warn:empty, .gd-full:empty { display: none; }
+.gd-warn .callout { margin: 0; }
+
+.gd-full-card { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
+  background: var(--success-bg); }
+.gd-full-card > svg { color: var(--success); flex: none; }
+
+.gd-tests { display: flex; flex-direction: column; gap: 10px; }
+.gd-test { border: 1px solid var(--border); border-radius: var(--radius); background: var(--code-bg); overflow: hidden; }
+.gd-test-head { display: flex; align-items: center; gap: 10px; padding: 4px 6px 4px 12px; background: var(--panel-2); border-bottom: 1px solid var(--border); font-size: 12.5px; }
+.gd-test-body { margin: 0; padding: 10px 14px; font: 12.8px/1.55 var(--mono); color: var(--text); max-height: 260px; overflow: auto; white-space: pre; tab-size: 4; }
+
+.gd-export-code .codeblock { margin: 0; }
+.gd-pane > .callout { margin: 0; }
+
+.gd-ref { display: flex; flex-direction: column; gap: 8px; }
+.gd-ref-cat { margin-top: 10px; }
+.gd-ref-item { border: 1px solid var(--border); border-radius: var(--radius-s); padding: 9px 12px; background: var(--panel); display: flex; flex-direction: column; gap: 5px; }
+.gd-ref-item:hover { border-color: var(--border-2); }
+.gd-ref-sig { font: 600 12.5px var(--mono); color: var(--tok-builtin); white-space: pre-wrap; word-break: break-word; }
+.gd-ref-desc { font-size: 12.8px; color: var(--text-2); }
+.gd-ref-ex { margin: 2px 0 0; padding: 6px 10px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; font: 12px/1.5 var(--mono); color: var(--text-2); white-space: pre; overflow-x: auto; }
+
+.gd-chips { flex-wrap: wrap; }
+.gd-ex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.gd-ex-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; background: var(--panel-2); cursor: pointer; display: flex; flex-direction: column; gap: 8px;
+  transition: border-color .12s, transform .12s var(--ease), background .12s; min-width: 0; }
+.gd-ex-card:hover, .gd-ex-card:focus-visible { border-color: var(--accent); background: var(--accent-bg); transform: translateY(-1px); outline: none; }
+.gd-ex-code { margin: 0; padding: 7px 10px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; font: 11.5px/1.5 var(--mono); color: var(--text-2);
+  white-space: pre; overflow: hidden; text-overflow: ellipsis; max-height: 112px; }
+
+/* kolory trybu oigen w motywie aplikacji */
+.cm-s-oiforge .cm-builtin { color: var(--tok-builtin); }

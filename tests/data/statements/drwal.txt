@@ -1,0 +1,24 @@
+Drwal
+Drwal Bajtazar musi zebrać co najmniej m metrów drewna. Ustawia piłę na wysokości H i ścina wszystkie drzewa: z każdego
+drzewa wyższego niż H dostaje kawałek o długości (wysokość drzewa − H), niższe drzewa pozostają nietknięte. Bajtazar
+dba o las, dlatego chce ustawić piłę jak najwyżej. Wyznacz największą całkowitą wysokość H, przy której zbierze
+co najmniej m metrów drewna.
+Wejście
+W pierwszym wierszu znajdują się dwie liczby całkowite n i m (1 ≤ n ≤ 10^6, 1 ≤ m ≤ 2·10^9) — liczba drzew i
+potrzebna ilość drewna. W drugim wierszu znajduje się n liczb całkowitych h_1, ..., h_n (1 ≤ h_i ≤ 10^9) — wysokości
+drzew. Suma wysokości wszystkich drzew jest nie mniejsza niż m.
+Wyjście
+Wypisz jedną liczbę — największą wysokość H.
+Przykład 1
+Wejście:
+4 7
+20 15 10 17
+Wyjście:
+15
+
+Przykład 2
+Wejście:
+5 20
+4 42 40 26 46
+Wyjście:
+36

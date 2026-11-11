@@ -1,0 +1,31 @@
+/* Auto-testerka */
+.at-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 18px; align-items: start; }
+@media (max-width: 1150px) { .at-grid { grid-template-columns: 1fr; } }
+.at-sample { padding: 10px 12px; border-radius: var(--radius-s); background: var(--panel-2); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+.at-sample .textarea { min-height: 96px; font-size: 12.5px; }
+.at-desc { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 5px; }
+.at-desc li { line-height: 1.5; }
+.at-desc li.nested { margin-left: 22px; list-style: circle; }
+.at-desc li::marker { color: var(--accent-2); font-weight: 600; }
+.at-json { min-height: 240px; font-size: 12px; }
+.at-spec-edit summary { cursor: pointer; color: var(--text-2); display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.at-strats .chip { cursor: pointer; font: inherit; font-size: 12.5px; }
+.at-editors { display: grid; grid-template-rows: 300px 240px; gap: 10px; }
+.at-ed { display: flex; flex-direction: column; min-height: 0; }
+.at-ed .editor { flex: 1; height: 100%; }
+.at-counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.at-counters .stat .s-value { font-size: 20px; }
+.at-step { display: flex; gap: 12px; align-items: flex-start; padding: 8px 4px; }
+.at-step-n { width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px;
+  background: var(--accent-bg); color: var(--accent-2); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.at-summary { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--border); flex-wrap: wrap; }
+.at-summary.ok { background: var(--success-bg); border-color: color-mix(in srgb, var(--success) 40%, var(--border)); }
+.at-summary.ok > svg { color: var(--success); }
+.at-summary.bad { background: var(--danger-bg); border-color: color-mix(in srgb, var(--danger) 40%, var(--border)); }
+.at-summary.bad > svg { color: var(--danger); }
+.at-fail.danger { border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.at-fail.danger .card-icon { color: var(--danger); }
+.at-fail.accent { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); box-shadow: 0 0 0 3px var(--accent-bg); }
+.at-fail.accent .card-icon { color: var(--accent-2); }
+.at-io { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.at-io .codeblock { min-width: 0; }

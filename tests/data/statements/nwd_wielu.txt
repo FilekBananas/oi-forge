@@ -1,0 +1,21 @@
+Największy wspólny dzielnik
+Dla danego zestawu liczb naturalnych wyznacz ich największy wspólny dzielnik, czyli największą liczbę, przez którą
+dzieli się każda z nich.
+Wejście
+Pierwszy wiersz zawiera liczbę n (1 ≤ n ≤ 10^6). Drugi wiersz zawiera n liczb naturalnych a_1, ..., a_n
+(1 ≤ a_i ≤ 10^18).
+Wyjście
+Wypisz NWD(a_1, a_2, ..., a_n).
+Przykład 1
+Wejście:
+4
+12 18 30 42
+Wyjście:
+6
+
+Przykład 2
+Wejście:
+3
+7 13 5
+Wyjście:
+1

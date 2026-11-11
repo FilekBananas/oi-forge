@@ -1,0 +1,42 @@
+/* Testerka uniwersalna */
+.ts-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(380px, 1fr); gap: 18px; }
+@media (max-width: 1150px) { .ts-layout { grid-template-columns: 1fr; } .ts-left { min-height: 560px; } }
+.ts-left { display: flex; flex-direction: column; min-height: 0; gap: 10px; }
+.ts-right { min-height: 0; overflow: auto; padding-right: 4px; }
+.ts-ed-head { gap: 10px; }
+.ts-ed-tabs { display: flex; gap: 4px; padding: 3px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; }
+.ts-tab { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 8px; border: 0; background: transparent;
+  color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ts-tab:hover { color: var(--text); }
+.ts-tab.active { background: var(--panel); color: var(--text); box-shadow: var(--shadow); }
+.ts-tab.active svg { color: var(--accent-2); }
+.ts-editors { flex: 1; min-height: 420px; display: flex; }
+.ts-editors > .ts-ed-holder { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ts-editors.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 1400px) { .ts-editors.cols { grid-template-columns: 1fr; } .ts-editors.cols > .ts-ed-holder { min-height: 320px; } }
+.ts-ed-holder .editor { flex: 1; height: 100%; }
+
+.ts-settings { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px 14px; align-items: end; }
+.ts-settings .more { grid-column: 1 / -1; }
+.ts-settings .more.open > .more-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px 14px; align-items: end; }
+.ts-settings .more-body > .field:first-child { grid-column: 1 / -1; }
+.ts-checks { grid-column: 1 / -1; flex-direction: row !important; flex-wrap: wrap; gap: 16px !important; }
+.ts-counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 8px; }
+.ts-counters .stat { padding: 10px 12px; }
+.ts-counters .stat .s-value { font-size: 20px; }
+.ts-times { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.ts-times b { color: var(--text); font-family: var(--mono); font-weight: 600; }
+
+.ts-summary { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--border); }
+.ts-summary.ok { background: var(--success-bg); border-color: color-mix(in srgb, var(--success) 40%, var(--border)); }
+.ts-summary.ok > svg { color: var(--success); }
+.ts-summary.bad { background: var(--danger-bg); border-color: color-mix(in srgb, var(--danger) 40%, var(--border)); }
+.ts-summary.bad > svg { color: var(--danger); }
+
+.ts-fail.danger { border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.ts-fail.warn { border-color: color-mix(in srgb, var(--warn) 45%, var(--border)); }
+.ts-fail.accent { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); box-shadow: 0 0 0 3px var(--accent-bg); }
+.ts-fail.danger .card-icon { color: var(--danger); }
+.ts-fail.accent .card-icon { color: var(--accent-2); }
+.ts-io { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.ts-io .codeblock { min-width: 0; }

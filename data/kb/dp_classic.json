@@ -1,0 +1,1696 @@
+{
+ "chunk": "dp-classic",
+ "articles": [
+  {
+   "id": "dp-lcs",
+   "title": "Najdłuższy wspólny podciąg (LCS)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "lcs",
+    "najdłuższy wspólny podciąg",
+    "longest common subsequence",
+    "napisy",
+    "dp 2d",
+    "diff"
+   ],
+   "aliases": [
+    "lcs",
+    "najdłuższy wspólny podciąg",
+    "longest common subsequence",
+    "nwp",
+    "wspólny podciąg",
+    "lcs c++",
+    "lcs dp",
+    "najdluzszy wspolny podciag"
+   ],
+   "summary": "dp[i][j] = długość LCS prefiksów a[0..i) i b[0..j): przy równych ostatnich znakach dp[i-1][j-1] + 1, w przeciwnym razie max(dp[i-1][j], dp[i][j-1]). Odtwarzanie przez cofanie się po tablicy.",
+   "complexity": "O(n·m) czasu; O(n·m) pamięci z odtwarzaniem albo O(min(n, m)) dla samej długości",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Podciąg** = znaki wybrane z zachowaniem kolejności (mogą być przerwy). LCS dwóch napisów to najdłuższy napis,\nktóry jest podciągiem obu (np. LCS(`ABCBDAB`, `BDCABA`) ma długość 4, np. `BCBA`).\n\nStan: `dp[i][j]` = długość LCS prefiksu `a` długości `i` i prefiksu `b` długości `j`.\n* jeśli `a[i-1] == b[j-1]`: `dp[i][j] = dp[i-1][j-1] + 1` (ostatni znak można dołączyć do wspólnego podciągu),\n* inaczej: `dp[i][j] = max(dp[i-1][j], dp[i][j-1])` (któryś z ostatnich znaków nie należy do LCS).\n\nBaza: `dp[0][j] = dp[i][0] = 0`. Wynik `dp[n][m]`. Sygnały w treści: „najdłuższy wspólny podciąg”,\n„ile znaków usunąć z obu napisów, żeby były równe” (= n + m − 2·LCS), „podobieństwo ciągów”, „diff”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: LCS z odtworzeniem",
+     "code": "// LCS dwóch napisów: długość + jeden najdłuższy wspólny podciąg.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string a, b;\n    cin >> a >> b;\n    int n = a.size(), m = b.size();\n    vector<vector<int>> dp(n + 1, vector<int>(m + 1, 0));\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++)\n            dp[i][j] = (a[i - 1] == b[j - 1]) ? dp[i - 1][j - 1] + 1\n                                             : max(dp[i - 1][j], dp[i][j - 1]);\n\n    string lcs;                                   // odtwarzanie od (n, m)\n    for (int i = n, j = m; i > 0 && j > 0; ) {\n        if (a[i - 1] == b[j - 1]) { lcs += a[i - 1]; i--; j--; }\n        else if (dp[i - 1][j] >= dp[i][j - 1]) i--;\n        else j--;\n    }\n    reverse(lcs.begin(), lcs.end());\n    cout << dp[n][m] << \"\\n\" << lcs << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zadanie",
+      "Sprowadzenie do LCS",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "min. usunięć z obu napisów, by były równe",
+       "n + m − 2·LCS",
+       "O(nm)"
+      ],
+      [
+       "najkrótszy wspólny nadciąg (SCS)",
+       "n + m − LCS",
+       "O(nm)"
+      ],
+      [
+       "min. wstawień, by napis był palindromem",
+       "n − LCS(s, odwrócone s)",
+       "O(n²)"
+      ],
+      [
+       "LCS dwóch permutacji",
+       "zamień na pozycje w drugiej permutacji i policz LIS",
+       "O(n log n)"
+      ],
+      [
+       "najdłuższe wspólne podsłowo (spójne!)",
+       "inne DP: dp = dp[i-1][j-1] + 1 albo 0",
+       "O(nm)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "**Podciąg ≠ podsłowo.** Podciąg może mieć przerwy (LCS), podsłowo (substring) jest spójne. Dla najdłuższego\nwspólnego **podsłowa** przy nierównych znakach wpisujemy 0, a nie maksimum sąsiadów."
+    },
+    {
+     "type": "tip",
+     "md": "Dla samej długości wystarczą dwa wiersze (`prev`, `cur`) — pamięć O(m). Gdy n·m ≈ 10^8 i pamięć jest ciasna,\na trzeba odtworzyć podciąg, istnieje algorytm Hirschberga (O(nm) czasu, O(n + m) pamięci)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dp[i][j] = a[i-1]==b[j-1] ? dp[i-1][j-1]+1 : max(dp[i-1][j], dp[i][j-1])",
+     "desc": "przejście LCS",
+     "complexity": "O(1) na pole"
+    }
+   ],
+   "pitfalls": [
+    "Przesunięcie indeksów: dp ma rozmiar (n+1)×(m+1), a znaki to a[i-1], b[j-1].",
+    "Tablica int 10^4 × 10^4 = 400 MB — dla samej długości użyj dwóch wierszy.",
+    "Mylenie podciągu (LCS) z podsłowem (longest common substring) — inne przejście.",
+    "LCS dwóch permutacji długości 10^5 w O(n²) to TLE — zamień na LIS."
+   ],
+   "qa": [
+    {
+     "q": [
+      "lcs",
+      "najdłuższy wspólny podciąg",
+      "longest common subsequence",
+      "lcs c++",
+      "nwp dwoch napisow"
+     ],
+     "a": "`dp[i][j]` = LCS prefiksów długości `i` i `j`. Gdy `a[i-1] == b[j-1]`: `dp[i-1][j-1] + 1`, inaczej\n`max(dp[i-1][j], dp[i][j-1])`. Wynik `dp[n][m]`, czas O(n·m). Działa tak samo dla napisów i dla ciągów liczb.",
+     "code": "string a = \"ABCBDAB\", b = \"BDCABA\";\nint n = a.size(), m = b.size();\nvector<vector<int>> dp(n + 1, vector<int>(m + 1, 0));\nfor (int i = 1; i <= n; i++)\n    for (int j = 1; j <= m; j++)\n        dp[i][j] = a[i-1] == b[j-1] ? dp[i-1][j-1] + 1 : max(dp[i-1][j], dp[i][j-1]);\ncout << dp[n][m] << \"\\n\";   // 4"
+    },
+    {
+     "q": [
+      "lcs odtworzenie",
+      "jak wypisać lcs",
+      "lcs reconstruct",
+      "wypisz najdluzszy wspolny podciag"
+     ],
+     "a": "Startuj z `(n, m)`: jeśli znaki są równe — dopisz znak i idź po skosie; inaczej idź w stronę większej wartości\n(`dp[i-1][j] >= dp[i][j-1]` ⇒ `i--`, w przeciwnym razie `j--`). Na końcu odwróć zebrany napis. Odtwarzanie\nkosztuje O(n + m), ale wymaga pełnej tablicy. Pełny program jest w treści."
+    },
+    {
+     "q": [
+      "lcs pamięć",
+      "lcs dwa wiersze",
+      "lcs memory limit",
+      "lcs 10^4 x 10^4",
+      "lcs o(m) pamieci"
+     ],
+     "a": "Wiersz `i` zależy tylko od wiersza `i-1`, więc trzymaj dwa wektory długości `m+1` i zamieniaj je `swap`-em.\nPamięć O(m) zamiast O(n·m) (np. 40 KB zamiast 400 MB dla 10^4 × 10^4). Odtworzenia w ten sposób nie zrobisz —\nwtedy Hirschberg albo bitowe decyzje.",
+     "code": "string a = \"AGGTAB\", b = \"GXTXAYB\";\nint m = b.size();\nvector<int> prev(m + 1, 0), cur(m + 1, 0);\nfor (char c : a) {\n    for (int j = 1; j <= m; j++)\n        cur[j] = (c == b[j - 1]) ? prev[j - 1] + 1 : max(prev[j], cur[j - 1]);\n    swap(prev, cur);\n}\ncout << prev[m] << \"\\n\";   // 4 (GTAB)"
+    },
+    {
+     "q": [
+      "najdłuższy wspólny podciąg spójny",
+      "longest common substring",
+      "najdluzsze wspolne podslowo",
+      "wspólny fragment dwóch napisów"
+     ],
+     "a": "Dla spójnego fragmentu: `dp[i][j] = a[i-1] == b[j-1] ? dp[i-1][j-1] + 1 : 0`, a wynik to **maksimum po całej\ntablicy** (nie `dp[n][m]`). Czas O(n·m). Dla długich napisów (10^5): wyszukiwanie binarne po długości +\nhashowanie albo tablica sufiksowa z LCP — O(n log n).",
+     "code": "string a = \"abcdxyz\", b = \"xyzabcd\";\nint n = a.size(), m = b.size(), best = 0;\nvector<vector<int>> dp(n + 1, vector<int>(m + 1, 0));\nfor (int i = 1; i <= n; i++)\n    for (int j = 1; j <= m; j++)\n        if (a[i - 1] == b[j - 1]) { dp[i][j] = dp[i - 1][j - 1] + 1; best = max(best, dp[i][j]); }\ncout << best << \"\\n\";   // 4 (\"abcd\")"
+    },
+    {
+     "q": [
+      "lcs permutacji",
+      "lcs dwóch permutacji n log n",
+      "lcs szybko dla permutacji",
+      "lcs n=10^5"
+     ],
+     "a": "Gdy oba ciągi to permutacje tych samych liczb (lub elementy w każdym ciągu są różne), zamień każdy element\npierwszego ciągu na jego pozycję w drugim. Wspólny podciąg odpowiada wtedy rosnącemu podciągowi pozycji, więc\nLCS = LIS nowego ciągu — O(n log n).",
+     "code": "vector<int> a = {1, 3, 2, 4}, b = {3, 1, 2, 4};\nint n = a.size();\nvector<int> pos(n + 1);\nfor (int i = 0; i < n; i++) pos[b[i]] = i;\nvector<int> tails;\nfor (int x : a) {\n    int p = pos[x];\n    auto it = lower_bound(tails.begin(), tails.end(), p);\n    if (it == tails.end()) tails.push_back(p); else *it = p;\n}\ncout << tails.size() << \"\\n\";   // 3"
+    },
+    {
+     "q": [
+      "najkrótszy wspólny nadciąg",
+      "shortest common supersequence",
+      "najkrotszy napis zawierajacy oba jako podciag"
+     ],
+     "a": "Najkrótszy napis, który zawiera `a` i `b` jako podciągi, ma długość `n + m − LCS(a, b)` — wspólne znaki\nz LCS piszemy raz, resztę wplatamy. Sam napis odtwarzasz jak LCS, dopisując też znaki pomijane przy ruchu\nw górę/w lewo. Czas O(n·m)."
+    },
+    {
+     "q": [
+      "ile wstawień żeby palindrom",
+      "min insertions palindrome",
+      "minimalna liczba liter do dopisania palindrom",
+      "ile usunac zeby byl palindrom"
+     ],
+     "a": "Minimalna liczba wstawień (albo usunięć), by napis stał się palindromem, to `n − LPS`, gdzie LPS = najdłuższy\npodciąg palindromiczny = `LCS(s, odwrócone s)`. Czas O(n²). Np. `aebcbda`: LPS = 5 (`abcba`), odpowiedź 2.",
+     "code": "string s = \"aebcbda\", t(s.rbegin(), s.rend());\nint n = s.size();\nvector<vector<int>> dp(n + 1, vector<int>(n + 1, 0));\nfor (int i = 1; i <= n; i++)\n    for (int j = 1; j <= n; j++)\n        dp[i][j] = s[i-1] == t[j-1] ? dp[i-1][j-1] + 1 : max(dp[i-1][j], dp[i][j-1]);\ncout << n - dp[n][n] << \"\\n\";   // 2"
+    },
+    {
+     "q": [
+      "lcs trzech napisów",
+      "lcs 3 strings",
+      "wspólny podciąg trzech ciągów"
+     ],
+     "a": "Ten sam pomysł w trzech wymiarach: `dp[i][j][k]`; gdy trzy ostatnie znaki są równe — `dp[i-1][j-1][k-1] + 1`,\ninaczej maksimum z trzech stanów z jednym indeksem mniejszym. Czas i pamięć O(n·m·k) — realne dla długości\n~200–300. Uwaga: LCS(LCS(a, b), c) **nie** jest poprawnym rozwiązaniem."
+    },
+    {
+     "q": [
+      "różnica lcs a lis",
+      "lcs vs lis",
+      "kiedy lcs kiedy lis"
+     ],
+     "a": "LIS szuka najdłuższego **rosnącego** podciągu w jednym ciągu (O(n log n)), LCS — najdłuższego **wspólnego**\npodciągu dwóch ciągów (O(n·m)). Związek: LCS dwóch permutacji sprowadza się do LIS, a LIS ciągu `a` to LCS\n`a` z posortowanym `a` bez powtórzeń (ale to wolniejsze)."
+    },
+    {
+     "q": [
+      "ile usunąć znaków żeby napisy były równe",
+      "delete operation for two strings",
+      "minimalna liczba usuniec dwa napisy rowne"
+     ],
+     "a": "Zostawiamy w obu napisach wspólny podciąg, a resztę usuwamy, więc odpowiedź to `n + m − 2·LCS`. To też odległość\nedycyjna, w której dozwolone są tylko usunięcia/wstawienia (bez zamiany). Czas O(n·m)."
+    }
+   ],
+   "related": [
+    "dp-edit-distance",
+    "dp-lis",
+    "str-palindromes",
+    "dp-interval",
+    "str-suffix-array"
+   ]
+  },
+  {
+   "id": "dp-edit-distance",
+   "title": "Odległość edycyjna (Levenshteina)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "odległość edycyjna",
+    "levenshtein",
+    "edit distance",
+    "napisy",
+    "dp 2d",
+    "wstawianie usuwanie zamiana"
+   ],
+   "aliases": [
+    "odległość edycyjna",
+    "levenshtein",
+    "edit distance",
+    "odleglosc levenshteina",
+    "edit distance c++",
+    "odległość levenshteina",
+    "minimalna liczba operacji edycji"
+   ],
+   "summary": "Minimalna liczba wstawień, usunięć i zamian znaków, by z a dostać b: dp[i][j] = min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + [a[i-1] ≠ b[j-1]]).",
+   "complexity": "O(n·m) czasu; O(n·m) pamięci z odtworzeniem operacji albo O(m) dla samej odległości",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`dp[i][j]` = minimalny koszt zamiany prefiksu `a[0..i)` na prefiks `b[0..j)`. Ostatnia operacja to jedna z:\n* **usunięcie** `a[i-1]`: `dp[i-1][j] + 1`,\n* **wstawienie** `b[j-1]`: `dp[i][j-1] + 1`,\n* **zamiana** `a[i-1]` na `b[j-1]` (darmowa, gdy znaki są równe): `dp[i-1][j-1] + (a[i-1] != b[j-1])`.\n\nBaza: `dp[i][0] = i` (usuwamy wszystko), `dp[0][j] = j` (wstawiamy wszystko). Wynik `dp[n][m]`.\nPrzykład: `kitten → sitting` = 3 (k→s, e→i, wstaw g)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: odległość edycyjna z odtworzeniem operacji",
+     "code": "// Odległość edycyjna + lista operacji. Napisy w osobnych liniach (mogą być puste).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string a, b;\n    getline(cin, a);\n    getline(cin, b);\n    int n = a.size(), m = b.size();\n    vector<vector<int>> dp(n + 1, vector<int>(m + 1));\n    for (int i = 0; i <= n; i++) dp[i][0] = i;\n    for (int j = 0; j <= m; j++) dp[0][j] = j;\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++)\n            dp[i][j] = min({dp[i - 1][j] + 1,                            // usuń a[i-1]\n                            dp[i][j - 1] + 1,                            // wstaw b[j-1]\n                            dp[i - 1][j - 1] + (a[i - 1] != b[j - 1])}); // zamień / zgodne\n    cout << dp[n][m] << \"\\n\";\n\n    vector<string> ops;                       // odtwarzanie od (n, m)\n    int i = n, j = m;\n    while (i > 0 || j > 0) {\n        if (i > 0 && j > 0 && dp[i][j] == dp[i - 1][j - 1] + (a[i - 1] != b[j - 1])) {\n            if (a[i - 1] != b[j - 1]) ops.push_back(string(\"zamień \") + a[i - 1] + \" na \" + b[j - 1]);\n            i--; j--;\n        } else if (i > 0 && dp[i][j] == dp[i - 1][j] + 1) {\n            ops.push_back(string(\"usuń \") + a[i - 1]); i--;\n        } else {\n            ops.push_back(string(\"wstaw \") + b[j - 1]); j--;\n        }\n    }\n    reverse(ops.begin(), ops.end());\n    for (auto &op : ops) cout << op << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Zmiana"
+     ],
+     "rows": [
+      [
+       "tylko wstawianie i usuwanie",
+       "bez przejścia „zamiana” ⇒ wynik n + m − 2·LCS"
+      ],
+      [
+       "różne koszty operacji",
+       "zamiast +1 dodaj koszt usunięcia/wstawienia/zamiany danego znaku"
+      ],
+      [
+       "zamiana sąsiednich liter (Damerau, wersja OSA)",
+       "dodatkowo dp[i-2][j-2] + 1, gdy a[i-1]=b[j-2] i a[i-2]=b[j-1]"
+      ],
+      [
+       "czy odległość ≤ k",
+       "licz tylko pasmo |i − j| ≤ k ⇒ O((n + m)·k)"
+      ],
+      [
+       "tylko odległość, mało pamięci",
+       "dwa wiersze ⇒ O(m)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Ta sama tabelka służy do „fuzzy matchingu” (literówki w wyszukiwarce): małe `dp[n][m]` = napisy podobne.\nOdtworzenie operacji to klasyczny „diff” dwóch tekstów."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dp[i][j] = min({dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+(a[i-1]!=b[j-1])})",
+     "desc": "przejście Levenshteina",
+     "complexity": "O(1) na pole"
+    },
+    {
+     "sig": "min({x, y, z})",
+     "desc": "minimum z listy inicjalizacyjnej (nagłówek <algorithm>)",
+     "complexity": "O(liczba elementów)"
+    }
+   ],
+   "pitfalls": [
+    "Zapomniana inicjalizacja brzegów dp[i][0] = i i dp[0][j] = j — wynik wychodzi za mały.",
+    "`cin >> s` nie wczyta pustego napisu — gdy napis może być pusty, użyj getline.",
+    "Tablica int 10^4 × 10^4 to 400 MB — dla samej odległości trzymaj dwa wiersze.",
+    "`min(a, b, c)` nie istnieje w tej postaci — pisz `min({a, b, c})` albo zagnieżdżone `min`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "odległość edycyjna",
+      "levenshtein",
+      "edit distance c++",
+      "odleglosc levenshteina kod",
+      "edit distance dp"
+     ],
+     "a": "`dp[i][j]` = koszt zamiany `a[0..i)` na `b[0..j)`; przejście = minimum z usunięcia (`dp[i-1][j] + 1`),\nwstawienia (`dp[i][j-1] + 1`) i zamiany (`dp[i-1][j-1] + [a[i-1] ≠ b[j-1]]`). Brzegi: `dp[i][0] = i`,\n`dp[0][j] = j`. Czas O(n·m).",
+     "code": "string a = \"sunday\", b = \"saturday\";\nint n = a.size(), m = b.size();\nvector<vector<int>> dp(n + 1, vector<int>(m + 1));\nfor (int i = 0; i <= n; i++) dp[i][0] = i;\nfor (int j = 0; j <= m; j++) dp[0][j] = j;\nfor (int i = 1; i <= n; i++)\n    for (int j = 1; j <= m; j++)\n        dp[i][j] = min({dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + (a[i-1] != b[j-1])});\ncout << dp[n][m] << \"\\n\";   // 3"
+    },
+    {
+     "q": [
+      "edit distance odtworzenie operacji",
+      "jakie operacje edit distance",
+      "levenshtein wypisz operacje",
+      "edit distance backtrack"
+     ],
+     "a": "Od `(n, m)` cofaj się: jeśli `dp[i][j]` pochodzi ze skosu — zamiana (albo zgodność, gdy znaki równe), jeśli\nz góry — usunięcie `a[i-1]`, jeśli z lewej — wstawienie `b[j-1]`. Zebrane operacje odwróć. Pełny program\nw treści wypisuje np. dla `kitten → sitting`: zamień k na s, zamień e na i, wstaw g."
+    },
+    {
+     "q": [
+      "edit distance pamięć",
+      "levenshtein dwa wiersze",
+      "edit distance o(m) memory",
+      "edit distance mle"
+     ],
+     "a": "Wiersz `i` zależy tylko od wiersza `i-1` (i od bieżącego wiersza po lewej), więc dwa wektory długości `m+1`\nwystarczą: pamięć O(m). Pamiętaj, że `cur[0] = i` w każdym wierszu.",
+     "code": "string a = \"intention\", b = \"execution\";\nint m = b.size();\nvector<int> prev(m + 1), cur(m + 1);\niota(prev.begin(), prev.end(), 0);           // dp[0][j] = j\nfor (int i = 1; i <= (int)a.size(); i++) {\n    cur[0] = i;\n    for (int j = 1; j <= m; j++)\n        cur[j] = min({prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] != b[j - 1])});\n    swap(prev, cur);\n}\ncout << prev[m] << \"\\n\";   // 5"
+    },
+    {
+     "q": [
+      "edit distance tylko wstawianie i usuwanie",
+      "odległość bez zamiany",
+      "levenshtein bez zamiany znakow"
+     ],
+     "a": "Gdy zamiana jest zabroniona (albo kosztuje 2), zamiana = usunięcie + wstawienie, a optymalnie zostawiamy\nnajdłuższy wspólny podciąg: odległość = `n + m − 2·LCS(a, b)`. Liczysz LCS w O(n·m)."
+    },
+    {
+     "q": [
+      "edit distance różne koszty",
+      "weighted edit distance",
+      "levenshtein z wagami",
+      "koszt wstawienia inny niz usuniecia"
+     ],
+     "a": "Zamień stałe `+1` na koszty: `dp[i-1][j] + cDel`, `dp[i][j-1] + cIns`, `dp[i-1][j-1] + (równe ? 0 : cRep)`.\nBrzegi też: `dp[i][0] = i·cDel`, `dp[0][j] = j·cIns`. Jeśli `cRep > cDel + cIns`, zamiana nigdy się nie opłaca —\nDP samo to uwzględni. Złożoność bez zmian."
+    },
+    {
+     "q": [
+      "damerau levenshtein",
+      "zamiana sąsiednich liter edit distance",
+      "transpozycja edit distance",
+      "literówka zamienione litery"
+     ],
+     "a": "Wersja OSA (optimal string alignment) dodaje przejście: jeśli `i, j ≥ 2`, `a[i-1] == b[j-2]` i `a[i-2] == b[j-1]`,\nto `dp[i][j] = min(dp[i][j], dp[i-2][j-2] + 1)` (zamiana dwóch sąsiednich liter). Czas nadal O(n·m).",
+     "code": "string a = \"ca\", b = \"ac\";\nint n = a.size(), m = b.size();\nvector<vector<int>> dp(n + 1, vector<int>(m + 1));\nfor (int i = 0; i <= n; i++) dp[i][0] = i;\nfor (int j = 0; j <= m; j++) dp[0][j] = j;\nfor (int i = 1; i <= n; i++)\n    for (int j = 1; j <= m; j++) {\n        dp[i][j] = min({dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + (a[i-1] != b[j-1])});\n        if (i >= 2 && j >= 2 && a[i-1] == b[j-2] && a[i-2] == b[j-1])\n            dp[i][j] = min(dp[i][j], dp[i-2][j-2] + 1);\n    }\ncout << dp[n][m] << \"\\n\";   // 1 (Levenshtein dałby 2)"
+    },
+    {
+     "q": [
+      "czy odległość edycyjna jest mała",
+      "edit distance ≤ k szybko",
+      "edit distance pasmo",
+      "banded edit distance"
+     ],
+     "a": "Jeśli interesuje Cię tylko, czy odległość ≤ k, licz pola z `|i − j| ≤ k` (poza pasmem odległość na pewno > k).\nCzas O((n + m)·k) zamiast O(n·m). Najpierw sprawdź `|n − m| ≤ k` — inaczej od razu odpowiedź „nie”."
+    },
+    {
+     "q": [
+      "podobieństwo napisów",
+      "fuzzy matching",
+      "jak sprawdzic czy napisy sa podobne",
+      "literówki porównanie słów"
+     ],
+     "a": "Standardowa miara to odległość Levenshteina (O(n·m)); podobieństwo często normalizuje się jako\n`1 − dist / max(n, m)`. Dla wielu krótkich słów wystarczy zwykła tablica DP; dla długich tekstów z małą liczbą\nróżnic — wersja z pasmem albo LCS (diff)."
+    },
+    {
+     "q": [
+      "levenshtein rekurencyjnie",
+      "edit distance memoizacja",
+      "edit distance rekurencja z pamiecia",
+      "levenshtein recursive memo"
+     ],
+     "a": "Ta sama rekurencja, tylko od góry: `f(i, j)` = koszt zamiany `a[0..i)` na `b[0..j)`, `f(0, j) = j`, `f(i, 0) = i`,\na wyniki zapisujesz w tablicy `memo`. Czas O(n·m) jak w wersji z pętlami, ale głębokość rekurencji to do n + m,\nwięc dla długich napisów wybierz wersję iteracyjną.",
+     "code": "string A = \"horse\", B = \"ros\";\nvector<vector<int>> memo(A.size() + 1, vector<int>(B.size() + 1, -1));\nfunction<int(int,int)> f = [&](int i, int j) -> int {\n    if (i == 0) return j;\n    if (j == 0) return i;\n    int &r = memo[i][j];\n    if (r != -1) return r;\n    return r = min({f(i - 1, j) + 1, f(i, j - 1) + 1, f(i - 1, j - 1) + (A[i - 1] != B[j - 1])});\n};\ncout << f(A.size(), B.size()) << \"\\n\";   // 3"
+    },
+    {
+     "q": [
+      "levenshtein dla długich napisów",
+      "edit distance n=10^5",
+      "edit distance szybciej niz n*m",
+      "odleglosc edycyjna duze dane"
+     ],
+     "a": "Dla dowolnych napisów nie jest znany algorytm istotnie szybszy niż O(n·m) (n = m = 10^5 to 10^10 — za wolno).\nJeśli zadanie ma takie limity, szukaj dodatkowej struktury: mała odległość ⇒ pasmo O((n + m)·k); tylko\nwstawianie/usuwanie ⇒ LCS, a dla permutacji LCS = LIS w O(n log n); porównania fragmentów ⇒ hashowanie."
+    }
+   ],
+   "related": [
+    "dp-lcs",
+    "dp-intro",
+    "str-hashing"
+   ]
+  },
+  {
+   "id": "dp-interval",
+   "title": "DP na przedziałach (mnożenie macierzy, nawiasowanie, łączenie stosów)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "dp na przedziałach",
+    "interval dp",
+    "mnożenie macierzy",
+    "nawiasowanie",
+    "dp[l][r]",
+    "palindromy",
+    "łączenie stosów"
+   ],
+   "aliases": [
+    "dp na przedziałach",
+    "interval dp",
+    "range dp",
+    "dp[l][r]",
+    "mnożenie macierzy kolejność",
+    "matrix chain multiplication",
+    "nawiasowanie dp",
+    "dp przedzialowe"
+   ],
+   "summary": "Stan dp[l][r] opisuje fragment a[l..r]; liczymy przedziały w kolejności rosnącej długości, a przejście zwykle wybiera punkt podziału k (O(n³)) albo zdejmuje skrajny element (O(n²)).",
+   "complexity": "typowo O(n²) stanów × O(n) podział = O(n³) czasu i O(n²) pamięci; n ≤ ~500",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "DP na przedziałach stosujemy, gdy wynik dla fragmentu `[l, r]` da się złożyć z wyników mniejszych fragmentów:\n* **podział:** `dp[l][r] = min_{l ≤ k < r} (dp[l][k] + dp[k+1][r] + koszt(l, k, r))` — mnożenie macierzy,\n  łączenie sąsiednich stosów, optymalne drzewo BST;\n* **zdejmowanie końców:** `dp[l][r]` z `dp[l+1][r]`, `dp[l][r-1]`, `dp[l+1][r-1]` — palindromy, gra\n  „bierz z końców”, nawiasy.\n\n**Kolejność:** przedział długości `len` zależy tylko od krótszych, więc zewnętrzna pętla idzie po **długości**\n(`len = 1..n`), wewnętrzna po początku `l`. Iterowanie `l` od 0 do n i `r` od `l` w górę jest BŁĘDNE (`dp[k+1][r]`\nnie byłoby gotowe). Alternatywnie: `l` od n−1 w dół, `r` od `l` w górę.\n\nSygnały w treści: „łączymy sąsiednie elementy”, „koszt połączenia zależy od sumy”, „nawiasowanie”,\n„usuwamy z końców”, „palindrom”, `n ≤ 500`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: kolejność mnożenia macierzy",
+     "code": "// Mnożenie łańcucha macierzy: A_i ma wymiary p[i-1] x p[i]. Minimalna liczba mnożeń skalarnych\n// i optymalne nawiasowanie.\n#include <bits/stdc++.h>\nusing namespace std;\n\nvector<vector<int>> cut;\n\nstring show(int l, int r) {\n    if (l == r) return \"A\" + to_string(l);\n    return \"(\" + show(l, cut[l][r]) + show(cut[l][r] + 1, r) + \")\";\n}\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> p(n + 1);\n    for (auto &x : p) cin >> x;\n    vector<vector<long long>> dp(n + 1, vector<long long>(n + 1, 0));\n    cut.assign(n + 1, vector<int>(n + 1, 0));\n    for (int len = 2; len <= n; len++)              // KOLEJNOŚĆ: po długości przedziału\n        for (int l = 1; l + len - 1 <= n; l++) {\n            int r = l + len - 1;\n            dp[l][r] = LLONG_MAX;\n            for (int k = l; k < r; k++) {           // ostatnie mnożenie: (A_l..A_k)(A_k+1..A_r)\n                long long c = dp[l][k] + dp[k + 1][r] + p[l - 1] * p[k] * p[r];\n                if (c < dp[l][r]) { dp[l][r] = c; cut[l][r] = k; }\n            }\n        }\n    cout << dp[1][n] << \"\\n\" << show(1, n) << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: łączenie stosów (koszt = suma)",
+     "code": "// Łączenie sąsiednich stosów: połączenie kosztuje sumę obu stosów. Minimalny koszt złączenia wszystkich.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> a(n), P(n + 1, 0);\n    for (int i = 0; i < n; i++) { cin >> a[i]; P[i + 1] = P[i] + a[i]; }   // sumy prefiksowe\n    vector<vector<long long>> dp(n, vector<long long>(n, 0));\n    for (int len = 2; len <= n; len++)\n        for (int l = 0; l + len - 1 < n; l++) {\n            int r = l + len - 1;\n            dp[l][r] = LLONG_MAX;\n            for (int k = l; k < r; k++)\n                dp[l][r] = min(dp[l][r], dp[l][k] + dp[k + 1][r]);\n            dp[l][r] += P[r + 1] - P[l];          // ostatnie złączenie kosztuje sumę całego przedziału\n        }\n    cout << dp[0][n - 1] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Problem",
+      "Przejście",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "mnożenie macierzy",
+       "min_k dp[l][k] + dp[k+1][r] + p[l-1]·p[k]·p[r]",
+       "O(n³)"
+      ],
+      [
+       "łączenie stosów",
+       "min_k dp[l][k] + dp[k+1][r] + suma(l..r)",
+       "O(n³), z Knuthem O(n²)"
+      ],
+      [
+       "najdłuższy podciąg palindromiczny",
+       "s[l]=s[r] ? dp[l+1][r-1]+2 : max(dp[l+1][r], dp[l][r-1])",
+       "O(n²)"
+      ],
+      [
+       "min. wstawień do poprawnego nawiasowania",
+       "min(dp[l+1][r]+1, pasujące końce dp[l+1][r-1], podział)",
+       "O(n³)"
+      ],
+      [
+       "gra: bierz z lewego lub prawego końca",
+       "max(a[l] − dp[l+1][r], a[r] − dp[l][r-1])",
+       "O(n²)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Gdy O(n³) jest za wolne (n ≈ 5000), sprawdź, czy koszt spełnia warunki **optymalizacji Knutha**\n(wtedy O(n²)) — typowo łączenie stosów i optymalne drzewa BST."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (len = 2..n) for (l ...) { r = l + len - 1; for (k = l; k < r; k++) ... }",
+     "desc": "szkielet DP na przedziałach z podziałem",
+     "complexity": "O(n³)"
+    }
+   ],
+   "pitfalls": [
+    "Zła kolejność pętli (l rosnąco, r rosnąco) — używasz dp[k+1][r], które nie jest jeszcze policzone. Iteruj po długości.",
+    "Iloczyn wymiarów p[l-1]·p[k]·p[r] przekracza int — long long.",
+    "Inicjalizacja dp[l][r] = INF przed minimum (dla len ≥ 2), a dp[i][i] = 0 (albo wartość bazowa).",
+    "n = 5000 i O(n³) to 1,25·10^11 operacji — za wolno; potrzebna optymalizacja (Knuth) albo inny pomysł.",
+    "Pamięć n² long longów: n = 5000 → 200 MB. Sprawdź limit."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dp na przedziałach",
+      "interval dp",
+      "dp[l][r] jak liczyc",
+      "range dp",
+      "dynamika na przedzialach"
+     ],
+     "a": "Stan `dp[l][r]` = wynik dla fragmentu `a[l..r]`. Przejście albo dzieli przedział w punkcie `k`\n(`dp[l][k]` + `dp[k+1][r]` + koszt połączenia), albo zdejmuje skrajny element. Liczymy przedziały\nod najkrótszych: zewnętrzna pętla po długości. Typowo O(n³) dla n ≤ 500 albo O(n²) bez podziału."
+    },
+    {
+     "q": [
+      "mnożenie macierzy kolejność",
+      "matrix chain multiplication",
+      "optymalne nawiasowanie macierzy",
+      "mcm dp",
+      "kolejnosc mnozenia macierzy"
+     ],
+     "a": "`dp[l][r]` = minimalny koszt pomnożenia `A_l…A_r`. Ostatnie mnożenie dzieli łańcuch w `k`:\n`dp[l][r] = min_k (dp[l][k] + dp[k+1][r] + p[l-1]·p[k]·p[r])`. Czas O(n³). Zapamiętaj `cut[l][r] = k`, żeby\nwypisać nawiasowanie rekurencyjnie. Pełny program jest w treści (dla 40 20 30 10 30 → 26000)."
+    },
+    {
+     "q": [
+      "kolejność pętli dp przedziały",
+      "dlaczego po długości dp przedzialy",
+      "dp przedziały zła kolejność",
+      "interval dp loop order"
+     ],
+     "a": "`dp[l][r]` zależy od `dp[l][k]` i `dp[k+1][r]` — oba przedziały są **krótsze**. Pętla po długości gwarantuje,\nże wszystkie krótsze są gotowe. Równoważnie działa `l` od `n−1` w dół i `r` od `l` w górę (wtedy\n`dp[k+1][r]` ma większe `l`, a `dp[l][k]` mniejsze `r`). Pętla `l` w górę + `r` w górę jest błędna."
+    },
+    {
+     "q": [
+      "łączenie stosów kamieni",
+      "merging stones",
+      "laczenie sasiednich stosow koszt suma",
+      "scalanie kupek dp"
+     ],
+     "a": "`dp[l][r] = min_k (dp[l][k] + dp[k+1][r]) + suma(l..r)` — ostatnie złączenie łączy wynik lewej i prawej części\ni kosztuje sumę całego przedziału (liczona z sum prefiksowych). O(n³), a z optymalizacją Knutha O(n²).\nUwaga: gdy wolno łączyć dowolne (niesąsiednie) stosy, to inny problem — zachłanny z kolejką priorytetową (Huffman)."
+    },
+    {
+     "q": [
+      "najdłuższy podciąg palindromiczny",
+      "longest palindromic subsequence",
+      "lps dp",
+      "najdluzszy palindrom podciag"
+     ],
+     "a": "`dp[l][r]`: jeśli `s[l] == s[r]`, to `dp[l+1][r-1] + 2`, inaczej `max(dp[l+1][r], dp[l][r-1])`; `dp[i][i] = 1`.\nCzas O(n²). Równoważnie LCS napisu i jego odwrócenia.",
+     "code": "string s = \"bbbab\";\nint n = s.size();\nvector<vector<int>> dp(n, vector<int>(n, 0));\nfor (int l = n - 1; l >= 0; l--) {\n    dp[l][l] = 1;\n    for (int r = l + 1; r < n; r++)\n        dp[l][r] = s[l] == s[r] ? dp[l + 1][r - 1] + 2 : max(dp[l + 1][r], dp[l][r - 1]);\n}\ncout << dp[0][n - 1] << \"\\n\";   // 4 (\"bbbb\")"
+    },
+    {
+     "q": [
+      "minimalna liczba nawiasów do dodania",
+      "poprawne nawiasowanie dp",
+      "ile nawiasow dopisac zeby bylo poprawne",
+      "bracket sequence dp",
+      "nawiasy okragle i kwadratowe dp"
+     ],
+     "a": "Dla jednego typu nawiasów wystarczy licznik (zachłannie, O(n)). Dla `()` i `[]` razem: `dp[l][r]` = min. liczba\nwstawień dla `s[l..r]`: `min(dp[l+1][r] + 1, dp[l][r-1] + 1)`, `dp[l+1][r-1]` gdy `s[l]` i `s[r]` do siebie\npasują, oraz podziały `dp[l][k] + dp[k+1][r]`. Pusty przedział = 0. Czas O(n³).",
+     "code": "string s = \"([)]\";\nint n = s.size();\nauto match = [&](char a, char b) { return (a == '(' && b == ')') || (a == '[' && b == ']'); };\nvector<vector<int>> dp(n + 1, vector<int>(n + 1, 0));   // dp[l][r] dla l > r = 0\nfor (int len = 1; len <= n; len++)\n    for (int l = 0; l + len - 1 < n; l++) {\n        int r = l + len - 1;\n        int best = (len == 1) ? 1 : min(dp[l + 1][r], dp[l][r - 1]) + 1;\n        if (len >= 2 && match(s[l], s[r])) best = min(best, len == 2 ? 0 : dp[l + 1][r - 1]);\n        for (int k = l; k < r; k++) best = min(best, dp[l][k] + dp[k + 1][r]);\n        dp[l][r] = best;\n    }\ncout << dp[0][n - 1] << \"\\n\";   // 2"
+    },
+    {
+     "q": [
+      "liczba poprawnych nawiasowań",
+      "ile jest poprawnych ciągów nawiasowych",
+      "number of valid parentheses",
+      "na ile sposobów nawiasować"
+     ],
+     "a": "Liczba poprawnych ciągów z `n` par nawiasów (i liczba sposobów nawiasowania iloczynu `n+1` czynników) to\nliczba Catalana `C_n = C(2n, n) / (n + 1)`: 1, 1, 2, 5, 14, 42… Rekurencja przedziałowa:\n`C_n = Σ_{i=0}^{n-1} C_i·C_{n-1-i}` (O(n²)), modulo p — wzorem z silniami (patrz kombinatoryka).",
+     "code": "int n = 10;\nvector<long long> C(n + 1, 0);\nC[0] = 1;\nfor (int k = 1; k <= n; k++)\n    for (int i = 0; i < k; i++) C[k] += C[i] * C[k - 1 - i];\ncout << C[3] << \" \" << C[n] << \"\\n\";   // 5 16796"
+    },
+    {
+     "q": [
+      "gra z końców ciągu",
+      "optimal game take from ends",
+      "gra bierzemy liczby z lewej lub prawej",
+      "dwóch graczy zabiera z końców"
+     ],
+     "a": "Niech `dp[l][r]` = maksymalna przewaga (moje punkty − punkty przeciwnika) gracza na ruchu dla fragmentu `a[l..r]`.\nBiorę lewy albo prawy koniec, a potem przeciwnik ma przewagę na reszcie: `dp[l][r] = max(a[l] − dp[l+1][r],\na[r] − dp[l][r-1])`. Wynik pierwszego gracza = `(suma + dp[0][n-1]) / 2`. Czas O(n²).",
+     "code": "vector<long long> a = {3, 9, 1, 2};\nint n = a.size();\nvector<vector<long long>> dp(n + 1, vector<long long>(n + 1, 0));\nfor (int l = n - 1; l >= 0; l--)\n    for (int r = l; r < n; r++)\n        dp[l][r] = (l == r) ? a[l] : max(a[l] - dp[l + 1][r], a[r] - dp[l][r - 1]);\nlong long sum = accumulate(a.begin(), a.end(), 0LL);\ncout << dp[0][n - 1] << \" \" << (sum + dp[0][n - 1]) / 2 << \"\\n\";   // 7 11"
+    },
+    {
+     "q": [
+      "dp przedziały n^3 za wolno",
+      "interval dp optimization",
+      "jak przyspieszyc dp na przedzialach"
+     ],
+     "a": "Najpierw sprawdź, czy wystarczą przejścia O(1) (zdejmowanie końców) — wtedy O(n²). Przy podziale z kosztem\nspełniającym nierówność czworokąta i monotoniczność (np. łączenie stosów) działa **optymalizacja Knutha**:\n`opt[l][r-1] ≤ opt[l][r] ≤ opt[l+1][r]`, co daje O(n²) łącznie."
+    },
+    {
+     "q": [
+      "łączenie stosów na okręgu",
+      "stosy w kole dp",
+      "cykliczne dp na przedziałach",
+      "circular interval dp",
+      "stosy ułożone w okrąg"
+     ],
+     "a": "Gdy elementy leżą na okręgu (ostatni sąsiaduje z pierwszym), podwój tablicę (`a + a`, długość 2n), policz zwykłe\nDP na przedziałach dla przedziałów długości ≤ n, a wynik to `min_{s < n} dp[s][s + n − 1]`. Złożoność rośnie\ntylko o stały czynnik: O((2n)²·n) = O(n³).",
+     "code": "vector<long long> a = {1, 2, 3, 4};\nint n = a.size();\nvector<long long> b(a);\nb.insert(b.end(), a.begin(), a.end());              // podwojona tablica\nvector<long long> P(2 * n + 1, 0);\nfor (int i = 0; i < 2 * n; i++) P[i + 1] = P[i] + b[i];\nvector<vector<long long>> dp(2 * n, vector<long long>(2 * n, 0));\nfor (int len = 2; len <= n; len++)\n    for (int l = 0; l + len - 1 < 2 * n; l++) {\n        int r = l + len - 1;\n        dp[l][r] = LLONG_MAX;\n        for (int k = l; k < r; k++) dp[l][r] = min(dp[l][r], dp[l][k] + dp[k + 1][r]);\n        dp[l][r] += P[r + 1] - P[l];\n    }\nlong long best = LLONG_MAX;\nfor (int s = 0; s < n; s++) best = min(best, dp[s][s + n - 1]);\ncout << best << \"\\n\";   // 19 (na prostej też 19; dla 4 4 5 9 na okręgu 43)"
+    }
+   ],
+   "related": [
+    "dp-knuth",
+    "dp-lcs",
+    "str-palindromes",
+    "dp-games",
+    "math-combinatorics",
+    "dp-intro",
+    "tech-huffman"
+   ]
+  },
+  {
+   "id": "dp-bitmask",
+   "title": "DP na maskach bitowych (komiwojażer, przydział zadań, podmaski, profil)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "maski bitowe",
+    "bitmask dp",
+    "komiwojażer",
+    "tsp",
+    "przydział",
+    "podmaski",
+    "ścieżka hamiltona",
+    "domino"
+   ],
+   "aliases": [
+    "dp na maskach",
+    "bitmask dp",
+    "maski bitowe dp",
+    "komiwojażer",
+    "tsp dp",
+    "travelling salesman",
+    "problem komiwojażera",
+    "dp maski",
+    "dp na podzbiorach",
+    "held karp"
+   ],
+   "summary": "Gdy n ≤ ~20, podzbiór elementów zapisujemy jako liczbę (maskę bitową) i robimy DP po wszystkich 2^n podzbiorach: komiwojażer dp[mask][v] w O(2^n·n²), przydział dp[mask] w O(2^n·n).",
+   "complexity": "komiwojażer O(2^n·n²) czasu i O(2^n·n) pamięci; przydział O(2^n·n); po wszystkich podmaskach O(3^n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Maska `mask` (liczba od 0 do 2^n − 1) koduje podzbiór: bit `i` = 1 ⇔ element `i` należy do zbioru.\nPodstawowe operacje: `mask >> i & 1` (czy `i` w zbiorze), `mask | (1 << i)` (dodaj), `mask & ~(1 << i)` (usuń),\n`__builtin_popcount(mask)` (rozmiar), `(1 << n) - 1` (pełny zbiór).\n\n**Komiwojażer (Held–Karp):** `dp[mask][v]` = minimalny koszt ścieżki, która startuje w 0, odwiedza dokładnie\nwierzchołki z `mask` i kończy w `v`. Przejście: `dp[mask | 1<<u][u] = min(dp[mask][v] + d[v][u])` dla `u ∉ mask`.\nWynik: `min_v dp[pełna][v] + d[v][0]`. Maski rosną liczbowo przy dodawaniu bitu, więc wystarczy pętla\n`mask = 0..2^n−1` rosnąco.\n\n**Sygnały:** `n ≤ 20` (czasem ≤ 16 przy O(2^n·n²) lub ≤ 13–15 przy O(3^n)), „odwiedź wszystkie”, „przydziel\nkażdemu dokładnie jedno”, „każdy podzbiór”, małe plansze o szerokości ≤ 10 (DP po profilu)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: komiwojażer (Held–Karp) z odtworzeniem trasy",
+     "code": "// Komiwojażer: n miast (n >= 2), macierz odległości. Minimalny cykl przez wszystkie miasta + trasa.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> d(n, vector<int>(n));\n    for (auto &row : d) for (auto &x : row) cin >> x;\n\n    const int INF = 1e9;\n    int FULL = (1 << n) - 1;\n    vector<vector<int>> dp(1 << n, vector<int>(n, INF)), par(1 << n, vector<int>(n, -1));\n    dp[1][0] = 0;                                   // start w mieście 0, odwiedzone = {0}\n    for (int mask = 1; mask <= FULL; mask++) {\n        if (!(mask & 1)) continue;                  // każda ścieżka zawiera start\n        for (int v = 0; v < n; v++) {\n            if (!(mask >> v & 1) || dp[mask][v] == INF) continue;\n            for (int u = 0; u < n; u++) {\n                if (mask >> u & 1) continue;\n                int nm = mask | (1 << u);\n                if (dp[mask][v] + d[v][u] < dp[nm][u]) {\n                    dp[nm][u] = dp[mask][v] + d[v][u];\n                    par[nm][u] = v;\n                }\n            }\n        }\n    }\n    int best = INF, last = -1;\n    for (int v = 1; v < n; v++)\n        if (dp[FULL][v] != INF && dp[FULL][v] + d[v][0] < best) { best = dp[FULL][v] + d[v][0]; last = v; }\n    cout << best << \"\\n\";\n\n    vector<int> path;                               // odtwarzanie po par[][]\n    for (int v = last, mask = FULL; v != -1; ) {\n        path.push_back(v);\n        int pv = par[mask][v];\n        mask ^= 1 << v;\n        v = pv;\n    }\n    reverse(path.begin(), path.end());\n    for (int v : path) cout << v << \" \";\n    cout << 0 << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: przydział zadań w O(2^n·n)",
+     "code": "// Przydział: n pracowników, n zadań, koszt c[i][j]. Każdy pracownik dostaje dokładnie jedno zadanie.\n// dp[mask] = minimalny koszt przydzielenia zadań z mask pracownikom 0..popcount(mask)-1.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> c(n, vector<int>(n));\n    for (auto &row : c) for (auto &x : row) cin >> x;\n    vector<long long> dp(1 << n, LLONG_MAX);\n    dp[0] = 0;\n    for (int mask = 0; mask < (1 << n); mask++) {\n        if (dp[mask] == LLONG_MAX) continue;\n        int worker = __builtin_popcount(mask);      // kolejny pracownik do obsłużenia\n        if (worker == n) continue;\n        for (int job = 0; job < n; job++)\n            if (!(mask >> job & 1))\n                dp[mask | (1 << job)] = min(dp[mask | (1 << job)], dp[mask] + c[worker][job]);\n    }\n    cout << dp[(1 << n) - 1] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Kod",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "czy i ∈ mask",
+       "`mask >> i & 1`",
+       "albo `mask & (1 << i)`"
+      ],
+      [
+       "dodaj / usuń i",
+       "`mask | (1 << i)` / `mask & ~(1 << i)`",
+       "dla i ≥ 31 użyj `1LL << i`"
+      ],
+      [
+       "liczba elementów",
+       "`__builtin_popcount(mask)`",
+       "`__builtin_popcountll` dla long long"
+      ],
+      [
+       "najniższy ustawiony bit",
+       "`__builtin_ctz(mask)` / `mask & -mask`",
+       "ctz(0) jest niezdefiniowane"
+      ],
+      [
+       "wszystkie podmaski m",
+       "`for (s = m; s; s = (s - 1) & m)`",
+       "plus s = 0 osobno; łącznie O(3^n) po wszystkich m"
+      ],
+      [
+       "pełny zbiór",
+       "`(1 << n) - 1`",
+       ""
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Pamięć: `int dp[1 << 20][20]` to 2^20·20·4 B ≈ 84 MB; `long long` — dwa razy więcej. Przy n = 20 trzymaj `int`\ni sprawdź limit pamięci. Pętla `mask` rośnie, bo dodanie bitu zwiększa liczbę — to jest poprawna kolejność."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "__builtin_popcount(mask)",
+     "desc": "liczba ustawionych bitów (wersja ll: __builtin_popcountll)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "__builtin_ctz(mask)",
+     "desc": "indeks najniższego ustawionego bitu (mask ≠ 0)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "for (int s = m; s; s = (s - 1) & m)",
+     "desc": "iteracja po wszystkich niepustych podmaskach m w kolejności malejącej",
+     "complexity": "O(2^popcount(m))"
+    }
+   ],
+   "pitfalls": [
+    "`1 << n` dla n ≥ 31 przepełnia int — używaj `1LL << n` (choć DP na maskach i tak ma sens tylko do ~25).",
+    "Priorytet operatorów: `mask & 1 << i == 0` to `mask & ((1 << i) == 0)` — zawsze nawiasuj: `(mask >> i & 1) == 0`.",
+    "Komiwojażer bez wymuszenia startu w 0 liczy n razy więcej stanów — ustal start, to cykl.",
+    "Iteracja po podmaskach pomija s = 0 — obsłuż pusty podzbiór osobno, jeśli jest potrzebny.",
+    "dp[1<<20][20] w long long to ~170 MB — sprawdź limit pamięci."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dp na maskach",
+      "bitmask dp",
+      "maski bitowe dp",
+      "dp na podzbiorach",
+      "dynamika na maskach bitowych"
+     ],
+     "a": "Gdy elementów jest mało (n ≤ ~20), każdy podzbiór zapisujesz jako liczbę `mask` i robisz DP po wszystkich 2^n\nmaskach (np. `dp[mask]` = najlepszy wynik dla wybranego podzbioru). Przejście dokłada jeden element\n`mask | (1 << i)`, więc liczysz maski rosnąco. Złożoność O(2^n·n) albo O(2^n·n²)."
+    },
+    {
+     "q": [
+      "komiwojażer",
+      "tsp dp",
+      "travelling salesman c++",
+      "problem komiwojazera kod",
+      "held karp"
+     ],
+     "a": "`dp[mask][v]` = najkrótsza ścieżka ze startu 0 przez zbiór `mask`, kończąca się w `v`. Przejście do\nnieodwiedzonego `u`: `dp[mask | 1<<u][u] = min(…, dp[mask][v] + d[v][u])`. Wynik `min_v dp[pełna][v] + d[v][0]`.\nCzas O(2^n·n²) — n ≤ 16–18 w sekundzie. Pełny program z odtworzeniem trasy jest w treści."
+    },
+    {
+     "q": [
+      "przydział zadań",
+      "assignment problem bitmask",
+      "przydzielenie pracownikow do zadan dp",
+      "dp przydzial maski"
+     ],
+     "a": "`dp[mask]` = minimalny koszt, gdy zadania z `mask` dostali pracownicy `0..popcount(mask)−1`. Kolejny pracownik\nto `popcount(mask)`, próbujemy każde wolne zadanie: O(2^n·n). Dla większych n (np. 500) — algorytm węgierski\nO(n³), ale na OI zwykle wystarczają maski."
+    },
+    {
+     "q": [
+      "iterowanie po podmaskach",
+      "submask enumeration",
+      "wszystkie podzbiory maski",
+      "petla po podmaskach 3^n"
+     ],
+     "a": "`for (int s = m; s; s = (s - 1) & m)` przechodzi po wszystkich niepustych podmaskach `m` malejąco (pusta osobno).\nOdejmowanie 1 i `& m` daje następną mniejszą podmaskę. Suma po wszystkich `m` to 3^n (każdy bit: poza m,\nw m i w s, w m i nie w s) — dla n = 15 to ok. 1,4·10^7.",
+     "code": "int m = 0b1011;   // 11\nfor (int s = m; s; s = (s - 1) & m) cout << s << \" \";\ncout << \"\\n\";     // 11 10 9 8 3 2 1"
+    },
+    {
+     "q": [
+      "ile pamięci dp maski n=20",
+      "dp na maskach memory limit",
+      "bitmask dp mle",
+      "tablica 1<<20 razy 20"
+     ],
+     "a": "`dp[1 << n][n]` ma 2^n·n pól: dla n = 20 to ok. 2,1·10^7 pól, czyli ~84 MB w `int` i ~168 MB w `long long`.\nTrzymaj `int`, jeśli wartości się mieszczą, albo zmniejsz stan (np. start ustalony ⇒ maski z bitem 0).\n`vector<vector<int>>` ma dodatkowy narzut — lepsza jedna płaska tablica."
+    },
+    {
+     "q": [
+      "ścieżka hamiltona dp",
+      "hamiltonian path bitmask",
+      "czy istnieje sciezka przez wszystkie wierzcholki",
+      "liczba ścieżek hamiltona"
+     ],
+     "a": "`dp[mask][v]` = czy (albo na ile sposobów) istnieje ścieżka odwiedzająca dokładnie `mask` i kończąca się w `v`;\nstartujemy z `dp[1 << v][v] = 1` dla każdego `v` (ścieżka, nie cykl). Przejście po krawędziach `v → u`,\n`u ∉ mask`. Odpowiedź: OR / suma po `v` z `dp[pełna][v]`. Czas O(2^n·n²).",
+     "code": "int n = 4;\nvector<vector<int>> adj = {{1}, {0, 2, 3}, {1, 3}, {1, 2}};   // graf nieskierowany\nvector<vector<long long>> dp(1 << n, vector<long long>(n, 0));\nfor (int v = 0; v < n; v++) dp[1 << v][v] = 1;\nfor (int mask = 1; mask < (1 << n); mask++)\n    for (int v = 0; v < n; v++) {\n        if (!dp[mask][v]) continue;\n        for (int u : adj[v])\n            if (!(mask >> u & 1)) dp[mask | 1 << u][u] += dp[mask][v];\n    }\nlong long cnt = 0;\nfor (int v = 0; v < n; v++) cnt += dp[(1 << n) - 1][v];\ncout << cnt << \"\\n\";   // 4: 0-1-2-3, 0-1-3-2 i ich odwrócenia"
+    },
+    {
+     "q": [
+      "popcount",
+      "__builtin_popcount",
+      "liczba jedynek w masce",
+      "ile bitow zapalonych c++"
+     ],
+     "a": "`__builtin_popcount(x)` zwraca liczbę ustawionych bitów `unsigned int`, `__builtin_popcountll` — dla 64 bitów\n(GCC/Clang, działa w O(1) instrukcjach). W C++20 jest też `std::popcount` z `<bit>` (wymaga typu unsigned).",
+     "code": "int mask = 0b101101;\nlong long big = (1LL << 40) | 7;\ncout << __builtin_popcount(mask) << \" \" << __builtin_popcountll(big) << \" \" << popcount((unsigned)mask) << \"\\n\";   // 4 4 4"
+    },
+    {
+     "q": [
+      "kafelkowanie domino dp",
+      "ile sposobów ułożyć domino",
+      "dp po profilu",
+      "broken profile dp",
+      "pokrycie planszy kostkami 1x2"
+     ],
+     "a": "DP po profilu: przetwarzamy pola wiersz po wierszu, a maska `m`-bitowa mówi, które pola „przed nami” są już\nzakryte przez pionowe domino z góry. Dla pola zakrytego tylko zdejmujemy bit; dla wolnego kładziemy domino\npionowe (ustawiamy bit) albo poziome (gdy sąsiad w prawo wolny). Czas O(n·m·2^m), m ≤ ~12.",
+     "code": "int n = 8, m = 8;\nvector<long long> dp(1 << m, 0), nd(1 << m);\ndp[0] = 1;\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < m; j++) {\n        fill(nd.begin(), nd.end(), 0);\n        for (int mask = 0; mask < (1 << m); mask++) {\n            if (!dp[mask]) continue;\n            if (mask >> j & 1) nd[mask & ~(1 << j)] += dp[mask];          // pole już zakryte\n            else {\n                nd[mask | (1 << j)] += dp[mask];                          // domino pionowe w dół\n                if (j + 1 < m && !(mask >> (j + 1) & 1))\n                    nd[mask | (1 << (j + 1))] += dp[mask];                // domino poziome w prawo\n            }\n        }\n        swap(dp, nd);\n    }\ncout << dp[0] << \"\\n\";   // 12988816 pokryć szachownicy 8x8"
+    },
+    {
+     "q": [
+      "dp na maskach kolejność",
+      "w jakiej kolejności liczyć maski",
+      "bitmask dp order",
+      "czy maski rosnaco wystarczy"
+     ],
+     "a": "Jeśli przejście tylko **dodaje** elementy do zbioru (`mask → mask | bit`), to nowa maska jest liczbowo\nwiększa, więc zwykła pętla `mask = 0, 1, 2, …` liczy wszystko we właściwej kolejności. Gdy przejście bierze\npodmaskę (`dp[mask]` z `dp[mask ^ sub]`), podmaski też są mniejsze — kolejność rosnąca nadal działa."
+    },
+    {
+     "q": [
+      "n=20 jaki algorytm",
+      "ograniczenie n 20 co to znaczy",
+      "n<=20 maski",
+      "male n dp wykladnicze"
+     ],
+     "a": "`n ≤ 20` to typowy sygnał algorytmu wykładniczego: 2^20 ≈ 10^6, więc O(2^n·n) ≈ 2·10^7 i O(2^n·n²) ≈ 4·10^8\n(na granicy). `n ≤ 40` sugeruje meet in the middle (2^20 z każdej połowy), `n ≤ 12–15` pozwala na O(3^n) albo n!."
+    }
+   ],
+   "related": [
+    "dp-sos",
+    "dp-intro",
+    "math-inclusion-exclusion",
+    "tech-meet-in-the-middle",
+    "tech-bit-tricks",
+    "stl-builtin-bits",
+    "tech-bitmask-brute-force",
+    "cpp-ref-bit",
+    "graph-hamiltonian"
+   ]
+  },
+  {
+   "id": "dp-digit",
+   "title": "DP po cyfrach (digit DP) — liczby z przedziału o zadanej własności",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "dp po cyfrach",
+    "digit dp",
+    "cyfry",
+    "suma cyfr",
+    "przedział",
+    "tight",
+    "wiodące zera"
+   ],
+   "aliases": [
+    "dp po cyfrach",
+    "digit dp",
+    "dp cyfrowe",
+    "dynamika po cyfrach",
+    "liczby w przedziale z własnością",
+    "ile liczb ma sumę cyfr",
+    "count numbers with property"
+   ],
+   "summary": "Liczymy, ile liczb z [0, N] ma daną własność, budując liczbę cyfra po cyfrze od najbardziej znaczącej; stan to (pozycja, informacja o własności, tight = czy prefiks równa się prefiksowi N). Przedział [L, R] = f(R) − f(L−1).",
+   "complexity": "O(liczba cyfr × liczba stanów własności × 10); np. dla 10^18 i reszty mod K: O(19·K·10)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "Sygnał w treści: „ile liczb z przedziału `[L, R]` (do 10^18) ma własność X”, gdzie X zależy od cyfr\n(suma cyfr, brak cyfry 4, brak dwóch równych sąsiednich cyfr, podzielność przez K…). Przeglądanie wszystkich liczb\njest niemożliwe, ale cyfr jest tylko ~19.\n\nLiczymy `f(N)` = liczba dobrych liczb w `[0, N]`, a odpowiedź to `f(R) − f(L − 1)`.\nBudujemy liczbę od najbardziej znaczącej cyfry. Stan:\n* `pos` — która cyfra,\n* dane potrzebne do własności (np. suma cyfr mod K, ostatnia cyfra),\n* `tight` — czy dotychczasowy prefiks jest **równy** prefiksowi N (wtedy kolejna cyfra ≤ cyfra N; inaczej 0..9),\n* czasem `started` — czy już postawiliśmy niezerową cyfrę (wiodące zera nie są cyframi liczby).\n\nMemoizujemy tylko stany z `tight = false` (stany tight występują raz na ścieżce)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: suma cyfr podzielna przez K",
+     "code": "// Ile liczb z [L, R] ma sumę cyfr podzielną przez K (0 <= L <= R <= 10^18, 1 <= K <= 199)?\n#include <bits/stdc++.h>\nusing namespace std;\n\nint K;\nvector<int> dig;                 // cyfry N od najbardziej znaczącej\nlong long memo[20][200];\nbool vis[20][200];\n\nlong long go(int pos, int rem, bool tight) {\n    if (pos == (int)dig.size()) return rem == 0;   // cała liczba zbudowana\n    if (!tight && vis[pos][rem]) return memo[pos][rem];\n    long long res = 0;\n    int lim = tight ? dig[pos] : 9;\n    for (int d = 0; d <= lim; d++)\n        res += go(pos + 1, (rem + d) % K, tight && d == lim);\n    if (!tight) { vis[pos][rem] = true; memo[pos][rem] = res; }\n    return res;\n}\n\nlong long countUpTo(long long N) {   // liczby z [0, N]\n    if (N < 0) return 0;\n    dig.clear();\n    for (char c : to_string(N)) dig.push_back(c - '0');\n    memset(vis, 0, sizeof vis);      // memo zależy od długości N — czyścimy\n    return go(0, 0, true);\n}\n\nint main() {\n    long long L, R;\n    cin >> L >> R >> K;\n    cout << countUpTo(R) - countUpTo(L - 1) << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Własność",
+      "Dodatkowy stan",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "suma cyfr = S / mod K",
+       "suma (≤ 9·19) lub reszta",
+       "wiodące zera nie przeszkadzają (dodają 0)"
+      ],
+      [
+       "brak cyfry 4 / tylko cyfry z zbioru",
+       "brak",
+       "pomijasz zakazane d w pętli"
+      ],
+      [
+       "brak dwóch równych sąsiednich cyfr",
+       "ostatnia cyfra + started",
+       "wiodące zera trzeba odróżnić od cyfry 0"
+      ],
+      [
+       "liczba podzielna przez K",
+       "reszta liczby mod K: (rem·10 + d) % K",
+       ""
+      ],
+      [
+       "ile razy cyfra d występuje (suma po liczbach)",
+       "zwracaj parę (liczba, suma)",
+       ""
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`memo` indeksowane pozycją od lewej zależy od długości N — czyść je przed każdym wywołaniem `countUpTo`.\nAlbo indeksuj liczbą **pozostałych** cyfr — wtedy memo (dla `tight = false`) jest wspólne dla wszystkich N."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "long long countUpTo(long long N)",
+     "desc": "liczba dobrych liczb w [0, N]; dla N < 0 zwraca 0",
+     "complexity": "O(cyfry · stany · 10)"
+    },
+    {
+     "sig": "go(pos, stan, tight)",
+     "desc": "rekurencja po cyfrach z memoizacją stanów nie-tight",
+     "complexity": "O(1) amortyzowanie na stan × 10"
+    }
+   ],
+   "pitfalls": [
+    "L = 0: wywołanie f(L − 1) = f(−1) musi zwrócić 0 (nie przekształcaj −1 na napis).",
+    "Memoizacja stanów z tight = true — błąd, bo ich wynik zależy od reszty cyfr N.",
+    "Wiodące zera: przy własnościach typu „brak równych sąsiednich cyfr” liczba 7 to „7”, nie „007” — potrzebna flaga started.",
+    "Pamiętaj, czy liczysz 0 jako liczbę — f(N) zwykle obejmuje 0; odejmowanie f(L−1) to wyrównuje.",
+    "R do 10^18 mieści się w long long, ale 10^19 już nie — wczytuj wtedy jako string."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dp po cyfrach",
+      "digit dp",
+      "dp cyfrowe",
+      "digit dp c++",
+      "dynamika po cyfrach jak dziala"
+     ],
+     "a": "Budujesz liczbę cyfra po cyfrze od lewej, pamiętając tylko to, co potrzebne do własności (np. sumę cyfr mod K),\noraz flagę `tight` — czy prefiks równa się prefiksowi N (wtedy kolejna cyfra ≤ cyfra N). `f(N)` liczy dobre\nliczby w `[0, N]`, odpowiedź dla przedziału to `f(R) − f(L−1)`. Czas O(19·stany·10) zamiast O(R − L)."
+    },
+    {
+     "q": [
+      "ile liczb w przedziale ma sumę cyfr",
+      "count numbers with digit sum",
+      "liczby o sumie cyfr S w przedziale",
+      "suma cyfr rowna s ile liczb"
+     ],
+     "a": "Stan `(pos, suma, tight)` — suma ≤ 9·19 = 171. W liściu zwracasz 1, gdy suma == S. Zakres przez `f(R) − f(L−1)`.\nPełny program w treści robi wariant „suma podzielna przez K”, wystarczy zmienić warunek w liściu i stan."
+    },
+    {
+     "q": [
+      "tight flaga dp po cyfrach co to",
+      "co oznacza tight w digit dp",
+      "ograniczenie gorne digit dp",
+      "limit flag digit dp"
+     ],
+     "a": "`tight = true` oznacza, że wszystkie dotąd wybrane cyfry są równe cyfrom N, więc kolejną cyfrę możesz wybrać\ntylko z `0..dig[pos]` (inaczej przekroczysz N). Po wybraniu cyfry mniejszej niż `dig[pos]` przechodzisz na\n`tight = false` i dalej wolno wszystkie cyfry 0..9. Stanów tight jest tylko jeden na pozycję, więc ich nie memoizujesz."
+    },
+    {
+     "q": [
+      "wiodące zera digit dp",
+      "leading zeros digit dp",
+      "started digit dp",
+      "zera na poczatku dp po cyfrach"
+     ],
+     "a": "Budując wszystkie liczby jako 19-cyfrowe z zerami z przodu, liczba 7 to `000…07`. Dla sumy cyfr to nie\nprzeszkadza, ale dla własności typu „brak dwóch równych sąsiednich cyfr” czy „liczba cyfr 0” — tak. Dodaj\nflagę `started`: dopóki jest fałszywa, zero nie jest cyfrą liczby i nie aktualizuje stanu.",
+     "code": "// Ile liczb z [0, N] nie ma dwóch równych sąsiednich cyfr? last = 10 oznacza \"jeszcze nie zaczęliśmy\".\nvector<int> dg;\nlong long memo2[20][11];\nbool vis2[20][11];\nlong long go2(int pos, int last, bool tight) {\n    if (pos == (int)dg.size()) return 1;\n    if (!tight && vis2[pos][last]) return memo2[pos][last];\n    long long res = 0;\n    int lim = tight ? dg[pos] : 9;\n    for (int d = 0; d <= lim; d++) {\n        if (last != 10 && d == last) continue;                 // dwie równe sąsiednie\n        int nl = (last == 10 && d == 0) ? 10 : d;               // wiodące zero: dalej \"nie zaczęte\"\n        res += go2(pos + 1, nl, tight && d == lim);\n    }\n    if (!tight) { vis2[pos][last] = true; memo2[pos][last] = res; }\n    return res;\n}\nlong long noAdj(long long N) {\n    if (N < 0) return 0;\n    dg.clear();\n    for (char c : to_string(N)) dg.push_back(c - '0');\n    memset(vis2, 0, sizeof vis2);\n    return go2(0, 10, true);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "f(R) - f(L-1) digit dp",
+      "przedział L R digit dp",
+      "jak policzyc dla przedzialu digit dp",
+      "digit dp range"
+     ],
+     "a": "Licz funkcję prefiksową `f(N)` = liczba dobrych liczb w `[0, N]` i odejmij: `f(R) − f(L−1)`. To ten sam trik co\nsumy prefiksowe. Uważaj na `L = 0` (f(−1) = 0) i na czyszczenie memo między wywołaniami."
+    },
+    {
+     "q": [
+      "ile liczb nie zawiera cyfry 4",
+      "liczby bez cyfry",
+      "count numbers without digit",
+      "ile liczb ma cyfre 7"
+     ],
+     "a": "W pętli po cyfrach po prostu pomiń zakazaną cyfrę; dodatkowego stanu nie trzeba. „Zawiera cyfrę 7” = wszystkie\nliczby − „nie zawiera 7”. Uwaga na wiodące zera, gdy zakazana jest cyfra 0 — wtedy potrzebna flaga `started`.",
+     "code": "// ile liczb z [0, N] nie zawiera cyfry 4 (bez memo: tight-y idą jedną ścieżką, reszta to 9^k)\nauto noFour = [](long long N) {\n    string s = to_string(N);\n    long long res = 0;\n    int k = s.size();\n    for (int i = 0; i < k; i++) {\n        int d = s[i] - '0';\n        long long rest = 1;\n        for (int j = i + 1; j < k; j++) rest *= 9;       // dowolne cyfry poza 4 na dalszych pozycjach\n        for (int x = 0; x < d; x++) if (x != 4) res += rest;\n        if (d == 4) return res;                          // prefiks N zawiera 4 — dalej nic\n    }\n    return res + 1;                                      // samo N jest dobre\n};\ncout << noFour(100) << \" \" << noFour(44) << \"\\n\";   // 82 36"
+    },
+    {
+     "q": [
+      "suma cyfr wszystkich liczb od 1 do N",
+      "sum of digits 1 to n",
+      "digit dp suma zamiast liczby"
+     ],
+     "a": "Niech DP zwraca parę `(cnt, sum)` — ile liczb i jaka suma cyfr w danym poddrzewie wyborów. Wybierając cyfrę `d`\nz wynikiem dziecka `(c, s)`, dodajesz `cnt += c`, `sum += s + d·c`. Czas O(19·10) na zapytanie.",
+     "code": "// suma cyfr wszystkich liczb z [0, N]\nauto digitSum = [](long long N) {\n    string s = to_string(N);\n    int k = s.size();\n    vector<array<long long,2>> fr(k + 1);   // fr[r] = (liczba, suma) dla r wolnych cyfr (tight = false)\n    fr[0] = {1, 0};\n    for (int r = 1; r <= k; r++) fr[r] = {fr[r-1][0] * 10, fr[r-1][1] * 10 + 45 * fr[r-1][0]};\n    long long res = 0, prefSum = 0;\n    for (int i = 0; i < k; i++) {\n        int d = s[i] - '0', r = k - i - 1;\n        for (int x = 0; x < d; x++) res += (prefSum + x) * fr[r][0] + fr[r][1];\n        prefSum += d;\n    }\n    return res + prefSum;                    // samo N\n};\ncout << digitSum(100) << \" \" << digitSum(12345) << \"\\n\";   // 901 214455"
+    },
+    {
+     "q": [
+      "digit dp memo reset",
+      "dlaczego trzeba czyscic memo digit dp",
+      "digit dp zly wynik drugie wywolanie"
+     ],
+     "a": "Jeśli `pos` liczysz od lewej, to „pozycja 3” oznacza co innego dla N o 5 i o 7 cyfrach — memo z poprzedniego\nwywołania jest wtedy złe. Albo czyść `memo` przed każdym `f(N)`, albo indeksuj stan liczbą **pozostałych**\ncyfr — wtedy wartości dla `tight = false` są uniwersalne i memo możesz zostawić."
+    },
+    {
+     "q": [
+      "liczby podzielne przez K o własności cyfr",
+      "digit dp podzielnosc",
+      "digit dp reszta z dzielenia liczby"
+     ],
+     "a": "Reszta budowanej liczby modulo K zmienia się przy dopisaniu cyfry `d` jako `rem = (rem·10 + d) % K`. Dodaj ją\ndo stanu (K stanów). Np. „liczby podzielne przez K o sumie cyfr podzielnej przez K” mają stan\n`(pos, rem liczby, rem sumy, tight)` — O(19·K²·10), dla K ≤ 100 to ok. 2·10^6."
+    }
+   ],
+   "related": [
+    "dp-intro",
+    "dp-prefix-opt",
+    "math-bases"
+   ]
+  },
+  {
+   "id": "dp-partition",
+   "title": "Podział ciągu na fragmenty (dp[i] = min po j dp[j] + koszt(j, i))",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "podział na fragmenty",
+    "partition dp",
+    "segmenty",
+    "word break",
+    "palindromy",
+    "k części",
+    "sumy prefiksowe"
+   ],
+   "aliases": [
+    "podział ciągu na fragmenty",
+    "partition dp",
+    "split array dp",
+    "podział na k części",
+    "podzial na podciagi",
+    "word break",
+    "dp podział na segmenty",
+    "palindrome partitioning"
+   ],
+   "summary": "Gdy ciąg trzeba pociąć na spójne kawałki, stan dp[i] dotyczy prefiksu długości i, a przejście wybiera początek ostatniego kawałka j: dp[i] = opt_j (dp[j] + koszt(j, i)). Z ograniczeniem liczby części: dp[k][i].",
+   "complexity": "O(n²) (lub O(k·n²) dla k części); optymalizacje: sumy prefiksowe dp, kolejka monotoniczna, CHT, dziel i zwyciężaj",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Schemat: `dp[i]` = najlepszy wynik dla prefiksu `a[0..i)`; ostatni fragment to `a[j..i)`:\n\n`dp[i] = min_{0 ≤ j < i} (dp[j] + koszt(j, i))`, `dp[0] = 0`.\n\nGdy liczba fragmentów jest zadana (`k`), dodaj wymiar: `dp[c][i] = min_j (dp[c−1][j] + koszt(j, i))`.\nKoszt fragmentu zwykle liczymy w O(1) z **sum prefiksowych**. Przykłady: podział tekstu na linie (word wrap),\npocięcie na palindromy, podział na słowa ze słownika (word break), k grup minimalizujących sumę kwadratów sum.\n\nLiczba sposobów podziału (`dp[i] = Σ dp[j]` po dopuszczalnych `j`) — gdy dopuszczalne `j` tworzą przedział,\nsumujemy w O(1) przez sumy prefiksowe tablicy `dp`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: podział na k fragmentów z odtworzeniem",
+     "code": "// Podziel ciąg na dokładnie k spójnych fragmentów, minimalizując sumę kwadratów sum fragmentów. O(k·n^2).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, k;\n    cin >> n >> k;\n    vector<long long> a(n), P(n + 1, 0);\n    for (int i = 0; i < n; i++) { cin >> a[i]; P[i + 1] = P[i] + a[i]; }\n    const long long INF = LLONG_MAX / 4;\n    // dp[c][i] = najlepszy koszt podziału prefiksu długości i na c fragmentów\n    vector<vector<long long>> dp(k + 1, vector<long long>(n + 1, INF));\n    vector<vector<int>> from(k + 1, vector<int>(n + 1, -1));\n    dp[0][0] = 0;\n    for (int c = 1; c <= k; c++)\n        for (int i = c; i <= n; i++)\n            for (int j = c - 1; j < i; j++) {             // ostatni fragment = a[j..i)\n                if (dp[c - 1][j] == INF) continue;\n                long long s = P[i] - P[j];\n                if (dp[c - 1][j] + s * s < dp[c][i]) { dp[c][i] = dp[c - 1][j] + s * s; from[c][i] = j; }\n            }\n    cout << dp[k][n] << \"\\n\";\n    vector<pair<int,int>> parts;                          // odtworzenie granic\n    for (int c = k, i = n; c > 0; c--) { int j = from[c][i]; parts.push_back({j, i}); i = j; }\n    reverse(parts.begin(), parts.end());\n    for (auto [l, r] : parts) {\n        cout << \"[\";\n        for (int t = l; t < r; t++) cout << a[t] << (t + 1 < r ? \" \" : \"\");\n        cout << \"] \";\n    }\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba podziałów z sumami prefiksowymi dp",
+     "code": "// Liczba sposobów podziału ciągu liczb dodatnich na fragmenty o sumie <= S, modulo 10^9+7. O(n).\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\n\nint main() {\n    int n; long long S;\n    cin >> n >> S;\n    vector<long long> a(n);\n    for (auto &x : a) cin >> x;\n    vector<long long> dp(n + 1, 0), pre(n + 2, 0);   // pre[i] = dp[0] + ... + dp[i-1]\n    dp[0] = 1; pre[1] = 1;\n    long long window = 0;\n    int j = 0;                                       // najmniejszy początek z sumą a[j..i) <= S\n    for (int i = 1; i <= n; i++) {\n        window += a[i - 1];\n        while (window > S) window -= a[j++];         // dwa wskaźniki (liczby dodatnie)\n        // ostatni fragment a[t..i) dla t = j..i-1  =>  dp[i] = dp[j] + ... + dp[i-1]\n        dp[i] = (pre[i] - pre[j] + MOD) % MOD;\n        pre[i + 1] = (pre[i] + dp[i]) % MOD;\n    }\n    cout << dp[n] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Problem",
+      "koszt / warunek ostatniego fragmentu",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "minimalna liczba cięć na palindromy",
+       "a[j..i) palindrom (tablica isPal)",
+       "O(n²)"
+      ],
+      [
+       "word break (czy / na ile sposobów)",
+       "a[j..i) jest słowem ze słownika",
+       "O(n·L) dla słów długości ≤ L"
+      ],
+      [
+       "k fragmentów, suma kwadratów sum",
+       "(P[i] − P[j])²",
+       "O(k·n²), D&C / CHT: O(k·n log n) / O(k·n)"
+      ],
+      [
+       "min. maksymalna suma fragmentu (k części)",
+       "lepiej: wyszukiwanie binarne po wyniku + zachłanny",
+       "O(n log Σ)"
+      ],
+      [
+       "liczba podziałów z sumą fragmentu ≤ S",
+       "j w przedziale ⇒ suma prefiksowa dp",
+       "O(n)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dp[i] = min_{j<i} (dp[j] + cost(j, i))",
+     "desc": "szkielet podziału na fragmenty",
+     "complexity": "O(n²)"
+    },
+    {
+     "sig": "P[i+1] = P[i] + a[i]; suma(j, i) = P[i] - P[j]",
+     "desc": "sumy prefiksowe do kosztu fragmentu w O(1)",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Indeksy: dp[i] dotyczy prefiksu DŁUGOŚCI i, ostatni fragment to a[j..i) — łatwo o przesunięcie o 1.",
+    "Przy k fragmentach i ≥ c (każdy fragment niepusty) — inaczej dostaniesz puste fragmenty.",
+    "Kwadrat sumy fragmentu przepełnia int (np. (10^9)²) — long long, a przy większych __int128.",
+    "„Minimalizuj maksimum” zwykle prościej rozwiązać wyszukiwaniem binarnym po odpowiedzi niż DP.",
+    "O(n²) przy n = 10^5 to TLE — szukaj struktury kosztu (monotoniczność, wypukłość) i optymalizacji."
+   ],
+   "qa": [
+    {
+     "q": [
+      "podział ciągu na fragmenty dp",
+      "split array into segments dp",
+      "dp podział na kawałki",
+      "podzial ciagu na spojne czesci"
+     ],
+     "a": "`dp[i]` = najlepszy wynik dla prefiksu długości `i`, przejście po początku ostatniego fragmentu `j`:\n`dp[i] = min_j (dp[j] + koszt(a[j..i)))`. Koszt z sum prefiksowych w O(1) ⇒ O(n²). Z zadaną liczbą części\ndodaj wymiar `dp[c][i]` ⇒ O(k·n²)."
+    },
+    {
+     "q": [
+      "podział na k części dp",
+      "split array into k parts",
+      "podziel tablice na k fragmentow minimalny koszt",
+      "k segmentow dp"
+     ],
+     "a": "`dp[c][i] = min_{j} (dp[c−1][j] + koszt(j, i))`, `dp[0][0] = 0`, wynik `dp[k][n]`. Każdy fragment niepusty ⇒\n`j ≥ c − 1`. Czas O(k·n²); gdy optymalne `j` jest monotoniczne względem `i` — optymalizacja dziel i zwyciężaj\ndaje O(k·n log n). Pełny program z odtworzeniem jest w treści."
+    },
+    {
+     "q": [
+      "minimalna liczba cięć na palindromy",
+      "palindrome partitioning",
+      "podziel napis na palindromy min ciec",
+      "min cut palindrome"
+     ],
+     "a": "Najpierw `isPal[l][r]` w O(n²) (od krótkich przedziałów), potem `cut[i]` = min. liczba fragmentów prefiksu\ndługości `i`: `cut[i] = min_{j: isPal[j][i-1]} cut[j] + 1`, `cut[0] = 0`. Liczba cięć = `cut[n] − 1`. Czas O(n²).",
+     "code": "string s = \"banana\";\nint n = s.size();\nvector<vector<bool>> pal(n, vector<bool>(n, false));\nfor (int l = n - 1; l >= 0; l--)\n    for (int r = l; r < n; r++)\n        pal[l][r] = s[l] == s[r] && (r - l < 2 || pal[l + 1][r - 1]);\nvector<int> cut(n + 1, INT_MAX);\ncut[0] = 0;\nfor (int i = 1; i <= n; i++)\n    for (int j = 0; j < i; j++)\n        if (pal[j][i - 1] && cut[j] != INT_MAX) cut[i] = min(cut[i], cut[j] + 1);\ncout << cut[n] - 1 << \"\\n\";   // 1: \"b\" | \"anana\""
+    },
+    {
+     "q": [
+      "word break",
+      "czy napis da się podzielić na słowa ze słownika",
+      "podzial napisu na slowa",
+      "word break liczba sposobow"
+     ],
+     "a": "`ok[i]` = czy prefiks długości `i` da się pociąć na słowa: `ok[i] = OR po słowach w (ok[i − |w|] && s kończy się\nna w w pozycji i)`. Liczba sposobów: suma zamiast OR (modulo). Czas O(n·Σ|w|) naiwnie; z trie O(n·L).",
+     "code": "string s = \"catsanddog\";\nvector<string> dict = {\"cat\", \"cats\", \"and\", \"sand\", \"dog\"};\nint n = s.size();\nvector<long long> ways(n + 1, 0);\nways[0] = 1;\nfor (int i = 1; i <= n; i++)\n    for (auto &w : dict) {\n        int L = w.size();\n        if (L <= i && s.compare(i - L, L, w) == 0) ways[i] += ways[i - L];\n    }\ncout << ways[n] << \"\\n\";   // 2: \"cats and dog\", \"cat sand dog\""
+    },
+    {
+     "q": [
+      "podział na k części minimalizując maksimum",
+      "minimize largest sum split",
+      "podziel na k czesci najmniejsze maksimum",
+      "split array largest sum"
+     ],
+     "a": "Zamiast DP O(k·n²) użyj **wyszukiwania binarnego po odpowiedzi**: dla danego limitu `X` zachłannie tnij, gdy suma\nprzekroczy `X`, i sprawdź, czy wyszło ≤ k fragmentów. Monotoniczność: większe X ⇒ mniej fragmentów. Czas\nO(n·log(Σa)).",
+     "code": "vector<long long> a = {7, 2, 5, 10, 8};\nint k = 2;\nauto parts = [&](long long X) {\n    int cnt = 1; long long s = 0;\n    for (long long x : a) { if (s + x > X) { cnt++; s = 0; } s += x; }\n    return cnt;\n};\nlong long lo = *max_element(a.begin(), a.end()), hi = accumulate(a.begin(), a.end(), 0LL);\nwhile (lo < hi) { long long mid = (lo + hi) / 2; if (parts(mid) <= k) hi = mid; else lo = mid + 1; }\ncout << lo << \"\\n\";   // 18: [7 2 5] [10 8]"
+    },
+    {
+     "q": [
+      "liczba sposobów podziału ciągu na fragmenty",
+      "ile jest podziałów tablicy na kawałki o sumie co najwyżej S",
+      "count partitions prefix sums dp"
+     ],
+     "a": "`dp[i] = Σ dp[j]` po wszystkich `j`, dla których `a[j..i)` spełnia warunek. Gdy dopuszczalne `j` tworzą przedział\n`[lo, i−1]` (np. suma ≤ S przy liczbach dodatnich — wyznaczasz `lo` dwoma wskaźnikami), suma to różnica sum\nprefiksowych tablicy dp: O(1) na `i`, razem O(n). Pełny program jest w treści."
+    },
+    {
+     "q": [
+      "dp[i] = min dp[j] + cost jak przyspieszyć",
+      "podział optymalizacja n^2 za wolno",
+      "speed up partition dp",
+      "optymalizacja dp podzial"
+     ],
+     "a": "Zależy od kosztu: (1) okno `j ∈ [i−K, i−1]` i koszt zależny osobno od `i` i `j` ⇒ **kolejka monotoniczna**, O(n);\n(2) koszt postaci `b[j]·x[i]` + coś ⇒ **convex hull trick**, O(n) lub O(n log n); (3) optymalne `j` rośnie\nz `i` przy k warstwach ⇒ **dziel i zwyciężaj**, O(k·n log n); (4) suma po przedziale `j` ⇒ sumy prefiksowe dp."
+    }
+   ],
+   "related": [
+    "dp-prefix-opt",
+    "dp-monotonic-queue",
+    "dp-cht",
+    "dp-divide-conquer",
+    "str-palindromes",
+    "str-trie",
+    "tech-binary-search",
+    "tech-binary-search-answer"
+   ]
+  },
+  {
+   "id": "dp-games",
+   "title": "Gry w DP — pozycje wygrywające i przegrywające",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "gry",
+    "pozycja wygrywająca",
+    "pozycja przegrywająca",
+    "minimax",
+    "gra optymalna",
+    "zabieranie kamieni"
+   ],
+   "aliases": [
+    "gry dp",
+    "pozycja wygrywająca",
+    "pozycja przegrywająca",
+    "winning losing positions",
+    "gra optymalna dp",
+    "kto wygra gra",
+    "minimax dp",
+    "gra dwóch graczy dp"
+   ],
+   "summary": "Pozycja jest wygrywająca, jeśli istnieje ruch do pozycji przegrywającej; przegrywająca, jeśli każdy ruch prowadzi do wygrywającej (w szczególności brak ruchów). Liczymy to DP od pozycji końcowych.",
+   "complexity": "O(liczba pozycji × liczba ruchów z pozycji)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Gra dwóch graczy z pełną informacją, bez losowości, ruchy na zmianę, kto nie może wykonać ruchu — **przegrywa**\n(tzw. normalna konwencja). Każda pozycja jest albo **wygrywająca** (W — gracz na ruchu wygrywa przy optymalnej\ngrze), albo **przegrywająca** (P):\n* pozycja bez ruchów: P,\n* W ⇔ istnieje ruch do pozycji P,\n* P ⇔ wszystkie ruchy prowadzą do pozycji W.\n\nJeśli ruchy zawsze zmniejszają pozycję (np. liczba kamieni maleje), liczymy `win[]` rosnąco jak zwykłe DP.\nSygnały: „obaj gracze grają optymalnie”, „kto wygra”, „wypisz zwycięzcę i pierwszy ruch”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: gra w zabieranie kamieni",
+     "code": "// Gra: stos n kamieni, w ruchu zabierasz s kamieni dla s z zadanego zbioru; kto nie może ruszyć, przegrywa.\n// Wejście: n k, potem k dozwolonych ruchów. Wyjście: zwycięzca i (dla pierwszego) wygrywający ruch.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, k;\n    cin >> n >> k;\n    vector<int> moves(k);\n    for (auto &s : moves) cin >> s;\n    vector<bool> win(n + 1, false);        // win[x] = gracz na ruchu przy x kamieniach wygrywa\n    for (int x = 1; x <= n; x++)\n        for (int s : moves)\n            if (s <= x && !win[x - s]) { win[x] = true; break; }   // ruch do pozycji przegrywającej\n    if (!win[n]) { cout << \"DRUGI\\n\"; return 0; }\n    for (int s : moves)\n        if (s <= n && !win[n - s]) { cout << \"PIERWSZY \" << s << \"\\n\"; break; }\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Gry z wynikiem liczbowym** (np. każdy zbiera punkty) — zamiast W/P liczymy wartość: `dp[stan]` = najlepsza\n**przewaga** gracza na ruchu (jego punkty minus punkty przeciwnika). Wtedy `dp[stan] = max_ruch (zysk − dp[nowy stan])`\n(zasada minimax w wersji „negamax”). Przykład: gra „bierz liczbę z lewego lub prawego końca” (DP na przedziałach)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sytuacja",
+      "Narzędzie"
+     ],
+     "rows": [
+      [
+       "jedna gra, stany tworzą DAG",
+       "DP W/P od stanów końcowych (ten artykuł)"
+      ],
+      [
+       "suma kilku niezależnych gier",
+       "Sprague-Grundy: XOR liczb Grundy'ego"
+      ],
+      [
+       "Nim (kilka stosów, bierz dowolnie z jednego)",
+       "XOR rozmiarów stosów ≠ 0 ⇒ wygrywa pierwszy"
+      ],
+      [
+       "graf z cyklami (możliwy remis)",
+       "wsteczne BFS od pozycji końcowych z licznikiem ruchów"
+      ],
+      [
+       "gra z punktami",
+       "negamax: dp = max(zysk − dp[następny])"
+      ],
+      [
+       "za dużo stanów",
+       "wypisz tabelę win dla małych n i szukaj okresu / wzoru"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Wypisz `win[0..50]` i popatrz: często pojawia się okresowość (dla ruchów {1, 3, 4} pozycje przegrywające to\nn mod 7 ∈ {0, 2}). Dzięki temu da się odpowiedzieć dla n do 10^18 — ale wzór zawsze sprawdź brute force'em."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "win[x] = exists s: !win[x - s]",
+     "desc": "pozycja wygrywająca ⇔ istnieje ruch do przegrywającej",
+     "complexity": "O(liczba ruchów)"
+    },
+    {
+     "sig": "dp[stan] = max(zysk - dp[następny])",
+     "desc": "negamax: przewaga gracza na ruchu w grze z punktami",
+     "complexity": "O(liczba ruchów)"
+    }
+   ],
+   "pitfalls": [
+    "Konwencja misère (kto wykona ostatni ruch, PRZEGRYWA) odwraca bazę — przeczytaj treść uważnie.",
+    "Remisy w grafach z cyklami: zwykłe DP/rekurencja się zapętli — potrzebne wsteczne BFS.",
+    "Rekurencja z memoizacją przy 10^6 stanach może przepełnić stos — liczba kamieni maleje, więc licz pętlą.",
+    "Pozycja 0 (brak ruchów) to przegrana gracza na ruchu, nie wygrana.",
+    "Wzór „na oko” z kilku pierwszych wartości bywa mylący — porównaj z brute force dla n ≤ 1000."
+   ],
+   "qa": [
+    {
+     "q": [
+      "gra dp wygrywająca przegrywająca",
+      "pozycja wygrywająca",
+      "winning losing positions",
+      "jak sprawdzic kto wygra gre",
+      "pozycje W i P"
+     ],
+     "a": "Pozycja bez ruchów jest przegrywająca. Pozycja jest **wygrywająca**, jeśli istnieje ruch do przegrywającej,\na **przegrywająca**, jeśli wszystkie ruchy prowadzą do wygrywających. Liczysz to DP od pozycji końcowych\n(np. od 0 kamieni w górę). Czas O(stany × ruchy)."
+    },
+    {
+     "q": [
+      "gra w zabieranie kamieni",
+      "zabieranie 1 3 lub 4 kamieni",
+      "subtraction game",
+      "gra kamienie kto wygra"
+     ],
+     "a": "`win[x] = true`, jeśli dla któregoś dozwolonego `s ≤ x` zachodzi `!win[x − s]`. Dla ruchów {1, 3, 4} pozycje\nprzegrywające to 0, 2, 7, 9, 14, 16, … (n mod 7 ∈ {0, 2}). Dla ruchów {1, …, k} przegrywają wielokrotności\n`k + 1`. Pełny program jest w treści.",
+     "code": "int n = 20;\nvector<int> moves = {1, 3, 4};\nvector<bool> win(n + 1, false);\nfor (int x = 1; x <= n; x++)\n    for (int s : moves) if (s <= x && !win[x - s]) { win[x] = true; break; }\nfor (int x = 0; x <= n; x++) if (!win[x]) cout << x << \" \";\ncout << \"\\n\";   // 0 2 7 9 14 16"
+    },
+    {
+     "q": [
+      "obaj gracze grają optymalnie",
+      "gra kto wygra przy optymalnej grze",
+      "optimal play two players",
+      "gracze graja optymalnie co to znaczy"
+     ],
+     "a": "„Optymalnie” = każdy gracz wybiera ruch najlepszy dla siebie, wiedząc, że przeciwnik też tak zrobi. Dlatego\nwynik pozycji definiujemy rekurencyjnie (W/P albo minimax) i liczymy DP po stanach gry, a nie symulujemy\n„rozsądnych” ruchów."
+    },
+    {
+     "q": [
+      "minimax dp",
+      "minimax memo",
+      "negamax",
+      "gra z punktami dp przewaga"
+     ],
+     "a": "Dla gier z punktami licz `dp[stan]` = przewaga gracza na ruchu: `dp[stan] = max po ruchach (zysk − dp[nowy])`.\nMinus, bo w nowym stanie na ruchu jest przeciwnik. Wynik gracza = `(suma + dp[start]) / 2`, gdy wszystkie\npunkty są rozdzielane. Memoizacja albo pętla po stanach w kolejności topologicznej."
+    },
+    {
+     "q": [
+      "gra z końców ciągu kto wygra",
+      "bierzemy liczby z końców tablicy dp",
+      "predict the winner"
+     ],
+     "a": "Stan to przedział `[l, r]`: `dp[l][r] = max(a[l] − dp[l+1][r], a[r] − dp[l][r-1])`, liczony od krótkich\nprzedziałów. Pierwszy gracz wygrywa (lub remisuje), gdy `dp[0][n−1] ≥ 0`. O(n²) — kod w artykule o DP na przedziałach."
+    },
+    {
+     "q": [
+      "suma gier",
+      "kilka stosów kto wygra",
+      "gra na wielu planszach naraz",
+      "xor grundy suma gier"
+     ],
+     "a": "Gdy gracz w ruchu wybiera jedną z kilku niezależnych gier, W/P nie wystarczy — potrzebne liczby Grundy'ego:\n`g(pozycja) = mex{g(następnik)}`, a cała gra jest przegrywająca ⇔ XOR liczb Grundy'ego składowych = 0.\nDla zwykłego Nima liczba Grundy'ego stosu = jego rozmiar."
+    },
+    {
+     "q": [
+      "gra na grafie z cyklami",
+      "remis w grze dp",
+      "gra moze trwac w nieskonczonosc",
+      "game on graph draw"
+     ],
+     "a": "Przy cyklach rekurencja się zapętla. Rób **wsteczne BFS**: pozycje bez ruchów to P; gdy pozycja ma ruch do P,\nstaje się W; gdy wszystkie jej ruchy (licznik malejącego stopnia wyjściowego) prowadzą do W, staje się P.\nPozycje nieoznaczone na końcu to remisy. Czas O(V + E)."
+    },
+    {
+     "q": [
+      "misere gra",
+      "kto wykona ostatni ruch przegrywa",
+      "odwrócona gra dp",
+      "misere convention"
+     ],
+     "a": "W konwencji misère pozycja bez ruchów jest **wygrywająca** dla gracza na ruchu (bo przeciwnik wykonał ostatni\nruch). Zmień przypadek bazowy (`win[stan końcowy] = true`), reszta reguł bez zmian. Uwaga: dla Nima wynik misère\nróżni się tylko, gdy wszystkie stosy mają rozmiar ≤ 1."
+    },
+    {
+     "q": [
+      "jak znaleźć wzór w grze",
+      "gra n do 10^18 wzor",
+      "okresowosc gry",
+      "game pattern periodic"
+     ],
+     "a": "Napisz DP/brute force dla małych `n` (np. ≤ 200), wypisz pozycje przegrywające i szukaj okresu (gry odejmowania\nze skończonym zbiorem ruchów są w końcu okresowe). Znaleziony wzór porównaj z DP dla wszystkich `n ≤ 10^5`\nzanim go wyślesz."
+    }
+   ],
+   "related": [
+    "game-sprague-grundy",
+    "game-nim",
+    "game-graph-games",
+    "dp-interval",
+    "dp-dag"
+   ]
+  },
+  {
+   "id": "dp-tree",
+   "title": "DP na drzewie (dynamika na poddrzewach, przekorzenianie)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "dp na drzewie",
+    "tree dp",
+    "poddrzewo",
+    "zbiór niezależny",
+    "średnica",
+    "rerooting",
+    "przekorzenianie"
+   ],
+   "aliases": [
+    "dp na drzewie",
+    "tree dp",
+    "dynamika na drzewie",
+    "dp na poddrzewach",
+    "rerooting",
+    "przekorzenianie",
+    "dp drzewo"
+   ],
+   "summary": "Ukorzeniamy drzewo i liczymy dp[v] z wartości dzieci (porządek post-order). Klasyki: maksymalny zbiór niezależny dp[v][0/1], rozmiary poddrzew, średnica, przekorzenianie dla odpowiedzi z każdego korzenia.",
+   "complexity": "O(n) dla większości dynamik (każda krawędź raz); plecak na drzewie O(n·k) lub O(n²)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Drzewo ukorzeniamy (np. w 1). `dp[v]` opisuje **poddrzewo** `v` i liczymy je z `dp` dzieci — więc dzieci muszą\nbyć policzone przed rodzicem (post-order). Typowe stany:\n* `dp[v][0/1]` — czy `v` jest wybrany (zbiór niezależny, pokrycie wierzchołkowe, kolorowanie),\n* `sz[v]` — rozmiar poddrzewa, `down[v]` — najgłębsza ścieżka w dół (średnica),\n* `dp[v][k]` — „plecak” na drzewie (wybierz k wierzchołków).\n\n**Przekorzenianie (rerooting):** gdy potrzebna jest odpowiedź dla każdego wierzchołka jako korzenia, liczymy\nnajpierw `dp` w dół, a potem drugim przejściem (od korzenia) przenosimy wynik z rodzica do dziecka w O(1).\nSzczegółowy opis i więcej przykładów: artykuł o DP na drzewach w dziale „Drzewa”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: maksymalny zbiór niezależny w drzewie",
+     "code": "// Maksymalny ważony zbiór niezależny w drzewie (żadne dwa wybrane nie są sąsiadami).\n// Iteracyjny DFS (bez rekurencji — bezpieczne dla n = 2*10^5 przy ścieżce).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> w(n + 1);\n    for (int i = 1; i <= n; i++) cin >> w[i];\n    vector<vector<int>> adj(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        adj[a].push_back(b);\n        adj[b].push_back(a);\n    }\n    vector<int> order, parent(n + 1, 0);\n    vector<int> st = {1};\n    parent[1] = -1;\n    while (!st.empty()) {                     // kolejność odwiedzin: rodzic przed dziećmi\n        int v = st.back(); st.pop_back();\n        order.push_back(v);\n        for (int u : adj[v]) if (u != parent[v]) { parent[u] = v; st.push_back(u); }\n    }\n    // dp0[v] = najlepszy wynik w poddrzewie v, gdy v NIE wybrany; dp1[v] — gdy wybrany\n    vector<long long> dp0(n + 1, 0), dp1(n + 1, 0);\n    for (int i = n - 1; i >= 0; i--) {       // odwrotna kolejność = dzieci przed rodzicem\n        int v = order[i];\n        dp1[v] += w[v];\n        if (parent[v] > 0) {\n            int p = parent[v];\n            dp0[p] += max(dp0[v], dp1[v]);  // rodzic niewybrany: dziecko dowolnie\n            dp1[p] += dp0[v];               // rodzic wybrany: dziecko niewybrane\n        }\n    }\n    cout << max(dp0[1], dp1[1]) << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Problem",
+      "Stan",
+      "Przejście"
+     ],
+     "rows": [
+      [
+       "max zbiór niezależny",
+       "dp[v][0/1]",
+       "dp[v][0] = Σ max(dp[c][0], dp[c][1]); dp[v][1] = w[v] + Σ dp[c][0]"
+      ],
+      [
+       "min pokrycie wierzchołkowe",
+       "dp[v][0/1]",
+       "dp[v][0] = Σ dp[c][1]; dp[v][1] = 1 + Σ min(dp[c][0], dp[c][1])"
+      ],
+      [
+       "rozmiar poddrzewa",
+       "sz[v]",
+       "sz[v] = 1 + Σ sz[c]"
+      ],
+      [
+       "średnica",
+       "down[v]",
+       "wynik = max po v dwóch największych (down[c] + 1)"
+      ],
+      [
+       "suma odległości do wszystkich (rerooting)",
+       "sum[v]",
+       "sum[c] = sum[v] − sz[c] + (n − sz[c])"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "order (DFS iteracyjny) + pętla od końca",
+     "desc": "porządek post-order bez rekurencji",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Rekurencyjny DFS na ścieżce długości 10^5–10^6 może przepełnić stos — użyj iteracyjnego porządku.",
+    "Zapominanie o pomijaniu rodzica przy przeglądaniu sąsiadów (lista sąsiedztwa jest nieskierowana).",
+    "Przy rerootingu nie licz odpowiedzi od zera dla każdego korzenia — to O(n²).",
+    "Wagi mogą być ujemne — wtedy „nie wybieraj” bywa lepsze; DP to uwzględnia, ale inicjalizacja musi być poprawna."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dp na drzewie",
+      "tree dp",
+      "dynamika na drzewie",
+      "dp na poddrzewach jak",
+      "dp drzewo c++"
+     ],
+     "a": "Ukorzeń drzewo, zdefiniuj `dp[v]` dla poddrzewa `v` i licz je z wartości dzieci w kolejności post-order\n(dzieci przed rodzicem). Każda krawędź jest użyta raz, więc zwykle O(n). Bez rekurencji: zbierz kolejność DFS\nstosem i przejdź ją od końca. Więcej w dziale „Drzewa” (DP na drzewach)."
+    },
+    {
+     "q": [
+      "maksymalny zbiór niezależny w drzewie",
+      "max independent set tree",
+      "zbior niezalezny drzewo dp",
+      "wybierz wierzcholki bez sasiadow max suma"
+     ],
+     "a": "`dp[v][1] = w[v] + Σ dp[c][0]` (v wybrany ⇒ dzieci nie), `dp[v][0] = Σ max(dp[c][0], dp[c][1])`. Wynik\n`max(dp[root][0], dp[root][1])`. Czas O(n). Pełny program (iteracyjny) jest w treści."
+    },
+    {
+     "q": [
+      "średnica drzewa dp",
+      "tree diameter dp",
+      "najdluzsza sciezka w drzewie",
+      "srednica drzewa"
+     ],
+     "a": "`down[v]` = najdłuższa ścieżka z `v` w dół. Dla każdego `v` średnica może przechodzić przez `v` i dwoje dzieci:\n`d1 + d2`, gdzie `d1 ≥ d2` to dwie największe wartości `down[c] + 1`. Wynik = maksimum po `v`. O(n).\nAlternatywa: dwa BFS-y (najdalszy od dowolnego, potem najdalszy od niego).",
+     "code": "int n = 6;\nvector<vector<int>> adj(n);\nvector<pair<int,int>> edges = {{0, 1}, {0, 2}, {2, 3}, {2, 4}, {2, 5}};\nfor (auto [a, b] : edges) { adj[a].push_back(b); adj[b].push_back(a); }\nvector<int> order, par(n, -1), st = {0};\nwhile (!st.empty()) { int v = st.back(); st.pop_back(); order.push_back(v);\n    for (int u : adj[v]) if (u != par[v]) { par[u] = v; st.push_back(u); } }\nvector<int> down(n, 0);\nint diam = 0;\nfor (int i = n - 1; i >= 0; i--) {\n    int v = order[i], d1 = 0, d2 = 0;\n    for (int u : adj[v]) if (u != par[v]) {\n        int d = down[u] + 1;\n        if (d > d1) { d2 = d1; d1 = d; } else if (d > d2) d2 = d;\n    }\n    down[v] = d1;\n    diam = max(diam, d1 + d2);\n}\ncout << diam << \"\\n\";   // 3 (np. 1-0-2-3)"
+    },
+    {
+     "q": [
+      "rerooting",
+      "dp na drzewie dla każdego korzenia",
+      "przekorzenianie drzewa",
+      "suma odległości do wszystkich wierzchołków",
+      "sum of distances in tree"
+     ],
+     "a": "Najpierw w dół: `sz[v]` i `sum[root]` = suma głębokości. Potem od korzenia do dzieci: przejście korzenia z `v`\ndo dziecka `c` przybliża `sz[c]` wierzchołków o 1 i oddala `n − sz[c]` o 1, więc\n`sum[c] = sum[v] − sz[c] + (n − sz[c])`. Dwa przejścia O(n) zamiast n razy DFS (O(n²)).",
+     "code": "int n = 6;\nvector<vector<int>> adj(n);\nvector<pair<int,int>> edges = {{0, 1}, {0, 2}, {2, 3}, {2, 4}, {2, 5}};\nfor (auto [a, b] : edges) { adj[a].push_back(b); adj[b].push_back(a); }\nvector<int> order, par(n, -1), st = {0}, dep(n, 0);\nwhile (!st.empty()) { int v = st.back(); st.pop_back(); order.push_back(v);\n    for (int u : adj[v]) if (u != par[v]) { par[u] = v; dep[u] = dep[v] + 1; st.push_back(u); } }\nvector<long long> sz(n, 1), sum(n, 0);\nfor (int i = n - 1; i > 0; i--) sz[par[order[i]]] += sz[order[i]];\nfor (int v = 0; v < n; v++) sum[0] += dep[v];\nfor (int i = 1; i < n; i++) { int c = order[i]; sum[c] = sum[par[c]] - sz[c] + (n - sz[c]); }\nfor (int v = 0; v < n; v++) cout << sum[v] << \" \";\ncout << \"\\n\";   // 8 12 6 10 10 10"
+    },
+    {
+     "q": [
+      "rozmiar poddrzewa",
+      "subtree size",
+      "ile wierzcholkow w poddrzewie",
+      "sz[v] drzewo"
+     ],
+     "a": "`sz[v] = 1 + Σ sz[dziecko]`, liczone post-order. W wersji iteracyjnej: przejdź kolejność DFS od końca\ni dodawaj `sz[v]` do `sz[parent[v]]`. O(n). Rozmiary poddrzew są podstawą wielu dynamik (rerooting,\ncentroid, plecak na drzewie)."
+    },
+    {
+     "q": [
+      "plecak na drzewie",
+      "tree knapsack",
+      "wybierz k wierzcholkow spojnych drzewo dp",
+      "dp na drzewie z wymiarem k"
+     ],
+     "a": "`dp[v][j]` = najlepszy wynik, wybierając `j` wierzchołków w poddrzewie `v`. Dzieci scalasz jak plecak:\n`nowe[a + b] = opt(dp[v][a] + dp[c][b])`. Jeśli pętle idą tylko do rozmiarów poddrzew (`a ≤ sz[v]`, `b ≤ sz[c]`),\nłączny koszt to O(n²) (a z limitem k: O(n·k)), a nie O(n³)."
+    },
+    {
+     "q": [
+      "dp na drzewie stack overflow",
+      "dfs rekurencja drzewo segfault",
+      "drzewo sciezka 10^6 rekurencja",
+      "iteracyjny dfs dp"
+     ],
+     "a": "Drzewo-ścieżka daje głębokość rekurencji n. Zrób porządek odwiedzin stosem (`vector<int> st`), zapamiętaj\nrodziców, a dynamikę licz pętlą po tej kolejności **od końca** (dzieci przed rodzicem). Pełny program w treści\nrobi dokładnie to."
+    }
+   ],
+   "related": [
+    "tree-dp",
+    "dp-dag",
+    "dp-intro",
+    "graph-dfs",
+    "oi-py-recursion"
+   ]
+  },
+  {
+   "id": "dp-dag",
+   "title": "DP na DAG-u (najdłuższa ścieżka, liczba ścieżek, kolejność topologiczna)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "dag",
+    "graf acykliczny",
+    "sortowanie topologiczne",
+    "najdłuższa ścieżka",
+    "liczba ścieżek",
+    "toposort dp"
+   ],
+   "aliases": [
+    "dp na dagu",
+    "dp on dag",
+    "najdłuższa ścieżka w dag",
+    "liczba ścieżek w dag",
+    "toposort dp",
+    "dynamika na grafie acyklicznym",
+    "dp na grafie skierowanym"
+   ],
+   "summary": "W grafie skierowanym bez cykli liczymy dp w porządku topologicznym: każdy wierzchołek po wszystkich swoich poprzednikach. Tak liczy się najdłuższą/najkrótszą ścieżkę (także z ujemnymi wagami) i liczbę ścieżek.",
+   "complexity": "O(V + E) (sortowanie topologiczne + jedno przejście po krawędziach)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Każde DP to w gruncie rzeczy DAG: stany są wierzchołkami, a przejścia krawędziami „z czego liczę”. Gdy w zadaniu\njest jawny graf skierowany bez cykli (zależności, zadania „po kolei”, ruchy tylko w jedną stronę), liczymy\n`dp[v]` w **kolejności topologicznej** — wtedy wszystkie poprzedniki `v` są gotowe:\n* liczba ścieżek z `s`: `cnt[v] = Σ cnt[u]` po krawędziach `u → v`,\n* najdłuższa ścieżka: `len[v] = max(len[u] + w(u, v))` (w ogólnym grafie to problem NP-trudny, w DAG-u liniowy),\n* najkrótsza ścieżka także przy **ujemnych** wagach — O(V + E), szybciej niż Bellman-Ford.\n\nKolejność topologiczna: algorytm Kahna (kolejka wierzchołków o stopniu wejściowym 0) albo odwrotny post-order DFS.\nJeśli graf ma cykle — najpierw silnie spójne składowe i DP na grafie składowych (kondensacja)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba ścieżek i najdłuższa ścieżka w DAG-u",
+     "code": "// DAG: n wierzchołków, m krawędzi u -> v. Liczba ścieżek 1 -> n (mod 10^9+7) i najdłuższa ścieżka (w krawędziach).\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> adj(n + 1);\n    vector<int> indeg(n + 1, 0);\n    for (int i = 0; i < m; i++) {\n        int u, v;\n        cin >> u >> v;\n        adj[u].push_back(v);\n        indeg[v]++;\n    }\n    queue<int> q;                                 // algorytm Kahna\n    for (int v = 1; v <= n; v++) if (indeg[v] == 0) q.push(v);\n    vector<int> topo;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        topo.push_back(v);\n        for (int u : adj[v]) if (--indeg[u] == 0) q.push(u);\n    }\n    // (topo.size() < n oznaczałoby cykl)\n    vector<long long> cnt(n + 1, 0);\n    vector<int> len(n + 1, -1);                   // -1 = nieosiągalny z 1\n    cnt[1] = 1; len[1] = 0;\n    for (int v : topo) {                          // poprzedniki v są już policzone\n        if (len[v] < 0) continue;\n        for (int u : adj[v]) {\n            cnt[u] = (cnt[u] + cnt[v]) % MOD;\n            len[u] = max(len[u], len[v] + 1);\n        }\n    }\n    cout << cnt[n] << \" \" << len[n] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Problem w DAG-u",
+      "Przejście w kolejności topologicznej",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "liczba ścieżek s → t",
+       "cnt[v] += cnt[u]",
+       "O(V + E)"
+      ],
+      [
+       "najdłuższa ścieżka",
+       "len[v] = max(len[u] + w)",
+       "O(V + E)"
+      ],
+      [
+       "najkrótsza ścieżka (wagi ujemne OK)",
+       "dist[v] = min(dist[u] + w)",
+       "O(V + E)"
+      ],
+      [
+       "najwcześniejszy czas zakończenia zadań",
+       "start[v] = max(start[u] + czas[u])",
+       "O(V + E)"
+      ],
+      [
+       "graf z cyklami",
+       "SCC → kondensacja (DAG) → DP",
+       "O(V + E)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "Kahn: queue z indeg == 0",
+     "desc": "kolejność topologiczna; jeśli wypisze < n wierzchołków — graf ma cykl",
+     "complexity": "O(V + E)"
+    }
+   ],
+   "pitfalls": [
+    "Liczenie dp w kolejności numerów wierzchołków zamiast topologicznej — działa tylko, gdy krawędzie idą od mniejszych do większych numerów.",
+    "Nieosiągalne wierzchołki: nie propaguj z nich wartości (len = -1 / -INF).",
+    "Liczba ścieżek rośnie wykładniczo — modulo po każdym dodaniu.",
+    "Graf z cyklem nie ma porządku topologicznego — sprawdź topo.size() == n.",
+    "Najdłuższa ścieżka w grafie z cyklami to inny (NP-trudny) problem — DP działa tylko na DAG-u."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dp na dagu",
+      "dp on dag",
+      "dynamika na grafie acyklicznym",
+      "dp na grafie skierowanym bez cykli"
+     ],
+     "a": "Posortuj wierzchołki topologicznie (Kahn albo DFS) i licz `dp[v]` w tej kolejności — każdy wierzchołek po\nswoich poprzednikach. Przejścia to krawędzie: `dp[v] = opt po u → v (dp[u] ⊕ w)`. Całość O(V + E)."
+    },
+    {
+     "q": [
+      "najdłuższa ścieżka w dag",
+      "longest path dag",
+      "najdluzsza droga w grafie acyklicznym",
+      "longest path in directed acyclic graph"
+     ],
+     "a": "W kolejności topologicznej: `len[v] = max(len[u] + w(u, v))` po krawędziach wchodzących (albo „pchając” wartości\npo krawędziach wychodzących). Start: `len[s] = 0`, reszta `-INF`. O(V + E). W grafie z cyklami ten problem jest\nNP-trudny — DP działa tylko dzięki acykliczności."
+    },
+    {
+     "q": [
+      "liczba ścieżek w dag",
+      "count paths dag",
+      "ile jest drog z 1 do n w dagu",
+      "liczba sciezek modulo"
+     ],
+     "a": "`cnt[s] = 1`, w kolejności topologicznej `cnt[v] += cnt[u]` dla każdej krawędzi `u → v`, modulo. Wynik `cnt[t]`.\nO(V + E). Pełny program (Kahn + liczba ścieżek + najdłuższa ścieżka) jest w treści."
+    },
+    {
+     "q": [
+      "toposort dp",
+      "sortowanie topologiczne i dynamika",
+      "kahn dp",
+      "topological sort dp"
+     ],
+     "a": "Algorytm Kahna: wrzuć do kolejki wierzchołki ze stopniem wejściowym 0, zdejmuj je, dopisuj do porządku i zmniejszaj\nstopnie sąsiadów (0 ⇒ do kolejki). Jeśli porządek ma mniej niż `n` wierzchołków — jest cykl. Na tym porządku\nliczysz DP. Szczegóły sortowania w dziale „Grafy”."
+    },
+    {
+     "q": [
+      "najkrótsza ścieżka w dag z ujemnymi wagami",
+      "shortest path dag negative",
+      "ujemne wagi bez cykli najkrotsza droga"
+     ],
+     "a": "W DAG-u nie ma cykli (więc ani ujemnych cykli), a relaksacja w kolejności topologicznej rozważa każdą krawędź raz:\n`dist[v] = min(dist[u] + w)`. O(V + E) — szybciej niż Bellman-Ford O(V·E), a Dijkstra przy ujemnych wagach\nmoże dać zły wynik.",
+     "code": "int n = 4;\nvector<vector<pair<int,int>>> adj(n);          // u -> (v, w); numeracja = kolejność topologiczna\nadj[0] = {{1, 2}, {2, 5}};\nadj[1] = {{2, 1}, {3, 3}};\nadj[2] = {{3, -4}};\nconst long long INF = LLONG_MAX / 4;\nvector<long long> dist(n, INF);\ndist[0] = 0;\nfor (int u = 0; u < n; u++) {                  // wierzchołki w porządku topologicznym 0, 1, 2, 3\n    if (dist[u] == INF) continue;\n    for (auto [v, w] : adj[u]) dist[v] = min(dist[v], dist[u] + w);\n}\ncout << dist[3] << \"\\n\";   // -1 (0 -> 1 -> 2 -> 3: 2 + 1 - 4)"
+    },
+    {
+     "q": [
+      "dp na grafie z cyklami",
+      "dag dp cykl co zrobic",
+      "silnie spojne skladowe dp",
+      "kondensacja grafu dp"
+     ],
+     "a": "Gdy graf ma cykle, ściągnij każdą silnie spójną składową (SCC, Tarjan/Kosaraju) do jednego wierzchołka — powstaje\nDAG (kondensacja). Wartości wewnątrz składowej (np. suma wag, którą można zebrać krążąc po cyklu) przypisz\nwierzchołkowi składowej i zrób DP na DAG-u. O(V + E)."
+    },
+    {
+     "q": [
+      "memoizacja dfs na dag",
+      "dp na dagu rekurencyjnie",
+      "dfs z zapamietywaniem graf"
+     ],
+     "a": "Zamiast sortować, możesz liczyć `f(v)` rekurencyjnie z memoizacją: `f(v) = opt po v → u (f(u) ⊕ w)`; DFS sam\nodwiedzi stany w dobrej kolejności. Przy głębokości ~10^5+ grozi przepełnienie stosu — wtedy Kahn i pętla."
+    }
+   ],
+   "related": [
+    "dp-tree",
+    "dp-intro",
+    "graph-toposort",
+    "graph-scc",
+    "dp-games",
+    "graph-dag-dp"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,115 @@
+/* Zadania (taskexplain + wspólne elementy suggest/edgecases/autosolver). Tylko zmienne motywu. */
+
+/* ---------- układ: treść po lewej, wyniki po prawej ---------- */
+.tk-layout { display: grid; grid-template-columns: minmax(330px, 0.85fr) minmax(0, 1.45fr); gap: 18px; align-items: start; }
+.tk-left { position: sticky; top: 0; min-width: 0; }
+.tk-results { min-width: 0; }
+@media (max-width: 1150px) {
+  .tk-layout { grid-template-columns: 1fr; }
+  .tk-left { position: static; }
+}
+
+/* ---------- panel treści ---------- */
+.tk-panel .textarea.tk-text { min-height: 230px; max-height: 46vh; resize: vertical; font-size: 13.5px; line-height: 1.55;
+  font-family: var(--font); background: var(--bg-2); }
+.tk-panel .filedrop { padding: 12px; font-size: 13px; }
+.tk-info { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
+.tk-switch { display: flex; flex-wrap: wrap; gap: 6px; }
+.tk-switch .chip { font-size: 12.5px; padding: 4px 11px; }
+.tk-switch .chip svg { color: var(--accent-2); }
+.tk-legend summary { cursor: pointer; list-style: none; }
+.tk-legend summary::-webkit-details-marker { display: none; }
+
+/* ---------- nagłówek wyniku ---------- */
+.tk-hero { background: radial-gradient(120% 160% at 0% 0%, var(--accent-bg), transparent 55%), var(--panel); }
+.tk-title { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -.01em; color: var(--text); }
+.tk-summary p { margin: 0 0 6px; line-height: 1.6; color: var(--text-2); }
+.tk-summary p:first-child { color: var(--text); }
+.tk-sec { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.tk-sec svg { color: var(--accent-2); }
+.tk-grid .card { height: 100%; }
+.tk-pad { padding: 0 14px 14px; }
+.tk-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; line-height: 1.55; }
+.tk-list li::marker { color: var(--accent-2); }
+
+/* ---------- format wejścia ---------- */
+.tk-format { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; counter-reset: tkf; }
+.tk-format li { padding: 9px 12px; border-radius: var(--radius-s); background: var(--panel-2); border: 1px solid var(--border); }
+.tk-line { font-size: 11.5px; color: var(--accent-2); background: var(--accent-bg); padding: 1px 7px; border-radius: 6px; white-space: nowrap; }
+.tk-desc { margin-top: 4px; line-height: 1.5; }
+
+/* ---------- przykłady ---------- */
+.tk-sample { border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel-2); overflow: hidden; }
+.tk-sample-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.tk-sample-head svg { color: var(--accent-2); }
+.tk-sample-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.tk-sample-grid .tk-io + .tk-io { border-left: 1px solid var(--border); }
+@media (max-width: 700px) { .tk-sample-grid { grid-template-columns: 1fr; } .tk-sample-grid .tk-io + .tk-io { border-left: 0; border-top: 1px solid var(--border); } }
+.tk-io { min-width: 0; }
+.tk-io-label { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 0 12px; font-size: 11.5px;
+  font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.tk-pre { margin: 0; padding: 8px 12px 12px; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; color: var(--text);
+  white-space: pre; overflow: auto; max-height: 300px; background: transparent; }
+.tk-expl { display: flex; gap: 6px; align-items: flex-start; padding: 8px 12px; border-top: 1px dashed var(--border); color: var(--text-2); }
+.tk-expl svg { flex: none; margin-top: 2px; color: var(--info); }
+
+/* ---------- pułapki ---------- */
+.tk-pits { display: flex; flex-direction: column; gap: 8px; }
+.tk-pit { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radius-s); border: 1px solid var(--border);
+  background: var(--panel-2); }
+.tk-pit-icon { flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--info-bg); color: var(--info); }
+.tk-pit.danger .tk-pit-icon { background: var(--danger-bg); color: var(--danger); }
+.tk-pit.warn .tk-pit-icon { background: var(--warn-bg); color: var(--warn); }
+.tk-pit.tip .tk-pit-icon { background: var(--success-bg); color: var(--success); }
+.tk-pit.danger { border-color: color-mix(in srgb, var(--danger) 35%, var(--border)); }
+.tk-pit-title { font-weight: 600; margin-bottom: 2px; }
+.tk-pit .md p { margin: 0; }
+
+/* ---------- słowniczek ---------- */
+.tk-gloss { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.tk-gl { padding: 10px 12px; border-radius: var(--radius-s); background: var(--panel-2); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; }
+.tk-gl-term { font-weight: 650; color: var(--accent-2); }
+.tk-kb .chip { font-size: 12px; padding: 3px 9px; }
+
+/* ---------- pasek pewności (wspólny) ---------- */
+.tk-conf { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tk-conf-track { flex: 1; height: 7px; border-radius: 99px; background: var(--panel-3); overflow: hidden; }
+.tk-conf-fill { height: 100%; border-radius: 99px; background: var(--muted); transition: width .4s var(--ease); }
+.tk-conf.high .tk-conf-fill { background: linear-gradient(90deg, var(--accent), var(--success)); }
+.tk-conf.mid .tk-conf-fill { background: linear-gradient(90deg, var(--accent-3), var(--accent)); }
+.tk-conf.low .tk-conf-fill { background: var(--faint); }
+.tk-conf-pct { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-2); width: 36px; text-align: right; }
+.tk-loading .card-body { padding: 18px; }
+
+/* ---------- „W skrócie” + typ zadania ---------- */
+.tk-brief { font-size: 15px; line-height: 1.6; color: var(--text); padding: 10px 12px; border-radius: var(--radius-s);
+  background: var(--panel-2); border: 1px solid var(--border); }
+.tk-brief-label { display: inline-block; margin-right: 8px; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--accent-2); }
+.tk-type { display: flex; flex-direction: column; gap: 4px; }
+.tk-type-cons { color: var(--text-2); line-height: 1.5; }
+.tk-type-cons .md p { margin: 0; }
+
+/* ---------- struktura ---------- */
+.tk-notes { margin: 0; padding-left: 18px; color: var(--text-2); display: flex; flex-direction: column; gap: 3px; }
+.tk-notes li::marker { color: var(--accent-2); }
+.tk-queries { border: 1px solid var(--border); border-radius: var(--radius-s); overflow: hidden; }
+.tk-fmt-row { display: flex; gap: 8px; align-items: baseline; }
+.tk-fmt-row > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+
+/* ---------- przykład rozpisany ---------- */
+.tk-walk { border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel-2); padding: 8px 12px; }
+.tk-walk-head { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 4px; }
+.tk-walk-head svg { color: var(--accent-2); }
+.tk-walk-in { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.6; display: flex; flex-direction: column; gap: 2px;
+  overflow-wrap: anywhere; }
+.tk-walk-out { margin-top: 4px; font-size: 12.5px; color: var(--accent-2); display: flex; align-items: center; gap: 4px;
+  overflow-wrap: anywhere; }
+.tk-walk .tk-expl { border-top: 1px dashed var(--border); margin-top: 6px; padding: 6px 0 0; }
+
+/* ---------- zmienne / złożoność / szczegóły ---------- */
+.tk-role.size { color: var(--accent-2); font-weight: 600; }
+.tk-role.param { color: var(--info); }
+.tk-hints { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+.tk-sub { font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.tk-details .card-body { padding: 10px 14px; }

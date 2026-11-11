@@ -1,0 +1,19 @@
+Drzewo genealogiczne
+Ród Bajtockich liczy n osób ponumerowanych od 1 do n; osoba nr 1 jest protoplastą rodu. Znamy n − 1 par (a, b)
+oznaczających, że jedna z osób a, b jest rodzicem drugiej — razem tworzą one drzewo. Ile pokoleń dzieli protoplastę
+od najdalszego potomka? (Głębokość osoby nr 1 to 0.)
+Wejście
+W pierwszym wierszu znajduje się liczba n (1 ≤ n ≤ 200 000). W kolejnych n − 1 wierszach znajdują się po dwie liczby
+a, b (1 ≤ a, b ≤ n) — krawędzie drzewa.
+Wyjście
+Wypisz największą głębokość osoby w drzewie (wysokość drzewa zakorzenionego w wierzchołku 1).
+Przykład
+Wejście:
+6
+1 2
+1 3
+3 4
+4 5
+2 6
+Wyjście:
+3

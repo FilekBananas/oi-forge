@@ -1,0 +1,1284 @@
+{
+ "chunk": "io-input",
+ "articles": [
+  {
+   "id": "io-fast-io",
+   "title": "Szybkie wejście/wyjście w C++ (sync_with_stdio, cin.tie, '\\n' zamiast endl)",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "szybkie io",
+    "sync_with_stdio",
+    "cin.tie",
+    "endl",
+    "TLE",
+    "wejście",
+    "wyjście",
+    "printf",
+    "scanf",
+    "flush"
+   ],
+   "aliases": [
+    "szybkie wczytywanie",
+    "fast io",
+    "fast input c++",
+    "ios_base::sync_with_stdio(false)",
+    "cin tie nullptr",
+    "przyspieszenie cin",
+    "dlaczego cin jest wolny",
+    "endl czy \\n",
+    "szybkie cin cout",
+    "fastio"
+   ],
+   "summary": "Dwie linijki `ios::sync_with_stdio(false); cin.tie(nullptr);` na początku `main` oraz `'\\n'` zamiast `endl` sprawiają, że `cin`/`cout` są tak szybkie jak `scanf`/`printf`. Bez nich duże wejście potrafi dać TLE.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Domyślnie strumienie C++ (`cin`, `cout`) są **zsynchronizowane** ze strumieniami C (`scanf`, `printf`), żeby można je było\nbezpiecznie mieszać. Ta synchronizacja kosztuje: każda operacja przechodzi przez bufor C. Do tego `cin` jest **powiązany**\n(`tie`) z `cout` — przed każdym wczytaniem `cout` jest opróżniany (flush). Przy 10^6 liczb to robi różnicę rzędu sekund."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szablon szybkiego I/O",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false); // wyłącz synchronizację z stdio (scanf/printf)\n    cin.tie(nullptr);            // cin nie opróżnia cout przed każdym wczytaniem\n\n    int n;\n    cin >> n;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    long long suma = 0;\n    for (auto x : a) suma += x;\n    cout << suma << '\\n';        // '\\n' zamiast endl!\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Element",
+      "Co robi",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`ios::sync_with_stdio(false)`",
+       "wyłącza synchronizację z C stdio",
+       "wywołaj PRZED pierwszym wczytaniem/wypisaniem"
+      ],
+      [
+       "`cin.tie(nullptr)`",
+       "cin nie robi flush na cout przed wczytaniem",
+       "w zadaniach interaktywnych pamiętaj o ręcznym flush"
+      ],
+      [
+       "`'\\n'`",
+       "sam znak nowej linii",
+       "szybkie, bufor opróżni się na końcu programu"
+      ],
+      [
+       "`endl`",
+       "`'\\n'` + flush",
+       "wolne w pętli (każdy wiersz = wywołanie systemowe)"
+      ],
+      [
+       "`cout.tie(nullptr)`",
+       "nic nie zmienia",
+       "cout domyślnie nie jest z niczym powiązany — nie szkodzi, nie pomaga"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Po `sync_with_stdio(false)` **nie mieszaj** `cin` z `scanf` ani `cout` z `printf`. Mają osobne bufory, więc\nkolejność wypisanych danych może się pomieszać, a wczytywanie może „zgubić” dane. Wybierz jeden styl na cały program."
+    },
+    {
+     "type": "tip",
+     "md": "W zadaniach **interaktywnych** (program rozmawia ze sprawdzarką) po każdym pytaniu trzeba opróżnić bufor:\n`cout << zapytanie << endl;` albo `cout << zapytanie << '\\n' << flush;` (w stylu C: `fflush(stdout)`)."
+    }
+   ],
+   "pitfalls": [
+    "Mieszanie `cin` i `scanf` (albo `cout` i `printf`) po `sync_with_stdio(false)` — pomieszana kolejność wyjścia.",
+    "`endl` w pętli wypisującej 10^5+ wierszy — TLE przez flush w każdym obrocie.",
+    "Brak flush w zadaniu interaktywnym po `cin.tie(nullptr)` — program „wisi”.",
+    "Wywołanie `sync_with_stdio(false)` po rozpoczęciu wczytywania."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak przyspieszyć cin",
+      "szybkie wczytywanie c++",
+      "cin jest za wolny",
+      "fast io c++",
+      "jak zrobic szybkie wejscie"
+     ],
+     "a": "Na początku `main` dodaj `ios::sync_with_stdio(false);` i `cin.tie(nullptr);`, a do końca linii używaj `'\\n'`\nzamiast `endl`. Pierwsza linijka wyłącza kosztowną synchronizację z `scanf/printf`, druga sprawia, że `cin` nie opróżnia\n`cout` przed każdym wczytaniem. Po tym `cin` jest zwykle tak szybki jak `scanf` (często szybszy).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    cout << n << '\\n';\n}"
+    },
+    {
+     "q": [
+      "co robi ios::sync_with_stdio(false)",
+      "ios_base::sync_with_stdio(false) co to",
+      "sync with stdio false",
+      "po co sync_with_stdio",
+      "co daje sync_with_stdio"
+     ],
+     "a": "Wyłącza synchronizację strumieni C++ (`cin`, `cout`) ze strumieniami C (`scanf`, `printf`). Dzięki temu `cin/cout`\nmają własny, szybki bufor zamiast przechodzić przez stdio przy każdej operacji. Koszt: od tej chwili nie wolno mieszać\n`cin` ze `scanf` ani `cout` z `printf`. Wywołaj to **przed** pierwszą operacją wejścia/wyjścia — wywołanie później\nma skutek zależny od implementacji.",
+     "code": "ios::sync_with_stdio(false);\ncin.tie(nullptr);"
+    },
+    {
+     "q": [
+      "co robi cin.tie(nullptr)",
+      "cin.tie(0)",
+      "cin tie null",
+      "po co cin.tie",
+      "cin.tie(NULL) co to znaczy"
+     ],
+     "a": "Domyślnie `cin` jest „przywiązany” do `cout`: przed każdym wczytaniem `cout` jest opróżniany, żeby np. pytanie\n„Podaj liczbę:” pojawiło się przed czekaniem na wejście. Na olimpiadzie to niepotrzebne i wolne. `cin.tie(nullptr)`\n(albo `cin.tie(0)`, `cin.tie(NULL)` — to samo) usuwa to powiązanie. Wyjątek: zadania interaktywne — tam flush rób ręcznie.",
+     "code": "cin.tie(nullptr); // równoważnie: cin.tie(0);"
+    },
+    {
+     "q": [
+      "endl czy \\n",
+      "endl vs \\n",
+      "czym rozni sie endl od \\n",
+      "endl a '\\n' różnica",
+      "dlaczego nie uzywac endl"
+     ],
+     "a": "`endl` wypisuje znak nowej linii **i opróżnia bufor** (flush), co jest wywołaniem systemowym. `'\\n'` tylko dopisuje\nznak do bufora, który zostanie wypisany hurtem. Przy 10^5–10^6 wierszy `endl` potrafi spowolnić program kilkukrotnie\ni dać TLE. Używaj `'\\n'`; `endl` tylko w zadaniach interaktywnych albo gdy celowo chcesz flush.",
+     "code": "int n = 5;\nfor (int i = 0; i < n; i++)\n    cout << i << '\\n';   // szybko\n// cout << i << endl;    // wolno: flush w każdym obrocie pętli"
+    },
+    {
+     "q": [
+      "czy moge mieszac cin i scanf",
+      "cin i scanf razem",
+      "printf i cout w jednym programie",
+      "mieszanie cout i printf",
+      "dlaczego wyjscie jest w zlej kolejnosci"
+     ],
+     "a": "Bez `sync_with_stdio(false)` — tak, można (ale wtedy `cin` jest wolny). **Po** `sync_with_stdio(false)` — nie:\n`cout` i `printf` mają osobne bufory, więc wyjście może pojawić się w złej kolejności, a `cin` i `scanf` mogą sobie\n„zabierać” dane z wejścia. Wybierz jeden styl. Jeśli musisz użyć `printf` do formatowania, zamień go na\n`cout << fixed << setprecision(...)` albo zrezygnuj z `sync_with_stdio(false)` i używaj samego stdio.",
+     "code": "// ŹLE (po sync_with_stdio(false)):\n// cout << \"a\"; printf(\"b\"); cout << \"c\\n\";   // może wypisać \"bac\" albo \"acb\"\n// DOBRZE: jeden styl\ncout << \"a\" << \"b\" << \"c\" << '\\n';"
+    },
+    {
+     "q": [
+      "scanf czy cin co szybsze",
+      "cin vs scanf szybkosc",
+      "czy printf jest szybszy od cout",
+      "co jest szybsze cin czy scanf",
+      "is cin slower than scanf"
+     ],
+     "a": "Bez optymalizacji `cin` jest wyraźnie wolniejszy. Z `ios::sync_with_stdio(false); cin.tie(nullptr);` `cin` jest\nporównywalny ze `scanf`, a często szybszy (nie musi parsować łańcucha formatu). W praktyce OI te dwie linijki wystarczą\nnawet dla ~10^6–10^7 liczb. Jeśli wejście jest naprawdę gigantyczne (dziesiątki MB), można napisać własny czytnik na\n`fread` (patrz artykuł o szybkim własnym wczytywaniu)."
+    },
+    {
+     "q": [
+      "dostaje TLE a algorytm jest dobry",
+      "tle przez wczytywanie",
+      "program wolny przy duzym wejsciu",
+      "time limit exceeded io",
+      "za wolne wypisywanie",
+      "program bardzo wolno wczytuje dane",
+      "wczytywanie danych trwa za długo"
+     ],
+     "a": "Sprawdź trzy rzeczy: (1) czy masz `ios::sync_with_stdio(false); cin.tie(nullptr);`, (2) czy nie używasz `endl`\nw pętli, (3) czy nie wypisujesz debugowania na `cerr`/`cout` w pętli (nawet ignorowany przez sprawdzarkę `cerr` kosztuje\nczas — `cerr` nie jest buforowany). Przy 10^6 liczb same te poprawki potrafią zbić czas z ~1 s do ~0,1 s.",
+     "code": "ios::sync_with_stdio(false);\ncin.tie(nullptr);\nint n = 1000000;\nfor (int i = 0; i < n; i++) cout << i << '\\n';"
+    },
+    {
+     "q": [
+      "gdzie wstawic sync_with_stdio",
+      "sync_with_stdio na poczatku main",
+      "czy sync_with_stdio musi byc pierwsze",
+      "sync_with_stdio po cin"
+     ],
+     "a": "Na samym początku `main`, przed jakimkolwiek `cin`, `cout`, `scanf`, `printf`. Standard mówi, że wywołanie po\nrozpoczęciu operacji I/O ma skutek zależny od implementacji — wczytane już dane mogą przepaść. Najprościej trzymać\nte dwie linijki jako pierwsze w szablonie.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    // dopiero tutaj wczytywanie\n    int n;\n    cin >> n;\n}"
+    },
+    {
+     "q": [
+      "zadanie interaktywne flush",
+      "interaktywne endl",
+      "jak zrobic flush",
+      "fflush stdout",
+      "cout flush"
+     ],
+     "a": "W zadaniu interaktywnym sprawdzarka czeka na Twoje pytanie, zanim odpowie. Jeśli zostanie w buforze, oba programy\nczekają na siebie (zwykle kończy się to TLE / „Idleness”). Po każdym pytaniu opróżnij bufor: `cout << ... << endl;`\nalbo `cout.flush();` (w C: `fflush(stdout);`). `cin.tie(nullptr)` w tym przypadku najlepiej pominąć albo pamiętać\no flush ręcznie.",
+     "code": "int x = 50, odp;\ncout << \"? \" << x << endl;   // endl = '\\n' + flush\ncin >> odp;\ncout << \"! \" << odp << '\\n' << flush;"
+    },
+    {
+     "q": [
+      "program nic nie wypisuje",
+      "brak wyjscia po crashu",
+      "wyjscie znika gdy program sie wywala",
+      "cout nic nie pokazuje przed bledem"
+     ],
+     "a": "Wyjście jest buforowane i trafia na ekran dopiero przy opróżnieniu bufora (koniec programu, `endl`, `flush`, zapełnienie\nbufora). Jeśli program się wywali (segfault, `abort`), niewypisany bufor przepada — wygląda to tak, jakby nic nie zostało\nwypisane. Do debugowania używaj `cerr` (niebuforowany) albo tymczasowo `endl`.",
+     "code": "int i = 3;\ncerr << \"doszedlem do i = \" << i << '\\n'; // cerr jest niebuforowany"
+    },
+    {
+     "q": [
+      "czy cout.tie(nullptr) jest potrzebne",
+      "cout.tie(0)",
+      "cout tie co robi"
+     ],
+     "a": "Nie. `cout` domyślnie nie jest przywiązany do żadnego strumienia, więc `cout.tie(nullptr)` niczego nie zmienia.\nNie szkodzi, ale nie pomaga — wystarczy `cin.tie(nullptr)`."
+    },
+    {
+     "q": [
+      "szybkie wypisywanie duzo liczb",
+      "jak szybko wypisac milion liczb",
+      "fast output c++"
+     ],
+     "a": "Z wyłączoną synchronizacją `cout << x << '\\n'` jest wystarczająco szybki dla ~10^6 liczb. Najgorszym hamulcem jest\n`endl`. Można też zbudować wynik w `string` i wypisać raz, ale zwykle to zbędne.",
+     "code": "ios::sync_with_stdio(false);\ncin.tie(nullptr);\nstring out;\nfor (int i = 0; i < 1000000; i++) {\n    out += to_string(i);\n    out += '\\n';\n}\ncout << out;"
+    },
+    {
+     "q": [
+      "cerr spowalnia program",
+      "czy cerr wplywa na czas",
+      "debug na cerr sprawdzarka"
+     ],
+     "a": "Sprawdzarka zwykle ignoruje `cerr` (strumień błędów), ale **czas** wypisywania się liczy. `cerr` jest niebuforowany,\nwięc tysiące wierszy debugowania mogą dać TLE. Przed wysłaniem usuń debug albo opakuj go makrem, które znika bez `-DLOCAL`.",
+     "code": "#ifdef LOCAL\n#define dbg(x) cerr << #x << \" = \" << (x) << '\\n'\n#else\n#define dbg(x)\n#endif",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "scanf printf szybkie io c",
+      "szybkie wczytywanie scanf",
+      "jak wczytac scanf long long"
+     ],
+     "a": "Jeśli wolisz styl C, `scanf/printf` są szybkie bez dodatkowych linijek (nie wywołuj wtedy `sync_with_stdio(false)` albo\nnie mieszaj z `cin`). Pamiętaj o formatach: `%d` int, `%lld` long long, `%lf` double w `scanf` i `&` przed zmienną.",
+     "code": "int n;\nlong long s = 0, x;\nscanf(\"%d\", &n);\nfor (int i = 0; i < n; i++) { scanf(\"%lld\", &x); s += x; }\nprintf(\"%lld\\n\", s);"
+    },
+    {
+     "q": [
+      "ile trwa wczytanie 10^6 liczb",
+      "czy cin wyrobi 10^7 liczb",
+      "jak duze wejscie to problem"
+     ],
+     "a": "Orientacyjnie: z szybkim I/O wczytanie 10^6 liczb to kilkadziesiąt milisekund, 10^7 liczb — kilkaset milisekund.\nBez `sync_with_stdio(false)` może to być kilka razy wolniej. Przy wejściu > ~50 MB rozważ czytnik na `fread`."
+    }
+   ],
+   "related": [
+    "io-custom-fast-read",
+    "pit-endl-tle",
+    "io-read-until-eof",
+    "io-printf-formats",
+    "oi-template",
+    "cpp-ref-iomanip-streams",
+    "cpp-variables-types-intro",
+    "oi-interactive",
+    "oi-py-cpp-equivalents",
+    "oi-py-fast-io",
+    "tech-hanoi"
+   ]
+  },
+  {
+   "id": "io-read-until-eof",
+   "title": "Wczytywanie do końca pliku (EOF) — gdy nie znasz liczby danych",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "eof",
+    "koniec pliku",
+    "while cin",
+    "nieznana liczba danych",
+    "getline",
+    "scanf EOF"
+   ],
+   "aliases": [
+    "wczytywanie do konca pliku",
+    "while(cin >> x)",
+    "read until eof c++",
+    "jak wczytac nieznana ilosc liczb",
+    "czytanie do EOF",
+    "koniec wejscia",
+    "wczytaj wszystkie liczby"
+   ],
+   "summary": "Gdy treść nie podaje, ile jest danych, czytaj w pętli `while (cin >> x)` — warunek staje się fałszywy na końcu pliku (lub przy błędzie formatu). Dla wierszy: `while (getline(cin, s))`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Wyrażenie `cin >> x` zwraca strumień, a strumień w warunku zamienia się na `true`, jeśli ostatnia operacja się udała.\nGdy wejście się skończy (EOF) albo trafi się coś, czego nie da się wczytać jako liczbę, warunek jest `false` i pętla\nsię kończy. To idiomatyczny i bezpieczny sposób."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Liczby do końca wejścia",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    vector<long long> a;\n    long long x;\n    while (cin >> x)        // kończy się na EOF\n        a.push_back(x);\n    cout << \"wczytano \" << a.size() << \" liczb\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wiersze do końca wejścia",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string line;\n    int nr = 0;\n    while (getline(cin, line)) {            // każdy wiersz, także pusty\n        if (!line.empty() && line.back() == '\\r') line.pop_back(); // pliki z Windows\n        cout << ++nr << \": \" << line << '\\n';\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Styl",
+      "Pętla",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "C++ liczby",
+       "`while (cin >> x)`",
+       "kończy się też przy złym formacie"
+      ],
+      [
+       "C++ wiersze",
+       "`while (getline(cin, s))`",
+       "zwraca też puste wiersze"
+      ],
+      [
+       "C scanf",
+       "`while (scanf(\"%d\", &x) == 1)`",
+       "lepiej `== 1` niż `!= EOF` (zły format → 0 → pętla nieskończona)"
+      ],
+      [
+       "C znaki",
+       "`while ((c = getchar()) != EOF)`",
+       "`c` musi być typu `int`, nie `char`"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Nie pisz `while (!cin.eof()) { cin >> x; ... }`. Flaga EOF ustawia się dopiero **po** nieudanej próbie wczytania,\nwięc ostatnia liczba zostanie przetworzona dwa razy (albo przetworzysz śmieci)."
+    },
+    {
+     "type": "tip",
+     "md": "Testując w terminalu, koniec wejścia wysyłasz: **Ctrl+D** (Linux/macOS) albo **Ctrl+Z, potem Enter** (Windows).\nWygodniej jednak trzymać test w pliku i uruchamiać `./prog < in.txt`."
+    }
+   ],
+   "pitfalls": [
+    "`while (!cin.eof())` — ostatni element przetworzony dwa razy.",
+    "`char c = getchar()` zamiast `int c` — błędne wykrywanie EOF.",
+    "`while (scanf(...) != EOF)` przy błędnym formacie zapętla się — używaj `== liczba_pól`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wczytac do konca pliku",
+      "wczytywanie do eof c++",
+      "while cin >> x",
+      "read until end of file c++",
+      "jak czytac dopoki sa dane"
+     ],
+     "a": "Użyj pętli `while (cin >> x)`. Operacja `cin >> x` zwraca strumień, który w warunku jest `true`, dopóki wczytywanie się\nudaje. Na końcu pliku (EOF) albo przy błędnym formacie zwraca `false` i pętla się kończy. Wczytane liczby zbieraj\nnp. do `vector` przez `push_back`.",
+     "code": "vector<int> a;\nint x;\nwhile (cin >> x) a.push_back(x);\ncout << a.size() << '\\n';"
+    },
+    {
+     "q": [
+      "nie wiem ile jest liczb na wejsciu",
+      "nieznana liczba danych",
+      "wczytaj wszystkie liczby z wejscia",
+      "ile liczb jest w pliku c++"
+     ],
+     "a": "Gdy nie ma `n` na początku, wczytuj do końca: `while (cin >> x)`. Rozmiar poznasz na końcu jako `a.size()`.\nJeśli liczby są w jednym wierszu, a dalej jest coś jeszcze, wczytaj wiersz przez `getline` i rozbij go\n`stringstream`-em.",
+     "code": "string line;\ngetline(cin, line);\nstringstream ss(line);\nvector<int> a;\nint x;\nwhile (ss >> x) a.push_back(x);"
+    },
+    {
+     "q": [
+      "dlaczego ostatnia liczba wczytuje sie dwa razy",
+      "while !cin.eof() blad",
+      "eof() ostatni element podwojnie",
+      "while(!feof) zle"
+     ],
+     "a": "Bo `eof()` staje się `true` dopiero **po** nieudanej próbie odczytu. Pętla `while (!cin.eof()) { cin >> x; użyj(x); }`\nwykona jeszcze jeden obrót po ostatniej liczbie — `cin >> x` się nie uda, a Ty użyjesz starej wartości `x`. Zawsze\numieszczaj samą operację wczytania w warunku: `while (cin >> x)`.",
+     "code": "int x;\nlong long s = 0;\nwhile (cin >> x) s += x;   // poprawnie"
+    },
+    {
+     "q": [
+      "jak czytac linie do konca pliku",
+      "getline do eof",
+      "wczytywanie wierszy az do konca",
+      "while getline"
+     ],
+     "a": "`while (getline(cin, s))` — `getline` zwraca strumień, który staje się fałszywy, gdy nie ma już wierszy. Dostaniesz\nteż puste wiersze (jako pusty `string`). Jeśli plik pochodzi z Windows, na końcu wiersza może zostać `'\\r'` — usuń go.",
+     "code": "string s;\nwhile (getline(cin, s)) {\n    if (!s.empty() && s.back() == '\\r') s.pop_back();\n    cout << s.size() << '\\n';\n}"
+    },
+    {
+     "q": [
+      "scanf do konca pliku",
+      "scanf != EOF",
+      "while scanf == 1",
+      "scanf eof c"
+     ],
+     "a": "W stylu C: `while (scanf(\"%d\", &x) == 1)`. `scanf` zwraca liczbę poprawnie wczytanych pól, a na końcu pliku `EOF` (-1).\nPorównanie `== 1` jest bezpieczniejsze niż `!= EOF`: przy niepoprawnych danych `scanf` zwraca 0, i warunek `!= EOF`\ndałby pętlę nieskończoną.",
+     "code": "int x;\nlong long s = 0;\nwhile (scanf(\"%d\", &x) == 1) s += x;\nprintf(\"%lld\\n\", s);"
+    },
+    {
+     "q": [
+      "jak zakonczyc wejscie w terminalu",
+      "ctrl d ctrl z",
+      "jak wyslac eof w konsoli",
+      "program czeka na dane bez konca"
+     ],
+     "a": "Gdy program czyta „do końca pliku”, w terminalu musisz sam zasygnalizować koniec: **Ctrl+D** na Linuksie i macOS,\n**Ctrl+Z i Enter** na Windows. Prościej zapisać test do pliku i uruchomić `./prog < in.txt` — wtedy koniec pliku jest\nnaturalny.",
+     "code": "./prog < in.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "wczytywanie znak po znaku do konca",
+      "getchar do eof",
+      "czytaj wszystkie znaki c++",
+      "cin.get do konca"
+     ],
+     "a": "`getchar()` zwraca `int`, a na końcu `EOF` (-1). Zmienna musi być `int`, bo `char` mógłby pomylić bajt 255 z `EOF`.\nW C++: `while (cin.get(c))` czyta każdy znak, także spacje i `'\\n'` (w przeciwieństwie do `cin >> c`).",
+     "code": "int c;\nlong long litery = 0;\nwhile ((c = getchar()) != EOF)\n    if (isalpha(c)) litery++;\nprintf(\"%lld\\n\", litery);"
+    },
+    {
+     "q": [
+      "pary liczb do konca pliku",
+      "wczytywanie par az do eof",
+      "while cin >> a >> b"
+     ],
+     "a": "Można łączyć: `while (cin >> a >> b)`. Warunek jest prawdziwy tylko wtedy, gdy udało się wczytać **obie** liczby.",
+     "code": "int a, b;\nwhile (cin >> a >> b) cout << a + b << '\\n';"
+    },
+    {
+     "q": [
+      "cin przestal wczytywac",
+      "cin fail co zrobic",
+      "cin.clear",
+      "po bledzie cin nic nie czyta"
+     ],
+     "a": "Gdy `cin >> x` napotka coś, co nie pasuje (np. literę zamiast liczby), strumień przechodzi w stan błędu i **wszystkie**\nkolejne odczyty od razu się nie udają. Trzeba wyczyścić flagi `cin.clear()` i pominąć zły fragment, np.\n`cin.ignore(numeric_limits<streamsize>::max(), '\\n')`. Na OI wejście jest poprawne, więc to zwykle znak, że czytasz zły typ.",
+     "code": "int x;\nif (!(cin >> x)) {\n    cin.clear();\n    cin.ignore(numeric_limits<streamsize>::max(), '\\n');\n}"
+    },
+    {
+     "q": [
+      "testy do konca pliku zakonczone zerem",
+      "wczytuj az do 0",
+      "dane konczace sie zerem",
+      "while x != 0"
+     ],
+     "a": "Gdy wejście kończy się „strażnikiem” (np. 0), połącz oba warunki: `while (cin >> x && x != 0)`. Dzięki temu pętla\nskończy się zarówno na zerze, jak i na końcu pliku, gdyby zera zabrakło.",
+     "code": "int x;\nwhile (cin >> x && x != 0) cout << x * 2 << '\\n';"
+    }
+   ],
+   "related": [
+    "io-getline",
+    "io-fast-io",
+    "str-basic-split",
+    "pit-input-format",
+    "cpp-ref-iomanip-streams",
+    "cpp-ref-sstream-fstream",
+    "oi-py-fast-io",
+    "stl-ref-functional-iterator",
+    "str-read-chars"
+   ]
+  },
+  {
+   "id": "io-getline",
+   "title": "getline: wczytywanie całych wierszy i stringów ze spacjami (oraz pułapka z cin >>)",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "getline",
+    "string ze spacjami",
+    "cały wiersz",
+    "cin.ignore",
+    "ws",
+    "wczytywanie tekstu",
+    "linia"
+   ],
+   "aliases": [
+    "getline c++",
+    "jak wczytac zdanie",
+    "wczytywanie stringa ze spacjami",
+    "getline pomija linie",
+    "getline po cin",
+    "cin ignore",
+    "read line with spaces c++",
+    "jak wczytac cala linie",
+    "wczytaj tekst ze spacjami"
+   ],
+   "summary": "`cin >> s` czyta tylko jedno słowo (do białego znaku). Cały wiersz ze spacjami czyta `getline(cin, s)`. Po `cin >> n` w strumieniu zostaje `'\\n'`, więc przed `getline` trzeba go zjeść: `cin.ignore()` albo `getline(cin >> ws, s)`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`getline(cin, s)` czyta znaki aż do `'\\n'`, **usuwa** `'\\n'` ze strumienia, ale go nie zapisuje do `s`.\nNatomiast `cin >> x` pomija białe znaki **przed** liczbą/słowem i zatrzymuje się tuż **przed** pierwszym białym znakiem po niej —\nczyli `'\\n'` na końcu wiersza zostaje w strumieniu. Jeśli zaraz potem wywołasz `getline`, przeczyta on „resztę”\nbieżącego wiersza, czyli pusty string. To najczęstszy problem z `getline`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "n, a potem n wierszy tekstu",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;                                            // w strumieniu zostaje '\\n'\n    cin.ignore(numeric_limits<streamsize>::max(), '\\n'); // zjedz resztę wiersza\n    vector<string> zdania(n);\n    for (auto& z : zdania) getline(cin, z);              // całe wiersze ze spacjami\n    for (auto& z : zdania) cout << \"[\" << z << \"]\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Krótsza wersja: getline(cin >> ws, s)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    string s;\n    getline(cin >> ws, s);   // ws pomija wszystkie białe znaki (także '\\n' i puste wiersze)\n    cout << s << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sposób",
+      "Co czyta",
+      "Białe znaki"
+     ],
+     "rows": [
+      [
+       "`cin >> s`",
+       "jedno słowo",
+       "pomija wiodące, kończy na pierwszym białym"
+      ],
+      [
+       "`getline(cin, s)`",
+       "cały wiersz",
+       "zachowuje spacje, zjada `'\\n'`"
+      ],
+      [
+       "`getline(cin, s, ',')`",
+       "do przecinka",
+       "separator dowolny znak"
+      ],
+      [
+       "`getline(cin >> ws, s)`",
+       "wiersz po pominięciu białych",
+       "uwaga: pominie też puste wiersze"
+      ],
+      [
+       "`cin.getline(buf, N)`",
+       "wiersz do tablicy `char`",
+       "maks. N-1 znaków + `'\\0'`"
+      ],
+      [
+       "`fgets(buf, N, stdin)`",
+       "wiersz (styl C)",
+       "ZOSTAWIA `'\\n'` w buforze"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`gets()` zostało **usunięte** z języka (C11/C++14) — nie używaj. Zamiast tego `getline` albo `fgets`."
+    }
+   ],
+   "pitfalls": [
+    "`getline` zaraz po `cin >> n` zwraca pusty string — zjedz `'\\n'`.",
+    "`cin.ignore()` pomija tylko jeden znak — przy spacjach na końcu wiersza za mało.",
+    "`getline(cin >> ws, s)` pomija puste wiersze.",
+    "`'\\r'` na końcu wiersza w plikach z Windows."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wczytac string ze spacjami",
+      "wczytywanie zdania c++",
+      "cin ucina tekst na spacji",
+      "string ze spacjami cin",
+      "read string with spaces c++",
+      "jak wczytac cale zdanie"
+     ],
+     "a": "`cin >> s` kończy czytanie na pierwszym białym znaku, więc dostajesz tylko pierwsze słowo. Użyj `getline(cin, s)` —\nczyta cały wiersz razem ze spacjami (bez końcowego `'\\n'`).",
+     "code": "string s;\ngetline(cin, s);\ncout << \"Wczytano: \" << s << '\\n';"
+    },
+    {
+     "q": [
+      "getline nie dziala po cin",
+      "getline pomija linie",
+      "getline wczytuje pusty string",
+      "getline po cin >> n",
+      "dlaczego getline nie czeka na dane",
+      "getline skips input"
+     ],
+     "a": "Po `cin >> n` w strumieniu zostaje znak `'\\n'` z końca wiersza. `getline` czyta do najbliższego `'\\n'`, więc od razu\nzwraca pusty string. Rozwiązanie: przed `getline` zjedz resztę wiersza — `cin.ignore(numeric_limits<streamsize>::max(), '\\n');`\n— albo pisz `getline(cin >> ws, s);`, co pomija wszystkie białe znaki.",
+     "code": "int n;\nstring s;\ncin >> n;\ncin.ignore(numeric_limits<streamsize>::max(), '\\n');\ngetline(cin, s);"
+    },
+    {
+     "q": [
+      "co robi cin.ignore",
+      "cin.ignore() a cin.ignore(1000, '\\n')",
+      "cin ignore numeric_limits",
+      "jak dziala ignore"
+     ],
+     "a": "`cin.ignore(k, ch)` pomija do `k` znaków albo do znaku `ch` włącznie. `cin.ignore()` bez argumentów pomija dokładnie\n**jeden** znak — wystarczy, jeśli zaraz po liczbie jest `'\\n'`, ale nie, jeśli są tam jeszcze spacje (np. `\"5  \\n\"`).\nBezpieczna wersja: `cin.ignore(numeric_limits<streamsize>::max(), '\\n')` — pomija całą resztę wiersza.",
+     "code": "int n;\ncin >> n;\ncin.ignore(numeric_limits<streamsize>::max(), '\\n'); // reszta wiersza z n"
+    },
+    {
+     "q": [
+      "co to jest cin >> ws",
+      "getline(cin >> ws, s)",
+      "ws c++",
+      "std::ws"
+     ],
+     "a": "`ws` to manipulator, który pomija wszystkie białe znaki (spacje, `'\\n'`, tabulatory) na początku strumienia.\n`getline(cin >> ws, s)` najpierw je pomija, a potem czyta wiersz — wygodne po `cin >> n`. Uwaga: pominie też\n**puste wiersze** i wiodące spacje w wierszu, więc nie używaj tego, gdy puste wiersze lub wcięcia mają znaczenie.",
+     "code": "int n;\nstring s;\ncin >> n;\ngetline(cin >> ws, s);"
+    },
+    {
+     "q": [
+      "jak wczytac n linii tekstu",
+      "wczytaj n wierszy",
+      "kilka linijek tekstu c++",
+      "getline w petli"
+     ],
+     "a": "Najpierw wczytaj `n`, zjedz koniec wiersza, potem `getline` w pętli `n` razy.",
+     "code": "int n;\ncin >> n;\ncin.ignore(numeric_limits<streamsize>::max(), '\\n');\nvector<string> w(n);\nfor (int i = 0; i < n; i++) getline(cin, w[i]);"
+    },
+    {
+     "q": [
+      "getline z separatorem",
+      "getline do przecinka",
+      "getline delimiter",
+      "getline(cin, s, ',')"
+     ],
+     "a": "Trzeci argument `getline` to znak końca: `getline(cin, s, ',')` czyta do przecinka i go usuwa ze strumienia.\nPrzydatne do rozbijania `stringstream`-a po dowolnym separatorze.",
+     "code": "string linia = \"ala,ma,kota\", kawalek;\nstringstream ss(linia);\nwhile (getline(ss, kawalek, ',')) cout << kawalek << '\\n';"
+    },
+    {
+     "q": [
+      "getline do tablicy char",
+      "cin.getline",
+      "wczytanie linii do char[]",
+      "char tablica ze spacjami"
+     ],
+     "a": "Dla tablicy znaków jest metoda `cin.getline(buf, N)` — wczyta maksymalnie `N-1` znaków i dopisze `'\\0'`. Jeśli wiersz\njest dłuższy, strumień przejdzie w stan błędu. Zwykle wygodniej używać `string` i `getline(cin, s)`.",
+     "code": "char buf[1005];\ncin.getline(buf, 1005);\ncout << strlen(buf) << '\\n';"
+    },
+    {
+     "q": [
+      "fgets zostawia enter",
+      "fgets \\n na koncu",
+      "jak usunac \\n z fgets",
+      "fgets c"
+     ],
+     "a": "`fgets(buf, N, stdin)` zapisuje do bufora także końcowy `'\\n'` (jeśli się zmieścił). Usuń go np. przez\n`buf[strcspn(buf, \"\\n\")] = '\\0';`.",
+     "code": "char buf[1005];\nif (fgets(buf, sizeof(buf), stdin)) {\n    buf[strcspn(buf, \"\\n\")] = '\\0';\n    printf(\"[%s]\\n\", buf);\n}"
+    },
+    {
+     "q": [
+      "\\r na koncu linii",
+      "getline zostawia \\r",
+      "windows line endings getline",
+      "dziwny znak na koncu stringa",
+      "string dluzszy o 1"
+     ],
+     "a": "Pliki zapisane na Windows mają końce wierszy `\\r\\n`. Czytając je na Linuksie/macOS, `getline` zostawi `'\\r'` na końcu\nstringa — długość jest o 1 większa i porównania nie wychodzą. Usuń go: `if (!s.empty() && s.back() == '\\r') s.pop_back();`.",
+     "code": "string s;\ngetline(cin, s);\nif (!s.empty() && s.back() == '\\r') s.pop_back();"
+    },
+    {
+     "q": [
+      "scanf string ze spacjami",
+      "scanf %[^\\n]",
+      "jak wczytac linie scanf"
+     ],
+     "a": "`scanf(\"%[^\\n]\", buf)` czyta wszystko do `'\\n'` (bez niego). Spacja przed `%` — `scanf(\" %[^\\n]\", buf)` — pomija\nwcześniejsze białe znaki, w tym `'\\n'` z poprzedniego wiersza. Pamiętaj o rozmiarze bufora (np. `%1000[^\\n]`).",
+     "code": "char buf[1005];\nscanf(\" %1000[^\\n]\", buf);\nprintf(\"%s\\n\", buf);"
+    },
+    {
+     "q": [
+      "wczytaj liczbe i tekst w jednej linii",
+      "liczba a potem nazwa ze spacjami",
+      "imie i nazwisko wczytywanie"
+     ],
+     "a": "Gdy w wierszu jest liczba, a po niej tekst ze spacjami, wczytaj liczbę przez `cin >>`, a resztę wiersza przez\n`getline` — reszta zacznie się od spacji, którą możesz usunąć (`cin >> ws` przed `getline`).",
+     "code": "int wiek;\nstring nazwa;\ncin >> wiek;\ngetline(cin >> ws, nazwa); // \"Jan Kowalski\""
+    },
+    {
+     "q": [
+      "gets nie dziala",
+      "gets was not declared",
+      "gets c++ blad",
+      "czym zastapic gets"
+     ],
+     "a": "`gets` zostało usunięte ze standardu (było niebezpieczne — brak limitu długości). Nowe kompilatory go nie znają.\nZamiast tego: `getline(cin, s)` dla `string` albo `fgets(buf, N, stdin)` dla tablicy `char`.",
+     "code": "string s;\ngetline(cin, s);"
+    }
+   ],
+   "related": [
+    "io-read-until-eof",
+    "str-basic-split",
+    "io-read-separated",
+    "io-read-grid",
+    "cpp-ref-iomanip-streams",
+    "cpp-ref-sstream-fstream",
+    "cpp-variables-types-intro",
+    "stl-ref-string-all",
+    "str-escape-whitespace",
+    "str-read-chars"
+   ]
+  },
+  {
+   "id": "io-read-grid",
+   "title": "Wczytywanie siatki znaków, mapy i planszy",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "siatka",
+    "plansza",
+    "mapa",
+    "grid",
+    "labirynt",
+    "char",
+    "vector<string>",
+    "tablica 2D"
+   ],
+   "aliases": [
+    "jak wczytac plansze",
+    "wczytywanie mapy",
+    "wczytaj siatke znakow",
+    "read grid c++",
+    "labirynt wczytywanie",
+    "tablica znakow 2d",
+    "wczytywanie znak po znaku",
+    "wczytaj cyfry bez spacji"
+   ],
+   "summary": "Siatkę bez spacji w wierszach najwygodniej wczytać jako `vector<string> g(n)` i `cin >> g[i]`. Znak `g[i][j]` to pole w wierszu i, kolumnie j. Cyfry bez spacji zamieniasz na liczby przez `g[i][j] - '0'`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Typowe wejście: w pierwszym wierszu `n m`, potem `n` wierszy po `m` znaków, np. `.` = wolne, `#` = ściana.\nPonieważ wiersze nie zawierają spacji, `cin >> string` czyta cały wiersz planszy."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Plansza jako vector<string> + ruchy w 4 kierunkach",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<string> g(n);\n    for (auto& row : g) cin >> row;      // każdy wiersz planszy\n    int sx = -1, sy = -1;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++)\n            if (g[i][j] == 'S') { sx = i; sy = j; }\n    cout << \"start: \" << sx << ' ' << sy << '\\n';\n    // sąsiedzi pola (i, j):\n    int dx[] = {-1, 1, 0, 0}, dy[] = {0, 0, -1, 1};\n    for (int d = 0; d < 4; d++) {\n        int x = sx + dx[d], y = sy + dy[d];\n        if (x < 0 || x >= n || y < 0 || y >= m) continue; // poza planszą\n        if (g[x][y] == '#') continue;\n        cout << \"sasiad \" << x << ' ' << y << '\\n';\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Tablica char z indeksowaniem od 1 (wygodna ramka)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 1005;\nchar g[MAXN][MAXN];   // globalnie: zera, nie zajmuje stosu\n\nint main() {\n    int n, m;\n    scanf(\"%d %d\", &n, &m);\n    for (int i = 1; i <= n; i++)\n        scanf(\"%s\", g[i] + 1);   // indeksy od 1, ramka z '\\0' wokół\n    // g[0][*], g[n+1][*], g[*][0], g[*][m+1] to zera = \"poza planszą\"\n    printf(\"%c\\n\", g[1][1]);\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Rozmiar wiersza w tablicy `char` musi mieć miejsce na kończący `'\\0'`: dla `m ≤ 1000` co najmniej `1001`,\na przy indeksowaniu od 1 — `1002`. Bezpiecznie dawaj zapas, np. `1005`."
+    }
+   ],
+   "pitfalls": [
+    "Za mała tablica `char` na wiersz — brak miejsca na `'\\0'`.",
+    "Wczytanie wiersza cyfr `0101` jako jednej liczby `int`.",
+    "Pomylenie kolejności: `g[wiersz][kolumna]`, a nie `g[x][y]` w sensie geometrii (x = kolumna).",
+    "Duża tablica planszy jako zmienna lokalna — przepełnienie stosu."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wczytac plansze",
+      "jak wczytac mape z pliku",
+      "wczytywanie siatki c++",
+      "read grid of characters c++",
+      "plansza n na m wczytywanie",
+      "wczytywanie planszy z kropkami i krzyżykami",
+      "plansza z kropkami i hashami wczytywanie",
+      "wczytaj mapę z kropek i krzyżyków"
+     ],
+     "a": "Jeśli wiersze nie zawierają spacji, wczytaj je jako stringi: `vector<string> g(n); for (auto& r : g) cin >> r;`.\nPole w wierszu `i` i kolumnie `j` to `g[i][j]` (indeksy od 0). To prostsze i bezpieczniejsze niż tablica `char`.",
+     "code": "int n, m;\ncin >> n >> m;\nvector<string> g(n);\nfor (auto& r : g) cin >> r;\ncout << g[0][0] << '\\n';"
+    },
+    {
+     "q": [
+      "wczytaj cyfry bez spacji",
+      "macierz 0 1 bez spacji",
+      "cyfry sklejone w wierszu",
+      "jak wczytac 0101 jako tablice",
+      "liczby bez odstepow"
+     ],
+     "a": "Gdy wiersz to np. `01101`, `cin >> x` wczyta całość jako jedną liczbę. Wczytaj wiersz jako `string` i zamieniaj\nkażdy znak: `g[i][j] - '0'` (kod znaku minus kod `'0'` daje cyfrę). Alternatywnie `cin >> c` dla każdego znaku —\n`cin >> char` czyta jeden znak, pomijając białe znaki.",
+     "code": "int n, m;\ncin >> n >> m;\nvector<vector<int>> a(n, vector<int>(m));\nfor (int i = 0; i < n; i++) {\n    string s;\n    cin >> s;\n    for (int j = 0; j < m; j++) a[i][j] = s[j] - '0';\n}"
+    },
+    {
+     "q": [
+      "cin >> char pomija spacje",
+      "jak wczytac spacje jako znak",
+      "cin get char",
+      "wczytanie pojedynczego znaku ze spacja",
+      "noskipws"
+     ],
+     "a": "`cin >> c` (dla `char`) pomija białe znaki, więc spacji ani `'\\n'` nie wczytasz. Żeby czytać **każdy** znak, użyj\n`cin.get(c)` albo `getchar()`. Jeśli plansza zawiera spacje jako pola, czytaj całe wiersze przez `getline`.",
+     "code": "char c;\ncin.get(c);          // wczyta też spację i '\\n'\nint k = getchar();   // styl C, zwraca int (EOF = -1)"
+    },
+    {
+     "q": [
+      "plansza ze spacjami miedzy polami",
+      "wczytywanie planszy . # ze spacjami",
+      "znaki oddzielone spacja"
+     ],
+     "a": "Jeśli pola są rozdzielone spacjami (np. `. # . .`), to `cin >> c` jest idealne — pominie spacje i wczyta kolejne pola.",
+     "code": "int n, m;\ncin >> n >> m;\nvector<vector<char>> g(n, vector<char>(m));\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < m; j++) cin >> g[i][j];"
+    },
+    {
+     "q": [
+      "jak sprawdzic czy pole jest na planszy",
+      "wyjscie poza plansze",
+      "sprawdzanie granic siatki",
+      "inside grid"
+     ],
+     "a": "Przed odwołaniem `g[x][y]` sprawdź `0 <= x && x < n && 0 <= y && y < m`. Kolejność warunków ma znaczenie:\n`&&` jest leniwe, więc najpierw granice, potem zawartość pola. Inna metoda: dodaj ramkę z „ścian” wokół planszy\ni indeksuj od 1.",
+     "code": "int n = 3, m = 4, x = 2, y = 5;\nauto wewnatrz = [&](int a, int b) { return 0 <= a && a < n && 0 <= b && b < m; };\nif (wewnatrz(x, y)) cout << \"ok\\n\";"
+    },
+    {
+     "q": [
+      "tablica dx dy",
+      "kierunki ruchu na planszy",
+      "4 sasiadow siatka",
+      "8 kierunkow ruchu",
+      "ruch skoczka tablica"
+     ],
+     "a": "Zamiast czterech `if`-ów trzymaj przesunięcia w tablicach: `dx[] = {-1,1,0,0}`, `dy[] = {0,0,-1,1}` (góra, dół,\nlewo, prawo). Dla 8 kierunków dodaj przekątne. Ruchy skoczka: `{1,2},{2,1},...`.",
+     "code": "int dx4[] = {-1, 1, 0, 0}, dy4[] = {0, 0, -1, 1};\nint dx8[] = {-1, -1, -1, 0, 0, 1, 1, 1}, dy8[] = {-1, 0, 1, -1, 1, -1, 0, 1};\nint kx[] = {1, 2, 2, 1, -1, -2, -2, -1}, ky[] = {2, 1, -1, -2, -2, -1, 1, 2};"
+    },
+    {
+     "q": [
+      "char g[1000][1000] scanf",
+      "tablica char siatka scanf %s",
+      "rozmiar tablicy char na wiersz"
+     ],
+     "a": "`scanf(\"%s\", g[i])` zapisze wiersz razem z kończącym `'\\0'`, więc wiersz musi mieć rozmiar co najmniej `m+1`.\nDuże tablice deklaruj **globalnie** (inaczej przepełnisz stos). `g[i] + 1` pozwala indeksować od 1.",
+     "code": "static char g[1005][1005];\nint n, m;\nscanf(\"%d %d\", &n, &m);\nfor (int i = 0; i < n; i++) scanf(\"%s\", g[i]);"
+    },
+    {
+     "q": [
+      "znajdz start S na mapie",
+      "szukanie znaku na planszy",
+      "pozycja litery w siatce"
+     ],
+     "a": "Przejdź dwiema pętlami po wszystkich polach i zapamiętaj współrzędne, gdy `g[i][j] == 'S'`.",
+     "code": "vector<string> g = {\"..#\", \".S.\", \"..E\"};\nint sx = -1, sy = -1;\nfor (int i = 0; i < (int)g.size(); i++)\n    for (int j = 0; j < (int)g[i].size(); j++)\n        if (g[i][j] == 'S') { sx = i; sy = j; }"
+    },
+    {
+     "q": [
+      "wiersze roznej dlugosci",
+      "plansza o nierownych wierszach",
+      "getline dla mapy"
+     ],
+     "a": "Gdy wiersze mogą mieć różną długość albo zawierać spacje, czytaj `getline` i nie zakładaj stałej szerokości — przed\n`g[i][j]` sprawdzaj `j < g[i].size()`. Po `cin >> n >> m` pamiętaj o zjedzeniu `'\\n'`.",
+     "code": "int n;\ncin >> n;\ncin.ignore(numeric_limits<streamsize>::max(), '\\n');\nvector<string> g(n);\nfor (auto& r : g) getline(cin, r);"
+    },
+    {
+     "q": [
+      "wypisz plansze",
+      "jak wypisac siatke",
+      "wypisanie mapy po zmianach"
+     ],
+     "a": "Dla `vector<string>` każdy wiersz wypisujesz w całości: `for (auto& r : g) cout << r << '\\n';`.",
+     "code": "vector<string> g = {\"#.#\", \"...\"};\nfor (auto& r : g) cout << r << '\\n';"
+    }
+   ],
+   "related": [
+    "io-print-separators",
+    "io-getline",
+    "pit-out-of-bounds",
+    "pit-stack-overflow",
+    "oi-py-fast-io",
+    "str-read-chars"
+   ]
+  },
+  {
+   "id": "io-read-separated",
+   "title": "Wczytywanie liczb rozdzielonych przecinkami, dwukropkami i innymi znakami",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "przecinek",
+    "separator",
+    "godzina",
+    "data",
+    "csv",
+    "dwukropek",
+    "stringstream"
+   ],
+   "aliases": [
+    "wczytaj liczby oddzielone przecinkami",
+    "csv c++",
+    "jak wczytac godzine 12:30",
+    "jak wczytac date",
+    "read comma separated numbers c++",
+    "separator przy wczytywaniu",
+    "scanf %d,%d"
+   ],
+   "summary": "Gdy liczby rozdziela znak inny niż biały (np. `3,5`, `12:30`, `2024-01-05`), wczytaj separator do zmiennej `char` (`cin >> a >> c >> b`) albo użyj `scanf(\"%d:%d\", &h, &m)`. Dla całej linii CSV: `getline` + `stringstream`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`cin >> x` dla liczby zatrzymuje się na pierwszym znaku, który do liczby nie pasuje. Przecinek czy dwukropek zostają\nw strumieniu — trzeba je „zjeść”, wczytując do zmiennej typu `char`. `scanf` pozwala wpisać separator wprost do formatu."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Godzina i data",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int h, m;\n    char c;\n    cin >> h >> c >> m;              // \"12:30\" -> h=12, c=':', m=30\n    int r, mi, d;\n    cin >> r >> c >> mi >> c >> d;   // \"2024-01-05\" -> 2024, 1, 5\n    cout << h * 60 + m << ' ' << r << ' ' << mi << ' ' << d << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Linia CSV o nieznanej długości",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string line;\n    getline(cin, line);               // np. \"4,8,15,16,23,42\"\n    stringstream ss(line);\n    vector<int> a;\n    string tok;\n    while (getline(ss, tok, ','))     // rozbij po przecinku\n        if (!tok.empty()) a.push_back(stoi(tok));\n    for (int x : a) cout << x << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Nie wczytuj daty `2024-01-05` jako `cin >> r >> mi >> d` — `-01` zostanie odczytane jako liczba **ujemna** `-1`!\nZawsze zjadaj separator do `char`."
+    }
+   ],
+   "pitfalls": [
+    "Wczytywanie daty `2024-01-05` bez zjadania myślników — `-01` staje się liczbą ujemną.",
+    "Brak `#include <sstream>` przy braku `bits/stdc++.h`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wczytac liczby oddzielone przecinkami",
+      "liczby po przecinku wczytywanie",
+      "read comma separated values c++",
+      "1,2,3 wczytywanie",
+      "csv c++ wczytywanie"
+     ],
+     "a": "Jeśli znasz liczbę elementów, wczytuj na zmianę liczbę i przecinek: `cin >> x >> c`. Jeśli nie znasz — wczytaj cały\nwiersz `getline`, a potem rozbij go `getline(ss, tok, ',')` i zamień kawałki przez `stoi`. Inny trik: zamień przecinki\nna spacje (`replace(s.begin(), s.end(), ',', ' ')`) i czytaj zwykłym `stringstream >> x`.",
+     "code": "string s = \"4,8,15,16\";\nreplace(s.begin(), s.end(), ',', ' ');\nstringstream ss(s);\nint x;\nwhile (ss >> x) cout << x << '\\n';"
+    },
+    {
+     "q": [
+      "jak wczytac godzine",
+      "wczytywanie czasu hh:mm",
+      "godzina 12:30 c++",
+      "scanf godzina",
+      "read time hh:mm c++"
+     ],
+     "a": "Najprościej `scanf(\"%d:%d\", &h, &m)` — dwukropek w formacie musi wystąpić w wejściu. W stylu C++: `cin >> h >> c >> m`\nz `char c`. Wiodące zera (`09`) nie przeszkadzają — `09` zostanie wczytane jako 9.",
+     "code": "int h, m;\nchar c;\ncin >> h >> c >> m;\ncout << h * 60 + m << \" minut od polnocy\\n\";"
+    },
+    {
+     "q": [
+      "wczytaj date rrrr-mm-dd",
+      "jak wczytac date c++",
+      "data z myslnikami",
+      "read date yyyy-mm-dd"
+     ],
+     "a": "Wczytaj separatory do `char`: `cin >> r >> c >> m >> c >> d`. Nie pomijaj ich! Bez tego `-01` zostałoby odczytane\njako liczba ujemna. Wersja C: `scanf(\"%d-%d-%d\", &r, &m, &d)`.",
+     "code": "int r, m, d;\nchar c;\ncin >> r >> c >> m >> c >> d;"
+    },
+    {
+     "q": [
+      "scanf z przecinkiem",
+      "scanf(\"%d,%d\")",
+      "scanf separator w formacie",
+      "scanf format ze znakiem"
+     ],
+     "a": "Zwykły znak w formacie `scanf` (np. `,`) musi dokładnie wystąpić w wejściu i zostaje pominięty. Spacja w formacie\noznacza „pomiń dowolną liczbę białych znaków”, więc `\"%d , %d\"` przyjmie też `3 , 5`.",
+     "code": "int a, b;\nif (scanf(\"%d , %d\", &a, &b) == 2) printf(\"%d\\n\", a + b);"
+    },
+    {
+     "q": [
+      "wczytaj punkt (x,y)",
+      "wspolrzedne w nawiasach",
+      "wczytywanie (1,2)",
+      "nawiasy na wejsciu"
+     ],
+     "a": "Zjedz każdy znak interpunkcyjny do `char`: `cin >> c >> x >> c >> y >> c` dla `(x,y)`. Przy `scanf`: `\" (%d,%d)\"`.",
+     "code": "int x, y;\nchar c;\ncin >> c >> x >> c >> y >> c;   // \"(3,-7)\""
+    },
+    {
+     "q": [
+      "liczba z przecinkiem zamiast kropki",
+      "3,14 wczytywanie double",
+      "przecinek dziesietny c++",
+      "polski format liczby"
+     ],
+     "a": "`cin >> double` oczekuje kropki (`3.14`). Jeśli wejście ma przecinek dziesiętny, wczytaj `string`, zamień `,` na `.`\ni skonwertuj `stod`. Na OI dane są w formacie z kropką, ale w zadaniach „z życia” bywa inaczej.",
+     "code": "string s = \"3,14\";\nreplace(s.begin(), s.end(), ',', '.');\ndouble x = stod(s);\ncout << x * 2 << '\\n';"
+    },
+    {
+     "q": [
+      "rozdziel string po separatorze",
+      "split po przecinku c++",
+      "split string c++ delimiter"
+     ],
+     "a": "C++ nie ma wbudowanego `split`. Standardowy sposób: `stringstream` + `getline(ss, tok, sep)`.",
+     "code": "vector<string> split(const string& s, char sep) {\n    vector<string> res;\n    stringstream ss(s);\n    string tok;\n    while (getline(ss, tok, sep)) res.push_back(tok);\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wczytaj ulamek a/b",
+      "ulamek z ukosnikiem",
+      "wczytywanie 3/4"
+     ],
+     "a": "Tak samo jak przy godzinie — separator do `char`: `cin >> a >> c >> b`.",
+     "code": "long long a, b;\nchar c;\ncin >> a >> c >> b;   // \"3/4\"\ncout << a * 1.0 / b << '\\n';"
+    },
+    {
+     "q": [
+      "wczytaj liczby z tekstu",
+      "wyciagnij liczby ze stringa",
+      "liczby wsrod liter"
+     ],
+     "a": "Przejdź po znakach i budując liczbę z cyfr (`x = x*10 + (c - '0')`), a gdy trafisz na nie-cyfrę, zapisz liczbę.\nAlternatywa: zamień wszystkie nie-cyfry na spacje i użyj `stringstream`.",
+     "code": "string s = \"ab12cd345e6\";\nfor (char& c : s) if (!isdigit((unsigned char)c)) c = ' ';\nstringstream ss(s);\nlong long x;\nwhile (ss >> x) cout << x << '\\n';   // 12 345 6"
+    }
+   ],
+   "related": [
+    "io-getline",
+    "str-basic-split",
+    "num-conversions",
+    "cpp-ref-sstream-fstream",
+    "tech-dates-time"
+   ]
+  },
+  {
+   "id": "io-freopen",
+   "title": "Czytanie i pisanie do plików: freopen, ifstream, ofstream",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "plik",
+    "freopen",
+    "ifstream",
+    "ofstream",
+    "fopen",
+    "in.txt",
+    "out.txt",
+    "LOCAL"
+   ],
+   "aliases": [
+    "freopen c++",
+    "jak czytac z pliku",
+    "wczytywanie z pliku c++",
+    "zapis do pliku c++",
+    "read from file c++",
+    "freopen input.txt",
+    "jak testowac na pliku"
+   ],
+   "summary": "`freopen(\"in.txt\", \"r\", stdin);` przekierowuje standardowe wejście na plik — reszta programu (`cin`, `scanf`) działa bez zmian. Na OI czytasz ze standardowego wejścia, więc freopen trzymaj pod `#ifdef LOCAL`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Na OI (i większości sprawdzarek) program czyta ze **standardowego wejścia** i pisze na **standardowe wyjście** — nie\notwierasz plików, chyba że treść wprost to każe. Lokalnie wygodnie jest jednak testować na plikach: albo przez\nprzekierowanie w terminalu (`./prog < in.txt > out.txt`), albo przez `freopen` w kodzie."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "freopen tylko lokalnie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n#ifdef LOCAL   // kompiluj lokalnie z -DLOCAL; na sprawdzarce ten fragment zniknie\n    freopen(\"in.txt\", \"r\", stdin);\n    freopen(\"out.txt\", \"w\", stdout);\n#endif\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int a, b;\n    cin >> a >> b;\n    cout << a + b << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "ifstream / ofstream",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ifstream fin(\"dane.txt\");\n    ofstream fout(\"wynik.txt\");\n    if (!fin) { cerr << \"nie moge otworzyc dane.txt\\n\"; return 1; }\n    long long x, s = 0;\n    while (fin >> x) s += x;\n    fout << s << '\\n';\n}   // pliki zamykają się same na końcu zakresu"
+    },
+    {
+     "type": "warn",
+     "md": "Ścieżka względna (`\"in.txt\"`) jest liczona względem **katalogu roboczego** procesu, a nie katalogu z plikiem `.cpp`.\nW IDE katalog roboczy bywa inny (np. folder `build/`) — wtedy plik „nie istnieje”. Sprawdzaj wynik `freopen`\n(zwraca `NULL` przy błędzie)."
+    }
+   ],
+   "pitfalls": [
+    "Zostawiony `freopen` w wysłanym rozwiązaniu — program nie czyta danych sprawdzarki.",
+    "Plik w złym katalogu roboczym (IDE).",
+    "Brak sprawdzenia, czy plik się otworzył."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak czytac z pliku c++",
+      "wczytywanie z pliku",
+      "freopen jak uzyc",
+      "read input from file c++",
+      "freopen in.txt"
+     ],
+     "a": "Najprościej `freopen(\"in.txt\", \"r\", stdin);` na początku `main` — od tej chwili `cin` i `scanf` czytają z pliku.\nAnalogicznie `freopen(\"out.txt\", \"w\", stdout);` dla wyjścia. Na sprawdzarce czytasz ze standardowego wejścia, więc\nopakuj to w `#ifdef LOCAL` i kompiluj lokalnie z `-DLOCAL`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n#ifdef LOCAL\n    freopen(\"in.txt\", \"r\", stdin);\n#endif\n    int n;\n    cin >> n;\n    cout << n << '\\n';\n}"
+    },
+    {
+     "q": [
+      "czy na oi uzywac freopen",
+      "czy trzeba otwierac pliki na olimpiadzie",
+      "oi wejscie z pliku czy stdin"
+     ],
+     "a": "Nie — na OI program czyta ze standardowego wejścia i wypisuje na standardowe wyjście (chyba że treść konkretnego\nzadania mówi inaczej, co jest rzadkie). Zostawiony `freopen(\"in.txt\", ...)` spowoduje, że na sprawdzarce program nie\ndostanie danych. Trzymaj go pod `#ifdef LOCAL`."
+    },
+    {
+     "q": [
+      "co to jest #ifdef LOCAL",
+      "-DLOCAL",
+      "jak kompilowac z LOCAL",
+      "makro LOCAL"
+     ],
+     "a": "`#ifdef LOCAL` kompiluje fragment tylko wtedy, gdy zdefiniowano makro `LOCAL`. Lokalnie kompilujesz\n`g++ -DLOCAL prog.cpp`, a sprawdzarka kompiluje bez tej flagi — fragment znika. Idealne do `freopen` i debugowania.",
+     "code": "g++ -std=c++20 -O2 -DLOCAL prog.cpp -o prog",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "ifstream ofstream przyklad",
+      "zapis do pliku c++",
+      "ofstream jak uzyc",
+      "jak zapisac wynik do pliku"
+     ],
+     "a": "`ifstream fin(\"plik\")` i `ofstream fout(\"plik\")` działają jak `cin`/`cout`, tylko na plikach (`fin >> x`,\n`fout << x`). Plik zamyka się automatycznie, gdy obiekt wychodzi z zakresu. Sprawdź `if (!fin)`, czy plik się otworzył.",
+     "code": "ofstream fout(\"wynik.txt\");\nfout << 42 << '\\n';"
+    },
+    {
+     "q": [
+      "freopen nie dziala",
+      "plik nie istnieje freopen",
+      "freopen zwraca null",
+      "program nie widzi pliku in.txt"
+     ],
+     "a": "Najczęstsza przyczyna: plik nie leży w **katalogu roboczym** programu (IDE uruchamia program z innego folderu).\nPodaj pełną ścieżkę albo uruchom program z katalogu z plikiem. Sprawdzaj błąd: `if (!freopen(...)) perror(\"freopen\");`.",
+     "code": "if (!freopen(\"in.txt\", \"r\", stdin)) {\n    perror(\"freopen\");\n    return 1;\n}"
+    },
+    {
+     "q": [
+      "przekierowanie zamiast freopen",
+      "./prog < in.txt",
+      "jak podac plik na wejscie bez freopen"
+     ],
+     "a": "Nie musisz zmieniać kodu: w terminalu `./prog < in.txt > out.txt` podaje plik na standardowe wejście i zapisuje\nwyjście do pliku. Działa na Linuksie, macOS i w Windows cmd (`prog.exe < in.txt > out.txt`). W PowerShellu operator `<`\nnie działa — użyj `Get-Content in.txt | .\\prog.exe` albo `cmd /c \"prog.exe < in.txt > out.txt\"`.",
+     "code": "./prog < in.txt > out.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "dopisywanie do pliku",
+      "ofstream append",
+      "jak dopisac do pliku zamiast nadpisac"
+     ],
+     "a": "Otwórz w trybie dopisywania: `ofstream fout(\"log.txt\", ios::app);` (w C: `fopen(\"log.txt\", \"a\")`).",
+     "code": "ofstream fout(\"log.txt\", ios::app);\nfout << \"kolejny wiersz\\n\";"
+    },
+    {
+     "q": [
+      "freopen i cin razem",
+      "freopen z cin dziala",
+      "czy freopen dziala z cout"
+     ],
+     "a": "Tak. `freopen` podmienia strumienie C (`stdin`/`stdout`), a `cin`/`cout` z nich korzystają. Wywołaj `freopen` przed\npierwszym wczytaniem. Działa to także po `sync_with_stdio(false)`, jeśli `freopen` jest wcześniej."
+    }
+   ],
+   "related": [
+    "tool-redirect-io",
+    "oi-template",
+    "oi-debugging",
+    "cpp-ref-sstream-fstream",
+    "str-escape-whitespace"
+   ]
+  },
+  {
+   "id": "io-custom-fast-read",
+   "title": "Własne, bardzo szybkie wczytywanie liczb (fread, getchar_unlocked)",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "fread",
+    "getchar_unlocked",
+    "szybki odczyt",
+    "read int",
+    "bufor",
+    "fast reader"
+   ],
+   "aliases": [
+    "getchar_unlocked",
+    "fread szybkie wczytywanie",
+    "najszybsze wczytywanie c++",
+    "fast reader c++",
+    "wlasna funkcja read",
+    "readint",
+    "szybkie wczytywanie liczb"
+   ],
+   "summary": "Gdy wejście ma dziesiątki megabajtów, własny parser liczb na buforze z `fread` jest kilka razy szybszy niż `cin`. `getchar_unlocked` jest szybki, ale nie istnieje na Windows (MinGW/MSVC) — wersja na `fread` jest przenośna.",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Zwykle `ios::sync_with_stdio(false); cin.tie(nullptr);` wystarcza. Własny czytnik ma sens, gdy:\nwejście ma 10^7+ liczb, limit czasu jest ciasny, a algorytm i tak jest liniowy. Idea: wczytaj duży blok bajtów\ndo bufora (`fread`) i samodzielnie zamieniaj cyfry na liczby."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Przenośny czytnik na fread",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstatic char buf[1 << 16];\nstatic size_t bufLen = 0, bufPos = 0;\n\ninline int readChar() {\n    if (bufPos == bufLen) {\n        bufLen = fread(buf, 1, sizeof(buf), stdin);\n        bufPos = 0;\n        if (bufLen == 0) return EOF;\n    }\n    return buf[bufPos++];\n}\n\n// Zwraca false, gdy skończyło się wejście.\ninline bool readInt(long long& out) {\n    int c = readChar();\n    while (c != EOF && c != '-' && (c < '0' || c > '9')) c = readChar();\n    if (c == EOF) return false;\n    bool neg = false;\n    if (c == '-') { neg = true; c = readChar(); }\n    long long x = 0;\n    while (c >= '0' && c <= '9') { x = x * 10 + (c - '0'); c = readChar(); }\n    out = neg ? -x : x;\n    return true;\n}\n\nint main() {\n    long long n, x, s = 0;\n    readInt(n);\n    for (long long i = 0; i < n; i++) { readInt(x); s += x; }\n    printf(\"%lld\\n\", s);\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "getchar_unlocked z zamiennikiem na Windows",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n#ifdef _WIN32\n#define gc() _getchar_nolock()\n#else\n#define gc() getchar_unlocked()\n#endif\n\ninline int readInt() {\n    int c = gc();\n    while (c != '-' && (c < '0' || c > '9')) c = gc();\n    bool neg = (c == '-');\n    if (neg) c = gc();\n    int x = 0;\n    while (c >= '0' && c <= '9') { x = x * 10 + (c - '0'); c = gc(); }\n    return neg ? -x : x;\n}\n\nint main() {\n    int n = readInt();\n    long long s = 0;\n    for (int i = 0; i < n; i++) s += readInt();\n    printf(\"%lld\\n\", s);\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Nie mieszaj własnego czytnika z `cin`/`scanf` — czytnik zabiera do swojego bufora więcej danych, niż przetworzył.\nWersja z `getchar_unlocked` zapętli się na końcu pliku, jeśli spróbujesz czytać więcej liczb, niż jest."
+    }
+   ],
+   "pitfalls": [
+    "`getchar_unlocked` nie kompiluje się na Windows.",
+    "Brak obsługi `EOF` w pętli pomijającej białe znaki — zapętlenie.",
+    "Mieszanie własnego czytnika z `cin`.",
+    "Zapomniany `flushOut()` na końcu przy własnym buforze wyjścia — brak części wyniku."
+   ],
+   "qa": [
+    {
+     "q": [
+      "getchar_unlocked",
+      "co to getchar_unlocked",
+      "getchar unlocked windows",
+      "getchar_unlocked was not declared"
+     ],
+     "a": "`getchar_unlocked` to szybsza wersja `getchar` bez blokowania wątków (POSIX: Linux, macOS). **Na Windows jej nie ma**\n(MinGW/MSVC) — kod się nie skompiluje; odpowiednik to `_getchar_nolock`. Jeśli nie wiesz, na czym działa\nsprawdzarka, użyj przenośnego czytnika na `fread` albo makra `#ifdef _WIN32`.",
+     "code": "#ifdef _WIN32\n#define gc() _getchar_nolock()\n#else\n#define gc() getchar_unlocked()\n#endif",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najszybsze wczytywanie liczb",
+      "fread szybkie wczytywanie",
+      "jak napisac wlasny read",
+      "fast reader fread"
+     ],
+     "a": "Wczytuj blokami przez `fread` do bufora (np. 64 KB) i parsuj ręcznie: pomiń znaki niebędące cyfrą/minusem, potem\n`x = x*10 + (c - '0')`. To zwykle 2–5× szybsze niż `cin` z wyłączoną synchronizacją. Pełny kod w treści artykułu."
+    },
+    {
+     "q": [
+      "czy potrzebuje wlasnego wczytywania",
+      "kiedy fread a kiedy cin",
+      "czy sync_with_stdio wystarczy"
+     ],
+     "a": "Prawie zawsze wystarczy `ios::sync_with_stdio(false); cin.tie(nullptr);`. Własny czytnik rozważ dopiero przy wejściu\nrzędu 10^7 liczb lub > 50 MB, gdy zmierzony czas wczytywania to istotna część limitu. Najpierw zmierz!"
+    },
+    {
+     "q": [
+      "szybkie wypisywanie wlasne",
+      "fwrite szybkie wyjscie",
+      "fast writer c++",
+      "putchar wypisywanie liczb"
+     ],
+     "a": "Analogicznie do wczytywania: zamieniaj liczbę na cyfry do bufora i wypisz go raz przez `fwrite`. Zwykle `cout` z `'\\n'`\njest wystarczający, ale przy 10^7 liczb ręczny bufor pomaga.",
+     "code": "static char obuf[1 << 16];\nstatic size_t opos = 0;\ninline void flushOut() { fwrite(obuf, 1, opos, stdout); opos = 0; }\ninline void writeInt(long long x, char end = '\\n') {\n    if (opos + 24 > sizeof(obuf)) flushOut();\n    if (x < 0) { obuf[opos++] = '-'; x = -x; }\n    char tmp[20];\n    int k = 0;\n    do { tmp[k++] = char('0' + x % 10); x /= 10; } while (x);\n    while (k) obuf[opos++] = tmp[--k];\n    obuf[opos++] = end;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wlasne wczytywanie a ujemne liczby",
+      "read int z minusem",
+      "fast read negative numbers"
+     ],
+     "a": "Przed cyframi sprawdź znak `'-'`: zapamiętaj flagę i zwróć `-x` na końcu. Uwaga: `-x` dla najmniejszej liczby\ndanego typu (np. `-2^63`) przepełnia się — buduj wtedy wynik od razu ujemny albo na typie bez znaku."
+    },
+    {
+     "q": [
+      "czytnik zapetla sie na koncu pliku",
+      "fast read eof nieskonczona petla",
+      "getchar_unlocked eof"
+     ],
+     "a": "Pętla pomijająca nie-cyfry musi kończyć się także na `EOF` (-1): `while (c != EOF && ...)`. Bez tego próba wczytania\nliczby po końcu danych kręci się w nieskończoność (TLE)."
+    },
+    {
+     "q": [
+      "czy moge mieszac fread i cin",
+      "wlasny read i scanf razem",
+      "fread i cin razem nie dziala"
+     ],
+     "a": "Nie. Czytnik na `fread` pobiera z wejścia cały blok (np. 64 KB) do własnego bufora — `cin`/`scanf` już tych danych\nnie zobaczą. Wszystko wczytuj jednym sposobem."
+    },
+    {
+     "q": [
+      "wczytaj wszystko na raz do stringa",
+      "caly plik do pamieci c++",
+      "read whole input c++"
+     ],
+     "a": "Można wczytać całe wejście do `string` jednym poleceniem i parsować w pamięci.",
+     "code": "string all((istreambuf_iterator<char>(cin)), istreambuf_iterator<char>());\ncout << all.size() << '\\n';"
+    }
+   ],
+   "related": [
+    "io-fast-io",
+    "io-read-until-eof",
+    "str-read-chars",
+    "tech-counting-sort"
+   ]
+  }
+ ]
+}

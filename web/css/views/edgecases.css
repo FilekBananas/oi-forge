@@ -1,0 +1,7 @@
+/* Testy brzegowe. Tylko zmienne motywu. */
+.ec-tests { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.ec-test { min-width: 0; }
+.ec-test .card-body { gap: 8px; }
+.ec-pre { border-radius: var(--radius-s); background: var(--code-bg); border: 1px solid var(--border); padding: 8px 10px; max-height: 220px; }
+.ec-code .editor { border-radius: var(--radius-s); }
+.ec-out { font-size: 12px; white-space: pre; max-width: 260px; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: bottom; }

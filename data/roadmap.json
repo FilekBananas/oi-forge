@@ -1,0 +1,517 @@
+{
+ "version": 1,
+ "description": "Ścieżka nauki OI Forge: od podstaw C++ do finału Olimpiady Informatycznej. Tematy wskazują artykuły bazy wiedzy (kb), wzorce dopasowania nazw rund z SIO2 (match, bez polskich znaków, małe litery, dopasowanie od początku słowa) i identyfikatory algorytmów z modułu „Moje programy” (algo).",
+ "weights": {"tasks": 0.6, "read": 0.25, "cards": 0.15},
+ "weights_no_tasks": {"read": 0.6, "cards": 0.4},
+ "read_target": 3,
+ "cards_target": 10,
+ "unlock_threshold": 0.45,
+ "stages": [
+  {
+   "id": "podstawy",
+   "title": "Podstawy",
+   "subtitle": "C++, STL i pierwsze algorytmy",
+   "icon": "blocks",
+   "description": "Fundament: pewne pisanie w C++ — pętle, tablice, napisy, typy liczbowe, sortowanie i kontenery STL. Bez tego trudno skupić się na samym algorytmie.",
+   "criteria": [
+    "Piszesz program z szybkim wczytywaniem i wypisywaniem bez zaglądania do ściągi.",
+    "Wiesz, kiedy potrzebny jest long long, i nie dajesz się złapać na przepełnienie.",
+    "Swobodnie używasz vector, string, set, map oraz sort z własnym komparatorem.",
+    "Znasz złożoności podstawowych operacji STL."
+   ],
+   "topics": [
+    {
+     "id": "control-io",
+     "title": "Pętle, warunki i wejście/wyjście",
+     "icon": "file-input",
+     "description": "Szablon programu, szybkie cin/cout, getline, wczytywanie do końca pliku i wypisywanie liczb rzeczywistych.",
+     "kb": ["io-fast-io", "oi-template", "cpp-auto-range-for", "io-getline", "io-read-until-eof", "io-precision", "pit-assign-vs-compare"],
+     "match": ["petl", "instrukcj", "warunk", "wejscie", "wyjscie"],
+     "algo": ["basics"],
+     "target": 4
+    },
+    {
+     "id": "types",
+     "title": "Typy liczbowe i przepełnienie",
+     "icon": "binary",
+     "description": "int, long long, double — zakresy, przepełnienie, dzielenie całkowite, modulo liczb ujemnych i zaokrąglanie.",
+     "kb": ["num-int-types", "num-overflow", "pit-int-overflow", "num-ceil-div", "num-negative-mod", "num-floating", "num-rounding"],
+     "match": ["typy", "liczby calkowite", "zmiennoprzecink"],
+     "algo": [],
+     "tasks": false,
+     "target": 0
+    },
+    {
+     "id": "arrays",
+     "title": "Tablice i vector",
+     "icon": "table",
+     "description": "Tablice jedno- i dwuwymiarowe, vector, indeksowanie bez wychodzenia poza zakres, zmienne globalne.",
+     "kb": ["stl-vector", "stl-vector-2d", "stl-array", "cpp-global-vs-local", "pit-out-of-bounds", "pit-off-by-one"],
+     "match": ["tablic", "vector", "wektor", "t[][]"],
+     "algo": ["arrays", "grid"],
+     "target": 4
+    },
+    {
+     "id": "strings",
+     "title": "Znaki i napisy",
+     "icon": "languages",
+     "description": "string, operacje na znakach, zliczanie liter, palindromy, szyfr Cezara i podstawowe metody napisów.",
+     "kb": ["stl-string", "str-basic-char-ops", "str-basic-count-letters", "str-basic-caesar", "str-basic-palindrome", "stl-string-methods", "str-basic-reverse"],
+     "match": ["znaki", "znak", "tekst", "napis", "string", "cezar", "szyfr"],
+     "algo": ["string_processing", "strings"],
+     "target": 5
+    },
+    {
+     "id": "math-basic",
+     "title": "NWD, dzielniki i liczby pierwsze",
+     "icon": "sigma",
+     "description": "Algorytm Euklidesa, dzielniki w O(√n), test pierwszości, sito Eratostenesa, rozkład na czynniki i systemy liczbowe.",
+     "kb": ["math-gcd-lcm", "math-divisors", "math-primality", "math-sieve", "math-factorization", "math-bases"],
+     "match": ["matematyk", "teoria liczb", "teorii liczb", "nwd", "nww", "pierwsz", "sito", "dzielnik"],
+     "algo": ["sieve", "gcd"],
+     "target": 5
+    },
+    {
+     "id": "bignum",
+     "title": "Duże liczby",
+     "icon": "calculator",
+     "description": "Dodawanie, odejmowanie i mnożenie liczb zapisanych jako napisy oraz __int128.",
+     "kb": ["num-bigint-strings", "math-bignum", "num-int128"],
+     "match": ["duzych liczb", "duze liczby", "dlugich liczb", "bignum"],
+     "algo": ["bignum"],
+     "target": 3
+    },
+    {
+     "id": "recursion",
+     "title": "Rekurencja i brute force",
+     "icon": "refresh-cw",
+     "description": "Funkcje rekurencyjne, backtracking, generowanie podzbiorów maskami i symulacja krok po kroku.",
+     "kb": ["tech-backtracking", "tech-bitmask-brute-force", "cpp-stack-overflow", "tech-simulation"],
+     "match": ["rekurencj", "backtrack", "nawrot"],
+     "algo": [],
+     "target": 4
+    },
+    {
+     "id": "sorting",
+     "title": "Sortowanie i komparatory",
+     "icon": "align-left",
+     "description": "sort, stable_sort, własne komparatory, struct z operatorem <, usuwanie duplikatów.",
+     "kb": ["stl-sort", "cpp-struct", "pit-comparator", "stl-unique", "stl-pair"],
+     "match": ["sortowan", "sort"],
+     "algo": [],
+     "target": 5
+    },
+    {
+     "id": "stl",
+     "title": "Kontenery STL: set, map, kolejki",
+     "icon": "braces",
+     "description": "set, multiset, map, queue, stack i iteratory — kiedy który kontener i ile kosztują operacje.",
+     "kb": ["stl-set", "stl-map", "stl-multiset", "stl-queue", "stl-stack", "stl-iterators", "stl-pair"],
+     "match": ["stl", "mapa", "map", "set", "zbior", "slownik"],
+     "algo": ["stl_assoc"],
+     "target": 5
+    },
+    {
+     "id": "pitfalls",
+     "title": "Pułapki C++",
+     "icon": "triangle-alert",
+     "description": "Błędy, które najczęściej zabierają punkty: przepełnienie, wyjście poza tablicę, niezainicjalizowane zmienne, endl, map[k].",
+     "kb": ["pit-int-overflow", "pit-out-of-bounds", "pit-uninitialized", "pit-multitest-reset", "pit-endl-tle", "pit-map-bracket", "pit-unsigned-size"],
+     "match": [],
+     "algo": [],
+     "tasks": false,
+     "target": 0
+    }
+   ]
+  },
+  {
+   "id": "etap1",
+   "title": "I etap OI",
+   "subtitle": "Techniki, które wygrywają I etap",
+   "icon": "target",
+   "description": "I etap rozgrywa się zdalnie i trwa kilka tygodni. Typowe pomysły: sumy prefiksowe, wyszukiwanie binarne (także po wyniku), gąsienica, zachłanne, proste programowanie dynamiczne, BFS i DFS. Liczą się też punkty za podzadania.",
+   "criteria": [
+    "Szacujesz złożoność z ograniczeń i od razu wiesz, jaki algorytm się zmieści.",
+    "Sumy prefiksowe, binsearch (także po wyniku) i gąsienica to dla Ciebie rutyna.",
+    "Rozwiązujesz klasyczne DP: plecak, LIS, LCS, ścieżki na siatce.",
+    "Piszesz BFS i DFS z pamięci, także na siatce.",
+    "Umiesz napisać brute force i stress-test, gdy rozwiązanie nie przechodzi."
+   ],
+   "topics": [
+    {
+     "id": "complexity",
+     "title": "Złożoność i czytanie treści",
+     "icon": "gauge",
+     "description": "Jak z ograniczeń (n ≤ 10^5, n ≤ 20…) odczytać wymaganą złożoność i jak policzyć pamięć.",
+     "kb": ["oi-complexity-limits", "oi-reading-statement", "oi-memory", "oi-strategy"],
+     "match": [],
+     "algo": [],
+     "tasks": false,
+     "target": 0
+    },
+    {
+     "id": "prefix-sums",
+     "title": "Sumy prefiksowe i tablica różnicowa",
+     "icon": "sigma",
+     "description": "Suma na przedziale w O(1), sumy 2D, tablica różnicowa i prefiksowe XOR-y.",
+     "kb": ["ds-prefix-sums", "ds-prefix-sums-2d", "ds-difference-array", "tech-prefix-xor", "stl-partial-sum"],
+     "match": ["sumy prefiksowe", "sum prefiksow", "prefiksow", "roznicow"],
+     "algo": ["prefix_sums"],
+     "target": 4
+    },
+    {
+     "id": "binsearch",
+     "title": "Wyszukiwanie binarne",
+     "icon": "search",
+     "description": "Binsearch na posortowanej tablicy, lower_bound i upper_bound, binsearch na liczbach rzeczywistych.",
+     "kb": ["tech-binary-search", "stl-binary-search", "tech-binary-search-real"],
+     "match": ["wyszukiwanie binarne", "binsearch", "binarne", "bisekcj", "lower_bound"],
+     "algo": ["binary_search"],
+     "target": 4
+    },
+    {
+     "id": "binsearch-answer",
+     "title": "Binsearch po wyniku",
+     "icon": "scan-search",
+     "description": "Gdy odpowiedź jest monotoniczna: zgadnij wynik binsearchem i sprawdź go szybkim algorytmem.",
+     "kb": ["tech-binary-search-answer", "tech-binary-search"],
+     "match": ["binsearch po wyniku", "wyszukiwanie binarne po wyniku", "binarne po wyniku", "po wyniku", "po odpowiedzi"],
+     "algo": [],
+     "target": 3
+    },
+    {
+     "id": "two-pointers",
+     "title": "Gąsienica i okno przesuwne",
+     "icon": "footprints",
+     "description": "Dwa wskaźniki, okno o zmiennej i stałej długości, kolejka monotoniczna.",
+     "kb": ["tech-two-pointers", "tech-sliding-window", "ds-monotonic-queue"],
+     "match": ["gasienic", "dwa wskazniki", "two pointers", "okno przesuwne", "sliding"],
+     "algo": ["two_pointers", "sliding_window"],
+     "target": 3
+    },
+    {
+     "id": "greedy",
+     "title": "Algorytmy zachłanne",
+     "icon": "zap",
+     "description": "Wybór lokalnie najlepszy, sortowanie po kluczu i dowód przez wymianę.",
+     "kb": ["tech-greedy", "stl-sort"],
+     "match": ["zachlan", "greedy"],
+     "algo": [],
+     "target": 4
+    },
+    {
+     "id": "dp-basic",
+     "title": "Programowanie dynamiczne — podstawy",
+     "icon": "grid-3x3",
+     "description": "Stan, przejście, przypadek bazowy: schody, monety, ścieżki na siatce, LIS, LCS i odległość edycyjna.",
+     "kb": ["dp-intro", "dp-stairs-fibonacci", "dp-coin-change", "dp-grid-paths", "dp-lis", "dp-lcs", "dp-edit-distance"],
+     "match": ["dynamik", "dynamiczn", "dp"],
+     "algo": [],
+     "target": 5
+    },
+    {
+     "id": "knapsack",
+     "title": "Problem plecakowy",
+     "icon": "layers",
+     "description": "Plecak 0/1 (także w wersji 1D z pętlą od tyłu), nieograniczony i z ograniczoną liczbą sztuk.",
+     "kb": ["dp-knapsack-01", "dp-knapsack-unbounded", "dp-knapsack-bounded"],
+     "match": ["plecak"],
+     "algo": ["knapsack"],
+     "target": 2
+    },
+    {
+     "id": "heap-ds",
+     "title": "Kopiec i struktury danych",
+     "icon": "database",
+     "description": "priority_queue, deque, unordered_map i stos monotoniczny — szybkie odpowiedzi na powtarzające się pytania.",
+     "kb": ["ds-heap", "stl-priority-queue", "stl-deque", "stl-unordered-map", "ds-monotonic-stack"],
+     "match": ["kopiec", "kopca", "kopcem", "struktury danych", "struktur danych", "priority"],
+     "algo": ["heap"],
+     "target": 4
+    },
+    {
+     "id": "graphs-basic",
+     "title": "Grafy: BFS i DFS",
+     "icon": "network",
+     "description": "Lista sąsiedztwa, BFS (najkrótsze ścieżki bez wag), DFS, spójne składowe, grafy dwudzielne i BFS na siatce.",
+     "kb": ["graph-representation", "graph-input", "graph-bfs", "graph-dfs", "graph-bfs-grid", "graph-connected-components", "graph-bipartite"],
+     "match": ["graf", "bfs", "dfs", "przeszukiwan"],
+     "algo": ["bfs", "dfs"],
+     "target": 6
+    },
+    {
+     "id": "trees-basic",
+     "title": "Drzewa: przejścia i średnica",
+     "icon": "list-tree",
+     "description": "Korzeń, rodzic, głębokość, preorder/postorder, średnica i drzewa binarne.",
+     "kb": ["tree-basics", "tree-from-parents", "tree-dfs-order", "tree-diameter", "tree-binary-bst"],
+     "match": ["drzew", "preorder", "postorder", "inorder"],
+     "algo": [],
+     "target": 4
+    },
+    {
+     "id": "testing",
+     "title": "Brute force i stress-test",
+     "icon": "flask-conical",
+     "description": "Jak napisać brute, generator i porównywać wyniki automatycznie; flagi kompilacji i debugowanie.",
+     "kb": ["oi-brute-generator", "oi-stress-test", "oi-debugging", "oi-compile-flags"],
+     "match": ["testowan", "stress", "brut"],
+     "algo": ["testing"],
+     "target": 1
+    },
+    {
+     "id": "contest-practice",
+     "title": "Zawody próbne",
+     "icon": "trophy",
+     "description": "Rozwiązywanie zestawów na czas: strategia, kolejność zadań, punkty częściowe i praca z SIO2.",
+     "kb": ["oi-strategy", "oi-template", "oi-sio2", "oi-about"],
+     "match": ["kontest", "contest", "zawody", "preoi"],
+     "algo": [],
+     "target": 5
+    }
+   ]
+  },
+  {
+   "id": "etap2",
+   "title": "II etap OI",
+   "subtitle": "Grafy ważone, drzewa przedziałowe, matematyka",
+   "icon": "trophy",
+   "description": "II etap to zawody stacjonarne: sesja próbna i dwie tury po 5 godzin. Potrzebne są: Dijkstra, Find & Union, sortowanie topologiczne, drzewa przedziałowe, arytmetyka modularna, DP na drzewach i maskach.",
+   "criteria": [
+    "Piszesz Dijkstrę z kopcem i DSU z kompresją ścieżek bez błędów.",
+    "Rozpoznajesz DAG i liczysz na nim DP w porządku topologicznym.",
+    "Implementujesz drzewo przedziałowe (także z lazy propagation) w kilkanaście minut.",
+    "Liczysz modulo 10^9+7: potęgowanie, odwrotności, dwumiany.",
+    "Rozwiązujesz DP na drzewie i na maskach bitowych."
+   ],
+   "topics": [
+    {
+     "id": "dijkstra",
+     "title": "Najkrótsze ścieżki",
+     "icon": "workflow",
+     "description": "Dijkstra z kopcem, 0-1 BFS, Bellman-Ford, Floyd-Warshall i Dijkstra na stanach.",
+     "kb": ["graph-dijkstra", "graph-01-bfs", "graph-bellman-ford", "graph-floyd-warshall", "graph-dijkstra-states"],
+     "match": ["dijkstr", "najkrotsz", "bellman", "floyd"],
+     "algo": ["dijkstra", "shortest_path"],
+     "target": 4
+    },
+    {
+     "id": "dsu-mst",
+     "title": "Find & Union i MST",
+     "icon": "git-branch",
+     "description": "Zbiory rozłączne z kompresją ścieżek i łączeniem wg rangi, algorytmy Kruskala i Prima.",
+     "kb": ["graph-dsu", "graph-mst-kruskal", "graph-mst-prim"],
+     "match": ["find & union", "find and union", "find&union", "find union", "union", "dsu", "zbiory rozlaczne", "mst", "kruskal", "rozpinaj"],
+     "algo": ["dsu", "mst"],
+     "target": 3
+    },
+    {
+     "id": "toposort",
+     "title": "Toposort i DP na DAG-u",
+     "icon": "list-checks",
+     "description": "Sortowanie topologiczne (Kahn i DFS), wykrywanie cyklu, najdłuższa ścieżka i liczba ścieżek w DAG-u.",
+     "kb": ["graph-toposort", "graph-cycle-detection", "graph-dag-dp", "dp-dag"],
+     "match": ["toposort", "sortowanie topologiczne", "topologiczn", "dynamiki na grafach", "dp na grafach", "dag"],
+     "algo": ["topo_sort", "graph_dp"],
+     "target": 3
+    },
+    {
+     "id": "segtree",
+     "title": "Drzewa przedziałowe i Fenwick",
+     "icon": "bolt",
+     "description": "Drzewo przedziałowe punkt-przedział i przedział-przedział (lazy), drzewo Fenwicka, sparse table.",
+     "kb": ["ds-segment-tree", "ds-fenwick", "ds-segment-tree-iterative", "ds-lazy-propagation", "ds-sparse-table"],
+     "match": ["drzewa przedzialowe", "drzewo przedzialowe", "drzew przedzialowych", "przedzialow", "fenwick", "segment tree"],
+     "algo": ["segment_tree", "lazy_segment_tree"],
+     "target": 3
+    },
+    {
+     "id": "ternary",
+     "title": "Wyszukiwanie ternarne",
+     "icon": "scan-search",
+     "description": "Minimum funkcji unimodalnej i binsearch na liczbach rzeczywistych.",
+     "kb": ["tech-ternary-search", "tech-binary-search-real"],
+     "match": ["ternarn"],
+     "algo": ["ternary_search"],
+     "target": 2
+    },
+    {
+     "id": "modmath",
+     "title": "Arytmetyka modularna i potęgowanie",
+     "icon": "calculator",
+     "description": "Działania modulo 10^9+7, szybkie potęgowanie, odwrotność modularna i dwumian Newtona.",
+     "kb": ["num-mod-arithmetic", "math-fast-pow", "math-mod-inverse", "math-binomial", "math-combinatorics"],
+     "match": ["potegowan", "modulo", "modular", "kombinatory", "dwumian"],
+     "algo": ["fast_pow"],
+     "target": 3
+    },
+    {
+     "id": "tree-dp",
+     "title": "DP na drzewach",
+     "icon": "list-tree",
+     "description": "Dynamika na poddrzewach, zbiór niezależny, przekorzenianie i środek drzewa.",
+     "kb": ["tree-dp", "dp-tree", "tree-rerooting", "tree-center"],
+     "match": ["dynamiki na drzewach", "dynamika na drzewie", "dp na drzew"],
+     "algo": ["tree_dp"],
+     "target": 2
+    },
+    {
+     "id": "lca",
+     "title": "LCA i skoki potęgowe",
+     "icon": "git-compare",
+     "description": "Najniższy wspólny przodek metodą binary lifting, odległości w drzewie, trasa Eulera, grafy funkcyjne.",
+     "kb": ["tree-lca", "tree-distance", "tech-euler-tour", "graph-functional"],
+     "match": ["lca", "binary lifting", "skoki potegowe", "przodek"],
+     "algo": ["lca"],
+     "target": 2
+    },
+    {
+     "id": "dnc",
+     "title": "Dziel i zwyciężaj",
+     "icon": "shuffle",
+     "description": "Sortowanie przez scalanie, liczenie inwersji i meet in the middle.",
+     "kb": ["tech-divide-and-conquer", "tech-meet-in-the-middle"],
+     "match": ["dziel i zwyciezaj", "meet in the middle"],
+     "algo": ["divide_conquer"],
+     "target": 2
+    },
+    {
+     "id": "dp-adv",
+     "title": "DP na maskach i przedziałach",
+     "icon": "binary",
+     "description": "Komiwojażer na maskach, DP na przedziałach, podział ciągu i przyspieszanie przejść sumami prefiksowymi.",
+     "kb": ["dp-bitmask", "dp-interval", "dp-partition", "dp-prefix-opt", "tech-bit-tricks"],
+     "match": ["maskach", "bitmask", "maski bitowe", "na przedzialach"],
+     "algo": [],
+     "target": 2
+    },
+    {
+     "id": "strings-adv",
+     "title": "Hashowanie i KMP",
+     "icon": "file-text",
+     "description": "Hash wielomianowy, funkcja prefiksowa, Z-funkcja, trie i palindromy.",
+     "kb": ["str-hashing", "str-kmp", "str-z-function", "str-trie", "str-palindromes"],
+     "match": ["kmp", "hash", "haszow", "hashow", "wzorc", "z-funkcj"],
+     "algo": ["hashing", "kmp", "z_function", "trie"],
+     "target": 2
+    },
+    {
+     "id": "geometry",
+     "title": "Geometria obliczeniowa",
+     "icon": "square-function",
+     "description": "Iloczyn wektorowy, orientacja, pole wielokąta, otoczka wypukła i pułapki precyzji.",
+     "kb": ["geo-point-vector", "geo-cross-dot", "geo-orientation", "geo-polygon-area", "geo-convex-hull", "geo-pitfalls"],
+     "match": ["geometri", "otoczk", "wielokat"],
+     "algo": ["geometry", "convex_hull"],
+     "target": 2
+    }
+   ]
+  },
+  {
+   "id": "etap3",
+   "title": "III etap OI",
+   "subtitle": "Finał — zaawansowane algorytmy",
+   "icon": "star",
+   "description": "Finał OI: zadania wymagają łączenia kilku technik naraz. Przydają się przepływy, silna spójność, dekompozycje drzew, optymalizacje DP, zaawansowane struktury i teksty.",
+   "criteria": [
+    "Rozpoznajesz problemy przepływowe i skojarzenia w grafach dwudzielnych.",
+    "Używasz SCC, mostów i 2-SAT jako klocków w większych rozwiązaniach.",
+    "Znasz HLD, dekompozycję centroidową i small-to-large.",
+    "Stosujesz optymalizacje DP (CHT, dziel i zwyciężaj, Knuth).",
+    "Piszesz tablicę sufiksową lub Aho-Corasick, gdy zadanie tego wymaga."
+   ],
+   "topics": [
+    {
+     "id": "scc",
+     "title": "Silna spójność, mosty i 2-SAT",
+     "icon": "network",
+     "description": "Tarjan i Kosaraju, graf kondensacji, mosty i punkty artykulacji, 2-SAT, cykl Eulera.",
+     "kb": ["graph-scc", "graph-bridges-articulation", "graph-2sat", "graph-euler"],
+     "match": ["silnie spojn", "silna spojnosc", "scc", "mosty", "artykulacj", "2-sat", "2sat", "eulera"],
+     "algo": ["scc", "bridges"],
+     "target": 2
+    },
+    {
+     "id": "flows",
+     "title": "Przepływy i skojarzenia",
+     "icon": "workflow",
+     "description": "Dinic, minimalny przekrój, skojarzenia w grafach dwudzielnych i przepływ o minimalnym koszcie.",
+     "kb": ["graph-max-flow", "graph-min-cut", "graph-bipartite-matching", "graph-min-cost-flow"],
+     "match": ["przeplyw", "skojarzen", "flow", "matching"],
+     "algo": ["flow", "matching"],
+     "target": 2
+    },
+    {
+     "id": "tree-adv",
+     "title": "HLD, centroidy i small-to-large",
+     "icon": "list-tree",
+     "description": "Heavy-light decomposition, dekompozycja centroidowa, łączenie mniejszego do większego, LCA w O(1).",
+     "kb": ["tree-hld", "tree-centroid", "tree-small-to-large", "tree-lca-euler"],
+     "match": ["hld", "heavy", "centroid", "small to large", "small-to-large"],
+     "algo": [],
+     "target": 2
+    },
+    {
+     "id": "ds-adv",
+     "title": "Zaawansowane struktury danych",
+     "icon": "database",
+     "description": "Trwałe i dynamiczne drzewa przedziałowe, treap, merge sort tree, DSU z cofaniem i ordered set.",
+     "kb": ["ds-persistent-segment-tree", "ds-treap", "ds-dynamic-segment-tree", "ds-merge-sort-tree", "ds-dsu-rollback", "ds-ordered-set"],
+     "match": ["treap", "trwal", "persistent", "dynamiczne drzewo"],
+     "algo": [],
+     "target": 2
+    },
+    {
+     "id": "sqrt",
+     "title": "Pierwiastki i zapytania offline",
+     "icon": "layers",
+     "description": "Dekompozycja na bloki √n, algorytm Mo, zapytania offline i zamiatanie.",
+     "kb": ["ds-sqrt-decomposition", "ds-mo", "tech-offline-queries", "tech-sweep-line"],
+     "match": ["pierwiastkow", "sqrt", "offline", "zamiatan"],
+     "algo": ["sqrt_decomp", "mo"],
+     "target": 2
+    },
+    {
+     "id": "dp-opt",
+     "title": "Optymalizacje DP",
+     "icon": "gauge",
+     "description": "Convex Hull Trick i Li Chao, optymalizacja dziel i zwyciężaj, Knuth, SOS DP, DP po cyfrach.",
+     "kb": ["dp-cht", "dp-divide-conquer", "dp-knuth", "dp-sos", "dp-digit", "dp-monotonic-queue"],
+     "match": ["convex hull trick", "cht", "knuth", "po cyfrach", "sos"],
+     "algo": [],
+     "target": 2
+    },
+    {
+     "id": "strings-pro",
+     "title": "Zaawansowane teksty",
+     "icon": "languages",
+     "description": "Tablica sufiksowa z LCP, Aho-Corasick, Manacher, okres słowa i najmniejsza rotacja.",
+     "kb": ["str-suffix-array", "str-aho-corasick", "str-manacher", "str-period", "str-min-rotation"],
+     "match": ["sufiks", "aho", "manacher", "okres slowa"],
+     "algo": ["manacher"],
+     "target": 1
+    },
+    {
+     "id": "games",
+     "title": "Teoria gier",
+     "icon": "brain-circuit",
+     "description": "Nim, twierdzenie Sprague'a–Grundy'ego, gry na grafach, strategia lustrzana.",
+     "kb": ["game-nim", "game-sprague-grundy", "game-graph-games", "game-mirror-strategy", "dp-games"],
+     "match": ["teoria gier", "teorii gier", "gry", "nim", "grundy"],
+     "algo": [],
+     "target": 2
+    },
+    {
+     "id": "math-adv",
+     "title": "Matematyka olimpijska",
+     "icon": "sigma",
+     "description": "Potęgowanie macierzy, chińskie twierdzenie o resztach, funkcja Eulera, włączenia-wyłączenia i prawdopodobieństwo.",
+     "kb": ["math-matrix-pow", "math-crt", "math-euler-phi", "math-inclusion-exclusion", "math-probability", "math-extended-euclid"],
+     "match": ["macierz", "chinsk", "wlaczen", "prawdopodob", "euklides"],
+     "algo": ["matrix_pow"],
+     "target": 2
+    }
+   ]
+  }
+ ]
+}

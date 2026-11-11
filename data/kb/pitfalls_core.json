@@ -1,0 +1,1269 @@
+{
+ "chunk": "pitfalls-core",
+ "articles": [
+  {
+   "id": "pit-int-overflow",
+   "title": "Pułapka: przepełnienie int (suma, iloczyn, licznik)",
+   "category": "Pułapki",
+   "tags": [
+    "overflow",
+    "przepełnienie",
+    "int",
+    "long long",
+    "WA",
+    "ujemny wynik"
+   ],
+   "aliases": [
+    "przepelnienie int",
+    "int overflow",
+    "zly wynik dla duzych danych",
+    "suma przekracza int",
+    "wynik ujemny",
+    "integer overflow pulapka",
+    "dlaczego WA na duzych testach"
+   ],
+   "summary": "Najczęstsza przyczyna WA na dużych testach: wartość pośrednia (suma, iloczyn, liczba par) przekracza ~2,1·10^9 i „zawija się”. Zmień typy na `long long` i mnóż jako `1LL * a * b`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Typowe miejsca przepełnienia",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n = 100000;\n    vector<int> a(n, 1000000);\n    int sumaZla = 0;                  // ŹLE: 10^11 nie mieści się w int\n    long long suma = 0;               // DOBRZE\n    for (int x : a) { sumaZla += x; suma += x; }\n    cout << sumaZla << ' ' << suma << '\\n';\n\n    int w = 50000, h = 50000;\n    long long pole = 1LL * w * h;     // nie: w * h\n    cout << pole << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Gdzie szukać",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "sumy",
+       "`int s = 0; s += a[i];` przy a[i] ≤ 10^9"
+      ],
+      [
+       "iloczyny",
+       "`a * b`, `x * x`, `w * h` (pole)"
+      ],
+      [
+       "liczba par / podzbiorów",
+       "`n * (n - 1) / 2`, `1 << n`"
+      ],
+      [
+       "DP z licznikami",
+       "liczba sposobów bez modulo"
+      ],
+      [
+       "współrzędne",
+       "iloczyn wektorowy `(x1*y2 - x2*y1)` przy współrzędnych 10^9"
+      ],
+      [
+       "warunki pętli",
+       "`i * i <= n`"
+      ]
+     ]
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "wynik ujemny zamiast dodatniego",
+      "suma wychodzi ujemna",
+      "przepelnienie int pulapka",
+      "dziwny ujemny wynik",
+      "negative result overflow"
+     ],
+     "a": "To objaw przepełnienia `int` (limit 2 147 483 647). Po przekroczeniu wartość „zawija się” do liczb ujemnych (formalnie\nto niezdefiniowane zachowanie). Zmień typ zmiennej na `long long` i upewnij się, że także wyrażenia pośrednie liczą się w\n64 bitach (`1LL * a * b`).",
+     "code": "long long s = 0;\nfor (int i = 0; i < 300000; i++) s += 1000000000;\ncout << s << '\\n';"
+    },
+    {
+     "q": [
+      "przechodza male testy a duze nie",
+      "WA na duzych testach",
+      "dla duzych n zly wynik",
+      "male dziala duze nie"
+     ],
+     "a": "Najpierw sprawdź przepełnienie: oszacuj największą możliwą wartość każdej zmiennej (np. n·max = 10^5·10^9 = 10^14)\ni porównaj z ~2·10^9. Drugi typowy powód: za mała tablica (wyjście poza zakres dopiero przy dużym n). Trzeci: TLE ukryte\njako WA, gdy program przerwano."
+    },
+    {
+     "q": [
+      "long long w = a * b nie dziala",
+      "przypisanie do long long a nadal overflow",
+      "dlaczego long long nie pomaga"
+     ],
+     "a": "Bo typ działania zależy od argumentów: `a * b` dla `int a, b` liczy się w `int` i przepełnia **przed** przypisaniem.\nWystarczy, że jeden argument jest `long long`: `1LL * a * b` lub `(long long)a * b`.",
+     "code": "int a = 70000, b = 70000;\nlong long w = 1LL * a * b;\ncout << w << '\\n';   // 4900000000"
+    },
+    {
+     "q": [
+      "czy zawsze uzywac long long",
+      "long long wszedzie",
+      "#define int long long"
+     ],
+     "a": "Używanie `long long` dla wszystkich wartości liczbowych jest na OI bezpieczną strategią — koszt to głównie 2× więcej\npamięci w tablicach. Uważaj tylko na limity pamięci (10^7 `long long` = 80 MB). `#define int long long` też działa, ale\nwymaga `signed main()` i bywa mylące.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n#define int long long\nsigned main() {\n    int x = 3000000000;\n    cout << x << '\\n';\n}"
+    },
+    {
+     "q": [
+      "jak znalezc przepelnienie",
+      "sanitizer integer overflow",
+      "gdzie jest overflow w kodzie"
+     ],
+     "a": "Skompiluj z `-fsanitize=undefined -g` i uruchom na dużym teście: program wypisze „signed integer overflow” z numerem\nlinii. Ręcznie: przejrzyj każde `+`, `*`, `<<` i zapytaj „jaka może być największa wartość?”.",
+     "code": "g++ -std=c++20 -g -fsanitize=undefined prog.cpp -o prog && ./prog < duzy.in",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "iloczyn wektorowy overflow",
+      "cross product overflow",
+      "geometria przepelnienie"
+     ],
+     "a": "Dla współrzędnych do 10^9 iloczyn wektorowy `(bx-ax)*(cy-ay) - (by-ay)*(cx-ax)` ma składniki do ~4·10^18 — mieści się\nw `long long` na styk. Wszystkie współrzędne trzymaj w `long long`; przy większych wartościach `__int128`.",
+     "code": "long long ax = 0, ay = 0, bx = 1000000000, by = 0, cx = 0, cy = 1000000000;\nlong long cr = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);\ncout << cr << '\\n';"
+    },
+    {
+     "q": [
+      "1 << n przepelnienie",
+      "liczba podzbiorow 2^n overflow",
+      "1 << 31"
+     ],
+     "a": "`1 << n` jest typu `int` — dla `n ≥ 31` to błąd. Pisz `1LL << n` (do n = 62).",
+     "code": "int n = 40;\nlong long podzbiory = 1LL << n;\ncout << podzbiory << '\\n';"
+    },
+    {
+     "q": [
+      "licznik sposobow za duzy",
+      "dp przepelnienie bez modulo",
+      "liczba drog overflow"
+     ],
+     "a": "Liczby kombinatoryczne rosną wykładniczo — jeśli zadanie nie prosi o modulo, a wynik może być ogromny, sprawdź, czy\nmieści się w `long long`/`unsigned long long`/`__int128`. Jeśli prosi o modulo — redukuj po każdym kroku."
+    }
+   ],
+   "related": [
+    "num-overflow",
+    "num-int-types",
+    "pit-bit-ops",
+    "oi-compile-flags",
+    "cpp-casting",
+    "cpp-ref-climits-cfloat"
+   ]
+  },
+  {
+   "id": "pit-out-of-bounds",
+   "title": "Pułapka: wyjście poza zakres tablicy (indeksy, rozmiar n vs n+1)",
+   "category": "Pułapki",
+   "tags": [
+    "out of bounds",
+    "poza tablicą",
+    "segfault",
+    "RE",
+    "indeks",
+    "rozmiar tablicy",
+    "naruszenie ochrony pamięci"
+   ],
+   "aliases": [
+    "wyjscie poza tablice",
+    "segmentation fault",
+    "index out of range c++",
+    "RE naruszenie pamieci",
+    "tablica za mala",
+    "out of bounds c++",
+    "segfault tablica",
+    "runtime error tablica"
+   ],
+   "summary": "Odwołanie `a[i]` dla `i < 0` lub `i ≥ rozmiar` to niezdefiniowane zachowanie: crash (RE/segfault), cicha zła odpowiedź albo „działa lokalnie, nie działa na sprawdzarce”. Dawaj tablicom zapas, sprawdzaj granice, testuj z `-fsanitize=address` i `-D_GLIBCXX_DEBUG`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Rozmiar z zapasem i indeksowanie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 200005;     // zapas ponad limit 2·10^5\nint a[MAXN];                 // indeksy 1..n mieszczą się\n\nint main() {\n    int n;\n    cin >> n;\n    for (int i = 1; i <= n; i++) cin >> a[i];   // potrzebne n+1 miejsc!\n    vector<int> v(n);\n    for (int i = 0; i < n; i++) v[i] = a[i + 1];\n    // v[n] byłoby poza zakresem; v.at(n) rzuci wyjątek out_of_range\n    cout << v.back() << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Kompiluj lokalnie z `-fsanitize=address,undefined -g` (Linux/macOS) — program zatrzyma się na pierwszym złym\ndostępie i wskaże linię. `-D_GLIBCXX_DEBUG` (tylko GCC/libstdc++) sprawdza indeksy w `vector`, `string` itd."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "segmentation fault",
+      "segfault c++",
+      "naruszenie ochrony pamieci",
+      "program sie wywala sigsegv",
+      "RE segfault"
+     ],
+     "a": "Segfault oznacza dostęp do pamięci, do której program nie ma prawa — najczęściej wyjście poza tablicę (`a[n]`,\n`a[-1]`), za głęboka rekurencja / za duża tablica lokalna (przepełnienie stosu) albo użycie nieważnego wskaźnika/iteratora.\nZnajdź miejsce: skompiluj z `-g -fsanitize=address` i uruchom na teście — dostaniesz numer linii.",
+     "code": "g++ -std=c++20 -g -fsanitize=address,undefined prog.cpp -o prog && ./prog < test.in",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "tablica za mala",
+      "jaki rozmiar tablicy dac",
+      "rozmiar tablicy n+1",
+      "indeksowanie od 1 rozmiar",
+      "int a[n] czy int a[n+1]"
+     ],
+     "a": "Jeśli indeksujesz od 1 do `n`, tablica musi mieć `n + 1` elementów. Bezpieczny nawyk: stała `MAXN` = limit + 5\n(np. `200005` dla n ≤ 2·10^5). Pamiętaj też o tablicach pomocniczych, np. sumy prefiksowe `pre[n + 1]`.",
+     "code": "const int MAXN = 100005;\nint pre[MAXN];\nint n = 5;\nint a[] = {0, 3, 1, 4, 1, 5};\nfor (int i = 1; i <= n; i++) pre[i] = pre[i - 1] + a[i];\ncout << pre[n] << '\\n';"
+    },
+    {
+     "q": [
+      "dziala lokalnie a na sprawdzarce nie",
+      "lokalnie dobrze sio zle",
+      "rozne wyniki na roznych komputerach",
+      "works locally fails on judge"
+     ],
+     "a": "Klasyczne objawy niezdefiniowanego zachowania: wyjście poza tablicę, niezainicjalizowana zmienna, przepełnienie. Lokalnie\n„przypadkiem” pod złym adresem jest zero, na sprawdzarce coś innego. Testuj z sanitizerami i `-D_GLIBCXX_DEBUG`, włącz\n`-Wall -Wextra` i przejrzyj ostrzeżenia."
+    },
+    {
+     "q": [
+      "vector at",
+      "at zamiast []",
+      "sprawdzanie zakresu vector",
+      "out_of_range vector"
+     ],
+     "a": "`v.at(i)` sprawdza zakres i rzuca `out_of_range` przy złym indeksie (program kończy się czytelnym komunikatem).\n`v[i]` niczego nie sprawdza. Do debugowania można używać `at` albo kompilować z `-D_GLIBCXX_DEBUG`, które sprawia,\nże `[]` też sprawdza zakres.",
+     "code": "vector<int> v(3);\ntry { v.at(5) = 1; } catch (out_of_range& e) { cout << \"zly indeks\\n\"; }"
+    },
+    {
+     "q": [
+      "a[i-1] dla i=0",
+      "indeks -1",
+      "ujemny indeks tablicy",
+      "sasiad poza tablica"
+     ],
+     "a": "Przy odwołaniach do sąsiadów (`a[i-1]`, `a[i+1]`, `g[x+dx][y+dy]`) sprawdzaj granice przed dostępem albo dodaj ramkę\n(indeksuj od 1 i zostaw puste pola 0 i n+1). Kolejność warunków: najpierw `i > 0`, potem `a[i-1]` (dzięki leniwemu `&&`).",
+     "code": "vector<int> a = {5, 3, 8};\nint i = 0;\nif (i > 0 && a[i - 1] < a[i]) cout << \"rosnie\\n\";"
+    },
+    {
+     "q": [
+      "string poza zakresem",
+      "s[i] dla i = s.size()",
+      "substr out of range"
+     ],
+     "a": "`s[s.size()]` zwraca `'\\0'` (dozwolone), ale dalej to UB. `s.substr(pos, len)` rzuca `out_of_range`, gdy `pos > s.size()`.\nPętle po znakach pisz `i < (int)s.size()`.",
+     "code": "string s = \"abc\";\nfor (int i = 0; i + 1 < (int)s.size(); i++)\n    if (s[i] == s[i + 1]) cout << \"para\\n\";"
+    },
+    {
+     "q": [
+      "d_glibcxx_debug",
+      "-D_GLIBCXX_DEBUG co to",
+      "debug mode stl"
+     ],
+     "a": "Flaga `-D_GLIBCXX_DEBUG` włącza tryb debugowania biblioteki standardowej GCC: `vector[]`, iteratory, `sort` z błędnym\nkomparatorem itp. są sprawdzane i przy błędzie program kończy się z opisem. Spowalnia program — używaj tylko lokalnie.\nDziała z libstdc++ (GCC); z Clangiem na macOS (libc++) nie ma efektu.",
+     "code": "g++ -std=c++20 -g -D_GLIBCXX_DEBUG prog.cpp -o prog",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "wyjscie poza tablice nie wywala programu",
+      "dlaczego nie ma bledu przy zlym indeksie",
+      "UB tablica cicho"
+     ],
+     "a": "C++ nie sprawdza indeksów. Zapis poza tablicą może trafić w inną zmienną (np. nadpisać `n`) i dać złą odpowiedź bez\ncrasha. Dlatego „brak błędu” nic nie znaczy — sanitizer to jedyny pewny sposób."
+    }
+   ],
+   "related": [
+    "pit-off-by-one",
+    "pit-stack-overflow",
+    "oi-compile-flags",
+    "oi-debugging",
+    "cpp-c-arrays",
+    "cpp-conditions",
+    "str-signed-char"
+   ]
+  },
+  {
+   "id": "pit-uninitialized",
+   "title": "Pułapka: niezainicjalizowane zmienne i tablice",
+   "category": "Pułapki",
+   "tags": [
+    "niezainicjalizowana",
+    "śmieci",
+    "inicjalizacja",
+    "zmienna lokalna",
+    "globalna",
+    "garbage"
+   ],
+   "aliases": [
+    "niezainicjalizowana zmienna",
+    "smieci w zmiennej",
+    "losowe wartosci w tablicy",
+    "uninitialized variable c++",
+    "zmienna ma dziwna wartosc",
+    "czy tablica jest wyzerowana",
+    "inicjalizacja tablicy zerami"
+   ],
+   "summary": "Zmienne i tablice **lokalne** (w funkcji) bez inicjalizacji zawierają śmieci; **globalne** i `static` są zerowane. Zawsze pisz `int s = 0;`, `int a[100] = {};` albo używaj `vector<int> a(n)` (zera).",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Kiedy są zera, a kiedy śmieci",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint globalna[1000];          // zera (zmienna globalna)\n\nint main() {\n    int suma;                // ŚMIECI — UB przy odczycie\n    int a[100];              // ŚMIECI\n    int b[100] = {};         // zera\n    int c[100] = {0};        // zera (wszystkie, nie tylko pierwszy)\n    int d[100] = {5};        // d[0] = 5, reszta zera\n    vector<int> v(100);      // zera\n    suma = 0;                // zainicjalizuj przed użyciem\n    for (int i = 0; i < 100; i++) suma += b[i] + c[i] + v[i] + globalna[i];\n    cout << suma << ' ' << d[0] << ' ' << d[1] << '\\n';\n    (void)a;\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`int c[100] = {1};` NIE wypełnia jedynkami — tylko `c[0] = 1`, reszta zera. Do wypełnienia wartością: `fill` albo\n`vector<int> c(100, 1)`."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "niezainicjalizowana zmienna",
+      "zmienna ma dziwna wartosc",
+      "smieci w zmiennej",
+      "uninitialized variable c++",
+      "suma ma losowa wartosc",
+      "dostaję różne wyniki przy każdym uruchomieniu",
+      "program daje różne wyniki za każdym razem",
+      "raz działa raz nie"
+     ],
+     "a": "Zmienna lokalna bez wartości początkowej (`int suma;`) zawiera to, co akurat było w pamięci — „śmieci”. Odczyt to\nniezdefiniowane zachowanie: lokalnie może wychodzić 0, na sprawdzarce coś innego. Zawsze inicjalizuj: `int suma = 0;`.\n`-Wall` ostrzega o wielu takich przypadkach (`-Wuninitialized`, `-Wmaybe-uninitialized` przy `-O2`).",
+     "code": "int suma = 0;\nfor (int i = 1; i <= 10; i++) suma += i;\ncout << suma << '\\n';"
+    },
+    {
+     "q": [
+      "czy tablica jest wyzerowana",
+      "czy tablica lokalna ma zera",
+      "tablica globalna zera",
+      "domyslna wartosc tablicy"
+     ],
+     "a": "Globalne (i `static`) tablice są wyzerowane automatycznie. Lokalne (w `main` czy innej funkcji) — **nie**. `vector<int> v(n)`\nzawsze ma zera. Lokalną tablicę wyzerujesz przez `int a[100] = {};`.",
+     "code": "int a[100] = {};\nvector<long long> v(100);\ncout << a[50] << ' ' << v[50] << '\\n';   // 0 0"
+    },
+    {
+     "q": [
+      "jak wyzerowac tablice",
+      "wypelnij tablice zerami",
+      "zerowanie tablicy c++",
+      "memset 0"
+     ],
+     "a": "Przy deklaracji: `int a[N] = {};`. Później: `memset(a, 0, sizeof a);` albo `fill(a, a + N, 0);`. Dla `vector`:\n`v.assign(n, 0);`.",
+     "code": "int a[1000];\nmemset(a, 0, sizeof a);\nvector<int> v(10, 7);\nv.assign(10, 0);"
+    },
+    {
+     "q": [
+      "int a[100] = {1}",
+      "inicjalizacja tablicy jedynkami",
+      "wypelnij tablice wartoscia",
+      "= {-1} cala tablica"
+     ],
+     "a": "`int a[100] = {1};` ustawia tylko `a[0] = 1`, resztę zera. Tak samo `{-1}`. Do wypełnienia całej tablicy wartością\nużyj `fill(a, a + 100, 1);` albo `vector<int> a(100, 1);` (dla -1 i 0 zadziała też `memset`).",
+     "code": "int a[100];\nfill(a, a + 100, 1);\nvector<int> b(100, -1);\ncout << a[99] << ' ' << b[99] << '\\n';   // 1 -1"
+    },
+    {
+     "q": [
+      "zmienna w petli nie resetuje sie",
+      "licznik nie zerowany w petli",
+      "max nie zainicjalizowany"
+     ],
+     "a": "Zmienna, która ma się zerować w każdym obrocie (np. suma wiersza), musi być zadeklarowana/wyzerowana **wewnątrz**\npętli. Zmienna `mx` na maksimum potrzebuje wartości startowej (pierwszy element albo `-INF`).",
+     "code": "vector<vector<int>> t = {{1, 2}, {3, 4}};\nfor (auto& w : t) {\n    int sumaWiersza = 0;            // zerowana dla każdego wiersza\n    for (int x : w) sumaWiersza += x;\n    cout << sumaWiersza << '\\n';\n}"
+    },
+    {
+     "q": [
+      "struct pola niezainicjalizowane",
+      "struktura smieci",
+      "inicjalizacja struct"
+     ],
+     "a": "Pola struktury zadeklarowanej lokalnie bez inicjalizacji też zawierają śmieci. Podaj wartości domyślne w definicji\n(`int x = 0;`) albo twórz obiekt z `{}`.",
+     "code": "struct Punkt { int x = 0, y = 0; };\nPunkt p;          // x = 0, y = 0\nPunkt q{3, 4};\ncout << p.x + q.y << '\\n';"
+    },
+    {
+     "q": [
+      "w debug dziala w release nie",
+      "-O2 zmienia wynik",
+      "inny wynik z optymalizacja"
+     ],
+     "a": "Zmiana wyniku po włączeniu `-O2` prawie zawsze oznacza UB: niezainicjalizowaną zmienną, wyjście poza tablicę albo\nprzepełnienie. Optymalizator inaczej rozkłada zmienne w pamięci, więc „śmieci” są inne."
+    },
+    {
+     "q": [
+      "funkcja nie zwraca wartosci",
+      "brak return w funkcji",
+      "warning control reaches end of non-void function"
+     ],
+     "a": "Funkcja `int f()` musi zwrócić wartość w każdej ścieżce. Brak `return` to UB — wynik losowy lub crash (GCC z `-O2`\npotrafi wygenerować dziwny kod). `-Wall` pokazuje ostrzeżenie „control reaches end of non-void function”.",
+     "code": "int znak(int x) {\n    if (x > 0) return 1;\n    if (x < 0) return -1;\n    return 0;            // bez tego: UB dla x == 0\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "pit-multitest-reset",
+    "pit-memset",
+    "oi-compile-flags",
+    "cpp-scope",
+    "cpp-variables-types-intro"
+   ]
+  },
+  {
+   "id": "pit-assign-vs-compare",
+   "title": "Pułapka: `=` zamiast `==`, średnik po if/for i inne literówki logiczne",
+   "category": "Pułapki",
+   "tags": [
+    "=",
+    "==",
+    "przypisanie",
+    "porównanie",
+    "średnik",
+    "if",
+    "&&",
+    "&",
+    "literówka"
+   ],
+   "aliases": [
+    "= zamiast ==",
+    "if (x = 5)",
+    "przypisanie w if",
+    "srednik po if",
+    "srednik po for",
+    "a < b < c",
+    "& zamiast &&",
+    "assignment instead of comparison"
+   ],
+   "summary": "`if (x = 5)` przypisuje 5 i zawsze jest prawdą — chodziło o `if (x == 5)`. Podobnie zdradliwe: średnik po `if (...)`/`for (...)`, zapis `a < b < c` i `&` zamiast `&&`. Kompilacja z `-Wall` ostrzega o większości z nich.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Zbiór literówek, które się kompilują",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int x = 3;\n    if (x = 5) cout << \"zawsze!\\n\";      // ŹLE: przypisanie, x == 5\n    if (x == 5) cout << \"porownanie\\n\";  // DOBRZE\n\n    for (int i = 0; i < 3; i++);         // ŹLE: średnik = pusta pętla\n    {\n        cout << \"wykona sie raz\\n\";\n    }\n\n    int a = 5, b = 1, c = 3;\n    cout << (a < b < c) << '\\n';          // 1 (!): (5 < 1) = 0, potem 0 < 3\n    cout << (a < b && b < c) << '\\n';     // 0 — poprawny zapis\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "= zamiast ==",
+      "if (x = 5) zawsze prawda",
+      "przypisanie w if",
+      "dlaczego if zawsze sie wykonuje",
+      "assignment in condition c++"
+     ],
+     "a": "`x = 5` to przypisanie, a jego wartością jest 5 (prawda). Warunek jest zawsze spełniony, a `x` zostaje zmienione.\nPorównanie to `==`. `-Wall` ostrzega: „suggest parentheses around assignment used as truth value”.",
+     "code": "int x = 3;\nif (x == 5) cout << \"piec\\n\";\nelse cout << \"nie piec\\n\";"
+    },
+    {
+     "q": [
+      "srednik po if",
+      "if (warunek);",
+      "if nie dziala srednik",
+      "semicolon after if"
+     ],
+     "a": "`if (warunek);` — średnik kończy `if` z pustą instrukcją. Blok `{...}` pod spodem wykona się **zawsze**. Usuń średnik.\n`-Wextra` (`-Wempty-body`) ostrzega.",
+     "code": "int x = 0;\nif (x > 0) {\n    cout << \"dodatnia\\n\";\n}"
+    },
+    {
+     "q": [
+      "srednik po for",
+      "for (...); petla nic nie robi",
+      "petla wykonuje sie raz",
+      "semicolon after for loop"
+     ],
+     "a": "`for (int i = 0; i < n; i++);` ma pusty korpus — pętla tylko zwiększa `i`, a blok pod nią wykona się raz (i to z `i`\nniedostępnym albo równym `n`). Usuń średnik.",
+     "code": "for (int i = 0; i < 3; i++) {\n    cout << i << '\\n';\n}"
+    },
+    {
+     "q": [
+      "a < b < c",
+      "porownanie trzech liczb",
+      "0 < x < 10 nie dziala",
+      "czy x jest w przedziale c++"
+     ],
+     "a": "C++ liczy `a < b < c` jako `(a < b) < c`, czyli porównuje `0` lub `1` z `c`. Napisz `a < b && b < c`. Przedział:\n`0 < x && x < 10`.",
+     "code": "int x = 15;\nif (0 < x && x < 10) cout << \"w przedziale\\n\";\nelse cout << \"poza\\n\";"
+    },
+    {
+     "q": [
+      "& zamiast &&",
+      "| zamiast ||",
+      "roznica & i &&",
+      "bitowe and w if"
+     ],
+     "a": "`&&` i `||` to operatory logiczne z leniwą ewaluacją (prawa strona liczona tylko w razie potrzeby). `&` i `|` są bitowe:\nliczą zawsze obie strony i działają na pojedynczych bitach (np. `2 & 1 == 0`, choć oba są „prawdziwe”). W warunkach logicznych używaj `&&`/`||`.\nLeniwość jest ważna np. w `i < n && a[i] > 0` (bez niej `a[n]` wyjdzie poza tablicę).",
+     "code": "vector<int> a = {1, 2};\nint i = 2;\nif (i < (int)a.size() && a[i] > 0) cout << \"ok\\n\";   // a[2] nie zostanie odczytane"
+    },
+    {
+     "q": [
+      "else do zlego if",
+      "dangling else",
+      "else nie do tego if"
+     ],
+     "a": "`else` łączy się z **najbliższym** `if` bez `else`, niezależnie od wcięć. Używaj klamer `{}` przy zagnieżdżonych `if`.",
+     "code": "int a = 1, b = 0;\nif (a > 0) {\n    if (b > 0) cout << \"oba\\n\";\n} else {\n    cout << \"a niedodatnie\\n\";\n}"
+    },
+    {
+     "q": [
+      "if bez klamer dwie instrukcje",
+      "tylko pierwsza instrukcja w if",
+      "brak klamer w petli"
+     ],
+     "a": "Bez klamer `if`/`for`/`while` obejmuje tylko **jedną** następną instrukcję. Druga linijka z wcięciem wykonuje się zawsze.\nW razie wątpliwości stawiaj `{}`.",
+     "code": "int x = 0;\nif (x > 0) {\n    cout << \"a\\n\";\n    cout << \"b\\n\";\n}"
+    },
+    {
+     "q": [
+      "switch bez break",
+      "switch fallthrough",
+      "switch wykonuje kilka case"
+     ],
+     "a": "Bez `break` wykonanie „przelatuje” do kolejnych `case`. Kończ każdy `case` `break`-iem (albo `return`). `-Wextra`\n(`-Wimplicit-fallthrough`) ostrzega.",
+     "code": "int d = 2;\nswitch (d) {\n    case 1: cout << \"jeden\\n\"; break;\n    case 2: cout << \"dwa\\n\"; break;\n    default: cout << \"inne\\n\";\n}"
+    },
+    {
+     "q": [
+      "porownanie stringa z char",
+      "s == 'a' blad",
+      "porownanie napisu z literalem"
+     ],
+     "a": "`s == \"abc\"` dla `std::string` działa. `s == 'a'` (znak, nie napis) się nie skompiluje — porównuj `s[0] == 'a'` albo\n`s == \"a\"`. Dla tablic `char` operator `==` porównuje adresy — użyj `strcmp(a, b) == 0`.",
+     "code": "string s = \"a\";\nchar t[] = \"abc\";\ncout << (s == \"a\") << ' ' << (strcmp(t, \"abc\") == 0) << '\\n';   // 1 1"
+    }
+   ],
+   "related": [
+    "pit-bit-ops",
+    "oi-compile-flags",
+    "pit-off-by-one",
+    "cpp-conditions",
+    "cpp-loops",
+    "cpp-operators"
+   ]
+  },
+  {
+   "id": "pit-unsigned-size",
+   "title": "Pułapka: v.size() jest unsigned (size() - 1 dla pustego wektora, porównania z -1)",
+   "category": "Pułapki",
+   "tags": [
+    "size_t",
+    "unsigned",
+    "size()",
+    "pusty wektor",
+    "pętla",
+    "porównanie signed unsigned"
+   ],
+   "aliases": [
+    "v.size()-1 pusty",
+    "size() - 1 petla nieskonczona",
+    "size_t pulapka",
+    "porownanie int z size",
+    "unsigned underflow",
+    "warning comparison of integer expressions of different signedness",
+    "petla od konca size_t"
+   ],
+   "summary": "`v.size()` zwraca `size_t` (bez znaku). Dla pustego wektora `v.size() - 1` to ~1,8·10^19, a `-1 < v.size()` jest fałszem. Rzutuj: `(int)v.size()` albo używaj `ssize(v)` (C++20).",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Problem i poprawki",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> v;                                   // pusty\n    cout << v.size() - 1 << '\\n';                    // 18446744073709551615 (!)\n    // for (int i = 0; i < v.size() - 1; i++)       // ŹLE: dla pustego v wyjście poza tablicę\n    for (int i = 0; i + 1 < (int)v.size(); i++) {}   // DOBRZE\n    for (int i = (int)v.size() - 1; i >= 0; i--) {}  // od końca: int, nie size_t\n    int x = -1;\n    cout << (x < v.size()) << ' ' << (x < (int)v.size()) << '\\n';   // 0 1\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "v.size()-1 pusty wektor",
+      "size() - 1 petla nieskonczona",
+      "petla do size-1 crash",
+      "for i < v.size()-1 blad",
+      "pętla do v.size()-1 dla pustego vectora",
+      "v.size() - 1 gdy vector jest pusty"
+     ],
+     "a": "`v.size()` jest typu bez znaku. Dla pustego `v` wynik `0 - 1` zawija się do największej liczby `size_t` (~1,8·10^19),\nwięc pętla `i < v.size() - 1` biegnie „w nieskończoność” poza tablicę. Pisz `i + 1 < v.size()` albo rzutuj\n`(int)v.size() - 1`.",
+     "code": "vector<int> v;\nfor (int i = 0; i + 1 < (int)v.size(); i++) cout << v[i] << '\\n';"
+    },
+    {
+     "q": [
+      "petla od konca size_t",
+      "for (size_t i = n-1; i >= 0; i--)",
+      "nieskonczona petla od konca",
+      "petla w dol unsigned"
+     ],
+     "a": "Dla typu bez znaku `i >= 0` jest zawsze prawdą — po `0` następuje zawinięcie do ogromnej liczby. Użyj `int`:\n`for (int i = (int)v.size() - 1; i >= 0; i--)`.",
+     "code": "vector<int> v = {1, 2, 3};\nfor (int i = (int)v.size() - 1; i >= 0; i--) cout << v[i] << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "porownanie int z size",
+      "-1 < v.size() falsz",
+      "comparison of integer expressions of different signedness",
+      "warning signed unsigned comparison"
+     ],
+     "a": "Przy porównaniu `int` z `size_t` wartość `int` jest konwertowana na typ bez znaku: `-1` staje się ogromną liczbą, więc\n`-1 < v.size()` jest fałszem. Ostrzeżenie „comparison of integer expressions of different signedness” (`-Wall -Wextra`)\nwarto traktować poważnie. Rzutuj `(int)v.size()`.",
+     "code": "vector<int> v(5);\nint x = -1;\nif (x < (int)v.size()) cout << \"ok\\n\";"
+    },
+    {
+     "q": [
+      "ssize c++20",
+      "std::ssize",
+      "rozmiar ze znakiem"
+     ],
+     "a": "C++20 ma `ssize(v)` zwracające rozmiar ze znakiem (`ptrdiff_t`) — pozwala pisać `for (int i = 0; i < ssize(v) - 1; i++)`\nbezpiecznie także dla pustego `v`.",
+     "code": "vector<int> v;\nfor (int i = 0; i < ssize(v) - 1; i++) cout << v[i];\ncout << ssize(v) - 1 << '\\n';   // -1"
+    },
+    {
+     "q": [
+      "string length - 1",
+      "s.length() - 1 pusty string",
+      "s.size() unsigned string"
+     ],
+     "a": "To samo dotyczy `string::size()`/`length()`: `s.size() - 1` dla pustego napisu to ogromna liczba. `s.back()` na pustym\nnapisie to UB. Sprawdź `!s.empty()` najpierw.",
+     "code": "string s;\nif (!s.empty() && s.back() == '\\r') s.pop_back();"
+    },
+    {
+     "q": [
+      "roznica size_t odejmowanie",
+      "a.size() - b.size() ujemne",
+      "odejmowanie rozmiarow"
+     ],
+     "a": "`a.size() - b.size()` przy `a` krótszym niż `b` nie da liczby ujemnej, tylko ogromną dodatnią. Rzutuj oba na `int`/`long long`\nprzed odejmowaniem.",
+     "code": "string a = \"ab\", b = \"abcd\";\nint roznica = (int)a.size() - (int)b.size();\ncout << roznica << '\\n';   // -2"
+    },
+    {
+     "q": [
+      "max(v.size(), 5) blad",
+      "min z size i int nie kompiluje",
+      "no matching function max size_t int"
+     ],
+     "a": "`max(v.size(), 5)` się nie skompiluje: `size_t` i `int` to różne typy, a `max` wymaga jednakowych. Napisz\n`max((int)v.size(), 5)` albo `max<size_t>(v.size(), 5)`.",
+     "code": "vector<int> v(3);\nint m = max((int)v.size(), 5);\ncout << m << '\\n';"
+    },
+    {
+     "q": [
+      "unsigned w petli zawija sie",
+      "unsigned i-- ponizej zera",
+      "unsigned minus jeden"
+     ],
+     "a": "Każde odejmowanie na typie bez znaku, które „powinno” dać liczbę ujemną, zawija się modulo 2^k. Jeśli wartości mogą zejść\nponiżej zera, używaj typów ze znakiem (`int`, `long long`).",
+     "code": "unsigned u = 2;\nu -= 3;\ncout << u << '\\n';   // 4294967295"
+    }
+   ],
+   "related": [
+    "pit-out-of-bounds",
+    "io-print-separators",
+    "pit-abs-long-long",
+    "cpp-casting",
+    "cpp-loops",
+    "cpp-ref-utility-optional"
+   ]
+  },
+  {
+   "id": "pit-comparator",
+   "title": "Pułapka: komparator łamiący strict weak ordering (<= w sort, set z własnym porównaniem)",
+   "category": "Pułapki",
+   "tags": [
+    "komparator",
+    "sort",
+    "strict weak ordering",
+    "<=",
+    "set",
+    "lambda",
+    "crash w sort"
+   ],
+   "aliases": [
+    "komparator <=",
+    "sort crash komparator",
+    "sort sie wywala",
+    "strict weak ordering",
+    "comparator c++ blad",
+    "set gubi elementy",
+    "wlasny komparator sort",
+    "invalid comparator"
+   ],
+   "summary": "Komparator musi zachowywać się jak `<`: dla równych elementów zwracać `false`. `return a <= b;` w `sort` to UB — może dać crash (wyjście poza tablicę) albo złą kolejność. W `set`/`map` elementy, których komparator nie rozróżnia, są uznawane za równe i duplikaty znikają.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Poprawne komparatory",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Osoba { string imie; int wiek; };\n\nint main() {\n    vector<int> a = {5, 3, 5, 1};\n    sort(a.begin(), a.end(), [](int x, int y) { return x > y; });   // malejąco: >, NIE >=\n\n    vector<Osoba> o = {{\"Ala\", 15}, {\"Ola\", 14}, {\"Ela\", 15}};\n    sort(o.begin(), o.end(), [](const Osoba& p, const Osoba& q) {\n        if (p.wiek != q.wiek) return p.wiek < q.wiek;   // najpierw wiek rosnąco\n        return p.imie < q.imie;                          // przy remisie imię\n    });\n    for (auto& x : o) cout << x.imie << ' ' << x.wiek << '\\n';\n\n    // set z komparatorem tylko po wieku: Ala i Ela są \"równe\" -> jedna znika!\n    auto cmpWiek = [](const Osoba& p, const Osoba& q) { return p.wiek < q.wiek; };\n    set<Osoba, decltype(cmpWiek)> s(cmpWiek);\n    for (auto& x : o) s.insert(x);\n    cout << s.size() << '\\n';   // 2, nie 3\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Warunki poprawnego komparatora** `cmp(a, b)` („a przed b”):\n1. `cmp(a, a) == false` (nigdy `<=`!),\n2. jeśli `cmp(a, b)`, to `!cmp(b, a)`,\n3. przechodniość: `cmp(a, b) && cmp(b, c)` ⇒ `cmp(a, c)`,\n4. „nierozróżnialność” jest przechodnia.\n\nNajprościej porównywać krotki: `return tie(a.x, a.y) < tie(b.x, b.y);`."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "komparator <=",
+      "sort z <= crash",
+      "sort sie wywala",
+      "segfault w sort",
+      "dlaczego sort crashuje"
+     ],
+     "a": "`sort` zakłada, że komparator działa jak `<`. Z `<=` dla równych elementów zwraca `true`, co łamie założenia algorytmu —\nwewnętrzne pętle mogą wyjść poza tablicę (segfault) albo dać złą kolejność. Zamień `<=` na `<` (a `>=` na `>`).",
+     "code": "vector<int> a = {3, 3, 3, 1, 2};\nsort(a.begin(), a.end(), [](int x, int y) { return x < y; });   // nie x <= y"
+    },
+    {
+     "q": [
+      "sortowanie malejaco",
+      "sort descending c++",
+      "sort od najwiekszego",
+      "greater sort"
+     ],
+     "a": "`sort(a.begin(), a.end(), greater<int>())` albo lambda `return x > y;`. Alternatywa: `sort(a.rbegin(), a.rend())`.",
+     "code": "vector<int> a = {3, 1, 2};\nsort(a.begin(), a.end(), greater<int>());\nsort(a.rbegin(), a.rend());   // też malejąco"
+    },
+    {
+     "q": [
+      "sortowanie po dwoch kluczach",
+      "sort po pierwszym potem po drugim",
+      "komparator wielokryterialny",
+      "sort by multiple fields c++"
+     ],
+     "a": "Porównaj pierwszy klucz; jeśli równy — drugi. Krótko i bez błędów przez `tie`: `return tie(a.x, a.y) < tie(b.x, b.y);`.\nDla kolejności mieszanej (x rosnąco, y malejąco): `tie(a.x, b.y) < tie(b.x, a.y)`.",
+     "code": "vector<pair<int,int>> v = {{2, 1}, {1, 5}, {2, 0}};\nsort(v.begin(), v.end(), [](const pair<int,int>& a, const pair<int,int>& b) {\n    return tie(a.first, b.second) < tie(b.first, a.second);   // first rosnąco, second malejąco\n});"
+    },
+    {
+     "q": [
+      "set gubi elementy",
+      "set z komparatorem usuwa duplikaty",
+      "set wlasny komparator mniej elementow",
+      "map z komparatorem"
+     ],
+     "a": "`set` uznaje `a` i `b` za równe, gdy `!cmp(a, b) && !cmp(b, a)`. Jeśli komparator porównuje tylko jedno pole, elementy\nróżniące się innym polem są „duplikatami” i nie zostaną wstawione. Dodaj kolejne pola do porównania (np. id) albo użyj\n`multiset`.",
+     "code": "struct P { int w, id; };\nauto cmp = [](const P& a, const P& b) { return tie(a.w, a.id) < tie(b.w, b.id); };\nset<P, decltype(cmp)> s(cmp);\ns.insert({5, 1});\ns.insert({5, 2});\ncout << s.size() << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "operator < dla struktury",
+      "jak posortowac struct",
+      "przeciazenie operator< sort"
+     ],
+     "a": "Zdefiniuj `bool operator<(const T& o) const` w strukturze — wtedy działa `sort` bez komparatora oraz `set<T>`/`map<T, ...>`.",
+     "code": "struct Krawedz {\n    int u, v, w;\n    bool operator<(const Krawedz& o) const { return w < o.w; }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "komparator do priority_queue",
+      "priority_queue min heap",
+      "kolejka priorytetowa odwrotnie"
+     ],
+     "a": "`priority_queue` wyciąga element **największy** według komparatora. Dla kolejki „najmniejszy pierwszy” użyj\n`priority_queue<T, vector<T>, greater<T>>`. Własny komparator też musi być ścisły (`>`/`<`, nie `>=`).",
+     "code": "priority_queue<int, vector<int>, greater<int>> pq;\npq.push(5); pq.push(1); pq.push(3);\ncout << pq.top() << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "komparator z losowoscia",
+      "komparator niestabilny",
+      "sort z rand w komparatorze"
+     ],
+     "a": "Komparator musi być deterministyczny i spójny — zwracanie losowych wyników (np. „tasowanie przez sort”) jest UB. Do\nlosowej kolejności użyj `shuffle`."
+    },
+    {
+     "q": [
+      "stable_sort",
+      "sortowanie stabilne",
+      "kolejnosc rownych elementow po sort"
+     ],
+     "a": "`sort` nie zachowuje kolejności równych elementów. Jeśli to ważne, użyj `stable_sort` (O(n log n), trochę wolniej) albo\ndodaj indeks jako ostatni klucz porównania.",
+     "code": "vector<pair<int,string>> v = {{2, \"b\"}, {1, \"a\"}, {2, \"a\"}};\nstable_sort(v.begin(), v.end(), [](auto& x, auto& y) { return x.first < y.first; });"
+    },
+    {
+     "q": [
+      "komparator z double",
+      "sort po kacie atan2",
+      "sortowanie liczb rzeczywistych komparator"
+     ],
+     "a": "Komparator na `double` jest poprawny, jeśli porównujesz zwykłym `<`. Porównanie „z epsilonem” (`a < b - EPS`) łamie\nprzechodniość nierozróżnialności i może psuć `sort`/`set`. Jeśli możesz, porównuj dokładnie na liczbach całkowitych\n(np. kąt przez iloczyn wektorowy)."
+    }
+   ],
+   "related": [
+    "pit-double-equal",
+    "oi-debugging",
+    "oi-py-sorting-bisect",
+    "stl-ref-sorting-partition"
+   ]
+  },
+  {
+   "id": "pit-map-bracket",
+   "title": "Pułapka: map[k] tworzy brakujący element",
+   "category": "Pułapki",
+   "tags": [
+    "map",
+    "unordered_map",
+    "operator[]",
+    "find",
+    "count",
+    "contains",
+    "wstawianie"
+   ],
+   "aliases": [
+    "map [] tworzy element",
+    "map operator[] wstawia",
+    "jak sprawdzic czy klucz jest w mapie",
+    "map count find",
+    "map size rosnie",
+    "map contains",
+    "unordered_map [] pulapka"
+   ],
+   "summary": "`m[k]` dla nieistniejącego klucza **wstawia** go z wartością domyślną (0). Samo sprawdzenie `if (m[k] == 0)` powiększa mapę. Do sprawdzania używaj `m.count(k)`, `m.find(k)` albo `m.contains(k)` (C++20).",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "[] vs count/find",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    map<string, int> m;\n    m[\"ala\"] = 3;\n    if (m[\"ola\"] == 0) cout << \"brak ola\\n\";   // ...ale teraz \"ola\" JEST w mapie z wartością 0\n    cout << m.size() << '\\n';                  // 2 (!)\n\n    if (m.count(\"ela\")) cout << \"jest\\n\";      // nie wstawia\n    auto it = m.find(\"ala\");\n    if (it != m.end()) cout << it->second << '\\n';   // 3\n    if (m.contains(\"ala\")) cout << \"C++20\\n\";\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak sprawdzic czy klucz jest w mapie",
+      "map czy istnieje klucz",
+      "map contains",
+      "map count",
+      "check key in map c++"
+     ],
+     "a": "`m.count(k)` (0 lub 1), `m.find(k) != m.end()` albo w C++20 `m.contains(k)`. Nie używaj `m[k]` do sprawdzania — wstawia\nbrakujący klucz.",
+     "code": "map<int, int> m = {{1, 10}};\nif (m.count(2) == 0) cout << \"brak 2\\n\";\nif (m.find(1) != m.end()) cout << \"jest 1\\n\";"
+    },
+    {
+     "q": [
+      "map [] tworzy element",
+      "map size rosnie sam",
+      "dlaczego w mapie sa zera",
+      "map operator[] wstawia"
+     ],
+     "a": "`operator[]` zwraca referencję do wartości — jeśli klucza nie ma, najpierw go **tworzy** (z `0` dla liczb, pustym napisem\ndla `string`). Dlatego każde „sprawdzenie” `m[k]` dla nowego klucza zwiększa `size()`, zużywa pamięć i czas.",
+     "code": "map<int, int> m;\nint x = m[5];        // wstawia 5 -> 0\ncout << x << ' ' << m.size() << '\\n';   // 0 1"
+    },
+    {
+     "q": [
+      "licznik wystapien map",
+      "zliczanie map ++",
+      "m[x]++ c++",
+      "czestosc elementow map"
+     ],
+     "a": "Tu `[]` jest idealne: `m[x]++` tworzy licznik z zerem przy pierwszym wystąpieniu i zwiększa go.",
+     "code": "vector<int> a = {3, 1, 3, 2, 3};\nmap<int, int> cnt;\nfor (int x : a) cnt[x]++;\nfor (auto& [k, v] : cnt) cout << k << \": \" << v << '\\n';"
+    },
+    {
+     "q": [
+      "map const [] nie kompiluje",
+      "operator[] const map blad",
+      "no match for operator[] const map"
+     ],
+     "a": "Dla `const map` (np. parametr `const map<...>&`) `[]` się nie skompiluje, bo mógłby modyfikować mapę. Użyj `m.at(k)`\n(rzuca wyjątek, gdy brak klucza) albo `find`.",
+     "code": "int pobierz(const map<string, int>& m, const string& k) {\n    auto it = m.find(k);\n    return it == m.end() ? -1 : it->second;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "map [] w petli po mapie",
+      "modyfikacja mapy podczas iteracji []",
+      "petla po map i dodawanie"
+     ],
+     "a": "Wywołanie `m[k]` z nowym kluczem w trakcie iteracji po `m` dodaje elementy — iteracja może je odwiedzić albo zachowywać\nsię nieoczekiwanie. W `unordered_map` wstawienie może przebudować tablicę i unieważnić iteratory. Zbierz klucze osobno\nalbo używaj `find`."
+    },
+    {
+     "q": [
+      "unordered_map [] pulapka",
+      "unordered_map count",
+      "unordered_map find"
+     ],
+     "a": "Zasada ta sama co dla `map`: `[]` wstawia, `count`/`find`/`contains` tylko sprawdzają.",
+     "code": "unordered_map<long long, int> h;\nh[42] = 1;\ncout << h.count(42) << ' ' << h.count(7) << ' ' << h.size() << '\\n';   // 1 0 1"
+    },
+    {
+     "q": [
+      "map at",
+      "m.at(k)",
+      "at zamiast []"
+     ],
+     "a": "`m.at(k)` zwraca wartość dla istniejącego klucza, a dla brakującego rzuca `out_of_range` — nie wstawia. Dobre, gdy klucz\n„musi” istnieć i chcesz wykryć błąd.",
+     "code": "map<string, int> m = {{\"a\", 1}};\ncout << m.at(\"a\") << '\\n';"
+    },
+    {
+     "q": [
+      "insert a [] roznica",
+      "map insert nie nadpisuje",
+      "emplace map"
+     ],
+     "a": "`m.insert({k, v})` wstawia tylko, jeśli klucza nie ma (nie nadpisuje!). `m[k] = v` zawsze ustawia wartość. `insert`\nzwraca parę `(iterator, czy_wstawiono)`.",
+     "code": "map<int, int> m;\nm.insert({1, 10});\nm.insert({1, 20});           // brak efektu\nm[2] = 5; m[2] = 7;          // nadpisuje\ncout << m[1] << ' ' << m[2] << '\\n';   // 10 7"
+    }
+   ],
+   "related": [
+    "pit-iterator-erase",
+    "stl-ref-map-all"
+   ]
+  },
+  {
+   "id": "pit-iterator-erase",
+   "title": "Pułapka: iterator po erase i modyfikacja kontenera w trakcie pętli",
+   "category": "Pułapki",
+   "tags": [
+    "iterator",
+    "erase",
+    "unieważnienie",
+    "invalidation",
+    "push_back",
+    "set",
+    "vector",
+    "pętla"
+   ],
+   "aliases": [
+    "iterator po erase",
+    "erase w petli",
+    "usuwanie w petli set",
+    "iterator invalidation",
+    "crash po erase",
+    "jak usunac elementy w petli",
+    "erase remove",
+    "push_back w petli for range"
+   ],
+   "summary": "Po `s.erase(it)` iterator `it` jest nieważny — `++it` to UB. Pisz `it = s.erase(it);` (erase zwraca następny). W `vector` każde `push_back` może unieważnić wszystkie iteratory i referencje.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Bezpieczne usuwanie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    set<int> s = {1, 2, 3, 4, 5, 6};\n    for (auto it = s.begin(); it != s.end(); ) {\n        if (*it % 2 == 0) it = s.erase(it);   // erase zwraca iterator na następny\n        else ++it;\n    }\n    for (int x : s) cout << x << ' ';         // 1 3 5\n    cout << '\\n';\n\n    vector<int> v = {1, 2, 3, 4, 5, 6};\n    v.erase(remove_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; }), v.end());   // erase–remove\n    erase_if(v, [](int x) { return x > 3; });   // C++20\n    for (int x : v) cout << x << ' ';           // 1 3\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`int& r = v[0]; v.push_back(7);` — po realokacji `r` wskazuje na zwolnioną pamięć. To samo z `auto it = v.begin()`\ni wskaźnikami. Nie trzymaj referencji do elementów `vector`, który rośnie (albo zrób `reserve`)."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "iterator po erase",
+      "erase w petli set",
+      "crash po erase",
+      "usuwanie z set w petli",
+      "erase iterator invalid"
+     ],
+     "a": "Po `erase(it)` iterator `it` wskazuje na usunięty element — `++it` to UB (crash lub pomijanie elementów). `erase` zwraca\niterator na następny element: `it = s.erase(it);`, a `++it` wykonuj tylko wtedy, gdy nie usuwałeś.",
+     "code": "set<int> s = {1, 2, 3, 4};\nfor (auto it = s.begin(); it != s.end(); ) {\n    if (*it > 2) it = s.erase(it);\n    else ++it;\n}"
+    },
+    {
+     "q": [
+      "usuwanie z vectora w petli",
+      "vector erase w petli for",
+      "jak usunac elementy spelniajace warunek",
+      "erase remove idiom"
+     ],
+     "a": "Usuwanie po jednym w pętli po indeksach przesuwa elementy (łatwo pominąć sąsiada) i kosztuje O(n) za każde `erase`\n→ O(n²). Użyj idiomu erase–remove: `v.erase(remove_if(...), v.end());` albo w C++20 `erase_if(v, warunek)` — O(n).",
+     "code": "vector<int> v = {5, 0, 3, 0, 1};\nv.erase(remove(v.begin(), v.end(), 0), v.end());   // usuwa wszystkie zera"
+    },
+    {
+     "q": [
+      "push_back w petli for range",
+      "dodawanie do vectora podczas iteracji",
+      "for auto x : v push_back crash"
+     ],
+     "a": "Pętla `for (int x : v)` używa iteratorów; `v.push_back` w środku może przenieść cały wektor w inne miejsce pamięci i\npętla czyta zwolnioną pamięć (UB). Iteruj po indeksach z zapamiętanym rozmiarem albo dodawaj do osobnego wektora.",
+     "code": "vector<int> v = {1, 2, 3};\nint n = v.size();\nfor (int i = 0; i < n; i++) v.push_back(v[i] * 10);"
+    },
+    {
+     "q": [
+      "referencja do elementu vectora po push_back",
+      "dangling reference vector",
+      "int& x = v[0] push_back"
+     ],
+     "a": "Referencja/wskaźnik/iterator do elementu `vector` staje się nieważny przy realokacji (gdy `push_back` przekracza\n`capacity`). Zapamiętuj **indeks** zamiast referencji albo wywołaj `reserve` z góry.",
+     "code": "vector<int> v = {1};\nint idx = 0;\nv.push_back(2);\nv[idx] = 100;      // przez indeks — bezpieczne\ncout << v[0] << '\\n';"
+    },
+    {
+     "q": [
+      "map erase w petli",
+      "usuwanie z mapy podczas iteracji",
+      "erase map iterator"
+     ],
+     "a": "Tak samo jak w `set`: `it = m.erase(it);`. Od C++20 jest też `erase_if(m, [](auto& p){ return ...; })`.",
+     "code": "map<int, int> m = {{1, 0}, {2, 5}, {3, 0}};\nfor (auto it = m.begin(); it != m.end(); ) {\n    if (it->second == 0) it = m.erase(it);\n    else ++it;\n}\ncout << m.size() << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "multiset erase usuwa wszystkie",
+      "multiset usun jeden element",
+      "ms.erase(x) usuwa wszystkie kopie"
+     ],
+     "a": "`ms.erase(x)` (po wartości) usuwa **wszystkie** kopie `x`. Jedną kopię usuwa `ms.erase(ms.find(x))` — wcześniej upewnij\nsię, że `find` nie zwrócił `end()`.",
+     "code": "multiset<int> ms = {2, 2, 2, 3};\nauto it = ms.find(2);\nif (it != ms.end()) ms.erase(it);\ncout << ms.count(2) << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "erase end() crash",
+      "erase find bez sprawdzenia",
+      "s.erase(s.find(x)) gdy brak"
+     ],
+     "a": "Jeśli `x` nie ma w zbiorze, `s.find(x)` zwraca `end()`, a `erase(end())` to UB (crash). Sprawdź przed usunięciem albo\nużyj `s.erase(x)` (po wartości — bezpieczne, zwraca liczbę usuniętych).",
+     "code": "set<int> s = {1, 2};\nauto it = s.find(5);\nif (it != s.end()) s.erase(it);"
+    },
+    {
+     "q": [
+      "iterator po sortowaniu",
+      "iterator po insert vector",
+      "kiedy iterator jest niewazny"
+     ],
+     "a": "`vector`: `push_back`/`insert` (przy realokacji — wszystkie), `erase` (od miejsca usunięcia). `set`/`map`: tylko iterator\nna usunięty element. `unordered_map`: wstawienie może przebudować tablicę (wszystkie iteratory). Bezpiecznie: po\nmodyfikacji pobieraj iteratory od nowa."
+    }
+   ],
+   "related": [
+    "pit-map-bracket",
+    "pit-out-of-bounds"
+   ]
+  },
+  {
+   "id": "pit-multitest-reset",
+   "title": "Pułapka: wiele testów w jednym wejściu bez czyszczenia danych",
+   "category": "Pułapki",
+   "tags": [
+    "multitest",
+    "wiele testów",
+    "czyszczenie",
+    "reset",
+    "clear",
+    "globalne tablice",
+    "TLE memset"
+   ],
+   "aliases": [
+    "multitest czyszczenie",
+    "wiele testow w jednym pliku",
+    "dane z poprzedniego testu",
+    "t testow reset tablic",
+    "clear po tescie",
+    "pierwszy test dobrze kolejne zle",
+    "memset w multitescie tle"
+   ],
+   "summary": "Gdy wejście zawiera T testów, globalne tablice, wektory i liczniki trzeba wyczyścić przed każdym testem — ale tylko w zakresie faktycznie użytym (O(n), nie O(MAXN)), inaczej TLE. Najprościej: dane testu trzymaj w lokalnych wektorach.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Multitest z czyszczeniem w O(n)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 200005;\nvector<int> g[MAXN];\nbool odw[MAXN];\n\nvoid solve() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 1; i <= n; i++) { g[i].clear(); odw[i] = false; }   // czyść tylko 1..n\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    // ... rozwiązanie ...\n    cout << g[1].size() << '\\n';\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int t;\n    cin >> t;\n    while (t--) solve();\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Nie przerywaj wczytywania testu w połowie (`return` po znalezieniu odpowiedzi), jeśli zostały jeszcze dane tego testu —\nnastępny test zacznie czytać „resztki” poprzedniego. Najpierw wczytaj cały test, potem licz."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "pierwszy test dobrze kolejne zle",
+      "multitest zle wyniki",
+      "dane z poprzedniego testu",
+      "multitest nie dziala"
+     ],
+     "a": "Prawie na pewno zostają dane z poprzedniego testu: niewyczyszczone listy sąsiedztwa, tablice odwiedzin, liczniki, globalne\nsumy. Przed każdym testem wyczyść wszystko, czego używasz (albo deklaruj dane lokalnie w funkcji `solve()`).",
+     "code": "int t;\ncin >> t;\nwhile (t--) {\n    int n;\n    cin >> n;\n    vector<int> a(n);          // lokalne — nowe dla każdego testu\n    long long suma = 0;        // zerowane w każdym teście\n    for (auto& x : a) { cin >> x; suma += x; }\n    cout << suma << '\\n';\n}"
+    },
+    {
+     "q": [
+      "memset w multitescie tle",
+      "czyszczenie tablicy w kazdym tescie wolne",
+      "tle przez memset",
+      "reset tablicy o(n)"
+     ],
+     "a": "`memset(a, 0, sizeof a)` na tablicy 10^6 przy T = 10^5 testów to 10^11 operacji — TLE. Czyść tylko zakres użyty w teście\n(`for i in 0..n`), a gwarancja „suma n ≤ 2·10^5” sprawia, że łączny koszt jest liniowy.",
+     "code": "const int MAXN = 1000005;\nstatic int cnt[MAXN];\nint t = 3;\nwhile (t--) {\n    int n = 5;\n    for (int i = 0; i <= n; i++) cnt[i] = 0;   // tylko używana część\n}"
+    },
+    {
+     "q": [
+      "return w srodku wczytywania testu",
+      "przerwanie testu przed wczytaniem",
+      "zle wczytywanie w multitescie"
+     ],
+     "a": "Jeśli w trakcie wczytywania zorientujesz się, że odpowiedź to np. `NIE`, nie rób od razu `return` — reszta danych testu\nzostanie w wejściu i następny test wczyta śmieci. Wczytaj cały test do końca, dopiero potem odpowiadaj.",
+     "code": "int t;\ncin >> t;\nwhile (t--) {\n    int n;\n    cin >> n;\n    vector<int> a(n);\n    for (auto& x : a) cin >> x;          // najpierw wszystko wczytaj\n    bool ok = all_of(a.begin(), a.end(), [](int x) { return x > 0; });\n    cout << (ok ? \"TAK\" : \"NIE\") << '\\n';\n}"
+    },
+    {
+     "q": [
+      "jak czyscic graf miedzy testami",
+      "clear adjacency list",
+      "g[i].clear()"
+     ],
+     "a": "Dla `vector<int> g[MAXN]` wyczyść `g[i].clear()` dla `i` od 0/1 do `n`. Analogicznie tablice `dist`, `odw`, `parent`.\nAlternatywa: `vector<vector<int>> g(n + 1);` tworzony lokalnie w każdym teście.",
+     "code": "int n = 4;\nvector<vector<int>> g(n + 1);   // nowy graf dla tego testu\ng[1].push_back(2);"
+    },
+    {
+     "q": [
+      "solve function multitest",
+      "szablon multitest",
+      "funkcja solve"
+     ],
+     "a": "Wygodny wzorzec: cała logika testu w `void solve()`, zmienne lokalne w środku, `main` tylko wczytuje `t` i woła `solve()`.\nLokalne zmienne same się „czyszczą”.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvoid solve() {\n    int n;\n    cin >> n;\n    cout << n * 2 << '\\n';\n}\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int t = 1;\n    cin >> t;\n    while (t--) solve();\n}"
+    },
+    {
+     "q": [
+      "static w funkcji multitest",
+      "zmienna static nie resetuje sie",
+      "static int w solve"
+     ],
+     "a": "Zmienna `static` (lub globalna) zachowuje wartość między wywołaniami `solve()` — nie zeruje się dla nowego testu.\nUnikaj `static` w funkcjach testu albo zeruj ręcznie."
+    },
+    {
+     "q": [
+      "suma n w tescie",
+      "suma n po wszystkich testach",
+      "sum of n does not exceed"
+     ],
+     "a": "Zdanie „suma n po wszystkich testach nie przekracza X” oznacza, że łączna praca O(suma n) jest OK — ale tylko jeśli\n**każdy** test kosztuje O(n), a nie O(MAXN). Czyść i alokuj proporcjonalnie do `n`."
+    },
+    {
+     "q": [
+      "set map clear multitest",
+      "czy clear jest szybkie",
+      "koszt clear vector"
+     ],
+     "a": "`v.clear()` dla `vector` kosztuje O(rozmiar) (dla typów prostych praktycznie O(1)) i nie zwalnia pamięci (capacity\nzostaje). `set/map::clear()` jest O(rozmiar). To w porządku, bo i tak było O(rozmiar) wstawień."
+    }
+   ],
+   "related": [
+    "pit-uninitialized",
+    "pit-memset",
+    "oi-template",
+    "cpp-loops"
+   ]
+  },
+  {
+   "id": "pit-stack-overflow",
+   "title": "Pułapka: przepełnienie stosu — za duża tablica lokalna i za głęboka rekurencja",
+   "category": "Pułapki",
+   "tags": [
+    "stos",
+    "stack overflow",
+    "rekurencja",
+    "tablica lokalna",
+    "segfault",
+    "DFS",
+    "ulimit"
+   ],
+   "aliases": [
+    "stack overflow c++",
+    "przepelnienie stosu",
+    "za duza tablica w main",
+    "rekurencja za gleboka",
+    "dfs segfault duze n",
+    "tablica lokalna crash",
+    "ulimit -s",
+    "program crashuje od razu duza tablica"
+   ],
+   "summary": "Zmienne lokalne i ramki rekurencji leżą na stosie, który lokalnie ma zwykle 8 MB (Linux/macOS) albo 1 MB (Windows). `int a[1000000]` w `main` lub DFS o głębokości 10^6 mogą go przepełnić → segfault. Duże tablice deklaruj globalnie albo jako `vector`.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Gdzie trzymać duże tablice",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint a[10000000];          // globalnie: OK (40 MB w segmencie danych, nie na stosie)\n\nint main() {\n    // int b[10000000];   // ŹLE: 40 MB na stosie -> natychmiastowy crash\n    vector<int> c(10000000);   // OK: dane na stercie\n    a[5] = c[5] = 1;\n    cout << a[5] + c[5] << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "DFS na własnym stosie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// DFS iteracyjny — bez ryzyka przepełnienia stosu dla ścieżki 10^6 wierzchołków\nint main() {\n    int n = 1000000;\n    vector<vector<int>> g(n);\n    for (int i = 0; i + 1 < n; i++) { g[i].push_back(i + 1); g[i + 1].push_back(i); }\n    vector<int> odw(n, 0), stos = {0};\n    odw[0] = 1;\n    long long ile = 0;\n    while (!stos.empty()) {\n        int v = stos.back(); stos.pop_back();\n        ile++;\n        for (int u : g[v]) if (!odw[u]) { odw[u] = 1; stos.push_back(u); }\n    }\n    cout << ile << '\\n';\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Na sprawdzarce** limit stosu bywa inny niż lokalnie — na OI zwykle stos jest ograniczony tylko limitem pamięci\nzadania (sprawdź „Ustalenia techniczne” / informacje o środowisku danej edycji). Lokalnie możesz zwiększyć stos:\nLinux `ulimit -s unlimited`, macOS flaga linkera `-Wl,-stack_size,0x20000000`, Windows (MinGW) `-Wl,--stack,268435456`.\n\n**Uwaga dla OI Forge:** programy uruchamiane przez aplikację w trybie release mają powiększony stos (512 MB), więc głęboka\nrekurencja może tu działać, a w zwykłym terminalu (8 MB / 1 MB) — paść. Gdy zależy Ci na pewności, przepisz DFS iteracyjnie."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "za duza tablica w main",
+      "tablica lokalna crash",
+      "program crashuje od razu",
+      "int a[1000000] w main segfault",
+      "duza tablica lokalna"
+     ],
+     "a": "Tablice lokalne są na stosie, który zwykle ma kilka MB (1 MB na Windows!). `int a[1000000]` to 4 MB, `int a[10000000]` —\n40 MB → program pada zaraz po starcie. Przenieś tablicę **poza funkcję** (globalnie) albo użyj `vector` (dane na stercie).\nGlobalne tablice są też automatycznie wyzerowane.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint a[10000000];          // globalnie\nint main() {\n    vector<int> b(10000000);   // albo vector\n    cout << a[0] + b[0] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "rekurencja za gleboka",
+      "dfs segfault duze n",
+      "stack overflow rekurencja",
+      "rekurencja crash dla duzych danych"
+     ],
+     "a": "Każde wywołanie rekurencyjne zajmuje kawałek stosu (zmienne lokalne + adres powrotu). DFS na ścieżce 10^6 wierzchołków\nto głębokość 10^6 i dziesiątki MB stosu. Lokalnie zwiększ stos (`ulimit -s unlimited` na Linuksie) albo przepisz na\nwersję iteracyjną z własnym stosem (`vector` jako stos). Na OI stos jest zwykle duży, ale sprawdź warunki techniczne."
+    },
+    {
+     "q": [
+      "ulimit -s",
+      "jak zwiekszyc stos",
+      "zwiekszenie stosu linux",
+      "stack size macos",
+      "stos windows mingw"
+     ],
+     "a": "Linux: `ulimit -s unlimited` w terminalu przed uruchomieniem. macOS: `ulimit -s` max ~64 MB; większy stos przez flagę linkera\n`-Wl,-stack_size,0x20000000` (512 MB). Windows/MinGW: `-Wl,--stack,268435456` (256 MB) przy kompilacji.",
+     "code": "ulimit -s unlimited && ./prog < in.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "ile pamieci ma stos",
+      "rozmiar stosu domyslny",
+      "default stack size"
+     ],
+     "a": "Domyślnie: Linux i macOS — 8 MB dla głównego wątku, Windows — 1 MB. Na sprawdzarkach bywa inaczej (często tyle, ile\nlimit pamięci). Na stosie trzymaj tylko małe zmienne."
+    },
+    {
+     "q": [
+      "vector lokalny a stos",
+      "czy vector jest na stosie",
+      "vector w main duzy"
+     ],
+     "a": "Sam obiekt `vector` (kilka wskaźników) jest na stosie, ale **elementy** są na stercie. Dlatego `vector<int> v(10000000)`\nw `main` jest bezpieczny, a `int a[10000000]` nie.",
+     "code": "vector<long long> v(5000000, 0);   // 40 MB na stercie\ncout << v.size() << '\\n';"
+    },
+    {
+     "q": [
+      "nieskonczona rekurencja",
+      "brak warunku stopu rekurencja",
+      "rekurencja bez konca segfault"
+     ],
+     "a": "Rekurencja bez poprawnego warunku stopu (albo z warunkiem, który nigdy nie zachodzi, np. dla ujemnych argumentów)\nzapełnia stos aż do crasha. Sprawdź przypadek bazowy i czy argumenty zbliżają się do niego.",
+     "code": "long long silnia(int n) {\n    if (n <= 1) return 1;          // warunek stopu także dla n <= 0\n    return n * silnia(n - 1);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "static tablica w funkcji",
+      "static int a[1000000]",
+      "duza tablica static zamiast globalnej"
+     ],
+     "a": "Tablica `static` wewnątrz funkcji też nie leży na stosie (jest jak globalna, wyzerowana) — to inna poprawka dla dużych\ntablic lokalnych. Pamiętaj, że zachowuje wartość między wywołaniami.",
+     "code": "static int bufor[5000000];\nbufor[0] = 1;\ncout << bufor[0] << '\\n';"
+    },
+    {
+     "q": [
+      "memo rekurencja glebokosc",
+      "dp rekurencyjne stack overflow",
+      "spamietywanie zbyt gleboko"
+     ],
+     "a": "DP z memoizacją (rekurencyjnie) może zejść na głębokość równą liczbie stanów w łańcuchu (np. 10^6). Jeśli to możliwe,\nprzepisz na DP iteracyjne (pętla po stanach w kolejności topologicznej).",
+     "code": "int n = 1000000;\nvector<long long> dp(n + 1);\ndp[0] = 1;\nfor (int i = 1; i <= n; i++) dp[i] = (dp[i - 1] * 2) % 1000000007;   // zamiast rekurencji\ncout << dp[n] << '\\n';"
+    }
+   ],
+   "related": [
+    "pit-out-of-bounds",
+    "oi-memory",
+    "tool-gdb-lldb",
+    "oi-py-recursion"
+   ]
+  }
+ ]
+}

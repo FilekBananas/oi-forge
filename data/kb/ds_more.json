@@ -1,0 +1,2057 @@
+{
+ "chunk": "ds_more",
+ "articles": [
+  {
+   "id": "ds-min-stack-queue",
+   "title": "Stos z minimum i kolejka na dwóch stosach (minimum w kolejce w O(1))",
+   "category": "Struktury danych",
+   "tags": [
+    "stos z minimum",
+    "min stack",
+    "kolejka na dwóch stosach",
+    "queue two stacks",
+    "kolejka z minimum",
+    "min queue",
+    "dwa wskaźniki",
+    "NWD w oknie",
+    "zamortyzowane O(1)",
+    "sliding window aggregation"
+   ],
+   "aliases": [
+    "stos z minimum",
+    "min stack",
+    "minstack",
+    "kolejka na dwóch stosach",
+    "kolejka na dwoch stosach",
+    "queue using two stacks",
+    "kolejka z dwóch stosów",
+    "kolejka z minimum",
+    "min queue",
+    "minimum w kolejce",
+    "stos z maksimum",
+    "two stacks queue",
+    "kolejka nwd",
+    "two stacks trick"
+   ],
+   "summary": "Stos, w którym każdy element pamięta minimum „pod sobą”, daje `getMin()` w O(1). Dwa takie stosy (wejściowy i wyjściowy) tworzą kolejkę FIFO z minimum — i ogólnie z dowolną operacją łączną (NWD, max, AND, iloczyn macierzy) — w O(1) zamortyzowanym na operację.",
+   "complexity": "stos z minimum: push/pop/top/getMin O(1); kolejka na dwóch stosach: push O(1), pop/front O(1) zamortyzowane (pojedynczy pop do O(n)), getMin O(1); pamięć O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Stos z minimum.** Zamiast samej wartości trzymamy parę `(x, min(x, minimum pod spodem))`. Minimum całego stosu leży zawsze na szczycie (druga współrzędna), a `pop` niczego nie psuje — minima zapisane niżej dotyczą tylko elementów niżej."
+    },
+    {
+     "type": "text",
+     "md": "**Kolejka na dwóch stosach.** `push` kładzie na stos `in`. `pop`/`front` biorą ze stosu `out`; gdy `out` jest pusty, przelewamy do niego **cały** `in` — to odwraca kolejność, więc najstarszy element ląduje na szczycie `out`. Minimum kolejki = `min(in.getMin(), out.getMin())`. Każdy element jest przelewany co najwyżej raz, więc *q* operacji kosztuje łącznie O(q)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Stos z minimum: każdy element pamięta minimum stosu od dna do siebie.\nstruct MinStack {\n    vector<pair<long long, long long>> s;   // (wartość, minimum do tego miejsca)\n    void push(long long x) { s.push_back({x, s.empty() ? x : min(x, s.back().second)}); }\n    void pop() { s.pop_back(); }\n    long long top() const { return s.back().first; }\n    long long getMin() const { return s.back().second; }\n    bool empty() const { return s.empty(); }\n    size_t size() const { return s.size(); }\n};\n\n// Kolejka FIFO z minimum na dwóch stosach: push na `in`, pop i front z `out`.\nstruct MinQueue {\n    MinStack in, out;\n    void push(long long x) { in.push(x); }\n    void moveIfNeeded() {                    // przelanie odwraca kolejność: najstarszy ląduje na górze `out`\n        if (out.empty())\n            while (!in.empty()) { out.push(in.top()); in.pop(); }\n    }\n    void pop() { moveIfNeeded(); out.pop(); }\n    long long front() { moveIfNeeded(); return out.top(); }\n    long long getMin() const {\n        if (in.empty()) return out.getMin();\n        if (out.empty()) return in.getMin();\n        return min(in.getMin(), out.getMin());\n    }\n    bool empty() const { return in.empty() && out.empty(); }\n    size_t size() const { return in.size() + out.size(); }\n};\n\nint main() {\n    // Wejście: q, potem q operacji: \"+ x\" (dodaj na koniec), \"-\" (usuń z początku), \"?\" (minimum kolejki)\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> q;\n    MinQueue mq;\n    while (q--) {\n        char op;\n        cin >> op;\n        if (op == '+') {\n            long long x;\n            cin >> x;\n            mq.push(x);\n        } else if (op == '-') {\n            if (!mq.empty()) mq.pop();\n        } else {\n            cout << (mq.empty() ? -1 : mq.getMin()) << '\\n';\n        }\n    }\n}",
+     "title": "Pełny program: kolejka z minimum (push, pop, min)"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Stos z minimum",
+      "Kolejka na 2 stosach",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "push(x)",
+       "O(1)",
+       "O(1)",
+       "kolejka: zawsze na stos `in`"
+      ],
+      [
+       "pop()",
+       "O(1)",
+       "O(1) zamortyzowane",
+       "pojedynczy pop może przelać cały `in` — O(n)"
+      ],
+      [
+       "top() / front()",
+       "O(1)",
+       "O(1) zamortyzowane",
+       "front = szczyt `out` (po ewentualnym przelaniu)"
+      ],
+      [
+       "getMin()",
+       "O(1)",
+       "O(1)",
+       "min ze szczytów obu stosów (pusty pomijamy)"
+      ],
+      [
+       "inna operacja łączna",
+       "tak",
+       "tak",
+       "NWD, max, AND/OR, iloczyn macierzy — odwrotność NIE jest potrzebna"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy to zamiast kolejki monotonicznej?** Kolejka monotoniczna (deque indeksów) umie tylko min/max. Dwa stosy działają dla **każdej operacji łącznej**, np. NWD w oknie przy dwóch wskaźnikach („najkrótszy fragment o NWD = 1”), AND/OR w oknie, iloczyn macierzy w oknie. Dla operacji nieprzemiennej pilnuj kolejności: na `out` trzymaj `agg = op(x, agg_poniżej)` (wyżej leżą starsze elementy), na `in` — `agg = op(agg_poniżej, x)`, a wynik kolejki to `op(agg_out, agg_in)`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Najkrótszy spójny fragment o NWD równym 1 (dwa wskaźniki + „kolejka NWD” na dwóch stosach).\n// Zwraca -1, gdy taki fragment nie istnieje. Każdy element wchodzi i wychodzi raz: O(n log A).\nint shortestGcdOne(const vector<long long>& a) {\n    vector<long long> inV, inG, outG;            // wartości i NWD „od dna do tego miejsca”\n    auto top = [](const vector<long long>& g) { return g.empty() ? 0LL : g.back(); };\n    int best = INT_MAX, l = 0;\n    for (int r = 0; r < (int)a.size(); r++) {\n        inV.push_back(a[r]);\n        inG.push_back(gcd(top(inG), a[r]));\n        while (gcd(top(inG), top(outG)) == 1) {  // okno [l, r] ma NWD 1 → próbuj skrócić z lewej\n            best = min(best, r - l + 1);\n            if (outG.empty())                    // przelej: najstarszy element na górę outG\n                while (!inV.empty()) {\n                    outG.push_back(gcd(top(outG), inV.back()));\n                    inV.pop_back();\n                    inG.pop_back();\n                }\n            outG.pop_back();                     // usuń a[l]\n            l++;\n        }\n    }\n    return best == INT_MAX ? -1 : best;\n}",
+     "title": "Dwa wskaźniki + kolejka NWD: najkrótszy fragment o NWD = 1",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Gdy elementy wypadają z okna w kolejności indeksów i chodzi o min/max, prostsza jest kolejka monotoniczna (`deque`). Dwa stosy wybierz, gdy operacja to NWD/AND/OR/macierze albo gdy potrzebujesz też zwykłego `front()`. **Deque z minimum** (zdejmowanie z obu końców) też da się zrobić na dwóch stosach: gdy jeden się opróżni, przerzuć do niego połowę drugiego — O(1) zamortyzowane."
+    },
+    {
+     "type": "warn",
+     "md": "O(1) jest **zamortyzowane**: pojedynczy `pop` po długiej serii `push` przelewa cały stos — liczy się suma, więc na zawodach to nie przeszkadza. `getMin()`/`front()` na pustej strukturze to `back()` pustego wektora, czyli niezdefiniowane zachowanie — sprawdzaj `empty()`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "MinStack::push(x)",
+     "desc": "kładzie parę (x, min(x, poprzednie minimum))",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "MinStack::getMin()",
+     "desc": "minimum całego stosu = druga współrzędna szczytu",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "MinQueue::pop()",
+     "desc": "zdejmuje z `out`; gdy pusty — najpierw przelewa cały `in`",
+     "complexity": "O(1) zamortyzowane"
+    },
+    {
+     "sig": "MinQueue::getMin()",
+     "desc": "min(in.getMin(), out.getMin()) z pominięciem pustych stosów",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Przelewanie, gdy `out` NIE jest pusty, albo przelewanie tylko części `in` — psuje kolejność FIFO.",
+    "Przy przelewaniu trzeba **przeliczyć** minima na `out` (wkładać wartości zwykłym `push`), a nie kopiować par z `in` — minima z `in` dotyczą innego porządku.",
+    "`getMin()` na pustym stosie: `s.back()` pustego wektora to niezdefiniowane zachowanie.",
+    "Dla operacji nieprzemiennej (macierze, składanie funkcji) zła kolejność argumentów w `op` daje zły wynik — zasada `op(agg_out, agg_in)`.",
+    "Kolejka monotoniczna nie zadziała dla NWD/AND: usuwa „zdominowane” elementy, co ma sens tylko dla min/max."
+   ],
+   "qa": [
+    {
+     "q": [
+      "stos z minimum",
+      "min stack c++",
+      "stos z minimum w O(1)",
+      "jak zrobic stos ktory zwraca minimum",
+      "getMin w O(1) stos",
+      "stos z min",
+      "stack with minimum"
+     ],
+     "a": "Trzymaj na stosie pary `(wartość, minimum do tego miejsca)`. Przy `push(x)` drugie pole to `min(x, szczyt.second)`; minimum całego stosu jest na szczycie. `pop` po prostu zdejmuje parę. Wszystko O(1).",
+     "code": "// Stos z minimum: każdy element pamięta minimum stosu od dna do siebie.\nstruct MinStack {\n    vector<pair<long long, long long>> s;   // (wartość, minimum do tego miejsca)\n    void push(long long x) { s.push_back({x, s.empty() ? x : min(x, s.back().second)}); }\n    void pop() { s.pop_back(); }\n    long long top() const { return s.back().first; }\n    long long getMin() const { return s.back().second; }\n    bool empty() const { return s.empty(); }\n    size_t size() const { return s.size(); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kolejka na dwóch stosach",
+      "kolejka na dwoch stosach",
+      "queue using two stacks",
+      "implementacja kolejki za pomocą stosów",
+      "kolejka z dwóch stosów jak",
+      "kolejka ze stosow",
+      "two stacks queue"
+     ],
+     "a": "`push` → stos `in`. `pop`/`front` → stos `out`; jeśli `out` jest pusty, przełóż do niego wszystko z `in` (kolejność się odwraca, więc najstarszy element jest na górze). Każdy element jest przekładany najwyżej raz → O(1) zamortyzowane.",
+     "code": "struct TwoStackQueue {\n    stack<int> in, out;\n    void push(int x) { in.push(x); }\n    void shift() {                       // przelej tylko, gdy out jest pusty\n        if (out.empty())\n            while (!in.empty()) { out.push(in.top()); in.pop(); }\n    }\n    int front() { shift(); return out.top(); }\n    void pop() { shift(); out.pop(); }\n    bool empty() const { return in.empty() && out.empty(); }\n    size_t size() const { return in.size() + out.size(); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "minimum w kolejce w O(1)",
+      "kolejka z minimum",
+      "min queue",
+      "kolejka fifo z minimum",
+      "minimum kolejki szybko",
+      "kolejka z min zamortyzowane",
+      "queue with getMin"
+     ],
+     "a": "Zbuduj kolejkę na dwóch **stosach z minimum**. Minimum kolejki to mniejsze ze szczytowych minimów obu stosów (pusty stos pomijasz). Przy przelewaniu wkładaj wartości do `out` zwykłym `push`, żeby minima przeliczyły się w nowym porządku.",
+     "code": "struct MinQueue {\n    vector<pair<long long, long long>> in, out;   // (wartość, minimum stosu do tego miejsca)\n    static void put(vector<pair<long long, long long>>& s, long long x) {\n        s.push_back({x, s.empty() ? x : min(x, s.back().second)});\n    }\n    void push(long long x) { put(in, x); }\n    void pop() {                                  // zakłada niepustą kolejkę\n        if (out.empty())\n            while (!in.empty()) { put(out, in.back().first); in.pop_back(); }   // minima liczone od nowa\n        out.pop_back();\n    }\n    long long getMin() const {                    // LLONG_MAX dla pustej kolejki\n        long long m = LLONG_MAX;\n        if (!in.empty()) m = min(m, in.back().second);\n        if (!out.empty()) m = min(m, out.back().second);\n        return m;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najkrótszy fragment o nwd 1",
+      "nwd na przedziale dwa wskaźniki",
+      "gcd w oknie przesuwnym",
+      "kolejka nwd",
+      "two pointers gcd",
+      "najkrotszy podciag nwd rowne 1",
+      "sliding window gcd"
+     ],
+     "a": "Dwa wskaźniki + kolejka NWD na dwóch stosach: każdy stos trzyma NWD „od dna do tego miejsca”, NWD okna = `gcd(szczyt in, szczyt out)`. Przesuwasz prawy koniec, a lewy — dopóki NWD okna to 1. Kolejka monotoniczna tu nie zadziała (NWD to nie min/max); sparse table też działa, ale kosztuje O(n log n) pamięci. Całość O(n log A).",
+     "code": "// Najkrótszy spójny fragment o NWD równym 1 (dwa wskaźniki + „kolejka NWD” na dwóch stosach).\n// Zwraca -1, gdy taki fragment nie istnieje. Każdy element wchodzi i wychodzi raz: O(n log A).\nint shortestGcdOne(const vector<long long>& a) {\n    vector<long long> inV, inG, outG;            // wartości i NWD „od dna do tego miejsca”\n    auto top = [](const vector<long long>& g) { return g.empty() ? 0LL : g.back(); };\n    int best = INT_MAX, l = 0;\n    for (int r = 0; r < (int)a.size(); r++) {\n        inV.push_back(a[r]);\n        inG.push_back(gcd(top(inG), a[r]));\n        while (gcd(top(inG), top(outG)) == 1) {  // okno [l, r] ma NWD 1 → próbuj skrócić z lewej\n            best = min(best, r - l + 1);\n            if (outG.empty())                    // przelej: najstarszy element na górę outG\n                while (!inV.empty()) {\n                    outG.push_back(gcd(top(outG), inV.back()));\n                    inV.pop_back();\n                    inG.pop_back();\n                }\n            outG.pop_back();                     // usuń a[l]\n            l++;\n        }\n    }\n    return best == INT_MAX ? -1 : best;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dlaczego kolejka na dwóch stosach jest O(1)",
+      "czemu przelewanie jest zamortyzowane",
+      "zamortyzowana złożoność kolejki na stosach",
+      "amortized two stacks queue",
+      "przelewanie stosu złożoność"
+     ],
+     "a": "Każdy element przechodzi dokładnie trzy kroki: wkładany do `in`, przekładany raz do `out`, zdejmowany z `out`. Do `in` nigdy nie wraca. Zatem *q* operacji robi łącznie ≤ 3q ruchów, czyli O(1) na operację **średnio** — choć pojedynczy `pop` może przelać nawet *n* elementów."
+    },
+    {
+     "q": [
+      "kolejka z minimum czy kolejka monotoniczna",
+      "dwa stosy czy deque minimum",
+      "min queue vs monotonic queue",
+      "kiedy kolejka na dwoch stosach a kiedy monotoniczna",
+      "różnica kolejka monotoniczna dwa stosy"
+     ],
+     "a": "Kolejka monotoniczna (deque indeksów) jest krótsza i szybsza, ale umie tylko min/max. Dwa stosy działają dla **dowolnej operacji łącznej** (NWD, AND, OR, iloczyn macierzy, złożenie funkcji liniowych) i dają też `front()`. Zasada: min/max w oknie → `deque`; cokolwiek innego → dwa stosy."
+    },
+    {
+     "q": [
+      "stos z maksimum",
+      "max stack",
+      "stos z max w o(1)",
+      "stack max element",
+      "maksimum na stosie"
+     ],
+     "a": "Identycznie jak stos z minimum, tylko drugie pole to `max(x, szczyt.second)`. Kolejka z maksimum = dwa takie stosy.",
+     "code": "vector<pair<int, int>> st;                       // (wartość, maksimum do tego miejsca)\nauto push = [&](int x) { st.push_back({x, st.empty() ? x : max(x, st.back().second)}); };\npush(3);\npush(7);\npush(5);\ncout << st.back().second << '\\n';                // 7\nst.pop_back();\nst.pop_back();\ncout << st.back().second << '\\n';                // 3"
+    },
+    {
+     "q": [
+      "kolejka z operacją łączną",
+      "agregat w oknie przesuwnym",
+      "sliding window aggregation",
+      "and w oknie przesuwnym",
+      "iloczyn macierzy w oknie",
+      "operacja nieprzemienna w kolejce"
+     ],
+     "a": "Na stosie `out` trzymaj `agg = op(x, agg_poniżej)` (wyżej są starsze elementy), na `in`: `agg = op(agg_poniżej, x)`. Wynik okna = `op(agg_out, agg_in)`. Kolejność argumentów ma znaczenie tylko dla operacji nieprzemiennych (macierze, składanie funkcji); dla NWD/AND/min jest obojętna."
+    },
+    {
+     "q": [
+      "deque z minimum",
+      "kolejka dwustronna z minimum",
+      "deque with min both ends",
+      "min deque",
+      "usuwanie z obu końców i minimum"
+     ],
+     "a": "Dwa stosy „plecami do siebie”: lewy koniec to szczyt jednego, prawy — drugiego. Gdy trzeba zdjąć z pustej strony, przerzuć **połowę** elementów drugiego stosu (przebudowując minima obu). Wychodzi O(1) zamortyzowane. Często prościej: `multiset` (O(log n)) albo kolejka monotoniczna, jeśli usuwasz tylko z jednej strony."
+    }
+   ],
+   "related": [
+    "ds-monotonic-queue",
+    "ds-monotonic-stack",
+    "stl-stack",
+    "stl-queue",
+    "tech-two-pointers",
+    "tech-sliding-window",
+    "ds-sparse-table"
+   ]
+  },
+  {
+   "id": "ds-linked-list-array",
+   "title": "Lista jedno- i dwukierunkowa na tablicach (nxt/prv): usuwanie i wstawianie w O(1)",
+   "category": "Struktury danych",
+   "tags": [
+    "lista dwukierunkowa",
+    "linked list",
+    "nxt prv",
+    "usuwanie w O(1)",
+    "symulacja",
+    "józef flawiusz",
+    "strażnik",
+    "forward star",
+    "dancing links",
+    "lista cykliczna"
+   ],
+   "aliases": [
+    "lista dwukierunkowa na tablicy",
+    "lista dwukierunkowa na tablicach",
+    "lista na tablicach",
+    "linked list na tablicy",
+    "linked list array",
+    "nxt prv",
+    "next prev tablice",
+    "lista jednokierunkowa",
+    "lista wiązana",
+    "lista wiazana c++",
+    "usuwanie elementu w o(1)",
+    "doubly linked list array",
+    "lista cykliczna",
+    "dancing links"
+   ],
+   "summary": "Zamiast `std::list` trzymamy dwie tablice `nxt[i]` i `prv[i]` — numery sąsiadów elementu *i*. Usunięcie, wstawienie za elementem i przejście do sąsiada to O(1), kod jest krótki i szybki — idealny do symulacji („usuń element, połącz sąsiadów”), problemu Józefa i sztuczek offline.",
+   "complexity": "usuń / wstaw za / sąsiad: O(1); przejście po liście: O(długość); k-ty element: O(n) (do tego Fenwick); pamięć O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Idea.** Elementy mają stałe numery 1..n (np. pozycje w wejściu). `nxt[i]` i `prv[i]` to numery **obecnych** sąsiadów. Dodajemy dwóch **strażników**: 0 (przed pierwszym) i n+1 (za ostatnim) — dzięki nim usuwanie skrajnego elementu nie wymaga żadnych `if`-ów."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Kod",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "inicjalizacja",
+       "`prv[i] = i - 1; nxt[i] = i + 1;` dla i = 0..n+1",
+       "O(n)"
+      ],
+      [
+       "usuń x",
+       "`nxt[prv[x]] = nxt[x]; prv[nxt[x]] = prv[x];`",
+       "O(1)"
+      ],
+      [
+       "wstaw y za x",
+       "`prv[y] = x; nxt[y] = nxt[x]; prv[nxt[x]] = y; nxt[x] = y;`",
+       "O(1)"
+      ],
+      [
+       "przywróć x (cofnięcie)",
+       "`nxt[prv[x]] = x; prv[nxt[x]] = x;`",
+       "O(1), w odwrotnej kolejności usuwania"
+      ],
+      [
+       "przejście po liście",
+       "`for (int i = nxt[0]; i != n + 1; i = nxt[i])`",
+       "O(długość)"
+      ],
+      [
+       "k-ty obecny element",
+       "brak — trzeba iść po liście",
+       "O(n) → użyj Fenwicka"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 1'000'005;\nint nxt[MAXN], prv[MAXN];       // NIE nazywaj ich next/prev — kolizja z std::next/std::prev\nbool gone[MAXN];\n\nvoid removeNode(int x) {        // O(1); x nie może być strażnikiem\n    nxt[prv[x]] = nxt[x];\n    prv[nxt[x]] = prv[x];\n    gone[x] = true;             // prv[x] i nxt[x] zostają — przydają się do cofania\n}\n\nvoid insertAfter(int x, int y) { // wstaw węzeł y tuż za x, O(1)\n    prv[y] = x;\n    nxt[y] = nxt[x];\n    prv[nxt[x]] = y;\n    nxt[x] = y;\n    gone[y] = false;\n}\n\nint main() {\n    // Wejście: n q, ciąg a[1..n], potem q pozycji x (oryginalne indeksy) do usunięcia.\n    // Po każdym usunięciu wypisz obecnych sąsiadów (lub -1, gdy brak).\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> a(n + 2, -1);              // a[0] i a[n+1] = strażnicy (wartość -1)\n    for (int i = 1; i <= n; i++) cin >> a[i];\n    for (int i = 0; i <= n + 1; i++) {\n        prv[i] = i - 1;\n        nxt[i] = i + 1;\n    }\n    while (q--) {\n        int x;\n        cin >> x;\n        if (gone[x]) { cout << \"juz usuniety\\n\"; continue; }\n        removeNode(x);\n        cout << a[prv[x]] << ' ' << a[nxt[x]] << '\\n';\n    }\n    for (int i = nxt[0]; i != n + 1; i = nxt[i]) cout << a[i] << ' ';   // co zostało\n    cout << '\\n';\n}",
+     "title": "Pełny program: usuwanie elementów i sąsiedzi po każdym usunięciu"
+    },
+    {
+     "type": "text",
+     "md": "**Typowe zastosowania.** (1) Symulacje: „usuń element, jego sąsiedzi stają się sąsiadami” (kasowanie par, zderzenia, usuwanie znaków). (2) Problem Józefa dla małego *k* — lista cykliczna. (3) Sztuczka offline: przetwarzaj od końca i **usuwaj** zamiast wstawiać — w liście posortowanej po wartościach sąsiedzi to najbliższe wartości. (4) Lista jednokierunkowa na tablicach = lista sąsiedztwa grafu bez `vector` („forward star”)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// res[i] = min |a[i] - a[j]| po j < i (res[0] = LLONG_MAX). Sortowanie + lista na tablicach: O(n log n).\n// Idziemy od końca i usuwamy: gdy rozpatrujemy i, w liście są tylko indeksy ≤ i,\n// więc sąsiedzi i w porządku wartości to najbliższe wartości spośród wcześniejszych elementów.\nvector<long long> nearestBefore(const vector<long long>& a) {\n    int n = a.size();\n    vector<int> ord(n), pos(n), L(n), R(n);\n    iota(ord.begin(), ord.end(), 0);\n    sort(ord.begin(), ord.end(), [&](int x, int y) { return a[x] < a[y]; });\n    for (int p = 0; p < n; p++) {\n        pos[ord[p]] = p;\n        L[p] = p - 1;                        // -1 = brak sąsiada\n        R[p] = p + 1;                        // n  = brak sąsiada\n    }\n    vector<long long> res(n, LLONG_MAX);\n    for (int i = n - 1; i >= 0; i--) {\n        int p = pos[i];\n        if (L[p] >= 0) res[i] = min(res[i], a[i] - a[ord[L[p]]]);\n        if (R[p] < n) res[i] = min(res[i], a[ord[R[p]]] - a[i]);\n        if (L[p] >= 0) R[L[p]] = R[p];       // usuń p z listy\n        if (R[p] < n) L[R[p]] = L[p];\n    }\n    return res;\n}",
+     "title": "Najbliższa wartość wśród wcześniejszych elementów (sortowanie + usuwanie z listy)",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Kolejność eliminacji w problemie Józefa Flawiusza (odliczamy co k-tą osobę), lista cykliczna.\n// O(n·k) — dobre dla małego k; dla dużego k użyj Fenwicka z k-tym elementem (O(n log n)).\nvector<int> josephus(int n, int k) {\n    vector<int> nx(n), pv(n);\n    for (int i = 0; i < n; i++) {\n        nx[i] = (i + 1) % n;\n        pv[i] = (i + n - 1) % n;\n    }\n    vector<int> order;\n    int cur = n - 1;                         // stoimy tuż „przed” osobą 0\n    for (int left = n; left > 0; left--) {\n        int steps = (k - 1) % left + 1;      // nie kręć się w kółko bez potrzeby\n        for (int s = 0; s < steps; s++) cur = nx[cur];\n        order.push_back(cur + 1);            // numeracja osób od 1\n        nx[pv[cur]] = nx[cur];\n        pv[nx[cur]] = pv[cur];\n        cur = pv[cur];\n    }\n    return order;                            // n = 7, k = 3 → 3 6 2 7 5 1 4\n}",
+     "title": "Józef Flawiusz — lista cykliczna, O(n·k)",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Po usunięciu `x` jego własne `prv[x]` i `nxt[x]` nadal wskazują na dawnych sąsiadów. Dzięki temu można **cofać** usunięcia w odwrotnej kolejności (`nxt[prv[x]] = x; prv[nxt[x]] = x;`) — na tym opiera się Dancing Links (algorytm X Knutha) i backtracking na listach."
+    },
+    {
+     "type": "warn",
+     "md": "Nie nazywaj tablic `next`/`prev`: przy `using namespace std;` zderzają się z `std::next`/`std::prev` („reference to 'next' is ambiguous”). Używaj `nxt`, `prv`. Nie usuwaj dwa razy tego samego elementu — drugie usunięcie „skleja” złych sąsiadów; trzymaj tablicę `gone[]`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Lista jednokierunkowa na tablicach = lista sąsiedztwa „forward star” (bez vectorów).\nconst int MAXV = 200'005, MAXE = 400'005;\nint head[MAXV], nxtE[MAXE], to[MAXE], edgeCnt = 0;\n\nvoid addEdge(int u, int v) {          // wstawienie na początek listy u: O(1)\n    to[edgeCnt] = v;\n    nxtE[edgeCnt] = head[u];\n    head[u] = edgeCnt++;\n}\n\nvoid example(int n) {\n    fill(head, head + n, -1);         // -1 = koniec listy; ustaw PRZED dodawaniem krawędzi\n    addEdge(0, 1);\n    addEdge(0, 2);\n    for (int e = head[0]; e != -1; e = nxtE[e])\n        cout << to[e] << ' ';         // 2 1 (odwrotna kolejność dodania)\n    cout << '\\n';\n}",
+     "title": "Lista jednokierunkowa na tablicach: lista sąsiedztwa (head / nxtE / to)",
+     "scope": "global"
+    }
+   ],
+   "functions": [
+    {
+     "sig": "removeNode(x)",
+     "desc": "usuwa x, łącząc prv[x] z nxt[x]",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "insertAfter(x, y)",
+     "desc": "wstawia węzeł y tuż za x",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "for (int i = nxt[0]; i != n + 1; i = nxt[i])",
+     "desc": "przejście po obecnych elementach w kolejności",
+     "complexity": "O(długość)"
+    },
+    {
+     "sig": "addEdge(u, v)",
+     "desc": "lista jednokierunkowa: dopisz krawędź na początek listy u",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Brak strażników → osobne przypadki dla pierwszego i ostatniego elementu i łatwy błąd z indeksem -1.",
+    "Kolizja nazw `next`/`prev` z `std::next`/`std::prev` przy `using namespace std`.",
+    "Podwójne usunięcie tego samego elementu psuje listę — sprawdzaj `gone[x]`.",
+    "Zła kolejność przypisań przy wstawianiu: najpierw ustaw `prv[y]` i `nxt[y]`, dopiero potem nadpisz `nxt[x]` (inaczej zgubisz starego następnika).",
+    "`std::list` działa, ale jest wolny (alokacja na każdy węzeł, słaba lokalność) i nie da się w nim dostać do elementu po numerze bez trzymania iteratorów.",
+    "Lista nie daje szybkiego dostępu do k-tego elementu — jeśli zadanie mówi „usuń k-ty obecny”, potrzebujesz Fenwicka z k-tym elementem."
+   ],
+   "qa": [
+    {
+     "q": [
+      "lista dwukierunkowa na tablicy",
+      "lista dwukierunkowa na tablicach",
+      "linked list na tablicach c++",
+      "nxt prv jak zrobic",
+      "doubly linked list array",
+      "lista wiązana bez wskaźników",
+      "lista dwukierunkowa c++ szybko"
+     ],
+     "a": "Dwie tablice `nxt[i]`, `prv[i]` + strażnicy 0 i n+1. Inicjalizacja `prv[i] = i-1`, `nxt[i] = i+1`. Usuwanie i wstawianie to po 2–4 przypisania, O(1).",
+     "code": "int n = 5;\nvector<int> nxt(n + 2), prv(n + 2);\nfor (int i = 0; i <= n + 1; i++) { prv[i] = i - 1; nxt[i] = i + 1; }   // 0 i n+1 to strażnicy\nauto removeNode = [&](int x) { nxt[prv[x]] = nxt[x]; prv[nxt[x]] = prv[x]; };\nremoveNode(2);\nremoveNode(4);\nfor (int i = nxt[0]; i != n + 1; i = nxt[i]) cout << i << ' ';        // 1 3 5\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "usuwanie elementu z ciągu w o(1)",
+      "usun element i polacz sasiadow",
+      "usuwanie ze środka tablicy szybko",
+      "delete from middle o(1)",
+      "usuwanie elementów symulacja",
+      "jak szybko usuwac elementy z tablicy"
+     ],
+     "a": "Nie przesuwaj elementów w `vector` (`erase` to O(n)). Zrób listę na tablicach: `nxt[prv[x]] = nxt[x]; prv[nxt[x]] = prv[x];`. Po usunięciu `prv[x]` i `nxt[x]` to para, która właśnie stała się sąsiadami — często dokładnie to, o co pyta zadanie.",
+     "code": "const int MAXN = 1'000'005;\nint nxt[MAXN], prv[MAXN];\nbool gone[MAXN];\n\nvoid removeNode(int x) {                  // O(1); sąsiedzi po usunięciu: prv[x] i nxt[x]\n    nxt[prv[x]] = nxt[x];\n    prv[nxt[x]] = prv[x];\n    gone[x] = true;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wstawianie elementu za innym w liście",
+      "insert after linked list array",
+      "lista wstaw za x",
+      "jak wstawić element do listy na tablicy",
+      "wstawianie w srodek o(1)"
+     ],
+     "a": "Nowy węzeł y dostaje wolny numer (np. kolejny indeks). Najpierw ustaw jego wskaźniki, potem przepnij sąsiadów — inaczej zgubisz starego następnika x.",
+     "code": "const int MAXN = 1'000'005;\nint nxt[MAXN], prv[MAXN];\n\nvoid insertAfter(int x, int y) {          // wstaw nowy węzeł y tuż za x, O(1)\n    prv[y] = x;\n    nxt[y] = nxt[x];                      // najpierw wskaźniki y...\n    prv[nxt[x]] = y;                      // ...potem przepinamy sąsiadów\n    nxt[x] = y;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "józef flawiusz",
+      "jozef flawiusz symulacja",
+      "josephus problem",
+      "co k-ta osoba odpada",
+      "wyliczanka w kółku",
+      "problem józefa lista cykliczna"
+     ],
+     "a": "Lista cykliczna `nx`, `pv` (modulo n). Idziesz `(k-1) % left + 1` kroków, usuwasz, cofasz się na poprzednika. O(n·k) — dla dużych *n* i *k* użyj Fenwicka z k-tym elementem (O(n log n)), a gdy potrzebny jest tylko ostatni ocalały — wzoru `J(n) = (J(n-1) + k) % n`.",
+     "code": "// Kolejność eliminacji w problemie Józefa Flawiusza (odliczamy co k-tą osobę), lista cykliczna.\n// O(n·k) — dobre dla małego k; dla dużego k użyj Fenwicka z k-tym elementem (O(n log n)).\nvector<int> josephus(int n, int k) {\n    vector<int> nx(n), pv(n);\n    for (int i = 0; i < n; i++) {\n        nx[i] = (i + 1) % n;\n        pv[i] = (i + n - 1) % n;\n    }\n    vector<int> order;\n    int cur = n - 1;                         // stoimy tuż „przed” osobą 0\n    for (int left = n; left > 0; left--) {\n        int steps = (k - 1) % left + 1;      // nie kręć się w kółko bez potrzeby\n        for (int s = 0; s < steps; s++) cur = nx[cur];\n        order.push_back(cur + 1);            // numeracja osób od 1\n        nx[pv[cur]] = nx[cur];\n        pv[nx[cur]] = pv[cur];\n        cur = pv[cur];\n    }\n    return order;                            // n = 7, k = 3 → 3 6 2 7 5 1 4\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najbliższa wartość wśród wcześniejszych",
+      "min |a_i - a_j| dla j < i",
+      "najblizszy element wartoscia wczesniej",
+      "closest previous value",
+      "sortowanie i usuwanie z listy sztuczka",
+      "lista po wartościach offline"
+     ],
+     "a": "Posortuj indeksy po wartości i zrób z nich listę dwukierunkową. Idź od **końca** ciągu: gdy rozpatrujesz i, w liście są tylko indeksy ≤ i, więc sąsiedzi i w liście to najbliższe wartości wśród wcześniejszych. Potem usuń i. Razem O(n log n) przez sortowanie, a sama lista O(n) — szybciej niż `set::lower_bound`.",
+     "code": "// res[i] = min |a[i] - a[j]| po j < i (res[0] = LLONG_MAX). Sortowanie + lista na tablicach: O(n log n).\n// Idziemy od końca i usuwamy: gdy rozpatrujemy i, w liście są tylko indeksy ≤ i,\n// więc sąsiedzi i w porządku wartości to najbliższe wartości spośród wcześniejszych elementów.\nvector<long long> nearestBefore(const vector<long long>& a) {\n    int n = a.size();\n    vector<int> ord(n), pos(n), L(n), R(n);\n    iota(ord.begin(), ord.end(), 0);\n    sort(ord.begin(), ord.end(), [&](int x, int y) { return a[x] < a[y]; });\n    for (int p = 0; p < n; p++) {\n        pos[ord[p]] = p;\n        L[p] = p - 1;                        // -1 = brak sąsiada\n        R[p] = p + 1;                        // n  = brak sąsiada\n    }\n    vector<long long> res(n, LLONG_MAX);\n    for (int i = n - 1; i >= 0; i--) {\n        int p = pos[i];\n        if (L[p] >= 0) res[i] = min(res[i], a[i] - a[ord[L[p]]]);\n        if (R[p] < n) res[i] = min(res[i], a[ord[R[p]]] - a[i]);\n        if (L[p] >= 0) R[L[p]] = R[p];       // usuń p z listy\n        if (R[p] < n) L[R[p]] = L[p];\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "std::list czy tablice",
+      "czy używać std::list",
+      "std list wolny",
+      "list c++ zawody",
+      "linked list stl vs array",
+      "dlaczego nie std::list"
+     ],
+     "a": "`std::list` daje O(1) `erase`/`insert` przez iterator, ale każdy węzeł to osobna alokacja (wolno, słaba pamięć podręczna) i nie ma dostępu po numerze — musisz trzymać `vector<list<int>::iterator>`. Tablice `nxt/prv` są kilka razy szybsze i krótsze. `std::list` ma sens głównie dla `splice` (przenoszenie kawałków list).",
+     "code": "list<int> L = {1, 2, 3, 4};\nauto it = next(L.begin());          // wskazuje na 2\nit = L.erase(it);                   // erase zwraca iterator na następny element (3)\nL.insert(it, 10);                   // wstawia PRZED it: 1 10 3 4\nfor (int x : L) cout << x << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "lista jednokierunkowa na tablicy",
+      "lista sasiedztwa bez vectora",
+      "head nxt to graf",
+      "forward star",
+      "graf na tablicach head next",
+      "lista jednokierunkowa c++"
+     ],
+     "a": "`head[u]` = pierwsza krawędź u, `nxtE[e]` = następna krawędź tej samej listy, `to[e]` = cel. Dodanie to wstawienie na początek, O(1); krawędzie wychodzą w odwrotnej kolejności dodania. Brak narzutu `vector` — przydatne przy ciasnym limicie pamięci.",
+     "code": "// Lista jednokierunkowa na tablicach = lista sąsiedztwa „forward star” (bez vectorów).\nconst int MAXV = 200'005, MAXE = 400'005;\nint head[MAXV], nxtE[MAXE], to[MAXE], edgeCnt = 0;\n\nvoid addEdge(int u, int v) {          // wstawienie na początek listy u: O(1)\n    to[edgeCnt] = v;\n    nxtE[edgeCnt] = head[u];\n    head[u] = edgeCnt++;\n}\n\nvoid example(int n) {\n    fill(head, head + n, -1);         // -1 = koniec listy; ustaw PRZED dodawaniem krawędzi\n    addEdge(0, 1);\n    addEdge(0, 2);\n    for (int e = head[0]; e != -1; e = nxtE[e])\n        cout << to[e] << ' ';         // 2 1 (odwrotna kolejność dodania)\n    cout << '\\n';\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "cofanie usunięcia z listy",
+      "dancing links",
+      "przywracanie elementu do listy",
+      "undo remove linked list",
+      "backtracking lista dwukierunkowa",
+      "algorytm x knutha"
+     ],
+     "a": "Po usunięciu x jego `prv[x]` i `nxt[x]` dalej wskazują na dawnych sąsiadów, więc `nxt[prv[x]] = x; prv[nxt[x]] = x;` przywraca go w O(1). Warunek: cofasz w **odwrotnej** kolejności niż usuwałeś (jak na stosie). To serce Dancing Links.",
+     "code": "const int MAXN = 1000;\nint nxt[MAXN], prv[MAXN];\n\nvoid removeNode(int x) { nxt[prv[x]] = nxt[x]; prv[nxt[x]] = prv[x]; }\nvoid restoreNode(int x) { nxt[prv[x]] = x; prv[nxt[x]] = x; }   // cofaj w ODWROTNEJ kolejności!",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "reference to next is ambiguous",
+      "next is ambiguous",
+      "błąd next prev tablica",
+      "int next[n] nie kompiluje",
+      "prev ambiguous error"
+     ],
+     "a": "Z `using namespace std;` globalna tablica `next` (lub `prev`) koliduje z funkcjami `std::next`/`std::prev`. Zmień nazwy na `nxt`, `prv` (albo `L`/`R`)."
+    }
+   ],
+   "related": [
+    "stl-list",
+    "tech-simulation",
+    "ds-fenwick-kth",
+    "cpp-pointers-vs-indices",
+    "pit-name-collisions",
+    "graph-representation"
+   ]
+  },
+  {
+   "id": "ds-fenwick-kth",
+   "title": "Fenwick: k-ty element i zejście po bitach (binary lifting na BIT)",
+   "category": "Struktury danych",
+   "tags": [
+    "fenwick",
+    "k-ty element",
+    "kth element",
+    "binary lifting",
+    "zejście po bitach",
+    "lower bound sumy prefiksu",
+    "zbiór liczb",
+    "józef flawiusz",
+    "odtwarzanie permutacji",
+    "mediana"
+   ],
+   "aliases": [
+    "fenwick k-ty element",
+    "k-ty element fenwick",
+    "fenwick kth",
+    "kth smallest fenwick",
+    "binary lifting fenwick",
+    "zejście po fenwicku",
+    "zejscie po bitach",
+    "fenwick lower bound",
+    "fenwick binary search",
+    "bit k-ty najmniejszy",
+    "k-ty najmniejszy w zbiorze fenwick",
+    "fenwick descent",
+    "józef flawiusz fenwick"
+   ],
+   "summary": "Fenwick na licznikach `cnt[v]` to dynamiczny multizbiór liczb: `sum(v)` = ile elementów ≤ v, a k-ty najmniejszy to pierwsze *v* z `sum(v) ≥ k`. Zamiast wyszukiwania binarnego (O(log² n)) schodzimy po bitach indeksu w O(log n).",
+   "complexity": "add/sum O(log n); k-ty element (zejście po bitach) O(log n); wyszukiwanie binarne + sum: O(log² n); pamięć O(n), n = zakres wartości (po kompresji)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Fenwick jako zbiór.** Dla wartości z [1, n] budujemy Fenwicka nad tablicą `cnt[v]` (ile razy *v* jest w zbiorze). Wstawienie *x* = `add(x, +1)`, usunięcie = `add(x, -1)`, liczba elementów < x = `sum(x - 1)`, a **k-ty najmniejszy** = najmniejsze *p* z `sum(p) ≥ k`. Duże wartości najpierw kompresujemy (offline)."
+    },
+    {
+     "type": "text",
+     "md": "**Zejście po bitach.** Węzeł `t[i]` przechowuje sumę bloku `(i - lowbit(i), i]`. Budujemy odpowiedź `pos` bit po bicie od najstarszego: jeżeli `pos + 2^j ≤ n` i `t[pos + 2^j] < k`, to cały blok `(pos, pos + 2^j]` jest „za mały” — przeskakujemy go (`pos += 2^j`, `k -= t[pos]`). Na końcu `pos` to największy indeks z `sum(pos) < k`, więc odpowiedź to `pos + 1`. Działa, bo `pos` ma wyzerowane młodsze bity, więc `t[pos + 2^j]` to dokładnie suma bloku `(pos, pos + 2^j]` — jak skoki potęgami dwójki w LCA."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Fenwick {\n    int n, LOG;\n    vector<long long> t;\n    Fenwick(int n) : n(n), LOG(n > 0 ? __lg(n) : 0), t(n + 1, 0) {}\n    void add(int i, long long d) {           // i ∈ [1, n]\n        for (; i <= n; i += i & -i) t[i] += d;\n    }\n    long long sum(int i) const {             // a[1] + ... + a[i]\n        long long s = 0;\n        for (; i > 0; i -= i & -i) s += t[i];\n        return s;\n    }\n    // Najmniejsze p, że sum(p) >= k (wymaga a[i] >= 0). Zwraca n + 1, gdy sum(n) < k.\n    int lowerBound(long long k) const {\n        int pos = 0;\n        for (int pw = 1 << LOG; pw > 0; pw >>= 1)\n            if (pos + pw <= n && t[pos + pw] < k) {\n                pos += pw;                   // cały blok (pos, pos+pw] ma sumę < k → przeskocz go\n                k -= t[pos];\n            }\n        return pos + 1;\n    }\n};\n\nint main() {\n    // Multizbiór liczb z zakresu [1, 10^6]. Operacje:\n    // \"+ x\" dodaj x, \"- x\" usuń jedną kopię x, \"k i\" i-ty najmniejszy, \"c x\" ile elementów < x\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    const int MAXV = 1'000'000;\n    Fenwick f(MAXV);\n    vector<int> cnt(MAXV + 1, 0);\n    long long total = 0;\n    int q;\n    cin >> q;\n    while (q--) {\n        char op;\n        long long x;\n        cin >> op >> x;\n        if (op == '+') { f.add(x, 1); cnt[x]++; total++; }\n        else if (op == '-') { if (cnt[x] > 0) { f.add(x, -1); cnt[x]--; total--; } }\n        else if (op == 'k') cout << (1 <= x && x <= total ? f.lowerBound(x) : -1) << '\\n';\n        else cout << f.sum(x - 1) << '\\n';\n    }\n}",
+     "title": "Pełny program: multizbiór liczb z k-tym najmniejszym"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zapytanie",
+      "Wywołanie",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "wstaw x / usuń jedną kopię x",
+       "`add(x, +1)` / `add(x, -1)`",
+       "O(log n)"
+      ],
+      [
+       "ile elementów < x",
+       "`sum(x - 1)`",
+       "O(log n)"
+      ],
+      [
+       "ile elementów w [a, b]",
+       "`sum(b) - sum(a - 1)`",
+       "O(log n)"
+      ],
+      [
+       "k-ty najmniejszy",
+       "`lowerBound(k)`",
+       "O(log n)"
+      ],
+      [
+       "k-ty największy",
+       "`lowerBound(total - k + 1)`",
+       "O(log n)"
+      ],
+      [
+       "następnik x (najmniejszy > x)",
+       "`lowerBound(sum(x) + 1)`",
+       "O(log n)"
+      ],
+      [
+       "poprzednik x (największy < x)",
+       "`lowerBound(sum(x - 1))`, gdy `sum(x - 1) > 0`",
+       "O(log n)"
+      ],
+      [
+       "mediana (dolna)",
+       "`lowerBound((total + 1) / 2)`",
+       "O(log n)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "struct Fenwick {\n    int n;\n    vector<int> t;\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, int d) { for (; i <= n; i += i & -i) t[i] += d; }\n    int kth(int k) const {                   // najmniejsze p z sumą prefiksu >= k\n        int pos = 0;\n        for (int pw = 1 << __lg(n); pw > 0; pw >>= 1)\n            if (pos + pw <= n && t[pos + pw] < k) { pos += pw; k -= t[pos]; }\n        return pos + 1;\n    }\n};\n\n// Józef Flawiusz w O(n log n): kto odpada jako kolejny, gdy odliczamy co k-tą osobę.\nvector<int> josephusFast(int n, int k) {\n    Fenwick f(n);\n    for (int i = 1; i <= n; i++) f.add(i, 1);    // 1 = osoba jeszcze w kółku\n    vector<int> order;\n    int idx = 0;                                 // pozycja (od 0) w bieżącym kółku\n    for (int left = n; left > 0; left--) {\n        idx = (idx + k - 1) % left;\n        int p = f.kth(idx + 1);                  // (idx+1)-ta żywa osoba\n        order.push_back(p);\n        f.add(p, -1);\n    }\n    return order;                                // n = 7, k = 3 → 3 6 2 7 5 1 4\n}",
+     "title": "Zastosowanie: Józef Flawiusz w O(n log n)",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "struct Fenwick {\n    int n;\n    vector<int> t;\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, int d) { for (; i <= n; i += i & -i) t[i] += d; }\n    int kth(int k) const {                   // najmniejsze p z sumą prefiksu >= k\n        int pos = 0;\n        for (int pw = 1 << __lg(n); pw > 0; pw >>= 1)\n            if (pos + pw <= n && t[pos + pw] < k) { pos += pw; k -= t[pos]; }\n        return pos + 1;\n    }\n};\n\n// c[i] = ile elementów PRZED pozycją i jest większych od p[i] (tablica inwersji, i od 0).\n// Odtwarzamy permutację 1..n od końca: p[i] to (i + 1 - c[i])-ta najmniejsza z niewykorzystanych.\nvector<int> restorePermutation(const vector<int>& c) {\n    int n = c.size();\n    Fenwick f(n);\n    for (int v = 1; v <= n; v++) f.add(v, 1);\n    vector<int> p(n);\n    for (int i = n - 1; i >= 0; i--) {\n        p[i] = f.kth(i + 1 - c[i]);\n        f.add(p[i], -1);\n    }\n    return p;\n}",
+     "title": "Zastosowanie: odtworzenie permutacji z tablicy inwersji",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Najstarszy bit: `1 << __lg(n)` (dla n ≥ 1). Stałe `LOG = 20` też działa — warunek `pos + pw <= n` odrzuca za duże skoki. W porównaniu z `ordered_set` z pb_ds Fenwick jest kilka razy szybszy, krótszy i liczy duplikaty, ale wymaga znanego (lub skompresowanego) zakresu wartości."
+    },
+    {
+     "type": "warn",
+     "md": "Zejście działa tylko dla **nieujemnych** wartości w tablicy (sumy prefiksów muszą być niemalejące). Jeśli `k` jest większe niż liczba elementów, wynik to `n + 1` — sprawdź to, zanim użyjesz go jako indeksu."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int lowerBound(long long k)",
+     "desc": "najmniejsze p, że a[1] + … + a[p] ≥ k (a[i] ≥ 0); n + 1, gdy brak",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "f.add(x, +1) / f.add(x, -1)",
+     "desc": "wstawienie / usunięcie jednej kopii x ze zbioru",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "f.sum(x - 1)",
+     "desc": "liczba elementów mniejszych od x",
+     "complexity": "O(log n)"
+    }
+   ],
+   "pitfalls": [
+    "Zejście po bitach przy ujemnych wartościach daje bzdury — sumy prefiksów nie są monotoniczne.",
+    "Indeksowanie od 0: `i += i & -i` dla i = 0 to nieskończona pętla. Fenwick jest 1-indeksowany — przesuń wartości o 1.",
+    "Za mały startowy bit (np. `1 << (__lg(n) - 1)`) — zejście nie dojdzie do końca tablicy.",
+    "Usuwanie elementu, którego nie ma, robi z licznika liczbę ujemną — trzymaj osobno `cnt[x]`.",
+    "Wartości do 10^9: najpierw wczytaj wszystkie zapytania i skompresuj współrzędne, inaczej tablica się nie zmieści.",
+    "Wyszukiwanie binarne po `sum()` to O(log² n) — przy 10^6 operacji może być za wolne; zejście jest O(log n)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "k-ty element fenwick",
+      "k-ty najmniejszy fenwick",
+      "fenwick kth element",
+      "kth smallest bit",
+      "jak znaleźć k-ty element w fenwicku",
+      "k ty najmniejszy element drzewo fenwicka",
+      "fenwik k-ty"
+     ],
+     "a": "Fenwick nad licznikami wartości; k-ty najmniejszy = najmniejsze *p* z `sum(p) ≥ k`. Szukaj go zejściem po bitach od najstarszego: jeśli `t[pos + pw] < k`, przeskocz blok i odejmij jego sumę. O(log n).",
+     "code": "struct Fenwick {\n    int n;\n    vector<int> t;\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, int d) { for (; i <= n; i += i & -i) t[i] += d; }\n    int kth(int k) const {                   // najmniejsze p z sumą prefiksu >= k\n        int pos = 0;\n        for (int pw = 1 << __lg(n); pw > 0; pw >>= 1)\n            if (pos + pw <= n && t[pos + pw] < k) { pos += pw; k -= t[pos]; }\n        return pos + 1;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "zejście po bitach fenwick",
+      "binary lifting na fenwicku",
+      "binary lifting bit",
+      "fenwick descent",
+      "jak dziala zejscie po fenwicku",
+      "fenwick bez binary search",
+      "walk on fenwick tree"
+     ],
+     "a": "`t[pos + 2^j]` (gdy młodsze bity `pos` są zerami) to suma bloku `(pos, pos + 2^j]`. Idąc od najstarszego bitu, dokładasz blok, jeśli jego suma jest < k — jak skoki potęgami dwójki w LCA. Po wszystkich bitach `pos` = ostatni indeks z sumą < k, odpowiedź `pos + 1`.",
+     "code": "int n = 8;\nvector<int> t(n + 1, 0);\nauto add = [&](int i, int d) { for (; i <= n; i += i & -i) t[i] += d; };\nfor (int v : {2, 3, 3, 7}) add(v, 1);                     // zbiór {2, 3, 3, 7}\nauto kth = [&](int k) {\n    int pos = 0;\n    for (int pw = 1 << __lg(n); pw > 0; pw >>= 1)\n        if (pos + pw <= n && t[pos + pw] < k) { pos += pw; k -= t[pos]; }\n    return pos + 1;\n};\ncout << kth(1) << ' ' << kth(3) << ' ' << kth(4) << '\\n';   // 2 3 7"
+    },
+    {
+     "q": [
+      "pierwsza pozycja gdzie suma prefiksu >= s",
+      "fenwick lower bound sumy",
+      "lower bound na sumach prefiksowych z aktualizacją",
+      "najmniejsze i z prefiksem co najmniej s",
+      "prefix sum lower bound bit",
+      "fenwick lower_bound"
+     ],
+     "a": "To samo zejście — działa dla dowolnych **nieujemnych** wartości, nie tylko 0/1. Zwraca najmniejsze p z `a[1] + … + a[p] ≥ s` albo n + 1, gdy suma całości < s.",
+     "code": "struct Fenwick {\n    int n, LOG;\n    vector<long long> t;\n    Fenwick(int n) : n(n), LOG(n > 0 ? __lg(n) : 0), t(n + 1, 0) {}\n    void add(int i, long long d) {           // i ∈ [1, n]\n        for (; i <= n; i += i & -i) t[i] += d;\n    }\n    long long sum(int i) const {             // a[1] + ... + a[i]\n        long long s = 0;\n        for (; i > 0; i -= i & -i) s += t[i];\n        return s;\n    }\n    // Najmniejsze p, że sum(p) >= k (wymaga a[i] >= 0). Zwraca n + 1, gdy sum(n) < k.\n    int lowerBound(long long k) const {\n        int pos = 0;\n        for (int pw = 1 << LOG; pw > 0; pw >>= 1)\n            if (pos + pw <= n && t[pos + pw] < k) {\n                pos += pw;                   // cały blok (pos, pos+pw] ma sumę < k → przeskocz go\n                k -= t[pos];\n            }\n        return pos + 1;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "zbiór liczb z k-tym najmniejszym",
+      "multiset k-ty element",
+      "multiset z k-tym elementem bez pb_ds",
+      "dynamiczny zbiór k-ty najmniejszy",
+      "set z indeksowaniem c++",
+      "k-ty element w multisecie szybko",
+      "order statistics bez ordered_set"
+     ],
+     "a": "`multiset` nie ma dostępu po pozycji (`next(begin, k)` to O(k)). Opcje: (1) Fenwick nad skompresowanymi wartościami — najszybszy, liczy duplikaty; (2) `ordered_set` z pb_ds — online, dowolne wartości, ale wolniejszy i bez duplikatów (trzeba par `(wartość, id)`); (3) treap. Fenwick wymaga znanego zakresu — wczytaj zapytania offline i skompresuj.",
+     "code": "vector<long long> xs = {1000000000, 5, 77, 5};   // wszystkie wartości z zapytań (wczytane offline)\nvector<long long> vals = xs;\nsort(vals.begin(), vals.end());\nvals.erase(unique(vals.begin(), vals.end()), vals.end());\nauto id = [&](long long x) { return int(lower_bound(vals.begin(), vals.end(), x) - vals.begin()) + 1; };\ncout << id(5) << ' ' << id(77) << ' ' << id(1000000000) << '\\n';   // 1 2 3\n// Fenwick f(vals.size()); f.add(id(x), +1); ...; k-ty najmniejszy = vals[f.kth(k) - 1]"
+    },
+    {
+     "q": [
+      "józef flawiusz n log n",
+      "josephus fenwick",
+      "józef flawiusz duże n",
+      "jozef flawiusz kolejnosc eliminacji szybko",
+      "kto odpada jako i-ty josephus",
+      "wyliczanka n do 10^5"
+     ],
+     "a": "Fenwick z jedynkami dla żywych osób. Pozycja kolejnej ofiary w bieżącym kółku to `idx = (idx + k - 1) % left`, a jej numer to `(idx+1)`-ta jedynka — zejście po bitach. O(n log n) zamiast O(n·k).",
+     "code": "struct Fenwick {\n    int n;\n    vector<int> t;\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, int d) { for (; i <= n; i += i & -i) t[i] += d; }\n    int kth(int k) const {                   // najmniejsze p z sumą prefiksu >= k\n        int pos = 0;\n        for (int pw = 1 << __lg(n); pw > 0; pw >>= 1)\n            if (pos + pw <= n && t[pos + pw] < k) { pos += pw; k -= t[pos]; }\n        return pos + 1;\n    }\n};\n\n// Józef Flawiusz w O(n log n): kto odpada jako kolejny, gdy odliczamy co k-tą osobę.\nvector<int> josephusFast(int n, int k) {\n    Fenwick f(n);\n    for (int i = 1; i <= n; i++) f.add(i, 1);    // 1 = osoba jeszcze w kółku\n    vector<int> order;\n    int idx = 0;                                 // pozycja (od 0) w bieżącym kółku\n    for (int left = n; left > 0; left--) {\n        idx = (idx + k - 1) % left;\n        int p = f.kth(idx + 1);                  // (idx+1)-ta żywa osoba\n        order.push_back(p);\n        f.add(p, -1);\n    }\n    return order;                                // n = 7, k = 3 → 3 6 2 7 5 1 4\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "odtworzenie permutacji z liczby inwersji",
+      "tablica inwersji do permutacji",
+      "ile większych przed każdym elementem odtwórz",
+      "restore permutation from inversion table",
+      "permutacja z ciągu ile wiekszych na lewo",
+      "odtwarzanie permutacji fenwick"
+     ],
+     "a": "Idź od końca: wartości na pozycjach 0..i to dokładnie liczby jeszcze niewykorzystane, a p[i] ma wśród nich c[i] większych przed sobą, więc jest `(i + 1 - c[i])`-tą najmniejszą. Fenwick z jedynkami + k-ty element → O(n log n).",
+     "code": "struct Fenwick {\n    int n;\n    vector<int> t;\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, int d) { for (; i <= n; i += i & -i) t[i] += d; }\n    int kth(int k) const {                   // najmniejsze p z sumą prefiksu >= k\n        int pos = 0;\n        for (int pw = 1 << __lg(n); pw > 0; pw >>= 1)\n            if (pos + pw <= n && t[pos + pw] < k) { pos += pw; k -= t[pos]; }\n        return pos + 1;\n    }\n};\n\n// c[i] = ile elementów PRZED pozycją i jest większych od p[i] (tablica inwersji, i od 0).\n// Odtwarzamy permutację 1..n od końca: p[i] to (i + 1 - c[i])-ta najmniejsza z niewykorzystanych.\nvector<int> restorePermutation(const vector<int>& c) {\n    int n = c.size();\n    Fenwick f(n);\n    for (int v = 1; v <= n; v++) f.add(v, 1);\n    vector<int> p(n);\n    for (int i = n - 1; i >= 0; i--) {\n        p[i] = f.kth(i + 1 - c[i]);\n        f.add(p[i], -1);\n    }\n    return p;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "mediana dynamiczna fenwick",
+      "mediana zbioru z dodawaniem i usuwaniem",
+      "median with insert delete",
+      "mediana na bieżąco z usuwaniem",
+      "dynamic median"
+     ],
+     "a": "Mediana (dolna) = k-ty najmniejszy dla `k = (total + 1) / 2`. Fenwick obsługuje dodawanie i usuwanie w O(log n). Bez usuwania wystarczą dwa kopce; z usuwaniem — Fenwick, `multiset` z iteratorem na środek albo dwa kopce z leniwym usuwaniem.",
+     "code": "struct Fenwick {\n    int n;\n    vector<int> t;\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, int d) { for (; i <= n; i += i & -i) t[i] += d; }\n    int kth(int k) const {                   // najmniejsze p z sumą prefiksu >= k\n        int pos = 0;\n        for (int pw = 1 << __lg(n); pw > 0; pw >>= 1)\n            if (pos + pw <= n && t[pos + pw] < k) { pos += pw; k -= t[pos]; }\n        return pos + 1;\n    }\n};\n\n// dolna mediana multizbioru o total >= 1 elementach (wartości 1..n)\nint medianOf(const Fenwick& f, int total) { return f.kth((total + 1) / 2); }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "k-ty element binary search po sumie",
+      "dlaczego nie wyszukiwanie binarne na fenwicku",
+      "binary search + fenwick log^2",
+      "fenwick log kwadrat k-ty",
+      "kth fenwick log^2 n vs log n"
+     ],
+     "a": "Wyszukiwanie binarne po wyniku z `sum(mid)` w środku daje O(log² n) — przy n, q ≤ 2·10^5 zwykle wejdzie, ale przy 10^6 operacji zejście po bitach (O(log n)) jest wielokrotnie szybsze i równie krótkie. Oba wymagają nieujemnych wartości."
+    }
+   ],
+   "related": [
+    "ds-fenwick",
+    "cpp-pbds-ordered-set",
+    "ds-ordered-set",
+    "ds-segment-tree-descent",
+    "tech-coordinate-compression",
+    "ds-linked-list-array",
+    "ds-treap"
+   ]
+  },
+  {
+   "id": "ds-segment-tree-descent",
+   "title": "Zejście po drzewie przedziałowym: pierwszy element ≥ x, k-ta jedynka, prefiks ≥ s",
+   "category": "Struktury danych",
+   "tags": [
+    "drzewo przedziałowe",
+    "segment tree",
+    "zejście",
+    "segment tree descent",
+    "walk on segment tree",
+    "pierwszy element większy",
+    "k-ta jedynka",
+    "lower bound sumy prefiksu",
+    "first fit"
+   ],
+   "aliases": [
+    "zejście po drzewie przedziałowym",
+    "zejscie po drzewie przedzialowym",
+    "segment tree descent",
+    "walk on segment tree",
+    "segment tree binary search",
+    "pierwszy element >= x drzewo przedziałowe",
+    "pierwszy element wiekszy od x segment tree",
+    "k-ta jedynka",
+    "kth one segment tree",
+    "first element greater than x",
+    "schodzenie po drzewie przedzialowym",
+    "wyszukiwanie binarne na drzewie przedziałowym",
+    "max right segment tree"
+   ],
+   "summary": "Zamiast wyszukiwania binarnego z zapytaniem w środku (O(log² n)) schodzimy od korzenia i na podstawie wartości w synach wybieramy, gdzie jest odpowiedź — O(log n). Tak znajdziesz pierwszy element ≥ x (od pozycji l), k-tą jedynkę i pierwszą pozycję z sumą prefiksu ≥ s.",
+   "complexity": "każde zejście O(log n); wyszukiwanie binarne + zapytanie: O(log² n); budowa O(n), pamięć 4n",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Idea.** Węzeł zna agregat swojego przedziału (max, sumę…). Jeśli odpowiedź na pewno jest w lewym synu, idziemy w lewo; inaczej w prawo (przy sumie odejmując sumę lewego syna). Każdy krok schodzi o poziom niżej, więc O(log n). To `lower_bound` na drzewie — szybszy i prostszy niż wyszukiwanie binarne z `query(l, mid)` w środku."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zapytanie",
+      "Agregat w węźle",
+      "Reguła zejścia",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "k-ta jedynka w tablicy 0/1",
+       "suma",
+       "`k ≤ sum(lewy)` → lewo, inaczej `k -= sum(lewy)` → prawo",
+       "O(log n)"
+      ],
+      [
+       "pierwsza pozycja z prefiksem ≥ s (a[i] ≥ 0)",
+       "suma",
+       "jak wyżej, z `s` zamiast `k`",
+       "O(log n)"
+      ],
+      [
+       "pierwszy indeks z a[i] ≥ x (cała tablica)",
+       "max",
+       "`max(lewy) ≥ x` → lewo, inaczej prawo",
+       "O(log n)"
+      ],
+      [
+       "pierwszy indeks ≥ l z a[i] ≥ x",
+       "max",
+       "rekurencja: pomiń węzły na lewo od l i z max < x, najpierw lewy syn",
+       "O(log n)"
+      ],
+      [
+       "ostatni indeks ≤ r z a[i] < x",
+       "min",
+       "lustrzanie: najpierw prawy syn",
+       "O(log n)"
+      ],
+      [
+       "first fit (pierwszy pojemnik z miejscem ≥ x)",
+       "max wolnego miejsca",
+       "jak „pierwszy ≥ x”, potem aktualizacja",
+       "O(log n)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Drzewo maksimum z zejściem: „pierwszy indeks i ≥ from, że a[i] ≥ x” w O(log n).\nstruct MaxTree {\n    int n;\n    vector<long long> t;\n    MaxTree(const vector<long long>& a) : n(a.size()), t(4 * a.size()) { build(1, 0, n - 1, a); }\n    void build(int v, int l, int r, const vector<long long>& a) {\n        if (l == r) { t[v] = a[l]; return; }\n        int m = (l + r) / 2;\n        build(2 * v, l, m, a);\n        build(2 * v + 1, m + 1, r, a);\n        t[v] = max(t[2 * v], t[2 * v + 1]);\n    }\n    void add(int v, int l, int r, int pos, long long d) {\n        if (l == r) { t[v] += d; return; }\n        int m = (l + r) / 2;\n        if (pos <= m) add(2 * v, l, m, pos, d);\n        else add(2 * v + 1, m + 1, r, pos, d);\n        t[v] = max(t[2 * v], t[2 * v + 1]);\n    }\n    int first(int v, int l, int r, int from, long long x) {\n        if (r < from || t[v] < x) return -1;     // poza zakresem albo nikt tu nie ma ≥ x\n        if (l == r) return l;\n        int m = (l + r) / 2;\n        int res = first(2 * v, l, m, from, x);   // najpierw lewy syn — szukamy NAJMNIEJSZEGO indeksu\n        if (res == -1) res = first(2 * v + 1, m + 1, r, from, x);\n        return res;\n    }\n    void add(int pos, long long d) { add(1, 0, n - 1, pos, d); }\n    int first(int from, long long x) { return first(1, 0, n - 1, from, x); }\n};\n\nint main() {\n    // „Hotele”: n hoteli, h[i] wolnych pokoi. Każda z m grup potrzebuje r pokoi i idzie\n    // do PIERWSZEGO hotelu, który ma ich co najmniej r. Wypisz numer hotelu (od 1) albo 0.\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<long long> h(n);\n    for (auto& x : h) cin >> x;\n    MaxTree st(h);\n    while (m--) {\n        long long r;\n        cin >> r;\n        int i = st.first(0, r);\n        if (i == -1) cout << 0 << ' ';\n        else {\n            cout << i + 1 << ' ';\n            st.add(i, -r);\n        }\n    }\n    cout << '\\n';\n}",
+     "title": "Pełny program: „Hotele” — pierwszy hotel z co najmniej r wolnymi pokojami"
+    },
+    {
+     "type": "text",
+     "md": "**Dlaczego „pierwszy ≥ x od pozycji l” to O(log n)?** Węzły w całości na lewo od `l` odpadają od razu. Węzły w całości na prawo od `l` z `max < x` też odpadają od razu. Pierwszy węzeł w całości w zakresie z `max ≥ x` na pewno zawiera odpowiedź — od niego schodzimy jedną ścieżką. Węzły przecięte częściowo leżą na ścieżce do `l` — jest ich O(log n)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Drzewo sum (a[i] ≥ 0) z zejściem od korzenia: bez wyszukiwania binarnego, O(log n).\nstruct SumTree {\n    int n;\n    vector<long long> t;\n    SumTree(int n) : n(n), t(4 * n, 0) {}\n    void add(int v, int l, int r, int pos, long long d) {\n        if (l == r) { t[v] += d; return; }\n        int m = (l + r) / 2;\n        if (pos <= m) add(2 * v, l, m, pos, d);\n        else add(2 * v + 1, m + 1, r, pos, d);\n        t[v] = t[2 * v] + t[2 * v + 1];\n    }\n    void add(int pos, long long d) { add(1, 0, n - 1, pos, d); }\n    // najmniejszy indeks i, że a[0] + ... + a[i] >= s; -1, gdy suma wszystkiego < s\n    int lowerBoundPrefix(long long s) const {\n        if (t[1] < s) return -1;\n        int v = 1, l = 0, r = n - 1;\n        while (l != r) {\n            int m = (l + r) / 2;\n            if (t[2 * v] >= s) { v = 2 * v; r = m; }             // wystarczy lewa połowa\n            else { s -= t[2 * v]; v = 2 * v + 1; l = m + 1; }   // weź całą lewą, szukaj w prawej\n        }\n        return l;\n    }\n    // indeks k-tej jedynki (k od 1) w tablicy zer i jedynek\n    int kthOne(int k) const { return lowerBoundPrefix(k); }\n};",
+     "title": "Drzewo sum: k-ta jedynka i pierwsza pozycja z prefiksem ≥ s",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Pierwszy indeks w [ql, qr] z a[i] >= x w drzewie MAKSIMUM t[] (wywołanie: firstIn(t, 1, 0, n-1, ql, qr, x)).\nint firstIn(const vector<long long>& t, int v, int l, int r, int ql, int qr, long long x) {\n    if (r < ql || qr < l || t[v] < x) return -1;\n    if (l == r) return l;\n    int m = (l + r) / 2;\n    int res = firstIn(t, 2 * v, l, m, ql, qr, x);\n    if (res == -1) res = firstIn(t, 2 * v + 1, m + 1, r, ql, qr, x);\n    return res;\n}",
+     "title": "Pierwszy indeks w [ql, qr] z a[i] ≥ x",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Schemat działa dla każdego warunku **monotonicznego** względem rozszerzania przedziału, o ile agregat w węźle wystarcza, by rozstrzygnąć, czy odpowiedź jest w środku: „pierwsza pozycja, gdzie NWD prefiksu od l spada do 1”, „najdłuższy prefiks od l o sumie ≤ s” (wtedy niesiesz sumę dotychczas zebranych węzłów)."
+    },
+    {
+     "type": "warn",
+     "md": "Zejście po sumach działa tylko dla nieujemnych a[i]. Zawsze obsłuż brak odpowiedzi (`-1`) — sprawdź korzeń przed zejściem. W wersji iteracyjnej (bottom-up) rozmiar musi być potęgą dwójki, inaczej liście nie tworzą jednego drzewa i zejście od korzenia nie działa."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int first(int from, long long x)",
+     "desc": "pierwszy indeks i ≥ from z a[i] ≥ x albo -1 (drzewo max)",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "int lowerBoundPrefix(long long s)",
+     "desc": "najmniejsze i z a[0] + … + a[i] ≥ s albo -1 (drzewo sum, a[i] ≥ 0)",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "int kthOne(int k)",
+     "desc": "indeks k-tej jedynki w tablicy 0/1",
+     "complexity": "O(log n)"
+    }
+   ],
+   "pitfalls": [
+    "Wyszukiwanie binarne z `query()` w środku działa, ale to O(log² n) i łatwo o błąd ±1 — zejście jest krótsze.",
+    "W „pierwszy ≥ x” prawego syna sprawdzaj tylko, gdy lewy zwrócił -1 — inaczej dostaniesz dowolny, a nie pierwszy indeks.",
+    "Brak sprawdzenia `t[1] < s` (`t[1] < k`) przed zejściem → zwrócisz ostatni liść zamiast „brak”.",
+    "Przy lazy propagation zrób `push` przed zejściem do synów — inaczej czytasz nieaktualne wartości.",
+    "Drzewo iteracyjne o rozmiarze niebędącym potęgą dwójki nie nadaje się do zejścia od korzenia."
+   ],
+   "qa": [
+    {
+     "q": [
+      "zejście po drzewie przedziałowym",
+      "segment tree descent",
+      "co to zejście w drzewie przedziałowym",
+      "zejscie po segment tree",
+      "descent on segment tree",
+      "schodzenie po drzewie przedziałowym od korzenia",
+      "segtree descent c++",
+      "walk on segment tree"
+     ],
+     "a": "Zamiast wyszukiwania binarnego z `query()` w środku (O(log² n)) idziesz od korzenia do liścia i w każdym węźle na podstawie agregatu lewego syna (suma, max) decydujesz: odpowiedź jest w lewym synu → w lewo; inaczej → w prawo (przy sumie odejmując sumę lewego). Jedna ścieżka, O(log n). Tak liczysz k-tą jedynkę, pierwszą pozycję z prefiksem ≥ s i pierwszy element ≥ x.",
+     "code": "// Drzewo sum (a[i] ≥ 0) z zejściem od korzenia: bez wyszukiwania binarnego, O(log n).\nstruct SumTree {\n    int n;\n    vector<long long> t;\n    SumTree(int n) : n(n), t(4 * n, 0) {}\n    void add(int v, int l, int r, int pos, long long d) {\n        if (l == r) { t[v] += d; return; }\n        int m = (l + r) / 2;\n        if (pos <= m) add(2 * v, l, m, pos, d);\n        else add(2 * v + 1, m + 1, r, pos, d);\n        t[v] = t[2 * v] + t[2 * v + 1];\n    }\n    void add(int pos, long long d) { add(1, 0, n - 1, pos, d); }\n    // najmniejszy indeks i, że a[0] + ... + a[i] >= s; -1, gdy suma wszystkiego < s\n    int lowerBoundPrefix(long long s) const {\n        if (t[1] < s) return -1;\n        int v = 1, l = 0, r = n - 1;\n        while (l != r) {\n            int m = (l + r) / 2;\n            if (t[2 * v] >= s) { v = 2 * v; r = m; }             // wystarczy lewa połowa\n            else { s -= t[2 * v]; v = 2 * v + 1; l = m + 1; }   // weź całą lewą, szukaj w prawej\n        }\n        return l;\n    }\n    // indeks k-tej jedynki (k od 1) w tablicy zer i jedynek\n    int kthOne(int k) const { return lowerBoundPrefix(k); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "pierwszy element >= x drzewo przedziałowe",
+      "pierwszy element większy od x segment tree",
+      "first element greater than x segment tree",
+      "najmniejszy indeks z a[i] >= x",
+      "pierwszy wiekszy rowny x w drzewie przedzialowym",
+      "znajdź pierwszy element co najmniej x",
+      "first index with value at least x"
+     ],
+     "a": "Drzewo maksimum. Od korzenia: jeśli `max(lewy syn) ≥ x` — w lewo, inaczej w prawo; gdy `max(korzeń) < x` — brak (-1). Z ograniczeniem do [ql, qr] użyj rekurencji, która pomija węzły poza zakresem i z `max < x`, sprawdzając najpierw lewego syna. O(log n).",
+     "code": "// Pierwszy indeks w [ql, qr] z a[i] >= x w drzewie MAKSIMUM t[] (wywołanie: firstIn(t, 1, 0, n-1, ql, qr, x)).\nint firstIn(const vector<long long>& t, int v, int l, int r, int ql, int qr, long long x) {\n    if (r < ql || qr < l || t[v] < x) return -1;\n    if (l == r) return l;\n    int m = (l + r) / 2;\n    int res = firstIn(t, 2 * v, l, m, ql, qr, x);\n    if (res == -1) res = firstIn(t, 2 * v + 1, m + 1, r, ql, qr, x);\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "k-ta jedynka",
+      "k-ta jedynka drzewo przedziałowe",
+      "kth one segment tree",
+      "indeks k-tej jedynki",
+      "k-ty wolny element",
+      "znajdź k-te wolne miejsce",
+      "k ta jedynka w tablicy zer i jedynek"
+     ],
+     "a": "Drzewo sum nad tablicą 0/1. Od korzenia: jeśli `k ≤ sum(lewy)` → w lewo, inaczej `k -= sum(lewy)` i w prawo. W liściu masz indeks. O(log n). Typowe użycia: „usuń k-ty obecny element”, „k-te wolne miejsce”.",
+     "code": "// Drzewo sum (a[i] ≥ 0) z zejściem od korzenia: bez wyszukiwania binarnego, O(log n).\nstruct SumTree {\n    int n;\n    vector<long long> t;\n    SumTree(int n) : n(n), t(4 * n, 0) {}\n    void add(int v, int l, int r, int pos, long long d) {\n        if (l == r) { t[v] += d; return; }\n        int m = (l + r) / 2;\n        if (pos <= m) add(2 * v, l, m, pos, d);\n        else add(2 * v + 1, m + 1, r, pos, d);\n        t[v] = t[2 * v] + t[2 * v + 1];\n    }\n    void add(int pos, long long d) { add(1, 0, n - 1, pos, d); }\n    // najmniejszy indeks i, że a[0] + ... + a[i] >= s; -1, gdy suma wszystkiego < s\n    int lowerBoundPrefix(long long s) const {\n        if (t[1] < s) return -1;\n        int v = 1, l = 0, r = n - 1;\n        while (l != r) {\n            int m = (l + r) / 2;\n            if (t[2 * v] >= s) { v = 2 * v; r = m; }             // wystarczy lewa połowa\n            else { s -= t[2 * v]; v = 2 * v + 1; l = m + 1; }   // weź całą lewą, szukaj w prawej\n        }\n        return l;\n    }\n    // indeks k-tej jedynki (k od 1) w tablicy zer i jedynek\n    int kthOne(int k) const { return lowerBoundPrefix(k); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "pierwsza pozycja z sumą prefiksu >= s",
+      "lower bound sumy prefiksowej drzewo przedziałowe",
+      "prefix sum lower bound segment tree",
+      "najmniejsze i takie że suma do i >= s",
+      "pierwszy prefiks o sumie co najmniej s",
+      "gdzie suma prefiksu przekracza s"
+     ],
+     "a": "Jak k-ta jedynka, tylko z dowolnymi **nieujemnymi** wartościami: `s ≤ sum(lewy)` → lewo, inaczej `s -= sum(lewy)` → prawo. Jeśli `sum(korzeń) < s` — brak. Bez aktualizacji wystarczy `lower_bound` na zwykłych sumach prefiksowych.",
+     "code": "// Drzewo sum (a[i] ≥ 0) z zejściem od korzenia: bez wyszukiwania binarnego, O(log n).\nstruct SumTree {\n    int n;\n    vector<long long> t;\n    SumTree(int n) : n(n), t(4 * n, 0) {}\n    void add(int v, int l, int r, int pos, long long d) {\n        if (l == r) { t[v] += d; return; }\n        int m = (l + r) / 2;\n        if (pos <= m) add(2 * v, l, m, pos, d);\n        else add(2 * v + 1, m + 1, r, pos, d);\n        t[v] = t[2 * v] + t[2 * v + 1];\n    }\n    void add(int pos, long long d) { add(1, 0, n - 1, pos, d); }\n    // najmniejszy indeks i, że a[0] + ... + a[i] >= s; -1, gdy suma wszystkiego < s\n    int lowerBoundPrefix(long long s) const {\n        if (t[1] < s) return -1;\n        int v = 1, l = 0, r = n - 1;\n        while (l != r) {\n            int m = (l + r) / 2;\n            if (t[2 * v] >= s) { v = 2 * v; r = m; }             // wystarczy lewa połowa\n            else { s -= t[2 * v]; v = 2 * v + 1; l = m + 1; }   // weź całą lewą, szukaj w prawej\n        }\n        return l;\n    }\n    // indeks k-tej jedynki (k od 1) w tablicy zer i jedynek\n    int kthOne(int k) const { return lowerBoundPrefix(k); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "pierwszy element >= x na prawo od l",
+      "pierwszy indeks od pozycji l z wartością co najmniej x",
+      "first element >= x starting from l",
+      "najbliższy na prawo element >= x z aktualizacjami",
+      "next greater element z aktualizacjami",
+      "pierwszy na prawo większy segment tree"
+     ],
+     "a": "Rekurencja `first(v, l, r, from, x)`: zwróć -1, gdy `r < from` albo `max[v] < x`; w liściu zwróć indeks; inaczej najpierw lewy syn, a gdy dał -1 — prawy. O(log n). Bez aktualizacji „najbliższy większy” prościej liczyć stosem monotonicznym.",
+     "code": "// Drzewo maksimum z zejściem: „pierwszy indeks i ≥ from, że a[i] ≥ x” w O(log n).\nstruct MaxTree {\n    int n;\n    vector<long long> t;\n    MaxTree(const vector<long long>& a) : n(a.size()), t(4 * a.size()) { build(1, 0, n - 1, a); }\n    void build(int v, int l, int r, const vector<long long>& a) {\n        if (l == r) { t[v] = a[l]; return; }\n        int m = (l + r) / 2;\n        build(2 * v, l, m, a);\n        build(2 * v + 1, m + 1, r, a);\n        t[v] = max(t[2 * v], t[2 * v + 1]);\n    }\n    void add(int v, int l, int r, int pos, long long d) {\n        if (l == r) { t[v] += d; return; }\n        int m = (l + r) / 2;\n        if (pos <= m) add(2 * v, l, m, pos, d);\n        else add(2 * v + 1, m + 1, r, pos, d);\n        t[v] = max(t[2 * v], t[2 * v + 1]);\n    }\n    int first(int v, int l, int r, int from, long long x) {\n        if (r < from || t[v] < x) return -1;     // poza zakresem albo nikt tu nie ma ≥ x\n        if (l == r) return l;\n        int m = (l + r) / 2;\n        int res = first(2 * v, l, m, from, x);   // najpierw lewy syn — szukamy NAJMNIEJSZEGO indeksu\n        if (res == -1) res = first(2 * v + 1, m + 1, r, from, x);\n        return res;\n    }\n    void add(int pos, long long d) { add(1, 0, n - 1, pos, d); }\n    int first(int from, long long x) { return first(1, 0, n - 1, from, x); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ostatni element mniejszy od x przed r",
+      "last element less than x segment tree",
+      "najbliższy na lewo mniejszy od x drzewo przedziałowe",
+      "ostatni indeks <= r z a[i] < x",
+      "szukanie od prawej w drzewie przedziałowym"
+     ],
+     "a": "Lustrzane odbicie: drzewo **minimum**, pomijasz węzły na prawo od `r` i z `min ≥ x`, najpierw odwiedzasz **prawego** syna. O(log n).",
+     "code": "// Ostatni indeks i ≤ to, że a[i] < x (drzewo MINIMUM t[], rekurencja od korzenia: last(1, 0, n-1, to, x)).\n// Lustrzane odbicie „first”: najpierw PRAWY syn, potem lewy. -1, gdy brak. O(log n).\nint last(const vector<long long>& t, int v, int l, int r, int to, long long x) {\n    if (l > to || t[v] >= x) return -1;\n    if (l == r) return l;\n    int m = (l + r) / 2;\n    int res = last(t, 2 * v + 1, m + 1, r, to, x);\n    if (res == -1) res = last(t, 2 * v, l, m, to, x);\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "binary search na drzewie przedziałowym log^2",
+      "wyszukiwanie binarne i query segment tree",
+      "dlaczego zejście zamiast binary search",
+      "segment tree log kwadrat",
+      "binsearch + query za wolne",
+      "jak przyspieszyć binary search na segment tree"
+     ],
+     "a": "Wyszukiwanie binarne po indeksie z `query(0, mid)` w środku robi log n zapytań po O(log n) → O(log² n). Zejście korzysta z tego, że drzewo już podzieliło tablicę na połówki: jedna ścieżka od korzenia do liścia, O(log n). Przy n, q rzędu 10^6 to różnica między ułamkiem sekundy a kilkoma sekundami."
+    },
+    {
+     "q": [
+      "zejście w drzewie przedziałowym bottom up",
+      "k-ta jedynka iteracyjne drzewo",
+      "segment tree iterative descent",
+      "zejscie po drzewie iteracyjnym",
+      "bottom-up segment tree kth"
+     ],
+     "a": "W drzewie iteracyjnym z rozmiarem N = potęga dwójki korzeń to `1`, synowie `2v` i `2v+1`, liście `N + i` — schodzisz pętlą `while (v < N)`. Gdy N nie jest potęgą dwójki, dopełnij tablicę zerami do potęgi dwójki.",
+     "code": "// Bottom-up: N = potęga dwójki ≥ n, liście w t[N .. 2N-1], t[v] = t[2v] + t[2v+1].\n// k-ta jedynka (k od 1, zakładamy t[1] >= k): schodzimy od korzenia v = 1.\nint kthOneBottomUp(const vector<int>& t, int N, int k) {\n    int v = 1;\n    while (v < N) {\n        if (t[2 * v] >= k) v = 2 * v;\n        else { k -= t[2 * v]; v = 2 * v + 1; }\n    }\n    return v - N;                  // indeks w tablicy (od 0)\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "first fit drzewo przedziałowe",
+      "przydzielanie miejsc pierwsze pasujące",
+      "hotel queries",
+      "pierwszy hotel z wolnymi pokojami",
+      "pierwszy pojemnik z miejscem co najmniej x",
+      "bin packing first fit szybko"
+     ],
+     "a": "Drzewo maksimum wolnego miejsca. Dla żądania r: `i = first(0, r)` (pierwszy indeks z wolnym miejscem ≥ r), potem `add(i, -r)`. Każde żądanie O(log n).",
+     "code": "// Drzewo maksimum z zejściem: „pierwszy indeks i ≥ from, że a[i] ≥ x” w O(log n).\nstruct MaxTree {\n    int n;\n    vector<long long> t;\n    MaxTree(const vector<long long>& a) : n(a.size()), t(4 * a.size()) { build(1, 0, n - 1, a); }\n    void build(int v, int l, int r, const vector<long long>& a) {\n        if (l == r) { t[v] = a[l]; return; }\n        int m = (l + r) / 2;\n        build(2 * v, l, m, a);\n        build(2 * v + 1, m + 1, r, a);\n        t[v] = max(t[2 * v], t[2 * v + 1]);\n    }\n    void add(int v, int l, int r, int pos, long long d) {\n        if (l == r) { t[v] += d; return; }\n        int m = (l + r) / 2;\n        if (pos <= m) add(2 * v, l, m, pos, d);\n        else add(2 * v + 1, m + 1, r, pos, d);\n        t[v] = max(t[2 * v], t[2 * v + 1]);\n    }\n    int first(int v, int l, int r, int from, long long x) {\n        if (r < from || t[v] < x) return -1;     // poza zakresem albo nikt tu nie ma ≥ x\n        if (l == r) return l;\n        int m = (l + r) / 2;\n        int res = first(2 * v, l, m, from, x);   // najpierw lewy syn — szukamy NAJMNIEJSZEGO indeksu\n        if (res == -1) res = first(2 * v + 1, m + 1, r, from, x);\n        return res;\n    }\n    void add(int pos, long long d) { add(1, 0, n - 1, pos, d); }\n    int first(int from, long long x) { return first(1, 0, n - 1, from, x); }\n};\n\n// First fit: każde żądanie trafia do pierwszego pojemnika z miejscem >= r (-1 = nigdzie).\nvector<int> firstFit(const vector<long long>& space, const vector<long long>& req) {\n    MaxTree st(space);\n    vector<int> res;\n    for (long long r : req) {\n        int i = st.first(0, r);\n        res.push_back(i);\n        if (i != -1) st.add(i, -r);\n    }\n    return res;\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "ds-segment-tree",
+    "ds-segment-tree-iterative",
+    "ds-lazy-propagation",
+    "ds-fenwick-kth",
+    "tech-binary-search",
+    "ds-monotonic-stack"
+   ]
+  },
+  {
+   "id": "ds-lazy-deletion-heap",
+   "title": "Kopiec z leniwym usuwaniem (usuwanie dowolnego elementu z priority_queue)",
+   "category": "Struktury danych",
+   "tags": [
+    "kopiec",
+    "priority_queue",
+    "leniwe usuwanie",
+    "lazy deletion",
+    "dwa kopce",
+    "erase z kopca",
+    "mediana w oknie",
+    "dijkstra",
+    "decrease key"
+   ],
+   "aliases": [
+    "kopiec z usuwaniem",
+    "leniwe usuwanie",
+    "lazy deletion",
+    "lazy deletion heap",
+    "usuwanie z priority_queue",
+    "usuwanie dowolnego elementu z kopca",
+    "priority queue erase",
+    "priority_queue remove element",
+    "dwa kopce usuwanie",
+    "kopiec z leniwym usuwaniem",
+    "erasable heap",
+    "usuwanie z kolejki priorytetowej",
+    "pq usuwanie elementu"
+   ],
+   "summary": "`priority_queue` nie ma `erase`. Elementy do usunięcia wrzucamy do drugiego kopca `del` i zdejmujemy oba szczyty, gdy są równe — usunięcie „dzieje się” dopiero, gdy element wypłynie na górę. Daje O(log n) zamortyzowane i zwykle jest wyraźnie szybsze od `multiset`.",
+   "complexity": "push/erase/pop: O(log n) zamortyzowane; top: O(1) + zamortyzowane czyszczenie; pamięć O(liczba wszystkich wstawień)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Idea.** Kopiec widzi tylko swój szczyt, więc nie usuwamy elementu od razu — tylko zapisujemy, że ma zniknąć. Wersja z dwoma kopcami: `q` (elementy) i `del` (do usunięcia, ten sam porządek). Dopóki `q.top() == del.top()`, zdejmujemy oba. Działa także z duplikatami, bo `del ⊆ q` jako multizbiory: jeśli szczyt `q` jest do usunięcia, to jest też największym elementem `del`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Kopiec z usuwaniem dowolnego elementu: drugi kopiec `del` trzyma „do usunięcia”.\n// Niezmiennik: del ⊆ q (jako multizbiory). Każdy element wchodzi i wychodzi ≤ 2 razy → O(log n) zamortyzowane.\ntemplate <class T, class Cmp = less<T>>\nstruct ErasableHeap {\n    priority_queue<T, vector<T>, Cmp> q, del;\n    void push(const T& x) { q.push(x); }\n    void erase(const T& x) { del.push(x); }          // x MUSI być teraz w kopcu!\n    void clean() {\n        while (!del.empty() && q.top() == del.top()) { q.pop(); del.pop(); }\n    }\n    const T& top() { clean(); return q.top(); }\n    void pop() { clean(); q.pop(); }\n    size_t size() const { return q.size() - del.size(); }\n    bool empty() const { return size() == 0; }\n};",
+     "title": "ErasableHeap — kopiec z usuwaniem dowolnego elementu",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sposób",
+      "Usuwanie",
+      "Wymaga",
+      "Kiedy"
+     ],
+     "rows": [
+      [
+       "dwa kopce (`q` i `del`)",
+       "`del.push(x)`",
+       "x musi być w kopcu",
+       "usuwasz po **wartości**, są duplikaty"
+      ],
+      [
+       "znacznik `dead[id]`",
+       "`dead[id] = true`",
+       "wpisy `(klucz, id)`",
+       "usuwasz konkretny obiekt (zadanie, krawędź)"
+      ],
+      [
+       "wersjonowanie `cur[id]`",
+       "wrzuć nowy wpis, stary pomiń",
+       "pamiętaj aktualny klucz",
+       "zmiana priorytetu (decrease-key), Dijkstra"
+      ],
+      [
+       "`multiset`",
+       "`ms.erase(ms.find(x))`",
+       "—",
+       "potrzebujesz naraz min i max, `lower_bound`, przeglądania"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Dijkstra to też leniwe usuwanie.** Zamiast decrease-key wrzucamy nową parę `(dist, v)`, a przy zdejmowaniu pomijamy nieaktualne: `if (d != dist[v]) continue;`. Kopiec może urosnąć do O(m) wpisów, więc złożoność to O(m log m) = O(m log n)."
+    },
+    {
+     "type": "text",
+     "md": "**Mediana w oknie przesuwnym.** Dwa kopce: `lo` (dolna połowa, max na górze) i `hi` (górna połowa, min na górze). Nowy element trafia do `lo`, jeśli jest ≤ `lo.top()`, inaczej do `hi`; element wypadający z okna usuwamy leniwie z kopca, w którym leży. Potem wyrównujemy rozmiary **żywych** elementów tak, by `lo` miał tyle samo albo o jeden więcej niż `hi`. Mediana (dolna) = `lo.top()`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Kopiec z usuwaniem dowolnego elementu: drugi kopiec `del` trzyma „do usunięcia”.\n// Niezmiennik: del ⊆ q (jako multizbiory). Każdy element wchodzi i wychodzi ≤ 2 razy → O(log n) zamortyzowane.\ntemplate <class T, class Cmp = less<T>>\nstruct ErasableHeap {\n    priority_queue<T, vector<T>, Cmp> q, del;\n    void push(const T& x) { q.push(x); }\n    void erase(const T& x) { del.push(x); }          // x MUSI być teraz w kopcu!\n    void clean() {\n        while (!del.empty() && q.top() == del.top()) { q.pop(); del.pop(); }\n    }\n    const T& top() { clean(); return q.top(); }\n    void pop() { clean(); q.pop(); }\n    size_t size() const { return q.size() - del.size(); }\n    bool empty() const { return size() == 0; }\n};\n\n// Mediana (dolna) każdego okna długości k na dwóch kopcach z leniwym usuwaniem: O(n log n).\nvector<long long> slidingMedian(const vector<long long>& a, int k) {\n    ErasableHeap<long long> lo;                       // dolna połowa, maksimum na górze\n    ErasableHeap<long long, greater<long long>> hi;   // górna połowa, minimum na górze\n    vector<long long> res;\n    for (int i = 0; i < (int)a.size(); i++) {\n        if (lo.empty() || a[i] <= lo.top()) lo.push(a[i]);\n        else hi.push(a[i]);\n        if (i >= k) {                                 // a[i-k] wypada z okna\n            if (a[i - k] <= lo.top()) lo.erase(a[i - k]);\n            else hi.erase(a[i - k]);\n        }\n        while (lo.size() > hi.size() + 1) { hi.push(lo.top()); lo.pop(); }\n        while (lo.size() < hi.size()) { lo.push(hi.top()); hi.pop(); }\n        if (i >= k - 1) res.push_back(lo.top());\n    }\n    return res;\n}\n\nint main() {\n    // Wejście: n k, potem a[0..n-1]. Wypisz (dolną) medianę każdego okna długości k.\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, k;\n    cin >> n >> k;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    for (long long m : slidingMedian(a, k)) cout << m << ' ';\n    cout << '\\n';\n}",
+     "title": "Pełny program: mediana każdego okna długości k (dwa kopce z leniwym usuwaniem)"
+    },
+    {
+     "type": "tip",
+     "md": "Liczba „żywych” elementów to `q.size() - del.size()`, a nie `q.size()`. Przy medianie na dwóch kopcach balansuj właśnie po tych rozmiarach."
+    },
+    {
+     "type": "warn",
+     "md": "Usunięcie elementu, którego **nie ma** w kopcu, psuje wszystko: `del` nigdy się nie wyczyści, a `size()` kłamie. Dla `double` porównanie szczytów przez `==` bywa zawodne — używaj identyfikatorów (`dead[id]`) zamiast wartości."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "h.erase(x)",
+     "desc": "oznacza x do usunięcia (x musi być w kopcu)",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "h.top()",
+     "desc": "zdejmuje z obu kopców równe szczyty, potem zwraca szczyt",
+     "complexity": "O(1) + zamortyzowane czyszczenie"
+    },
+    {
+     "sig": "h.size()",
+     "desc": "liczba żywych elementów: q.size() − del.size()",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`erase(x)` dla x, którego nie ma w kopcu — nieodwracalnie psuje strukturę.",
+    "Rozmiar liczony jako `q.size()` — zawiera martwe elementy.",
+    "Inny porządek w `del` niż w `q` (np. `q` z `greater<>`, `del` domyślny) — szczyty nigdy się nie spotkają.",
+    "Czyszczenie tylko w `pop()`, a nie w `top()` — `top()` zwróci martwy element.",
+    "Wersja z `dead[id]`: pomijanie martwych trzeba robić w KAŻDYM miejscu, które czyta szczyt.",
+    "Pamięć rośnie z liczbą wszystkich wstawień (martwe wpisy siedzą w kopcu) — przy 10^7 operacji policz limit."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak usunąć dowolny element z priority_queue",
+      "usuwanie z priority_queue",
+      "priority queue erase",
+      "remove element from priority queue c++",
+      "usuniecie elementu z kopca",
+      "pq erase c++",
+      "kolejka priorytetowa usuń element"
+     ],
+     "a": "`priority_queue` nie ma `erase`. Trzymaj drugi kopiec `del` z elementami do usunięcia; przed każdym `top()`/`pop()` zdejmuj z obu, dopóki szczyty są równe. O(log n) zamortyzowane. Alternatywa: `multiset` z `ms.erase(ms.find(x))` — prostszy, ale wolniejszy.",
+     "code": "// Kopiec z usuwaniem dowolnego elementu: drugi kopiec `del` trzyma „do usunięcia”.\n// Niezmiennik: del ⊆ q (jako multizbiory). Każdy element wchodzi i wychodzi ≤ 2 razy → O(log n) zamortyzowane.\ntemplate <class T, class Cmp = less<T>>\nstruct ErasableHeap {\n    priority_queue<T, vector<T>, Cmp> q, del;\n    void push(const T& x) { q.push(x); }\n    void erase(const T& x) { del.push(x); }          // x MUSI być teraz w kopcu!\n    void clean() {\n        while (!del.empty() && q.top() == del.top()) { q.pop(); del.pop(); }\n    }\n    const T& top() { clean(); return q.top(); }\n    void pop() { clean(); q.pop(); }\n    size_t size() const { return q.size() - del.size(); }\n    bool empty() const { return size() == 0; }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "leniwe usuwanie",
+      "lazy deletion",
+      "co to leniwe usuwanie",
+      "lazy deletion heap",
+      "leniwe usuwanie kopiec",
+      "lazy delete priority queue"
+     ],
+     "a": "Nie usuwasz od razu, tylko oznaczasz element jako martwy; fizycznie wyrzucasz go dopiero, gdy pojawi się na szczycie. Każdy element zostaje zdjęty najwyżej raz, więc łączny koszt to O(liczba wstawień · log n).",
+     "code": "priority_queue<int> q, del;\nfor (int x : {5, 9, 7}) q.push(x);\ndel.push(9);                                          // „usuń 9”\nwhile (!del.empty() && q.top() == del.top()) { q.pop(); del.pop(); }\ncout << q.top() << '\\n';                              // 7"
+    },
+    {
+     "q": [
+      "dijkstra continue jeśli d > dist",
+      "dlaczego w dijkstrze if d != dist continue",
+      "dijkstra stare wpisy w kolejce",
+      "dijkstra bez decrease key",
+      "dijkstra lazy deletion",
+      "dijkstra priority queue duplikaty"
+     ],
+     "a": "To leniwe usuwanie: przy poprawie `dist[v]` wrzucasz nową parę zamiast zmieniać starą. Stare (większe) wpisy zostają w kopcu i trzeba je pominąć — inaczej przetwarzasz wierzchołek wiele razy i złożoność może eksplodować.",
+     "code": "vector<long long> dijkstra(const vector<vector<pair<int, long long>>>& g, int s) {\n    vector<long long> dist(g.size(), LLONG_MAX);\n    priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;\n    dist[s] = 0;\n    pq.push({0, s});\n    while (!pq.empty()) {\n        auto [d, v] = pq.top();\n        pq.pop();\n        if (d != dist[v]) continue;                   // martwy (nieaktualny) wpis — leniwe usuwanie\n        for (auto [u, w] : g[v])\n            if (d + w < dist[u]) {\n                dist[u] = d + w;\n                pq.push({dist[u], u});                // zamiast decrease-key: nowy wpis\n            }\n    }\n    return dist;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "zmiana priorytetu w priority_queue",
+      "decrease key priority queue c++",
+      "aktualizacja klucza w kopcu",
+      "update priority heap",
+      "zmienic wartosc elementu w kolejce priorytetowej"
+     ],
+     "a": "Trzymaj `cur[id]` (aktualny priorytet) i przy każdej zmianie wrzucaj nową parę `(priorytet, id)`. Zdejmując, pomijaj pary z `p != cur[id]`. Nie potrzeba ręcznego kopca z indeksami.",
+     "code": "// Zmiana priorytetu bez decrease-key: wrzucamy nową parę, a stare wpisy pomijamy przy zdejmowaniu.\nint n = 5;\nvector<int> cur(n, 0);                          // aktualny priorytet zadania id\npriority_queue<pair<int, int>> pq;              // (priorytet, id)\nauto setPriority = [&](int id, int p) { cur[id] = p; pq.push({p, id}); };\nauto popBest = [&]() -> int {                   // zwraca id o największym priorytecie albo -1\n    while (!pq.empty()) {\n        auto [p, id] = pq.top();\n        pq.pop();\n        if (p == cur[id]) { cur[id] = INT_MIN; return id; }   // wpis aktualny → wydajemy zadanie\n    }                                                       // nieaktualny → leniwie wyrzucony\n    return -1;\n};\nsetPriority(1, 10);\nsetPriority(2, 7);\nsetPriority(1, 3);                              // stary wpis (10, 1) zostaje w kopcu, ale jest martwy\ncout << popBest() << ' ' << popBest() << '\\n';  // 2 1"
+    },
+    {
+     "q": [
+      "kopiec czy multiset",
+      "multiset vs priority_queue z usuwaniem",
+      "dwa kopce czy multiset szybsze",
+      "priority queue vs multiset speed",
+      "co szybsze multiset czy pq"
+     ],
+     "a": "Dwa kopce są zwykle 2–3× szybsze od `multiset` (ciągła pamięć, brak alokacji węzłów) i wystarczą, gdy pytasz tylko o jeden koniec (max **albo** min). `multiset` wybierz, gdy potrzebujesz naraz min i max, `lower_bound`, przeglądania po kolei albo nie masz pewności, że usuwany element istnieje."
+    },
+    {
+     "q": [
+      "mediana w oknie przesuwnym",
+      "sliding window median",
+      "mediana z k kolejnych elementów",
+      "median of sliding window c++",
+      "mediana okna dwa kopce",
+      "ruchoma mediana"
+     ],
+     "a": "Dwa kopce: `lo` (dolna połowa, max na górze) i `hi` (górna, min na górze), oba z leniwym usuwaniem. Element wypadający z okna usuwasz z kopca, do którego należy (`x ≤ lo.top()` → `lo`), potem wyrównujesz rozmiary **żywych** elementów. Mediana = `lo.top()`. O(n log n). Prostsza alternatywa: dwa `multiset`-y.",
+     "code": "// Kopiec z usuwaniem dowolnego elementu: drugi kopiec `del` trzyma „do usunięcia”.\n// Niezmiennik: del ⊆ q (jako multizbiory). Każdy element wchodzi i wychodzi ≤ 2 razy → O(log n) zamortyzowane.\ntemplate <class T, class Cmp = less<T>>\nstruct ErasableHeap {\n    priority_queue<T, vector<T>, Cmp> q, del;\n    void push(const T& x) { q.push(x); }\n    void erase(const T& x) { del.push(x); }          // x MUSI być teraz w kopcu!\n    void clean() {\n        while (!del.empty() && q.top() == del.top()) { q.pop(); del.pop(); }\n    }\n    const T& top() { clean(); return q.top(); }\n    void pop() { clean(); q.pop(); }\n    size_t size() const { return q.size() - del.size(); }\n    bool empty() const { return size() == 0; }\n};\n\n// Mediana (dolna) każdego okna długości k na dwóch kopcach z leniwym usuwaniem: O(n log n).\nvector<long long> slidingMedian(const vector<long long>& a, int k) {\n    ErasableHeap<long long> lo;                       // dolna połowa, maksimum na górze\n    ErasableHeap<long long, greater<long long>> hi;   // górna połowa, minimum na górze\n    vector<long long> res;\n    for (int i = 0; i < (int)a.size(); i++) {\n        if (lo.empty() || a[i] <= lo.top()) lo.push(a[i]);\n        else hi.push(a[i]);\n        if (i >= k) {                                 // a[i-k] wypada z okna\n            if (a[i - k] <= lo.top()) lo.erase(a[i - k]);\n            else hi.erase(a[i - k]);\n        }\n        while (lo.size() > hi.size() + 1) { hi.push(lo.top()); lo.pop(); }\n        while (lo.size() < hi.size()) { lo.push(hi.top()); hi.pop(); }\n        if (i >= k - 1) res.push_back(lo.top());\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "rozmiar kopca z leniwym usuwaniem",
+      "size po lazy deletion",
+      "ile elementów w kopcu z usuwaniem",
+      "pq size zle po usuwaniu",
+      "empty kopca z leniwym usuwaniem"
+     ],
+     "a": "Żywych elementów jest `q.size() - del.size()` (przy niezmienniku `del ⊆ q`). `q.empty()` może być fałszem, mimo że wszystko jest martwe — sprawdzaj `size() == 0`, a nie `q.empty()`."
+    },
+    {
+     "q": [
+      "usuwanie z kopca po id",
+      "oznaczanie usuniętych w priority_queue",
+      "dead flag heap",
+      "anulowanie zadania w kolejce priorytetowej",
+      "usuwanie konkretnego obiektu z pq"
+     ],
+     "a": "Wkładaj pary `(klucz, id)` i trzymaj `dead[id]`. Usunięcie = `dead[id] = true`. Przed odczytem szczytu zdejmuj martwe. Działa także dla `double` i obiektów bez sensownego `==`.",
+     "code": "priority_queue<pair<double, int>> pq;                // (klucz, id)\nvector<bool> dead(3, false);\npq.push({2.5, 0});\npq.push({9.1, 1});\npq.push({4.0, 2});\ndead[1] = true;                                      // anuluj obiekt 1\nwhile (!pq.empty() && dead[pq.top().second]) pq.pop();\ncout << pq.top().second << '\\n';                     // 2"
+    }
+   ],
+   "related": [
+    "ds-heap",
+    "stl-priority-queue",
+    "stl-multiset",
+    "graph-dijkstra",
+    "ds-fenwick-kth"
+   ]
+  },
+  {
+   "id": "ds-cartesian-tree",
+   "title": "Drzewo kartezjańskie: budowa stosem w O(n), związek z RMQ i treapem",
+   "category": "Struktury danych",
+   "tags": [
+    "drzewo kartezjańskie",
+    "cartesian tree",
+    "stos monotoniczny",
+    "rmq",
+    "lca",
+    "treap",
+    "histogram",
+    "suma minimów",
+    "dziel i zwyciężaj"
+   ],
+   "aliases": [
+    "drzewo kartezjańskie",
+    "drzewo kartezjanskie",
+    "cartesian tree",
+    "cartesian tree c++",
+    "budowa drzewa kartezjańskiego",
+    "drzewo kartezjanskie stos",
+    "drzewo kartezjańskie o(n)",
+    "kartezjańskie drzewo",
+    "drzewo kartezjanskie rmq",
+    "drzewo minimum tablicy",
+    "cartesian tree stack",
+    "dziel po minimum"
+   ],
+   "summary": "Drzewo binarne na tablicy: korzeń to minimum, lewe poddrzewo powstaje z części na lewo od niego, prawe — z części na prawo. In-order daje oryginalną kolejność, a wartości tworzą kopiec. Budujemy je stosem w O(n); LCA(i, j) to pozycja minimum na [i, j], a treap to drzewo kartezjańskie par (klucz, priorytet).",
+   "complexity": "budowa O(n) stosem; głębokość do O(n) (dla losowych priorytetów oczekiwanie O(log n)); przedziały poddrzew O(n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Definicja.** Dla tablicy a[0..n-1]: korzeń = indeks minimum m; lewy syn = korzeń drzewa dla a[0..m-1], prawy = korzeń drzewa dla a[m+1..n-1]. Własności: (1) in-order daje indeksy 0, 1, …, n-1; (2) ojciec ma wartość ≤ syna (kopiec min); (3) **poddrzewo węzła i to maksymalny przedział, na którym a[i] jest minimum**."
+    },
+    {
+     "type": "text",
+     "md": "**Budowa w O(n).** Idziemy od lewej i trzymamy na stosie prawą krawędź drzewa (wartości niemalejące). Nowy element `i` zdejmuje ze stosu wszystkie większe — ostatni zdjęty zostaje jego lewym synem — a `i` staje się prawym synem tego, co zostało na szczycie. Każdy indeks wchodzi i schodzi ze stosu raz → O(n). To dokładnie stos monotoniczny („najbliższy mniejszy element”)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Drzewo kartezjańskie (kopiec MINIMUM, przy remisie korzeniem jest wcześniejszy indeks).\n// L[i], R[i] = lewy/prawy syn, par[i] = ojciec (-1 = brak). Zwraca korzeń. O(n) — stos.\nint buildCartesian(const vector<long long>& a, vector<int>& L, vector<int>& R, vector<int>& par) {\n    int n = a.size();\n    L.assign(n, -1);\n    R.assign(n, -1);\n    par.assign(n, -1);\n    vector<int> st;                    // prawa krawędź drzewa: wartości niemalejące od dna\n    for (int i = 0; i < n; i++) {\n        int last = -1;\n        while (!st.empty() && a[st.back()] > a[i]) { last = st.back(); st.pop_back(); }\n        if (last != -1) { L[i] = last; par[last] = i; }   // zdjęty fragment → lewe poddrzewo i\n        if (!st.empty()) { R[st.back()] = i; par[i] = st.back(); }\n        st.push_back(i);\n    }\n    return st.empty() ? -1 : st[0];\n}",
+     "title": "Budowa drzewa kartezjańskiego stosem w O(n)",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Drzewo kartezjańskie (kopiec MINIMUM, przy remisie korzeniem jest wcześniejszy indeks).\n// L[i], R[i] = lewy/prawy syn, par[i] = ojciec (-1 = brak). Zwraca korzeń. O(n) — stos.\nint buildCartesian(const vector<long long>& a, vector<int>& L, vector<int>& R, vector<int>& par) {\n    int n = a.size();\n    L.assign(n, -1);\n    R.assign(n, -1);\n    par.assign(n, -1);\n    vector<int> st;                    // prawa krawędź drzewa: wartości niemalejące od dna\n    for (int i = 0; i < n; i++) {\n        int last = -1;\n        while (!st.empty() && a[st.back()] > a[i]) { last = st.back(); st.pop_back(); }\n        if (last != -1) { L[i] = last; par[last] = i; }   // zdjęty fragment → lewe poddrzewo i\n        if (!st.empty()) { R[st.back()] = i; par[i] = st.back(); }\n        st.push_back(i);\n    }\n    return st.empty() ? -1 : st[0];\n}\n\nint main() {\n    // Wejście: n, a[0..n-1]. Wypisuje: korzeń, ojców, największy prostokąt w histogramie\n    // i sumę minimów wszystkich spójnych fragmentów.\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    vector<int> L, R, par;\n    int root = buildCartesian(a, L, R, par);\n\n    // rozmiary poddrzew bez rekurencji: kolejność DFS, potem od końca\n    vector<int> order, sz(n, 1), st = {root};\n    while (!st.empty()) {\n        int v = st.back();\n        st.pop_back();\n        order.push_back(v);\n        if (L[v] != -1) st.push_back(L[v]);\n        if (R[v] != -1) st.push_back(R[v]);\n    }\n    for (int j = n - 1; j > 0; j--) sz[par[order[j]]] += sz[order[j]];\n\n    long long bestRect = 0, sumMin = 0;\n    for (int i = 0; i < n; i++) {\n        long long left = L[i] == -1 ? 0 : sz[L[i]];   // poddrzewo i = przedział [i-left, i+right],\n        long long right = R[i] == -1 ? 0 : sz[R[i]];  // na którym a[i] jest minimum\n        bestRect = max(bestRect, a[i] * sz[i]);\n        sumMin += a[i] * (left + 1) * (right + 1);    // fragmenty z minimum (LCA) w i\n    }\n    cout << \"korzen: \" << root << \"\\nojcowie:\";\n    for (int i = 0; i < n; i++) cout << ' ' << par[i];\n    cout << \"\\nprostokat: \" << bestRect << \"\\nsuma minimow: \" << sumMin << '\\n';\n}",
+     "title": "Pełny program: korzeń, ojcowie, największy prostokąt i suma minimów"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Pojęcie",
+      "W drzewie kartezjańskim",
+      "Wniosek"
+     ],
+     "rows": [
+      [
+       "min na [i, j] (RMQ)",
+       "a[LCA(i, j)]",
+       "RMQ ⇔ LCA (a LCA → RMQ przez Euler tour)"
+      ],
+      [
+       "przedział, gdzie a[i] jest minimum",
+       "poddrzewo i",
+       "granice = najbliższe mniejsze z lewej i prawej"
+      ],
+      [
+       "liczba fragmentów z minimum w i",
+       "(rozmiar lewego + 1) · (rozmiar prawego + 1)",
+       "suma minimów wszystkich fragmentów w O(n)"
+      ],
+      [
+       "największy prostokąt w histogramie",
+       "max a[i] · rozmiar poddrzewa(i)",
+       "O(n)"
+      ],
+      [
+       "treap",
+       "drzewo kartezjańskie par (klucz, priorytet)",
+       "losowe priorytety → oczekiwana głębokość O(log n)"
+      ],
+      [
+       "„dziel po minimum”",
+       "rekurencja po drzewie",
+       "wszystkie podziały gotowe, bez szukania minimum pętlą"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**„Dziel i zwyciężaj po minimum”.** Wiele zadań rozwiązuje się tak: weź minimum przedziału, policz fragmenty przechodzące przez nie, rozwiąż lewą i prawą część. Szukanie minimum pętlą daje O(n²) dla posortowanej tablicy — drzewo kartezjańskie daje wszystkie podziały od razu. Gdy w węźle iterujesz po **mniejszej** stronie, całość to O(n log n) (jak small-to-large)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// „Dziel po minimum” bez O(n^2): rekurencja po drzewie kartezjańskim (zamiast szukać minimum pętlą).\n// Przykład: liczba fragmentów [l, r], w których min * długość >= K. Każdy węzeł v obsługuje\n// fragmenty o minimum w v, czyli l ∈ [lo, v], r ∈ [v, hi]. Stos jawny → brak przepełnienia stosu.\nlong long countGood(const vector<long long>& a, long long K) {\n    int n = a.size();\n    if (n == 0) return 0;\n    vector<int> L(n, -1), R(n, -1), st;\n    for (int i = 0; i < n; i++) {\n        int last = -1;\n        while (!st.empty() && a[st.back()] > a[i]) { last = st.back(); st.pop_back(); }\n        L[i] = last;\n        if (!st.empty()) R[st.back()] = i;\n        st.push_back(i);\n    }\n    long long res = 0;\n    vector<array<int, 3>> todo = {{st[0], 0, n - 1}};      // (węzeł, lo, hi)\n    while (!todo.empty()) {\n        auto [v, lo, hi] = todo.back();\n        todo.pop_back();\n        // fragmenty l ∈ [lo, v], r ∈ [v, hi]: przechodzimy po MNIEJSZEJ stronie (small-to-large → O(n log n))\n        long long need = K <= 0 ? 1 : (a[v] > 0 ? (K + a[v] - 1) / a[v] : n + 1);   // min. długość\n        if (v - lo <= hi - v) {\n            for (int l = lo; l <= v; l++) {\n                long long rmin = max<long long>(v, l + need - 1);\n                if (rmin <= hi) res += hi - rmin + 1;\n            }\n        } else {\n            for (int r = v; r <= hi; r++) {\n                long long lmax = min<long long>(v, r - need + 1);\n                if (lmax >= lo) res += lmax - lo + 1;\n            }\n        }\n        if (L[v] != -1) todo.push_back({L[v], lo, v - 1});\n        if (R[v] != -1) todo.push_back({R[v], v + 1, hi});\n    }\n    return res;\n}",
+     "title": "Dziel po minimum: liczba fragmentów z min · długość ≥ K",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Poddrzewo i w drzewie kartezjańskim = przedział [lo[i], hi[i]], na którym a[i] jest minimum:\n// lo = za najbliższym na lewo ≤ a[i], hi = przed najbliższym na prawo < a[i]. Liczone tym samym stosem.\nvoid subtreeRanges(const vector<long long>& a, vector<int>& lo, vector<int>& hi) {\n    int n = a.size();\n    lo.assign(n, 0);\n    hi.assign(n, n - 1);\n    vector<int> st;\n    for (int i = 0; i < n; i++) {\n        while (!st.empty() && a[st.back()] > a[i]) { hi[st.back()] = i - 1; st.pop_back(); }\n        lo[i] = st.empty() ? 0 : st.back() + 1;\n        st.push_back(i);\n    }\n}\n\nlong long largestRectangle(const vector<long long>& h) {      // największy prostokąt w histogramie\n    vector<int> lo, hi;\n    subtreeRanges(h, lo, hi);\n    long long best = 0;\n    for (int i = 0; i < (int)h.size(); i++) best = max(best, h[i] * (hi[i] - lo[i] + 1));\n    return best;\n}\n\nlong long sumOfMinima(const vector<long long>& a) {           // suma min po wszystkich fragmentach\n    vector<int> lo, hi;\n    subtreeRanges(a, lo, hi);\n    long long s = 0;\n    for (int i = 0; i < (int)a.size(); i++) s += a[i] * (i - lo[i] + 1) * (hi[i] - i + 1);\n    return s;\n}",
+     "title": "Przedziały poddrzew stosem: największy prostokąt i suma minimów",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Przy równych wartościach ustal regułę i trzymaj się jej: `>` przy zdejmowaniu (jak wyżej) robi korzeniem **wcześniejsze** z równych minimów, a późniejsze trafiają do jego prawego poddrzewa. Dzięki temu każdy fragment ma jednoznaczny węzeł-minimum i nic nie liczy się podwójnie."
+    },
+    {
+     "type": "warn",
+     "md": "Głębokość drzewa kartezjańskiego dla posortowanej tablicy to n — rekurencyjny DFS przy n = 10^6 przepełni stos. Przechodź iteracyjnie (jawny stos) albo licz granice przedziałów bezpośrednio stosem monotonicznym."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Treap z POSORTOWANYCH kluczy w O(n): to drzewo kartezjańskie po priorytetach (kopiec maksimum).\nstruct Node { int key, pri, l = -1, r = -1; };\n\nint buildTreapSorted(vector<Node>& t) {          // t posortowane rosnąco po key\n    vector<int> st;\n    for (int i = 0; i < (int)t.size(); i++) {\n        int last = -1;\n        while (!st.empty() && t[st.back()].pri < t[i].pri) { last = st.back(); st.pop_back(); }\n        t[i].l = last;\n        if (!st.empty()) t[st.back()].r = i;\n        st.push_back(i);\n    }\n    return st.empty() ? -1 : st[0];              // korzeń\n}",
+     "title": "Treap z posortowanych kluczy w O(n)",
+     "scope": "global"
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int buildCartesian(a, L, R, par)",
+     "desc": "buduje drzewo (kopiec min) stosem, zwraca korzeń",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "subtreeRanges(a, lo, hi)",
+     "desc": "przedział poddrzewa każdego węzła = gdzie a[i] jest minimum",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "int buildTreapSorted(t)",
+     "desc": "treap z kluczy posortowanych rosnąco (kopiec max po priorytetach)",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Niespójne traktowanie równych wartości (raz `>`, raz `>=`) — fragmenty z kilkoma równymi minimami liczą się 0 albo 2 razy.",
+    "Rekurencja po drzewie dla tablicy posortowanej → głębokość n → przepełnienie stosu.",
+    "Szukanie minimum pętlą w „dziel po minimum” → O(n²) na tablicy posortowanej.",
+    "Pomylenie kopca min z max: dla treapa (priorytet max na górze) odwróć warunek zdejmowania.",
+    "Iloczyny `a[i] · (l + 1) · (r + 1)` przekraczają `int` — licz w `long long`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "drzewo kartezjańskie",
+      "drzewo kartezjanskie co to",
+      "cartesian tree",
+      "co to jest drzewo kartezjańskie",
+      "drzewo kartezjanskie jak dziala",
+      "cartesian tree explanation",
+      "kartezjańskie drzewo definicja"
+     ],
+     "a": "Drzewo binarne na tablicy: korzeń = minimum, lewe poddrzewo = drzewo części na lewo, prawe = na prawo (rekurencyjnie). In-order to kolejność tablicy, wartości tworzą kopiec min. Poddrzewo węzła i to przedział, na którym a[i] jest minimum. Treap = drzewo kartezjańskie par (klucz, priorytet).",
+     "code": "// Drzewo kartezjańskie (kopiec MINIMUM, przy remisie korzeniem jest wcześniejszy indeks).\n// L[i], R[i] = lewy/prawy syn, par[i] = ojciec (-1 = brak). Zwraca korzeń. O(n) — stos.\nint buildCartesian(const vector<long long>& a, vector<int>& L, vector<int>& R, vector<int>& par) {\n    int n = a.size();\n    L.assign(n, -1);\n    R.assign(n, -1);\n    par.assign(n, -1);\n    vector<int> st;                    // prawa krawędź drzewa: wartości niemalejące od dna\n    for (int i = 0; i < n; i++) {\n        int last = -1;\n        while (!st.empty() && a[st.back()] > a[i]) { last = st.back(); st.pop_back(); }\n        if (last != -1) { L[i] = last; par[last] = i; }   // zdjęty fragment → lewe poddrzewo i\n        if (!st.empty()) { R[st.back()] = i; par[i] = st.back(); }\n        st.push_back(i);\n    }\n    return st.empty() ? -1 : st[0];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "budowa drzewa kartezjańskiego w o(n)",
+      "drzewo kartezjanskie stos",
+      "cartesian tree build linear",
+      "jak zbudować drzewo kartezjańskie szybko",
+      "drzewo kartezjanskie o(n) stosem",
+      "build cartesian tree stack"
+     ],
+     "a": "Stos trzyma prawą krawędź drzewa. Dla nowego i: zdejmij wszystkie większe od a[i] (ostatni zdjęty → lewy syn i), potem i → prawy syn szczytu stosu, wrzuć i. Korzeń = dno stosu. O(n), bo każdy indeks wchodzi i wychodzi raz.",
+     "code": "// Drzewo kartezjańskie (kopiec MINIMUM, przy remisie korzeniem jest wcześniejszy indeks).\n// L[i], R[i] = lewy/prawy syn, par[i] = ojciec (-1 = brak). Zwraca korzeń. O(n) — stos.\nint buildCartesian(const vector<long long>& a, vector<int>& L, vector<int>& R, vector<int>& par) {\n    int n = a.size();\n    L.assign(n, -1);\n    R.assign(n, -1);\n    par.assign(n, -1);\n    vector<int> st;                    // prawa krawędź drzewa: wartości niemalejące od dna\n    for (int i = 0; i < n; i++) {\n        int last = -1;\n        while (!st.empty() && a[st.back()] > a[i]) { last = st.back(); st.pop_back(); }\n        if (last != -1) { L[i] = last; par[last] = i; }   // zdjęty fragment → lewe poddrzewo i\n        if (!st.empty()) { R[st.back()] = i; par[i] = st.back(); }\n        st.push_back(i);\n    }\n    return st.empty() ? -1 : st[0];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "drzewo kartezjańskie rmq",
+      "związek rmq i lca",
+      "rmq lca drzewo kartezjańskie",
+      "minimum na przedziale jako lca",
+      "rmq to lca reduction",
+      "lca w drzewie kartezjanskim"
+     ],
+     "a": "Minimum na [i, j] = a[LCA(i, j)] w drzewie kartezjańskim: LCA leży między i a j w in-orderze i ma najmniejszą wartość w swoim poddrzewie. W drugą stronę LCA sprowadza się do RMQ na Euler tour. Na zawodach do samego RMQ używa się sparse table — drzewo kartezjańskie przydaje się, gdy potrzebna jest **struktura** minimów (podziały, przedziały dominacji)."
+    },
+    {
+     "q": [
+      "największy prostokąt w histogramie",
+      "largest rectangle in histogram",
+      "najwiekszy prostokat histogram drzewo kartezjanskie",
+      "prostokąt pod histogramem",
+      "max prostokat w histogramie o(n)"
+     ],
+     "a": "Dla każdego słupka i jego poddrzewo w drzewie kartezjańskim to maksymalny przedział, gdzie h[i] jest najniższy — prostokąt `h[i] · rozmiar`. Granice to najbliższe mniejsze z lewej i prawej (stos monotoniczny). Wynik = maksimum. O(n).",
+     "code": "// Poddrzewo i w drzewie kartezjańskim = przedział [lo[i], hi[i]], na którym a[i] jest minimum:\n// lo = za najbliższym na lewo ≤ a[i], hi = przed najbliższym na prawo < a[i]. Liczone tym samym stosem.\nvoid subtreeRanges(const vector<long long>& a, vector<int>& lo, vector<int>& hi) {\n    int n = a.size();\n    lo.assign(n, 0);\n    hi.assign(n, n - 1);\n    vector<int> st;\n    for (int i = 0; i < n; i++) {\n        while (!st.empty() && a[st.back()] > a[i]) { hi[st.back()] = i - 1; st.pop_back(); }\n        lo[i] = st.empty() ? 0 : st.back() + 1;\n        st.push_back(i);\n    }\n}\n\nlong long largestRectangle(const vector<long long>& h) {      // największy prostokąt w histogramie\n    vector<int> lo, hi;\n    subtreeRanges(h, lo, hi);\n    long long best = 0;\n    for (int i = 0; i < (int)h.size(); i++) best = max(best, h[i] * (hi[i] - lo[i] + 1));\n    return best;\n}\n\nlong long sumOfMinima(const vector<long long>& a) {           // suma min po wszystkich fragmentach\n    vector<int> lo, hi;\n    subtreeRanges(a, lo, hi);\n    long long s = 0;\n    for (int i = 0; i < (int)a.size(); i++) s += a[i] * (i - lo[i] + 1) * (hi[i] - i + 1);\n    return s;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "suma minimów wszystkich podtablic",
+      "suma minimow wszystkich fragmentow",
+      "sum of subarray minimums",
+      "suma min po wszystkich przedziałach",
+      "ile razy element jest minimum fragmentu",
+      "contribution technique minimum"
+     ],
+     "a": "Element i jest minimum dokładnie `(i - lo + 1) · (hi - i + 1)` fragmentów, gdzie [lo, hi] to jego poddrzewo (lewa granica: za ostatnim ≤ a[i], prawa: przed pierwszym < a[i]). Suma = Σ a[i] · liczba. Asymetria `≤`/`<` usuwa podwójne liczenie przy równych wartościach. O(n).",
+     "code": "// Poddrzewo i w drzewie kartezjańskim = przedział [lo[i], hi[i]], na którym a[i] jest minimum:\n// lo = za najbliższym na lewo ≤ a[i], hi = przed najbliższym na prawo < a[i]. Liczone tym samym stosem.\nvoid subtreeRanges(const vector<long long>& a, vector<int>& lo, vector<int>& hi) {\n    int n = a.size();\n    lo.assign(n, 0);\n    hi.assign(n, n - 1);\n    vector<int> st;\n    for (int i = 0; i < n; i++) {\n        while (!st.empty() && a[st.back()] > a[i]) { hi[st.back()] = i - 1; st.pop_back(); }\n        lo[i] = st.empty() ? 0 : st.back() + 1;\n        st.push_back(i);\n    }\n}\n\nlong long largestRectangle(const vector<long long>& h) {      // największy prostokąt w histogramie\n    vector<int> lo, hi;\n    subtreeRanges(h, lo, hi);\n    long long best = 0;\n    for (int i = 0; i < (int)h.size(); i++) best = max(best, h[i] * (hi[i] - lo[i] + 1));\n    return best;\n}\n\nlong long sumOfMinima(const vector<long long>& a) {           // suma min po wszystkich fragmentach\n    vector<int> lo, hi;\n    subtreeRanges(a, lo, hi);\n    long long s = 0;\n    for (int i = 0; i < (int)a.size(); i++) s += a[i] * (i - lo[i] + 1) * (hi[i] - i + 1);\n    return s;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "treap z posortowanych kluczy",
+      "budowa treapa w o(n)",
+      "treap build linear",
+      "zbuduj treap z posortowanej tablicy",
+      "treap o(n) stos",
+      "szybka budowa treapa"
+     ],
+     "a": "Treap to drzewo kartezjańskie po priorytetach (kopiec max), więc dla kluczy już posortowanych budujesz go tym samym stosem w O(n) zamiast n wstawień po O(log n).",
+     "code": "// Treap z POSORTOWANYCH kluczy w O(n): to drzewo kartezjańskie po priorytetach (kopiec maksimum).\nstruct Node { int key, pri, l = -1, r = -1; };\n\nint buildTreapSorted(vector<Node>& t) {          // t posortowane rosnąco po key\n    vector<int> st;\n    for (int i = 0; i < (int)t.size(); i++) {\n        int last = -1;\n        while (!st.empty() && t[st.back()].pri < t[i].pri) { last = st.back(); st.pop_back(); }\n        t[i].l = last;\n        if (!st.empty()) t[st.back()].r = i;\n        st.push_back(i);\n    }\n    return st.empty() ? -1 : st[0];              // korzeń\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dziel i zwyciężaj po minimum",
+      "rekurencja po minimum przedziału",
+      "divide and conquer minimum",
+      "rozbij tablicę na minimum",
+      "dziel po minimum o(n^2) za wolno",
+      "dc po minimum drzewo kartezjanskie"
+     ],
+     "a": "Zamiast w każdej rekurencji szukać minimum pętlą (O(n²) dla posortowanej tablicy), zbuduj drzewo kartezjańskie — każdy węzeł to gotowy podział [lo, v-1] | v | [v+1, hi]. Jeśli w węźle iterujesz po **mniejszej** stronie, łącznie O(n log n). Przechodź jawnym stosem, nie rekurencją.",
+     "code": "// „Dziel po minimum” bez O(n^2): rekurencja po drzewie kartezjańskim (zamiast szukać minimum pętlą).\n// Przykład: liczba fragmentów [l, r], w których min * długość >= K. Każdy węzeł v obsługuje\n// fragmenty o minimum w v, czyli l ∈ [lo, v], r ∈ [v, hi]. Stos jawny → brak przepełnienia stosu.\nlong long countGood(const vector<long long>& a, long long K) {\n    int n = a.size();\n    if (n == 0) return 0;\n    vector<int> L(n, -1), R(n, -1), st;\n    for (int i = 0; i < n; i++) {\n        int last = -1;\n        while (!st.empty() && a[st.back()] > a[i]) { last = st.back(); st.pop_back(); }\n        L[i] = last;\n        if (!st.empty()) R[st.back()] = i;\n        st.push_back(i);\n    }\n    long long res = 0;\n    vector<array<int, 3>> todo = {{st[0], 0, n - 1}};      // (węzeł, lo, hi)\n    while (!todo.empty()) {\n        auto [v, lo, hi] = todo.back();\n        todo.pop_back();\n        // fragmenty l ∈ [lo, v], r ∈ [v, hi]: przechodzimy po MNIEJSZEJ stronie (small-to-large → O(n log n))\n        long long need = K <= 0 ? 1 : (a[v] > 0 ? (K + a[v] - 1) / a[v] : n + 1);   // min. długość\n        if (v - lo <= hi - v) {\n            for (int l = lo; l <= v; l++) {\n                long long rmin = max<long long>(v, l + need - 1);\n                if (rmin <= hi) res += hi - rmin + 1;\n            }\n        } else {\n            for (int r = v; r <= hi; r++) {\n                long long lmax = min<long long>(v, r - need + 1);\n                if (lmax >= lo) res += lmax - lo + 1;\n            }\n        }\n        if (L[v] != -1) todo.push_back({L[v], lo, v - 1});\n        if (R[v] != -1) todo.push_back({R[v], v + 1, hi});\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "drzewo kartezjańskie równe wartości",
+      "cartesian tree duplicates",
+      "remisy w drzewie kartezjanskim",
+      "drzewo kartezjanskie powtarzajace sie elementy",
+      "> czy >= przy budowie drzewa kartezjańskiego"
+     ],
+     "a": "Przy `>` (zdejmujesz tylko ściśle większe) korzeniem zostaje **pierwsze** z równych minimów, a kolejne równe trafiają do jego prawego poddrzewa. Przy `>=` — ostatnie. Obie wersje są poprawne; ważne, by w całym rozwiązaniu (granice przedziałów, liczenie) używać tej samej reguły."
+    },
+    {
+     "q": [
+      "drzewo kartezjańskie a treap",
+      "treap a drzewo kartezjanskie roznica",
+      "cartesian tree vs treap",
+      "czy treap to drzewo kartezjańskie"
+     ],
+     "a": "Treap **jest** drzewem kartezjańskim zbioru par (klucz, priorytet): BST po kluczach, kopiec po priorytetach; losowe priorytety dają oczekiwaną głębokość O(log n). Drzewo kartezjańskie tablicy to szczególny przypadek: klucz = indeks, priorytet = wartość — i jego głębokość może wynosić n."
+    }
+   ],
+   "related": [
+    "ds-treap",
+    "ds-monotonic-stack",
+    "ds-sparse-table",
+    "tree-lca-euler",
+    "tech-divide-and-conquer",
+    "tree-small-to-large"
+   ]
+  },
+  {
+   "id": "ds-segment-tree-beats",
+   "title": "Segment tree beats — chmin/chmax na przedziale + suma",
+   "category": "Struktury danych",
+   "tags": [
+    "segment tree beats",
+    "ji driver",
+    "chmin",
+    "chmax",
+    "drzewo przedziałowe",
+    "lazy",
+    "drugie maksimum",
+    "modulo na przedziale",
+    "pierwiastek na przedziale"
+   ],
+   "aliases": [
+    "segment tree beats",
+    "seg tree beats",
+    "beats",
+    "ji driver segment tree",
+    "chmin na przedziale",
+    "chmax na przedziale",
+    "range chmin",
+    "range chmax",
+    "a[i] = min(a[i], x) na przedziale",
+    "drzewo przedzialowe beats",
+    "drzewo przedziałowe chmin i suma",
+    "gorgeous sequence",
+    "modulo na przedziale",
+    "pierwiastek na przedziale"
+   ],
+   "summary": "Rozszerzenie drzewa przedziałowego o operacje `a[i] = min(a[i], x)` / `max` na przedziale razem z zapytaniem o sumę. Węzeł pamięta maksimum, ściśle drugie maksimum i liczbę wystąpień maksimum; gdy `drugie < x < max`, aktualizujemy węzeł w O(1), inaczej schodzimy niżej — łączny koszt jest zamortyzowanie mały.",
+   "complexity": "chmin + suma/max: O((n + q) log n) zamortyzowane; z chmax i dodawaniem na przedziale: O((n + q) log² n); pamięć O(n)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Problem.** Zwykły lazy nie umie `chmin` z sumą: po `a[i] = min(a[i], x)` nie wiadomo, o ile zmalała suma, bo zależy to od tego, ile elementów było > x. Beats trzyma w węźle: `mx` (maksimum), `se` (**ściśle** drugie maksimum, −∞ gdy brak), `cnt` (ile razy występuje `mx`) i `sum`."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Przypadek w węźle (w całości w zakresie)",
+      "Co robimy",
+      "Koszt"
+     ],
+     "rows": [
+      [
+       "`mx ≤ x`",
+       "nic się nie zmienia — wyjdź (break)",
+       "O(1)"
+      ],
+      [
+       "`se < x < mx`",
+       "zmieniają się tylko maksima: `sum -= (mx - x) · cnt; mx = x` (tag)",
+       "O(1)"
+      ],
+      [
+       "`x ≤ se`",
+       "zmienią się co najmniej dwie różne wartości — push i zejście do synów",
+       "rekurencja"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Dlaczego to szybkie?** Zejście w przypadku `x ≤ se` zlewa `mx` i `se` w jedną wartość, czyli zmniejsza liczbę różnych wartości w węźle. Analiza potencjałowa (Ji Ruyi, 2016) daje O((n + q) log n) dla samego chmin + suma; z dodawaniem na przedziale — O(log² n) zamortyzowane na operację. `push` do syna to po prostu „obetnij swoje maksimum do maksimum ojca”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Segment tree beats (Ji): a[i] = min(a[i], x) na przedziale + suma i maksimum na przedziale.\n// Węzeł: mx = maksimum, se = ŚCIŚLE drugie maksimum, cnt = ile razy występuje mx, sum = suma.\nconst long long NEG = LLONG_MIN / 4;\nint n;\nvector<long long> mx, se, sum;\nvector<int> cnt;\n\nvoid pull(int v) {\n    int a = 2 * v, b = 2 * v + 1;\n    sum[v] = sum[a] + sum[b];\n    if (mx[a] == mx[b]) { mx[v] = mx[a]; cnt[v] = cnt[a] + cnt[b]; se[v] = max(se[a], se[b]); }\n    else if (mx[a] > mx[b]) { mx[v] = mx[a]; cnt[v] = cnt[a]; se[v] = max(se[a], mx[b]); }\n    else { mx[v] = mx[b]; cnt[v] = cnt[b]; se[v] = max(mx[a], se[b]); }\n}\n\nvoid applyMin(int v, long long x) {      // wymaga se[v] < x: zmieniają się tylko maksima węzła\n    if (mx[v] <= x) return;\n    sum[v] -= (mx[v] - x) * cnt[v];\n    mx[v] = x;\n}\n\nvoid push(int v) {                        // „lazy” = maksimum ojca: syn nie może go przekraczać\n    applyMin(2 * v, mx[v]);\n    applyMin(2 * v + 1, mx[v]);\n}\n\nvoid build(int v, int l, int r, const vector<long long>& a) {\n    if (l == r) { mx[v] = sum[v] = a[l]; se[v] = NEG; cnt[v] = 1; return; }\n    int m = (l + r) / 2;\n    build(2 * v, l, m, a);\n    build(2 * v + 1, m + 1, r, a);\n    pull(v);\n}\n\nvoid chmin(int v, int l, int r, int ql, int qr, long long x) {\n    if (qr < l || r < ql || mx[v] <= x) return;              // break: nic do zmiany\n    if (ql <= l && r <= qr && se[v] < x) { applyMin(v, x); return; }   // tag: zmieniamy tylko mx\n    push(v);\n    int m = (l + r) / 2;\n    chmin(2 * v, l, m, ql, qr, x);\n    chmin(2 * v + 1, m + 1, r, ql, qr, x);\n    pull(v);\n}\n\nlong long qsum(int v, int l, int r, int ql, int qr) {\n    if (qr < l || r < ql) return 0;\n    if (ql <= l && r <= qr) return sum[v];\n    push(v);\n    int m = (l + r) / 2;\n    return qsum(2 * v, l, m, ql, qr) + qsum(2 * v + 1, m + 1, r, ql, qr);\n}\n\nlong long qmax(int v, int l, int r, int ql, int qr) {\n    if (qr < l || r < ql) return NEG;\n    if (ql <= l && r <= qr) return mx[v];\n    push(v);\n    int m = (l + r) / 2;\n    return max(qmax(2 * v, l, m, ql, qr), qmax(2 * v + 1, m + 1, r, ql, qr));\n}\n\nint main() {\n    // Wejście: n q, a[1..n], potem q zapytań (1-indeksowane):\n    // \"0 l r x\" → a[i] = min(a[i], x) dla i ∈ [l, r];  \"1 l r\" → max;  \"2 l r\" → suma\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> n >> q;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    mx.assign(4 * n, 0); se.assign(4 * n, 0); sum.assign(4 * n, 0); cnt.assign(4 * n, 0);\n    build(1, 0, n - 1, a);\n    while (q--) {\n        int t, l, r;\n        cin >> t >> l >> r;\n        l--; r--;\n        if (t == 0) { long long x; cin >> x; chmin(1, 0, n - 1, l, r, x); }\n        else if (t == 1) cout << qmax(1, 0, n - 1, l, r) << '\\n';\n        else cout << qsum(1, 0, n - 1, l, r) << '\\n';\n    }\n}",
+     "title": "Pełny program: chmin na przedziale, max i suma na przedziale"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Pełne beats: chmin, chmax, add na przedziale + suma/max/min. O((n + q) log² n) zamortyzowane.\nstruct Beats {\n    static constexpr long long INF = LLONG_MAX / 4;\n    int n;\n    vector<long long> sum, mx1, mx2, mn1, mn2, lz;   // mx2/mn2 = ŚCIŚLE drugie max/min\n    vector<int> cmx, cmn, len;\n    Beats(const vector<long long>& a) : n(a.size()) {\n        int s = 4 * n;\n        sum.assign(s, 0); mx1 = mx2 = mn1 = mn2 = lz = sum;\n        cmx.assign(s, 0); cmn = len = cmx;\n        build(1, 0, n - 1, a);\n    }\n    void pull(int v) {\n        int a = 2 * v, b = 2 * v + 1;\n        sum[v] = sum[a] + sum[b];\n        if (mx1[a] == mx1[b]) { mx1[v] = mx1[a]; cmx[v] = cmx[a] + cmx[b]; mx2[v] = max(mx2[a], mx2[b]); }\n        else if (mx1[a] > mx1[b]) { mx1[v] = mx1[a]; cmx[v] = cmx[a]; mx2[v] = max(mx2[a], mx1[b]); }\n        else { mx1[v] = mx1[b]; cmx[v] = cmx[b]; mx2[v] = max(mx1[a], mx2[b]); }\n        if (mn1[a] == mn1[b]) { mn1[v] = mn1[a]; cmn[v] = cmn[a] + cmn[b]; mn2[v] = min(mn2[a], mn2[b]); }\n        else if (mn1[a] < mn1[b]) { mn1[v] = mn1[a]; cmn[v] = cmn[a]; mn2[v] = min(mn2[a], mn1[b]); }\n        else { mn1[v] = mn1[b]; cmn[v] = cmn[b]; mn2[v] = min(mn1[a], mn2[b]); }\n    }\n    void build(int v, int l, int r, const vector<long long>& a) {\n        len[v] = r - l + 1;\n        if (l == r) {\n            sum[v] = mx1[v] = mn1[v] = a[l];\n            mx2[v] = -INF; mn2[v] = INF; cmx[v] = cmn[v] = 1;\n            return;\n        }\n        int m = (l + r) / 2;\n        build(2 * v, l, m, a);\n        build(2 * v + 1, m + 1, r, a);\n        pull(v);\n    }\n    void applyAdd(int v, long long x) {\n        sum[v] += x * len[v];\n        mx1[v] += x; if (mx2[v] != -INF) mx2[v] += x;\n        mn1[v] += x; if (mn2[v] != INF) mn2[v] += x;\n        lz[v] += x;\n    }\n    void applyChmin(int v, long long x) {        // wymaga mx2[v] < x\n        if (mx1[v] <= x) return;\n        sum[v] -= (mx1[v] - x) * cmx[v];\n        if (mn1[v] == mx1[v]) mn1[v] = x;        // węzeł miał jedną wartość\n        else if (mn2[v] == mx1[v]) mn2[v] = x;   // dwie wartości: stare max było drugim min\n        mx1[v] = x;\n    }\n    void applyChmax(int v, long long x) {        // wymaga mn2[v] > x\n        if (mn1[v] >= x) return;\n        sum[v] += (x - mn1[v]) * cmn[v];\n        if (mx1[v] == mn1[v]) mx1[v] = x;\n        else if (mx2[v] == mn1[v]) mx2[v] = x;\n        mn1[v] = x;\n    }\n    void push(int v) {                           // kolejność: add, potem obcięcie do max/min ojca\n        for (int c : {2 * v, 2 * v + 1}) {\n            if (lz[v]) applyAdd(c, lz[v]);\n            applyChmin(c, mx1[v]);\n            applyChmax(c, mn1[v]);\n        }\n        lz[v] = 0;\n    }\n    void chmin(int v, int l, int r, int ql, int qr, long long x) {\n        if (qr < l || r < ql || mx1[v] <= x) return;\n        if (ql <= l && r <= qr && mx2[v] < x) { applyChmin(v, x); return; }\n        push(v);\n        int m = (l + r) / 2;\n        chmin(2 * v, l, m, ql, qr, x); chmin(2 * v + 1, m + 1, r, ql, qr, x);\n        pull(v);\n    }\n    void chmax(int v, int l, int r, int ql, int qr, long long x) {\n        if (qr < l || r < ql || mn1[v] >= x) return;\n        if (ql <= l && r <= qr && mn2[v] > x) { applyChmax(v, x); return; }\n        push(v);\n        int m = (l + r) / 2;\n        chmax(2 * v, l, m, ql, qr, x); chmax(2 * v + 1, m + 1, r, ql, qr, x);\n        pull(v);\n    }\n    void add(int v, int l, int r, int ql, int qr, long long x) {\n        if (qr < l || r < ql) return;\n        if (ql <= l && r <= qr) { applyAdd(v, x); return; }\n        push(v);\n        int m = (l + r) / 2;\n        add(2 * v, l, m, ql, qr, x); add(2 * v + 1, m + 1, r, ql, qr, x);\n        pull(v);\n    }\n    long long qsum(int v, int l, int r, int ql, int qr) {\n        if (qr < l || r < ql) return 0;\n        if (ql <= l && r <= qr) return sum[v];\n        push(v);\n        int m = (l + r) / 2;\n        return qsum(2 * v, l, m, ql, qr) + qsum(2 * v + 1, m + 1, r, ql, qr);\n    }\n    long long qmax(int v, int l, int r, int ql, int qr) {\n        if (qr < l || r < ql) return -INF;\n        if (ql <= l && r <= qr) return mx1[v];\n        push(v);\n        int m = (l + r) / 2;\n        return max(qmax(2 * v, l, m, ql, qr), qmax(2 * v + 1, m + 1, r, ql, qr));\n    }\n    long long qmin(int v, int l, int r, int ql, int qr) {\n        if (qr < l || r < ql) return INF;\n        if (ql <= l && r <= qr) return mn1[v];\n        push(v);\n        int m = (l + r) / 2;\n        return min(qmin(2 * v, l, m, ql, qr), qmin(2 * v + 1, m + 1, r, ql, qr));\n    }\n    // wygodne wywołania, przedziały [l, r] od 0\n    void chmin(int l, int r, long long x) { chmin(1, 0, n - 1, l, r, x); }\n    void chmax(int l, int r, long long x) { chmax(1, 0, n - 1, l, r, x); }\n    void add(int l, int r, long long x) { add(1, 0, n - 1, l, r, x); }\n    long long sumOf(int l, int r) { return qsum(1, 0, n - 1, l, r); }\n    long long maxOf(int l, int r) { return qmax(1, 0, n - 1, l, r); }\n    long long minOf(int l, int r) { return qmin(1, 0, n - 1, l, r); }\n};",
+     "title": "Pełna wersja: chmin, chmax, add na przedziale + suma/max/min",
+     "scope": "global"
+    },
+    {
+     "type": "text",
+     "md": "**Ta sama sztuczka bez lazy.** Operacje, po których każdy element zmienia się tylko kilka razy, robimy „aż do liści”, ale **ucinamy** poddrzewa, w których nic się nie zmieni: `a[i] %= x` (gdy `max < x` — wyjdź; każda skuteczna zmiana co najmniej połowi liczbę → O(log A) zmian na element), `a[i] = ⌊√a[i]⌋` (gdy `max ≤ 1` — wyjdź; ~6 zmian dla 10^18), `a[i] /= x` (gdy `max == 0` lub `x == 1`), `a[i] &= x` (gdy `(OR węzła & ~x) == 0`)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// a[i] %= x na przedziale + suma (bez lazy!). Jeśli max < x, nic się nie zmienia → wyjdź.\n// Każda skuteczna zmiana co najmniej połowi a[i], więc element zmienia się O(log A) razy.\nstruct ModTree {\n    int n;\n    vector<long long> sum, mx;\n    ModTree(const vector<long long>& a) : n(a.size()), sum(4 * a.size()), mx(4 * a.size()) { build(1, 0, n - 1, a); }\n    void build(int v, int l, int r, const vector<long long>& a) {\n        if (l == r) { sum[v] = mx[v] = a[l]; return; }\n        int m = (l + r) / 2;\n        build(2 * v, l, m, a);\n        build(2 * v + 1, m + 1, r, a);\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n        mx[v] = max(mx[2 * v], mx[2 * v + 1]);\n    }\n    void modRange(int v, int l, int r, int ql, int qr, long long x) {\n        if (qr < l || r < ql || mx[v] < x) return;          // klucz całej sztuczki\n        if (l == r) { sum[v] %= x; mx[v] = sum[v]; return; }\n        int m = (l + r) / 2;\n        modRange(2 * v, l, m, ql, qr, x);\n        modRange(2 * v + 1, m + 1, r, ql, qr, x);\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n        mx[v] = max(mx[2 * v], mx[2 * v + 1]);\n    }\n    long long query(int v, int l, int r, int ql, int qr) {\n        if (qr < l || r < ql) return 0;\n        if (ql <= l && r <= qr) return sum[v];\n        int m = (l + r) / 2;\n        return query(2 * v, l, m, ql, qr) + query(2 * v + 1, m + 1, r, ql, qr);\n    }\n};",
+     "title": "Modulo na przedziale + suma",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Jeśli po `chmin` pytasz tylko o **maksimum/minimum** (bez sumy), beats jest zbędny — zwykły lazy z tagiem „min z x” wystarczy, bo złożenie dwóch takich tagów to znów min. Beats jest potrzebny, gdy chcesz sumy (albo liczby elementów równych maksimum)."
+    },
+    {
+     "type": "warn",
+     "md": "`se` musi być **ściśle** drugim maksimum (różnym od `mx`), inicjalizowanym na −∞ — inaczej warunek `se < x` przepuszcza błędne tagi. Sumy trzymaj w `long long`. Złożoność jest zamortyzowana: pojedyncze zapytanie może kosztować dużo, ale suma jest mała."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "chmin(l, r, x)",
+     "desc": "a[i] = min(a[i], x) dla i ∈ [l, r]",
+     "complexity": "O(log n) zamortyzowane (z add: O(log² n))"
+    },
+    {
+     "sig": "chmax(l, r, x)",
+     "desc": "a[i] = max(a[i], x) dla i ∈ [l, r]",
+     "complexity": "O(log n) zamortyzowane (z add: O(log² n))"
+    },
+    {
+     "sig": "add(l, r, x)",
+     "desc": "a[i] += x dla i ∈ [l, r]",
+     "complexity": "O(log n) + wpływ na potencjał"
+    },
+    {
+     "sig": "sumOf(l, r) / maxOf(l, r) / minOf(l, r)",
+     "desc": "zapytania o sumę, maksimum, minimum",
+     "complexity": "O(log n)"
+    }
+   ],
+   "pitfalls": [
+    "Nieściśle liczone `se` (np. pominięcie `mx` mniejszego syna przy łączeniu) — złe tagi i zła suma.",
+    "`push` bez obcięcia synów do `mx` ojca — synowie mają nieaktualne maksima i sumy.",
+    "W pełnej wersji: gdy węzeł ma 1 lub 2 różne wartości, zmiana maksimum zmienia też `mn1`/`mn2` (i odwrotnie).",
+    "Kolejność w `push`: najpierw dodawanie, potem obcięcie do max/min ojca.",
+    "`int` dla sumy — przepełnienie przy n · 10^9.",
+    "Dodawanie `x` do wartowników −∞/+∞ w `se` — pomijaj je przy `add`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "segment tree beats",
+      "co to segment tree beats",
+      "seg tree beats c++",
+      "ji driver segment tree",
+      "drzewo przedziałowe beats",
+      "segment tree beats jak dziala",
+      "beats drzewo"
+     ],
+     "a": "Drzewo przedziałowe obsługujące `chmin`/`chmax` na przedziale razem z sumą. W węźle: max, ściśle drugie max, liczba wystąpień max i suma. Gdy `drugie < x < max` — aktualizacja w O(1); gdy `x ≤ drugie` — schodzisz niżej. Zamortyzowanie O(log n) (z dodawaniem O(log² n)).",
+     "code": "// Segment tree beats (Ji): a[i] = min(a[i], x) na przedziale + suma i maksimum na przedziale.\n// Węzeł: mx = maksimum, se = ŚCIŚLE drugie maksimum, cnt = ile razy występuje mx, sum = suma.\nconst long long NEG = LLONG_MIN / 4;\nint n;\nvector<long long> mx, se, sum;\nvector<int> cnt;\n\nvoid pull(int v) {\n    int a = 2 * v, b = 2 * v + 1;\n    sum[v] = sum[a] + sum[b];\n    if (mx[a] == mx[b]) { mx[v] = mx[a]; cnt[v] = cnt[a] + cnt[b]; se[v] = max(se[a], se[b]); }\n    else if (mx[a] > mx[b]) { mx[v] = mx[a]; cnt[v] = cnt[a]; se[v] = max(se[a], mx[b]); }\n    else { mx[v] = mx[b]; cnt[v] = cnt[b]; se[v] = max(mx[a], se[b]); }\n}\n\nvoid applyMin(int v, long long x) {      // wymaga se[v] < x: zmieniają się tylko maksima węzła\n    if (mx[v] <= x) return;\n    sum[v] -= (mx[v] - x) * cnt[v];\n    mx[v] = x;\n}\n\nvoid push(int v) {                        // „lazy” = maksimum ojca: syn nie może go przekraczać\n    applyMin(2 * v, mx[v]);\n    applyMin(2 * v + 1, mx[v]);\n}\n\nvoid build(int v, int l, int r, const vector<long long>& a) {\n    if (l == r) { mx[v] = sum[v] = a[l]; se[v] = NEG; cnt[v] = 1; return; }\n    int m = (l + r) / 2;\n    build(2 * v, l, m, a);\n    build(2 * v + 1, m + 1, r, a);\n    pull(v);\n}\n\nvoid chmin(int v, int l, int r, int ql, int qr, long long x) {\n    if (qr < l || r < ql || mx[v] <= x) return;              // break: nic do zmiany\n    if (ql <= l && r <= qr && se[v] < x) { applyMin(v, x); return; }   // tag: zmieniamy tylko mx\n    push(v);\n    int m = (l + r) / 2;\n    chmin(2 * v, l, m, ql, qr, x);\n    chmin(2 * v + 1, m + 1, r, ql, qr, x);\n    pull(v);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "chmin na przedziale",
+      "a[i] = min(a[i], x) na przedziale",
+      "range chmin",
+      "zmniejsz do x na przedziale i suma",
+      "przytnij wartości do x na przedziale",
+      "range min update sum query",
+      "chmin segment tree"
+     ],
+     "a": "Przypadki w węźle w całości w zakresie: `mx ≤ x` → nic; `se < x < mx` → `sum -= (mx - x)·cnt`, `mx = x`; `x ≤ se` → push i rekurencja do synów, potem pull. Push = obetnij maksimum syna do `mx` ojca.",
+     "code": "// Segment tree beats (Ji): a[i] = min(a[i], x) na przedziale + suma i maksimum na przedziale.\n// Węzeł: mx = maksimum, se = ŚCIŚLE drugie maksimum, cnt = ile razy występuje mx, sum = suma.\nconst long long NEG = LLONG_MIN / 4;\nint n;\nvector<long long> mx, se, sum;\nvector<int> cnt;\n\nvoid pull(int v) {\n    int a = 2 * v, b = 2 * v + 1;\n    sum[v] = sum[a] + sum[b];\n    if (mx[a] == mx[b]) { mx[v] = mx[a]; cnt[v] = cnt[a] + cnt[b]; se[v] = max(se[a], se[b]); }\n    else if (mx[a] > mx[b]) { mx[v] = mx[a]; cnt[v] = cnt[a]; se[v] = max(se[a], mx[b]); }\n    else { mx[v] = mx[b]; cnt[v] = cnt[b]; se[v] = max(mx[a], se[b]); }\n}\n\nvoid applyMin(int v, long long x) {      // wymaga se[v] < x: zmieniają się tylko maksima węzła\n    if (mx[v] <= x) return;\n    sum[v] -= (mx[v] - x) * cnt[v];\n    mx[v] = x;\n}\n\nvoid push(int v) {                        // „lazy” = maksimum ojca: syn nie może go przekraczać\n    applyMin(2 * v, mx[v]);\n    applyMin(2 * v + 1, mx[v]);\n}\n\nvoid build(int v, int l, int r, const vector<long long>& a) {\n    if (l == r) { mx[v] = sum[v] = a[l]; se[v] = NEG; cnt[v] = 1; return; }\n    int m = (l + r) / 2;\n    build(2 * v, l, m, a);\n    build(2 * v + 1, m + 1, r, a);\n    pull(v);\n}\n\nvoid chmin(int v, int l, int r, int ql, int qr, long long x) {\n    if (qr < l || r < ql || mx[v] <= x) return;              // break: nic do zmiany\n    if (ql <= l && r <= qr && se[v] < x) { applyMin(v, x); return; }   // tag: zmieniamy tylko mx\n    push(v);\n    int m = (l + r) / 2;\n    chmin(2 * v, l, m, ql, qr, x);\n    chmin(2 * v + 1, m + 1, r, ql, qr, x);\n    pull(v);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "chmax na przedziale",
+      "a[i] = max(a[i], x) na przedziale",
+      "range chmax",
+      "podnieś do x na przedziale",
+      "chmax segment tree beats",
+      "range max update"
+     ],
+     "a": "Symetrycznie do chmin: trzymasz min, ściśle drugie min i liczbę minimów; `mn ≥ x` → nic, `mn < x < mn2` → `sum += (x - mn)·cnt`. Szybki trik bez nowego kodu: `chmax(x)` na `a` = `chmin(-x)` na tablicy `-a` (sumę wtedy negujesz). Gdy potrzebujesz chmin i chmax naraz — pełna wersja z artykułu."
+    },
+    {
+     "q": [
+      "modulo na przedziale",
+      "a[i] %= x na przedziale",
+      "range modulo segment tree",
+      "reszta z dzielenia na przedziale i suma",
+      "the child and sequence",
+      "range mod update"
+     ],
+     "a": "Rekurencja do liści, ale ucinasz węzły z `max < x` (tam `%` nic nie zmienia). Każda skuteczna zmiana co najmniej połowi liczbę, więc element zmienia się O(log A) razy → O((n log A + q) log n) łącznie (przypisanie punktowe dokłada elementowi kolejne O(log A) „żyć”).",
+     "code": "// a[i] %= x na przedziale + suma (bez lazy!). Jeśli max < x, nic się nie zmienia → wyjdź.\n// Każda skuteczna zmiana co najmniej połowi a[i], więc element zmienia się O(log A) razy.\nstruct ModTree {\n    int n;\n    vector<long long> sum, mx;\n    ModTree(const vector<long long>& a) : n(a.size()), sum(4 * a.size()), mx(4 * a.size()) { build(1, 0, n - 1, a); }\n    void build(int v, int l, int r, const vector<long long>& a) {\n        if (l == r) { sum[v] = mx[v] = a[l]; return; }\n        int m = (l + r) / 2;\n        build(2 * v, l, m, a);\n        build(2 * v + 1, m + 1, r, a);\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n        mx[v] = max(mx[2 * v], mx[2 * v + 1]);\n    }\n    void modRange(int v, int l, int r, int ql, int qr, long long x) {\n        if (qr < l || r < ql || mx[v] < x) return;          // klucz całej sztuczki\n        if (l == r) { sum[v] %= x; mx[v] = sum[v]; return; }\n        int m = (l + r) / 2;\n        modRange(2 * v, l, m, ql, qr, x);\n        modRange(2 * v + 1, m + 1, r, ql, qr, x);\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n        mx[v] = max(mx[2 * v], mx[2 * v + 1]);\n    }\n    long long query(int v, int l, int r, int ql, int qr) {\n        if (qr < l || r < ql) return 0;\n        if (ql <= l && r <= qr) return sum[v];\n        int m = (l + r) / 2;\n        return query(2 * v, l, m, ql, qr) + query(2 * v + 1, m + 1, r, ql, qr);\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "pierwiastek na przedziale",
+      "a[i] = sqrt(a[i]) na przedziale",
+      "range sqrt segment tree",
+      "pierwiastkowanie przedziału i suma",
+      "sqrt na przedziale drzewo przedziałowe"
+     ],
+     "a": "Jak modulo: rekurencja do liści z wyjściem z węzłów, gdzie `max ≤ 1`. Liczba ≤ 10^18 po ~6 pierwiastkowaniach staje się 1, więc łącznie O(6·n·log n + q·log n). Pierwiastek całkowity licz bezpiecznie (`sqrtl` + poprawka).",
+     "code": "// a[i] = ⌊√a[i]⌋ na przedziale + suma. Gdy max ≤ 1, pierwiastek nic nie zmienia → wyjdź.\n// Liczba ≤ 10^18 po ~6 pierwiastkowaniach staje się ≤ 1, więc łącznie O(6·n·log n + q·log n).\nvector<long long> S, M;                       // suma i maksimum węzła (rozmiar 4n)\n\nlong long isqrtll(long long x) {\n    long long r = sqrtl((long double)x);\n    while (r * r > x) r--;\n    while ((r + 1) * (r + 1) <= x) r++;\n    return r;\n}\n\nvoid build(int v, int l, int r, const vector<long long>& a) {\n    if (l == r) { S[v] = M[v] = a[l]; return; }\n    int m = (l + r) / 2;\n    build(2 * v, l, m, a);\n    build(2 * v + 1, m + 1, r, a);\n    S[v] = S[2 * v] + S[2 * v + 1];\n    M[v] = max(M[2 * v], M[2 * v + 1]);\n}\n\nvoid sqrtRange(int v, int l, int r, int ql, int qr) {\n    if (qr < l || r < ql || M[v] <= 1) return;\n    if (l == r) { S[v] = M[v] = isqrtll(S[v]); return; }\n    int m = (l + r) / 2;\n    sqrtRange(2 * v, l, m, ql, qr);\n    sqrtRange(2 * v + 1, m + 1, r, ql, qr);\n    S[v] = S[2 * v] + S[2 * v + 1];\n    M[v] = max(M[2 * v], M[2 * v + 1]);\n}\n// użycie: S.assign(4 * n, 0); M.assign(4 * n, 0); build(1, 0, n - 1, a); sqrtRange(1, 0, n - 1, l, r);",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "złożoność segment tree beats",
+      "dlaczego beats jest szybkie",
+      "segment tree beats complexity",
+      "beats o(log^2 n)",
+      "analiza beats zamortyzowana"
+     ],
+     "a": "Każde zejście w przypadku `x ≤ se` zlewa co najmniej dwie różne wartości w jedną, a liczba różnych wartości rośnie tylko przy innych operacjach (dodawanie na części węzła). Wynik (Ji Ruyi): chmin + suma — O((n + q) log n); z dodawaniem na przedziale — O((n + q) log² n). Dla n, q = 2·10^5 to ułamek sekundy."
+    },
+    {
+     "q": [
+      "chmin chmax add suma razem",
+      "gorgeous sequence",
+      "beats z dodawaniem na przedziale",
+      "pełne segment tree beats",
+      "chmin chmax i dodawanie na przedziale",
+      "range add chmin chmax sum"
+     ],
+     "a": "Węzeł trzyma max1/max2/cntMax, min1/min2/cntMin, sumę i lazy dodawania. `push`: najpierw dodaj lazy do synów, potem obetnij je do max1 i min1 ojca. Uwaga na węzły z 1–2 różnymi wartościami: zmiana max zmienia też min (i odwrotnie). Przetestowany kod poniżej.",
+     "code": "// Pełne beats: chmin, chmax, add na przedziale + suma/max/min. O((n + q) log² n) zamortyzowane.\nstruct Beats {\n    static constexpr long long INF = LLONG_MAX / 4;\n    int n;\n    vector<long long> sum, mx1, mx2, mn1, mn2, lz;   // mx2/mn2 = ŚCIŚLE drugie max/min\n    vector<int> cmx, cmn, len;\n    Beats(const vector<long long>& a) : n(a.size()) {\n        int s = 4 * n;\n        sum.assign(s, 0); mx1 = mx2 = mn1 = mn2 = lz = sum;\n        cmx.assign(s, 0); cmn = len = cmx;\n        build(1, 0, n - 1, a);\n    }\n    void pull(int v) {\n        int a = 2 * v, b = 2 * v + 1;\n        sum[v] = sum[a] + sum[b];\n        if (mx1[a] == mx1[b]) { mx1[v] = mx1[a]; cmx[v] = cmx[a] + cmx[b]; mx2[v] = max(mx2[a], mx2[b]); }\n        else if (mx1[a] > mx1[b]) { mx1[v] = mx1[a]; cmx[v] = cmx[a]; mx2[v] = max(mx2[a], mx1[b]); }\n        else { mx1[v] = mx1[b]; cmx[v] = cmx[b]; mx2[v] = max(mx1[a], mx2[b]); }\n        if (mn1[a] == mn1[b]) { mn1[v] = mn1[a]; cmn[v] = cmn[a] + cmn[b]; mn2[v] = min(mn2[a], mn2[b]); }\n        else if (mn1[a] < mn1[b]) { mn1[v] = mn1[a]; cmn[v] = cmn[a]; mn2[v] = min(mn2[a], mn1[b]); }\n        else { mn1[v] = mn1[b]; cmn[v] = cmn[b]; mn2[v] = min(mn1[a], mn2[b]); }\n    }\n    void build(int v, int l, int r, const vector<long long>& a) {\n        len[v] = r - l + 1;\n        if (l == r) {\n            sum[v] = mx1[v] = mn1[v] = a[l];\n            mx2[v] = -INF; mn2[v] = INF; cmx[v] = cmn[v] = 1;\n            return;\n        }\n        int m = (l + r) / 2;\n        build(2 * v, l, m, a);\n        build(2 * v + 1, m + 1, r, a);\n        pull(v);\n    }\n    void applyAdd(int v, long long x) {\n        sum[v] += x * len[v];\n        mx1[v] += x; if (mx2[v] != -INF) mx2[v] += x;\n        mn1[v] += x; if (mn2[v] != INF) mn2[v] += x;\n        lz[v] += x;\n    }\n    void applyChmin(int v, long long x) {        // wymaga mx2[v] < x\n        if (mx1[v] <= x) return;\n        sum[v] -= (mx1[v] - x) * cmx[v];\n        if (mn1[v] == mx1[v]) mn1[v] = x;        // węzeł miał jedną wartość\n        else if (mn2[v] == mx1[v]) mn2[v] = x;   // dwie wartości: stare max było drugim min\n        mx1[v] = x;\n    }\n    void applyChmax(int v, long long x) {        // wymaga mn2[v] > x\n        if (mn1[v] >= x) return;\n        sum[v] += (x - mn1[v]) * cmn[v];\n        if (mx1[v] == mn1[v]) mx1[v] = x;\n        else if (mx2[v] == mn1[v]) mx2[v] = x;\n        mn1[v] = x;\n    }\n    void push(int v) {                           // kolejność: add, potem obcięcie do max/min ojca\n        for (int c : {2 * v, 2 * v + 1}) {\n            if (lz[v]) applyAdd(c, lz[v]);\n            applyChmin(c, mx1[v]);\n            applyChmax(c, mn1[v]);\n        }\n        lz[v] = 0;\n    }\n    void chmin(int v, int l, int r, int ql, int qr, long long x) {\n        if (qr < l || r < ql || mx1[v] <= x) return;\n        if (ql <= l && r <= qr && mx2[v] < x) { applyChmin(v, x); return; }\n        push(v);\n        int m = (l + r) / 2;\n        chmin(2 * v, l, m, ql, qr, x); chmin(2 * v + 1, m + 1, r, ql, qr, x);\n        pull(v);\n    }\n    void chmax(int v, int l, int r, int ql, int qr, long long x) {\n        if (qr < l || r < ql || mn1[v] >= x) return;\n        if (ql <= l && r <= qr && mn2[v] > x) { applyChmax(v, x); return; }\n        push(v);\n        int m = (l + r) / 2;\n        chmax(2 * v, l, m, ql, qr, x); chmax(2 * v + 1, m + 1, r, ql, qr, x);\n        pull(v);\n    }\n    void add(int v, int l, int r, int ql, int qr, long long x) {\n        if (qr < l || r < ql) return;\n        if (ql <= l && r <= qr) { applyAdd(v, x); return; }\n        push(v);\n        int m = (l + r) / 2;\n        add(2 * v, l, m, ql, qr, x); add(2 * v + 1, m + 1, r, ql, qr, x);\n        pull(v);\n    }\n    long long qsum(int v, int l, int r, int ql, int qr) {\n        if (qr < l || r < ql) return 0;\n        if (ql <= l && r <= qr) return sum[v];\n        push(v);\n        int m = (l + r) / 2;\n        return qsum(2 * v, l, m, ql, qr) + qsum(2 * v + 1, m + 1, r, ql, qr);\n    }\n    long long qmax(int v, int l, int r, int ql, int qr) {\n        if (qr < l || r < ql) return -INF;\n        if (ql <= l && r <= qr) return mx1[v];\n        push(v);\n        int m = (l + r) / 2;\n        return max(qmax(2 * v, l, m, ql, qr), qmax(2 * v + 1, m + 1, r, ql, qr));\n    }\n    long long qmin(int v, int l, int r, int ql, int qr) {\n        if (qr < l || r < ql) return INF;\n        if (ql <= l && r <= qr) return mn1[v];\n        push(v);\n        int m = (l + r) / 2;\n        return min(qmin(2 * v, l, m, ql, qr), qmin(2 * v + 1, m + 1, r, ql, qr));\n    }\n    // wygodne wywołania, przedziały [l, r] od 0\n    void chmin(int l, int r, long long x) { chmin(1, 0, n - 1, l, r, x); }\n    void chmax(int l, int r, long long x) { chmax(1, 0, n - 1, l, r, x); }\n    void add(int l, int r, long long x) { add(1, 0, n - 1, l, r, x); }\n    long long sumOf(int l, int r) { return qsum(1, 0, n - 1, l, r); }\n    long long maxOf(int l, int r) { return qmax(1, 0, n - 1, l, r); }\n    long long minOf(int l, int r) { return qmin(1, 0, n - 1, l, r); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kiedy zwykły lazy wystarczy zamiast beats",
+      "chmin i max na przedziale bez beats",
+      "czy potrzebuje beats",
+      "lazy min update max query",
+      "range chmin range max query"
+     ],
+     "a": "Jeśli pytasz tylko o max/min, wystarczy zwykły lazy z tagiem „min(·, x)” — złożenie tagów to `min(t1, t2)`, a max po chmin to `min(max, x)`. Beats jest potrzebny, gdy po chmin/chmax chcesz **sumę** (lub liczbę elementów) — tego zwykły tag nie policzy."
+    }
+   ],
+   "related": [
+    "ds-lazy-propagation",
+    "ds-segment-tree",
+    "ds-sqrt-decomposition",
+    "ds-segment-tree-descent"
+   ]
+  },
+  {
+   "id": "ds-wavelet-tree",
+   "title": "Wavelet tree: k-ty najmniejszy i liczba elementów ≤ x na przedziale",
+   "category": "Struktury danych",
+   "tags": [
+    "wavelet tree",
+    "drzewo falkowe",
+    "k-ty najmniejszy na przedziale",
+    "kth smallest in range",
+    "ile mniejszych od x na przedziale",
+    "mediana na przedziale",
+    "merge sort tree",
+    "trwałe drzewo przedziałowe",
+    "kompresja współrzędnych"
+   ],
+   "aliases": [
+    "wavelet tree",
+    "wavelet",
+    "drzewo falkowe",
+    "drzewo waveletowe",
+    "wavelet tree c++",
+    "wavelet matrix",
+    "k-ty najmniejszy na przedziale wavelet",
+    "kth smallest in range wavelet",
+    "ile elementów <= x na przedziale",
+    "liczba elementow mniejszych od x na przedziale",
+    "mediana na przedziale",
+    "k-ta statystyka pozycyjna na przedziale",
+    "range kth smallest",
+    "wavelet drzewo"
+   ],
+   "summary": "Statyczna struktura na tablicy: każdy węzeł dzieli zakres wartości na pół i pamięta, ile z pierwszych *i* elementów poszło w lewo. Odpowiada online w O(log σ) na k-ty najmniejszy na [l, r], liczbę elementów ≤ x na [l, r] i podobne zapytania — krócej niż trwałe drzewo przedziałowe, szybciej niż merge sort tree.",
+   "complexity": "budowa O(n log σ); k-ty najmniejszy, ile ≤ x, ile w [a, b]: O(log σ) (σ = liczba różnych wartości po kompresji); pamięć O(n log σ)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Budowa.** Korzeń odpowiada całemu zakresowi wartości [lo, hi] i całej tablicy. Dzielimy wartości w `mid`: elementy ≤ mid idą (z zachowaniem kolejności) do lewego syna, reszta do prawego. W węźle zapisujemy `b[i]` = ile spośród pierwszych *i* elementów węzła poszło w lewo. Rekurencja kończy się na pojedynczej wartości — głębokość ⌈log σ⌉."
+    },
+    {
+     "type": "text",
+     "md": "**k-ty najmniejszy na [l, r).** W węźle w lewo idzie `b[r] - b[l]` elementów przedziału. Jeśli `k` jest ≤ tej liczby — schodzimy w lewo z przedziałem `[b[l], b[r])`; inaczej `k -= b[r] - b[l]` i w prawo z `[l - b[l], r - b[r])`. W liściu wartość = odpowiedź. **Ile ≤ x:** schodzimy w stronę x, a idąc w prawo dodajemy do wyniku liczbę elementów, które poszły w lewo (wszystkie są < x)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "// Wavelet tree na wartościach [lo, hi] (najlepiej po kompresji: 0..σ-1). Przedziały [l, r) od 0.\n// Węzeł dzieli wartości na ≤ mid (lewo) i > mid (prawo); b[i] = ile z pierwszych i elementów idzie w lewo.\nstruct WaveletTree {\n    struct Node { int lo, hi, left = -1, right = -1; vector<int> b; };\n    vector<Node> t;\n    WaveletTree(vector<int> a, int lo, int hi) { build(a.begin(), a.end(), lo, hi); }\n    int build(vector<int>::iterator from, vector<int>::iterator to, int lo, int hi) {\n        int id = t.size();\n        t.push_back({lo, hi});\n        if (lo == hi || from == to) return id;\n        int mid = lo + (hi - lo) / 2;\n        auto goesLeft = [mid](int x) { return x <= mid; };\n        vector<int> b(1, 0);\n        b.reserve(to - from + 1);\n        for (auto it = from; it != to; ++it) b.push_back(b.back() + goesLeft(*it));\n        auto pivot = stable_partition(from, to, goesLeft);   // lewa część, potem prawa (kolejność zachowana)\n        int L = build(from, pivot, lo, mid);\n        int R = build(pivot, to, mid + 1, hi);\n        t[id].b = move(b);                                    // t mogło się realokować — używamy indeksów\n        t[id].left = L;\n        t[id].right = R;\n        return id;\n    }\n    // k-ty najmniejszy (k od 1) w a[l..r)\n    int kth(int l, int r, int k) const {\n        int v = 0;\n        while (t[v].lo != t[v].hi) {\n            const vector<int>& b = t[v].b;\n            int inLeft = b[r] - b[l];\n            if (k <= inLeft) { l = b[l]; r = b[r]; v = t[v].left; }\n            else { k -= inLeft; l -= b[l]; r -= b[r]; v = t[v].right; }\n        }\n        return t[v].lo;\n    }\n    // ile elementów ≤ x w a[l..r)\n    int countLE(int l, int r, int x) const {\n        int v = 0, res = 0;\n        while (l < r) {\n            if (x < t[v].lo) return res;\n            if (t[v].hi <= x) return res + (r - l);\n            const vector<int>& b = t[v].b;\n            int mid = t[v].lo + (t[v].hi - t[v].lo) / 2;\n            if (x <= mid) { l = b[l]; r = b[r]; v = t[v].left; }\n            else { res += b[r] - b[l]; l -= b[l]; r -= b[r]; v = t[v].right; }\n        }\n        return res;\n    }\n};",
+     "title": "Wavelet tree (indeksy węzłów zamiast wskaźników)",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Wavelet tree na wartościach [lo, hi] (najlepiej po kompresji: 0..σ-1). Przedziały [l, r) od 0.\n// Węzeł dzieli wartości na ≤ mid (lewo) i > mid (prawo); b[i] = ile z pierwszych i elementów idzie w lewo.\nstruct WaveletTree {\n    struct Node { int lo, hi, left = -1, right = -1; vector<int> b; };\n    vector<Node> t;\n    WaveletTree(vector<int> a, int lo, int hi) { build(a.begin(), a.end(), lo, hi); }\n    int build(vector<int>::iterator from, vector<int>::iterator to, int lo, int hi) {\n        int id = t.size();\n        t.push_back({lo, hi});\n        if (lo == hi || from == to) return id;\n        int mid = lo + (hi - lo) / 2;\n        auto goesLeft = [mid](int x) { return x <= mid; };\n        vector<int> b(1, 0);\n        b.reserve(to - from + 1);\n        for (auto it = from; it != to; ++it) b.push_back(b.back() + goesLeft(*it));\n        auto pivot = stable_partition(from, to, goesLeft);   // lewa część, potem prawa (kolejność zachowana)\n        int L = build(from, pivot, lo, mid);\n        int R = build(pivot, to, mid + 1, hi);\n        t[id].b = move(b);                                    // t mogło się realokować — używamy indeksów\n        t[id].left = L;\n        t[id].right = R;\n        return id;\n    }\n    // k-ty najmniejszy (k od 1) w a[l..r)\n    int kth(int l, int r, int k) const {\n        int v = 0;\n        while (t[v].lo != t[v].hi) {\n            const vector<int>& b = t[v].b;\n            int inLeft = b[r] - b[l];\n            if (k <= inLeft) { l = b[l]; r = b[r]; v = t[v].left; }\n            else { k -= inLeft; l -= b[l]; r -= b[r]; v = t[v].right; }\n        }\n        return t[v].lo;\n    }\n    // ile elementów ≤ x w a[l..r)\n    int countLE(int l, int r, int x) const {\n        int v = 0, res = 0;\n        while (l < r) {\n            if (x < t[v].lo) return res;\n            if (t[v].hi <= x) return res + (r - l);\n            const vector<int>& b = t[v].b;\n            int mid = t[v].lo + (t[v].hi - t[v].lo) / 2;\n            if (x <= mid) { l = b[l]; r = b[r]; v = t[v].left; }\n            else { res += b[r] - b[l]; l -= b[l]; r -= b[r]; v = t[v].right; }\n        }\n        return res;\n    }\n};\n\nint main() {\n    // Wejście: n q, a[1..n] (dowolne int), q zapytań (przedziały 1-indeksowane, domknięte):\n    // \"1 l r k\" → k-ty najmniejszy na [l, r];  \"2 l r x\" → ile elementów ≤ x na [l, r]\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<int> a(n);\n    for (auto& x : a) cin >> x;\n    vector<int> vals = a;                                 // kompresja → głębokość log n\n    sort(vals.begin(), vals.end());\n    vals.erase(unique(vals.begin(), vals.end()), vals.end());\n    vector<int> c(n);\n    for (int i = 0; i < n; i++) c[i] = lower_bound(vals.begin(), vals.end(), a[i]) - vals.begin();\n    WaveletTree wt(c, 0, (int)vals.size() - 1);\n    while (q--) {\n        int type, l, r;\n        long long y;\n        cin >> type >> l >> r >> y;\n        l--;                                              // [l, r] 1-indeksowane → [l-1, r) od 0\n        if (type == 1) cout << vals[wt.kth(l, r, (int)y)] << '\\n';\n        else {\n            int idx = upper_bound(vals.begin(), vals.end(), y) - vals.begin() - 1;   // największa wartość ≤ y\n            cout << (idx < 0 ? 0 : wt.countLE(l, r, idx)) << '\\n';\n        }\n    }\n}",
+     "title": "Pełny program: k-ty najmniejszy i liczba ≤ x na przedziale (z kompresją)"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Struktura",
+      "Budowa",
+      "k-ty na [l, r]",
+      "Ile ≤ x na [l, r]",
+      "Pamięć",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "Wavelet tree",
+       "O(n log σ)",
+       "O(log σ)",
+       "O(log σ)",
+       "O(n log σ)",
+       "statyczne, online, krótki kod"
+      ],
+      [
+       "Merge sort tree",
+       "O(n log n)",
+       "O(log³ n) (binsearch po wyniku)",
+       "O(log² n)",
+       "O(n log n)",
+       "najprostszy, gdy wystarczy „ile ≤ x”"
+      ],
+      [
+       "Trwałe drzewo przedziałowe",
+       "O(n log n)",
+       "O(log n)",
+       "O(log n)",
+       "~2·n·log n węzłów",
+       "online; działa też na ścieżkach w drzewie"
+      ],
+      [
+       "Offline: sortowanie + Fenwick",
+       "—",
+       "równoległe binsearch: O((n + q) log² n)",
+       "O((n + q) log n)",
+       "O(n)",
+       "tylko gdy zapytania znane z góry"
+      ],
+      [
+       "Mo + Fenwick",
+       "—",
+       "O((n + q)·√n·log n)",
+       "O((n + q)·√n·log n)",
+       "O(n)",
+       "gdy zapytania są nietypowe"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Zawsze kompresuj wartości (sort + unique) — wtedy głębokość to log n zamiast log 10^9, a wynik `kth` tłumaczysz z powrotem przez `vals[...]`. „Ile w zakresie wartości [a, b]” = `countLE(b) − countLE(a − 1)`, mediana = `kth(l, r, (len + 1) / 2)`."
+    },
+    {
+     "type": "warn",
+     "md": "Wavelet tree jest **statyczne**: zmiana elementu wymaga przebudowy (wyjątek: zamiana sąsiednich elementów da się w O(log σ)). Przy aktualizacjach: rozwiązanie offline, dekompozycja pierwiastkowa albo drzewo przedziałowe z `ordered_set` w węzłach. Pamięć: n = 10^6 i log σ = 20 to ~20 mln intów (80 MB) — sprawdź limit."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "WaveletTree(vector<int> a, int lo, int hi)",
+     "desc": "budowa na wartościach z [lo, hi] (po kompresji 0..σ−1)",
+     "complexity": "O(n log σ)"
+    },
+    {
+     "sig": "int kth(int l, int r, int k)",
+     "desc": "k-ty najmniejszy (k od 1) w a[l..r) — przedział półotwarty od 0",
+     "complexity": "O(log σ)"
+    },
+    {
+     "sig": "int countLE(int l, int r, int x)",
+     "desc": "liczba elementów ≤ x w a[l..r)",
+     "complexity": "O(log σ)"
+    }
+   ],
+   "pitfalls": [
+    "Pomylenie przedziałów: kod używa półotwartych [l, r) od 0 — dla [l, r] 1-indeksowanego wywołaj `kth(l - 1, r, k)`.",
+    "Brak kompresji przy wartościach do 10^9 → głębokość ~31 i więcej pamięci; przy ujemnych wartościach licz `mid = lo + (hi - lo) / 2`.",
+    "Trzymanie referencji `Node&` przez rekurencyjne `push_back` — `vector` się realokuje i referencja wisi. Używaj indeksów.",
+    "`k` spoza [1, r − l] → wyjście poza tablicę albo zła odpowiedź.",
+    "`countLE` dla x mniejszego niż wszystkie wartości: `upper_bound(...) - 1` daje -1 — zwróć wtedy 0."
+   ],
+   "qa": [
+    {
+     "q": [
+      "wavelet tree",
+      "wavelet tree co to",
+      "drzewo falkowe",
+      "wavelet tree c++",
+      "jak dziala wavelet tree",
+      "wavelet tree implementacja",
+      "drzewo waveletowe"
+     ],
+     "a": "Drzewo po **wartościach**: każdy węzeł dzieli zakres [lo, hi] na pół i zapisuje prefiksowe liczniki `b[i]` = ile z pierwszych i elementów poszło w lewo. Dzięki temu przedział [l, r) da się „przenieść” do syna w O(1), a zapytania o k-ty element czy liczbę ≤ x schodzą jedną ścieżką — O(log σ).",
+     "code": "// Wavelet tree na wartościach [lo, hi] (najlepiej po kompresji: 0..σ-1). Przedziały [l, r) od 0.\n// Węzeł dzieli wartości na ≤ mid (lewo) i > mid (prawo); b[i] = ile z pierwszych i elementów idzie w lewo.\nstruct WaveletTree {\n    struct Node { int lo, hi, left = -1, right = -1; vector<int> b; };\n    vector<Node> t;\n    WaveletTree(vector<int> a, int lo, int hi) { build(a.begin(), a.end(), lo, hi); }\n    int build(vector<int>::iterator from, vector<int>::iterator to, int lo, int hi) {\n        int id = t.size();\n        t.push_back({lo, hi});\n        if (lo == hi || from == to) return id;\n        int mid = lo + (hi - lo) / 2;\n        auto goesLeft = [mid](int x) { return x <= mid; };\n        vector<int> b(1, 0);\n        b.reserve(to - from + 1);\n        for (auto it = from; it != to; ++it) b.push_back(b.back() + goesLeft(*it));\n        auto pivot = stable_partition(from, to, goesLeft);   // lewa część, potem prawa (kolejność zachowana)\n        int L = build(from, pivot, lo, mid);\n        int R = build(pivot, to, mid + 1, hi);\n        t[id].b = move(b);                                    // t mogło się realokować — używamy indeksów\n        t[id].left = L;\n        t[id].right = R;\n        return id;\n    }\n    // k-ty najmniejszy (k od 1) w a[l..r)\n    int kth(int l, int r, int k) const {\n        int v = 0;\n        while (t[v].lo != t[v].hi) {\n            const vector<int>& b = t[v].b;\n            int inLeft = b[r] - b[l];\n            if (k <= inLeft) { l = b[l]; r = b[r]; v = t[v].left; }\n            else { k -= inLeft; l -= b[l]; r -= b[r]; v = t[v].right; }\n        }\n        return t[v].lo;\n    }\n    // ile elementów ≤ x w a[l..r)\n    int countLE(int l, int r, int x) const {\n        int v = 0, res = 0;\n        while (l < r) {\n            if (x < t[v].lo) return res;\n            if (t[v].hi <= x) return res + (r - l);\n            const vector<int>& b = t[v].b;\n            int mid = t[v].lo + (t[v].hi - t[v].lo) / 2;\n            if (x <= mid) { l = b[l]; r = b[r]; v = t[v].left; }\n            else { res += b[r] - b[l]; l -= b[l]; r -= b[r]; v = t[v].right; }\n        }\n        return res;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "k-ty najmniejszy na przedziale",
+      "kth smallest in range",
+      "k-ty najmniejszy element na przedziale wavelet",
+      "k-ta statystyka pozycyjna na przedziale",
+      "k-ty co do wielkości w przedziale l r",
+      "range kth smallest query",
+      "k ty najmniejszy w przedziale online"
+     ],
+     "a": "Wavelet tree: w węźle w lewo trafia `c = b[r] - b[l]` elementów przedziału. `k ≤ c` → w lewo z `[b[l], b[r])`; inaczej `k -= c` → w prawo z `[l - b[l], r - b[r])`. W liściu wartość. O(log σ). Alternatywy: trwałe drzewo przedziałowe (też O(log n)), merge sort tree (O(log³ n)).",
+     "code": "// Wavelet tree na wartościach [lo, hi] (najlepiej po kompresji: 0..σ-1). Przedziały [l, r) od 0.\n// Węzeł dzieli wartości na ≤ mid (lewo) i > mid (prawo); b[i] = ile z pierwszych i elementów idzie w lewo.\nstruct WaveletTree {\n    struct Node { int lo, hi, left = -1, right = -1; vector<int> b; };\n    vector<Node> t;\n    WaveletTree(vector<int> a, int lo, int hi) { build(a.begin(), a.end(), lo, hi); }\n    int build(vector<int>::iterator from, vector<int>::iterator to, int lo, int hi) {\n        int id = t.size();\n        t.push_back({lo, hi});\n        if (lo == hi || from == to) return id;\n        int mid = lo + (hi - lo) / 2;\n        auto goesLeft = [mid](int x) { return x <= mid; };\n        vector<int> b(1, 0);\n        b.reserve(to - from + 1);\n        for (auto it = from; it != to; ++it) b.push_back(b.back() + goesLeft(*it));\n        auto pivot = stable_partition(from, to, goesLeft);   // lewa część, potem prawa (kolejność zachowana)\n        int L = build(from, pivot, lo, mid);\n        int R = build(pivot, to, mid + 1, hi);\n        t[id].b = move(b);                                    // t mogło się realokować — używamy indeksów\n        t[id].left = L;\n        t[id].right = R;\n        return id;\n    }\n    // k-ty najmniejszy (k od 1) w a[l..r)\n    int kth(int l, int r, int k) const {\n        int v = 0;\n        while (t[v].lo != t[v].hi) {\n            const vector<int>& b = t[v].b;\n            int inLeft = b[r] - b[l];\n            if (k <= inLeft) { l = b[l]; r = b[r]; v = t[v].left; }\n            else { k -= inLeft; l -= b[l]; r -= b[r]; v = t[v].right; }\n        }\n        return t[v].lo;\n    }\n    // ile elementów ≤ x w a[l..r)\n    int countLE(int l, int r, int x) const {\n        int v = 0, res = 0;\n        while (l < r) {\n            if (x < t[v].lo) return res;\n            if (t[v].hi <= x) return res + (r - l);\n            const vector<int>& b = t[v].b;\n            int mid = t[v].lo + (t[v].hi - t[v].lo) / 2;\n            if (x <= mid) { l = b[l]; r = b[r]; v = t[v].left; }\n            else { res += b[r] - b[l]; l -= b[l]; r -= b[r]; v = t[v].right; }\n        }\n        return res;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile elementów <= x na przedziale",
+      "ile liczb mniejszych od x w przedziale",
+      "count less than x in range",
+      "liczba elementów nie większych od x na [l, r]",
+      "ile mniejszych od x na przedziale online",
+      "count elements <= x in subarray",
+      "zliczanie mniejszych na przedziale"
+     ],
+     "a": "`countLE(l, r, x)`: schodzisz w stronę x; gdy idziesz w prawo, dodajesz `b[r] - b[l]` (te poszły w lewo, więc są < x); gdy cały zakres węzła jest ≤ x — dodajesz `r - l` i kończysz. O(log σ). Surowe x tłumacz na indeks skompresowany przez `upper_bound(vals, x) - 1`. Dla „ile < x” użyj `x - 1` (liczby całkowite).",
+     "code": "vector<int> a = {5, -3, 100, 7};\nvector<int> vals = a;\nsort(vals.begin(), vals.end());\nvals.erase(unique(vals.begin(), vals.end()), vals.end());       // -3 5 7 100\nlong long x = 8;\nint idx = upper_bound(vals.begin(), vals.end(), x) - vals.begin() - 1;   // największa wartość <= x\ncout << idx << '\\n';                                            // 2 (wartość 7)\n// wynik = idx < 0 ? 0 : wt.countLE(l, r, idx)"
+    },
+    {
+     "q": [
+      "wavelet tree czy merge sort tree",
+      "wavelet vs persistent segment tree",
+      "co wybrać k-ty na przedziale",
+      "merge sort tree vs wavelet tree",
+      "trwałe drzewo czy wavelet",
+      "porównanie struktur k-ty najmniejszy na przedziale"
+     ],
+     "a": "Tylko „ile ≤ x” i nie ma pośpiechu → merge sort tree (najprostszy, O(log² n)). k-ty najmniejszy online → wavelet tree (O(log σ), krótki kod, ~n·log σ intów) albo trwałe drzewo przedziałowe (O(log n), więcej pamięci, ale działa też na ścieżkach w drzewie i z wersjami). Zapytania znane z góry → offline z Fenwickiem. Aktualizacje → żadna z tych trzech wprost."
+    },
+    {
+     "q": [
+      "ile elementów z zakresu wartości [a, b] na przedziale",
+      "ile liczb między a i b w przedziale l r",
+      "count in value range on subarray",
+      "zliczanie wartości z przedziału w podtablicy",
+      "range count between a and b"
+     ],
+     "a": "`countLE(l, r, B') − countLE(l, r, A')`, gdzie `B' = upper_bound(vals, b) − 1` (wartości ≤ b), a `A' = lower_bound(vals, a) − 1` (wartości < a). O(log σ).",
+     "code": "vector<int> vals = {-3, 5, 7, 100};                // posortowane unikalne wartości\nint A = 0, B = 50;                                  // pytamy o wartości z [A, B]\nint hiIdx = upper_bound(vals.begin(), vals.end(), B) - vals.begin() - 1;   // 2: wartości <= B\nint loIdx = lower_bound(vals.begin(), vals.end(), A) - vals.begin() - 1;   // 0: wartości < A\ncout << hiIdx << ' ' << loIdx << '\\n';\n// wynik = wt.countLE(l, r, hiIdx) - wt.countLE(l, r, loIdx)   (countLE dla x < 0 zwraca 0)"
+    },
+    {
+     "q": [
+      "mediana na przedziale",
+      "median in range query",
+      "mediana podtablicy l r",
+      "mediana na przedziale online",
+      "mediana fragmentu tablicy szybko",
+      "range median"
+     ],
+     "a": "Mediana (dolna) = `kth(l, r, (len + 1) / 2)`, gdzie `len = r − l`; górna: `kth(l, r, len / 2 + 1)`. Na wavelet tree O(log σ) na zapytanie, online."
+    },
+    {
+     "q": [
+      "wavelet tree z aktualizacjami",
+      "wavelet tree update",
+      "zmiana elementu wavelet tree",
+      "k-ty na przedziale z aktualizacjami",
+      "dynamiczny k-ty najmniejszy na przedziale",
+      "kth smallest with updates"
+     ],
+     "a": "Wavelet tree jest statyczne — po zmianie elementu trzeba przebudować. Wyjątek: zamianę sąsiednich `a[i]`, `a[i+1]` da się zrobić w O(log σ) (na każdym poziomie zmienia się jedno `b`, aż do węzła, w którym się rozdzielają). Przy ogólnych aktualizacjach: offline (równoległe wyszukiwanie binarne), drzewo przedziałowe z `ordered_set` w węzłach (O(log² n)) albo dekompozycja pierwiastkowa."
+    },
+    {
+     "q": [
+      "wavelet tree pamięć",
+      "ile pamięci zajmuje wavelet tree",
+      "wavelet tree memory",
+      "wavelet tree kompresja wartości",
+      "wavelet tree za dużo pamięci",
+      "wavelet tree mle"
+     ],
+     "a": "Każdy poziom trzyma ~n liczników, poziomów jest ⌈log σ⌉ → ~n·log σ intów: n = 2·10^5 → ~4 mln intów (16 MB), n = 10^6 → ~80 MB. Kompresja wartości zmniejsza σ do ≤ n. Przy ciasnym limicie: wavelet matrix z bitami i strukturą rank (~n·log σ bitów)."
+    }
+   ],
+   "related": [
+    "ds-merge-sort-tree",
+    "ds-persistent-segment-tree",
+    "tech-coordinate-compression",
+    "ds-mo",
+    "ds-fenwick-kth",
+    "tech-offline-queries"
+   ]
+  }
+ ]
+}

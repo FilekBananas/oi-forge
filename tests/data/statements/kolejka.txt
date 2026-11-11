@@ -1,0 +1,23 @@
+Kolejka w sklepie
+Do kasy w sklepie ustawiają się klienci. Zdarzenie „PRZYJDZ x” oznacza, że na koniec kolejki staje klient z numerem x.
+Zdarzenie „OBSLUZ” oznacza, że kasjerka obsługuje klienta z początku kolejki, który następnie wychodzi ze sklepu.
+Dla każdego zdarzenia OBSLUZ wypisz numer obsłużonego klienta.
+Wejście
+W pierwszym wierszu znajduje się liczba zdarzeń q (1 ≤ q ≤ 10^6). W kolejnych q wierszach znajdują się opisy zdarzeń:
+„PRZYJDZ x” (1 ≤ x ≤ 10^9) albo „OBSLUZ”.
+Wyjście
+Dla każdego zdarzenia OBSLUZ wypisz w osobnym wierszu numer obsłużonego klienta albo słowo PUSTO, jeśli kolejka była
+pusta.
+Przykład
+Wejście:
+6
+PRZYJDZ 5
+PRZYJDZ 7
+OBSLUZ
+OBSLUZ
+OBSLUZ
+PRZYJDZ 2
+Wyjście:
+5
+7
+PUSTO

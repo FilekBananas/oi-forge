@@ -1,0 +1,21 @@
+Spacer po parku
+Wzdłuż alejki stoi n ławek, przy i-tej ławce leży a_i liści. Jaś chce wybrać spójny fragment alejki (kolejne ławki) o jak największej liczbie ławek, tak aby łączna liczba liści przy
+wybranych ławkach nie przekroczyła s. Jaka jest długość najdłuższego takiego fragmentu?
+Wejście
+W pierwszym wierszu wejścia znajdują się dwie liczby całkowite n oraz s (1 ≤ n ≤ 10^6, 1 ≤ s ≤ 10^18).
+W drugim wierszu znajduje się n dodatnich liczb całkowitych a_1, ..., a_n (1 ≤ a_i ≤ 10^9).
+Wyjście
+Wypisz długość najdłuższego spójnego fragmentu o sumie nie większej niż s (lub 0, jeśli taki fragment nie istnieje).
+Przykład 1
+Wejście:
+7 10
+2 5 1 3 4 1 1
+Wyjście:
+5
+
+Przykład 2
+Wejście:
+3 1
+5 6 7
+Wyjście:
+0

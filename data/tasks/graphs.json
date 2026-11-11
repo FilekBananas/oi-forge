@@ -1,0 +1,1196 @@
+{
+ "chunk": "graphs",
+ "templates": [
+  {
+   "id": "bfs-dist-all",
+   "name": "BFS: odległości od wierzchołka 1",
+   "description": "",
+   "algos": [
+    "bfs",
+    "graph"
+   ],
+   "shapes": [
+    "G"
+   ],
+   "signals": {
+    "any": [
+     "odleglosc\\w*",
+     "najkrotsz\\w*",
+     "najmniejsz\\w* liczb\\w* krawedzi"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<ll> d(n + 1, -1); queue<ll> q; d[1] = 0; q.push(1);\nwhile (!q.empty()) { ll v = q.front(); q.pop(); for (ll u : g[v]) if (d[u] < 0) { d[u] = d[v] + 1; q.push(u); } }\nfor (ll v = 1; v <= n; v++) cout << d[v] << \"\\n\";",
+   "example": {
+    "input": "4 3\n1 2\n2 3\n1 3\n",
+    "output": "0\n1\n1\n-1\n"
+   },
+   "brute": "ll n, m; cin >> n >> m;\nvector<pair<ll,ll>> e(m); for (auto &x : e) cin >> x.first >> x.second;\nconst ll INF = LLONG_MAX / 4; vector<ll> d(n + 1, INF); d[1] = 0;\nfor (ll it = 0; it < n; it++) for (auto [a, b] : e) { if (d[a] < INF && d[a] + 1 < d[b]) d[b] = d[a] + 1; if (d[b] < INF && d[b] + 1 < d[a]) d[a] = d[b] + 1; }   // Bellman–Ford\nfor (ll v = 1; v <= n; v++) cout << (d[v] >= INF ? -1 : d[v]) << \"\\n\";"
+  },
+  {
+   "id": "bfs-dist-1n",
+   "name": "BFS: odległość z 1 do n",
+   "description": "",
+   "algos": [
+    "bfs",
+    "graph"
+   ],
+   "shapes": [
+    "G"
+   ],
+   "signals": {
+    "any": [
+     "najkrotsz\\w*",
+     "odleglosc\\w*",
+     "najmniej (krokow|przesiadek)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<ll> d(n + 1, -1); queue<ll> q; d[1] = 0; q.push(1);\nwhile (!q.empty()) { ll v = q.front(); q.pop(); for (ll u : g[v]) if (d[u] < 0) { d[u] = d[v] + 1; q.push(u); } }\ncout << d[n] << \"\\n\";",
+   "example": {
+    "input": "4 3\n1 2\n2 3\n3 4\n",
+    "output": "3\n"
+   },
+   "brute": "ll n, m; cin >> n >> m;\nvector<pair<ll,ll>> e(m); for (auto &x : e) cin >> x.first >> x.second;\nconst ll INF = LLONG_MAX / 4; vector<ll> d(n + 1, INF); d[1] = 0;\nfor (ll it = 0; it < n; it++) for (auto [a, b] : e) { if (d[a] < INF && d[a] + 1 < d[b]) d[b] = d[a] + 1; if (d[b] < INF && d[b] + 1 < d[a]) d[a] = d[b] + 1; }   // Bellman–Ford\ncout << (d[n] >= INF ? -1 : d[n]) << \"\\n\";"
+  },
+  {
+   "id": "bfs-dist-st",
+   "name": "BFS: odległość s → t (s t w ostatnim wierszu)",
+   "description": "",
+   "algos": [
+    "bfs",
+    "graph"
+   ],
+   "shapes": [
+    "G+S2"
+   ],
+   "signals": {
+    "any": [
+     "najkrotsz\\w*",
+     "odleglosc\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nll s, t; cin >> s >> t;\nvector<ll> d(n + 1, -1); queue<ll> q; d[s] = 0; q.push(s);\nwhile (!q.empty()) { ll v = q.front(); q.pop(); for (ll u : g[v]) if (d[u] < 0) { d[u] = d[v] + 1; q.push(u); } }\ncout << d[t] << \"\\n\";",
+   "example": {
+    "input": "4 3\n1 2\n2 3\n3 4\n1 4\n",
+    "output": "3\n"
+   }
+  },
+  {
+   "id": "reachable-from-1",
+   "name": "Osiągalność z wierzchołka 1 (TAK/NIE dla każdego)",
+   "description": "",
+   "algos": [
+    "dfs",
+    "bfs",
+    "graph"
+   ],
+   "shapes": [
+    "G"
+   ],
+   "signals": {
+    "any": [
+     "osiagaln\\w*",
+     "da sie (dojsc|dojechac|dostac)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<ll> d(n + 1, -1); queue<ll> q; d[1] = 0; q.push(1);\nwhile (!q.empty()) { ll v = q.front(); q.pop(); for (ll u : g[v]) if (d[u] < 0) { d[u] = d[v] + 1; q.push(u); } }\nfor (ll v = 1; v <= n; v++) cout << (d[v] >= 0 ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "3 1\n1 2\n",
+    "output": "{{YES}}\n{{YES}}\n{{NO}}\n"
+   },
+   "variants": [
+    {
+     "id": "reachable-list",
+     "name": "Lista osiągalnych z 1 (rosnąco)",
+     "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<ll> d(n + 1, -1); queue<ll> q; d[1] = 0; q.push(1);\nwhile (!q.empty()) { ll v = q.front(); q.pop(); for (ll u : g[v]) if (d[u] < 0) { d[u] = d[v] + 1; q.push(u); } }\nbool f = true; for (ll v = 1; v <= n; v++) if (d[v] >= 0) { cout << (f ? \"\" : \" \") << v; f = false; }\ncout << \"\\n\";"
+    },
+    {
+     "id": "reachable-count",
+     "name": "Ile wierzchołków osiągalnych z 1",
+     "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<ll> d(n + 1, -1); queue<ll> q; d[1] = 0; q.push(1);\nwhile (!q.empty()) { ll v = q.front(); q.pop(); for (ll u : g[v]) if (d[u] < 0) { d[u] = d[v] + 1; q.push(u); } }\nll c = 0; for (ll v = 1; v <= n; v++) if (d[v] >= 0) c++;\ncout << c << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "components-count",
+   "name": "Liczba spójnych składowych",
+   "description": "",
+   "algos": [
+    "dfs",
+    "dsu",
+    "graph"
+   ],
+   "shapes": [
+    "G"
+   ],
+   "signals": {
+    "any": [
+     "spojn\\w*",
+     "skladow\\w*",
+     "ile (jest )?(grup|wysp|czesci)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<int> vis(n + 1, 0); ll c = 0;\nfor (ll s = 1; s <= n; s++) { if (vis[s]) continue; c++; vector<ll> st = {s}; vis[s] = 1; while (!st.empty()) { ll v = st.back(); st.pop_back(); for (ll u : g[v]) if (!vis[u]) { vis[u] = 1; st.push_back(u); } } }\ncout << c << \"\\n\";",
+   "example": {
+    "input": "5 2\n1 2\n3 4\n",
+    "output": "3\n"
+   },
+   "variants": [
+    {
+     "id": "components-largest",
+     "name": "Rozmiar największej składowej",
+     "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<int> vis(n + 1, 0); ll best = 0;\nfor (ll s = 1; s <= n; s++) { if (vis[s]) continue; ll sz = 0; vector<ll> st = {s}; vis[s] = 1; while (!st.empty()) { ll v = st.back(); st.pop_back(); sz++; for (ll u : g[v]) if (!vis[u]) { vis[u] = 1; st.push_back(u); } } best = max(best, sz); }\ncout << best << \"\\n\";"
+    },
+    {
+     "id": "components-edges-needed",
+     "name": "Ile krawędzi trzeba dodać, by graf był spójny",
+     "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<int> vis(n + 1, 0); ll c = 0;\nfor (ll s = 1; s <= n; s++) { if (vis[s]) continue; c++; vector<ll> st = {s}; vis[s] = 1; while (!st.empty()) { ll v = st.back(); st.pop_back(); for (ll u : g[v]) if (!vis[u]) { vis[u] = 1; st.push_back(u); } } }\ncout << c - 1 << \"\\n\";"
+    }
+   ],
+   "brute": "ll n, m; cin >> n >> m;\nvector<pair<ll,ll>> e(m); for (auto &x : e) cin >> x.first >> x.second;\nvector<ll> lab(n + 1); iota(lab.begin(), lab.end(), 0);   // brute: etykiety = min numer w składowej, aż do stabilizacji\nbool ch = true; while (ch) { ch = false; for (auto [a, b] : e) { ll x = min(lab[a], lab[b]); if (lab[a] != x || lab[b] != x) { lab[a] = lab[b] = x; ch = true; } } }\nset<ll> s(lab.begin() + 1, lab.end()); cout << s.size() << \"\\n\";"
+  },
+  {
+   "id": "components-queries",
+   "name": "Czy a i b w tej samej składowej (zapytania)",
+   "description": "",
+   "algos": [
+    "dsu",
+    "dfs"
+   ],
+   "shapes": [
+    "G-Q2"
+   ],
+   "signals": {
+    "any": [
+     "spojn\\w*",
+     "ta sama|tej samej",
+     "polaczon\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<ll> comp(n + 1, 0); ll c = 0;\nfor (ll s = 1; s <= n; s++) { if (comp[s]) continue; c++; vector<ll> st = {s}; comp[s] = c; while (!st.empty()) { ll v = st.back(); st.pop_back(); for (ll u : g[v]) if (!comp[u]) { comp[u] = c; st.push_back(u); } } }\nll q; cin >> q; while (q--) { ll a, b; cin >> a >> b; cout << (comp[a] == comp[b] ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\"; }",
+   "example": {
+    "input": "4 1\n1 2\n2\n1 2\n1 3\n",
+    "output": "{{YES}}\n{{NO}}\n"
+   }
+  },
+  {
+   "id": "degrees",
+   "name": "Stopnie wierzchołków",
+   "description": "",
+   "algos": [
+    "graph"
+   ],
+   "shapes": [
+    "G"
+   ],
+   "signals": {
+    "any": [
+     "stopie\\w*|stopni\\w*",
+     "ilu (sasiad|znajom)",
+     "liczb\\w* sasiad"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<ll> d(n + 1, 0);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; d[a]++; d[b]++; }\nfor (ll v = 1; v <= n; v++) cout << d[v] << \"\\n\";",
+   "example": {
+    "input": "3 2\n1 2\n1 3\n",
+    "output": "2\n1\n1\n"
+   }
+  },
+  {
+   "id": "adjacency-list",
+   "name": "Listy sąsiedztwa (posortowane)",
+   "description": "",
+   "algos": [
+    "graph"
+   ],
+   "shapes": [
+    "G"
+   ],
+   "signals": {
+    "any": [
+     "list\\w* sasiedztwa",
+     "sasiad\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nfor (ll v = 1; v <= n; v++) { sort(g[v].begin(), g[v].end()); cout << g[v].size(); for (ll u : g[v]) cout << ' ' << u; cout << \"\\n\"; }",
+   "example": {
+    "input": "3 2\n1 2\n1 3\n",
+    "output": "2 2 3\n1 1\n1 1\n"
+   },
+   "variants": [
+    {
+     "id": "adjacency-list-nocount",
+     "name": "Listy sąsiedztwa bez liczby sąsiadów",
+     "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nfor (ll v = 1; v <= n; v++) { sort(g[v].begin(), g[v].end()); for (size_t i = 0; i < g[v].size(); i++) cout << (i ? \" \" : \"\") << g[v][i]; cout << \"\\n\"; }"
+    }
+   ]
+  },
+  {
+   "id": "adjacency-matrix",
+   "name": "Macierz sąsiedztwa",
+   "description": "",
+   "algos": [
+    "graph"
+   ],
+   "shapes": [
+    "G"
+   ],
+   "signals": {
+    "any": [
+     "macierz\\w* sasiedztwa",
+     "macierz\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<int>> A(n + 1, vector<int>(n + 1, 0));\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; A[a][b] = A[b][a] = 1; }\nfor (ll i = 1; i <= n; i++) for (ll j = 1; j <= n; j++) cout << A[i][j] << (j == n ? \"\\n\" : \" \");",
+   "example": {
+    "input": "3 1\n1 2\n",
+    "output": "0 1 0\n1 0 0\n0 0 0\n"
+   }
+  },
+  {
+   "id": "edge-exists-queries",
+   "name": "Czy istnieje krawędź (zapytania)",
+   "description": "",
+   "algos": [
+    "graph",
+    "stl"
+   ],
+   "shapes": [
+    "G-Q2"
+   ],
+   "signals": {
+    "any": [
+     "istnieje krawedz",
+     "krawedz\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nset<pair<ll,ll>> e;\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; e.insert({a, b}); e.insert({b, a}); }\nll q; cin >> q; while (q--) { ll a, b; cin >> a >> b; cout << (e.count({a, b}) ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\"; }",
+   "example": {
+    "input": "3 1\n1 2\n2\n2 1\n1 3\n",
+    "output": "{{YES}}\n{{NO}}\n"
+   }
+  },
+  {
+   "id": "dijkstra-all",
+   "name": "Dijkstra: odległości od 1",
+   "description": "",
+   "algos": [
+    "dijkstra"
+   ],
+   "shapes": [
+    "GW"
+   ],
+   "signals": {
+    "any": [
+     "najkrotsz\\w*",
+     "odleglosc\\w*",
+     "wag\\w*|dlugosc\\w*|koszt\\w*|czas\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<pair<ll,ll>>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b, w; cin >> a >> b >> w; g[a].push_back({b, w}); g[b].push_back({a, w}); }\nvector<ll> d(n + 1, LLONG_MAX); priority_queue<pair<ll,ll>, vector<pair<ll,ll>>, greater<>> pq; d[1] = 0; pq.push({0, 1});\nwhile (!pq.empty()) { auto [dv, v] = pq.top(); pq.pop(); if (dv != d[v]) continue; for (auto [u, w] : g[v]) if (d[v] + w < d[u]) { d[u] = d[v] + w; pq.push({d[u], u}); } }\nfor (ll v = 1; v <= n; v++) cout << (d[v] == LLONG_MAX ? -1 : d[v]) << \"\\n\";",
+   "example": {
+    "input": "3 2\n1 2 5\n2 3 1\n",
+    "output": "0\n5\n6\n"
+   },
+   "brute": "ll n, m; cin >> n >> m;\nvector<array<ll,3>> e(m); for (auto &x : e) cin >> x[0] >> x[1] >> x[2];\nconst ll INF = LLONG_MAX / 4; vector<ll> d(n + 1, INF); d[1] = 0;\nfor (ll it = 0; it < n; it++) for (auto &x : e) { if (d[x[0]] < INF && d[x[0]] + x[2] < d[x[1]]) d[x[1]] = d[x[0]] + x[2]; if (d[x[1]] < INF && d[x[1]] + x[2] < d[x[0]]) d[x[0]] = d[x[1]] + x[2]; }   // Bellman–Ford\nfor (ll v = 1; v <= n; v++) cout << (d[v] >= INF ? -1 : d[v]) << \"\\n\";"
+  },
+  {
+   "id": "dijkstra-1n",
+   "name": "Dijkstra: z 1 do n",
+   "description": "",
+   "algos": [
+    "dijkstra"
+   ],
+   "shapes": [
+    "GW"
+   ],
+   "signals": {
+    "any": [
+     "najkrotsz\\w*",
+     "najszybciej",
+     "najtaniej",
+     "najmniejsz\\w* (koszt|czas)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<pair<ll,ll>>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b, w; cin >> a >> b >> w; g[a].push_back({b, w}); g[b].push_back({a, w}); }\nvector<ll> d(n + 1, LLONG_MAX); priority_queue<pair<ll,ll>, vector<pair<ll,ll>>, greater<>> pq; d[1] = 0; pq.push({0, 1});\nwhile (!pq.empty()) { auto [dv, v] = pq.top(); pq.pop(); if (dv != d[v]) continue; for (auto [u, w] : g[v]) if (d[v] + w < d[u]) { d[u] = d[v] + w; pq.push({d[u], u}); } }\nif (d[n] == LLONG_MAX) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[n] << \"\\n\";",
+   "example": {
+    "input": "3 2\n1 2 5\n2 3 1\n",
+    "output": "6\n"
+   },
+   "brute": "ll n, m; cin >> n >> m;\nvector<array<ll,3>> e(m); for (auto &x : e) cin >> x[0] >> x[1] >> x[2];\nconst ll INF = LLONG_MAX / 4; vector<ll> d(n + 1, INF); d[1] = 0;\nfor (ll it = 0; it < n; it++) for (auto &x : e) { if (d[x[0]] < INF && d[x[0]] + x[2] < d[x[1]]) d[x[1]] = d[x[0]] + x[2]; if (d[x[1]] < INF && d[x[1]] + x[2] < d[x[0]]) d[x[0]] = d[x[1]] + x[2]; }   // Bellman–Ford\nif (d[n] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[n] << \"\\n\";"
+  },
+  {
+   "id": "dijkstra-directed-1n",
+   "name": "Dijkstra (skierowany): z 1 do n",
+   "description": "",
+   "algos": [
+    "dijkstra"
+   ],
+   "shapes": [
+    "GW"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "skierowan\\w*|jednokierunkow\\w*"
+     ],
+     [
+      "najkrotsz\\w*|najszybciej|najtaniej|odleglosc|najmniejsz\\w* (koszt|czas)"
+     ]
+    ],
+    "none": [
+     "nieskierowan\\w*|dwukierunkow\\w*|w obie strony|w obu kierunkach"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<pair<ll,ll>>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b, w; cin >> a >> b >> w; g[a].push_back({b, w}); }\nvector<ll> d(n + 1, LLONG_MAX); priority_queue<pair<ll,ll>, vector<pair<ll,ll>>, greater<>> pq; d[1] = 0; pq.push({0, 1});\nwhile (!pq.empty()) { auto [dv, v] = pq.top(); pq.pop(); if (dv != d[v]) continue; for (auto [u, w] : g[v]) if (d[v] + w < d[u]) { d[u] = d[v] + w; pq.push({d[u], u}); } }\nif (d[n] == LLONG_MAX) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[n] << \"\\n\";",
+   "example": {
+    "input": "3 2\n1 2 5\n2 3 1\n",
+    "output": "6\n"
+   },
+   "brute": "ll n, m; cin >> n >> m;\nvector<array<ll,3>> e(m); for (auto &x : e) cin >> x[0] >> x[1] >> x[2];\nconst ll INF = LLONG_MAX / 4; vector<ll> d(n + 1, INF); d[1] = 0;\nfor (ll it = 0; it < n; it++) for (auto &x : e) { if (d[x[0]] < INF && d[x[0]] + x[2] < d[x[1]]) d[x[1]] = d[x[0]] + x[2]; }   // Bellman–Ford\nif (d[n] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[n] << \"\\n\";"
+  },
+  {
+   "id": "mst-kruskal",
+   "name": "Minimalne drzewo rozpinające (suma wag)",
+   "description": "",
+   "algos": [
+    "mst",
+    "dsu"
+   ],
+   "shapes": [
+    "GW"
+   ],
+   "signals": {
+    "any": [
+     "najtaniej",
+     "rozpinajac\\w*",
+     "polaczyc wszystk\\w*",
+     "minimaln\\w* koszt",
+     "laczn\\w* koszt\\w* (?:\\w+ ){0,2}(?:najmniejsz|minimaln)\\w*",
+     "z kazde\\w* (?:wsi|miast\\w*|wierzcholk\\w*|komputer\\w*|budynk\\w*|dom\\w*|osiedl\\w*|stacj\\w*) .{0,60}do kazde\\w* inne\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<array<ll,3>> e(m); for (auto &x : e) cin >> x[1] >> x[2] >> x[0];\nsort(e.begin(), e.end());\nvector<ll> p(n + 1); iota(p.begin(), p.end(), 0);\nfunction<ll(ll)> f = [&](ll x) { return p[x] == x ? x : p[x] = f(p[x]); };\nll s = 0, cnt = 0; for (auto &x : e) { ll a = f(x[1]), b = f(x[2]); if (a != b) { p[a] = b; s += x[0]; cnt++; } }\nif (cnt != n - 1) cout << \"{{NONE}}\" << \"\\n\"; else cout << s << \"\\n\";",
+   "example": {
+    "input": "3 3\n1 2 5\n2 3 1\n1 3 2\n",
+    "output": "3\n"
+   },
+   "brute": "ll n, m; cin >> n >> m;\nconst ll INF = LLONG_MAX / 4; vector<vector<ll>> w(n + 1, vector<ll>(n + 1, INF));\nfor (ll i = 0; i < m; i++) { ll a, b, c; cin >> a >> b >> c; if (a != b) { w[a][b] = min(w[a][b], c); w[b][a] = min(w[b][a], c); } }\n// brute: algorytm Prima O(n²) na macierzy sąsiedztwa\nvector<ll> d(n + 1, INF); vector<int> in(n + 1, 0); d[1] = 0; ll s = 0; bool ok = true;\nfor (ll it = 0; it < n; it++) { ll v = -1; for (ll u = 1; u <= n; u++) if (!in[u] && (v < 0 || d[u] < d[v])) v = u; if (d[v] >= INF) { ok = false; break; } in[v] = 1; s += d[v]; for (ll u = 1; u <= n; u++) if (!in[u] && w[v][u] < d[u]) d[u] = w[v][u]; }\nif (!ok) cout << \"{{NONE}}\" << \"\\n\"; else cout << s << \"\\n\";"
+  },
+  {
+   "id": "toposort-lex",
+   "name": "Sortowanie topologiczne (najmniejsze leksykograficznie)",
+   "description": "",
+   "algos": [
+    "topo_sort"
+   ],
+   "shapes": [
+    "G"
+   ],
+   "signals": {
+    "any": [
+     "topologiczn\\w*",
+     "kolejnosc\\w*",
+     "przed\\b",
+     "zaleznosc\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nvector<ll> indeg(n + 1, 0);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); indeg[b]++; }\npriority_queue<ll, vector<ll>, greater<ll>> pq; for (ll v = 1; v <= n; v++) if (!indeg[v]) pq.push(v);\nvector<ll> ord; while (!pq.empty()) { ll v = pq.top(); pq.pop(); ord.push_back(v); for (ll u : g[v]) if (--indeg[u] == 0) pq.push(u); }\nif ((ll)ord.size() != n) { cout << \"{{NONE}}\" << \"\\n\"; return; }\nfor (ll i = 0; i < n; i++) cout << ord[i] << (i + 1 == n ? \"\\n\" : \" \");",
+   "example": {
+    "input": "3 2\n1 3\n2 3\n",
+    "output": "1 2 3\n"
+   },
+   "brute": "ll n, m; cin >> n >> m;\nvector<pair<ll,ll>> e(m); for (auto &x : e) cin >> x.first >> x.second;\nvector<int> done(n + 1, 0); vector<ll> ord;\n// brute: w każdym kroku najmniejszy wierzchołek, którego wszyscy poprzednicy są już zrobieni — O(n·(n + m))\nfor (ll step = 0; step < n; step++) { ll pick = -1; for (ll v = 1; v <= n && pick < 0; v++) { if (done[v]) continue; bool ok = true; for (auto [a, b] : e) if (b == v && !done[a]) { ok = false; break; } if (ok) pick = v; } if (pick < 0) break; done[pick] = 1; ord.push_back(pick); }\nif ((ll)ord.size() != n) { cout << \"{{NONE}}\" << \"\\n\"; return; }\nfor (ll i = 0; i < n; i++) cout << ord[i] << (i + 1 == n ? \"\\n\" : \" \");",
+   "variants": [
+    {
+     "id": "toposort-lex-yesno",
+     "name": "Toposort: TAK + najmniejsza leksykograficznie kolejność albo NIE",
+     "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nvector<ll> indeg(n + 1, 0);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); indeg[b]++; }\npriority_queue<ll, vector<ll>, greater<ll>> pq; for (ll v = 1; v <= n; v++) if (!indeg[v]) pq.push(v);\nvector<ll> ord; while (!pq.empty()) { ll v = pq.top(); pq.pop(); ord.push_back(v); for (ll u : g[v]) if (--indeg[u] == 0) pq.push(u); }\nif ((ll)ord.size() != n) { cout << \"{{NO}}\" << \"\\n\"; return; }\ncout << \"{{YES}}\" << \"\\n\";\nfor (ll i = 0; i < n; i++) cout << ord[i] << (i + 1 == n ? \"\\n\" : \" \");",
+     "brute": "ll n, m; cin >> n >> m;\nvector<pair<ll,ll>> e(m); for (auto &x : e) cin >> x.first >> x.second;\nvector<int> done(n + 1, 0); vector<ll> ord;\n// brute: w każdym kroku najmniejszy wierzchołek, którego wszyscy poprzednicy są już zrobieni — O(n·(n + m))\nfor (ll step = 0; step < n; step++) { ll pick = -1; for (ll v = 1; v <= n && pick < 0; v++) { if (done[v]) continue; bool ok = true; for (auto [a, b] : e) if (b == v && !done[a]) { ok = false; break; } if (ok) pick = v; } if (pick < 0) break; done[pick] = 1; ord.push_back(pick); }\nif ((ll)ord.size() != n) { cout << \"{{NO}}\" << \"\\n\"; return; }\ncout << \"{{YES}}\" << \"\\n\";\nfor (ll i = 0; i < n; i++) cout << ord[i] << (i + 1 == n ? \"\\n\" : \" \");"
+    }
+   ]
+  },
+  {
+   "id": "toposort-unique",
+   "name": "Czy porządek topologiczny jest jednoznaczny (TAK + kolejność / NIE)",
+   "description": "",
+   "algos": [
+    "topo_sort"
+   ],
+   "shapes": [
+    "G"
+   ],
+   "signals": {
+    "any": [
+     "jednoznaczn\\w*",
+     "tylko jedna",
+     "jedyn\\w* (mozliw\\w* )?kolejnosc"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nvector<ll> indeg(n + 1, 0);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); indeg[b]++; }\nqueue<ll> q; for (ll v = 1; v <= n; v++) if (!indeg[v]) q.push(v);\nvector<ll> ord; bool uniq = true; while (!q.empty()) { if (q.size() > 1) uniq = false; ll v = q.front(); q.pop(); ord.push_back(v); for (ll u : g[v]) if (--indeg[u] == 0) q.push(u); }\nif ((ll)ord.size() != n || !uniq) { cout << \"{{NO}}\" << \"\\n\"; return; }\ncout << \"{{YES}}\" << \"\\n\"; for (ll i = 0; i < n; i++) cout << ord[i] << (i + 1 == n ? \"\\n\" : \" \");",
+   "example": {
+    "input": "3 2\n1 2\n2 3\n",
+    "output": "{{YES}}\n1 2 3\n"
+   }
+  },
+  {
+   "id": "has-cycle-directed",
+   "name": "Czy graf skierowany ma cykl",
+   "description": "",
+   "algos": [
+    "topo_sort",
+    "dfs"
+   ],
+   "shapes": [
+    "G"
+   ],
+   "signals": {
+    "any": [
+     "\\bcykl\\w*",
+     "zapetl\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> g(n + 1);\nvector<ll> indeg(n + 1, 0);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); indeg[b]++; }\nqueue<ll> q; for (ll v = 1; v <= n; v++) if (!indeg[v]) q.push(v);\nll c = 0; while (!q.empty()) { ll v = q.front(); q.pop(); c++; for (ll u : g[v]) if (--indeg[u] == 0) q.push(u); }\ncout << (c != n ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "3 3\n1 2\n2 3\n3 1\n",
+    "output": "{{YES}}\n"
+   }
+  },
+  {
+   "id": "tree-subtree-sizes",
+   "name": "Rozmiary poddrzew (korzeń 1)",
+   "description": "",
+   "algos": [
+    "tree",
+    "dfs"
+   ],
+   "shapes": [
+    "T"
+   ],
+   "signals": {
+    "any": [
+     "poddrzew\\w*",
+     "potomk\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < n - 1; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<ll> par(n + 1, 0), ord, sz(n + 1, 1); ord.reserve(n); vector<ll> st = {1}; par[1] = -1;\nwhile (!st.empty()) { ll v = st.back(); st.pop_back(); ord.push_back(v); for (ll u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); } }\nfor (ll i = n - 1; i > 0; i--) sz[par[ord[i]]] += sz[ord[i]];\nfor (ll v = 1; v <= n; v++) cout << sz[v] << \"\\n\";",
+   "example": {
+    "input": "3\n1 2\n1 3\n",
+    "output": "3\n1\n1\n"
+   }
+  },
+  {
+   "id": "tree-depths",
+   "name": "Głębokości / odległości od korzenia 1 w drzewie",
+   "description": "",
+   "algos": [
+    "tree",
+    "bfs"
+   ],
+   "shapes": [
+    "T"
+   ],
+   "signals": {
+    "any": [
+     "glebokos\\w*",
+     "odleglosc\\w*",
+     "poziom\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < n - 1; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<ll> d(n + 1, -1); queue<ll> q; d[1] = 0; q.push(1);\nwhile (!q.empty()) { ll v = q.front(); q.pop(); for (ll u : g[v]) if (d[u] < 0) { d[u] = d[v] + 1; q.push(u); } }\nfor (ll v = 1; v <= n; v++) cout << d[v] << \"\\n\";",
+   "example": {
+    "input": "3\n1 2\n2 3\n",
+    "output": "0\n1\n2\n"
+   },
+   "brute": "ll n; cin >> n; ll m = n - 1;\nvector<pair<ll,ll>> e(m); for (auto &x : e) cin >> x.first >> x.second;\nconst ll INF = LLONG_MAX / 4; vector<ll> d(n + 1, INF); d[1] = 0;\nfor (ll it = 0; it < n; it++) for (auto [a, b] : e) { if (d[a] < INF && d[a] + 1 < d[b]) d[b] = d[a] + 1; if (d[b] < INF && d[b] + 1 < d[a]) d[a] = d[b] + 1; }   // Bellman–Ford\nfor (ll v = 1; v <= n; v++) cout << d[v] << \"\\n\";"
+  },
+  {
+   "id": "tree-diameter",
+   "name": "Średnica drzewa",
+   "description": "",
+   "algos": [
+    "tree",
+    "bfs"
+   ],
+   "shapes": [
+    "T"
+   ],
+   "signals": {
+    "any": [
+     "srednic\\w*",
+     "najdluzsz\\w* sciezk",
+     "najdalsz\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < n - 1; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nauto far = [&](ll s, vector<ll> &d) { d.assign(n + 1, -1); queue<ll> q; d[s] = 0; q.push(s); ll last = s; while (!q.empty()) { ll v = q.front(); q.pop(); last = v; for (ll u : g[v]) if (d[u] < 0) { d[u] = d[v] + 1; q.push(u); } } return last; };\nvector<ll> d; ll a = far(1, d); ll b = far(a, d);\ncout << d[b] << \"\\n\";",
+   "example": {
+    "input": "4\n1 2\n2 3\n2 4\n",
+    "output": "2\n"
+   }
+  },
+  {
+   "id": "tree-parents-preorder",
+   "name": "Preorder drzewa (dzieci rosnąco, korzeń 1)",
+   "description": "",
+   "algos": [
+    "tree",
+    "dfs",
+    "recursion"
+   ],
+   "shapes": [
+    "T"
+   ],
+   "signals": {
+    "any": [
+     "preorder",
+     "kolejnosc\\w* odwiedz"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < n - 1; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nfor (auto &x : g) sort(x.rbegin(), x.rend());\nvector<ll> st = {1}, par(n + 1, 0), out; par[1] = -1;\nwhile (!st.empty()) { ll v = st.back(); st.pop_back(); out.push_back(v); for (ll u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); } }\nfor (ll i = 0; i < n; i++) cout << out[i] << (i + 1 == n ? \"\\n\" : \" \");",
+   "example": {
+    "input": "4\n1 3\n1 2\n2 4\n",
+    "output": "1 2 4 3\n"
+   }
+  },
+  {
+   "id": "grid-bfs",
+   "name": "BFS na planszy (start → meta)",
+   "description": "",
+   "algos": [
+    "grid",
+    "bfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [
+     "plansz\\w*",
+     "labirynt\\w*",
+     "siatk\\w*",
+     "pol\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<string> b(n); for (auto &r : b) cin >> r;\nll sr = -1, sc = -1, tr = -1, tc = -1;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { if (b[i][j] == '{{START}}') { sr = i; sc = j; } if (b[i][j] == '{{END}}') { tr = i; tc = j; } }\nvector<vector<ll>> d(n, vector<ll>(m, -1)); queue<pair<ll,ll>> q; if (sr >= 0) { d[sr][sc] = 0; q.push({sr, sc}); }\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nwhile (!q.empty()) { auto [r, c] = q.front(); q.pop(); for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k]; if (nr < 0 || nc < 0 || nr >= n || nc >= m || b[nr][nc] == '{{WALL}}' || d[nr][nc] >= 0) continue; d[nr][nc] = d[r][c] + 1; q.push({nr, nc}); } }\nif (tr < 0 || d[tr][tc] < 0) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[tr][tc] << \"\\n\";",
+   "example": {
+    "input": "3 3\n{{START}}..\n.{{WALL}}.\n..{{END}}\n",
+    "output": "4\n"
+   },
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nconst ll INF = LLONG_MAX / 4; vector<vector<ll>> d(n, vector<ll>(m, INF));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{START}}') d[i][j] = 0;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (d[r][c] >= INF) continue;\n        for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || !(b[nr][nc] != '{{WALL}}')) continue;\n            if (d[r][c] + 1 < d[nr][nc]) { d[nr][nc] = d[r][c] + 1; changed = true; } } } }\nll tr = -1, tc = -1; for (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{END}}') { tr = i; tc = j; }\nif (tr < 0 || d[tr][tc] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[tr][tc] << \"\\n\";"
+  },
+  {
+   "id": "grid-count-regions",
+   "name": "Liczba obszarów na planszy",
+   "description": "",
+   "algos": [
+    "grid",
+    "dfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [
+     "wysp\\w*",
+     "obszar\\w*",
+     "jezior\\w*",
+     "plam\\w*",
+     "ile (jest )?(grup|kawalk)"
+    ],
+    "all": [],
+    "none": [
+     "8 kierunk|osmiu kierunk|ukosn\\w*|po skosie|skosn\\w*|przekatn\\w*|rogiem|naroznik\\w*"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<string> b(n); for (auto &r : b) cin >> r;\nvector<vector<int>> vis(n, vector<int>(m, 0)); ll c = 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { if (vis[i][j] || b[i][j] != '{{LAND}}') continue; c++; vector<pair<ll,ll>> st = {{i, j}}; vis[i][j] = 1; while (!st.empty()) { auto [r, cc] = st.back(); st.pop_back(); for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = cc + dc[k]; if (nr < 0 || nc < 0 || nr >= n || nc >= m || vis[nr][nc] || b[nr][nc] != '{{LAND}}') continue; vis[nr][nc] = 1; st.push_back({nr, nc}); } } }\ncout << c << \"\\n\";",
+   "example": {
+    "input": "3 3\n{{LAND}}..\n...\n..{{LAND}}\n",
+    "output": "2\n"
+   },
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\n// brute: każde pole lądu dostaje etykietę = swój numer, potem powtarzamy „weź mniejszą etykietę sąsiada” aż do stabilizacji\nvector<vector<ll>> lab(n, vector<ll>(m, -1));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{LAND}}') lab[i][j] = i * m + j;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (lab[r][c] < 0) continue;\n        for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || lab[nr][nc] < 0) continue;\n            if (lab[nr][nc] < lab[r][c]) { lab[r][c] = lab[nr][nc]; changed = true; } } } }\nset<ll> s; for (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{LAND}}') s.insert(lab[i][j]);\ncout << s.size() << \"\\n\";"
+  },
+  {
+   "id": "matrix-row-col-sums",
+   "name": "Sumy wierszy i kolumn macierzy",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "MAT"
+   ],
+   "signals": {
+    "any": [
+     "wiersz\\w*",
+     "kolumn\\w*"
+    ],
+    "all": [
+     [
+      "sum\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<ll> rs(n, 0), cs(m, 0);\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { ll x; cin >> x; rs[i] += x; cs[j] += x; }\nfor (ll i = 0; i < n; i++) cout << rs[i] << (i + 1 == n ? \"\\n\" : \" \");\nfor (ll j = 0; j < m; j++) cout << cs[j] << (j + 1 == m ? \"\\n\" : \" \");",
+   "example": {
+    "input": "2 2\n1 2\n3 4\n",
+    "output": "3 7\n4 6\n"
+   }
+  },
+  {
+   "id": "matrix-transpose",
+   "name": "Transpozycja macierzy",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "MAT"
+   ],
+   "signals": {
+    "any": [
+     "transpoz\\w*",
+     "obr[oó]c\\w*",
+     "kolumn\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> a(n, vector<ll>(m)); for (auto &r : a) for (auto &x : r) cin >> x;\nfor (ll j = 0; j < m; j++) for (ll i = 0; i < n; i++) cout << a[i][j] << (i + 1 == n ? \"\\n\" : \" \");",
+   "example": {
+    "input": "2 3\n1 2 3\n4 5 6\n",
+    "output": "1 4\n2 5\n3 6\n"
+   }
+  },
+  {
+   "id": "matrix-max-path-dp",
+   "name": "Maks. suma ścieżki w prawo/w dół",
+   "description": "",
+   "algos": [
+    "dp",
+    "grid"
+   ],
+   "shapes": [
+    "MAT"
+   ],
+   "signals": {
+    "any": [
+     "w prawo",
+     "w dol",
+     "prawy dolny",
+     "lewego gornego"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> a(n, vector<ll>(m)); for (auto &r : a) for (auto &x : r) cin >> x;\nvector<vector<ll>> f(n, vector<ll>(m, LLONG_MIN));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { ll best = (i == 0 && j == 0) ? 0 : LLONG_MIN; if (i > 0) best = max(best, f[i-1][j]); if (j > 0) best = max(best, f[i][j-1]); f[i][j] = best + a[i][j]; }\ncout << f[n-1][m-1] << \"\\n\";",
+   "example": {
+    "input": "2 2\n1 2\n3 4\n",
+    "output": "8\n"
+   },
+   "variants": [
+    {
+     "id": "matrix-min-path-dp",
+     "name": "Min. suma ścieżki w prawo/w dół",
+     "solve": "ll n, m; cin >> n >> m;\nvector<vector<ll>> a(n, vector<ll>(m)); for (auto &r : a) for (auto &x : r) cin >> x;\nvector<vector<ll>> f(n, vector<ll>(m, LLONG_MAX));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { ll best = (i == 0 && j == 0) ? 0 : LLONG_MAX; if (i > 0) best = min(best, f[i-1][j]); if (j > 0) best = min(best, f[i][j-1]); f[i][j] = best + a[i][j]; }\ncout << f[n-1][m-1] << \"\\n\";"
+    },
+    {
+     "id": "grid-paths-count",
+     "name": "Liczba ścieżek w prawo/w dół (tylko wymiary)",
+     "solve": "ll n, m; cin >> n >> m;\nvector<vector<unsigned long long>> f(n + 1, vector<unsigned long long>(m + 1, 0)); f[1][1] = 1;\nfor (ll i = 1; i <= n; i++) for (ll j = 1; j <= m; j++) if (i > 1 || j > 1) f[i][j] = f[i-1][j] + f[i][j-1];\ncout << f[n][m] << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "grid-bfs-corners",
+   "name": "BFS na planszy: z lewego górnego do prawego dolnego rogu",
+   "description": "",
+   "algos": [
+    "grid",
+    "bfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [
+     "lew\\w* gorn\\w*",
+     "praw\\w* doln\\w*",
+     "\\(1, ?1\\).{0,40}\\(n, ?m\\)"
+    ],
+    "all": [
+     [
+      "lew\\w* gorn\\w*|praw\\w* doln\\w*|\\brog\\w*|\\brogu\\b|narozn\\w*|\\(1, ?1\\)"
+     ],
+     [
+      "najmniej\\w*|najkrotsz\\w*|minimaln\\w*|ile (co )?najmniej|najszybciej"
+     ]
+    ],
+    "none": [
+     "8 kierunk|osmiu kierunk|ukosn\\w*|po skosie|skosn\\w*|przekatn\\w*|rogiem|naroznik\\w*"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nif (n == 0 || b[0][0] == '{{WALL}}' || b[n - 1][m - 1] == '{{WALL}}') { cout << \"{{NONE}}\" << \"\\n\"; return; }\nvector<vector<ll>> d(n, vector<ll>(m, -1)); queue<pair<ll,ll>> q; d[0][0] = 0; q.push({0, 0});\nwhile (!q.empty()) { auto [r, c] = q.front(); q.pop(); for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n    if (nr < 0 || nc < 0 || nr >= n || nc >= m || b[nr][nc] == '{{WALL}}' || d[nr][nc] >= 0) continue; d[nr][nc] = d[r][c] + 1; q.push({nr, nc}); } }\nif (d[n - 1][m - 1] < 0) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[n - 1][m - 1] << \"\\n\";",
+   "example": {
+    "input": "3 4\n..#.\n#...\n..#.\n",
+    "output": "5\n"
+   },
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nconst ll INF = LLONG_MAX / 4; vector<vector<ll>> d(n, vector<ll>(m, INF));\nif (n && b[0][0] != '{{WALL}}') d[0][0] = 0;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (d[r][c] >= INF) continue;\n        for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || !(b[nr][nc] != '{{WALL}}')) continue;\n            if (d[r][c] + 1 < d[nr][nc]) { d[nr][nc] = d[r][c] + 1; changed = true; } } } }\nif (n == 0 || b[n - 1][m - 1] == '{{WALL}}' || d[n - 1][m - 1] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[n - 1][m - 1] << \"\\n\";"
+  },
+  {
+   "id": "grid-bfs-corners-diag",
+   "name": "BFS na planszy: z rogu do rogu, 8 kierunków (także po skosie)",
+   "description": "",
+   "algos": [
+    "grid",
+    "bfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "8 kierunk|osmiu kierunk|ukosn\\w*|po skosie|skosn\\w*|przekatn\\w*|rogiem|naroznik\\w*"
+     ],
+     [
+      "lew\\w* gorn\\w*|praw\\w* doln\\w*|narozn\\w*|\\(1, ?1\\)"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\nif (n == 0 || b[0][0] == '{{WALL}}' || b[n - 1][m - 1] == '{{WALL}}') { cout << \"{{NONE}}\" << \"\\n\"; return; }\nvector<vector<ll>> d(n, vector<ll>(m, -1)); queue<pair<ll,ll>> q; d[0][0] = 0; q.push({0, 0});\nwhile (!q.empty()) { auto [r, c] = q.front(); q.pop(); for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = c + dc[k];\n    if (nr < 0 || nc < 0 || nr >= n || nc >= m || b[nr][nc] == '{{WALL}}' || d[nr][nc] >= 0) continue; d[nr][nc] = d[r][c] + 1; q.push({nr, nc}); } }\nif (d[n - 1][m - 1] < 0) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[n - 1][m - 1] << \"\\n\";",
+   "example": {
+    "input": "3 3\n.#.\n#.#\n.#.\n",
+    "output": "2\n"
+   },
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\nconst ll INF = LLONG_MAX / 4; vector<vector<ll>> d(n, vector<ll>(m, INF));\nif (n && b[0][0] != '{{WALL}}') d[0][0] = 0;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (d[r][c] >= INF) continue;\n        for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || !(b[nr][nc] != '{{WALL}}')) continue;\n            if (d[r][c] + 1 < d[nr][nc]) { d[nr][nc] = d[r][c] + 1; changed = true; } } } }\nif (n == 0 || b[n - 1][m - 1] == '{{WALL}}' || d[n - 1][m - 1] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[n - 1][m - 1] << \"\\n\";"
+  },
+  {
+   "id": "grid-bfs-letters",
+   "name": "BFS na planszy: start i cel oznaczone literami (S/E, P/K, M/S…)",
+   "description": "",
+   "algos": [
+    "grid",
+    "bfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [
+     "\\blitera\\w*|\\bliter[aąy]\\b",
+     "\\bstart\\w*|poczat\\w*|\\bcel\\b|\\bcelu\\b|met[aey]\\b|skarb\\w*"
+    ],
+    "all": [
+     [
+      "najmniej\\w*|najkrotsz\\w*|minimaln\\w*|ile (co )?najmniej|najszybciej"
+     ]
+    ],
+    "none": [
+     "8 kierunk|osmiu kierunk|ukosn\\w*|po skosie|skosn\\w*|przekatn\\w*|rogiem|naroznik\\w*"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nll sr = -1, sc = -1, tr = -1, tc = -1;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { if (b[i][j] == '{{START}}') { sr = i; sc = j; } if (b[i][j] == '{{END}}') { tr = i; tc = j; } }\nvector<vector<ll>> d(n, vector<ll>(m, -1)); queue<pair<ll,ll>> q; if (sr >= 0) { d[sr][sc] = 0; q.push({sr, sc}); }\nwhile (!q.empty()) { auto [r, c] = q.front(); q.pop(); for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n    if (nr < 0 || nc < 0 || nr >= n || nc >= m || b[nr][nc] == '{{WALL}}' || d[nr][nc] >= 0) continue; d[nr][nc] = d[r][c] + 1; q.push({nr, nc}); } }\nif (tr < 0 || d[tr][tc] < 0) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[tr][tc] << \"\\n\";",
+   "example": {
+    "input": "3 4\n{{START}}..#\n.#..\n...{{END}}\n",
+    "output": "5\n"
+   },
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nconst ll INF = LLONG_MAX / 4; vector<vector<ll>> d(n, vector<ll>(m, INF));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{START}}') d[i][j] = 0;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (d[r][c] >= INF) continue;\n        for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || !(b[nr][nc] != '{{WALL}}')) continue;\n            if (d[r][c] + 1 < d[nr][nc]) { d[nr][nc] = d[r][c] + 1; changed = true; } } } }\nll tr = -1, tc = -1; for (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{END}}') { tr = i; tc = j; }\nif (tr < 0 || d[tr][tc] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[tr][tc] << \"\\n\";"
+  },
+  {
+   "id": "grid-bfs-letters-8",
+   "name": "BFS na planszy: start/cel literami, 8 kierunków",
+   "description": "",
+   "algos": [
+    "grid",
+    "bfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [
+     "\\blitera\\w*|\\bliter[aąy]\\b"
+    ],
+    "all": [
+     [
+      "8 kierunk|osmiu kierunk|ukosn\\w*|po skosie|skosn\\w*|przekatn\\w*|rogiem|naroznik\\w*"
+     ],
+     [
+      "najmniej\\w*|najkrotsz\\w*|minimaln\\w*|ile (co )?najmniej|najszybciej"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\nll sr = -1, sc = -1, tr = -1, tc = -1;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { if (b[i][j] == '{{START}}') { sr = i; sc = j; } if (b[i][j] == '{{END}}') { tr = i; tc = j; } }\nvector<vector<ll>> d(n, vector<ll>(m, -1)); queue<pair<ll,ll>> q; if (sr >= 0) { d[sr][sc] = 0; q.push({sr, sc}); }\nwhile (!q.empty()) { auto [r, c] = q.front(); q.pop(); for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = c + dc[k];\n    if (nr < 0 || nc < 0 || nr >= n || nc >= m || b[nr][nc] == '{{WALL}}' || d[nr][nc] >= 0) continue; d[nr][nc] = d[r][c] + 1; q.push({nr, nc}); } }\nif (tr < 0 || d[tr][tc] < 0) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[tr][tc] << \"\\n\";",
+   "example": {
+    "input": "3 3\n{{START}}#.\n#.#\n..{{END}}\n",
+    "output": "2\n"
+   },
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\nconst ll INF = LLONG_MAX / 4; vector<vector<ll>> d(n, vector<ll>(m, INF));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{START}}') d[i][j] = 0;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (d[r][c] >= INF) continue;\n        for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || !(b[nr][nc] != '{{WALL}}')) continue;\n            if (d[r][c] + 1 < d[nr][nc]) { d[nr][nc] = d[r][c] + 1; changed = true; } } } }\nll tr = -1, tc = -1; for (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{END}}') { tr = i; tc = j; }\nif (tr < 0 || d[tr][tc] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[tr][tc] << \"\\n\";"
+  },
+  {
+   "id": "grid-multi-source-spread",
+   "name": "BFS z wielu źródeł: po ilu krokach wszystko zostanie objęte (pożar, zaraza)",
+   "description": "",
+   "algos": [
+    "grid",
+    "bfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [
+     "pozar\\w*|plon\\w*|ogie\\w*|zapal\\w*",
+     "zaraz\\w*|zaraż\\w*|choro\\w*|zgnil\\w*|infek\\w*|rozprzestrzen\\w*",
+     "po ilu (minutach|sekundach|dniach|godzinach|krokach|turach)",
+     "kazd\\w* (minut|sekund|dni|godzin|tur)\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nvector<vector<ll>> d(n, vector<ll>(m, -1)); queue<pair<ll,ll>> q;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{SRC}}') { d[i][j] = 0; q.push({i, j}); }\nwhile (!q.empty()) { auto [r, c] = q.front(); q.pop(); for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n    if (nr < 0 || nc < 0 || nr >= n || nc >= m || d[nr][nc] >= 0) continue; char ch = b[nr][nc]; if (!(ch == '{{FUEL}}')) continue;\n    d[nr][nc] = d[r][c] + 1; q.push({nr, nc}); } }\nll best = 0; bool all_ok = true;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { char ch = b[i][j]; if (!(ch == '{{FUEL}}')) continue; if (d[i][j] < 0) all_ok = false; else best = max(best, d[i][j]); }\nif (!all_ok) cout << \"{{NONE}}\" << \"\\n\"; else cout << best << \"\\n\";",
+   "example": {
+    "input": "2 3\n{{SRC}}{{FUEL}}{{FUEL}}\n#{{FUEL}}#\n",
+    "output": "2\n"
+   },
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nconst ll INF = LLONG_MAX / 4; vector<vector<ll>> d(n, vector<ll>(m, INF));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{SRC}}') d[i][j] = 0;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (d[r][c] >= INF) continue;\n        for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || !([&](char ch) { return ch == '{{FUEL}}'; }(b[nr][nc]))) continue;\n            if (d[r][c] + 1 < d[nr][nc]) { d[nr][nc] = d[r][c] + 1; changed = true; } } } }\nll best = 0; bool all_ok = true;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { char ch = b[i][j]; if (!(ch == '{{FUEL}}')) continue; if (d[i][j] >= INF) all_ok = false; else best = max(best, d[i][j]); }\nif (!all_ok) cout << \"{{NONE}}\" << \"\\n\"; else cout << best << \"\\n\";",
+   "variants": [
+    {
+     "id": "grid-multi-source-spread-notwall",
+     "name": "BFS z wielu źródeł po wszystkich polach poza ścianami",
+     "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nvector<vector<ll>> d(n, vector<ll>(m, -1)); queue<pair<ll,ll>> q;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{SRC}}') { d[i][j] = 0; q.push({i, j}); }\nwhile (!q.empty()) { auto [r, c] = q.front(); q.pop(); for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n    if (nr < 0 || nc < 0 || nr >= n || nc >= m || d[nr][nc] >= 0) continue; char ch = b[nr][nc]; if (!(ch != '{{WALL}}')) continue;\n    d[nr][nc] = d[r][c] + 1; q.push({nr, nc}); } }\nll best = 0; bool all_ok = true;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { char ch = b[i][j]; if (!(ch != '{{WALL}}')) continue; if (d[i][j] < 0) all_ok = false; else best = max(best, d[i][j]); }\nif (!all_ok) cout << \"{{NONE}}\" << \"\\n\"; else cout << best << \"\\n\";",
+     "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nconst ll INF = LLONG_MAX / 4; vector<vector<ll>> d(n, vector<ll>(m, INF));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{SRC}}') d[i][j] = 0;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (d[r][c] >= INF) continue;\n        for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || !([&](char ch) { return ch != '{{WALL}}'; }(b[nr][nc]))) continue;\n            if (d[r][c] + 1 < d[nr][nc]) { d[nr][nc] = d[r][c] + 1; changed = true; } } } }\nll best = 0; bool all_ok = true;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { char ch = b[i][j]; if (!(ch != '{{WALL}}')) continue; if (d[i][j] >= INF) all_ok = false; else best = max(best, d[i][j]); }\nif (!all_ok) cout << \"{{NONE}}\" << \"\\n\"; else cout << best << \"\\n\";"
+    },
+    {
+     "id": "grid-multi-source-spread-8",
+     "name": "BFS z wielu źródeł (8 kierunków)",
+     "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\nvector<vector<ll>> d(n, vector<ll>(m, -1)); queue<pair<ll,ll>> q;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{SRC}}') { d[i][j] = 0; q.push({i, j}); }\nwhile (!q.empty()) { auto [r, c] = q.front(); q.pop(); for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = c + dc[k];\n    if (nr < 0 || nc < 0 || nr >= n || nc >= m || d[nr][nc] >= 0) continue; char ch = b[nr][nc]; if (!(ch == '{{FUEL}}')) continue;\n    d[nr][nc] = d[r][c] + 1; q.push({nr, nc}); } }\nll best = 0; bool all_ok = true;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { char ch = b[i][j]; if (!(ch == '{{FUEL}}')) continue; if (d[i][j] < 0) all_ok = false; else best = max(best, d[i][j]); }\nif (!all_ok) cout << \"{{NONE}}\" << \"\\n\"; else cout << best << \"\\n\";",
+     "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\nconst ll INF = LLONG_MAX / 4; vector<vector<ll>> d(n, vector<ll>(m, INF));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{SRC}}') d[i][j] = 0;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (d[r][c] >= INF) continue;\n        for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || !([&](char ch) { return ch == '{{FUEL}}'; }(b[nr][nc]))) continue;\n            if (d[r][c] + 1 < d[nr][nc]) { d[nr][nc] = d[r][c] + 1; changed = true; } } } }\nll best = 0; bool all_ok = true;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { char ch = b[i][j]; if (!(ch == '{{FUEL}}')) continue; if (d[i][j] >= INF) all_ok = false; else best = max(best, d[i][j]); }\nif (!all_ok) cout << \"{{NONE}}\" << \"\\n\"; else cout << best << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "grid-count-regions-8",
+   "name": "Liczba obszarów na planszy (sąsiedztwo także po skosie)",
+   "description": "",
+   "algos": [
+    "grid",
+    "dfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "8 kierunk|osmiu kierunk|ukosn\\w*|po skosie|skosn\\w*|przekatn\\w*|rogiem|naroznik\\w*"
+     ],
+     [
+      "wysp\\w*|obszar\\w*|jezior\\w*|plam\\w*|grup\\w*|kawalk\\w*|skupisk\\w*|ile (jest )?"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\nvector<vector<int>> vis(n, vector<int>(m, 0)); ll c = 0, best = 0;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { if (vis[i][j] || b[i][j] != '{{LAND}}') continue; c++; ll sz = 0;\n    vector<pair<ll,ll>> st = {{i, j}}; vis[i][j] = 1;\n    while (!st.empty()) { auto [r, cc] = st.back(); st.pop_back(); sz++; for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = cc + dc[k];\n        if (nr < 0 || nc < 0 || nr >= n || nc >= m || vis[nr][nc] || b[nr][nc] != '{{LAND}}') continue; vis[nr][nc] = 1; st.push_back({nr, nc}); } }\n    best = max(best, sz); }\ncout << c << \"\\n\";",
+   "example": {
+    "input": "3 3\n{{LAND}}..\n.{{LAND}}.\n...\n",
+    "output": "1\n"
+   },
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\n// brute: każde pole lądu dostaje etykietę = swój numer, potem powtarzamy „weź mniejszą etykietę sąsiada” aż do stabilizacji\nvector<vector<ll>> lab(n, vector<ll>(m, -1));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{LAND}}') lab[i][j] = i * m + j;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (lab[r][c] < 0) continue;\n        for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || lab[nr][nc] < 0) continue;\n            if (lab[nr][nc] < lab[r][c]) { lab[r][c] = lab[nr][nc]; changed = true; } } } }\nset<ll> s; for (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{LAND}}') s.insert(lab[i][j]);\ncout << s.size() << \"\\n\";"
+  },
+  {
+   "id": "grid-largest-region",
+   "name": "Rozmiar największego obszaru na planszy",
+   "description": "",
+   "algos": [
+    "grid",
+    "dfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [
+     "najwieksz\\w* (wysp|obszar|jezior|plam|pokoj|pomieszcz|pole\\b|powierzchn)\\w*",
+     "(wysp|obszar|jezior|plam|pokoj)\\w* .{0,40}(najwieksz|maksymaln)\\w*"
+    ],
+    "all": [],
+    "none": [
+     "8 kierunk|osmiu kierunk|ukosn\\w*|po skosie|skosn\\w*|przekatn\\w*|rogiem|naroznik\\w*"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nvector<vector<int>> vis(n, vector<int>(m, 0)); ll c = 0, best = 0;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { if (vis[i][j] || b[i][j] != '{{LAND}}') continue; c++; ll sz = 0;\n    vector<pair<ll,ll>> st = {{i, j}}; vis[i][j] = 1;\n    while (!st.empty()) { auto [r, cc] = st.back(); st.pop_back(); sz++; for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = cc + dc[k];\n        if (nr < 0 || nc < 0 || nr >= n || nc >= m || vis[nr][nc] || b[nr][nc] != '{{LAND}}') continue; vis[nr][nc] = 1; st.push_back({nr, nc}); } }\n    best = max(best, sz); }\ncout << best << \"\\n\";",
+   "example": {
+    "input": "3 3\n{{LAND}}{{LAND}}.\n...\n..{{LAND}}\n",
+    "output": "2\n"
+   },
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\n// brute: każde pole lądu dostaje etykietę = swój numer, potem powtarzamy „weź mniejszą etykietę sąsiada” aż do stabilizacji\nvector<vector<ll>> lab(n, vector<ll>(m, -1));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{LAND}}') lab[i][j] = i * m + j;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (lab[r][c] < 0) continue;\n        for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || lab[nr][nc] < 0) continue;\n            if (lab[nr][nc] < lab[r][c]) { lab[r][c] = lab[nr][nc]; changed = true; } } } }\nmap<ll, ll> cnt; ll best = 0; for (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{LAND}}') best = max(best, ++cnt[lab[i][j]]);\ncout << best << \"\\n\";"
+  },
+  {
+   "id": "grid-largest-region-8",
+   "name": "Rozmiar największego obszaru (8 kierunków)",
+   "description": "",
+   "algos": [
+    "grid",
+    "dfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "8 kierunk|osmiu kierunk|ukosn\\w*|po skosie|skosn\\w*|przekatn\\w*|rogiem|naroznik\\w*"
+     ],
+     [
+      "najwieksz\\w*|maksymaln\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\nvector<vector<int>> vis(n, vector<int>(m, 0)); ll c = 0, best = 0;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) { if (vis[i][j] || b[i][j] != '{{LAND}}') continue; c++; ll sz = 0;\n    vector<pair<ll,ll>> st = {{i, j}}; vis[i][j] = 1;\n    while (!st.empty()) { auto [r, cc] = st.back(); st.pop_back(); sz++; for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = cc + dc[k];\n        if (nr < 0 || nc < 0 || nr >= n || nc >= m || vis[nr][nc] || b[nr][nc] != '{{LAND}}') continue; vis[nr][nc] = 1; st.push_back({nr, nc}); } }\n    best = max(best, sz); }\ncout << best << \"\\n\";",
+   "example": {
+    "input": "3 3\n{{LAND}}..\n.{{LAND}}.\n..{{LAND}}\n",
+    "output": "3\n"
+   },
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\n// brute: każde pole lądu dostaje etykietę = swój numer, potem powtarzamy „weź mniejszą etykietę sąsiada” aż do stabilizacji\nvector<vector<ll>> lab(n, vector<ll>(m, -1));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{LAND}}') lab[i][j] = i * m + j;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (lab[r][c] < 0) continue;\n        for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr < 0 || nc < 0 || nr >= n || nc >= m || lab[nr][nc] < 0) continue;\n            if (lab[nr][nc] < lab[r][c]) { lab[r][c] = lab[nr][nc]; changed = true; } } } }\nmap<ll, ll> cnt; ll best = 0; for (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{LAND}}') best = max(best, ++cnt[lab[i][j]]);\ncout << best << \"\\n\";"
+  },
+  {
+   "id": "grid-flood-reachable",
+   "name": "Ile pól jest osiągalnych ze startu (flood fill)",
+   "description": "",
+   "algos": [
+    "grid",
+    "dfs",
+    "bfs"
+   ],
+   "shapes": [
+    "GRID"
+   ],
+   "signals": {
+    "any": [
+     "ile (pol|komnat|pokoi|kratek)",
+     "osiagaln\\w*|dotrze\\w*|odwiedz\\w*|zalej\\w*|zalan\\w*|rozlej\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\nvector<vector<int>> vis(n, vector<int>(m, 0)); vector<pair<ll,ll>> st;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{START}}') { vis[i][j] = 1; st.push_back({i, j}); }\nll cnt = 0;\nwhile (!st.empty()) { auto [r, c] = st.back(); st.pop_back(); cnt++; for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n    if (nr < 0 || nc < 0 || nr >= n || nc >= m || vis[nr][nc] || b[nr][nc] == '{{WALL}}') continue; vis[nr][nc] = 1; st.push_back({nr, nc}); } }\ncout << cnt << \"\\n\";",
+   "example": {
+    "input": "3 3\n{{START}}.#\n##.\n...\n",
+    "output": "2\n"
+   },
+   "variants": [
+    {
+     "id": "grid-flood-reachable-8",
+     "name": "Ile pól osiągalnych ze startu (8 kierunków)",
+     "solve": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[8] = {1, -1, 0, 0, 1, 1, -1, -1}, dc[8] = {0, 0, 1, -1, 1, -1, 1, -1};\nvector<vector<int>> vis(n, vector<int>(m, 0)); vector<pair<ll,ll>> st;\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{START}}') { vis[i][j] = 1; st.push_back({i, j}); }\nll cnt = 0;\nwhile (!st.empty()) { auto [r, c] = st.back(); st.pop_back(); cnt++; for (int k = 0; k < 8; k++) { ll nr = r + dr[k], nc = c + dc[k];\n    if (nr < 0 || nc < 0 || nr >= n || nc >= m || vis[nr][nc] || b[nr][nc] == '{{WALL}}') continue; vis[nr][nc] = 1; st.push_back({nr, nc}); } }\ncout << cnt << \"\\n\";"
+    }
+   ],
+   "brute": "ll A_, B_; cin >> A_ >> B_;\nvector<string> b; string row_; while (cin >> row_) b.push_back(row_);   // n wierszy (kolejność „n m” / „m n” bez znaczenia)\nll n = b.size(), m = n ? (ll)b[0].size() : 0;\nint dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\n// brute: powtarzaj „pole jest osiągalne, jeśli osiągalny jest sąsiad” aż do stabilizacji\nvector<vector<int>> ok(n, vector<int>(m, 0));\nfor (ll i = 0; i < n; i++) for (ll j = 0; j < m; j++) if (b[i][j] == '{{START}}') ok[i][j] = 1;\nbool changed = true;\nwhile (changed) { changed = false;\n    for (ll r = 0; r < n; r++) for (ll c = 0; c < m; c++) { if (ok[r][c] || b[r][c] == '{{WALL}}') continue;\n        for (int k = 0; k < 4; k++) { ll nr = r + dr[k], nc = c + dc[k];\n            if (nr >= 0 && nc >= 0 && nr < n && nc < m && ok[nr][nc]) { ok[r][c] = 1; changed = true; break; } } } }\nll cnt = 0; for (auto &row : ok) for (int x : row) cnt += x;\ncout << cnt << \"\\n\";"
+  },
+  {
+   "id": "bfs-dist-st-first",
+   "name": "BFS: najmniej krawędzi z s do t („n m s t” w pierwszym wierszu)",
+   "description": "",
+   "algos": [
+    "bfs",
+    "graph"
+   ],
+   "shapes": [
+    "GST"
+   ],
+   "signals": {
+    "any": [
+     "najmniej\\w*|najkrotsz\\w*|minimaln\\w*",
+     "przesiad\\w*|przejazd\\w*|krok\\w*|polaczen\\w*|odleglosc\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m, s, t; cin >> n >> m >> s >> t;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<ll> d(n + 1, -1); queue<ll> q; d[s] = 0; q.push(s);\nwhile (!q.empty()) { ll v = q.front(); q.pop(); for (ll u : g[v]) if (d[u] < 0) { d[u] = d[v] + 1; q.push(u); } }\nif (d[t] < 0) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[t] << \"\\n\";",
+   "example": {
+    "input": "4 3 1 4\n1 2\n2 3\n3 4\n",
+    "output": "3\n"
+   },
+   "brute": "ll n, m, s, t; cin >> n >> m >> s >> t;\nvector<pair<ll,ll>> e(m); for (auto &x : e) cin >> x.first >> x.second;\nconst ll INF = LLONG_MAX / 4; vector<ll> d(n + 1, INF); d[s] = 0;\nfor (ll it = 0; it < n; it++) for (auto [a, b] : e) { if (d[a] + 1 < d[b]) d[b] = d[a] + 1; if (d[b] + 1 < d[a]) d[a] = d[b] + 1; }   // Bellman–Ford\nif (d[t] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[t] << \"\\n\";"
+  },
+  {
+   "id": "dijkstra-st-first",
+   "name": "Dijkstra: z s do t („n m s t” w pierwszym wierszu, krawędzie a b w)",
+   "description": "",
+   "algos": [
+    "dijkstra"
+   ],
+   "shapes": [
+    "GWST"
+   ],
+   "signals": {
+    "any": [
+     "najkrotsz\\w*|najszybciej|najtaniej|najmniejsz\\w* (koszt|czas)\\w*",
+     "wag\\w*|dlugosc\\w*|koszt\\w*|czas\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, m, s, t; cin >> n >> m >> s >> t;\nvector<vector<pair<ll,ll>>> g(n + 1);\nfor (ll i = 0; i < m; i++) { ll a, b, w; cin >> a >> b >> w; g[a].push_back({b, w}); g[b].push_back({a, w}); }\nvector<ll> d(n + 1, LLONG_MAX); priority_queue<pair<ll,ll>, vector<pair<ll,ll>>, greater<>> pq; d[s] = 0; pq.push({0, s});\nwhile (!pq.empty()) { auto [dv, v] = pq.top(); pq.pop(); if (dv != d[v]) continue; for (auto [u, w] : g[v]) if (d[v] + w < d[u]) { d[u] = d[v] + w; pq.push({d[u], u}); } }\nif (d[t] == LLONG_MAX) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[t] << \"\\n\";",
+   "example": {
+    "input": "3 3 1 3\n1 2 1\n2 3 1\n1 3 5\n",
+    "output": "2\n"
+   },
+   "brute": "ll n, m, s, t; cin >> n >> m >> s >> t;\nvector<array<ll,3>> e(m); for (auto &x : e) cin >> x[0] >> x[1] >> x[2];\nconst ll INF = LLONG_MAX / 4; vector<ll> d(n + 1, INF); d[s] = 0;\nfor (ll it = 0; it < n; it++) for (auto &x : e) { if (d[x[0]] < INF && d[x[0]] + x[2] < d[x[1]]) d[x[1]] = d[x[0]] + x[2]; if (d[x[1]] < INF && d[x[1]] + x[2] < d[x[0]]) d[x[0]] = d[x[1]] + x[2]; }\nif (d[t] >= INF) cout << \"{{NONE}}\" << \"\\n\"; else cout << d[t] << \"\\n\";"
+  },
+  {
+   "id": "tree-height",
+   "name": "Wysokość drzewa (największa głębokość, korzeń 1)",
+   "description": "",
+   "algos": [
+    "tree",
+    "bfs"
+   ],
+   "shapes": [
+    "T"
+   ],
+   "signals": {
+    "any": [
+     "wysokosc\\w*",
+     "najwieksz\\w* glebokos\\w*|glebokosc\\w* drzewa",
+     "pokolen\\w*",
+     "najdalsz\\w* (potom|od korzen|lisc)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<vector<ll>> g(n + 1);\nfor (ll i = 0; i < n - 1; i++) { ll a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\nvector<ll> d(n + 1, -1); queue<ll> q; d[1] = 0; q.push(1); ll best = 0;\nwhile (!q.empty()) { ll v = q.front(); q.pop(); best = max(best, d[v]); for (ll u : g[v]) if (d[u] < 0) { d[u] = d[v] + 1; q.push(u); } }\ncout << best << \"\\n\";",
+   "example": {
+    "input": "4\n1 2\n2 3\n1 4\n",
+    "output": "2\n"
+   },
+   "brute": "ll n; cin >> n;\nvector<pair<ll,ll>> e(n - 1); for (auto &x : e) cin >> x.first >> x.second;\nconst ll INF = LLONG_MAX / 4; vector<ll> d(n + 1, INF); d[1] = 0;\nfor (ll it = 0; it < n; it++) for (auto [a, b] : e) { if (d[a] + 1 < d[b]) d[b] = d[a] + 1; if (d[b] + 1 < d[a]) d[a] = d[b] + 1; }\nll best = 0; for (ll v = 1; v <= n; v++) if (d[v] < INF) best = max(best, d[v]);\ncout << best << \"\\n\";"
+  }
+ ]
+}

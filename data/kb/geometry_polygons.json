@@ -1,0 +1,1057 @@
+{
+ "chunk": "geometry-polygons",
+ "articles": [
+  {
+   "id": "geo-polygon-area",
+   "title": "Pole wielokąta — wzór shoelace (Gaussa), orientacja, ×2 w long long",
+   "category": "Geometria",
+   "tags": [
+    "pole wielokąta",
+    "shoelace",
+    "wzór Gaussa",
+    "wzór sznurowadłowy",
+    "orientacja wielokąta",
+    "środek ciężkości",
+    "obwód"
+   ],
+   "aliases": [
+    "pole wielokąta",
+    "shoelace",
+    "wzór gaussa",
+    "polygon area",
+    "pole wielokata wzor",
+    "shoelace formula",
+    "wzór sznurowadłowy",
+    "pole figury z wierzchołków",
+    "area of polygon c++"
+   ],
+   "summary": "Podwojone pole wielokąta prostego to |Σ (x_i·y_{i+1} − x_{i+1}·y_i)| — suma iloczynów wektorowych kolejnych wierzchołków. Dla współrzędnych całkowitych wynik ×2 jest całkowity, więc liczymy go dokładnie w long long; znak sumy mówi o orientacji (CCW > 0).",
+   "complexity": "O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Wielokąt prosty (bez samoprzecięć) o wierzchołkach `p_0, …, p_{n−1}` podanych **po kolei** (wzdłuż brzegu):\n\n`2·Pole = | Σ_{i=0}^{n−1} p_i × p_{i+1} |`, gdzie `p_n = p_0`, a `p × q = p.x·q.y − p.y·q.x`.\n\nIntuicja: `p_i × p_{i+1}` to podwojone pole ze znakiem trójkąta `(0, p_i, p_{i+1})`. Trójkąty „po zewnętrznej\nstronie” wchodzą z przeciwnym znakiem i się znoszą — zostaje dokładnie pole wielokąta. Wzór działa dla wielokątów\n**wypukłych i wklęsłych**.\n\n* Znak sumy: `> 0` — wierzchołki przeciwnie do ruchu wskazówek zegara (CCW), `< 0` — zgodnie (CW).\n* Dla współrzędnych całkowitych suma jest całkowita, a pole ma końcówkę `.0` albo `.5` — licz `2·Pole`\n  w liczbach całkowitych i dziel dopiero przy wypisywaniu.\n* Przy |x|, |y| ≤ 10^9 każdy składnik ≤ 2·10^18, a wynik ≤ 8·10^18, ale **sumy częściowe** dla wielu wierzchołków\n  mogą wyjść poza `long long` — bezpiecznie sumować w `__int128`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: pole wielokąta dokładnie + orientacja",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Podwojone pole ze znakiem (wzór shoelace / Gaussa). > 0: wierzchołki CCW, < 0: CW.\nlong long twiceSignedArea(const vector<P> &p) {\n    __int128 s = 0;                              // sumy częściowe mogą wyjść poza long long\n    int n = p.size();\n    for (int i = 0; i < n; i++) s += p[i].cross(p[(i + 1) % n]);\n    return (long long)s;                         // |2·pole| <= 8·10^18 dla |x|, |y| <= 10^9\n}\n\nint main() {\n    int n;\n    cin >> n;\n    vector<P> p(n);\n    for (auto &q : p) cin >> q.x >> q.y;\n    long long s = twiceSignedArea(p);\n    long long a2 = llabs(s);                                  // podwojone pole\n    cout << a2 / 2 << (a2 % 2 ? \".5\" : \"\") << \"\\n\";           // pole dokładnie\n    cout << (s > 0 ? \"CCW\" : s < 0 ? \"CW\" : \"ZDEGENEROWANY\") << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wielkość",
+      "Wzór",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "2·pole ze znakiem S",
+       "Σ p_i × p_{i+1}",
+       "S > 0 ⇔ CCW"
+      ],
+      [
+       "pole",
+       "|S| / 2",
+       "końcówka .0 lub .5 przy współrzędnych całkowitych"
+      ],
+      [
+       "pole trójkąta ABC",
+       "|(B − A) × (C − A)| / 2",
+       "szczególny przypadek n = 3"
+      ],
+      [
+       "środek ciężkości (centroid)",
+       "C_x = Σ (x_i + x_{i+1})·c_i / (3S), c_i = p_i × p_{i+1}",
+       "analogicznie C_y; double"
+      ],
+      [
+       "obwód",
+       "Σ |p_{i+1} − p_i|",
+       "double (pierwiastki)"
+      ],
+      [
+       "wielokąt z dziurą",
+       "|S_zewn| − Σ |S_dziur|",
+       "każdy kontur liczony osobno"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Wzór wymaga wierzchołków w kolejności **wzdłuż brzegu**. Jeśli dostajesz punkty w dowolnej kolejności, a wielokąt\njest wypukły — posortuj je kątowo wokół wnętrza (albo policz otoczkę). Dla wielokąta samoprzecinającego się\n(np. „ósemki”) suma shoelace NIE jest polem — fragmenty o przeciwnej orientacji się odejmują."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "long long twiceSignedArea(const vector<P> &p)",
+     "desc": "podwojone pole ze znakiem (shoelace), suma w __int128",
+     "complexity": "O(n)",
+     "returns": "long long",
+     "example": "long long s = twiceSignedArea(poly);  // pole = |s| / 2"
+    }
+   ],
+   "pitfalls": [
+    "Dzielenie przez 2 w liczbach całkowitych gubi .5 — wypisuj `a2 / 2` i dopisz `.5`, gdy a2 nieparzyste (albo użyj double tylko przy wypisaniu).",
+    "Zapomniany składnik zamykający p_{n−1} × p_0 — pętla musi iść cyklicznie `(i + 1) % n`.",
+    "Pole ujemne — zapomniane `abs`; znak oznacza tylko orientację.",
+    "Wierzchołki w losowej kolejności — wzór daje bzdury; potrzebna kolejność wzdłuż brzegu.",
+    "Suma w `int` albo nawet `long long` dla wielu wierzchołków o współrzędnych ~10^9 — sumuj w __int128.",
+    "Samoprzecinający się wielokąt — shoelace liczy pole ze znakiem z krotnością nawinięcia, a nie pole figury."
+   ],
+   "qa": [
+    {
+     "q": [
+      "pole wielokata",
+      "pole wielokąta wzór",
+      "polygon area c++",
+      "shoelace",
+      "wzor gaussa pole",
+      "shoelace formula c++"
+     ],
+     "a": "Wzór shoelace (Gaussa): `2·Pole = |Σ (x_i·y_{i+1} − x_{i+1}·y_i)|`, indeksy cyklicznie (`p_n = p_0`). Działa dla\nkażdego wielokąta prostego (wypukłego i wklęsłego) z wierzchołkami podanymi po kolei. Licz podwojone pole\nw liczbach całkowitych i dziel przez 2 przy wypisywaniu. O(n).",
+     "code": "vector<pair<long long,long long>> p = {{0, 0}, {4, 0}, {4, 4}, {2, 2}, {0, 4}};\nlong long s = 0;\nint n = p.size();\nfor (int i = 0; i < n; i++) {\n    auto [x1, y1] = p[i]; auto [x2, y2] = p[(i + 1) % n];\n    s += x1 * y2 - x2 * y1;\n}\ncout << llabs(s) / 2.0 << \"\\n\";   // 12"
+    },
+    {
+     "q": [
+      "pole wielokąta ujemne",
+      "dlaczego pole wychodzi ujemne",
+      "shoelace ujemny wynik",
+      "pole ze znakiem"
+     ],
+     "a": "Shoelace daje pole **ze znakiem**: dodatnie, gdy wierzchołki idą przeciwnie do ruchu wskazówek zegara (CCW),\nujemne — gdy zgodnie (CW). Pole to wartość bezwzględna. Znak jest przydatny: mówi o orientacji wielokąta,\nktórej wymagają np. algorytmy punktu w wielokącie wypukłym."
+    },
+    {
+     "q": [
+      "orientacja wielokąta cw ccw",
+      "clockwise polygon check",
+      "czy wielokat jest zgodnie z zegarem",
+      "jak odwrocic orientacje wielokata"
+     ],
+     "a": "Policz `S = Σ p_i × p_{i+1}`: `S > 0` — CCW, `S < 0` — CW. Żeby zamienić orientację, odwróć kolejność wierzchołków\n(`reverse(p.begin(), p.end())`) — pole zmieni znak. O(n).",
+     "code": "vector<pair<long long,long long>> p = {{0, 0}, {0, 3}, {4, 3}, {4, 0}};   // CW\nauto S = [&]() { long long s = 0; int n = p.size();\n    for (int i = 0; i < n; i++) s += p[i].first * p[(i+1)%n].second - p[(i+1)%n].first * p[i].second;\n    return s; };\ncout << S() << \" \";\nreverse(p.begin(), p.end());\ncout << S() << \"\\n\";   // -24 24"
+    },
+    {
+     "q": [
+      "pole wielokąta long long",
+      "pole wielokąta przepełnienie",
+      "shoelace __int128",
+      "pole wielokata duze wspolrzedne"
+     ],
+     "a": "Każdy składnik `x_i·y_{i+1} − x_{i+1}·y_i` przy |x|, |y| ≤ 10^9 ma do 2·10^18 i mieści się w `long long`, a końcowe\npodwojone pole wielokąta prostego to ≤ 8·10^18 (mieści się). Sumy częściowe przy wielu wierzchołkach mogą jednak\nprzekroczyć 9,2·10^18 — sumuj w `__int128` i rzutuj wynik na `long long`. Przy współrzędnych ≤ 10^6 wystarcza\nzwykły `long long`.",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Podwojone pole ze znakiem (wzór shoelace / Gaussa). > 0: wierzchołki CCW, < 0: CW.\nlong long twiceSignedArea(const vector<P> &p) {\n    __int128 s = 0;                              // sumy częściowe mogą wyjść poza long long\n    int n = p.size();\n    for (int i = 0; i < n; i++) s += p[i].cross(p[(i + 1) % n]);\n    return (long long)s;                         // |2·pole| <= 8·10^18 dla |x|, |y| <= 10^9\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "pole jako ułamek .5",
+      "jak wypisać pole wielokąta dokładnie",
+      "pole wielokąta połowa",
+      "pole wielokata wypisac z .5"
+     ],
+     "a": "Przy współrzędnych całkowitych podwojone pole `a2` jest całkowite. Wypisz `a2 / 2`, a jeśli `a2` jest nieparzyste,\ndopisz `.5` — bez żadnych błędów zaokrągleń, nawet dla 4·10^18. Jeśli zadanie chce np. 1 miejsca po przecinku:\n`a2 / 2 << (a2 % 2 ? \".5\" : \".0\")`.",
+     "code": "long long a2 = 9;   // podwojone pole\ncout << a2 / 2 << (a2 % 2 ? \".5\" : \".0\") << \"\\n\";   // 4.5"
+    },
+    {
+     "q": [
+      "środek ciężkości wielokąta",
+      "centroid polygon",
+      "srodek masy wielokata",
+      "centroid of polygon c++"
+     ],
+     "a": "Dla `c_i = p_i × p_{i+1}` i `S = Σ c_i` (podwojone pole ze znakiem): `C_x = Σ (x_i + x_{i+1})·c_i / (3S)`,\n`C_y = Σ (y_i + y_{i+1})·c_i / (3S)`. Znak S się skraca, więc orientacja nie ma znaczenia. To środek masy\njednorodnej płytki — nie średnia wierzchołków. O(n).",
+     "code": "vector<pair<double,double>> p = {{0, 0}, {4, 0}, {4, 3}, {0, 3}};\ndouble S = 0, cx = 0, cy = 0;\nint n = p.size();\nfor (int i = 0; i < n; i++) {\n    auto [x1, y1] = p[i]; auto [x2, y2] = p[(i + 1) % n];\n    double c = x1 * y2 - x2 * y1;\n    S += c; cx += (x1 + x2) * c; cy += (y1 + y2) * c;\n}\ncout << cx / (3 * S) << \" \" << cy / (3 * S) << \"\\n\";   // 2 1.5"
+    },
+    {
+     "q": [
+      "pole wielokąta z dziurą",
+      "polygon with hole area",
+      "pole figury z otworem",
+      "pole wielokata z dziurami"
+     ],
+     "a": "Policz shoelace osobno dla konturu zewnętrznego i każdej dziury, weź wartości bezwzględne i odejmij:\n`Pole = |S_zewn| / 2 − Σ |S_dziura| / 2`. Dzięki `abs` orientacja konturów nie ma znaczenia.",
+     "code": "auto twice = [](vector<pair<long long,long long>> p) {\n    long long s = 0; int n = p.size();\n    for (int i = 0; i < n; i++) s += p[i].first * p[(i+1)%n].second - p[(i+1)%n].first * p[i].second;\n    return llabs(s);\n};\nlong long outer = twice({{0, 0}, {4, 0}, {4, 4}, {0, 4}});\nlong long hole = twice({{1, 1}, {1, 3}, {3, 3}, {3, 1}});\ncout << (outer - hole) / 2 << \"\\n\";   // 12"
+    },
+    {
+     "q": [
+      "obwód wielokąta",
+      "perimeter polygon",
+      "obwod wielokata c++",
+      "dlugosc brzegu wielokata"
+     ],
+     "a": "Obwód to suma długości boków: `Σ |p_{i+1} − p_i|` (cyklicznie), każda długość przez `hypot(dx, dy)`.\nWynik w `double`, wypisz z `fixed << setprecision(k)`. O(n).",
+     "code": "vector<pair<double,double>> p = {{0, 0}, {3, 0}, {0, 4}};\ndouble per = 0;\nint n = p.size();\nfor (int i = 0; i < n; i++)\n    per += hypot(p[(i + 1) % n].first - p[i].first, p[(i + 1) % n].second - p[i].second);\ncout << per << \"\\n\";   // 12"
+    },
+    {
+     "q": [
+      "pole wielokąta niewypukłego",
+      "shoelace dla wklęsłego",
+      "pole wielokata wkleslego",
+      "czy shoelace dziala dla wkleslych"
+     ],
+     "a": "Tak — wzór shoelace działa dla **każdego wielokąta prostego** (bez samoprzecięć), także wklęsłego. Warunek: wierzchołki\npodane w kolejności wzdłuż brzegu. Nie działa dla wielokątów samoprzecinających się (np. „kokardka”), gdzie części\no przeciwnej orientacji się odejmują."
+    },
+    {
+     "q": [
+      "wierzchołki w losowej kolejności pole",
+      "punkty nie po kolei pole wielokata",
+      "pole wielokata wypuklego z nieuporzadkowanych punktow"
+     ],
+     "a": "Shoelace wymaga kolejności wzdłuż brzegu. Jeśli wielokąt jest wypukły, a punkty pomieszane, policz otoczkę wypukłą\n(zwraca wierzchołki CCW) albo posortuj punkty kątowo wokół punktu wewnętrznego (np. średniej wierzchołków).\nDla wielokąta wklęsłego kolejności nie da się jednoznacznie odtworzyć — musi być w danych."
+    },
+    {
+     "q": [
+      "pole trójkąta z wierzchołków shoelace",
+      "pole trojkata wzor z wspolrzednych",
+      "triangle area shoelace"
+     ],
+     "a": "Dla trójkąta shoelace upraszcza się do `2·Pole = |(B − A) × (C − A)| = |(x_B − x_A)(y_C − y_A) − (y_B − y_A)(x_C − x_A)|`.\nTen sam wynik daje suma `A × B + B × C + C × A`.",
+     "code": "long long ax = 1, ay = 1, bx = 4, by = 2, cx = 2, cy = 5;\nlong long t = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);\nlong long u = (ax * by - bx * ay) + (bx * cy - cx * by) + (cx * ay - ax * cy);\ncout << t << \" \" << u << \"\\n\";   // 11 11  => pole 5.5"
+    }
+   ],
+   "related": [
+    "geo-cross-dot",
+    "geo-orientation",
+    "geo-pick",
+    "geo-convex-hull",
+    "num-int128"
+   ]
+  },
+  {
+   "id": "geo-pick",
+   "title": "Twierdzenie Picka i punkty kratowe (na odcinku, w wielokącie)",
+   "category": "Geometria",
+   "tags": [
+    "twierdzenie Picka",
+    "punkty kratowe",
+    "lattice points",
+    "gcd",
+    "pole wielokąta",
+    "punkty całkowite"
+   ],
+   "aliases": [
+    "twierdzenie picka",
+    "pick theorem",
+    "wzór picka",
+    "pick",
+    "punkty kratowe",
+    "lattice points",
+    "punkty całkowite w wielokącie",
+    "ile punktów kratowych"
+   ],
+   "summary": "Dla wielokąta prostego o wierzchołkach kratowych: Pole = I + B/2 − 1, gdzie I — punkty kratowe wewnątrz, B — na brzegu. B liczymy jako Σ gcd(|dx|, |dy|) po bokach, więc I = (2·Pole − B + 2) / 2.",
+   "complexity": "O(n log C) — n boków, gcd na współrzędnych do C",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Twierdzenie Picka:** jeśli wszystkie wierzchołki wielokąta prostego mają współrzędne całkowite, to\n`Pole = I + B/2 − 1`, gdzie `I` — liczba punktów kratowych ściśle wewnątrz, `B` — liczba punktów kratowych\nna brzegu (wierzchołki też).\n\n**Punkty kratowe na odcinku** od `(x1, y1)` do `(x2, y2)`: `gcd(|x2 − x1|, |y2 − y1|) + 1` (z oboma końcami).\nNa całym brzegu wielokąta (każdy wierzchołek liczony raz): `B = Σ gcd(|dx_i|, |dy_i|)`.\n\nStąd liczba punktów wewnątrz, wyrażona przez **podwojone pole** `A2` (całkowite z shoelace):\n`I = (A2 − B + 2) / 2`. Łącznie punktów w wielokącie z brzegiem: `I + B`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: punkty kratowe na brzegu (B) i wewnątrz (I)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\nint main() {\n    int n;\n    cin >> n;\n    vector<P> p(n);\n    for (auto &q : p) cin >> q.x >> q.y;\n    __int128 s = 0;\n    long long B = 0;\n    for (int i = 0; i < n; i++) {\n        P a = p[i], b = p[(i + 1) % n];\n        s += a.cross(b);                                  // shoelace\n        B += gcd(llabs(b.x - a.x), llabs(b.y - a.y));     // punkty kratowe na boku (bez jednego końca)\n    }\n    long long A2 = (long long)(s < 0 ? -s : s);           // podwojone pole\n    long long I = (A2 - B + 2) / 2;                       // z twierdzenia Picka\n    cout << B << \" \" << I << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wielkość",
+      "Wzór"
+     ],
+     "rows": [
+      [
+       "punkty kratowe na odcinku (z końcami)",
+       "gcd(|dx|, |dy|) + 1"
+      ],
+      [
+       "punkty kratowe na brzegu wielokąta B",
+       "Σ gcd(|dx_i|, |dy_i|)"
+      ],
+      [
+       "twierdzenie Picka",
+       "Pole = I + B/2 − 1"
+      ],
+      [
+       "punkty wewnątrz I",
+       "(2·Pole − B + 2) / 2"
+      ],
+      [
+       "punkty wewnątrz + na brzegu",
+       "I + B = (2·Pole + B + 2) / 2"
+      ],
+      [
+       "wielokąt z h dziurami",
+       "Pole = I + B/2 − 1 + h (B — wszystkie brzegi)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Twierdzenie Picka działa tylko dla wierzchołków o **całkowitych** współrzędnych i wielokąta **prostego**.\nDla okręgu, wielokąta o wierzchołkach niecałkowitych albo samoprzecinającego się — nie."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "gcd(llabs(dx), llabs(dy))",
+     "desc": "liczba punktów kratowych na odcinku minus 1 (std::gcd z <numeric>)",
+     "complexity": "O(log C)",
+     "returns": "long long"
+    },
+    {
+     "sig": "I = (A2 - B + 2) / 2",
+     "desc": "punkty ściśle wewnątrz z podwojonego pola A2 i punktów brzegowych B",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Liczenie wierzchołków dwa razy: suma `gcd + 1` po bokach liczy każdy wierzchołek podwójnie — używaj samego Σ gcd.",
+    "Pole połówkowe: używaj podwojonego pola A2 (całkowitego), a nie `double`.",
+    "`gcd` z ujemnych liczb — weź wartości bezwzględne (`std::gcd` w praktyce zwraca nieujemne, ale jawne `llabs` jest czytelne).",
+    "Wynik może być rzędu 10^18 — trzymaj w long long, a sumę shoelace w __int128.",
+    "Pick nie dotyczy punktów w kole ani figur o niecałkowitych wierzchołkach."
+   ],
+   "qa": [
+    {
+     "q": [
+      "twierdzenie picka",
+      "pick theorem",
+      "pick twierdzenie wzor",
+      "wzor picka",
+      "co to jest twierdzenie picka"
+     ],
+     "a": "Dla wielokąta prostego o wierzchołkach w punktach kratowych: `Pole = I + B/2 − 1`, gdzie `I` — punkty kratowe\nściśle wewnątrz, `B` — na brzegu. Zwykle używa się go odwrotnie: pole liczymy shoelace'em, `B` z gcd po bokach,\na szukane `I = (2·Pole − B + 2) / 2`. Czas O(n log C)."
+    },
+    {
+     "q": [
+      "ile punktów kratowych w wielokącie",
+      "punkty calkowite wewnatrz wielokata",
+      "lattice points inside polygon",
+      "ile punktow o calkowitych wspolrzednych w wielokacie"
+     ],
+     "a": "Policz podwojone pole `A2` (shoelace, liczba całkowita) i `B = Σ gcd(|dx|, |dy|)` po bokach. Wewnątrz jest\n`I = (A2 − B + 2) / 2` punktów, a z brzegiem `I + B`. Nie iteruj po wszystkich punktach prostokąta — przy\nwspółrzędnych 10^9 to 10^18 punktów.",
+     "code": "vector<pair<long long,long long>> p = {{0, 0}, {4, 0}, {0, 3}};\nlong long A2 = 0, B = 0; int n = p.size();\nfor (int i = 0; i < n; i++) {\n    auto [x1, y1] = p[i]; auto [x2, y2] = p[(i + 1) % n];\n    A2 += x1 * y2 - x2 * y1;\n    B += gcd(llabs(x2 - x1), llabs(y2 - y1));\n}\nA2 = llabs(A2);\ncout << (A2 - B + 2) / 2 << \" \" << (A2 - B + 2) / 2 + B << \"\\n\";   // 3 11"
+    },
+    {
+     "q": [
+      "punkty kratowe na odcinku",
+      "ile punktow calkowitych na odcinku gcd",
+      "lattice points on segment",
+      "ile punktow kratowych lezy na odcinku"
+     ],
+     "a": "Odcinek od (x1, y1) do (x2, y2) zawiera `gcd(|x2 − x1|, |y2 − y1|) + 1` punktów kratowych (z końcami). Kolejne\npunkty są oddalone o wektor `(dx/g, dy/g)`. Dla odcinka poziomego/pionowego wzór też działa (gcd(a, 0) = a).",
+     "code": "long long x1 = 0, y1 = 0, x2 = 6, y2 = 4;\nlong long g = gcd(llabs(x2 - x1), llabs(y2 - y1));\ncout << g + 1 << \":\";\nfor (long long k = 0; k <= g; k++) cout << \" (\" << x1 + (x2 - x1) / g * k << \",\" << y1 + (y2 - y1) / g * k << \")\";\ncout << \"\\n\";   // 3: (0,0) (3,2) (6,4)"
+    },
+    {
+     "q": [
+      "punkty na brzegu wielokąta",
+      "boundary lattice points",
+      "ile punktow kratowych na brzegu",
+      "liczba punktow na obwodzie wielokata"
+     ],
+     "a": "`B = Σ gcd(|dx_i|, |dy_i|)` po wszystkich bokach. Każdy bok wnosi swoje punkty bez jednego końca, więc każdy\nwierzchołek jest policzony dokładnie raz. Dla kwadratu 2×2: 4 boki × gcd(2, 0) = 8."
+    },
+    {
+     "q": [
+      "liczba punktów wewnątrz trójkąta",
+      "punkty calkowite w trojkacie",
+      "lattice points in triangle",
+      "ile punktow kratowych w trojkacie"
+     ],
+     "a": "Trójkąt to wielokąt, więc: `A2 = |(B − A) × (C − A)|`, `B = gcd boków AB, BC, CA`, wewnątrz `I = (A2 − B + 2) / 2`.\nDla (0,0), (4,0), (0,3): A2 = 12, B = 4 + 1 + 3 = 8, I = 3 — punkty (1,1), (1,2), (2,1)."
+    },
+    {
+     "q": [
+      "pick dla wielokąta niewypukłego",
+      "pick wklesly",
+      "czy pick dziala dla wklesłych",
+      "pick concave polygon"
+     ],
+     "a": "Tak — twierdzenie Picka działa dla każdego wielokąta **prostego** o wierzchołkach kratowych, wypukłego lub\nwklęsłego. Przykład: (0,0), (4,0), (4,4), (2,2), (0,4) — pole 12, B = 16, I = 5. Nie działa dla wielokątów\nsamoprzecinających się."
+    },
+    {
+     "q": [
+      "pick z dziurami",
+      "pick polygon with holes",
+      "twierdzenie picka wielokat z otworem"
+     ],
+     "a": "Dla wielokąta z `h` dziurami (brzegi dziur też kratowe): `Pole = I + B/2 − 1 + h`, gdzie `B` liczy punkty na\nwszystkich brzegach (zewnętrznym i dziur), a pole to pole figury (zewnętrzny minus dziury). Przykład: kwadrat 4×4\nz dziurą 2×2 pośrodku: pole 12, B = 16 + 8 = 24, I = 0 → 0 + 12 − 1 + 1 = 12."
+    },
+    {
+     "q": [
+      "punkty kratowe w kole",
+      "ile punktow calkowitych w kole",
+      "lattice points in circle",
+      "punkty w okregu o promieniu r"
+     ],
+     "a": "To nie jest Pick (koło nie jest wielokątem). Dla każdego `x` z [−r, r] policz `t = ⌊√(r² − x²)⌋` i dodaj `2t + 1`.\nPierwiastek całkowity licz ostrożnie (popraw wynik `sqrt` w górę/w dół). O(r).",
+     "code": "auto isqrtll = [](long long v) { long long t = sqrtl((long double)v); while (t * t > v) t--; while ((t + 1) * (t + 1) <= v) t++; return t; };\nfor (long long r : {2LL, 5LL}) {\n    long long cnt = 0;\n    for (long long x = -r; x <= r; x++) cnt += 2 * isqrtll(r * r - x * x) + 1;\n    cout << cnt << \" \";\n}\ncout << \"\\n\";   // 13 81"
+    }
+   ],
+   "related": [
+    "geo-polygon-area",
+    "math-gcd-lcm",
+    "geo-point-in-polygon",
+    "geo-cross-dot",
+    "geo-circles"
+   ]
+  },
+  {
+   "id": "geo-convex-hull",
+   "title": "Otoczka wypukła — algorytm Andrew (monotone chain), obwód, pole, średnica",
+   "category": "Geometria",
+   "tags": [
+    "otoczka wypukła",
+    "convex hull",
+    "Andrew",
+    "monotone chain",
+    "Graham",
+    "rotating calipers",
+    "średnica"
+   ],
+   "aliases": [
+    "otoczka wypukła",
+    "convex hull",
+    "otoczka wypukla",
+    "convex hull c++",
+    "andrew monotone chain",
+    "monotone chain",
+    "graham scan",
+    "otoczka",
+    "hull",
+    "minimalny płot"
+   ],
+   "summary": "Otoczka wypukła to najmniejszy wielokąt wypukły zawierający wszystkie punkty. Algorytm Andrew: sortujemy punkty po (x, y) i budujemy dolną oraz górną łamaną, usuwając punkty dające skręt w prawo. O(n log n).",
+   "complexity": "O(n log n) (sortowanie) + O(n) budowa; średnica obracającymi się suwmiarkami O(n) na gotowej otoczce",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja:** wyobraź sobie gumkę naciągniętą na gwoździe — przylega do punktów otoczki. Na OI otoczka pojawia się\nprzy: najmniejszym płocie wokół drzew (obwód otoczki), najdalszej parze punktów (średnica), polu zajmowanym przez\nzbiór punktów, optymalizacji typu `max (a_i·x + b_i)` (górna otoczka), sprawdzaniu, czy punkt jest „w środku”.\n\n**Algorytm Andrew (monotone chain):**\n1. Posortuj punkty po `x`, przy remisie po `y`; usuń duplikaty.\n2. **Dolna część:** idź od lewej do prawej; przed dodaniem punktu `p` usuwaj ostatni punkt łamanej, dopóki\n   ostatnie dwa punkty i `p` **nie** tworzą skrętu w lewo (`cross ≤ 0`).\n3. **Górna część:** to samo od prawej do lewej.\n4. Sklej obie części (bez powtórzonych końców) — wierzchołki w kolejności CCW.\n\nKażdy punkt jest dodany i usunięty co najwyżej raz na część, więc po sortowaniu budowa to O(n).\nWarunek `≤ 0` usuwa punkty współliniowe z boków; `< 0` je zostawia (wtedy osobno obsłuż przypadek, gdy\nwszystkie punkty leżą na jednej prostej)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: otoczka, obwód i pole",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Otoczka wypukła — algorytm Andrew (monotone chain), O(n log n).\n// Zwraca wierzchołki CCW, bez duplikatów i bez punktów współliniowych na bokach.\nvector<P> convexHull(vector<P> pts) {\n    sort(pts.begin(), pts.end());\n    pts.erase(unique(pts.begin(), pts.end()), pts.end());\n    int n = pts.size();\n    if (n <= 2) return pts;\n    vector<P> h(2 * n);\n    int k = 0;\n    for (int i = 0; i < n; i++) {                               // dolna część (od lewej do prawej)\n        while (k >= 2 && (h[k - 1] - h[k - 2]).cross(pts[i] - h[k - 2]) <= 0) k--;\n        h[k++] = pts[i];\n    }\n    for (int i = n - 2, lo = k + 1; i >= 0; i--) {              // górna część (od prawej do lewej)\n        while (k >= lo && (h[k - 1] - h[k - 2]).cross(pts[i] - h[k - 2]) <= 0) k--;\n        h[k++] = pts[i];\n    }\n    h.resize(k - 1);                                            // ostatni punkt = pierwszy\n    return h;\n}\n\nint main() {\n    int n;\n    cin >> n;\n    vector<P> pts(n);\n    for (auto &p : pts) cin >> p.x >> p.y;\n    vector<P> h = convexHull(pts);\n    int k = h.size();\n    cout << k << \"\\n\";\n    for (auto &p : h) cout << p.x << \" \" << p.y << \"\\n\";\n    double per = 0;                                    // obwód (dla 2 punktów: odcinek tam i z powrotem)\n    __int128 s = 0;                                    // podwojone pole\n    for (int i = 0; i < k; i++) {\n        P a = h[i], b = h[(i + 1) % k];\n        per += sqrt((double)(b - a).norm2());\n        s += a.cross(b);\n    }\n    long long a2 = (long long)s;                       // >= 0, bo otoczka jest CCW\n    cout << fixed << setprecision(6) << per << \"\\n\";\n    cout << a2 / 2 << (a2 % 2 ? \".5\" : \"\") << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wariant: otoczka z punktami współliniowymi na bokach",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Otoczka z zachowaniem punktów współliniowych leżących na bokach (CCW).\nvector<P> convexHullAll(vector<P> pts) {\n    sort(pts.begin(), pts.end());\n    pts.erase(unique(pts.begin(), pts.end()), pts.end());\n    int n = pts.size();\n    if (n <= 2) return pts;\n    bool collinear = true;\n    for (int i = 2; i < n; i++)\n        if ((pts[1] - pts[0]).cross(pts[i] - pts[0]) != 0) collinear = false;\n    if (collinear) return pts;                                  // wszystkie na jednej prostej\n    vector<P> h(2 * n);\n    int k = 0;\n    for (int i = 0; i < n; i++) {\n        while (k >= 2 && (h[k - 1] - h[k - 2]).cross(pts[i] - h[k - 2]) < 0) k--;   // < 0 zamiast <= 0\n        h[k++] = pts[i];\n    }\n    for (int i = n - 2, lo = k + 1; i >= 0; i--) {\n        while (k >= lo && (h[k - 1] - h[k - 2]).cross(pts[i] - h[k - 2]) < 0) k--;\n        h[k++] = pts[i];\n    }\n    h.resize(k - 1);\n    return h;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Algorytm",
+      "Złożoność",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "Andrew (monotone chain)",
+       "O(n log n)",
+       "sortowanie po (x, y), prosty, bez kątów — polecany"
+      ],
+      [
+       "Graham",
+       "O(n log n)",
+       "sortowanie kątowe wokół najniższego punktu; trudniejsze remisy"
+      ],
+      [
+       "Jarvis (owijanie prezentu)",
+       "O(n·h)",
+       "h — liczba wierzchołków otoczki; dobre, gdy h małe"
+      ],
+      [
+       "obracające się suwmiarki",
+       "O(h)",
+       "średnica, najszersza/najwęższa szerokość na gotowej otoczce"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Średnica zbioru (najdalsza para) — obracające się suwmiarki",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Kwadrat średnicy (największej odległości) — obracające się suwmiarki na otoczce CCW bez współliniowych.\nlong long diameter2(const vector<P> &h) {\n    int n = h.size();\n    if (n == 1) return 0;\n    if (n == 2) return (h[0] - h[1]).norm2();\n    long long best = 0;\n    for (int i = 0, j = 1; i < n; i++) {\n        int ni = (i + 1) % n;\n        // przesuwaj j, dopóki wierzchołek j+1 jest dalej od prostej (h[i], h[ni]) niż j\n        while ((h[ni] - h[i]).cross(h[(j + 1) % n] - h[j]) > 0) j = (j + 1) % n;\n        best = max({best, (h[i] - h[j]).norm2(), (h[ni] - h[j]).norm2()});\n    }\n    return best;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Otoczka jest zwracana CCW i zaczyna się od najmniejszego punktu (po x, potem y). Jeśli zadanie wymaga innej kolejności\n(np. CW albo start od najniższego punktu), obróć/odwróć wektor wynikowy (`rotate`, `reverse`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "vector<P> convexHull(vector<P> pts)",
+     "desc": "otoczka wypukła CCW bez punktów współliniowych i duplikatów",
+     "complexity": "O(n log n)",
+     "returns": "vector<P>",
+     "example": "auto h = convexHull(pts);"
+    },
+    {
+     "sig": "vector<P> convexHullAll(vector<P> pts)",
+     "desc": "otoczka CCW z zachowaniem punktów współliniowych na bokach",
+     "complexity": "O(n log n)",
+     "returns": "vector<P>"
+    },
+    {
+     "sig": "long long diameter2(const vector<P> &h)",
+     "desc": "kwadrat największej odległości między punktami otoczki",
+     "complexity": "O(h)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Brak usunięcia duplikatów — powtórzone punkty psują warunek skrętu (cross = 0) i mogą zostać w wyniku.",
+    "Wszystkie punkty współliniowe: wersja z `≤ 0` zwraca 2 skrajne punkty; wersja z `< 0` bez osobnej obsługi zwróci punkty dwa razy.",
+    "n = 1 lub 2 — obsłuż, zanim zaczniesz indeksować h[k−2].",
+    "`h.resize(k − 1)` — ostatni punkt górnej części to pierwszy punkt otoczki; bez tego jest duplikat.",
+    "Cross na int albo double przy współrzędnych ~10^9 — przepełnienie/błąd znaku; licz w long long.",
+    "Obwód otoczki z 2 punktów to podwojona długość odcinka (płot tam i z powrotem) — sprawdź, czego chce zadanie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "otoczka wypukla",
+      "convex hull c++",
+      "otoczka wypukła kod",
+      "convex hull algorithm",
+      "otoczka wypukla andrew",
+      "jak policzyc otoczke wypukla"
+     ],
+     "a": "Posortuj punkty po (x, y), usuń duplikaty i zbuduj dolną i górną łamaną: przed dodaniem punktu zdejmuj ostatni,\ndopóki trzy ostatnie punkty nie skręcają w lewo (`cross ≤ 0`). Wynik to wierzchołki CCW. Czas O(n log n)\nprzez sortowanie, pamięć O(n). Wszystko w `long long` — bez kątów i `double`.",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Otoczka wypukła — algorytm Andrew (monotone chain), O(n log n).\n// Zwraca wierzchołki CCW, bez duplikatów i bez punktów współliniowych na bokach.\nvector<P> convexHull(vector<P> pts) {\n    sort(pts.begin(), pts.end());\n    pts.erase(unique(pts.begin(), pts.end()), pts.end());\n    int n = pts.size();\n    if (n <= 2) return pts;\n    vector<P> h(2 * n);\n    int k = 0;\n    for (int i = 0; i < n; i++) {                               // dolna część (od lewej do prawej)\n        while (k >= 2 && (h[k - 1] - h[k - 2]).cross(pts[i] - h[k - 2]) <= 0) k--;\n        h[k++] = pts[i];\n    }\n    for (int i = n - 2, lo = k + 1; i >= 0; i--) {              // górna część (od prawej do lewej)\n        while (k >= lo && (h[k - 1] - h[k - 2]).cross(pts[i] - h[k - 2]) <= 0) k--;\n        h[k++] = pts[i];\n    }\n    h.resize(k - 1);                                            // ostatni punkt = pierwszy\n    return h;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "andrew monotone chain jak dziala",
+      "monotone chain",
+      "algorytm andrew",
+      "dlaczego otoczka andrew dziala"
+     ],
+     "a": "Po posortowaniu po x skrajnie lewy i prawy punkt na pewno należą do otoczki i dzielą ją na część dolną i górną —\nobie są „monotoniczne” w x. Idąc po kolei, utrzymujemy łamaną skręcającą tylko w lewo; punkt, który powoduje skręt\nw prawo (lub prosto), leży nad dolną częścią, więc nie jest wierzchołkiem — zdejmujemy go jak ze stosu. Każdy punkt\nwchodzi i wychodzi raz, więc budowa to O(n)."
+    },
+    {
+     "q": [
+      "graham scan",
+      "algorytm grahama",
+      "graham czy andrew",
+      "otoczka graham c++"
+     ],
+     "a": "Graham sortuje punkty kątowo wokół najniższego punktu i przechodzi je z tym samym stosem co Andrew. Złożoność też\nO(n log n), ale sortowanie kątowe ma trudne remisy (punkty współliniowe z pivotem). Andrew sortuje zwykłym\nporządkiem (x, y), więc jest prostszy i mniej podatny na błędy — na OI polecany."
+    },
+    {
+     "q": [
+      "otoczka z punktami współliniowymi",
+      "convex hull collinear points",
+      "otoczka zachowac punkty na bokach",
+      "otoczka z punktami na krawedziach"
+     ],
+     "a": "Zamień warunek zdejmowania z `cross ≤ 0` na `cross < 0` — wtedy punkty leżące na bokach otoczki zostają. Osobno\nobsłuż przypadek, gdy wszystkie punkty są współliniowe (inaczej wrócą dwa razy): wtedy zwróć posortowane punkty.\nFunkcja `convexHullAll` w treści robi dokładnie to."
+    },
+    {
+     "q": [
+      "obwód otoczki",
+      "minimalny płot wokół punktów",
+      "perimeter convex hull",
+      "dlugosc ogrodzenia wokol punktow",
+      "najkrotszy plot"
+     ],
+     "a": "Najkrótszy płot otaczający wszystkie punkty to obwód otoczki wypukłej: `Σ |h_{i+1} − h_i|` po wierzchołkach otoczki\n(cyklicznie). Punkty współliniowe nie zmieniają obwodu, więc wystarczy wersja bez nich. O(n log n).",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Otoczka wypukła — algorytm Andrew (monotone chain), O(n log n).\n// Zwraca wierzchołki CCW, bez duplikatów i bez punktów współliniowych na bokach.\nvector<P> convexHull(vector<P> pts) {\n    sort(pts.begin(), pts.end());\n    pts.erase(unique(pts.begin(), pts.end()), pts.end());\n    int n = pts.size();\n    if (n <= 2) return pts;\n    vector<P> h(2 * n);\n    int k = 0;\n    for (int i = 0; i < n; i++) {                               // dolna część (od lewej do prawej)\n        while (k >= 2 && (h[k - 1] - h[k - 2]).cross(pts[i] - h[k - 2]) <= 0) k--;\n        h[k++] = pts[i];\n    }\n    for (int i = n - 2, lo = k + 1; i >= 0; i--) {              // górna część (od prawej do lewej)\n        while (k >= lo && (h[k - 1] - h[k - 2]).cross(pts[i] - h[k - 2]) <= 0) k--;\n        h[k++] = pts[i];\n    }\n    h.resize(k - 1);                                            // ostatni punkt = pierwszy\n    return h;\n}\n\ndouble perimeter(const vector<P> &pts) {\n    vector<P> h = convexHull(pts);\n    double per = 0;\n    for (int i = 0, k = h.size(); i < k; i++) per += sqrt((double)(h[(i + 1) % k] - h[i]).norm2());\n    return per;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "pole otoczki",
+      "area of convex hull",
+      "pole otoczki wypuklej",
+      "pole najmniejszego wielokata wypuklego"
+     ],
+     "a": "Policz otoczkę (CCW), a potem wzór shoelace na jej wierzchołkach — suma jest dodatnia, bo otoczka jest CCW.\nPodwojone pole jest całkowite, więc wypisz `a2 / 2` i ewentualnie `.5`. O(n log n)."
+    },
+    {
+     "q": [
+      "otoczka duplikaty punktów",
+      "powtorzone punkty otoczka",
+      "convex hull duplicate points"
+     ],
+     "a": "Przed budową zrób `sort` + `erase(unique(...))`. Duplikaty dają `cross = 0` z każdym punktem i mogą zostać\nw wyniku albo zepsuć przypadki brzegowe (np. wszystkie punkty identyczne → otoczka z 1 punktu)."
+    },
+    {
+     "q": [
+      "otoczka wszystkie punkty na prostej",
+      "otoczka zdegenerowana",
+      "otoczka 1 lub 2 punkty",
+      "convex hull collinear all"
+     ],
+     "a": "Wersja z `cross ≤ 0` dla punktów na jednej prostej zwraca 2 skrajne punkty (odcinek), dla jednego punktu — 1 punkt.\nPole wynosi wtedy 0, a „obwód” liczony cyklicznie to 2·długość odcinka. Kod musi obsłużyć `n ≤ 2` przed użyciem\n`h[k − 2]`."
+    },
+    {
+     "q": [
+      "najdalsza para punktów",
+      "średnica zbioru punktów",
+      "rotating calipers",
+      "obracające się suwmiarki",
+      "max distance between points"
+     ],
+     "a": "Najdalsza para punktów to dwa wierzchołki otoczki. Obracające się suwmiarki: dla każdego boku otoczki przesuwamy\nwskaźnik `j` na najdalszy od niego wierzchołek (wskaźnik tylko rośnie), sprawdzając odległości od obu końców boku.\nŁącznie O(h) po otoczce, O(n log n) z budową otoczki. Brute force O(n²) jest dobry do testów.",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Otoczka wypukła — algorytm Andrew (monotone chain), O(n log n).\n// Zwraca wierzchołki CCW, bez duplikatów i bez punktów współliniowych na bokach.\nvector<P> convexHull(vector<P> pts) {\n    sort(pts.begin(), pts.end());\n    pts.erase(unique(pts.begin(), pts.end()), pts.end());\n    int n = pts.size();\n    if (n <= 2) return pts;\n    vector<P> h(2 * n);\n    int k = 0;\n    for (int i = 0; i < n; i++) {                               // dolna część (od lewej do prawej)\n        while (k >= 2 && (h[k - 1] - h[k - 2]).cross(pts[i] - h[k - 2]) <= 0) k--;\n        h[k++] = pts[i];\n    }\n    for (int i = n - 2, lo = k + 1; i >= 0; i--) {              // górna część (od prawej do lewej)\n        while (k >= lo && (h[k - 1] - h[k - 2]).cross(pts[i] - h[k - 2]) <= 0) k--;\n        h[k++] = pts[i];\n    }\n    h.resize(k - 1);                                            // ostatni punkt = pierwszy\n    return h;\n}\n\n// Kwadrat średnicy (największej odległości) — obracające się suwmiarki na otoczce CCW bez współliniowych.\nlong long diameter2(const vector<P> &h) {\n    int n = h.size();\n    if (n == 1) return 0;\n    if (n == 2) return (h[0] - h[1]).norm2();\n    long long best = 0;\n    for (int i = 0, j = 1; i < n; i++) {\n        int ni = (i + 1) % n;\n        // przesuwaj j, dopóki wierzchołek j+1 jest dalej od prostej (h[i], h[ni]) niż j\n        while ((h[ni] - h[i]).cross(h[(j + 1) % n] - h[j]) > 0) j = (j + 1) % n;\n        best = max({best, (h[i] - h[j]).norm2(), (h[ni] - h[j]).norm2()});\n    }\n    return best;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "złożoność otoczki",
+      "convex hull complexity",
+      "otoczka wypukla zlozonosc",
+      "jak szybka jest otoczka"
+     ],
+     "a": "Andrew i Graham: O(n log n) czasu (dominuje sortowanie) i O(n) pamięci. Jarvis: O(n·h), gdzie h to liczba\nwierzchołków otoczki. Dolne ograniczenie dla ogólnego przypadku to Ω(n log n) — otoczka „sortuje” punkty.\nPrzy n = 10^6 Andrew działa w ułamku sekundy."
+    },
+    {
+     "q": [
+      "czy punkt jest w otoczce",
+      "point inside convex hull",
+      "punkt w otoczce wypuklej",
+      "czy punkt w srodku zbioru"
+     ],
+     "a": "Zbuduj otoczkę (CCW, bez współliniowych), a potem dla każdego zapytania użyj testu punktu w wielokącie wypukłym\nprzez wyszukiwanie binarne — O(log h) na zapytanie (patrz punkt w wielokącie). Dla jednego zapytania wystarczy\nsprawdzić, że punkt jest na lewo (lub na) od każdego boku — O(h)."
+    },
+    {
+     "q": [
+      "górna i dolna otoczka",
+      "upper hull lower hull",
+      "gorna otoczka",
+      "dolna otoczka wypukla"
+     ],
+     "a": "W algorytmie Andrew pierwsza pętla buduje **dolną** otoczkę (od najmniejszego do największego x), druga — **górną**.\nCzasem potrzebna jest tylko jedna z nich, np. przy maksymalizacji `a·x + b` po prostych (convex hull trick) albo\nprzy liczeniu górnej obwiedni — wtedy wystarczy jedna pętla."
+    }
+   ],
+   "related": [
+    "geo-orientation",
+    "geo-polygon-area",
+    "geo-point-in-polygon",
+    "geo-angular-sort",
+    "geo-cross-dot",
+    "stl-sort",
+    "stl-unique"
+   ]
+  },
+  {
+   "id": "geo-point-in-polygon",
+   "title": "Punkt w wielokącie — ray casting, winding number, wielokąt wypukły w O(log n)",
+   "category": "Geometria",
+   "tags": [
+    "punkt w wielokącie",
+    "point in polygon",
+    "ray casting",
+    "winding number",
+    "wielokąt wypukły",
+    "brzeg"
+   ],
+   "aliases": [
+    "punkt w wielokącie",
+    "point in polygon",
+    "ray casting",
+    "czy punkt jest w wielokącie",
+    "pip",
+    "punkt w wielokącie wypukłym",
+    "winding number",
+    "liczba nawinięć",
+    "metoda promienia"
+   ],
+   "summary": "Ray casting: prowadzimy poziomy promień z punktu w prawo i liczymy przecięcia z bokami — nieparzysta liczba oznacza wnętrze. Brzeg sprawdzamy osobno testem „punkt na odcinku”. Dla wielokąta wypukłego zapytanie w O(log n) wyszukiwaniem binarnym po klinach.",
+   "complexity": "wielokąt dowolny: O(n) na zapytanie; wielokąt wypukły: O(log n) na zapytanie po O(1) przygotowaniu",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Ray casting (metoda promienia):** z punktu `p` puszczamy promień w prawo (`y = p.y`, `x > p.x`). Każde przejście\nprzez brzeg zmienia „wewnątrz” ↔ „na zewnątrz”, więc `p` jest wewnątrz ⇔ liczba przecięć jest **nieparzysta**.\n\nSzczegóły, które robią różnicę:\n* **Brzeg:** najpierw sprawdź, czy `p` leży na którymś boku (`cross = 0` i `dot ≤ 0`) — wtedy odpowiedź „na brzegu”.\n* **Wierzchołki na promieniu:** reguła półotwarta — bok liczy się, gdy **dokładnie jeden** koniec jest ściśle\n  powyżej `p.y` (`(a.y > p.y) != (b.y > p.y)`). Boki poziome nigdy się nie liczą, wierzchołek liczony jest raz.\n* **Bez dzielenia:** zamiast liczyć `x` przecięcia, sprawdzamy znak iloczynu wektorowego: dla boku idącego w górę\n  przecięcie jest na prawo od `p` ⇔ `p` leży na lewo od boku.\n\n**Winding number** (liczba nawinięć) — ile razy brzeg okrąża `p`. Dla wielokąta prostego daje to samo co ray casting,\na dla samoprzecinającego się definiuje „wnętrze” jako `wn ≠ 0`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: punkt w wielokącie (ray casting, dokładnie)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Punkt w wielokącie prostym (dowolna orientacja): 0 — na zewnątrz, 1 — na brzegu, 2 — wewnątrz.\nint pointInPolygon(const vector<P> &poly, P p) {\n    int n = poly.size();\n    bool inside = false;\n    for (int i = 0; i < n; i++) {\n        P a = poly[i], b = poly[(i + 1) % n];\n        if ((b - a).cross(p - a) == 0 && (a - p).dot(b - p) <= 0) return 1;   // p na boku [a, b]\n        if ((a.y > p.y) != (b.y > p.y)) {                 // bok przecina poziomą prostą y = p.y\n            long long c = (b - a).cross(p - a);           // (reguła półotwarta: wierzchołek liczony raz)\n            if ((c > 0) == (b.y > a.y)) inside = !inside; // przecięcie leży na prawo od p\n        }\n    }\n    return inside ? 2 : 0;\n}\n\nint main() {\n    int n, q;\n    cin >> n >> q;\n    vector<P> poly(n);\n    for (auto &p : poly) cin >> p.x >> p.y;\n    const char *name[] = {\"OUTSIDE\", \"BOUNDARY\", \"INSIDE\"};\n    while (q--) {\n        P p;\n        cin >> p.x >> p.y;\n        cout << name[pointInPolygon(poly, p)] << \"\\n\";\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wielokąt wypukły: O(log n) na zapytanie",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Punkt w wielokącie WYPUKŁYM (CCW, bez trzech współliniowych wierzchołków, n >= 3), O(log n).\n// 0 — na zewnątrz, 1 — na brzegu, 2 — wewnątrz.\nint pointInConvex(const vector<P> &poly, P p) {\n    int n = poly.size();\n    P o = poly[0];\n    if ((poly[1] - o).cross(p - o) < 0 || (poly[n - 1] - o).cross(p - o) > 0) return 0;\n    int lo = 1, hi = n - 1;                        // szukamy klina o, poly[lo], poly[lo+1] zawierającego p\n    while (hi - lo > 1) {\n        int mid = (lo + hi) / 2;\n        if ((poly[mid] - o).cross(p - o) >= 0) lo = mid; else hi = mid;\n    }\n    long long c = (poly[lo + 1] - poly[lo]).cross(p - poly[lo]);\n    if (c < 0) return 0;                           // za bokiem lo -> lo+1\n    if (c == 0) return 1;                          // na boku lo -> lo+1\n    if (lo == 1 && (poly[1] - o).cross(p - o) == 0) return 1;          // na boku o -> poly[1]\n    if (lo + 1 == n - 1 && (poly[n - 1] - o).cross(p - o) == 0) return 1;  // na boku poly[n-1] -> o\n    return 2;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Winding number (liczba nawinięć)",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Liczba nawinięć (winding number) wielokąta wokół p (p nie na brzegu). != 0 => p wewnątrz.\nint windingNumber(const vector<P> &poly, P p) {\n    int n = poly.size(), wn = 0;\n    for (int i = 0; i < n; i++) {\n        P a = poly[i], b = poly[(i + 1) % n];\n        if (a.y <= p.y) {\n            if (b.y > p.y && (b - a).cross(p - a) > 0) wn++;    // bok w górę, p na lewo\n        } else {\n            if (b.y <= p.y && (b - a).cross(p - a) < 0) wn--;   // bok w dół, p na prawo\n        }\n    }\n    return wn;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Metoda",
+      "Złożoność",
+      "Kiedy"
+     ],
+     "rows": [
+      [
+       "ray casting",
+       "O(n)",
+       "dowolny wielokąt prosty, pojedyncze zapytania"
+      ],
+      [
+       "winding number",
+       "O(n)",
+       "wielokąty samoprzecinające się / orientacja ma znaczenie"
+      ],
+      [
+       "kliny + wyszukiwanie binarne",
+       "O(log n)",
+       "wielokąt wypukły, wiele zapytań"
+      ],
+      [
+       "trzy orientacje",
+       "O(1)",
+       "trójkąt"
+      ],
+      [
+       "porównania współrzędnych",
+       "O(1)",
+       "prostokąt równoległy do osi"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int pointInPolygon(const vector<P> &poly, P p)",
+     "desc": "0 — zewnątrz, 1 — brzeg, 2 — wnętrze; wielokąt prosty, dowolna orientacja",
+     "complexity": "O(n)",
+     "returns": "int"
+    },
+    {
+     "sig": "int windingNumber(const vector<P> &poly, P p)",
+     "desc": "liczba nawinięć brzegu wokół p (p nie na brzegu)",
+     "complexity": "O(n)",
+     "returns": "int"
+    },
+    {
+     "sig": "int pointInConvex(const vector<P> &poly, P p)",
+     "desc": "to samo dla wielokąta wypukłego CCW bez współliniowych wierzchołków",
+     "complexity": "O(log n)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Brak osobnego testu brzegu — punkt na boku raz wychodzi „w środku”, raz „na zewnątrz”.",
+    "Liczenie przecięcia w wierzchołku dwa razy (dla obu boków) — stosuj regułę półotwartą `(a.y > p.y) != (b.y > p.y)`.",
+    "Liczenie x przecięcia dzieleniem na double — niepotrzebne błędy; użyj znaku iloczynu wektorowego.",
+    "pointInConvex wymaga orientacji CCW i braku trzech współliniowych wierzchołków — w razie potrzeby odwróć wielokąt / policz otoczkę bez współliniowych.",
+    "Test „po lewej od każdego boku” działa tylko dla wielokątów wypukłych — dla wklęsłych potrzebny ray casting."
+   ],
+   "qa": [
+    {
+     "q": [
+      "punkt w wielokacie",
+      "point in polygon c++",
+      "czy punkt jest wewnatrz wielokata",
+      "pip algorithm",
+      "punkt wewnatrz wielokata kod"
+     ],
+     "a": "Ray casting: dla każdego boku sprawdź najpierw, czy punkt na nim leży (brzeg). Potem licz boki, które przecinają\npoziomy promień biegnący z punktu w prawo — nieparzysta liczba przecięć oznacza wnętrze. Z regułą półotwartą\ni znakiem iloczynu wektorowego wszystko jest dokładne w `long long`. O(n) na zapytanie.",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Punkt w wielokącie prostym (dowolna orientacja): 0 — na zewnątrz, 1 — na brzegu, 2 — wewnątrz.\nint pointInPolygon(const vector<P> &poly, P p) {\n    int n = poly.size();\n    bool inside = false;\n    for (int i = 0; i < n; i++) {\n        P a = poly[i], b = poly[(i + 1) % n];\n        if ((b - a).cross(p - a) == 0 && (a - p).dot(b - p) <= 0) return 1;   // p na boku [a, b]\n        if ((a.y > p.y) != (b.y > p.y)) {                 // bok przecina poziomą prostą y = p.y\n            long long c = (b - a).cross(p - a);           // (reguła półotwarta: wierzchołek liczony raz)\n            if ((c > 0) == (b.y > a.y)) inside = !inside; // przecięcie leży na prawo od p\n        }\n    }\n    return inside ? 2 : 0;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ray casting",
+      "metoda promienia",
+      "algorytm promienia punkt w wielokącie",
+      "ray casting jak dziala"
+     ],
+     "a": "Promień z punktu w prawo przecina brzeg wielokąta; każde przecięcie zamienia stan wewnątrz/na zewnątrz, a daleko\nw prawo jesteśmy na zewnątrz. Zatem nieparzysta liczba przecięć = wnętrze. Bok `(a, b)` przecina promień, gdy\njeden koniec jest ściśle nad `p.y`, a drugi nie, i punkt przecięcia leży na prawo od `p` (znak `cross`)."
+    },
+    {
+     "q": [
+      "punkt na brzegu wielokąta",
+      "point on polygon boundary",
+      "czy punkt lezy na obwodzie wielokata"
+     ],
+     "a": "Dla każdego boku `[a, b]` sprawdź `onSegment`: `(b − a) × (p − a) == 0` i `(a − p) · (b − p) ≤ 0`. Rób to\n**przed** liczeniem przecięć — wtedy ray casting nie musi się martwić punktami na boku. O(n)."
+    },
+    {
+     "q": [
+      "punkt w wielokącie wypukłym log n",
+      "point in convex polygon binary search",
+      "punkt w wielokacie wypuklym szybko",
+      "wiele zapytan punkt w wielokacie wypuklym"
+     ],
+     "a": "Wielokąt CCW, wierzchołek `p0` jako środek „wachlarza”. Najpierw odrzuć punkty spoza kąta `p1, p0, p_{n−1}`, potem\nwyszukiwaniem binarnym znajdź klin `p0, p_i, p_{i+1}` zawierający kierunek do punktu i sprawdź jedną orientację\nwzględem boku `p_i p_{i+1}`. O(log n) na zapytanie — kod w treści (`pointInConvex`)."
+    },
+    {
+     "q": [
+      "winding number",
+      "liczba nawinięć",
+      "winding number c++",
+      "winding vs ray casting"
+     ],
+     "a": "Winding number liczy, ile razy brzeg okrąża punkt (ze znakiem: CCW +1, CW −1). Bok idący w górę z punktem po lewej\ndaje +1, bok idący w dół z punktem po prawej −1. Dla wielokąta prostego `wn ∈ {0, ±1}` i daje to samo co ray casting;\nróżnica jest dla wielokątów samoprzecinających się. O(n)."
+    },
+    {
+     "q": [
+      "ray casting wierzcholek problem",
+      "promień przechodzi przez wierzchołek",
+      "ray casting bok poziomy",
+      "punkt w wielokacie wierzcholek na promieniu"
+     ],
+     "a": "Gdy promień trafia dokładnie w wierzchołek, naiwny kod liczy przecięcie dla obu sąsiednich boków (albo żadnego).\nReguła półotwarta: bok liczy się tylko, gdy `(a.y > p.y) != (b.y > p.y)` — wierzchołek „należy” do boku, który\nidzie od niego w górę. Boki poziome nie spełniają warunku, więc są pomijane. Dzięki temu „dziobek” w dół liczy się\n0 albo 2 razy, a przejście przez wierzchołek — raz."
+    },
+    {
+     "q": [
+      "punkt w prostokącie",
+      "point in rectangle",
+      "czy punkt w prostokacie rownoleglym do osi"
+     ],
+     "a": "Dla prostokąta o bokach równoległych do osi: `x1 ≤ x ≤ x2 && y1 ≤ y ≤ y2` (z brzegiem; `<` bez brzegu). Najpierw\nustaw `x1 = min`, `x2 = max` itd., jeśli rogi mogą być podane w dowolnej kolejności. O(1). Prostokąt obrócony\ntraktuj jak wielokąt wypukły.",
+     "code": "long long x1 = 0, y1 = 0, x2 = 5, y2 = 3;\nauto in = [&](long long x, long long y) { return x1 <= x && x <= x2 && y1 <= y && y <= y2; };\ncout << in(2, 2) << in(5, 3) << in(6, 1) << \"\\n\";   // 110"
+    },
+    {
+     "q": [
+      "punkt w wielokącie double",
+      "point in polygon floating point",
+      "punkt w wielokacie wspolrzedne rzeczywiste"
+     ],
+     "a": "Ten sam algorytm, ale test brzegu z tolerancją: `fabs(cross) < EPS` i `dot < EPS`, a przy rozstrzyganiu, po której\nstronie jest przecięcie — porównanie `cross > 0` zastąp `cross > EPS` (przypadki z |cross| ≤ EPS i tak są już\nobsłużone jako brzeg). Jeśli dane są całkowite, nie przechodź na `double`."
+    },
+    {
+     "q": [
+      "czy wielokąt zawiera inny wielokąt",
+      "wielokat w wielokacie",
+      "polygon inside polygon"
+     ],
+     "a": "Wielokąt Q leży w wielokącie P, gdy wszystkie wierzchołki Q są w P (lub na brzegu) **i** żaden bok Q nie przecina\nwłaściwie boku P. Dla P wypukłego wystarczy sprawdzić same wierzchołki Q (O(m log n) z `pointInConvex`).\nOgólnie O(n·m)."
+    },
+    {
+     "q": [
+      "ile punktów kratowych wewnątrz wielokąta",
+      "punkty calkowite w wielokacie szybko",
+      "zliczanie punktow w wielokacie"
+     ],
+     "a": "Nie testuj każdego punktu siatki osobno. Użyj twierdzenia Picka: `I = (2·Pole − B + 2) / 2`, gdzie B to punkty\nkratowe na brzegu (Σ gcd). Działa w O(n log C) niezależnie od rozmiaru wielokąta."
+    }
+   ],
+   "related": [
+    "geo-orientation",
+    "geo-segment-intersection",
+    "geo-convex-hull",
+    "geo-pick",
+    "geo-polygon-area"
+   ]
+  },
+  {
+   "id": "geo-angular-sort",
+   "title": "Sortowanie kątowe (polarne) — półpłaszczyzny i iloczyn wektorowy zamiast atan2",
+   "category": "Geometria",
+   "tags": [
+    "sortowanie kątowe",
+    "sortowanie polarne",
+    "atan2",
+    "polar sort",
+    "kąt",
+    "iloczyn wektorowy",
+    "zamiatanie kątowe"
+   ],
+   "aliases": [
+    "sortowanie kątowe",
+    "sortowanie katowe",
+    "polar sort",
+    "sort by angle",
+    "sortowanie po kącie",
+    "atan2 sortowanie",
+    "sortowanie punktów wokół punktu",
+    "angular sort"
+   ],
+   "summary": "Wektory sortujemy po kącie dzieląc płaszczyznę na dwie półpłaszczyzny (kąt w [0, π) i [π, 2π)), a w obrębie jednej porównujemy znak iloczynu wektorowego. To dokładne w long long, w przeciwieństwie do atan2.",
+   "complexity": "O(n log n), porównanie O(1)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Chcemy posortować wektory (punkty względem środka `O`) według kąta mierzonego od dodatniej półosi `x`, przeciwnie do\nruchu wskazówek zegara, w zakresie `[0, 2π)`.\n\n1. **Półpłaszczyzna:** `half(v) = 0`, gdy kąt jest w `[0, π)` (`y > 0` albo `y = 0, x > 0`), a `1` dla `[π, 2π)`.\n2. Różne półpłaszczyzny → wcześniej ta z `half = 0`.\n3. Ta sama półpłaszczyzna → `a` przed `b` ⇔ `a × b > 0` (b jest na lewo od a). W obrębie półpłaszczyzny kąty różnią\n   się o mniej niż π, więc znak iloczynu wektorowego jest jednoznaczny.\n4. Ten sam kierunek (`a × b = 0`) → np. bliższy pierwszy (`norm2`).\n\nWszystko w liczbach całkowitych — porządek jest dokładny także dla współrzędnych ~10^9, gdzie `atan2` nie rozróżnia\nbliskich kierunków. Punkty wokół innego środka `O`: sortuj wektory `p − O`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: sortowanie kątowe wokół (0, 0)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Sortowanie kątowe wektorów wokół (0, 0): kąt od 0 (dodatnia półoś x) przeciwnie do wskazówek zegara\n// do 2π; przy tym samym kierunku bliższy pierwszy. Bez atan2 — dokładnie w long long.\nint half(P a) { return (a.y < 0 || (a.y == 0 && a.x < 0)) ? 1 : 0; }   // 0: kąt w [0, π), 1: [π, 2π)\nbool angleLess(P a, P b) {\n    int ha = half(a), hb = half(b);\n    if (ha != hb) return ha < hb;\n    long long c = a.cross(b);\n    if (c != 0) return c > 0;                    // b na lewo od a => a ma mniejszy kąt\n    return a.norm2() < b.norm2();\n}\n\nint main() {\n    int n;\n    cin >> n;\n    vector<P> v(n);\n    for (auto &p : v) cin >> p.x >> p.y;\n    sort(v.begin(), v.end(), angleLess);\n    for (auto &p : v) cout << p.x << \" \" << p.y << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersja z atan2 (zakres (−π, π])",
+     "code": "// Wersja z atan2 — krócej, ale tylko dla małych współrzędnych (precyzja double!).\nvector<pair<long long,long long>> v = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}};\nsort(v.begin(), v.end(), [](auto &a, auto &b) {\n    return atan2((double)a.second, (double)a.first) < atan2((double)b.second, (double)b.first);\n});\nfor (auto &[x, y] : v) cout << x << \",\" << y << \" \";   // od kąta -π: 0,-1 1,0 1,1 0,1 -1,0"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "",
+      "atan2",
+      "półpłaszczyzny + cross"
+     ],
+     "rows": [
+      [
+       "zakres",
+       "(−π, π] — start od ujemnej półosi x",
+       "[0, 2π) — start od dodatniej półosi x (dowolny po modyfikacji half)"
+      ],
+      [
+       "dokładność",
+       "double: błędy dla dużych współrzędnych",
+       "dokładnie w long long"
+      ],
+      [
+       "remisy (ten sam kierunek)",
+       "porównanie double ==, zawodne",
+       "cross == 0, pewne"
+      ],
+      [
+       "szybkość",
+       "wolniejsze (funkcja trygonometryczna)",
+       "szybkie"
+      ],
+      [
+       "kiedy",
+       "małe współrzędne, kąty do wypisania",
+       "zawsze przy danych całkowitych"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int half(P a)",
+     "desc": "0, gdy kąt wektora w [0, π), 1 — w [π, 2π)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "bool angleLess(P a, P b)",
+     "desc": "komparator sortowania kątowego (remis kierunku — bliższy pierwszy)",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "sort(v.begin(), v.end(), angleLess);"
+    },
+    {
+     "sig": "atan2(y, x)",
+     "desc": "kąt wektora w radianach z (−π, π]",
+     "complexity": "O(1)",
+     "returns": "double"
+    }
+   ],
+   "pitfalls": [
+    "Komparator tylko na `cross > 0` (bez podziału na półpłaszczyzny) nie jest przechodni dla kątów różniących się o > π — sort daje losowy porządek albo crash.",
+    "atan2 zaczyna od −π (ujemna półoś x), a nie od 0 — kolejność „od godziny 3” wymaga dodania 2π do ujemnych kątów.",
+    "Wektor zerowy (punkt równy środkowi) nie ma kąta — usuń go albo obsłuż osobno.",
+    "Remisy kierunku: zdecyduj, czy bliższy, czy dalszy ma być pierwszy (np. Graham na końcu otoczki potrzebuje odwrotnej kolejności).",
+    "atan2 dla współrzędnych ~10^9 nie rozróżnia kierunków o iloczynie wektorowym ±1."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sortowanie katowe",
+      "sort by angle c++",
+      "sortowanie polarne",
+      "polar sort",
+      "jak posortowac punkty po kacie",
+      "angular sort"
+     ],
+     "a": "Podziel wektory na dwie półpłaszczyzny (kąt w [0, π) i [π, 2π)), a w obrębie jednej porównuj znak iloczynu\nwektorowego: `a` przed `b` ⇔ `a × b > 0`. Przy tym samym kierunku rozstrzygnij np. odległością. Porównanie jest O(1)\ni dokładne w `long long`; sortowanie O(n log n).",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Sortowanie kątowe wektorów wokół (0, 0): kąt od 0 (dodatnia półoś x) przeciwnie do wskazówek zegara\n// do 2π; przy tym samym kierunku bliższy pierwszy. Bez atan2 — dokładnie w long long.\nint half(P a) { return (a.y < 0 || (a.y == 0 && a.x < 0)) ? 1 : 0; }   // 0: kąt w [0, π), 1: [π, 2π)\nbool angleLess(P a, P b) {\n    int ha = half(a), hb = half(b);\n    if (ha != hb) return ha < hb;\n    long long c = a.cross(b);\n    if (c != 0) return c > 0;                    // b na lewo od a => a ma mniejszy kąt\n    return a.norm2() < b.norm2();\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "atan2 sortowanie",
+      "sortowanie katowe atan2",
+      "atan2 c++ jak dziala",
+      "atan2 vs atan",
+      "co zwraca atan2"
+     ],
+     "a": "`atan2(y, x)` zwraca kąt wektora (x, y) w radianach z przedziału (−π, π], poprawnie rozpoznając ćwiartkę (w odróżnieniu\nod `atan(y / x)`, które nie rozróżnia (1, 1) od (−1, −1) i dzieli przez 0 dla x = 0). Sortowanie po `atan2` jest\nkrótkie, ale przy dużych współrzędnych całkowitych zawodzi przez precyzję `double` — wtedy użyj iloczynu wektorowego.",
+     "code": "cout << fixed << setprecision(4) << atan2(1.0, 1.0) << \" \" << atan2(-1.0, -1.0) << \" \" << atan2(0.0, -1.0) << \"\\n\";   // 0.7854 -2.3562 3.1416"
+    },
+    {
+     "q": [
+      "sortowanie bez atan2",
+      "sortowanie katowe cross product",
+      "sortowanie katowe dokladne",
+      "polar sort without atan2"
+     ],
+     "a": "Komparator: najpierw półpłaszczyzna (`y > 0 || (y == 0 && x > 0)` → pierwsza połowa), potem `cross(a, b) > 0`.\nSam `cross` bez podziału na połowy NIE jest poprawnym komparatorem (relacja nie jest przechodnia dla kątów\nróżniących się o więcej niż π). Kod: funkcje `half` i `angleLess` w treści."
+    },
+    {
+     "q": [
+      "sortowanie punktów wokół punktu",
+      "posortuj punkty wokol srodka",
+      "sortowanie katowe wzgledem punktu",
+      "sort points around center"
+     ],
+     "a": "Odejmij środek: sortuj wektory `p − O` komparatorem kątowym (`angleLess(a − O, b − O)`). Środek może być dowolnym\npunktem; jeśli punkty tworzą wielokąt wypukły, a środkiem jest punkt wewnętrzny (np. średnia — wtedy podwój\nwspółrzędne lub użyj n·p − Σp, by zostać w liczbach całkowitych), dostaniesz wierzchołki po kolei (CCW).",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }\n    long long dot(const P &o) const { return x * o.x + y * o.y; }\n    long long norm2() const { return x * x + y * y; }\n};\n\n// Sortowanie kątowe wektorów wokół (0, 0): kąt od 0 (dodatnia półoś x) przeciwnie do wskazówek zegara\n// do 2π; przy tym samym kierunku bliższy pierwszy. Bez atan2 — dokładnie w long long.\nint half(P a) { return (a.y < 0 || (a.y == 0 && a.x < 0)) ? 1 : 0; }   // 0: kąt w [0, π), 1: [π, 2π)\nbool angleLess(P a, P b) {\n    int ha = half(a), hb = half(b);\n    if (ha != hb) return ha < hb;\n    long long c = a.cross(b);\n    if (c != 0) return c > 0;                    // b na lewo od a => a ma mniejszy kąt\n    return a.norm2() < b.norm2();\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kat w stopniach atan2",
+      "atan2 stopnie",
+      "jak zamienic atan2 na stopnie",
+      "kat wektora w stopniach"
+     ],
+     "a": "`double deg = atan2(y, x) * 180 / acos(-1.0);` daje kąt z (−180°, 180°]. Żeby dostać [0°, 360°), dodaj 360 do\nujemnych wyników: `if (deg < 0) deg += 360;`.",
+     "code": "double deg = atan2(-1.0, 0.0) * 180 / acos(-1.0);\nif (deg < 0) deg += 360;\ncout << deg << \"\\n\";   // 270"
+    },
+    {
+     "q": [
+      "punkty o tym samym kierunku sortowanie",
+      "remis w sortowaniu katowym",
+      "wspolliniowe ze srodkiem sortowanie katowe"
+     ],
+     "a": "Gdy `cross(a, b) == 0` i oba są w tej samej półpłaszczyźnie, mają ten sam kierunek — rozstrzygnij remis\n`norm2()` (bliższy pierwszy) albo odwrotnie, zależnie od zastosowania. Bez rozstrzygnięcia `sort` też zadziała\n(to poprawny komparator), ale kolejność takich punktów będzie dowolna."
+    },
+    {
+     "q": [
+      "zamiatanie katowe",
+      "angular sweep",
+      "obrot prostej wokol punktu",
+      "ile punktow w polplaszczyznie max"
+     ],
+     "a": "Zamiatanie kątowe: posortuj punkty kątowo wokół środka, „zdubluj” tablicę (kąty + 2π) i przesuwaj dwa wskaźniki,\nutrzymując okno kierunków w przedziale kąta < π (warunek: `cross(v[i], v[j]) > 0` lub ten sam kierunek). Tak liczy\nsię np. maksymalną liczbę punktów w półpłaszczyźnie przez środek albo liczbę trójkątów zawierających punkt —\nO(n log n)."
+    },
+    {
+     "q": [
+      "graham sortowanie katowe",
+      "sortowanie katowe do otoczki",
+      "graham scan sort"
+     ],
+     "a": "Graham sortuje punkty kątowo wokół najniższego (a przy remisie najbardziej lewego) punktu — wtedy wszystkie wektory\nsą w półpłaszczyźnie `y ≥ 0`, więc wystarczy `cross > 0` z remisem po odległości. Prościej jednak użyć algorytmu\nAndrew, który sortuje po (x, y) i nie wymaga sortowania kątowego."
+    }
+   ],
+   "related": [
+    "geo-cross-dot",
+    "geo-convex-hull",
+    "geo-pitfalls",
+    "geo-orientation",
+    "stl-sort"
+   ]
+  }
+ ]
+}

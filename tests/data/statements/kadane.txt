@@ -1,0 +1,21 @@
+Najlepszy okres
+Firma Bajtpol zapisywała przez n dni swój dzienny zysk (może być ujemny, gdy dzień był stratny). Prezes chce wskazać
+spójny okres (co najmniej jeden dzień), w którym łączny zysk był największy. Podaj ten największy łączny zysk.
+Wejście
+W pierwszym wierszu znajduje się liczba n (1 ≤ n ≤ 10^6). W drugim wierszu znajduje się n liczb całkowitych
+z_1, ..., z_n (-10^9 ≤ z_i ≤ 10^9) — zyski w kolejnych dniach.
+Wyjście
+Wypisz jedną liczbę — największą sumę zysków w spójnym okresie.
+Przykład 1
+Wejście:
+8
+-2 1 -3 4 -1 2 1 -5
+Wyjście:
+6
+
+Przykład 2
+Wejście:
+3
+-5 -2 -7
+Wyjście:
+-2

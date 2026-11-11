@@ -1,0 +1,1577 @@
+{
+ "chunk": "graphs-paths",
+ "articles": [
+  {
+   "id": "graph-toposort",
+   "title": "Sortowanie topologiczne (Kahn i DFS)",
+   "category": "Grafy",
+   "tags": [
+    "sortowanie topologiczne",
+    "toposort",
+    "dag",
+    "kahn",
+    "stopień wejściowy",
+    "zależności",
+    "kolejność zadań",
+    "postorder"
+   ],
+   "aliases": [
+    "sortowanie topologiczne",
+    "toposort",
+    "topological sort",
+    "topo sort",
+    "algorytm kahna",
+    "kahn",
+    "toposort c++",
+    "porządek topologiczny",
+    "kolejność wykonywania zadań",
+    "toposort dfs",
+    "sortowanie topologiczne c++"
+   ],
+   "summary": "Porządek topologiczny DAG-u to ustawienie wierzchołków tak, by każda krawędź szła „w prawo”. Kahn: zdejmuj wierzchołki o stopniu wejściowym 0; DFS: odwrócony postorder. Oba O(n + m); jeśli porządku nie ma — graf ma cykl.",
+   "complexity": "O(n + m); wersja leksykograficznie najmniejsza z kopcem: O((n + m) log n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Masz zadania i zależności „a musi być przed b” (krawędź `a → b`). Szukasz kolejności, w której każde\nzadanie jest po wszystkich swoich wymaganiach. Taka kolejność istnieje **wtedy i tylko wtedy**, gdy\ngraf nie ma cyklu skierowanego (jest DAG-iem — *directed acyclic graph*).\n\n**Algorytm Kahna:** policz `indeg[v]` (ile krawędzi wchodzi do `v`). Wierzchołki z `indeg = 0` nie\nmają żadnych wymagań — wrzuć je do kolejki. Zdejmując `v`, dopisz go do wyniku i „usuń” jego krawędzie:\n`indeg[u]--`; gdy spadnie do 0, `u` trafia do kolejki. Jeśli wynik ma mniej niż `n` wierzchołków —\njest cykl.\n\n**Wersja DFS:** wierzchołek dopisujesz do listy w momencie **wyjścia** z niego (postorder); odwrócona\nlista jest porządkiem topologicznym (każdy wierzchołek kończy się po wszystkich swoich następnikach)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „zadanie A musi być wykonane przed B”, „przedmiot wymaga zaliczenia innych”, „kolejność\nkompilacji modułów”, „ustal kolejność, w której…”, „czy zależności są sprzeczne”, „graf skierowany\nbez cykli”, DP na grafie skierowanym (potrzebuje kolejności topologicznej)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Algorytm Kahna — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    vector<int> indeg(n + 1, 0);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;            // a musi być przed b\n        g[a].push_back(b);\n        indeg[b]++;\n    }\n    queue<int> q;\n    for (int v = 1; v <= n; v++)\n        if (indeg[v] == 0) q.push(v);\n    vector<int> order;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        order.push_back(v);\n        for (int u : g[v])\n            if (--indeg[u] == 0) q.push(u);\n    }\n    if ((int)order.size() < n) {\n        cout << \"CYKL\\n\";         // nie da się ustawić\n        return 0;\n    }\n    for (int v : order) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Toposort przez DFS (odwrócony postorder)",
+     "code": "const int MAXN = 200005;\nvector<int> g[MAXN];\nint color[MAXN];          // 0 nieodwiedzony, 1 na stosie, 2 gotowy\nvector<int> post;\nbool cykl = false;\n\nvoid dfs(int v) {\n    color[v] = 1;\n    for (int u : g[v]) {\n        if (color[u] == 0) dfs(u);\n        else if (color[u] == 1) cykl = true;\n    }\n    color[v] = 2;\n    post.push_back(v);    // wychodzimy z v: wszystkie jego następniki już są w post\n}\n\nvector<int> toposortDfs(int n) {\n    for (int v = 1; v <= n; v++) if (color[v] == 0) dfs(v);\n    reverse(post.begin(), post.end());\n    return post;          // gdy cykl == true, wynik nie jest poprawnym porządkiem\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Kahn jest iteracyjny (bez ryzyka przepełnienia stosu) i od razu wykrywa cykl, więc na OI jest zwykle\npierwszym wyborem. Zamieniając `queue` na `priority_queue` z `greater<int>`, dostajesz porządek\n**leksykograficznie najmniejszy** — częsty wymóg „jeśli jest wiele odpowiedzi, wypisz najmniejszą”."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "indeg[b]++",
+     "desc": "przy wczytaniu krawędzi a→b liczymy stopnie wejściowe",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "toposortDfs(n)",
+     "desc": "porządek topologiczny jako odwrócony postorder DFS",
+     "complexity": "O(n + m)",
+     "returns": "vector<int>"
+    }
+   ],
+   "pitfalls": [
+    "Toposort ma sens tylko dla grafu skierowanego. Krawędzie dodaje się w jedną stronę.",
+    "Brak sprawdzenia `order.size() < n` → przy cyklu wypisujesz niepełną kolejność zamiast „NIE/CYKL”.",
+    "Wersja DFS bez odwrócenia listy daje porządek odwrotny (każda krawędź „w lewo”).",
+    "Porządek zwykle nie jest jednoznaczny — jeśli sprawdzarka wymaga konkretnego (np. leksykograficznie najmniejszego), użyj kopca.",
+    "Rekurencyjny DFS na łańcuchu 10^6 zależności może przepełnić stos — Kahn jest bezpieczny.",
+    "Kierunek krawędzi: „a zależy od b” znaczy, że b musi być PRZED a, czyli krawędź b → a. Łatwo odwrócić."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sortowanie topologiczne",
+      "toposort c++",
+      "topological sort",
+      "algorytm kahna",
+      "jak zrobić toposort"
+     ],
+     "a": "Kahn: policz stopnie wejściowe, wrzuć do kolejki wierzchołki o `indeg = 0`, zdejmuj je po kolei,\ndopisuj do wyniku i zmniejszaj `indeg` sąsiadów (do kolejki, gdy spadnie do 0). Każda krawędź\nobsłużona raz → **O(n + m)**. Jeśli wynik ma mniej niż `n` elementów, graf ma cykl i porządku nie ma.",
+     "code": "vector<int> kahn(const vector<vector<int>>& g, int n) {\n    vector<int> indeg(n + 1, 0), order;\n    for (int v = 1; v <= n; v++) for (int u : g[v]) indeg[u]++;\n    queue<int> q;\n    for (int v = 1; v <= n; v++) if (indeg[v] == 0) q.push(v);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        order.push_back(v);\n        for (int u : g[v]) if (--indeg[u] == 0) q.push(u);\n    }\n    return order;          // order.size() < n  =>  cykl\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "toposort dfs",
+      "sortowanie topologiczne dfs",
+      "topological sort dfs postorder",
+      "toposort rekurencyjnie"
+     ],
+     "a": "Zrób DFS z każdego nieodwiedzonego wierzchołka i dopisuj wierzchołek do listy w chwili **wyjścia**\nz niego. Odwrócona lista to porządek topologiczny: gdy kończysz `v`, wszystkie wierzchołki osiągalne\nz `v` są już na liście (wcześniej), więc po odwróceniu `v` stoi przed nimi. O(n + m). Cykl wykryjesz\nkolorami (krawędź do wierzchołka „na stosie”).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> g[100005], post;\nbool vis[100005];\nvoid dfs(int v) {\n    vis[v] = true;\n    for (int u : g[v]) if (!vis[u]) dfs(u);\n    post.push_back(v);\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n    }\n    for (int v = 1; v <= n; v++) if (!vis[v]) dfs(v);\n    reverse(post.begin(), post.end());\n    for (int v : post) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "najmniejsze leksykograficznie sortowanie topologiczne",
+      "toposort priority queue",
+      "toposort najmniejszy leksykograficznie",
+      "lexicographically smallest topological order"
+     ],
+     "a": "W Kahnie zamień `queue` na kopiec minimalny `priority_queue<int, vector<int>, greater<int>>` — zawsze\nbierzesz najmniejszy dostępny wierzchołek. Złożoność **O((n + m) log n)**. Uwaga: „najmniejszy\nleksykograficznie” to nie to samo co „wierzchołek 1 jak najwcześniej” — to drugie robi się Kahnem\nz kopcem maksymalnym na grafie odwróconym i odwróceniem wyniku.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    vector<int> indeg(n + 1, 0);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        indeg[b]++;\n    }\n    priority_queue<int, vector<int>, greater<int>> pq;\n    for (int v = 1; v <= n; v++) if (indeg[v] == 0) pq.push(v);\n    vector<int> order;\n    while (!pq.empty()) {\n        int v = pq.top(); pq.pop();\n        order.push_back(v);\n        for (int u : g[v]) if (--indeg[u] == 0) pq.push(u);\n    }\n    if ((int)order.size() < n) { cout << \"CYKL\\n\"; return 0; }\n    for (int v : order) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "czy da się wykonać wszystkie zadania",
+      "zależności między zadaniami",
+      "kolejność wykonywania zadań",
+      "zadanie a przed b graf",
+      "course schedule"
+     ],
+     "a": "Zbuduj graf skierowany: krawędź `a → b`, gdy `a` musi być przed `b`. Wszystkie zadania da się wykonać\n⇔ graf nie ma cyklu ⇔ Kahn przetworzy wszystkie `n` wierzchołków. Kolejność z Kahna jest gotową\nodpowiedzią. Uważaj na kierunek: „b wymaga a” to też `a → b`.",
+     "code": "int n = 3;\nvector<pair<int,int>> wymaga = {{2, 1}, {3, 2}};   // (x, y): x wymaga y  =>  krawędź y -> x\nvector<vector<int>> g(n + 1);\nvector<int> indeg(n + 1, 0);\nfor (auto [x, y] : wymaga) { g[y].push_back(x); indeg[x]++; }\nqueue<int> q;\nfor (int v = 1; v <= n; v++) if (!indeg[v]) q.push(v);\nint zrobione = 0;\nwhile (!q.empty()) {\n    int v = q.front(); q.pop(); zrobione++;\n    for (int u : g[v]) if (--indeg[u] == 0) q.push(u);\n}\ncout << (zrobione == n ? \"TAK\" : \"NIE\") << '\\n';"
+    },
+    {
+     "q": [
+      "czy porządek topologiczny jest jednoznaczny",
+      "unikalny toposort",
+      "jedna kolejność topologiczna",
+      "unique topological order"
+     ],
+     "a": "Porządek jest jedyny ⇔ w Kahnie kolejka ma **zawsze dokładnie jeden** element (nigdy dwóch kandydatów\nnaraz). Równoważnie: kolejne wierzchołki porządku są połączone krawędziami (istnieje ścieżka\nHamiltona). Sprawdź `q.size() > 1` w każdej iteracji. O(n + m).",
+     "code": "bool jednoznaczny(const vector<vector<int>>& g, int n) {\n    vector<int> indeg(n + 1, 0);\n    for (int v = 1; v <= n; v++) for (int u : g[v]) indeg[u]++;\n    queue<int> q;\n    for (int v = 1; v <= n; v++) if (!indeg[v]) q.push(v);\n    int ile = 0;\n    while (!q.empty()) {\n        if (q.size() > 1) return false;\n        int v = q.front(); q.pop(); ile++;\n        for (int u : g[v]) if (--indeg[u] == 0) q.push(u);\n    }\n    return ile == n;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "toposort złożoność",
+      "ile działa sortowanie topologiczne",
+      "toposort complexity"
+     ],
+     "a": "Kahn i DFS: **O(n + m)** — każdy wierzchołek wchodzi do kolejki raz, każda krawędź zmniejsza `indeg`\nraz. Z kopcem (porządek leksykograficzny) O((n + m) log n). Dla `n, m ≤ 10^6` to ułamek sekundy.",
+     "code": "int n = 5;\nvector<vector<int>> g = {{}, {2, 3}, {4}, {4}, {5}, {}};   // m = 5\nvector<int> indeg(n + 1, 0);\nfor (int v = 1; v <= n; v++) for (int u : g[v]) indeg[u]++;\nqueue<int> q;\nfor (int v = 1; v <= n; v++) if (!indeg[v]) q.push(v);\nint zdjecia = 0, dekrementacje = 0;\nwhile (!q.empty()) {\n    int v = q.front(); q.pop(); zdjecia++;\n    for (int u : g[v]) { dekrementacje++; if (--indeg[u] == 0) q.push(u); }\n}\ncout << zdjecia << ' ' << dekrementacje << '\\n';   // 5 5, czyli n i m"
+    },
+    {
+     "q": [
+      "minimalna liczba semestrów",
+      "ile dni potrzeba zadania równolegle",
+      "warstwy toposortu",
+      "najdłuższy łańcuch zależności"
+     ],
+     "a": "Jeśli niezależne zadania można robić równolegle (każde trwa 1 dzień), minimalna liczba dni to długość\nnajdłuższej ścieżki w DAG-u (liczba wierzchołków). W Kahnie licz `poziom[u] = max(poziom[u],\npoziom[v] + 1)` przy zdejmowaniu `v`. Ewentualnie przetwarzaj kolejkę warstwami: każda warstwa = jeden\ndzień. O(n + m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    vector<int> indeg(n + 1, 0), poziom(n + 1, 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        indeg[b]++;\n    }\n    queue<int> q;\n    for (int v = 1; v <= n; v++) if (!indeg[v]) q.push(v);\n    int dni = 0;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        dni = max(dni, poziom[v]);\n        for (int u : g[v]) {\n            poziom[u] = max(poziom[u], poziom[v] + 1);\n            if (--indeg[u] == 0) q.push(u);\n        }\n    }\n    cout << dni << '\\n';\n}"
+    },
+    {
+     "q": [
+      "co to dag",
+      "graf acykliczny skierowany",
+      "directed acyclic graph",
+      "dag co to znaczy"
+     ],
+     "a": "**DAG** (*directed acyclic graph*) to graf skierowany bez cykli. Każdy DAG ma porządek topologiczny,\na każdy graf z porządkiem topologicznym jest DAG-iem. Na DAG-u wiele trudnych problemów robi się\nprosto: najdłuższa ścieżka, liczba ścieżek, najkrótsza ścieżka nawet z ujemnymi wagami — wszystko DP\npo porządku topologicznym w O(n + m). Graf dowolny można sprowadzić do DAG-u, ściskając silnie\nspójne składowe.",
+     "code": "auto czyDAG = [](int n, const vector<pair<int,int>>& e) {\n    vector<vector<int>> g(n + 1);\n    vector<int> indeg(n + 1, 0);\n    for (auto [a, b] : e) { g[a].push_back(b); indeg[b]++; }\n    queue<int> q;\n    for (int v = 1; v <= n; v++) if (!indeg[v]) q.push(v);\n    int ile = 0;\n    while (!q.empty()) {\n        int v = q.front(); q.pop(); ile++;\n        for (int u : g[v]) if (--indeg[u] == 0) q.push(u);\n    }\n    return ile == n;            // porządek topologiczny istnieje <=> DAG\n};\ncout << czyDAG(3, {{1, 2}, {2, 3}, {1, 3}}) << ' ' << czyDAG(3, {{1, 2}, {2, 3}, {3, 1}}) << '\\n';   // 1 0"
+    },
+    {
+     "q": [
+      "zależność odwrotna kierunek krawędzi toposort",
+      "a zależy od b krawędź",
+      "w którą stronę krawędź toposort"
+     ],
+     "a": "Ustal regułę: krawędź prowadzi od tego, co musi być **wcześniej**, do tego, co **później**. „a zależy\nod b” / „a wymaga b” → b przed a → krawędź `b → a`. Jeśli pomylisz kierunek, Kahn wypisze odwróconą\nkolejność — wtedy wystarczy odwrócić wynik, ale przy porządku leksykograficznym odwrócenie nie\nzachowuje minimalności.",
+     "code": "vector<vector<int>> g(4);\nint a = 2, b = 3;            // „2 wymaga 3”\ng[b].push_back(a);           // 3 -> 2: najpierw 3, potem 2"
+    }
+   ],
+   "related": [
+    "graph-dag-dp",
+    "graph-cycle-detection",
+    "graph-dfs",
+    "graph-scc",
+    "graph-bfs"
+   ]
+  },
+  {
+   "id": "graph-dag-dp",
+   "title": "Programowanie dynamiczne na DAG-u: najdłuższa ścieżka, liczba ścieżek",
+   "category": "Grafy",
+   "tags": [
+    "dp na grafie",
+    "dag",
+    "najdłuższa ścieżka",
+    "liczba ścieżek",
+    "toposort",
+    "dynamika na grafie",
+    "ścieżka krytyczna",
+    "memoizacja"
+   ],
+   "aliases": [
+    "dp na dag",
+    "dp na grafie",
+    "dynamika na grafie",
+    "najdłuższa ścieżka w dag",
+    "longest path dag",
+    "liczba ścieżek w dag",
+    "ile jest dróg z 1 do n",
+    "count paths dag",
+    "dynamiki na grafach",
+    "toposort i dynamiki"
+   ],
+   "summary": "W grafie skierowanym bez cykli wartości liczy się po porządku topologicznym: każdy wierzchołek po wszystkich poprzednikach. Tak w O(n + m) liczy się najdłuższą/najkrótszą ścieżkę (nawet z ujemnymi wagami), liczbę ścieżek i wiele innych DP.",
+   "complexity": "O(n + m)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Każde DP to w gruncie rzeczy DAG: stany to wierzchołki, a przejścia — krawędzie. Gdy graf jest dany\nwprost i nie ma cykli, wystarczy przetwarzać wierzchołki w **porządku topologicznym** — wtedy w chwili\nliczenia `dp[v]` wszystkie `dp` poprzedników są gotowe.\n\n- **Najdłuższa ścieżka:** `best[v] = max(best[u] + w(u, v))` po krawędziach `u → v`.\n- **Najkrótsza ścieżka** (także z ujemnymi wagami!): to samo z `min`.\n- **Liczba ścieżek z s:** `cnt[s] = 1`, `cnt[v] = Σ cnt[u]` (modulo).\n\nW grafie z cyklami „najdłuższa ścieżka prosta” jest problemem NP-trudnym — DP działa tylko na DAG-u."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „drogi jednokierunkowe i nie da się wrócić” / „zawsze w dół góry” / „i < j” (krawędzie\ntylko do większych numerów = DAG z gotowym porządkiem), „najdłuższa trasa”, „na ile sposobów można\ndojść”, „najwcześniejszy czas zakończenia projektu”. Runda „Toposort i dynamiki na grafach”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Najdłuższa ścieżka i liczba ścieżek 1 → n",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1000000007;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int, int>>> g(n + 1);\n    vector<int> indeg(n + 1, 0);\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        indeg[b]++;\n    }\n    // porządek topologiczny (Kahn)\n    vector<int> order;\n    queue<int> q;\n    for (int v = 1; v <= n; v++) if (indeg[v] == 0) q.push(v);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        order.push_back(v);\n        for (auto [u, w] : g[v]) if (--indeg[u] == 0) q.push(u);\n    }\n\n    vector<long long> best(n + 1, 0);   // najdłuższa ścieżka KOŃCZĄCA się w v (start dowolny)\n    vector<long long> cnt(n + 1, 0);    // liczba ścieżek 1 -> v\n    cnt[1] = 1;\n    for (int v : order)\n        for (auto [u, w] : g[v]) {\n            best[u] = max(best[u], best[v] + w);\n            cnt[u] = (cnt[u] + cnt[v]) % MOD;\n        }\n    cout << *max_element(best.begin(), best.end()) << '\\n';\n    cout << cnt[n] << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersja rekurencyjna z memoizacją",
+     "code": "// Memoizacja: dp[v] = najdłuższa ścieżka (liczba krawędzi) ZACZYNAJĄCA się w v.\nconst int MAXN = 200005;\nvector<int> g[MAXN];\nint dp[MAXN];\nbool done[MAXN];\n\nint longest(int v) {\n    if (done[v]) return dp[v];\n    done[v] = true;\n    dp[v] = 0;\n    for (int u : g[v]) dp[v] = max(dp[v], longest(u) + 1);\n    return dp[v];\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Jeśli w treści krawędzie prowadzą zawsze od mniejszego numeru do większego (`a < b`), porządek\ntopologiczny to po prostu `1, 2, …, n` — nie trzeba Kahna, wystarczy pętla `for (v = 1; v <= n; v++)`."
+    }
+   ],
+   "pitfalls": [
+    "DP w kolejności numerów wierzchołków zamiast topologicznej — działa tylko, gdy krawędzie idą od mniejszych do większych numerów.",
+    "Inicjalizacja: dla „najdłuższej ścieżki z s” nieosiągalne wierzchołki muszą mieć `-INF`, a nie 0 — inaczej ścieżka „zaczyna się” w dowolnym wierzchołku.",
+    "Liczba ścieżek rośnie wykładniczo — licz modulo i trzymaj w `long long` przed `%`.",
+    "Graf z cyklem: Kahn nie przetworzy wszystkich wierzchołków, DP jest wtedy bez sensu. Sprawdź `order.size()`.",
+    "Rekurencyjna memoizacja na łańcuchu 10^6 wierzchołków → przepełnienie stosu. Iteracyjnie po toposorcie.",
+    "Najdłuższa ścieżka w grafie z cyklami (ogólnym) nie ma wielomianowego algorytmu — szukaj DAG-u w zadaniu (np. po ściśnięciu SCC)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "najdłuższa ścieżka w dag",
+      "longest path dag",
+      "najdluzsza sciezka graf skierowany acykliczny",
+      "najdłuższa droga w grafie bez cykli"
+     ],
+     "a": "Przetwarzaj wierzchołki w porządku topologicznym i dla każdej krawędzi `v → u` rób\n`best[u] = max(best[u], best[v] + w)`. Gdy dochodzisz do `u`, wszystkie ścieżki do niego są już\npoliczone. **O(n + m)**. Jeśli ścieżka musi zaczynać się w konkretnym `s`, zainicjalizuj\n`best[s] = 0`, a resztę `-INF` i pomijaj wierzchołki z `-INF`.",
+     "code": "vector<long long> najdluzszaZ(const vector<vector<pair<int,int>>>& g, const vector<int>& order, int s) {\n    const long long NEG = LLONG_MIN / 4;\n    vector<long long> best(g.size(), NEG);\n    best[s] = 0;\n    for (int v : order) {\n        if (best[v] == NEG) continue;          // nieosiągalny z s\n        for (auto [u, w] : g[v]) best[u] = max(best[u], best[v] + w);\n    }\n    return best;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liczba ścieżek w dag",
+      "ile jest dróg z 1 do n",
+      "count paths dag",
+      "na ile sposobów można dojść graf",
+      "liczba sciezek modulo"
+     ],
+     "a": "`cnt[s] = 1`, potem w porządku topologicznym dla każdej krawędzi `v → u`: `cnt[u] += cnt[v]` (mod).\nKażda ścieżka do `u` kończy się jakąś krawędzią `v → u`, więc sumujemy po poprzednikach. **O(n + m)**.\nJeśli krawędzie idą tylko od mniejszych do większych numerów, porządek to `1..n`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1e9 + 7;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;            // gwarantowane a < b\n        g[a].push_back(b);\n    }\n    vector<long long> cnt(n + 1, 0);\n    cnt[1] = 1;\n    for (int v = 1; v <= n; v++)\n        for (int u : g[v]) cnt[u] = (cnt[u] + cnt[v]) % MOD;\n    cout << cnt[n] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dp na grafie",
+      "dynamika na grafie",
+      "dp na dagu",
+      "dynamic programming on dag",
+      "dynamiki na grafach"
+     ],
+     "a": "Schemat: (1) upewnij się, że graf przejść jest acykliczny, (2) znajdź porządek topologiczny,\n(3) licz `dp` w tej kolejności, korzystając z wartości poprzedników (lub w odwrotnej — następników).\nKażde klasyczne DP (plecak, LIS) to DP na niejawnym DAG-u stanów. Całość O(n + m) plus koszt\nprzejścia.",
+     "code": "int n = 4;\nvector<int> val = {0, 5, 1, 7, 2};                       // wartość wierzchołka\nvector<vector<int>> g = {{}, {2, 3}, {4}, {4}, {}};\n// (1) porządek topologiczny\nvector<int> indeg(n + 1, 0), order;\nfor (int v = 1; v <= n; v++) for (int u : g[v]) indeg[u]++;\nqueue<int> q;\nfor (int v = 1; v <= n; v++) if (!indeg[v]) q.push(v);\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    order.push_back(v);\n    for (int u : g[v]) if (--indeg[u] == 0) q.push(u);\n}\n// (2) dp w tej kolejności: max suma wartości na ścieżce kończącej się w v\nvector<long long> dp(n + 1);\nfor (int v = 1; v <= n; v++) dp[v] = val[v];\nfor (int v : order) for (int u : g[v]) dp[u] = max(dp[u], dp[v] + val[u]);\ncout << *max_element(dp.begin() + 1, dp.end()) << '\\n';   // 14 (1 -> 3 -> 4)"
+    },
+    {
+     "q": [
+      "najkrótsza ścieżka w dag z ujemnymi wagami",
+      "dag ujemne wagi",
+      "shortest path dag negative"
+     ],
+     "a": "Na DAG-u ujemne wagi nie przeszkadzają: nie ma cykli, więc nie ma ujemnych cykli. Relaksuj krawędzie\nw porządku topologicznym: `dist[u] = min(dist[u], dist[v] + w)` — **O(n + m)**, szybciej niż\nBellman-Ford (O(n·m)) i poprawnie, w przeciwieństwie do Dijkstry z ujemnymi wagami.",
+     "code": "int n = 3;\nvector<vector<pair<int,int>>> g = {{}, {{2, 5}, {3, 2}}, {{3, -10}}, {}};\nvector<int> order = {1, 2, 3};\nvector<long long> dist(n + 1, LLONG_MAX);\ndist[1] = 0;\nfor (int v : order) {\n    if (dist[v] == LLONG_MAX) continue;\n    for (auto [u, w] : g[v]) dist[u] = min(dist[u], dist[v] + w);\n}\ncout << dist[3] << '\\n';   // -5"
+    },
+    {
+     "q": [
+      "odtworzenie najdłuższej ścieżki",
+      "wypisz najdłuższą ścieżkę dag",
+      "reconstruct longest path"
+     ],
+     "a": "Przy każdej poprawie `best[u]` zapisz `from[u] = v`. Znajdź wierzchołek z największym `best`\ni idź po `from` wstecz aż do wierzchołka bez poprzednika (`from = 0`), potem odwróć. Koszt O(długość).",
+     "code": "int n = 4;\nvector<vector<pair<int,int>>> g = {{}, {{2, 1}, {3, 5}}, {{4, 1}}, {{4, 1}}, {}};\nvector<int> order = {1, 2, 3, 4}, from(n + 1, 0);\nvector<long long> best(n + 1, 0);\nfor (int v : order)\n    for (auto [u, w] : g[v])\n        if (best[v] + w > best[u]) { best[u] = best[v] + w; from[u] = v; }\nint end = max_element(best.begin() + 1, best.end()) - best.begin();\nvector<int> path;\nfor (int v = end; v != 0; v = from[v]) path.push_back(v);\nreverse(path.begin(), path.end());\nfor (int v : path) cout << v << ' ';     // 1 3 4\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "dp na dag rekurencyjnie",
+      "memoizacja na grafie",
+      "dfs z memo dag",
+      "dp dfs memo"
+     ],
+     "a": "Zamiast toposortu możesz liczyć `dp[v]` rekurencyjnie z memoizacją: `dp[v] = max(dp[u] + 1)` po\nnastępnikach `u`. Każdy wierzchołek liczony raz → O(n + m). Wygodne, ale przy głębokich grafach\n(łańcuch 10^5+) grozi przepełnieniem stosu; wtedy wersja iteracyjna po porządku z Kahna.",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint memo[MAXN];                 // -1 = nie policzone\nint dp(int v) {\n    if (memo[v] != -1) return memo[v];\n    int r = 0;\n    for (int u : g[v]) r = max(r, dp(u) + 1);\n    return memo[v] = r;\n}\nvoid init(int n) { for (int i = 0; i <= n; i++) memo[i] = -1; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najdłuższa ścieżka w grafie z cyklami",
+      "longest path np hard",
+      "najdłuższa ścieżka prosta ogólny graf"
+     ],
+     "a": "W dowolnym grafie znalezienie najdłuższej **ścieżki prostej** jest NP-trudne — nie ma szybkiego\nalgorytmu (dla małych `n ≤ 20` można DP po maskach O(2^n·n²)). Jeśli w zadaniu można wierzchołki\nodwiedzać wielokrotnie, a graf ma cykle, ściśnij silnie spójne składowe (SCC) — powstaje DAG, na którym\nrobisz DP (np. „maksymalna suma wartości zebranych na trasie”).",
+     "code": "int n = 4;                                    // małe n: DP po maskach O(2^n · n^2)\nvector<vector<int>> w(n, vector<int>(n, 0));  // 0 = brak krawędzi\nauto add = [&](int a, int b, int c) { w[a][b] = w[b][a] = c; };\nadd(0, 1, 3); add(1, 2, 4); add(2, 0, 5); add(2, 3, 1);\n// dp[mask][v] = najdłuższa ścieżka prosta po wierzchołkach z mask, kończąca się w v\nvector<vector<int>> dp(1 << n, vector<int>(n, -1));\nfor (int v = 0; v < n; v++) dp[1 << v][v] = 0;\nint best = 0;\nfor (int mask = 1; mask < (1 << n); mask++)\n    for (int v = 0; v < n; v++) {\n        if (dp[mask][v] < 0) continue;\n        best = max(best, dp[mask][v]);\n        for (int u = 0; u < n; u++)\n            if (w[v][u] && !(mask >> u & 1))\n                dp[mask | 1 << u][u] = max(dp[mask | 1 << u][u], dp[mask][v] + w[v][u]);\n    }\ncout << best << '\\n';   // 9 (np. 3-2-0-1)"
+    },
+    {
+     "q": [
+      "ścieżka krytyczna",
+      "najwcześniejszy czas zakończenia projektu",
+      "critical path method",
+      "czas wykonania zadań z zależnościami"
+     ],
+     "a": "Każde zadanie `v` trwa `t[v]` i może zacząć się po zakończeniu wszystkich poprzedników.\n`koniec[v] = t[v] + max(koniec[u])` po poprzednikach `u` (0, gdy brak). Liczysz w porządku\ntopologicznym; czas całego projektu = `max koniec[v]`. O(n + m). Zadania na najdłuższej ścieżce\ntworzą ścieżkę krytyczną — opóźnienie któregokolwiek opóźnia projekt.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<long long> t(n + 1), koniec(n + 1, 0);\n    for (int v = 1; v <= n; v++) cin >> t[v];\n    vector<vector<int>> g(n + 1);\n    vector<int> indeg(n + 1, 0);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        indeg[b]++;\n    }\n    queue<int> q;\n    vector<long long> start(n + 1, 0);\n    for (int v = 1; v <= n; v++) if (!indeg[v]) q.push(v);\n    long long wynik = 0;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        koniec[v] = start[v] + t[v];\n        wynik = max(wynik, koniec[v]);\n        for (int u : g[v]) {\n            start[u] = max(start[u], koniec[v]);\n            if (--indeg[u] == 0) q.push(u);\n        }\n    }\n    cout << wynik << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "graph-toposort",
+    "graph-scc",
+    "graph-cycle-detection",
+    "dp-intro",
+    "graph-bellman-ford",
+    "graph-k-shortest"
+   ]
+  },
+  {
+   "id": "graph-dijkstra",
+   "title": "Algorytm Dijkstry — najkrótsze ścieżki z nieujemnymi wagami",
+   "category": "Grafy",
+   "tags": [
+    "dijkstra",
+    "najkrótsza ścieżka",
+    "priority_queue",
+    "kopiec",
+    "graf ważony",
+    "lazy deletion",
+    "long long",
+    "odległości"
+   ],
+   "aliases": [
+    "dijkstra",
+    "dijkstra c++",
+    "algorytm dijkstry",
+    "jak zrobić dijkstrę",
+    "dijkstra priority queue",
+    "najkrótsza ścieżka z wagami",
+    "shortest path weighted",
+    "dijkstra kod",
+    "dijkstra kopiec",
+    "dijsktra",
+    "dikstra",
+    "najkrotsza droga graf wazony"
+   ],
+   "summary": "Dijkstra liczy najkrótsze odległości z jednego źródła w grafie z NIEUJEMNYMI wagami w O(m log n): kopiec zawsze daje wierzchołek o najmniejszej znanej odległości, który jest już ostateczny. Kluczowe: `long long`, kopiec minimalny i pomijanie nieaktualnych wpisów `if (d > dist[v]) continue`.",
+   "complexity": "O((n + m) log n) z priority_queue; O(n²) w wersji tablicowej dla grafów gęstych",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja:** jak BFS, ale „fala” rozchodzi się z prędkością zależną od długości krawędzi. Trzymamy\nkopiec par `(odległość, wierzchołek)`. Zdejmujemy wierzchołek `v` o najmniejszej odległości — skoro\nwszystkie wagi są ≥ 0, żadna inna droga nie może być krótsza (każda inna przechodzi przez wierzchołek\no odległości ≥ `dist[v]`), więc `dist[v]` jest **ostateczne**. Potem **relaksujemy** krawędzie:\n`dist[u] = min(dist[u], dist[v] + w)`.\n\n`priority_queue` w C++ nie umie zmniejszać klucza, więc przy poprawie po prostu wrzucamy nową parę.\nStare pary zostają w kopcu — przy zdjęciu rozpoznajemy je warunkiem `d > dist[v]` i pomijamy\n(*lazy deletion*). Kopiec ma wtedy O(m) elementów, a czas to O(m log m) = O(m log n)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „najkrótsza droga”, „minimalny koszt/czas dojazdu”, krawędzie z długościami/czasami/\nopłatami (wszystkie ≥ 0), `n, m ≤ 10^5..10^6`. Wagi ujemne → Bellman-Ford/SPFA; wszystkie wagi równe →\nBFS; wagi 0/1 → 0-1 BFS. Często w ukryciu: „Dijkstra po stanach” (np. z liczbą użytych biletów)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Dijkstra — pełny program (odległości z 1 + ścieżka do n)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst ll INF = LLONG_MAX / 4;          // zapas, żeby INF + w się nie przepełniło\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int, int>>> g(n + 1);   // (sąsiad, waga)\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});                // nieskierowany\n    }\n\n    vector<ll> dist(n + 1, INF);\n    vector<int> par(n + 1, 0);\n    priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<pair<ll, int>>> pq;   // MIN-kopiec\n    dist[1] = 0;\n    pq.push({0, 1});\n    while (!pq.empty()) {\n        auto [d, v] = pq.top();\n        pq.pop();\n        if (d > dist[v]) continue;             // nieaktualny wpis — pomijamy\n        for (auto [u, w] : g[v]) {\n            if (dist[v] + w < dist[u]) {\n                dist[u] = dist[v] + w;\n                par[u] = v;\n                pq.push({dist[u], u});\n            }\n        }\n    }\n\n    for (int v = 1; v <= n; v++) cout << (dist[v] == INF ? -1 : dist[v]) << ' ';\n    cout << '\\n';\n    if (dist[n] == INF) {\n        cout << \"BRAK\\n\";\n        return 0;\n    }\n    vector<int> path;\n    for (int v = n; v != 0; v = par[v]) path.push_back(v);   // par[1] == 0\n    reverse(path.begin(), path.end());\n    for (int v : path) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Dijkstra jako funkcja do wklejenia",
+     "code": "typedef long long ll;\nconst ll INF = LLONG_MAX / 4;\n\nvector<ll> dijkstra(const vector<vector<pair<int, int>>>& g, int s) {\n    vector<ll> dist(g.size(), INF);\n    priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<>> pq;\n    dist[s] = 0;\n    pq.push({0, s});\n    while (!pq.empty()) {\n        auto [d, v] = pq.top(); pq.pop();\n        if (d > dist[v]) continue;\n        for (auto [u, w] : g[v])\n            if (d + w < dist[u]) {\n                dist[u] = d + w;\n                pq.push({dist[u], u});\n            }\n    }\n    return dist;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Błąd",
+      "Skutek",
+      "Poprawka"
+     ],
+     "rows": [
+      [
+       "`priority_queue<pair<ll,int>>` bez `greater`",
+       "kopiec MAKSYMALNY — zdejmuje najdalsze, TLE/WA",
+       "`greater<>` albo wrzucaj `-d`"
+      ],
+      [
+       "brak `if (d > dist[v]) continue`",
+       "ten sam wierzchołek przetwarzany wiele razy, TLE",
+       "dodaj warunek po `pop`"
+      ],
+      [
+       "`int dist`",
+       "przepełnienie przy sumach > 2·10^9, WA",
+       "`long long`"
+      ],
+      [
+       "`INF = LLONG_MAX`",
+       "`dist[v] + w` przepełnia się",
+       "`LLONG_MAX / 4` lub `1e18`"
+      ],
+      [
+       "para `(wierzchołek, odległość)`",
+       "kopiec sortuje po numerze wierzchołka",
+       "odległość PIERWSZA"
+      ],
+      [
+       "ujemne wagi",
+       "złe wyniki",
+       "Bellman-Ford / SPFA"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Dijkstra **nie działa** z ujemnymi wagami krawędzi — wierzchołek uznany za ostateczny mógłby później\ndostać krótszą drogę przez ujemną krawędź. Nie „naprawiaj” tego usuwaniem `continue` — wtedy w złośliwych\ntestach algorytm robi się wykładniczy."
+    },
+    {
+     "type": "tip",
+     "md": "Zamiast `greater<>` można wrzucać do zwykłego (maksymalnego) kopca `{-dist, v}` i przy zdejmowaniu\nbrać `d = -pq.top().first`. Działa tak samo — wybierz jedną konwencję i trzymaj się jej."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dijkstra(g, s)",
+     "desc": "odległości z s do wszystkich wierzchołków (INF = nieosiągalny)",
+     "complexity": "O(m log n)",
+     "returns": "vector<long long>",
+     "example": "auto d = dijkstra(g, 1); cout << d[n];"
+    },
+    {
+     "sig": "priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>>",
+     "desc": "kopiec minimalny par (odległość, wierzchołek)",
+     "complexity": "push/pop: O(log n), top: O(1)"
+    },
+    {
+     "sig": "if (d > dist[v]) continue;",
+     "desc": "pominięcie nieaktualnego wpisu (lazy deletion)",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Domyślny `priority_queue` to kopiec MAKSYMALNY — bez `greater<>` (albo minusa) Dijkstra jest błędna/wolna.",
+    "Brak `if (d > dist[v]) continue;` → wierzchołki przetwarzane wielokrotnie; na złośliwych testach TLE.",
+    "Odległości w `int`: 10^5 krawędzi × waga 10^9 = 10^14 → `long long` obowiązkowo.",
+    "`INF = LLONG_MAX` i `dist[v] + w` → przepełnienie do liczby ujemnej. Używaj `LLONG_MAX / 4` lub `(ll)1e18`.",
+    "Para musi mieć odległość na PIERWSZYM miejscu, bo kopiec porównuje pary leksykograficznie.",
+    "Graf nieskierowany — krawędź dodana w obie strony. Skierowany — tylko `a → b`.",
+    "Ujemne wagi → Dijkstra daje złe wyniki. Użyj Bellmana-Forda/SPFA (albo potencjałów Johnsona).",
+    "Przekazywanie grafu do funkcji przez wartość (`vector<vector<...>> g`) kopiuje cały graf — używaj `const&`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dijkstra c++",
+      "jak zrobić dijkstrę",
+      "algorytm dijkstry kod",
+      "dijkstra priority queue",
+      "dijkstra implementacja",
+      "dijsktra c++"
+     ],
+     "a": "Trzymaj `dist[]` (start `INF`, `dist[s] = 0`) i kopiec minimalny par `(dist, v)`. Zdejmuj najmniejszą\nparę; jeśli `d > dist[v]`, to stary wpis — pomiń. Inaczej dla każdej krawędzi `(v, u, w)`: gdy\n`dist[v] + w < dist[u]`, popraw `dist[u]` i wrzuć `(dist[u], u)`. Złożoność **O(m log n)**,\nodległości w `long long`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int,int>>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n    const ll INF = 1e18;\n    vector<ll> dist(n + 1, INF);\n    priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>> pq;\n    dist[1] = 0; pq.push({0, 1});\n    while (!pq.empty()) {\n        auto [d, v] = pq.top(); pq.pop();\n        if (d > dist[v]) continue;\n        for (auto [u, w] : g[v])\n            if (d + w < dist[u]) { dist[u] = d + w; pq.push({dist[u], u}); }\n    }\n    cout << (dist[n] == INF ? -1 : dist[n]) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "najkrótsza ścieżka z wagami",
+      "shortest path weighted graph",
+      "najkrotsza droga graf wazony",
+      "minimalny koszt dojazdu graf"
+     ],
+     "a": "Dla grafu z **nieujemnymi** wagami — Dijkstra, O(m log n). Dla wag ujemnych bez ujemnych cykli —\nBellman-Ford O(n·m) albo SPFA. Dla wszystkich par przy `n ≤ ~500` — Floyd-Warshall O(n³). Dla wag\nrównych — BFS, dla 0/1 — 0-1 BFS. W 90% zadań OI z „najkrótszą drogą” i długościami chodzi o Dijkstrę.",
+     "code": "vector<array<long long,3>> e = {{1, 2, 4}, {2, 3, 0}, {1, 3, 7}};   // (a, b, waga)\nbool ujemne = false, zeroJeden = true, rowne = true;\nfor (auto [a, b, w] : e) {\n    if (w < 0) ujemne = true;\n    if (w != 0 && w != 1) zeroJeden = false;\n    if (w != e[0][2]) rowne = false;\n}\nstring alg = ujemne ? \"Bellman-Ford / SPFA\" : rowne ? \"BFS\" : zeroJeden ? \"0-1 BFS\" : \"Dijkstra\";\ncout << alg << '\\n';   // Dijkstra"
+    },
+    {
+     "q": [
+      "if d > dist[v] continue po co",
+      "lazy deletion dijkstra",
+      "dijkstra nieaktualne wpisy w kolejce",
+      "dlaczego continue w dijkstrze",
+      "dijkstra visited"
+     ],
+     "a": "`priority_queue` nie potrafi zmniejszyć klucza istniejącego elementu, więc przy każdej poprawie\n`dist[u]` wrzucamy nową parę, a stara zostaje. Gdy później zdejmiesz starą parę `(d, v)` z `d > dist[v]`,\nwierzchołek był już przetworzony z lepszą odległością — trzeba ją pominąć. Bez tego `v` przetwarza\nswoje krawędzie wielokrotnie i na złośliwych testach czas rośnie z O(m log n) do nawet O(n·m).\nRównoważnie można trzymać `bool done[v]`.",
+     "code": "typedef long long ll;\nvoid przetworz(priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>>& pq,\n               vector<ll>& dist, const vector<vector<pair<int,int>>>& g) {\n    while (!pq.empty()) {\n        auto [d, v] = pq.top(); pq.pop();\n        if (d > dist[v]) continue;      // to stara kopia v — już przetworzony\n        for (auto [u, w] : g[v])\n            if (d + w < dist[u]) { dist[u] = d + w; pq.push({dist[u], u}); }\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dijkstra long long",
+      "overflow dijkstra",
+      "dijkstra int za mały",
+      "dijkstra zle wyniki duze wagi",
+      "dijkstra przepełnienie"
+     ],
+     "a": "Odległość to suma wag po ścieżce: do `(n − 1) · max_w`, np. 10^5 · 10^9 = 10^14 — nie mieści się\nw `int` (max ≈ 2,1·10^9). Trzymaj `dist` i pierwszy element pary w kopcu jako `long long`. INF ustaw\nna `1e18` lub `LLONG_MAX / 4`, żeby `dist[v] + w` nie przepełniło się, gdy `dist[v] == INF`.",
+     "code": "typedef long long ll;\nconst ll INF = (ll)1e18;\nll dist_v = INF;\nint w = 1000000000;\nll suma = dist_v + w;            // OK: 1e18 + 1e9 mieści się w long long\ncout << (suma > INF) << '\\n';    // 1"
+    },
+    {
+     "q": [
+      "priority_queue min heap",
+      "greater pair dijkstra",
+      "kopiec minimalny c++",
+      "priority queue rosnąco",
+      "jak odwrócić priority_queue"
+     ],
+     "a": "`priority_queue<T>` w C++ zwraca **największy** element. Kopiec minimalny:\n`priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<pair<ll,int>>>` (od C++14 wystarczy\n`greater<>`). Alternatywa: wrzucaj `{-dist, v}` do zwykłego kopca. Pary porównują się po pierwszym\nelemencie, potem po drugim — dlatego odległość musi być pierwsza.",
+     "code": "priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;\npq.push({5, 1}); pq.push({2, 7}); pq.push({9, 3});\ncout << pq.top().first << ' ' << pq.top().second << '\\n';   // 2 7\npriority_queue<pair<long long, int>> mx;                    // trik z minusem\nmx.push({-5, 1}); mx.push({-2, 7});\ncout << -mx.top().first << '\\n';                            // 2"
+    },
+    {
+     "q": [
+      "dijkstra ujemne wagi",
+      "czy dijkstra działa z ujemnymi krawędziami",
+      "dijkstra negative weights",
+      "ujemna waga dijkstra"
+     ],
+     "a": "Nie. Dijkstra zakłada, że zdjęty wierzchołek ma ostateczną odległość — przy ujemnej krawędzi późniejsza\ndroga może być krótsza. Przykład: `1→2` (2), `1→3` (3), `3→2` (−2): Dijkstra ustali `dist[2] = 2`,\na poprawnie jest 1. Dla ujemnych wag: Bellman-Ford (O(n·m)), SPFA, a na DAG-u — DP po toposorcie.",
+     "code": "// 1->2 (2), 1->3 (3), 3->2 (-2): poprawnie dist[2] = 1\nvector<vector<pair<int,int>>> g = {{}, {{2, 2}, {3, 3}}, {}, {{2, -2}}};\nvector<long long> d(4, LLONG_MAX / 4);\nvector<bool> done(4, false);\npriority_queue<pair<long long,int>, vector<pair<long long,int>>, greater<>> pq;\nd[1] = 0; pq.push({0, 1});\nwhile (!pq.empty()) {\n    auto [dv, v] = pq.top(); pq.pop();\n    if (done[v]) continue;\n    done[v] = true;                       // „ostateczny” — przy ujemnych wagach to nieprawda\n    for (auto [u, w] : g[v]) if (!done[u] && dv + w < d[u]) { d[u] = dv + w; pq.push({d[u], u}); }\n}\nvector<long long> bf(4, LLONG_MAX / 4);   // Bellman-Ford dla porównania\nbf[1] = 0;\nfor (int it = 0; it < 3; it++)\n    for (int v = 1; v <= 3; v++)\n        for (auto [u, w] : g[v]) if (bf[v] + w < bf[u]) bf[u] = bf[v] + w;\ncout << d[2] << ' ' << bf[2] << '\\n';   // 2 1 — Dijkstra się myli"
+    },
+    {
+     "q": [
+      "dijkstra złożoność",
+      "ile działa dijkstra",
+      "dijkstra o(m log n)",
+      "dijkstra complexity"
+     ],
+     "a": "Z `priority_queue` i lazy deletion: każda krawędź może dodać jeden wpis do kopca → O(m) wpisów,\nkażda operacja O(log m) = O(log n) → **O((n + m) log n)**. Dla `n = m = 10^6` to ok. 0,3–0,5 s.\nWersja tablicowa bez kopca (szukanie minimum liniowo) to O(n² + m) — lepsza dla grafów gęstych\n(`m ≈ n²`).",
+     "code": "int n = 1000, m = 5000;\nmt19937 rng(1);\nvector<vector<pair<int,int>>> g(n + 1);\nfor (int i = 0; i < m; i++) {\n    int a = rng() % n + 1, b = rng() % n + 1, w = rng() % 100;\n    g[a].push_back({b, w});\n    g[b].push_back({a, w});\n}\nvector<long long> d(n + 1, LLONG_MAX / 4);\npriority_queue<pair<long long,int>, vector<pair<long long,int>>, greater<>> pq;\nd[1] = 0; pq.push({0, 1});\nlong long wpisy = 1;\nwhile (!pq.empty()) {\n    auto [dv, v] = pq.top(); pq.pop();\n    if (dv > d[v]) continue;\n    for (auto [u, w] : g[v])\n        if (dv + w < d[u]) { d[u] = dv + w; pq.push({d[u], u}); wpisy++; }\n}\n// każda skierowana krawędź dokłada co najwyżej jeden wpis -> O(m) wpisów, O(m log n) czasu\ncout << (wpisy <= 2LL * m + 1 ? \"wpisów w kopcu <= 2m+1\" : \"?\") << '\\n';"
+    },
+    {
+     "q": [
+      "dijkstra odtworzenie ścieżki",
+      "dijkstra wypisz trasę",
+      "dijkstra path reconstruction",
+      "jak wypisać najkrótszą drogę dijkstra"
+     ],
+     "a": "Przy każdej udanej relaksacji zapisz `par[u] = v`. Po algorytmie idź od celu po `par` aż do źródła\ni odwróć. `par` zawsze wskazuje poprzednika na jakiejś najkrótszej ścieżce, bo ostatnia poprawka\n`dist[u]` pochodzi z ostatecznego `dist[v]`.",
+     "code": "vector<int> sciezka(const vector<int>& par, int s, int t) {\n    vector<int> p;\n    for (int v = t; v != s; v = par[v]) p.push_back(v);\n    p.push_back(s);\n    reverse(p.begin(), p.end());\n    return p;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dijkstra z set",
+      "set vs priority_queue dijkstra",
+      "dijkstra na secie",
+      "dijkstra set erase"
+     ],
+     "a": "Z `set<pair<ll,int>>` można usuwać stary wpis (`s.erase({dist[u], u})`) przed wstawieniem nowego —\nw zbiorze jest wtedy co najwyżej `n` elementów i nie trzeba warunku `d > dist[v]`. Złożoność też\nO(m log n), ale stała jest większa niż przy `priority_queue`. Na OI zwykle wybiera się kopiec.",
+     "code": "typedef long long ll;\nvector<ll> dijkstraSet(const vector<vector<pair<int,int>>>& g, int s) {\n    vector<ll> dist(g.size(), LLONG_MAX);\n    set<pair<ll,int>> st;\n    dist[s] = 0; st.insert({0, s});\n    while (!st.empty()) {\n        auto [d, v] = *st.begin();\n        st.erase(st.begin());\n        for (auto [u, w] : g[v])\n            if (d + w < dist[u]) {\n                if (dist[u] != LLONG_MAX) st.erase({dist[u], u});\n                dist[u] = d + w;\n                st.insert({dist[u], u});\n            }\n    }\n    return dist;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dijkstra o(n^2)",
+      "dijkstra bez kopca",
+      "dijkstra graf gęsty",
+      "dijkstra macierz sąsiedztwa"
+     ],
+     "a": "Gdy graf jest gęsty (`m ≈ n²`, np. macierz `n ≤ 5000`), szybsza jest wersja bez kopca: `n` razy wybierz\nnieprzetworzony wierzchołek o najmniejszym `dist` (liniowo), oznacz go i zrelaksuj jego krawędzie.\n**O(n²)** zamiast O(n² log n).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<long long>> w(n, vector<long long>(n));\n    for (auto& r : w) for (auto& x : r) cin >> x;     // -1 = brak krawędzi\n    const long long INF = 1e18;\n    vector<long long> dist(n, INF);\n    vector<bool> done(n, false);\n    dist[0] = 0;\n    for (int it = 0; it < n; it++) {\n        int v = -1;\n        for (int i = 0; i < n; i++)\n            if (!done[i] && (v == -1 || dist[i] < dist[v])) v = i;\n        if (dist[v] == INF) break;\n        done[v] = true;\n        for (int u = 0; u < n; u++)\n            if (w[v][u] >= 0 && dist[v] + w[v][u] < dist[u]) dist[u] = dist[v] + w[v][u];\n    }\n    cout << dist[n - 1] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dijkstra wiele źródeł",
+      "multi source dijkstra",
+      "odległość do najbliższego szpitala wagi",
+      "dijkstra kilka startów"
+     ],
+     "a": "Wstaw wszystkie źródła do kopca z odległością 0 (`dist[s] = 0` dla każdego) i puść zwykłą Dijkstrę.\nDostaniesz odległość każdego wierzchołka do **najbliższego** źródła w jednym przebiegu, O(m log n).\nTo równoważne dodaniu sztucznego wierzchołka połączonego z każdym źródłem krawędzią 0.",
+     "code": "typedef long long ll;\nvector<ll> multiDijkstra(const vector<vector<pair<int,int>>>& g, const vector<int>& zrodla) {\n    vector<ll> dist(g.size(), LLONG_MAX / 4);\n    priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>> pq;\n    for (int s : zrodla) { dist[s] = 0; pq.push({0, s}); }\n    while (!pq.empty()) {\n        auto [d, v] = pq.top(); pq.pop();\n        if (d > dist[v]) continue;\n        for (auto [u, w] : g[v])\n            if (d + w < dist[u]) { dist[u] = d + w; pq.push({dist[u], u}); }\n    }\n    return dist;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dijkstra do jednego celu",
+      "dijkstra przerwać gdy dojdzie do celu",
+      "dijkstra early exit",
+      "dijkstra tylko z s do t"
+     ],
+     "a": "Gdy interesuje Cię tylko `dist[t]`, możesz przerwać w chwili **zdjęcia** `t` z kopca (nie wcześniej —\nprzy wrzucaniu odległość może jeszcze się poprawić). W najgorszym razie złożoność się nie zmienia,\nale w praktyce bywa szybciej.",
+     "code": "typedef long long ll;\nll doCelu(const vector<vector<pair<int,int>>>& g, int s, int t) {\n    vector<ll> dist(g.size(), LLONG_MAX / 4);\n    priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>> pq;\n    dist[s] = 0; pq.push({0, s});\n    while (!pq.empty()) {\n        auto [d, v] = pq.top(); pq.pop();\n        if (d > dist[v]) continue;\n        if (v == t) return d;              // zdjęty = ostateczny\n        for (auto [u, w] : g[v])\n            if (d + w < dist[u]) { dist[u] = d + w; pq.push({dist[u], u}); }\n    }\n    return -1;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dijkstra tle",
+      "dijkstra za wolna",
+      "dlaczego dijkstra przekracza czas",
+      "dijkstra time limit"
+     ],
+     "a": "Najczęstsze przyczyny: (1) kopiec maksymalny zamiast minimalnego, (2) brak `if (d > dist[v]) continue`,\n(3) graf przekazywany przez wartość do funkcji (kopia przy każdym wywołaniu), (4) `endl` i `cin` bez\n`sync_with_stdio(false)` przy dużym wejściu, (5) puszczanie Dijkstry osobno dla każdego zapytania,\ngdy wystarczy jedna (np. od celu na grafie odwróconym albo wiele źródeł naraz).",
+     "code": "typedef long long ll;\nll dobrze(const vector<vector<pair<int,int>>>& g, int s, int t) {   // (3) const& — bez kopiowania grafu\n    vector<ll> d(g.size(), (ll)1e18);\n    priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>> pq;  // (1) kopiec MINIMALNY\n    d[s] = 0;\n    pq.push({0, s});\n    while (!pq.empty()) {\n        auto [dv, v] = pq.top(); pq.pop();\n        if (dv > d[v]) continue;                                      // (2) pomijanie starych wpisów\n        if (v == t) return dv;\n        for (auto [u, w] : g[v])\n            if (dv + w < d[u]) { d[u] = dv + w; pq.push({d[u], u}); }\n    }\n    return -1;\n}\n// (4) w programie: ios::sync_with_stdio(false); cin.tie(nullptr); oraz '\\n' zamiast endl\n// (5) jedna Dijkstra od celu/z wielu źródeł zamiast osobnej dla każdego zapytania",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dijkstra na siatce",
+      "dijkstra grid",
+      "plansza z kosztami pól najtańsza droga",
+      "dijkstra plansza"
+     ],
+     "a": "Każde pole to wierzchołek, krawędź do sąsiedniego pola ma wagę = koszt wejścia na to pole. Dijkstra po\npolach z kopcem trójek `(dist, x, y)` albo `(dist, x*m+y)`. O(n·m·log(n·m)). Jeśli koszty to tylko 0/1,\nszybciej będzie 0-1 BFS.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> c(n, vector<int>(m));\n    for (auto& r : c) for (auto& x : r) cin >> x;\n    int dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\n    vector<long long> dist(n * m, LLONG_MAX);\n    priority_queue<pair<long long,int>, vector<pair<long long,int>>, greater<>> pq;\n    dist[0] = c[0][0]; pq.push({dist[0], 0});\n    while (!pq.empty()) {\n        auto [d, id] = pq.top(); pq.pop();\n        if (d > dist[id]) continue;\n        int x = id / m, y = id % m;\n        for (int k = 0; k < 4; k++) {\n            int nx = x + dx[k], ny = y + dy[k];\n            if (nx < 0 || ny < 0 || nx >= n || ny >= m) continue;\n            int nid = nx * m + ny;\n            if (d + c[nx][ny] < dist[nid]) { dist[nid] = d + c[nx][ny]; pq.push({dist[nid], nid}); }\n        }\n    }\n    cout << dist[n * m - 1] << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "graph-bfs",
+    "graph-01-bfs",
+    "graph-dijkstra-states",
+    "graph-bellman-ford",
+    "graph-spfa",
+    "graph-floyd-warshall",
+    "graph-mst-prim",
+    "ds-lazy-deletion-heap",
+    "graph-k-shortest",
+    "graph-multi-source-bfs",
+    "oi-py-collections",
+    "stl-ref-adaptors-all"
+   ]
+  },
+  {
+   "id": "graph-dijkstra-states",
+   "title": "Dijkstra na stanach (graf warstwowy): kupony, darmowe krawędzie, paliwo",
+   "category": "Grafy",
+   "tags": [
+    "dijkstra",
+    "graf stanów",
+    "graf warstwowy",
+    "kupony",
+    "darmowe krawędzie",
+    "dist[v][k]",
+    "druga najkrótsza ścieżka",
+    "stan"
+   ],
+   "aliases": [
+    "dijkstra na stanach",
+    "dijkstra z kuponami",
+    "graf warstwowy",
+    "dijkstra stany",
+    "layered graph",
+    "k darmowych krawędzi",
+    "dijkstra dist[v][k]",
+    "dijkstra z biletami",
+    "druga najkrótsza ścieżka",
+    "dijkstra z dodatkowym parametrem"
+   ],
+   "summary": "Gdy oprócz wierzchołka liczy się jeszcze coś (ile kuponów zużyto, ile paliwa, parzystość), stanem jest para `(v, k)`, a Dijkstra działa na grafie `n·(K+1)` stanów. Klasyka: „możesz k razy przejechać drogą za darmo”.",
+   "complexity": "O(n·K + m·K) · log(n·K) dla K+1 warstw",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "Zwykła Dijkstra pamięta tylko `dist[v]`. Jeśli przyszłe ruchy zależą od dodatkowego parametru (liczba\nużytych kuponów, stan baku, czy już użyto teleportu), trzeba go dołożyć do stanu: `dist[v][j]` =\nnajmniejszy koszt dotarcia do `v`, mając użyte `j` kuponów. Wyobraź sobie `K + 1` kopii grafu\n(„warstw”); zwykła krawędź działa wewnątrz warstwy, a użycie kuponu przenosi do warstwy `j + 1`\nz kosztem 0 (lub zmniejszonym).\n\nOdpowiedź to zwykle `min_j dist[t][j]` (bo nie trzeba zużyć wszystkich kuponów)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „co najwyżej k razy możesz…”, „bilet ulgowy na jedną podróż”, „k darmowych przejazdów”,\n„bak o pojemności C, tankowanie w miastach”, „druga najkrótsza droga”, „liczba przesiadek ≤ k”.\nParametr musi być mały (K ≤ ~20, pojemność ≤ ~100), bo mnoży liczbę stanów."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Dijkstra z k darmowymi krawędziami — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst ll INF = LLONG_MAX / 4;\n\n// n miast, m dróg (a, b, w), co najwyżej k dróg można przejechać za darmo. Koszt 1 -> n.\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m, k;\n    cin >> n >> m >> k;\n    vector<vector<pair<int, int>>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n    vector<vector<ll>> dist(n + 1, vector<ll>(k + 1, INF));\n    // stan w kopcu: (koszt, wierzchołek, użyte kupony)\n    priority_queue<tuple<ll, int, int>, vector<tuple<ll, int, int>>, greater<>> pq;\n    dist[1][0] = 0;\n    pq.push({0, 1, 0});\n    while (!pq.empty()) {\n        auto [d, v, j] = pq.top();\n        pq.pop();\n        if (d > dist[v][j]) continue;\n        for (auto [u, w] : g[v]) {\n            if (d + w < dist[u][j]) {                 // zwykły przejazd\n                dist[u][j] = d + w;\n                pq.push({dist[u][j], u, j});\n            }\n            if (j < k && d < dist[u][j + 1]) {        // przejazd za darmo (kupon)\n                dist[u][j + 1] = d;\n                pq.push({d, u, j + 1});\n            }\n        }\n    }\n    ll ans = *min_element(dist[n].begin(), dist[n].end());\n    cout << (ans == INF ? -1 : ans) << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Zamiast `dist[v][j]` można zakodować stan jako jeden numer `id = j * (n + 1) + v` i użyć zwykłej\nDijkstry na grafie z `(K + 1)(n + 1)` wierzchołkami. Kod ten sam, tylko jawnie zbudowany graf\nwarstwowy — wygodne, gdy masz gotową funkcję `dijkstra(g, s)`."
+    },
+    {
+     "type": "warn",
+     "md": "Pamięć: `dist` ma `n·(K+1)` elementów, a kopiec do `m·(K+1)` wpisów. Dla `n = 10^5`, `K = 20` to 2·10^6\nstanów — OK; dla `K = 1000` już nie. Sprawdź limity przed implementacją."
+    }
+   ],
+   "pitfalls": [
+    "Odpowiedź to minimum po WSZYSTKICH warstwach `j ≤ k`, nie tylko `dist[n][k]` (kuponu nie trzeba zużyć).",
+    "Warunek lazy deletion musi porównywać z `dist[v][j]` dla tej samej warstwy.",
+    "Przejście kuponem tylko gdy `j < k` — inaczej wyjście poza tablicę.",
+    "`tuple` w kopcu porównuje elementy po kolei — koszt musi być pierwszy.",
+    "Za duży parametr stanu (np. pojemność baku 10^9) — wtedy trzeba innej obserwacji, nie warstw."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dijkstra na stanach",
+      "dijkstra z kuponami",
+      "graf warstwowy dijkstra",
+      "layered graph dijkstra",
+      "dijkstra stan v k"
+     ],
+     "a": "Stan = `(wierzchołek, ile kuponów użyto)`. `dist[v][j]` liczysz Dijkstrą: z `(v, j)` krawędź `(v, u, w)`\ndaje `(u, j)` z kosztem `w` oraz — jeśli `j < k` — `(u, j + 1)` z kosztem 0 (albo `w/2`, zależnie od\nzadania). Stanów `n(k+1)`, przejść `2m(k+1)` → **O(m·k·log(n·k))**. Wynik: `min_j dist[t][j]`.",
+     "code": "typedef long long ll;\nll zKuponami(const vector<vector<pair<int,int>>>& g, int n, int k, int s, int t) {\n    const ll INF = LLONG_MAX / 4;\n    vector<vector<ll>> dist(n + 1, vector<ll>(k + 1, INF));\n    priority_queue<tuple<ll,int,int>, vector<tuple<ll,int,int>>, greater<>> pq;\n    dist[s][0] = 0; pq.push({0, s, 0});\n    while (!pq.empty()) {\n        auto [d, v, j] = pq.top(); pq.pop();\n        if (d > dist[v][j]) continue;\n        for (auto [u, w] : g[v]) {\n            if (d + w < dist[u][j]) { dist[u][j] = d + w; pq.push({dist[u][j], u, j}); }\n            if (j < k && d + w / 2 < dist[u][j + 1]) {        // kupon: połowa ceny\n                dist[u][j + 1] = d + w / 2;\n                pq.push({dist[u][j + 1], u, j + 1});\n            }\n        }\n    }\n    return *min_element(dist[t].begin(), dist[t].end());\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "k darmowych krawędzi",
+      "k darmowych przejazdów",
+      "możesz k razy nie płacić za drogę",
+      "free edges k times shortest path"
+     ],
+     "a": "Klasyczny graf warstwowy: `K + 1` kopii grafu, krawędź „darmowa” prowadzi z warstwy `j` do `j + 1`\nz kosztem 0. Dijkstra po stanach `(v, j)`. Dlaczego nie zachłannie „zrób darmowe k najdroższych\nkrawędzi najkrótszej ścieżki”? Bo optymalna ścieżka z kuponami może być zupełnie inna niż najkrótsza\nbez nich (np. jedna bardzo droga krawędź, która staje się darmowa).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m, k;\n    cin >> n >> m >> k;\n    int N = n * (k + 1);\n    vector<vector<pair<int,int>>> g(N + 1);     // jawny graf warstwowy: id = j*n + v\n    auto id = [&](int v, int j) { return j * n + v; };\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        for (int j = 0; j <= k; j++) {\n            g[id(a, j)].push_back({id(b, j), w});\n            g[id(b, j)].push_back({id(a, j), w});\n            if (j < k) {\n                g[id(a, j)].push_back({id(b, j + 1), 0});\n                g[id(b, j)].push_back({id(a, j + 1), 0});\n            }\n        }\n    }\n    vector<long long> dist(N + 1, LLONG_MAX);\n    priority_queue<pair<long long,int>, vector<pair<long long,int>>, greater<>> pq;\n    dist[id(1, 0)] = 0; pq.push({0, id(1, 0)});\n    while (!pq.empty()) {\n        auto [d, v] = pq.top(); pq.pop();\n        if (d > dist[v]) continue;\n        for (auto [u, w] : g[v]) if (d + w < dist[u]) { dist[u] = d + w; pq.push({dist[u], u}); }\n    }\n    long long ans = LLONG_MAX;\n    for (int j = 0; j <= k; j++) ans = min(ans, dist[id(n, j)]);\n    cout << ans << '\\n';\n}"
+    },
+    {
+     "q": [
+      "druga najkrótsza ścieżka",
+      "second shortest path",
+      "druga najkrotsza droga dijkstra",
+      "ścieżka ściśle dłuższa od najkrótszej"
+     ],
+     "a": "Trzymaj dwie odległości: `d1[v]` (najkrótsza) i `d2[v]` (druga, ściśle większa). Zdejmując `(d, v)`,\npomiń, jeśli `d > d2[v]`. Dla krawędzi: nowa wartość `nd = d + w`; jeśli `nd < d1[u]` → przesuń\n`d1` do `d2` i ustaw `d1 = nd`; inaczej jeśli `d1[u] < nd < d2[u]` → `d2 = nd`. Każdy wierzchołek\nmoże wejść do kopca ≤ 2 razy „aktywnie” → O(m log n).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int,int>>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n    const ll INF = LLONG_MAX / 4;\n    vector<ll> d1(n + 1, INF), d2(n + 1, INF);\n    priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>> pq;\n    d1[1] = 0; pq.push({0, 1});\n    while (!pq.empty()) {\n        auto [d, v] = pq.top(); pq.pop();\n        if (d > d2[v]) continue;\n        for (auto [u, w] : g[v]) {\n            ll nd = d + w;\n            if (nd < d1[u]) { swap(d1[u], nd); pq.push({d1[u], u}); }\n            if (d1[u] < nd && nd < d2[u]) { d2[u] = nd; pq.push({d2[u], u}); }\n        }\n    }\n    cout << d1[n] << ' ' << d2[n] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dijkstra z paliwem",
+      "bak paliwa tankowanie najtaniej",
+      "full tank problem",
+      "stan paliwo dijkstra"
+     ],
+     "a": "Stan = `(miasto, ile paliwa w baku)`. Z `(v, f)`: dotankuj jedną jednostkę → `(v, f + 1)` z kosztem ceny\nw `v` (jeśli `f < C`), albo przejedź drogą długości `w` → `(u, f − w)` za darmo (jeśli `f ≥ w`).\nStanów `n·(C+1)`. Tankowanie po jednej jednostce sprawia, że przejść z każdego stanu jest mało.",
+     "code": "typedef long long ll;\nll tankowanie(const vector<vector<pair<int,int>>>& g, const vector<int>& cena, int C, int s, int t) {\n    int n = g.size();\n    vector<vector<ll>> dist(n, vector<ll>(C + 1, LLONG_MAX));\n    priority_queue<tuple<ll,int,int>, vector<tuple<ll,int,int>>, greater<>> pq;\n    dist[s][0] = 0; pq.push({0, s, 0});\n    while (!pq.empty()) {\n        auto [d, v, f] = pq.top(); pq.pop();\n        if (d > dist[v][f]) continue;\n        if (v == t) return d;\n        if (f < C && d + cena[v] < dist[v][f + 1]) {\n            dist[v][f + 1] = d + cena[v];\n            pq.push({dist[v][f + 1], v, f + 1});\n        }\n        for (auto [u, w] : g[v])\n            if (f >= w && d < dist[u][f - w]) { dist[u][f - w] = d; pq.push({d, u, f - w}); }\n    }\n    return -1;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dijkstra z parzystością",
+      "najkrótsza ścieżka o parzystej liczbie krawędzi",
+      "stan parzystość dijkstra"
+     ],
+     "a": "Dodaj do stanu parzystość liczby przebytych krawędzi: `dist[v][p]`, `p ∈ {0, 1}`. Krawędź z `(v, p)`\nprowadzi do `(u, p ^ 1)`. Dwa razy więcej stanów, ta sama złożoność O(m log n). Analogicznie dla\nreszty modulo `k` (stan `(v, r)`, `k` warstw).",
+     "code": "typedef long long ll;\nll parzysta(const vector<vector<pair<int,int>>>& g, int s, int t) {\n    int n = g.size();\n    vector<array<ll, 2>> dist(n, {LLONG_MAX, LLONG_MAX});\n    priority_queue<tuple<ll,int,int>, vector<tuple<ll,int,int>>, greater<>> pq;\n    dist[s][0] = 0; pq.push({0, s, 0});\n    while (!pq.empty()) {\n        auto [d, v, p] = pq.top(); pq.pop();\n        if (d > dist[v][p]) continue;\n        for (auto [u, w] : g[v])\n            if (d + w < dist[u][p ^ 1]) { dist[u][p ^ 1] = d + w; pq.push({dist[u][p ^ 1], u, p ^ 1}); }\n    }\n    return dist[t][0];          // ścieżka o parzystej liczbie krawędzi\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dist[v][k] pamięć",
+      "ile pamięci graf warstwowy",
+      "za dużo stanów dijkstra"
+     ],
+     "a": "Stanów jest `n·(K+1)`, a kopiec może mieć do `m·(K+1)` wpisów po 16 B (para `ll` + `int`) lub 24 B\n(`tuple`). Dla `n = m = 2·10^5`, `K = 10` to ~2·10^6 stanów i do ~50 MB w kopcu — na granicy. Trik:\nkodować `(v, j)` w jednym `int` (`j * n + v`) i trzymać w kopcu `pair<ll,int>`; `dist` jako jeden\npłaski `vector<ll>`.",
+     "code": "int n = 5, K = 3;\nvector<long long> dist((long long)n * (K + 1), LLONG_MAX);\nauto id = [&](int v, int j) { return j * n + v; };      // v z 0..n-1\ndist[id(2, 1)] = 7;\nint kod = id(2, 1);\ncout << kod % n << ' ' << kod / n << '\\n';               // 2 1"
+    },
+    {
+     "q": [
+      "najkrótsza ścieżka z co najwyżej k krawędziami",
+      "limit liczby przesiadek najtańszy lot",
+      "cheapest flights within k stops"
+     ],
+     "a": "Ograniczenie liczby krawędzi to też stan: `dist[v][j]` dla `j ≤ K` krawędzi. Prościej jednak użyć\nBellmana-Forda z `K` iteracjami na **kopii** tablicy z poprzedniej iteracji — O(K·m). Dijkstra po\nstanach `(v, j)` też działa, ale przy dużym `K` ma więcej stanów.",
+     "code": "int n = 3, K = 1;\nvector<array<int,3>> e = {{0, 1, 100}, {1, 2, 100}, {0, 2, 500}};\nvector<long long> d(n, LLONG_MAX / 4);\nd[0] = 0;\nfor (int it = 0; it <= K; it++) {          // co najwyżej K+1 krawędzi (K przesiadek)\n    vector<long long> nd = d;\n    for (auto [a, b, w] : e) nd[b] = min(nd[b], d[a] + w);\n    d = nd;\n}\ncout << d[2] << '\\n';   // 200"
+    }
+   ],
+   "related": [
+    "graph-dijkstra",
+    "graph-state-bfs",
+    "graph-bellman-ford",
+    "graph-01-bfs",
+    "graph-k-shortest"
+   ]
+  },
+  {
+   "id": "graph-bellman-ford",
+   "title": "Algorytm Bellmana-Forda — ujemne wagi i ujemne cykle",
+   "category": "Grafy",
+   "tags": [
+    "bellman-ford",
+    "bellman ford",
+    "ujemne wagi",
+    "ujemny cykl",
+    "najkrótsza ścieżka",
+    "relaksacja",
+    "lista krawędzi",
+    "nierówności różnicowe"
+   ],
+   "aliases": [
+    "bellman ford",
+    "bellman-ford",
+    "algorytm bellmana forda",
+    "bellman ford c++",
+    "ujemne wagi",
+    "ujemny cykl",
+    "negative cycle",
+    "wykrywanie ujemnego cyklu",
+    "najkrótsza ścieżka ujemne krawędzie",
+    "belman ford"
+   ],
+   "summary": "Bellman-Ford n−1 razy relaksuje wszystkie krawędzie i liczy najkrótsze ścieżki z jednego źródła nawet przy ujemnych wagach, w O(n·m). Jeśli w n-tej rundzie coś się jeszcze poprawia — istnieje ujemny cykl osiągalny ze źródła.",
+   "complexity": "O(n·m) czasu, O(n + m) pamięci",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Idea:** najkrótsza ścieżka (bez ujemnych cykli) ma co najwyżej `n − 1` krawędzi. Po `i` rundach\nrelaksacji **wszystkich** krawędzi (`dist[b] = min(dist[b], dist[a] + w)`) znamy poprawne odległości\ndla ścieżek z ≤ `i` krawędziami. Więc `n − 1` rund wystarcza. Jeśli w rundzie `n` jakaś odległość\ndalej spada, to istnieje cykl o ujemnej sumie wag — można by kręcić się po nim w nieskończoność.\n\nWolniejszy od Dijkstry (O(n·m) vs O(m log n)), ale działa z ujemnymi wagami i wykrywa ujemne cykle.\nPrzy `n·m ≤ ~10^8` mieści się w czasie."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** ujemne wagi („zysk”, „zwrot pieniędzy”, „zmiana temperatury”), „czy da się zarabiać\nw nieskończoność” (ujemny cykl przy kosztach / dodatni przy zyskach — zaneguj wagi), „arbitraż walut”\n(logarytmy kursów), układ nierówności `x_b − x_a ≤ c`, „co najwyżej k krawędzi”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Bellman-Ford — pełny program (źródło 1)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst ll INF = LLONG_MAX / 4;\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<array<ll, 3>> e(m);            // krawędź skierowana a -> b o wadze w\n    for (auto& [a, b, w] : e) cin >> a >> b >> w;\n\n    vector<ll> dist(n + 1, INF);\n    dist[1] = 0;\n    for (int it = 0; it < n - 1; it++) {\n        bool zmiana = false;\n        for (auto [a, b, w] : e)\n            if (dist[a] != INF && dist[a] + w < dist[b]) {\n                dist[b] = dist[a] + w;\n                zmiana = true;\n            }\n        if (!zmiana) break;                // wcześniejsze zakończenie\n    }\n    for (auto [a, b, w] : e)               // runda kontrolna\n        if (dist[a] != INF && dist[a] + w < dist[b]) {\n            cout << \"UJEMNY CYKL\\n\";\n            return 0;\n        }\n    for (int v = 1; v <= n; v++) {\n        if (dist[v] == INF) cout << \"INF \";\n        else cout << dist[v] << ' ';\n    }\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Znajdowanie i wypisywanie ujemnego cyklu",
+     "code": "// Odtworzenie ujemnego cyklu: wierzchołek poprawiony w n-tej rundzie + n kroków wstecz po par.\ntypedef long long ll;\nvector<int> ujemnyCykl(int n, const vector<array<ll, 3>>& e) {\n    vector<ll> dist(n + 1, 0);              // 0 wszędzie = wirtualne źródło -> cykl gdziekolwiek\n    vector<int> par(n + 1, 0);\n    int x = -1;\n    for (int it = 0; it < n; it++) {\n        x = -1;\n        for (auto [a, b, w] : e)\n            if (dist[a] + w < dist[b]) { dist[b] = dist[a] + w; par[b] = a; x = b; }\n    }\n    if (x == -1) return {};                 // brak ujemnego cyklu\n    for (int i = 0; i < n; i++) x = par[x]; // na pewno jesteśmy na cyklu\n    vector<int> cyc;\n    for (int v = x;; v = par[v]) {\n        cyc.push_back(v);\n        if (v == x && cyc.size() > 1) break;\n    }\n    reverse(cyc.begin(), cyc.end());\n    return cyc;                             // x, ..., x\n}",
+     "scope": "global"
+    },
+    {
+     "type": "warn",
+     "md": "Warunek `dist[a] != INF` jest konieczny: bez niego `INF + (−5)` „poprawia” nieosiągalne wierzchołki\ni wynik wychodzi bez sensu (a z `INF = LLONG_MAX` dodanie dodatniej wagi przepełnia typ)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "relaksacja: if (dist[a] + w < dist[b]) dist[b] = dist[a] + w",
+     "desc": "podstawowa operacja; n−1 rund po wszystkich krawędziach",
+     "complexity": "O(m) na rundę"
+    },
+    {
+     "sig": "ujemnyCykl(n, e)",
+     "desc": "zwraca wierzchołki ujemnego cyklu (pusty wektor, gdy brak)",
+     "complexity": "O(n·m)",
+     "returns": "vector<int>"
+    }
+   ],
+   "pitfalls": [
+    "Brak sprawdzenia `dist[a] != INF` → nieosiągalne wierzchołki dostają „odległości” i fałszywe ujemne cykle.",
+    "Wykrywanie ujemnego cyklu tylko ze źródła wykrywa cykle OSIĄGALNE ze źródła. Cykl gdziekolwiek: zacznij z `dist = 0` dla wszystkich.",
+    "W grafie nieskierowanym krawędź o ujemnej wadze sama w sobie jest ujemnym cyklem (a→b→a). Bellman-Ford na grafach nieskierowanych z ujemnymi wagami zwykle nie ma sensu.",
+    "O(n·m) — dla `n = m = 10^5` to 10^10 operacji, za wolno. Sprawdź limity; może wystarczy Dijkstra (brak ujemnych wag) albo DP na DAG-u.",
+    "Wierzchołki „za” ujemnym cyklem mają odległość −∞ — jeśli zadanie pyta o konkretne `dist[t]`, trzeba sprawdzić, czy `t` jest osiągalny z cyklu."
+   ],
+   "qa": [
+    {
+     "q": [
+      "bellman ford c++",
+      "bellman-ford kod",
+      "algorytm bellmana forda",
+      "jak działa bellman ford",
+      "belman ford"
+     ],
+     "a": "Trzymaj listę krawędzi. `dist[s] = 0`, reszta INF. Powtórz `n − 1` razy: dla każdej krawędzi `(a, b, w)`\nz `dist[a] != INF` zrób `dist[b] = min(dist[b], dist[a] + w)`. Działa, bo najkrótsza ścieżka ma ≤ n−1\nkrawędzi, a po rundzie `i` ścieżki o `i` krawędziach są już policzone. **O(n·m)**.",
+     "code": "typedef long long ll;\nvector<ll> bellmanFord(int n, const vector<array<ll,3>>& e, int s) {\n    const ll INF = LLONG_MAX / 4;\n    vector<ll> dist(n + 1, INF);\n    dist[s] = 0;\n    for (int it = 0; it < n - 1; it++)\n        for (auto [a, b, w] : e)\n            if (dist[a] != INF && dist[a] + w < dist[b]) dist[b] = dist[a] + w;\n    return dist;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ujemne wagi najkrótsza ścieżka",
+      "negative weights shortest path",
+      "najkrotsza sciezka ujemne krawedzie",
+      "co gdy wagi są ujemne"
+     ],
+     "a": "Dijkstra nie działa z ujemnymi wagami. Opcje: **Bellman-Ford** O(n·m) (zawsze poprawny, wykrywa ujemne\ncykle), **SPFA** (zwykle szybszy, pesymistycznie też O(n·m)), na **DAG-u** — DP po porządku\ntopologicznym O(n + m). Dla wszystkich par przy małym `n` — Floyd-Warshall O(n³), który też obsługuje\nujemne wagi.",
+     "code": "int n = 4;\nvector<array<long long,3>> e = {{1, 2, 5}, {1, 3, 2}, {3, 2, -4}, {2, 4, 1}};   // skierowane\nconst long long INF = LLONG_MAX / 4;\nvector<long long> d(n + 1, INF);\nd[1] = 0;\nfor (int it = 0; it < n - 1; it++)\n    for (auto [a, b, w] : e)\n        if (d[a] != INF && d[a] + w < d[b]) d[b] = d[a] + w;\ncout << d[2] << ' ' << d[4] << '\\n';   // -2 -1"
+    },
+    {
+     "q": [
+      "wykrywanie ujemnego cyklu",
+      "negative cycle detection",
+      "czy jest ujemny cykl",
+      "ujemny cykl bellman ford"
+     ],
+     "a": "Po `n − 1` rundach zrób jeszcze jedną. Jeśli jakakolwiek krawędź da się zrelaksować, istnieje ujemny\ncykl (osiągalny ze źródła). Dowód: bez ujemnych cykli odległości są już ostateczne po `n − 1` rundach.\nŻeby wykryć ujemny cykl w dowolnym miejscu grafu, zacznij od `dist[v] = 0` dla wszystkich `v`\n(jak z wirtualnego źródła połączonego krawędziami 0 z każdym wierzchołkiem).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<array<long long,3>> e(m);\n    for (auto& [a, b, w] : e) cin >> a >> b >> w;\n    vector<long long> d(n + 1, 0);              // wirtualne źródło\n    bool cykl = false;\n    for (int it = 0; it < n; it++) {\n        cykl = false;\n        for (auto [a, b, w] : e)\n            if (d[a] + w < d[b]) { d[b] = d[a] + w; cykl = true; }\n    }\n    cout << (cykl ? \"TAK\" : \"NIE\") << '\\n';     // zmiana w n-tej rundzie => ujemny cykl\n}"
+    },
+    {
+     "q": [
+      "wypisz ujemny cykl",
+      "odtworzenie ujemnego cyklu",
+      "print negative cycle"
+     ],
+     "a": "Zapamiętuj `par[b] = a` przy relaksacji. Weź wierzchołek `x` poprawiony w `n`-tej rundzie i cofnij się\n`n` razy po `par` — po tylu krokach na pewno jesteś na cyklu (mógł być „za” nim). Potem idź po `par`,\naż wrócisz do tego samego wierzchołka, i odwróć listę. O(n·m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<array<long long,3>> e(m);\n    for (auto& [a, b, w] : e) cin >> a >> b >> w;\n    vector<long long> d(n + 1, 0);\n    vector<int> par(n + 1, 0);\n    int x = -1;\n    for (int it = 0; it < n; it++) {\n        x = -1;\n        for (auto [a, b, w] : e)\n            if (d[a] + w < d[b]) { d[b] = d[a] + w; par[b] = a; x = b; }\n    }\n    if (x == -1) { cout << \"BRAK\\n\"; return 0; }\n    for (int i = 0; i < n; i++) x = par[x];\n    vector<int> c = {x};\n    for (int v = par[x]; v != x; v = par[v]) c.push_back(v);\n    c.push_back(x);\n    reverse(c.begin(), c.end());\n    for (int v : c) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "bellman ford złożoność",
+      "ile działa bellman ford",
+      "bellman ford o(nm)",
+      "bellman ford za wolny"
+     ],
+     "a": "`n − 1` rund po `m` krawędzi → **O(n·m)**. Przy `n = 2000`, `m = 5000` to 10^7 — szybko; przy\n`n = m = 10^5` to 10^10 — za wolno. Optymalizacja: przerwij, gdy runda nic nie zmieniła (w praktyce\nzwykle dużo szybciej, pesymistycznie bez zmian). Jeśli wag ujemnych nie ma — użyj Dijkstry.",
+     "code": "int n = 5;\nvector<array<long long,3>> e = {{4, 5, 1}, {3, 4, 1}, {2, 3, 1}, {1, 2, 1}};   // złośliwa kolejność\nconst long long INF = LLONG_MAX / 4;\nvector<long long> d(n + 1, INF);\nd[1] = 0;\nint rundy = 0;\nfor (int it = 0; it < n - 1; it++) {\n    rundy++;\n    bool zmiana = false;\n    for (auto [a, b, w] : e)\n        if (d[a] != INF && d[a] + w < d[b]) { d[b] = d[a] + w; zmiana = true; }\n    if (!zmiana) break;                       // wcześniejsze zakończenie\n}\ncout << rundy << \" rundy po \" << e.size() << \" krawędzie, d[5] = \" << d[5] << '\\n';\n// tu potrzeba aż n-1 = 4 rund: pesymistycznie O(n·m)"
+    },
+    {
+     "q": [
+      "najkrótsza ścieżka z co najwyżej k krawędziami",
+      "bellman ford k iteracji",
+      "at most k edges shortest path",
+      "maksymalnie k przesiadek"
+     ],
+     "a": "Zrób `k` rund Bellmana-Forda, ale w każdej rundzie licz nowe wartości z **kopii** tablicy z poprzedniej\nrundy (`nd[b] = min(nd[b], d[a] + w)`), żeby jedna runda dodawała co najwyżej jedną krawędź. Bez kopii\nw jednej rundzie mogłaby „przejść” cała ścieżka. O(k·m).",
+     "code": "int n = 4, k = 2;\nvector<array<int,3>> e = {{1, 2, 1}, {2, 3, 1}, {3, 4, 1}, {1, 4, 10}};\nconst long long INF = LLONG_MAX / 4;\nvector<long long> d(n + 1, INF);\nd[1] = 0;\nfor (int it = 0; it < k; it++) {\n    vector<long long> nd = d;\n    for (auto [a, b, w] : e) if (d[a] != INF) nd[b] = min(nd[b], d[a] + w);\n    d = nd;\n}\ncout << d[4] << '\\n';   // 10 (ścieżka 1-2-3-4 ma 3 krawędzie)"
+    },
+    {
+     "q": [
+      "system nierówności różnicowych",
+      "x_b - x_a <= c",
+      "difference constraints",
+      "nierówności graf bellman"
+     ],
+     "a": "Układ nierówności `x_b − x_a ≤ c` zamieniasz na krawędzie `a → b` o wadze `c`. Dodaj wirtualne źródło\nz krawędziami 0 do wszystkich (albo `dist = 0` wszędzie) i puść Bellmana-Forda. Ujemny cykl ⇔ układ\nsprzeczny; w przeciwnym razie `x_v = dist[v]` jest rozwiązaniem. `x_b − x_a ≥ c` to `x_a − x_b ≤ −c`\n(krawędź `b → a` z wagą `−c`).",
+     "code": "int n = 3;\n// x2 - x1 <= 3, x3 - x2 <= -2, x1 - x3 <= 0\nvector<array<int,3>> e = {{1, 2, 3}, {2, 3, -2}, {3, 1, 0}};\nvector<long long> x(n + 1, 0);\nbool sprzeczny = false;\nfor (int it = 0; it < n; it++) {\n    sprzeczny = false;\n    for (auto [a, b, w] : e) if (x[a] + w < x[b]) { x[b] = x[a] + w; sprzeczny = true; }\n}\nif (sprzeczny) cout << \"SPRZECZNY\\n\";\nelse cout << x[1] << ' ' << x[2] << ' ' << x[3] << '\\n';   // -2 0 -2"
+    },
+    {
+     "q": [
+      "wierzchołki z minus nieskończonością",
+      "na które wierzchołki wpływa ujemny cykl",
+      "-inf distance bellman"
+     ],
+     "a": "Odległość `−∞` mają wierzchołki osiągalne z jakiegoś ujemnego cyklu (osiągalnego ze źródła). Zaznacz\nwierzchołki, których `dist` poprawił się w rundach `n..2n−1` (albo poprawione w rundzie `n`), i puść\nz nich BFS/DFS — wszystko osiągalne ma `−∞`. O(n·m).",
+     "code": "int n = 4;\nvector<array<long long,3>> e = {{1, 2, 1}, {2, 3, -1}, {3, 2, -1}, {3, 4, 1}};\nconst long long INF = LLONG_MAX / 4;\nvector<long long> d(n + 1, INF);\nvector<bool> minusInf(n + 1, false);\nd[1] = 0;\nfor (int it = 0; it < 2 * n; it++)\n    for (auto [a, b, w] : e)\n        if (d[a] != INF && (minusInf[a] || d[a] + w < d[b])) {\n            if (it >= n - 1) minusInf[b] = true;      // poprawa po n-1 rundach\n            d[b] = min(d[b], d[a] + w);\n        }\nfor (int v = 1; v <= n; v++) cout << (minusInf[v] ? \"-inf\" : to_string(d[v])) << ' ';\ncout << '\\n';   // 0 -inf -inf -inf"
+    },
+    {
+     "q": [
+      "arbitraż walut",
+      "zarabianie w nieskończoność graf",
+      "dodatni cykl zysk",
+      "positive cycle"
+     ],
+     "a": "„Czy można zarabiać bez końca” = czy istnieje cykl o dodatniej sumie zysków. Zaneguj wagi (koszt =\n−zysk) i szukaj ujemnego cyklu Bellmanem-Fordem. Dla kursów walut (mnożenie) weź `w = −log(kurs)`:\niloczyn > 1 ⇔ suma logarytmów > 0 ⇔ ujemny cykl w zanegowanych wagach (uważaj na błędy\nzmiennoprzecinkowe — porównuj z epsilonem).",
+     "code": "vector<array<double,3>> kursy = {{0, 1, 0.9}, {1, 2, 1.2}, {2, 0, 1.0}};   // 0.9*1.2*1.0 = 1.08 > 1\nint n = 3;\nvector<double> d(n, 0);\nbool arbitraz = false;\nfor (int it = 0; it < n; it++) {\n    arbitraz = false;\n    for (auto [a, b, k] : kursy) {\n        double w = -log(k);\n        if (d[(int)a] + w < d[(int)b] - 1e-12) { d[(int)b] = d[(int)a] + w; arbitraz = true; }\n    }\n}\ncout << (arbitraz ? \"TAK\" : \"NIE\") << '\\n';   // TAK"
+    }
+   ],
+   "related": [
+    "graph-spfa",
+    "graph-dijkstra",
+    "graph-floyd-warshall",
+    "graph-dag-dp",
+    "graph-min-cost-flow"
+   ]
+  },
+  {
+   "id": "graph-spfa",
+   "title": "SPFA — Bellman-Ford z kolejką (uwagi i pułapki)",
+   "category": "Grafy",
+   "tags": [
+    "spfa",
+    "shortest path faster algorithm",
+    "bellman-ford",
+    "kolejka",
+    "ujemne wagi",
+    "ujemny cykl",
+    "min cost flow"
+   ],
+   "aliases": [
+    "spfa",
+    "spfa c++",
+    "shortest path faster algorithm",
+    "bellman ford z kolejką",
+    "spfa ujemny cykl",
+    "spfa złożoność",
+    "czy spfa jest szybkie"
+   ],
+   "summary": "SPFA relaksuje tylko krawędzie wierzchołków, których odległość się zmieniła (trzymanych w kolejce). Często dużo szybszy od Bellmana-Forda, ale pesymistycznie wciąż O(n·m) — złośliwe testy go zabijają. Używaj, gdy są ujemne wagi; przy nieujemnych zawsze Dijkstra.",
+   "complexity": "średnio „zwykle szybko”, pesymistycznie O(n·m)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Bellman-Ford w każdej rundzie przegląda wszystkie krawędzie, nawet jeśli nic się nie zmieniło. SPFA\ntrzyma kolejkę wierzchołków, których `dist` się poprawił — tylko ich krawędzie mogą dać nowe poprawy.\nFlaga `inq[v]` pilnuje, żeby wierzchołek nie siedział w kolejce dwa razy. Ujemny cykl wykrywa licznik:\njeśli najkrótsza ścieżka do `v` ma już `≥ n` krawędzi (albo `v` wszedł do kolejki `n` razy) — cykl."
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy używać:** ujemne wagi, a Bellman-Ford O(n·m) jest „na styk”; w implementacji min-cost-flow\n(sieć residualna ma ujemne koszty). **Kiedy NIE:** wagi nieujemne — Dijkstra ma gwarantowane\nO(m log n), a SPFA na specjalnie skonstruowanych grafach (np. siatki) działa w O(n·m). Autorzy zadań\nna OI potrafią przygotować testy przeciw SPFA."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "SPFA z wykrywaniem ujemnego cyklu",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst ll INF = LLONG_MAX / 4;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int, int>>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});          // skierowany\n    }\n    vector<ll> dist(n + 1, INF);\n    vector<int> len(n + 1, 0);           // liczba krawędzi bieżącej najkrótszej ścieżki\n    vector<bool> inq(n + 1, false);\n    queue<int> q;\n    dist[1] = 0;\n    q.push(1);\n    inq[1] = true;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        inq[v] = false;\n        for (auto [u, w] : g[v]) {\n            if (dist[v] + w < dist[u]) {\n                dist[u] = dist[v] + w;\n                len[u] = len[v] + 1;\n                if (len[u] >= n) {       // ścieżka z n krawędziami => ujemny cykl\n                    cout << \"UJEMNY CYKL\\n\";\n                    return 0;\n                }\n                if (!inq[u]) { inq[u] = true; q.push(u); }\n            }\n        }\n    }\n    for (int v = 1; v <= n; v++) {\n        if (dist[v] == INF) cout << \"INF \";\n        else cout << dist[v] << ' ';\n    }\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "SPFA **nie jest** szybszą Dijkstrą. Na grafach bez ujemnych wag zawsze wybieraj Dijkstrę — SPFA może\ndostać TLE na testach przygotowanych pod niego (zdarzało się to na wielu zawodach)."
+    }
+   ],
+   "pitfalls": [
+    "Używanie SPFA zamiast Dijkstry przy nieujemnych wagach — ryzyko TLE na złośliwych testach.",
+    "Brak flagi `inq` → wierzchołek w kolejce wiele razy, wolniej i z większą pamięcią.",
+    "Wykrywanie cyklu licznikiem wejść do kolejki `cnt[v] > n` też działa, ale licznik długości ścieżki (`len[u] >= n`) zwykle wykrywa cykl wcześniej.",
+    "Heurystyki SLF/LLL (wstawianie na początek deque) przyspieszają typowe testy, ale też da się je pokonać — nie zmieniają pesymistycznej złożoności.",
+    "Wykrywa tylko ujemne cykle osiągalne ze źródła — dla całego grafu wrzuć na start wszystkie wierzchołki z `dist = 0`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "spfa",
+      "spfa c++",
+      "shortest path faster algorithm",
+      "spfa kod",
+      "bellman ford z kolejką"
+     ],
+     "a": "SPFA to Bellman-Ford, który relaksuje krawędzie tylko tych wierzchołków, którym ostatnio zmalała\nodległość (są w kolejce). `inq[v]` zapobiega duplikatom. Typowo bardzo szybki, ale **pesymistycznie\nO(n·m)** — tak samo jak Bellman-Ford. Stosuj przy ujemnych wagach (np. w min-cost-flow).",
+     "code": "typedef long long ll;\nvector<ll> spfa(const vector<vector<pair<int,int>>>& g, int s) {\n    int n = g.size();\n    vector<ll> dist(n, LLONG_MAX / 4);\n    vector<bool> inq(n, false);\n    queue<int> q;\n    dist[s] = 0; q.push(s); inq[s] = true;\n    while (!q.empty()) {\n        int v = q.front(); q.pop(); inq[v] = false;\n        for (auto [u, w] : g[v])\n            if (dist[v] + w < dist[u]) {\n                dist[u] = dist[v] + w;\n                if (!inq[u]) { inq[u] = true; q.push(u); }\n            }\n    }\n    return dist;      // UWAGA: przy ujemnym cyklu pętla się nie kończy — patrz wersja z len[]\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "spfa złożoność",
+      "czy spfa jest szybkie",
+      "spfa tle",
+      "spfa worst case",
+      "spfa jest martwe"
+     ],
+     "a": "Średnio SPFA działa często w czasie bliskim O(m), ale **pesymistycznie O(n·m)** — istnieją proste\nkonstrukcje (np. siatki z odpowiednimi wagami), na których wierzchołki wchodzą do kolejki\nwielokrotnie. Dlatego mówi się „SPFA is dead”: przy nieujemnych wagach używaj Dijkstry, a SPFA tylko\ntam, gdzie i tak potrzebujesz Bellmana-Forda.",
+     "code": "int n = 5;\nvector<vector<pair<int,int>>> g(n + 1);\nfor (int k = n; k >= 2; k--) g[1].push_back({k, (int)pow(10, k - 2)});   // 1->5 (1000), ..., 1->2 (1)\nfor (int k = 2; k < n; k++) g[k].push_back({k + 1, 1});                 // łańcuch 2->3->4->5\nvector<long long> dist(n + 1, LLONG_MAX / 4);\nvector<bool> inq(n + 1, false);\nqueue<int> q;\ndist[1] = 0; q.push(1); inq[1] = true;\nint wejscia = 1;\nwhile (!q.empty()) {\n    int v = q.front(); q.pop(); inq[v] = false;\n    for (auto [u, w] : g[v])\n        if (dist[v] + w < dist[u]) {\n            dist[u] = dist[v] + w;\n            if (!inq[u]) { inq[u] = true; q.push(u); wejscia++; }\n        }\n}\ncout << \"wejść do kolejki: \" << wejscia << \" (n = \" << n << \"), d[5] = \" << dist[5] << '\\n';\n// wierzchołki wracają do kolejki wielokrotnie — na złośliwych testach nawet O(n·m)"
+    },
+    {
+     "q": [
+      "spfa ujemny cykl",
+      "spfa wykrywanie cyklu",
+      "spfa cnt n",
+      "spfa negative cycle"
+     ],
+     "a": "Trzymaj `len[u] = len[v] + 1` (liczba krawędzi bieżącej najkrótszej ścieżki do `u`). Bez ujemnych cykli\nnajkrótsza ścieżka ma ≤ `n − 1` krawędzi, więc `len[u] >= n` oznacza ujemny cykl. Alternatywnie licz,\nile razy wierzchołek wszedł do kolejki — więcej niż `n` razy = cykl. Bez takiego sprawdzenia SPFA na\nujemnym cyklu działa w nieskończoność.",
+     "code": "typedef long long ll;\nbool maUjemnyCykl(const vector<vector<pair<int,int>>>& g) {\n    int n = g.size();\n    vector<ll> dist(n, 0);                    // wszystkie jako źródła\n    vector<int> len(n, 0);\n    vector<bool> inq(n, true);\n    queue<int> q;\n    for (int v = 0; v < n; v++) q.push(v);\n    while (!q.empty()) {\n        int v = q.front(); q.pop(); inq[v] = false;\n        for (auto [u, w] : g[v])\n            if (dist[v] + w < dist[u]) {\n                dist[u] = dist[v] + w;\n                len[u] = len[v] + 1;\n                if (len[u] >= n) return true;\n                if (!inq[u]) { inq[u] = true; q.push(u); }\n            }\n    }\n    return false;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "spfa vs dijkstra",
+      "spfa czy dijkstra",
+      "czy używać spfa zamiast dijkstry"
+     ],
+     "a": "Nieujemne wagi → **zawsze Dijkstra**: gwarantowane O(m log n). SPFA może być szybsze na losowych\ntestach, ale pesymistycznie O(n·m), więc ryzykujesz TLE. Ujemne wagi → Dijkstra jest niepoprawna,\nwtedy SPFA/Bellman-Ford (albo potencjały Johnsona + Dijkstra, jeśli liczysz wiele razy).",
+     "code": "typedef long long ll;\n// Wagi >= 0: Dijkstra — gwarantowane O(m log n)\nvector<ll> dijkstra(const vector<vector<pair<int,int>>>& g, int s) {\n    vector<ll> d(g.size(), LLONG_MAX / 4);\n    priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>> pq;\n    d[s] = 0; pq.push({0, s});\n    while (!pq.empty()) {\n        auto [dv, v] = pq.top(); pq.pop();\n        if (dv > d[v]) continue;\n        for (auto [u, w] : g[v]) if (dv + w < d[u]) { d[u] = dv + w; pq.push({d[u], u}); }\n    }\n    return d;\n}\n// Wagi ujemne (bez ujemnych cykli): SPFA — poprawne, ale pesymistycznie O(n·m)\nvector<ll> spfa(const vector<vector<pair<int,int>>>& g, int s) {\n    vector<ll> d(g.size(), LLONG_MAX / 4);\n    vector<bool> inq(g.size(), false);\n    queue<int> q;\n    d[s] = 0; q.push(s); inq[s] = true;\n    while (!q.empty()) {\n        int v = q.front(); q.pop(); inq[v] = false;\n        for (auto [u, w] : g[v])\n            if (d[v] + w < d[u]) { d[u] = d[v] + w; if (!inq[u]) { inq[u] = true; q.push(u); } }\n    }\n    return d;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "spfa vs bellman ford",
+      "spfa a bellman ford różnica",
+      "czy spfa zawsze lepsze od bellmana"
+     ],
+     "a": "Wynik ten sam, złożoność pesymistyczna ta sama O(n·m). SPFA zwykle robi dużo mniej pracy, bo pomija\nwierzchołki bez zmian. Bellman-Ford jest prostszy, deterministyczny w czasie i łatwiej z nim zrobić\nwarianty „co najwyżej k krawędzi” albo odtworzenie ujemnego cyklu. Na małych grafach to bez znaczenia.",
+     "code": "int n = 6;\nvector<array<int,3>> e;                                  // łańcuch 1->2->...->6\nfor (int v = 1; v < n; v++) e.push_back({v, v + 1, 1});\nconst long long INF = LLONG_MAX / 4;\n// Bellman-Ford z wcześniejszym zakończeniem\nvector<long long> d(n + 1, INF);\nd[1] = 0;\nlong long bf = 0;\nfor (int it = 0; it < n - 1; it++) {\n    bool zmiana = false;\n    for (auto [a, b, w] : e) { bf++; if (d[a] != INF && d[a] + w < d[b]) { d[b] = d[a] + w; zmiana = true; } }\n    if (!zmiana) break;\n}\n// SPFA\nvector<vector<pair<int,int>>> g(n + 1);\nfor (auto [a, b, w] : e) g[a].push_back({b, w});\nvector<long long> d2(n + 1, INF);\nvector<bool> inq(n + 1, false);\nqueue<int> q;\nd2[1] = 0; q.push(1); inq[1] = true;\nlong long sp = 0;\nwhile (!q.empty()) {\n    int v = q.front(); q.pop(); inq[v] = false;\n    for (auto [u, w] : g[v]) {\n        sp++;\n        if (d2[v] + w < d2[u]) { d2[u] = d2[v] + w; if (!inq[u]) { inq[u] = true; q.push(u); } }\n    }\n}\ncout << \"BF: \" << bf << \", SPFA: \" << sp << '\\n';   // BF: 10, SPFA: 5"
+    },
+    {
+     "q": [
+      "spfa slf deque",
+      "spfa optymalizacja",
+      "small label first"
+     ],
+     "a": "SLF (*Small Label First*): przy wstawianiu `u` porównaj `dist[u]` z `dist` wierzchołka na początku\n`deque` — mniejszy idzie na przód. Często przyspiesza, ale nie poprawia pesymistycznej złożoności\ni bywa celem złośliwych testów. Na OI lepiej nie polegać na heurystykach SPFA.",
+     "code": "typedef long long ll;\nvector<ll> spfaSLF(const vector<vector<pair<int,int>>>& g, int s) {\n    int n = g.size();\n    vector<ll> dist(n, LLONG_MAX / 4);\n    vector<bool> inq(n, false);\n    deque<int> dq;\n    dist[s] = 0; dq.push_back(s); inq[s] = true;\n    while (!dq.empty()) {\n        int v = dq.front(); dq.pop_front(); inq[v] = false;\n        for (auto [u, w] : g[v])\n            if (dist[v] + w < dist[u]) {\n                dist[u] = dist[v] + w;\n                if (inq[u]) continue;\n                inq[u] = true;\n                if (!dq.empty() && dist[u] < dist[dq.front()]) dq.push_front(u);\n                else dq.push_back(u);\n            }\n    }\n    return dist;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "algorytm johnsona",
+      "potencjały johnsona",
+      "dijkstra z ujemnymi wagami potencjały",
+      "johnson reweighting",
+      "jak użyć dijkstry przy ujemnych wagach"
+     ],
+     "a": "Johnson: raz policz potencjały `h[v]` Bellmanem-Fordem/SPFA z wirtualnego źródła (start `h = 0` wszędzie).\nNowe wagi `w'(a, b) = w + h[a] − h[b]` są **nieujemne** (z nierówności trójkąta), więc działa Dijkstra.\nPrawdziwa odległość: `d(s, v) = d'(s, v) − h[s] + h[v]`. Opłaca się, gdy puszczasz wiele Dijkstr\n(np. wszystkie pary w rzadkim grafie: O(n·m + n·m log n)) albo w min-cost-flow. Wymaga braku ujemnych cykli.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<array<ll, 3>> e(m);\n    for (auto& [a, b, w] : e) cin >> a >> b >> w;\n    vector<ll> h(n + 1, 0);                              // potencjały (Bellman-Ford)\n    for (int it = 0; it < n; it++)\n        for (auto [a, b, w] : e) if (h[a] + w < h[b]) h[b] = h[a] + w;\n    vector<vector<pair<int, ll>>> g(n + 1);\n    for (auto [a, b, w] : e) g[a].push_back({(int)b, w + h[a] - h[b]});   // wagi >= 0\n    const ll INF = LLONG_MAX / 4;\n    vector<ll> d(n + 1, INF);\n    priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<>> pq;\n    d[1] = 0; pq.push({0, 1});\n    while (!pq.empty()) {\n        auto [dv, v] = pq.top(); pq.pop();\n        if (dv > d[v]) continue;\n        for (auto [u, w] : g[v]) if (dv + w < d[u]) { d[u] = dv + w; pq.push({d[u], u}); }\n    }\n    for (int v = 1; v <= n; v++) {\n        if (d[v] == INF) cout << \"INF \";\n        else cout << d[v] - h[1] + h[v] << ' ';            // powrót do prawdziwych wag\n    }\n    cout << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "graph-bellman-ford",
+    "graph-dijkstra",
+    "graph-min-cost-flow"
+   ]
+  },
+  {
+   "id": "graph-floyd-warshall",
+   "title": "Floyd-Warshall — najkrótsze ścieżki między wszystkimi parami",
+   "category": "Grafy",
+   "tags": [
+    "floyd-warshall",
+    "floyd",
+    "wszystkie pary",
+    "all pairs shortest path",
+    "macierz odległości",
+    "domknięcie przechodnie",
+    "n^3"
+   ],
+   "aliases": [
+    "floyd warshall",
+    "floyd",
+    "floyd c++",
+    "algorytm floyda",
+    "najkrótsze ścieżki między wszystkimi parami",
+    "all pairs shortest path",
+    "apsp",
+    "floyd warshall kod",
+    "domknięcie przechodnie",
+    "transitive closure",
+    "floyd warszal"
+   ],
+   "summary": "Floyd-Warshall liczy odległości między wszystkimi parami wierzchołków w O(n³) trzema pętlami (`k` na zewnątrz!). Idealny dla `n ≤ ~500`, działa z ujemnymi wagami (bez ujemnych cykli) i jest trywialny w implementacji.",
+   "complexity": "O(n³) czasu, O(n²) pamięci",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`d[i][j]` na początku to waga krawędzi `i → j` (INF, gdy brak; 0 na przekątnej). Potem dla każdego\n`k = 1..n` sprawdzamy, czy przejście przez `k` skraca drogę: `d[i][j] = min(d[i][j], d[i][k] + d[k][j])`.\nPo rozpatrzeniu `k` macierz zawiera najkrótsze ścieżki, których wierzchołki pośrednie należą do\n`{1..k}` — dlatego pętla po `k` **musi być zewnętrzna**."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „odpowiedz na wiele zapytań o odległość między dowolnymi miastami”, `n ≤ 400..500`\n(n³ = 10^8 prostych operacji), „dla każdej pary”, macierz na wejściu, „czy z a da się dojść do b” dla\nwszystkich par (domknięcie przechodnie), minimax (najszersza ścieżka)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Floyd-Warshall + zapytania o odległość",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst ll INF = LLONG_MAX / 4;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m, q;\n    cin >> n >> m >> q;\n    vector<vector<ll>> d(n + 1, vector<ll>(n + 1, INF));\n    for (int i = 1; i <= n; i++) d[i][i] = 0;\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        ll w;\n        cin >> a >> b >> w;\n        d[a][b] = min(d[a][b], w);      // min — krawędzie wielokrotne!\n        d[b][a] = min(d[b][a], w);      // nieskierowany\n    }\n    for (int k = 1; k <= n; k++)            // k NA ZEWNĄTRZ\n        for (int i = 1; i <= n; i++) {\n            if (d[i][k] == INF) continue;\n            for (int j = 1; j <= n; j++)\n                if (d[k][j] != INF && d[i][k] + d[k][j] < d[i][j])\n                    d[i][j] = d[i][k] + d[k][j];\n        }\n    while (q--) {\n        int a, b;\n        cin >> a >> b;\n        cout << (d[a][b] == INF ? -1 : d[a][b]) << '\\n';\n    }\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Ujemny cykl: po algorytmie `d[i][i] < 0` dla jakiegoś `i` oznacza, że `i` leży na ujemnym cyklu."
+    },
+    {
+     "type": "warn",
+     "md": "INF + INF przepełnia `int` i `long long` przy `INF = LLONG_MAX`. Albo sprawdzaj `!= INF` przed dodaniem\n(jak w kodzie), albo bierz INF ≈ 10^18 / 4 i dodawaj bez sprawdzania (dla `int`: INF = 10^9)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "d[i][j] = min(d[i][j], d[i][k] + d[k][j])",
+     "desc": "relaksacja przez wierzchołek pośredni k",
+     "complexity": "O(1); łącznie O(n³)"
+    }
+   ],
+   "pitfalls": [
+    "Zła kolejność pętli (`i, j, k` zamiast `k, i, j`) — algorytm daje błędne wyniki.",
+    "Brak `d[i][i] = 0` na starcie.",
+    "Krawędzie wielokrotne: przypisanie `d[a][b] = w` nadpisuje lepszą krawędź — używaj `min`.",
+    "INF + INF → przepełnienie. Sprawdzaj INF albo dobierz INF z zapasem (np. 10^9 dla `int` przy wagach ≤ 10^6).",
+    "`n = 2000` → 8·10^9 operacji, za wolno; Floyd tylko dla `n` do ~500 (czasem 800–1000 z szybką pętlą).",
+    "Macierz `vector<vector<ll>>` dla `n = 5000` to 200 MB — za dużo."
+   ],
+   "qa": [
+    {
+     "q": [
+      "floyd warshall",
+      "floyd c++",
+      "najkrótsze ścieżki między wszystkimi parami",
+      "all pairs shortest path",
+      "floyd warshall kod",
+      "floyd warszal"
+     ],
+     "a": "Ustaw `d[i][i] = 0`, `d[a][b] = waga` (min przy wielu krawędziach), reszta INF. Potem trzy pętle:\n`for k, for i, for j: d[i][j] = min(d[i][j], d[i][k] + d[k][j])`. Po pętli po `k` znane są najkrótsze\nścieżki z wierzchołkami pośrednimi z `{1..k}`. **O(n³)** — dla `n ≤ 500` około 10^8 operacji.",
+     "code": "const int N = 505;\nlong long d[N][N];\nvoid floyd(int n) {\n    for (int k = 1; k <= n; k++)\n        for (int i = 1; i <= n; i++)\n            for (int j = 1; j <= n; j++)\n                if (d[i][k] + d[k][j] < d[i][j]) d[i][j] = d[i][k] + d[k][j];\n}\n// INF = 1e18 / 4, żeby INF + INF się nie przepełniło",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kolejność pętli floyd",
+      "dlaczego k na zewnątrz floyd",
+      "floyd pętla k i j",
+      "floyd kolejnosc petli"
+     ],
+     "a": "Floyd to DP: `d_k[i][j]` = najkrótsza ścieżka `i → j` z pośrednimi tylko z `{1..k}`. Przejście\n`d_k[i][j] = min(d_{k−1}[i][j], d_{k−1}[i][k] + d_{k−1}[k][j])` wymaga, żeby **cała** macierz była\njuż policzona dla `k − 1` — więc `k` musi być zewnętrzną pętlą. Kolejność `i` i `j` nie ma znaczenia.\nPętla `i, j, k` daje błędne wyniki (dla niektórych par za duże).",
+     "code": "const int INF = 1000000000;\nauto init = [&]() {\n    vector<vector<int>> d(4, vector<int>(4, INF));\n    for (int i = 0; i < 4; i++) d[i][i] = 0;\n    d[0][2] = 1; d[2][3] = 1; d[3][1] = 1;            // ścieżka 0 -> 2 -> 3 -> 1\n    return d;\n};\nauto dobra = init(), zla = init();\nfor (int k = 0; k < 4; k++) for (int i = 0; i < 4; i++) for (int j = 0; j < 4; j++)\n    dobra[i][j] = min(dobra[i][j], dobra[i][k] + dobra[k][j]);   // k na zewnątrz\nfor (int i = 0; i < 4; i++) for (int j = 0; j < 4; j++) for (int k = 0; k < 4; k++)\n    zla[i][j] = min(zla[i][j], zla[i][k] + zla[k][j]);           // k w środku — BŁĄD\ncout << dobra[0][1] << ' ' << (zla[0][1] >= INF ? -1 : zla[0][1]) << '\\n';   // 3 -1"
+    },
+    {
+     "q": [
+      "floyd złożoność",
+      "do jakiego n floyd",
+      "floyd n^3 czas",
+      "floyd za wolny"
+     ],
+     "a": "**O(n³)**: `n = 100` → 10^6, `n = 500` → 1,25·10^8 (ok. 0,2–0,5 s), `n = 1000` → 10^9 (zwykle za\nwolno). Pamięć O(n²). Dla dużych rzadkich grafów lepiej `n` razy Dijkstra: O(n·m log n). Przyspieszenie:\n`if (d[i][k] == INF) continue;` przed pętlą po `j` i tablica statyczna zamiast `vector<vector>`.",
+     "code": "int n = 100;\nlong long ops = 0;\nfor (int k = 0; k < n; k++)\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < n; j++) ops++;\ncout << ops << '\\n';                                       // 1000000 = n^3\nfor (int N : {200, 500, 1000}) cout << N << \": \" << 1LL * N * N * N << '\\n';"
+    },
+    {
+     "q": [
+      "floyd ujemny cykl",
+      "floyd wykrywanie ujemnego cyklu",
+      "d[i][i] < 0",
+      "floyd negative cycle"
+     ],
+     "a": "Floyd działa z ujemnymi wagami, jeśli nie ma ujemnych cykli. Po algorytmie sprawdź przekątną:\n`d[i][i] < 0` ⇔ `i` leży na ujemnym cyklu. Para `(i, j)` ma odległość `−∞`, jeśli istnieje `k`\nz `d[k][k] < 0`, `d[i][k] < INF` i `d[k][j] < INF`.",
+     "code": "int n = 3;\nconst long long INF = 1e18;\nvector<vector<long long>> d(n, vector<long long>(n, INF));\nfor (int i = 0; i < n; i++) d[i][i] = 0;\nd[0][1] = 1; d[1][2] = -3; d[2][1] = 1;\nfor (int k = 0; k < n; k++)\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < n; j++)\n            if (d[i][k] < INF && d[k][j] < INF) d[i][j] = min(d[i][j], d[i][k] + d[k][j]);\nbool cykl = false;\nfor (int i = 0; i < n; i++) if (d[i][i] < 0) cykl = true;\ncout << cykl << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "floyd inf overflow",
+      "inf + inf przepełnienie",
+      "jaka wartość inf floyd",
+      "floyd int max"
+     ],
+     "a": "Jeśli `INF = INT_MAX`, to `d[i][k] + d[k][j]` przepełnia się do liczby ujemnej i psuje wynik. Dwa\nsposoby: (1) sprawdzaj `d[i][k] != INF && d[k][j] != INF` przed dodaniem, (2) weź INF tak, by\n`2·INF` mieściło się w typie: dla `int` np. `1e9` (o ile prawdziwe odległości < 10^9), dla `long long`\nnp. `1e18`. Przy ujemnych wagach sprawdzanie jest bezpieczniejsze.",
+     "code": "const int INF = 1000000000;     // 2*INF = 2e9 < INT_MAX ≈ 2,147e9, więc suma się mieści\nint a = INF, b = INF;\nlong long s = (long long)a + b;\ncout << (s <= INT_MAX) << '\\n'; // 1"
+    },
+    {
+     "q": [
+      "domknięcie przechodnie",
+      "transitive closure",
+      "czy z a da się dojść do b dla wszystkich par",
+      "floyd bitset osiągalność"
+     ],
+     "a": "Floyd na wartościach logicznych: `reach[i][j] |= reach[i][k] && reach[k][j]`. Z `bitset` wiersz robisz\njedną operacją: jeśli `reach[i][k]`, to `reach[i] |= reach[k]` — **O(n³/64)**, więc nawet `n = 2000`\ndziała szybko.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int N = 2005;\nbitset<N> reach[N];\nint main() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 1; i <= n; i++) reach[i][i] = 1;\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        reach[a][b] = 1;                    // skierowany\n    }\n    for (int k = 1; k <= n; k++)\n        for (int i = 1; i <= n; i++)\n            if (reach[i][k]) reach[i] |= reach[k];\n    int pary = 0;\n    for (int i = 1; i <= n; i++) pary += reach[i].count();\n    cout << pary << '\\n';                   // liczba par (i, j) z i ->* j\n}"
+    },
+    {
+     "q": [
+      "floyd odtworzenie ścieżki",
+      "floyd wypisz ścieżkę",
+      "floyd next matrix",
+      "floyd path reconstruction"
+     ],
+     "a": "Trzymaj `nxt[i][j]` — pierwszy wierzchołek po `i` na najkrótszej ścieżce do `j`. Na starcie\n`nxt[a][b] = b` dla każdej krawędzi. Przy poprawie przez `k`: `nxt[i][j] = nxt[i][k]`. Ścieżka:\n`i, nxt[i][j], nxt[nxt[i][j]][j], …` aż do `j`.",
+     "code": "int n = 3;\nconst long long INF = 1e18;\nvector<vector<long long>> d(n, vector<long long>(n, INF));\nvector<vector<int>> nxt(n, vector<int>(n, -1));\nauto kraw = [&](int a, int b, long long w) { d[a][b] = w; nxt[a][b] = b; };\nfor (int i = 0; i < n; i++) { d[i][i] = 0; nxt[i][i] = i; }\nkraw(0, 1, 1); kraw(1, 2, 1); kraw(0, 2, 5);\nfor (int k = 0; k < n; k++)\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < n; j++)\n            if (d[i][k] < INF && d[k][j] < INF && d[i][k] + d[k][j] < d[i][j]) {\n                d[i][j] = d[i][k] + d[k][j];\n                nxt[i][j] = nxt[i][k];\n            }\nfor (int v = 0; v != 2; v = nxt[v][2]) cout << v << ' ';\ncout << 2 << '\\n';   // 0 1 2"
+    },
+    {
+     "q": [
+      "najszersza ścieżka floyd",
+      "minimax ścieżka",
+      "bottleneck path",
+      "ścieżka o największej minimalnej przepustowości"
+     ],
+     "a": "Floyd działa dla każdego „półpierścienia”: zamiast `(min, +)` użyj `(max, min)`:\n`cap[i][j] = max(cap[i][j], min(cap[i][k], cap[k][j]))` — największa przepustowość ścieżki, której\nwąskie gardło jest jak najszersze. Analogicznie `(min, max)` dla „minimalizuj najdłuższy odcinek”.\nDla jednej pary szybciej: MST (Kruskal) albo zmodyfikowana Dijkstra.",
+     "code": "int n = 3;\nvector<vector<int>> cap(n, vector<int>(n, 0));\ncap[0][1] = cap[1][0] = 5; cap[1][2] = cap[2][1] = 4; cap[0][2] = cap[2][0] = 2;\nfor (int k = 0; k < n; k++)\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < n; j++)\n            cap[i][j] = max(cap[i][j], min(cap[i][k], cap[k][j]));\ncout << cap[0][2] << '\\n';   // 4 (przez 1)"
+    },
+    {
+     "q": [
+      "floyd czy n razy dijkstra",
+      "floyd vs dijkstra",
+      "kiedy floyd a kiedy dijkstra"
+     ],
+     "a": "Floyd: O(n³), 10 linijek, ujemne wagi OK — dla `n ≤ ~500`. `n` razy Dijkstra: O(n·m·log n) — lepsze\ndla dużych rzadkich grafów (np. `n = 5000`, `m = 10^4`), ale bez ujemnych wag. Jeśli pytań jest mało,\nwystarczy Dijkstra tylko od źródeł z zapytań.",
+     "code": "auto koszty = [](long long n, long long m) {\n    long long floyd = n * n * n;\n    long long lg = (long long)ceil(log2((double)max(2LL, n)));\n    long long dijkstry = n * (n + m) * lg;\n    cout << \"n=\" << n << \" m=\" << m << \": Floyd ~\" << floyd << \", n×Dijkstra ~\" << dijkstry << '\\n';\n};\nkoszty(300, 40000);    // gęsty, małe n: Floyd\nkoszty(5000, 10000);   // rzadki, duże n: n razy Dijkstra"
+    },
+    {
+     "q": [
+      "floyd macierz na wejściu",
+      "floyd z macierzy sąsiedztwa",
+      "floyd wczytanie"
+     ],
+     "a": "Gdy wejście to macierz `n×n` wag (np. `-1` lub `0` = brak krawędzi), wczytaj ją wprost do `d`,\nzamieniając „brak” na INF (poza przekątną), i od razu puść trzy pętle. Uważaj, czy `0` w macierzy\nznaczy „brak krawędzi”, czy „krawędź długości 0” — treść zadania to precyzuje.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    const long long INF = 1e18;\n    vector<vector<long long>> d(n, vector<long long>(n));\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < n; j++) {\n            cin >> d[i][j];\n            if (d[i][j] == -1) d[i][j] = INF;   // -1 = brak krawędzi\n        }\n    for (int k = 0; k < n; k++)\n        for (int i = 0; i < n; i++)\n            for (int j = 0; j < n; j++)\n                if (d[i][k] < INF && d[k][j] < INF) d[i][j] = min(d[i][j], d[i][k] + d[k][j]);\n    cout << d[0][n - 1] << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "graph-dijkstra",
+    "graph-bellman-ford",
+    "graph-shortest-cycle",
+    "graph-representation"
+   ]
+  },
+  {
+   "id": "graph-shortest-cycle",
+   "title": "Najkrótszy cykl w grafie (girth): BFS z każdego wierzchołka, wersje ważone",
+   "category": "Grafy",
+   "tags": [
+    "najkrótszy cykl",
+    "girth",
+    "cykl",
+    "bfs",
+    "dijkstra",
+    "floyd",
+    "graf nieskierowany",
+    "graf skierowany"
+   ],
+   "aliases": [
+    "najkrótszy cykl",
+    "najkrotszy cykl w grafie",
+    "shortest cycle",
+    "girth",
+    "talia grafu",
+    "minimalny cykl",
+    "cykl o minimalnej wadze",
+    "najkrótszy cykl skierowany"
+   ],
+   "summary": "Najkrótszy cykl w grafie nieważonym nieskierowanym: BFS z każdego wierzchołka i krawędzie łączące odwiedzone wierzchołki (O(n·m)). W skierowanym: BFS/Dijkstra z każdego `s` i krawędź powrotna do `s`. Ważony nieskierowany: usuń krawędź i szukaj ścieżki Dijkstrą albo wariant Floyda.",
+   "complexity": "nieważony: O(n·(n + m)); ważony skierowany: O(n·m log n); Floyd: O(n³)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Nieskierowany, bez wag.** Puść BFS z każdego wierzchołka `s`. Gdy przeglądając krawędź `v – u`\ntrafiasz na już odwiedzony `u`, który nie jest rodzicem `v` w drzewie BFS, to istnieje cykl\n(zamknięty) długości co najwyżej `dist[v] + dist[u] + 1`. Minimum po wszystkich `s` i takich krawędziach\nto dokładnie długość najkrótszego cyklu — bo BFS z wierzchołka leżącego na najkrótszym cyklu znajdzie\ngo z dokładną długością.\n\n**Skierowany.** Najkrótszy cykl przez `s` = `min(dist(s, v) + w(v, s))` po krawędziach `v → s`.\nBFS (lub Dijkstra) z każdego `s`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „najmniejsza liczba ulic tworząca zamkniętą trasę”, „najkrótsza pętla”, „talia grafu”,\n„wróć do punktu startu najkrótszą drogą, nie przechodząc dwa razy tą samą drogą”. Limity typu\n`n ≤ 3000–5000` sugerują O(n·m)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Najkrótszy cykl w grafie nieskierowanym nieważonym",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    int best = INT_MAX;\n    vector<int> dist(n + 1), par(n + 1);\n    for (int s = 1; s <= n; s++) {\n        fill(dist.begin(), dist.end(), -1);\n        queue<int> q;\n        dist[s] = 0;\n        par[s] = 0;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int u : g[v]) {\n                if (dist[u] == -1) {\n                    dist[u] = dist[v] + 1;\n                    par[u] = v;\n                    q.push(u);\n                } else if (par[v] != u) {          // krawędź spoza drzewa BFS\n                    best = min(best, dist[v] + dist[u] + 1);\n                }\n            }\n        }\n    }\n    cout << (best == INT_MAX ? -1 : best) << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Warunek `par[v] != u` zakłada graf **prosty**. Przy krawędziach wielokrotnych dwie krawędzie `a – b`\ntworzą cykl długości 2, którego ten warunek nie widzi — porównuj id krawędzi albo sprawdź duplikaty\nosobno. Pętla `a – a` to cykl długości 1."
+    }
+   ],
+   "pitfalls": [
+    "Jeden BFS (z wierzchołka 1) nie wystarczy — najkrótszy cykl może być daleko od niego i BFS zawyży wynik.",
+    "Krawędzie wielokrotne i pętle — obsłuż osobno (cykl długości 2 lub 1).",
+    "W skierowanym nie wolno używać sztuczki z `dist[u] + dist[v] + 1` — liczy się tylko krawędź powrotna do `s`.",
+    "Złożoność O(n·m): dla `n = m = 10^5` to 10^10 — za wolno; wtedy szukaj własności zadania.",
+    "Ważony nieskierowany: zwykła Dijkstra z `s` z warunkiem „nie rodzic” bywa błędna; bezpieczniej usuwać krawędź (a, b) i szukać `dist(a, b)` bez niej."
+   ],
+   "qa": [
+    {
+     "q": [
+      "najkrótszy cykl w grafie",
+      "girth graph",
+      "shortest cycle undirected",
+      "najkrotszy cykl nieskierowany",
+      "najmniejszy cykl graf"
+     ],
+     "a": "BFS z każdego wierzchołka `s`; dla krawędzi `v – u`, gdzie `u` jest już odwiedzony i nie jest rodzicem\n`v`, kandydatem jest `dist[v] + dist[u] + 1`. Wynik = minimum. Jeden BFS to O(n + m), razem\n**O(n·(n + m))**. Poprawność: dla `s` leżącego na najkrótszym cyklu BFS znajdzie dokładnie jego długość,\na każdy kandydat jest długością pewnego zamkniętego spaceru zawierającego cykl, więc nie jest mniejszy\nod odpowiedzi.",
+     "code": "int girth(const vector<vector<int>>& g, int n) {   // graf prosty nieskierowany, wierzchołki 1..n\n    int best = INT_MAX;\n    for (int s = 1; s <= n; s++) {\n        vector<int> d(n + 1, -1), par(n + 1, 0);\n        queue<int> q;\n        d[s] = 0;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int u : g[v]) {\n                if (d[u] == -1) { d[u] = d[v] + 1; par[u] = v; q.push(u); }\n                else if (par[v] != u) best = min(best, d[v] + d[u] + 1);\n            }\n        }\n    }\n    return best == INT_MAX ? -1 : best;            // -1 = las (brak cykli)\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najkrótszy cykl skierowany",
+      "shortest cycle directed graph",
+      "najkrótszy cykl w grafie skierowanym"
+     ],
+     "a": "Dla każdego `s` puść BFS (lub Dijkstrę przy wagach) i dla każdej krawędzi `v → s` weź `dist[v] + w`.\nMinimum po `s` to najkrótszy cykl. O(n·(n + m)) bez wag, O(n·m log n) z wagami. Alternatywa przy\nmałym `n`: Floyd i `min d[i][i]` po inicjalizacji `d[i][i] = INF` (zamiast 0).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n    }\n    int best = INT_MAX;\n    for (int s = 1; s <= n; s++) {\n        vector<int> d(n + 1, -1);\n        queue<int> q;\n        d[s] = 0; q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int u : g[v]) {\n                if (u == s) best = min(best, d[v] + 1);\n                else if (d[u] == -1) { d[u] = d[v] + 1; q.push(u); }\n            }\n        }\n    }\n    cout << (best == INT_MAX ? -1 : best) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "cykl o minimalnej wadze",
+      "najkrótszy cykl ważony",
+      "minimum weight cycle",
+      "najlżejszy cykl"
+     ],
+     "a": "**Skierowany:** z każdego `s` Dijkstra, wynik `min(dist[s][v] + w(v → s))` — O(n·m log n).\n**Nieskierowany:** dla każdej krawędzi `(a, b, w)` policz Dijkstrą `dist(a, b)` w grafie **bez tej\nkrawędzi**; cykl = `dist + w`. To O(m · m log n) — dla większych grafów użyj wariantu Floyda O(n³).",
+     "code": "typedef long long ll;\nll najlzejszyCyklSkierowany(const vector<vector<pair<int,int>>>& g) {\n    int n = g.size();\n    const ll INF = LLONG_MAX / 4;\n    ll best = INF;\n    for (int s = 0; s < n; s++) {\n        vector<ll> d(n, INF);\n        priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>> pq;\n        d[s] = 0; pq.push({0, s});\n        while (!pq.empty()) {\n            auto [dv, v] = pq.top(); pq.pop();\n            if (dv > d[v]) continue;\n            for (auto [u, w] : g[v]) {\n                if (u == s) best = min(best, dv + w);\n                else if (dv + w < d[u]) { d[u] = dv + w; pq.push({d[u], u}); }\n            }\n        }\n    }\n    return best == INF ? -1 : best;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najkrótszy cykl floyd",
+      "floyd minimalny cykl",
+      "minimum cycle floyd warshall"
+     ],
+     "a": "Wariant Floyda dla grafu nieskierowanego ważonego: przed relaksacją przez `k` sprawdź dla `i < j < k`\nkandydata `d[i][j] + w[j][k] + w[k][i]` — `d[i][j]` używa wtedy tylko wierzchołków `< k`, więc cykl\n`i → … → j → k → i` jest prosty. Potem zwykła relaksacja. **O(n³)**, `n ≤ ~300–500`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    const long long INF = 1e15;\n    vector<vector<long long>> w(n + 1, vector<long long>(n + 1, INF)), d;\n    for (int i = 1; i <= n; i++) w[i][i] = 0;\n    for (int i = 0; i < m; i++) {\n        int a, b; long long c;\n        cin >> a >> b >> c;\n        w[a][b] = w[b][a] = min(w[a][b], c);\n    }\n    d = w;\n    long long best = INF;\n    for (int k = 1; k <= n; k++) {\n        for (int i = 1; i < k; i++)\n            for (int j = i + 1; j < k; j++)\n                best = min(best, d[i][j] + w[j][k] + w[k][i]);\n        for (int i = 1; i <= n; i++)\n            for (int j = 1; j <= n; j++)\n                d[i][j] = min(d[i][j], d[i][k] + d[k][j]);\n    }\n    cout << (best >= INF ? -1 : best) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "najkrótszy cykl przez dany wierzchołek",
+      "cykl przez wierzchołek s",
+      "shortest cycle through vertex"
+     ],
+     "a": "Skierowany: jedna Dijkstra/BFS z `s` i `min(dist[v] + w(v → s))`. Nieskierowany: z BFS-a z `s` dla\nkażdej krawędzi `v – u` łączącej **różne poddrzewa** dzieci `s` (różne „gałęzie” pierwszego kroku)\nkandydat to `dist[v] + dist[u] + 1`; trzeba pamiętać, przez którego sąsiada `s` weszliśmy do wierzchołka.",
+     "code": "int n = 4, s = 1;\nvector<vector<int>> g = {{}, {2, 3}, {1, 4}, {1, 4}, {2, 3}};   // kwadrat 1-2-4-3\nvector<int> d(n + 1, -1), branch(n + 1, 0);\nqueue<int> q;\nd[s] = 0; q.push(s);\nint best = INT_MAX;\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    for (int u : g[v]) {\n        if (d[u] == -1) {\n            d[u] = d[v] + 1;\n            branch[u] = (v == s) ? u : branch[v];\n            q.push(u);\n        } else if (u != s && v != s && branch[u] != branch[v]) {\n            best = min(best, d[u] + d[v] + 1);\n        }\n    }\n}\ncout << best << '\\n';   // 4"
+    },
+    {
+     "q": [
+      "krawędzie wielokrotne najkrótszy cykl",
+      "cykl długości 2",
+      "multigraf najkrótszy cykl"
+     ],
+     "a": "W nieskierowanym multigrafie dwie krawędzie między tą samą parą dają cykl długości 2 (ważony: suma dwóch\nnajlżejszych krawędzi tej pary), a pętla `a – a` — cykl długości 1. Wykryj je osobno przy wczytywaniu\n(np. `set<pair<int,int>>` lub sortowanie krawędzi), a BFS uruchamiaj na grafie prostym.",
+     "code": "vector<pair<int,int>> e = {{1, 2}, {2, 3}, {2, 1}};\nset<pair<int,int>> seen;\nint best = INT_MAX;\nfor (auto [a, b] : e) {\n    if (a == b) best = min(best, 1);\n    pair<int,int> key = {min(a, b), max(a, b)};\n    if (seen.count(key)) best = min(best, 2);\n    seen.insert(key);\n}\ncout << best << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "graf n wierzchołków n krawędzi",
+      "jeden cykl w grafie",
+      "znajdź jedyny cykl",
+      "unicyclic graph",
+      "drzewo plus jedna krawędź cykl"
+     ],
+     "a": "Spójny graf z `n` wierzchołkami i `n` krawędziami ma **dokładnie jeden cykl** (drzewo + jedna krawędź).\nZnajdziesz go obcinaniem liści: wrzuć do kolejki wierzchołki stopnia 1, usuwaj je i zmniejszaj stopnie\nsąsiadów; nowe liście też do kolejki. Co zostanie — to wierzchołki cyklu. O(n), bez rekurencji.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    vector<int> deg(n + 1, 0);\n    for (int i = 0; i < n; i++) {                // n krawędzi\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b); g[b].push_back(a);\n        deg[a]++; deg[b]++;\n    }\n    vector<bool> usuniety(n + 1, false);\n    queue<int> q;\n    for (int v = 1; v <= n; v++) if (deg[v] == 1) q.push(v);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        usuniety[v] = true;\n        for (int u : g[v]) if (!usuniety[u] && --deg[u] == 1) q.push(u);\n    }\n    vector<int> cykl;\n    for (int v = 1; v <= n; v++) if (!usuniety[v]) cykl.push_back(v);\n    cout << cykl.size() << '\\n';\n    for (int v : cykl) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "najkrótszy cykl złożoność",
+      "najkrótszy cykl za wolno",
+      "girth n=10^5"
+     ],
+     "a": "BFS z każdego wierzchołka to O(n·(n + m)) — dobre do `n·m ≈ 10^8` (np. `n = m = 5000` to 2,5·10^7 —\nszybko, `n = m = 10^5` — 10^10, za wolno). Optymalizacja: przerwij BFS z `s`, gdy `dist[v]` przekroczy\npołowę dotychczasowego najlepszego wyniku — dalej krótszego cyklu z `s` nie znajdziesz. Dla dużych\ngrafów szukaj struktury (graf funkcyjny, jeden cykl, drzewo + kilka krawędzi).",
+     "code": "int n = 4, best = INT_MAX;\nvector<vector<int>> g = {{}, {2, 4}, {1, 3}, {2, 4}, {3, 1}};   // kwadrat\nfor (int s = 1; s <= n; s++) {\n    vector<int> d(n + 1, -1), par(n + 1, 0);\n    queue<int> q;\n    d[s] = 0; q.push(s);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        if (best != INT_MAX && 2 * d[v] >= best) break;     // odcięcie\n        for (int u : g[v]) {\n            if (d[u] == -1) { d[u] = d[v] + 1; par[u] = v; q.push(u); }\n            else if (par[v] != u) best = min(best, d[v] + d[u] + 1);\n        }\n    }\n}\ncout << best << '\\n';   // 4"
+    }
+   ],
+   "related": [
+    "graph-bfs",
+    "graph-cycle-detection",
+    "graph-dijkstra",
+    "graph-floyd-warshall",
+    "graph-functional"
+   ]
+  },
+  {
+   "id": "graph-functional",
+   "title": "Grafy funkcyjne: jeden następnik, cykle i binary lifting po następnikach",
+   "category": "Grafy",
+   "tags": [
+    "graf funkcyjny",
+    "functional graph",
+    "następnik",
+    "cykle",
+    "binary lifting",
+    "k-ty następnik",
+    "permutacja",
+    "żółw i zając",
+    "jump pointers"
+   ],
+   "aliases": [
+    "graf funkcyjny",
+    "functional graph",
+    "każdy wierzchołek ma jedną krawędź wychodzącą",
+    "f(v) następnik",
+    "k-ty następnik",
+    "binary lifting następnik",
+    "skok o k kroków",
+    "cykle permutacji",
+    "żółw i zając",
+    "tortoise and hare",
+    "successor graph"
+   ],
+   "summary": "W grafie funkcyjnym każdy wierzchołek ma dokładnie jedną krawędź wychodzącą `f[v]`. Każda składowa to jeden cykl z „drzewkami” do niego wpadającymi. k-ty następnik liczy się binary liftingiem w O(log k), a cykle — jednym przejściem w O(n).",
+   "complexity": "znalezienie cykli: O(n); binary lifting: O(n log K) preprocessingu, O(log K) na zapytanie",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Graf funkcyjny pojawia się, gdy „z każdego miejsca jest dokładnie jeden ruch”: teleporty, permutacje,\nfunkcja `f: {1..n} → {1..n}`, „każdy uczeń przekazuje kartkę jednej osobie”. Idąc z dowolnego\nwierzchołka, po co najwyżej `n` krokach wpadasz w cykl i krążysz po nim już zawsze. Struktura: każda\nskładowa spójności ma **dokładnie jeden cykl**, a reszta wierzchołków tworzy drzewa „wpadające” do cyklu\n(tzw. *rho*, kształt litery ρ).\n\n**k-ty następnik** dla ogromnych `k` (10^9, 10^18): binary lifting — `up[0][v] = f[v]`,\n`up[j][v] = up[j−1][up[j−1][v]]` (skok o `2^j`). Skok o `k` = złożenie skoków po bitach `k`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „każdy wierzchołek/pole wskazuje dokładnie jedno następne”, „teleport z pola i prowadzi do\na_i”, „po k ruchach (k ≤ 10^18)”, „permutacja zastosowana k razy”, „po ilu krokach wróci”, „ile osób\njest w pętli”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "k-ty następnik — binary lifting",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int LOG = 30;                       // k < 2^30 (dla k <= 10^18 weź 60 i long long)\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<array<int, LOG>> up(n + 1);    // up[v][j] = wierzchołek po 2^j krokach z v\n    for (int v = 1; v <= n; v++) cin >> up[v][0];\n    for (int j = 1; j < LOG; j++)\n        for (int v = 1; v <= n; v++)\n            up[v][j] = up[up[v][j - 1]][j - 1];\n    while (q--) {\n        int v;\n        long long k;\n        cin >> v >> k;\n        for (int j = 0; j < LOG; j++)\n            if (k >> j & 1) v = up[v][j];\n        cout << v << '\\n';\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Cykle i ogony w grafie funkcyjnym — iteracyjnie, O(n)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Dla każdego v: długość cyklu, do którego dochodzi, i odległość od cyklu (0, gdy leży na cyklu).\nint main() {\n    int n;\n    cin >> n;\n    vector<int> f(n + 1);\n    for (int v = 1; v <= n; v++) cin >> f[v];\n    vector<int> state(n + 1, 0), pos(n + 1, -1), cyc(n + 1, 0), tail(n + 1, 0);\n    for (int s = 1; s <= n; s++) {\n        if (state[s]) continue;\n        vector<int> path;\n        int v = s;\n        while (state[v] == 0) {           // idziemy, aż trafimy na coś odwiedzonego\n            state[v] = 1;\n            pos[v] = path.size();\n            path.push_back(v);\n            v = f[v];\n        }\n        if (state[v] == 1) {              // nowy cykl: od pozycji v do końca ścieżki\n            int L = path.size() - pos[v];\n            for (int i = pos[v]; i < (int)path.size(); i++) {\n                cyc[path[i]] = L;\n                tail[path[i]] = 0;\n                state[path[i]] = 2;\n            }\n            path.resize(pos[v]);\n        }\n        for (int i = (int)path.size() - 1; i >= 0; i--) {   // ogon: od końca\n            int u = path[i];\n            cyc[u] = cyc[f[u]];\n            tail[u] = tail[f[u]] + 1;\n            state[u] = 2;\n        }\n    }\n    for (int v = 1; v <= n; v++) cout << cyc[v] << ' ' << tail[v] << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Wierzchołki leżące na cyklach można też znaleźć „obcinaniem liści”: licz stopnie wejściowe, wrzuć\ndo kolejki wierzchołki z `indeg = 0` i usuwaj je (jak w Kahnie). Co zostanie — leży na cyklach."
+    },
+    {
+     "type": "warn",
+     "md": "Pamięć binary liftingu: `LOG × n` intów. Dla `n = 2·10^5` i `LOG = 60` to 48 MB — sprawdź limit.\nGdy zapytań jest mało, prościej: znajdź cykl i policz `k mod długość_cyklu`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "up[v][j] = up[up[v][j-1]][j-1]",
+     "desc": "skok o 2^j kroków = dwa skoki o 2^(j−1)",
+     "complexity": "O(n·LOG) łącznie"
+    },
+    {
+     "sig": "for j: if (k >> j & 1) v = up[v][j]",
+     "desc": "k-ty następnik przez rozkład k na potęgi dwójki",
+     "complexity": "O(LOG)"
+    }
+   ],
+   "pitfalls": [
+    "`LOG` za mały: dla `k ≤ 10^18` potrzeba 60 poziomów, a `k` musi być `long long` (`1LL << j`).",
+    "Kolejność wymiarów: `up[j][v]` (j zewnętrzne) jest bardziej przyjazne pamięci podręcznej przy budowie warstwami; najważniejsze, żeby budować warstwę `j` po całej warstwie `j − 1`.",
+    "Rekurencyjne szukanie cykli na grafie z długim ogonem (10^6) — przepełnienie stosu. Wersja iteracyjna.",
+    "Permutacja to szczególny graf funkcyjny (bez ogonów: każdy wierzchołek na cyklu). Ogólny graf funkcyjny ma ogony — nie zakładaj, że `f` jest różnowartościowa.",
+    "Liczba kroków do powrotu permutacji do stanu wyjściowego to NWW długości cykli — może być ogromna, licz modulo albo w `__int128`/rozkładzie na czynniki."
+   ],
+   "qa": [
+    {
+     "q": [
+      "graf funkcyjny",
+      "functional graph",
+      "każdy wierzchołek ma jedną krawędź wychodzącą",
+      "co to graf funkcyjny",
+      "successor graph"
+     ],
+     "a": "Graf, w którym każdy wierzchołek ma dokładnie jeden następnik `f[v]`. Z każdego wierzchołka po\nco najwyżej `n` krokach wchodzisz na cykl. Każda składowa ma dokładnie jeden cykl i drzewa do niego\nwpadające. Typowe operacje: znalezienie cykli (O(n)), k-ty następnik (binary lifting O(log k)),\nodległość do cyklu.",
+     "code": "vector<int> f = {0, 2, 3, 4, 2, 1};   // 1->2->3->4->2 oraz 5->1\nint v = 5;\nvector<int> seen(6, -1), path;\nwhile (seen[v] == -1) { seen[v] = path.size(); path.push_back(v); v = f[v]; }\ncout << \"ogon:\";\nfor (int i = 0; i < seen[v]; i++) cout << ' ' << path[i];\ncout << \" | cykl:\";\nfor (int i = seen[v]; i < (int)path.size(); i++) cout << ' ' << path[i];\ncout << '\\n';   // ogon: 5 1 | cykl: 2 3 4"
+    },
+    {
+     "q": [
+      "k-ty następnik",
+      "binary lifting następnik",
+      "f^k(v)",
+      "skok o k kroków",
+      "po k ruchach gdzie będę",
+      "k-th successor"
+     ],
+     "a": "Binary lifting: `up[0][v] = f[v]`, `up[j][v] = up[j−1][up[j−1][v]]`. Żeby przejść `k` kroków,\nrozłóż `k` binarnie i dla każdego zapalonego bitu `j` wykonaj `v = up[j][v]`. Preprocessing\nO(n log K), zapytanie **O(log K)**. Dla `k ≤ 10^18` weź `LOG = 60` i `long long k`.",
+     "code": "const int LOG = 60, MAXN = 100005;\nint up[LOG][MAXN];\nvoid build(int n, const vector<int>& f) {        // f[1..n]\n    for (int v = 1; v <= n; v++) up[0][v] = f[v];\n    for (int j = 1; j < LOG; j++)\n        for (int v = 1; v <= n; v++) up[j][v] = up[j - 1][up[j - 1][v]];\n}\nint jump(int v, long long k) {\n    for (int j = 0; j < LOG; j++)\n        if (k >> j & 1LL) v = up[j][v];\n    return v;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "długość cyklu dla każdego wierzchołka",
+      "znajdź cykle w grafie funkcyjnym",
+      "cykl i ogon",
+      "odległość do cyklu"
+     ],
+     "a": "Idź z każdego nieodwiedzonego wierzchołka po `f`, oznaczając stan „na bieżącej ścieżce”. Gdy trafisz\nna wierzchołek ze stanu „na ścieżce” — od jego pozycji do końca ścieżki jest nowy cykl. Gdy trafisz na\nprzetworzony — nie ma nowego cyklu. Ogon przetwarzasz od końca: `tail[u] = tail[f[u]] + 1`. Każdy\nwierzchołek raz → **O(n)**, iteracyjnie.",
+     "code": "int n = 5;\nvector<int> f = {0, 2, 3, 1, 1, 4};        // 1->2->3->1, 4->1, 5->4\nvector<int> indeg(n + 1, 0);\nfor (int v = 1; v <= n; v++) indeg[f[v]]++;\nqueue<int> q;\nfor (int v = 1; v <= n; v++) if (!indeg[v]) q.push(v);\nvector<bool> naCyklu(n + 1, true);\nwhile (!q.empty()) {                          // obcinamy wierzchołki spoza cykli\n    int v = q.front(); q.pop();\n    naCyklu[v] = false;\n    if (--indeg[f[v]] == 0) q.push(f[v]);\n}\nfor (int v = 1; v <= n; v++) cout << naCyklu[v];\ncout << '\\n';   // 11100"
+    },
+    {
+     "q": [
+      "żółw i zając",
+      "algorytm floyda wykrywanie cyklu",
+      "tortoise and hare",
+      "floyd cycle detection",
+      "wykrycie cyklu O(1) pamięci"
+     ],
+     "a": "Dwa wskaźniki: żółw robi 1 krok, zając 2. Jeśli jest cykl (w grafie funkcyjnym zawsze), spotkają się na\nnim. Potem: żółw wraca do startu, oba idą po 1 kroku — spotkają się na **początku cyklu** (`μ` = długość\nogona). Długość cyklu `λ`: jeden obchodzi cykl, licząc kroki. O(μ + λ) czasu, **O(1) pamięci** —\nprzydatne, gdy `f` jest funkcją liczbową (np. generator pseudolosowy), a nie tablicą.",
+     "code": "auto f = [](long long x) { return (x * x + 1) % 1000; };\nlong long x0 = 2;\nlong long t = f(x0), h = f(f(x0));\nwhile (t != h) { t = f(t); h = f(f(h)); }\nlong long mu = 0;\nt = x0;\nwhile (t != h) { t = f(t); h = f(h); mu++; }      // początek cyklu\nlong long lam = 1;\nh = f(t);\nwhile (t != h) { h = f(h); lam++; }               // długość cyklu\ncout << mu << ' ' << lam << '\\n';"
+    },
+    {
+     "q": [
+      "cykle permutacji",
+      "rozkład permutacji na cykle",
+      "ile razy zastosować permutację żeby wrócić",
+      "rząd permutacji",
+      "permutation cycles"
+     ],
+     "a": "Permutacja to graf funkcyjny bez ogonów — wszystko leży na cyklach. Przejdź po każdym nieodwiedzonym\n`i` i licz długość cyklu. Po `k` zastosowaniach element `i` jest w miejscu przesuniętym o `k mod L` po\nswoim cyklu. Permutacja wraca do identyczności po **NWW długości cykli** kroków. O(n).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<int> p(n + 1);\n    for (int i = 1; i <= n; i++) cin >> p[i];\n    vector<bool> vis(n + 1, false);\n    long long nww = 1;\n    int cykle = 0;\n    for (int i = 1; i <= n; i++) {\n        if (vis[i]) continue;\n        cykle++;\n        long long L = 0;\n        for (int v = i; !vis[v]; v = p[v]) { vis[v] = true; L++; }\n        nww = nww / __gcd(nww, L) * L;\n    }\n    cout << cykle << ' ' << nww << '\\n';\n}"
+    },
+    {
+     "q": [
+      "symulacja 10^18 kroków",
+      "po k krokach z cyklem modulo",
+      "k bardzo duże symulacja",
+      "przewiń do cyklu i modulo"
+     ],
+     "a": "Gdy jest jedno zapytanie (albo stan to jedna wartość), zamiast binary liftingu: symuluj, zapisując\nnumer kroku, w którym odwiedziłeś stan (`seen[x] = krok`). Gdy trafisz na odwiedzony stan, znasz\npoczątek cyklu `μ = seen[x]` i długość `λ = krok − μ`; resztę kroków skróć: `(k − μ) mod λ`. O(n).",
+     "code": "int n = 5;\nvector<int> f = {0, 2, 3, 4, 5, 3};          // 1->2->3->4->5->3\nlong long k = 1000000000000LL;\nvector<long long> seen(n + 1, -1);\nint v = 1;\nlong long krok = 0;\nwhile (krok < k && seen[v] == -1) { seen[v] = krok; v = f[v]; krok++; }\nif (krok < k) {\n    long long lam = krok - seen[v];\n    long long reszta = (k - krok) % lam;\n    while (reszta--) v = f[v];\n}\ncout << v << '\\n';   // 5"
+    },
+    {
+     "q": [
+      "binary lifting pamięć",
+      "ile poziomów log binary lifting",
+      "binary lifting mle",
+      "LOG 20 czy 30 czy 60"
+     ],
+     "a": "Liczba poziomów `LOG` musi spełniać `2^LOG > max k`: `k ≤ 10^6` → 20, `k ≤ 10^9` → 30, `k ≤ 10^18` → 60.\nPamięć `LOG · n · 4 B`: dla `n = 10^6`, `LOG = 30` to 120 MB — często za dużo. Wtedy: zapytania offline\nposortowane po bitach, albo znajdź cykle i licz `k mod λ` bez tablicy skoków.",
+     "code": "long long maxK = 1000000000000000000LL;\nint LOG = 1;\nwhile ((1LL << LOG) <= maxK && LOG < 62) LOG++;\ncout << LOG << '\\n';   // 60"
+    }
+   ],
+   "related": [
+    "graph-cycle-detection",
+    "tree-lca",
+    "graph-dfs",
+    "graph-shortest-cycle"
+   ]
+  }
+ ]
+}

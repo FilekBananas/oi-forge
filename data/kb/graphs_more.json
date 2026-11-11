@@ -1,0 +1,1897 @@
+{
+ "chunk": "graphs_more",
+ "articles": [
+  {
+   "id": "graph-multi-source-bfs",
+   "title": "BFS z wielu źródeł (multi-source BFS) — odległość do najbliższego obiektu, rozprzestrzenianie się ognia",
+   "category": "Grafy",
+   "tags": [
+    "bfs",
+    "wiele źródeł",
+    "multi-source bfs",
+    "najbliższy obiekt",
+    "odległość od zbioru",
+    "ogień",
+    "superźródło",
+    "voronoi",
+    "siatka",
+    "rozprzestrzenianie",
+    "zaraza"
+   ],
+   "aliases": [
+    "bfs z wielu źródeł",
+    "bfs z wielu zrodel",
+    "multi source bfs",
+    "multi-source bfs",
+    "multisource bfs",
+    "bfs od wielu startów naraz",
+    "bfs wiele źródeł",
+    "odległość do najbliższego obiektu",
+    "odleglosc do najblizszego",
+    "rozprzestrzenianie się ognia",
+    "ogień rozprzestrzenia się po planszy",
+    "ogień bfs",
+    "superźródło",
+    "najbliższe źródło",
+    "odległość od zbioru wierzchołków"
+   ],
+   "summary": "Zamiast puszczać BFS osobno z każdego z k źródeł (O(k·(n+m))), wrzucamy WSZYSTKIE źródła do kolejki z odległością 0 i robimy jeden BFS. Każdy wierzchołek dostaje odległość do najbliższego źródła (i informację, które to źródło) w O(n+m).",
+   "complexity": "O(n + m) (na siatce O(n·m)) — niezależnie od liczby źródeł",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Idea.** Wyobraź sobie *superźródło* `S` połączone krawędzią długości 0 z każdym źródłem. Najkrótsza droga z `S` do `v` to odległość `v` od **najbliższego** źródła. W praktyce `S` nie dodajemy — na starcie wrzucamy do kolejki wszystkie źródła z `dist = 0`. BFS przetwarza wierzchołki warstwami (0, 1, 2, …), więc pierwsze dotarcie do `v` pochodzi od najbliższego źródła."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „dla każdego pola podaj odległość do najbliższego sklepu/wyjścia/strażnika”, „ogień/woda/zaraza rozprzestrzenia się co minutę na sąsiednie pola”, „po ilu dniach wszystko zgnije”, „uciekaj przed potworami”, „odległość od zbioru wierzchołków”, „najbliższa para punktów specjalnych”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Siatka: odległość każdego pola do najbliższego 'X'",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<string> g(n);              // 'X' = źródło (np. sklep), '#' = ściana, '.' = wolne\n    for (auto& r : g) cin >> r;\n    const int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};\n    vector<vector<int>> dist(n, vector<int>(m, -1));\n    queue<pair<int, int>> q;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++)\n            if (g[i][j] == 'X') {     // WSZYSTKIE źródła na start, każde z odległością 0\n                dist[i][j] = 0;\n                q.push({i, j});\n            }\n    while (!q.empty()) {              // dalej zwykły BFS\n        auto [x, y] = q.front();\n        q.pop();\n        for (int d = 0; d < 4; d++) {\n            int nx = x + dx[d], ny = y + dy[d];\n            if (nx < 0 || nx >= n || ny < 0 || ny >= m) continue;\n            if (g[nx][ny] == '#' || dist[nx][ny] != -1) continue;\n            dist[nx][ny] = dist[x][y] + 1;\n            q.push({nx, ny});\n        }\n    }\n    for (int i = 0; i < n; i++)       // -1 = żadne źródło nie dociera\n        for (int j = 0; j < m; j++)\n            cout << dist[i][j] << \" \\n\"[j == m - 1];\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zadanie",
+      "Źródła w kolejce na starcie",
+      "Co odczytać"
+     ],
+     "rows": [
+      [
+       "Odległość do najbliższego obiektu",
+       "wszystkie obiekty, dist = 0",
+       "dist[v]"
+      ],
+      [
+       "Który obiekt jest najbliżej",
+       "każde źródło z owner[s] = s",
+       "owner[v] (dziedziczone po rodzicu w BFS)"
+      ],
+      [
+       "Czas zalania całej planszy (ogień, zgniłe pomarańcze)",
+       "wszystkie zarzewia",
+       "max dist[v] (−1, gdy coś nieosiągalne)"
+      ],
+      [
+       "Ucieczka przed ogniem/potworami",
+       "1) BFS z ognia, 2) BFS z gracza",
+       "gracz wchodzi na pole tylko gdy t < czasOgnia"
+      ],
+      [
+       "Najbliższa para dwóch różnych źródeł",
+       "wszystkie źródła + owner",
+       "min po krawędziach (a, b) z owner[a] ≠ owner[b]: dist[a] + 1 + dist[b]"
+      ],
+      [
+       "Wagi na krawędziach",
+       "Dijkstra: wszystkie źródła z d = 0 w kopcu",
+       "jak wyżej, O(m log n)"
+      ],
+      [
+       "Gdzie postawić nowy obiekt najdalej od istniejących",
+       "wszystkie obiekty",
+       "pole z max dist"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Graf: najbliższe źródło każdego wierzchołka i najbliższa para źródeł",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, m, k;\n    cin >> n >> m >> k;\n    vector<int> src(k);                       // różne wierzchołki specjalne\n    for (auto& s : src) cin >> s;\n    vector<vector<int>> adj(n + 1);\n    vector<pair<int, int>> edges(m);\n    for (auto& [a, b] : edges) {\n        cin >> a >> b;\n        adj[a].push_back(b);\n        adj[b].push_back(a);\n    }\n    vector<int> dist(n + 1, -1), owner(n + 1, -1);   // owner[v] = najbliższe źródło\n    queue<int> q;\n    for (int s : src) {\n        dist[s] = 0;\n        owner[s] = s;\n        q.push(s);\n    }\n    while (!q.empty()) {\n        int v = q.front();\n        q.pop();\n        for (int u : adj[v])\n            if (dist[u] == -1) {\n                dist[u] = dist[v] + 1;\n                owner[u] = owner[v];          // u dziedziczy źródło po v\n                q.push(u);\n            }\n    }\n    for (int v = 1; v <= n; v++)\n        cout << v << \": dist=\" << dist[v] << \" zrodlo=\" << owner[v] << '\\n';\n    // najbliższa para RÓŻNYCH źródeł = krawędź na granicy dwóch „stref”\n    int best = INT_MAX;\n    for (auto [a, b] : edges)\n        if (dist[a] != -1 && dist[b] != -1 && owner[a] != owner[b])\n            best = min(best, dist[a] + 1 + dist[b]);\n    cout << \"najblizsza para zrodel: \" << (best == INT_MAX ? -1 : best) << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Ucieczka przed ogniem: dwa BFS-y z wielu źródeł",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};\nint n, m;\nvector<string> g;            // '.' wolne, '#' ściana, 'F' ogień, 'A' ja\n\n// BFS z wielu źródeł: start ze wszystkich pól z literą c (czas 0).\n// fire != nullptr: wolno wejść na pole tylko PRZED ogniem.\nvector<vector<int>> bfs(char c, const vector<vector<int>>* fire) {\n    vector<vector<int>> d(n, vector<int>(m, INT_MAX));\n    queue<pair<int, int>> q;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++)\n            if (g[i][j] == c) { d[i][j] = 0; q.push({i, j}); }\n    while (!q.empty()) {\n        auto [x, y] = q.front();\n        q.pop();\n        for (int k = 0; k < 4; k++) {\n            int nx = x + dx[k], ny = y + dy[k];\n            if (nx < 0 || nx >= n || ny < 0 || ny >= m || g[nx][ny] == '#') continue;\n            if (d[nx][ny] != INT_MAX) continue;\n            int t = d[x][y] + 1;\n            if (fire && t >= (*fire)[nx][ny]) continue;   // ogień był tam wcześniej lub dociera w tej chwili\n            d[nx][ny] = t;\n            q.push({nx, ny});\n        }\n    }\n    return d;\n}\n\nint main() {\n    cin >> n >> m;\n    g.resize(n);\n    for (auto& r : g) cin >> r;\n    auto fire = bfs('F', nullptr);      // 1) kiedy ogień dociera do każdego pola\n    auto me = bfs('A', &fire);          // 2) kiedy ja mogę tam bezpiecznie stanąć\n    int best = INT_MAX;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++)\n            if ((i == 0 || j == 0 || i == n - 1 || j == m - 1) && me[i][j] != INT_MAX)\n                best = min(best, me[i][j]);\n    if (best == INT_MAX) cout << \"NIE\\n\";\n    else cout << best << '\\n';          // liczba ruchów do pola na brzegu planszy\n}"
+    },
+    {
+     "type": "tip",
+     "md": "W wersji ważonej to samo robi Dijkstra: przed pętlą `d[s] = 0; pq.push({0, s});` dla każdego źródła. Przy wagach 0/1 — 0-1 BFS ze wszystkimi źródłami na początku `deque`."
+    },
+    {
+     "type": "warn",
+     "md": "Multi-source BFS liczy zawsze **minimum** po źródłach. Odległości do *najdalszego* źródła (maksimum) tak nie policzysz — potrzebny inny trik (np. metryka Manhattan, średnica w drzewie)."
+    },
+    {
+     "type": "warn",
+     "md": "Nie puszczaj BFS-a z każdego źródła osobno: przy 10^5 źródłach na planszy 1000×1000 to 10^11 operacji. Jeden BFS ze wszystkimi źródłami robi to samo w O(n·m)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (int s : zrodla) { dist[s] = 0; q.push(s); }",
+     "desc": "inicjalizacja: wszystkie źródła naraz",
+     "complexity": "O(k)",
+     "example": "for (int s : src) { dist[s] = 0; owner[s] = s; q.push(s); }"
+    },
+    {
+     "sig": "owner[u] = owner[v]",
+     "desc": "przy odwiedzaniu u z v: u dziedziczy najbliższe źródło",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Źródła trzeba oznaczyć jako odwiedzone (`dist = 0`) ZANIM ruszy pętla — inaczej BFS z jednego źródła „nadpisze” inne źródło odległością > 0.",
+    "Pole źródła (`X`, `F`) potraktowane jak ściana, bo warunek sprawdza `== '.'` — sprawdzaj `!= '#'`.",
+    "Ucieczka przed ogniem: remis — czy można wejść na pole w tej samej minucie, w której dochodzi ogień? Zwykle NIE (`t < fire`), ale czytaj treść; czasem wyjście poza planszę liczy się jako dodatkowy ruch (+1).",
+    "Brak jakiegokolwiek źródła (np. nie ma ognia) — wszystkie `dist` zostają `INF`/`-1`; obsłuż to przed liczeniem maksimum.",
+    "Najbliższa para źródeł: przeglądasz KRAWĘDZIE z różnym `owner`, nie wierzchołki; zduplikowane źródło (to samo pole dwa razy na wejściu) daje fałszywe 0."
+   ],
+   "qa": [
+    {
+     "q": [
+      "bfs z wielu źródeł",
+      "bfs z wielu zrodel",
+      "multi source bfs",
+      "multisource bfs jak zrobić",
+      "bfs od kilku startów naraz",
+      "bfs wiele wierzchołków startowych jednocześnie",
+      "kilka źródeł bfs"
+     ],
+     "a": "Wrzuć do kolejki **wszystkie** źródła z `dist = 0` przed pętlą, a potem zwykły BFS. Każdy wierzchołek dostaje odległość do **najbliższego** źródła. Jeden przebieg O(n + m), niezależnie od liczby źródeł.",
+     "code": "int n = 5;\nvector<vector<int>> adj = {{1}, {0, 2}, {1, 3}, {2, 4}, {3}};   // ścieżka 0-1-2-3-4\nvector<int> zrodla = {0, 4}, dist(n, -1);\nqueue<int> q;\nfor (int s : zrodla) { dist[s] = 0; q.push(s); }               // wszystkie naraz\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    for (int u : adj[v])\n        if (dist[u] == -1) { dist[u] = dist[v] + 1; q.push(u); }\n}\nfor (int d : dist) cout << d << ' ';                            // 0 1 2 1 0"
+    },
+    {
+     "q": [
+      "odległość do najbliższego obiektu na planszy",
+      "odleglosc do najblizszego sklepu dla kazdego pola",
+      "dla każdego pola najbliższa jedynka",
+      "distance to nearest cell grid",
+      "nearest zero matrix",
+      "najbliższe wyjście dla każdego pola labiryntu"
+     ],
+     "a": "Każdy obiekt (sklep, `1`, wyjście) jest źródłem. Wrzuć wszystkie takie pola do kolejki z `dist = 0` i puść BFS po siatce. `dist[x][y]` = odległość do najbliższego obiektu, `-1` = odgrodzone ścianami. Pełny program: blok „Siatka” w treści.",
+     "code": "int n = 3, m = 4;\nvector<string> g = {\"X..#\", \"...#\", \"#..X\"};\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nvector<vector<int>> dist(n, vector<int>(m, -1));\nqueue<pair<int, int>> q;\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < m; j++)\n        if (g[i][j] == 'X') { dist[i][j] = 0; q.push({i, j}); }\nwhile (!q.empty()) {\n    auto [x, y] = q.front(); q.pop();\n    for (int d = 0; d < 4; d++) {\n        int nx = x + dx[d], ny = y + dy[d];\n        if (nx < 0 || ny < 0 || nx >= n || ny >= m || g[nx][ny] == '#' || dist[nx][ny] != -1) continue;\n        dist[nx][ny] = dist[x][y] + 1;\n        q.push({nx, ny});\n    }\n}\ncout << dist[1][2] << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "ucieczka przed ogniem",
+      "rozprzestrzenianie się ognia bfs",
+      "ogień rozprzestrzenia się po planszy",
+      "ogien rozprzestrzenia sie po planszy",
+      "ogień rozprzestrzenia się co minutę",
+      "pozar plansza bfs",
+      "fire escape bfs",
+      "monsters cses",
+      "uciec z labiryntu zanim dojdzie ogień"
+     ],
+     "a": "Dwa BFS-y: (1) ze **wszystkich** pól ognia/potworów naraz → `fire[x][y]` = minuta, w której zagrożenie dociera; (2) z gracza, ale na pole wchodzisz tylko, gdy będziesz tam **wcześniej**: `t < fire[nx][ny]`. Ucieczka udana, jeśli gracz osiągnie pole na brzegu. Pełny program „Ucieczka przed ogniem” w treści.",
+     "code": "// fragment BFS-a gracza (fire policzone wcześniej BFS-em z wielu źródeł)\nint t = 4;                  // czas, w którym wszedłbym na pole (nx, ny)\nint fireTime = 4;           // kiedy ogień dociera do (nx, ny)\nbool mogeWejsc = t < fireTime;   // remis = spalony (sprawdź w treści!)\ncout << mogeWejsc << '\\n';       // 0"
+    },
+    {
+     "q": [
+      "po ilu minutach wszystko się spali",
+      "po ilu dniach wszystkie pomarańcze zgniją",
+      "rotting oranges",
+      "czas zalania całej planszy",
+      "ile minut aż cały obszar zarażony",
+      "time to infect whole grid",
+      "zaraza rozprzestrzenia się na sąsiadów"
+     ],
+     "a": "BFS ze wszystkich zarzewi naraz; wynik to **największa** odległość wśród pól, które mają się zarazić. Jeśli któreś zostało nieodwiedzone — odpowiedź `-1` (nigdy). Brak pól do zarażenia → `0`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> a(n, vector<int>(m));     // 0 puste, 1 zdrowa, 2 zgniła\n    vector<vector<int>> dist(n, vector<int>(m, -1));\n    queue<pair<int, int>> q;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++) {\n            cin >> a[i][j];\n            if (a[i][j] == 2) { dist[i][j] = 0; q.push({i, j}); }   // wszystkie zarzewia naraz\n        }\n    int dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\n    while (!q.empty()) {\n        auto [x, y] = q.front();\n        q.pop();\n        for (int d = 0; d < 4; d++) {\n            int nx = x + dx[d], ny = y + dy[d];\n            if (nx < 0 || ny < 0 || nx >= n || ny >= m) continue;\n            if (a[nx][ny] != 1 || dist[nx][ny] != -1) continue;\n            dist[nx][ny] = dist[x][y] + 1;\n            q.push({nx, ny});\n        }\n    }\n    int ans = 0;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++)\n            if (a[i][j] == 1) {\n                if (dist[i][j] == -1) { cout << -1 << '\\n'; return 0; }   // nigdy nie zgnije\n                ans = max(ans, dist[i][j]);\n            }\n    cout << ans << '\\n';\n}"
+    },
+    {
+     "q": [
+      "który obiekt jest najbliżej",
+      "najbliższe źródło dla każdego wierzchołka",
+      "nearest source id bfs",
+      "voronoi na grafie",
+      "do którego sklepu najbliżej",
+      "podział grafu na strefy najbliższych szpitali"
+     ],
+     "a": "Trzymaj `owner[v]` — z którego źródła przyszedł BFS. Na starcie `owner[s] = s`, przy odwiedzaniu `owner[u] = owner[v]`. Przy remisie dostajesz jedno z najbliższych (to, które dotarło pierwsze).",
+     "code": "int n = 5;\nvector<vector<int>> adj = {{1}, {0, 2}, {1, 3}, {2, 4}, {3}};   // ścieżka 0-1-2-3-4\nvector<int> src = {0, 4}, dist(n, -1), owner(n, -1);\nqueue<int> q;\nfor (int s : src) { dist[s] = 0; owner[s] = s; q.push(s); }\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    for (int u : adj[v])\n        if (dist[u] == -1) { dist[u] = dist[v] + 1; owner[u] = owner[v]; q.push(u); }\n}\nfor (int v = 0; v < n; v++) cout << owner[v] << ' ';           // 0 0 0 4 4"
+    },
+    {
+     "q": [
+      "najbliższa para wierzchołków specjalnych",
+      "minimalna odległość między dwoma wyróżnionymi wierzchołkami",
+      "closest pair of special vertices",
+      "najkrótsza ścieżka między dowolnymi dwoma ze zbioru",
+      "dwa najbliższe sklepy w grafie"
+     ],
+     "a": "Multi-source BFS z `owner`, potem przegląd krawędzi: dla `(a, b)` z `owner[a] != owner[b]` kandydat to `dist[a] + 1 + dist[b]` (z wagami: `+ w`). Minimum = odległość najbliższej pary różnych źródeł. O(n + m) zamiast k osobnych BFS-ów.",
+     "code": "vector<pair<int, int>> edges = {{0, 1}, {1, 2}, {2, 3}};\nvector<int> dist = {0, 1, 1, 0}, owner = {0, 0, 3, 3};   // po BFS ze źródeł 0 i 3\nint best = INT_MAX;\nfor (auto [a, b] : edges)\n    if (owner[a] != owner[b]) best = min(best, dist[a] + 1 + dist[b]);\ncout << best << '\\n';                                     // 3"
+    },
+    {
+     "q": [
+      "dijkstra z wielu źródeł naraz",
+      "multi source dijkstra z wagami",
+      "superźródło",
+      "super source",
+      "sztuczny wierzchołek połączony ze wszystkimi źródłami",
+      "najbliższy szpital z wagami krawędzi"
+     ],
+     "a": "Z wagami działa ten sam trik: przed pętlą `d[s] = 0` i `pq.push({0, s})` dla każdego źródła. To równoważne dodaniu superźródła połączonego krawędziami o wadze 0 ze wszystkimi źródłami (możesz je też dodać jawnie jako wierzchołek `0`).",
+     "code": "int n = 4;\nvector<vector<pair<int, int>>> g(n);          // (sąsiad, waga)\ng[0] = {{1, 5}}; g[1] = {{0, 5}, {2, 1}}; g[2] = {{1, 1}, {3, 7}}; g[3] = {{2, 7}};\nvector<int> zrodla = {0, 3};\nvector<long long> d(n, LLONG_MAX);\npriority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;\nfor (int s : zrodla) { d[s] = 0; pq.push({0, s}); }\nwhile (!pq.empty()) {\n    auto [dd, v] = pq.top(); pq.pop();\n    if (dd > d[v]) continue;\n    for (auto [u, w] : g[v])\n        if (dd + w < d[u]) { d[u] = dd + w; pq.push({d[u], u}); }\n}\ncout << d[1] << ' ' << d[2] << '\\n';          // 5 6"
+    },
+    {
+     "q": [
+      "odległość do najdalszego źródła",
+      "max odległość do wszystkich obiektów",
+      "czy multi source bfs liczy maksimum",
+      "najdalszy obiekt dla każdego pola",
+      "farthest source distance"
+     ],
+     "a": "Nie — multi-source BFS daje zawsze **minimum** po źródłach. Na planszy bez ścian (metryka Manhattan) maksimum liczysz w O(1) na pole z czterech ekstremów `x+y` i `x−y`. W drzewie najdalszy wierzchołek zbioru to jeden z dwóch końców „średnicy” tego zbioru. W ogólnym grafie zwykle zostaje k BFS-ów.",
+     "code": "vector<pair<int, int>> pts = {{0, 0}, {5, 2}, {1, 7}};\nint x = 2, y = 3;\nint mnS = INT_MAX, mxS = INT_MIN, mnD = INT_MAX, mxD = INT_MIN;\nfor (auto [a, b] : pts) {\n    mnS = min(mnS, a + b); mxS = max(mxS, a + b);\n    mnD = min(mnD, a - b); mxD = max(mxD, a - b);\n}\n// max |x - a| + |y - b| po wszystkich punktach\nint far = max({x + y - mnS, mxS - x - y, x - y - mnD, mxD - x + y});\ncout << far << '\\n';   // 5"
+    }
+   ],
+   "related": [
+    "graph-bfs",
+    "graph-bfs-grid",
+    "graph-flood-fill",
+    "graph-01-bfs",
+    "graph-dijkstra",
+    "tree-diameter"
+   ]
+  },
+  {
+   "id": "graph-flood-fill",
+   "title": "Flood fill — liczenie wysp i obszarów na planszy (BFS, DFS, DSU)",
+   "category": "Grafy",
+   "tags": [
+    "flood fill",
+    "zalewanie",
+    "wyspy",
+    "obszary",
+    "spójne składowe",
+    "siatka",
+    "plansza",
+    "bfs",
+    "dfs",
+    "dsu",
+    "jeziora",
+    "pokoje"
+   ],
+   "aliases": [
+    "flood fill",
+    "floodfill",
+    "zalewanie obszaru",
+    "algorytm zalewania",
+    "liczba wysp",
+    "liczenie wysp",
+    "ile wysp",
+    "number of islands",
+    "liczba obszarów na planszy",
+    "największa wyspa",
+    "największy obszar",
+    "counting rooms",
+    "spójne obszary na siatce",
+    "wypełnianie obszaru",
+    "jeziora"
+   ],
+   "summary": "Flood fill „zalewa” cały spójny obszar pól od jednego pola startowego (BFS/DFS po siatce). Puszczony z każdego jeszcze nieodwiedzonego pola liczy wyspy/pokoje, ich rozmiary i numeruje obszary w O(n·m).",
+   "complexity": "O(n·m) czasu i pamięci (każde pole raz); wersja online z DSU: prawie O(1) na dodane pole",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Schemat:** przejdź po wszystkich polach; gdy trafisz na pole lądu, którego jeszcze nie odwiedziłeś — to **nowy obszar**: zwiększ licznik i puść z niego BFS/DFS, który oznaczy wszystkie pola tego obszaru. Każde pole odwiedzasz raz, więc całość to O(n·m) nawet dla 2000×2000. To po prostu spójne składowe grafu, w którym wierzchołki = pola, a krawędzie = sąsiedztwo (bokiem lub też rogiem)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Liczba wysp, rozmiar największej i numer obszaru każdego pola (BFS)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<string> g(n);\n    for (auto& r : g) cin >> r;\n    const char LAD = '#';                              // znak pola należącego do obszaru (wyspy)\n    const int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};\n    vector<vector<int>> comp(n, vector<int>(m, -1));   // numer obszaru pola albo -1\n    vector<int> sz;                                    // sz[c] = liczba pól obszaru c\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++) {\n            if (g[i][j] != LAD || comp[i][j] != -1) continue;\n            int c = sz.size();                         // nieodwiedzony ląd = nowy obszar\n            sz.push_back(0);\n            queue<pair<int, int>> q;\n            comp[i][j] = c;                            // oznaczamy PRZY wrzucaniu do kolejki\n            q.push({i, j});\n            while (!q.empty()) {\n                auto [x, y] = q.front();\n                q.pop();\n                sz[c]++;\n                for (int d = 0; d < 4; d++) {\n                    int nx = x + dx[d], ny = y + dy[d];\n                    if (nx < 0 || nx >= n || ny < 0 || ny >= m) continue;\n                    if (g[nx][ny] != LAD || comp[nx][ny] != -1) continue;\n                    comp[nx][ny] = c;\n                    q.push({nx, ny});\n                }\n            }\n        }\n    cout << sz.size() << '\\n';                                               // liczba wysp\n    cout << (sz.empty() ? 0 : *max_element(sz.begin(), sz.end())) << '\\n';   // największa wyspa\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Co zmienić"
+     ],
+     "rows": [
+      [
+       "Sąsiedztwo 8-kierunkowe (stykanie rogiem)",
+       "pętla po 8 parach (dx, dy)"
+      ],
+      [
+       "Rozmiar największego obszaru",
+       "licz pola zdjęte z kolejki, bierz max"
+      ],
+      [
+       "Zapytania „jak duży jest obszar pola (x, y)”",
+       "zapamiętaj comp[x][y] i sz[c] — odpowiedź O(1)"
+      ],
+      [
+       "Jeziora (woda niepołączona z brzegiem)",
+       "najpierw zalej wodę od brzegu, potem licz resztę"
+      ],
+      [
+       "Wiaderko w Paincie (zmień kolor obszaru)",
+       "BFS od (x, y) po polach tego samego koloru, nadpisuj kolor"
+      ],
+      [
+       "Obwód wyspy",
+       "dla każdego pola lądu policz boki stykające się z wodą lub krawędzią planszy"
+      ],
+      [
+       "Ląd dochodzi online, wyspy po każdym kroku",
+       "DSU na indeksach x·m + y"
+      ],
+      [
+       "Które pole wody połączy najwięcej",
+       "dla pola wody: 1 + suma sz[c] RÓŻNYCH comp wśród sąsiadów"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "DFS rekurencyjny — krótki, ale uwaga na stos",
+     "code": "\nint n, m;\nvector<string> g;\nvector<vector<bool>> vis;\nint dfs(int x, int y) {                              // zwraca rozmiar obszaru\n    if (x < 0 || x >= n || y < 0 || y >= m) return 0;\n    if (g[x][y] != '#' || vis[x][y]) return 0;\n    vis[x][y] = true;\n    return 1 + dfs(x + 1, y) + dfs(x - 1, y) + dfs(x, y + 1) + dfs(x, y - 1);\n}",
+     "scope": "global"
+    },
+    {
+     "type": "warn",
+     "md": "Rekurencyjny DFS na planszy 1000×1000 w kształcie węża ma głębokość do 10^6 — na macOS (stos 8 MB) i na części sprawdzarek kończy się *segfaultem*. Na zawodach bezpieczniej BFS z kolejką albo DFS z jawnym stosem (`vector<pair<int,int>>`)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wyspy online: ląd pojawia się pole po polu (DSU)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvector<int> par, sz;\nint findp(int v) { return par[v] == v ? v : par[v] = findp(par[v]); }\nbool unite(int a, int b) {\n    a = findp(a), b = findp(b);\n    if (a == b) return false;\n    if (sz[a] < sz[b]) swap(a, b);\n    par[b] = a;\n    sz[a] += sz[b];\n    return true;\n}\n\nint main() {\n    int n, m, q;\n    cin >> n >> m >> q;                    // plansza n×m, na początku sama woda\n    par.resize(n * m);\n    sz.assign(n * m, 1);\n    iota(par.begin(), par.end(), 0);\n    vector<char> land(n * m, 0);\n    const int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};\n    int islands = 0;\n    while (q--) {\n        int x, y;\n        cin >> x >> y;                     // pole (x, y) staje się lądem (0-indeksowane)\n        int id = x * m + y;\n        if (!land[id]) {\n            land[id] = 1;\n            islands++;                     // nowa wyspa z jednego pola...\n            for (int d = 0; d < 4; d++) {\n                int nx = x + dx[d], ny = y + dy[d];\n                if (nx < 0 || nx >= n || ny < 0 || ny >= m) continue;\n                int nid = nx * m + ny;\n                if (land[nid] && unite(id, nid)) islands--;   // ...sklejana z sąsiednimi\n            }\n        }\n        cout << islands << '\\n';\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Jeziora: obszary wody niepołączone z brzegiem",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<string> g(n);                       // '.' woda, '#' ląd\n    for (auto& r : g) cin >> r;\n    int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};\n    vector<vector<char>> vis(n, vector<char>(m, 0));\n    auto fill = [&](int sx, int sy) {          // zalewa obszar wody od (sx, sy)\n        queue<pair<int, int>> q;\n        vis[sx][sy] = 1;\n        q.push({sx, sy});\n        while (!q.empty()) {\n            auto [x, y] = q.front();\n            q.pop();\n            for (int d = 0; d < 4; d++) {\n                int nx = x + dx[d], ny = y + dy[d];\n                if (nx < 0 || nx >= n || ny < 0 || ny >= m) continue;\n                if (g[nx][ny] != '.' || vis[nx][ny]) continue;\n                vis[nx][ny] = 1;\n                q.push({nx, ny});\n            }\n        }\n    };\n    for (int i = 0; i < n; i++)                // 1) zalej wodę połączoną z brzegiem (morze)\n        for (int j = 0; j < m; j++)\n            if ((i == 0 || j == 0 || i == n - 1 || j == m - 1) && g[i][j] == '.' && !vis[i][j])\n                fill(i, j);\n    int lakes = 0;                             // 2) każdy pozostały obszar wody to jezioro\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++)\n            if (g[i][j] == '.' && !vis[i][j]) { lakes++; fill(i, j); }\n    cout << lakes << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Otocz planszę ramką z wody (tablica (n+2)×(m+2), dane w 1..n, 1..m) — znikają warunki granic, a przy liczeniu jezior cała woda przy brzegu łączy się w jedno „morze”."
+    }
+   ],
+   "pitfalls": [
+    "Oznaczanie pola jako odwiedzone dopiero przy ZDEJMOWANIU z kolejki — to samo pole trafia do kolejki wiele razy (MLE/TLE). Oznaczaj przy wrzucaniu.",
+    "Rekurencyjny DFS na dużej planszy → przepełnienie stosu (RE).",
+    "Zła definicja sąsiedztwa: czy obszary stykające się tylko rogiem są połączone? Sprawdź na przykładzie z treści.",
+    "Pomylone `n` (wiersze) i `m` (kolumny) w indeksie `x * m + y` w DSU — wychodzi tylko na prostokątnych planszach.",
+    "Plansza ze spacjami między znakami (`1 0 1`) wczytywana przez `cin >> string` — czytaj po jednym `char`/liczbie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "liczba wysp",
+      "ile jest wysp na mapie",
+      "liczenie wysp na planszy",
+      "number of islands",
+      "ilosc wysp c++",
+      "policz wyspy w macierzy 0 1",
+      "ile jest pokoi counting rooms"
+     ],
+     "a": "Dla każdego pola lądu, którego jeszcze nie odwiedziłeś: `wyspy++` i flood fill (BFS/DFS), który oznacza całą wyspę. Wynik = liczba uruchomień. O(n·m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<string> g(n);                       // '1' ląd, '0' woda\n    for (auto& r : g) cin >> r;\n    int dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1}, wyspy = 0;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++) {\n            if (g[i][j] != '1') continue;\n            wyspy++;\n            queue<pair<int, int>> q;\n            g[i][j] = '0';                     // „zatapiamy” odwiedzone pole\n            q.push({i, j});\n            while (!q.empty()) {\n                auto [x, y] = q.front(); q.pop();\n                for (int d = 0; d < 4; d++) {\n                    int nx = x + dx[d], ny = y + dy[d];\n                    if (nx < 0 || ny < 0 || nx >= n || ny >= m || g[nx][ny] != '1') continue;\n                    g[nx][ny] = '0';\n                    q.push({nx, ny});\n                }\n            }\n        }\n    cout << wyspy << '\\n';\n}"
+    },
+    {
+     "q": [
+      "flood fill",
+      "flood fill c++",
+      "floodfill algorytm",
+      "zalewanie obszaru",
+      "algorytm zalewania",
+      "wypełnianie jak w paincie",
+      "flud fil",
+      "wiaderko z farbą algorytm"
+     ],
+     "a": "Flood fill = BFS/DFS od pola startowego po sąsiednich polach „tego samego rodzaju”, oznaczający wszystko, co osiągnie. Jak wiaderko w Paincie: zmienia kolor całego spójnego obszaru.",
+     "code": "vector<string> g = {\"aab\", \"abb\", \"ccb\"};\nint n = 3, m = 3, sx = 0, sy = 2;\nchar stary = g[sx][sy], nowy = 'z';\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nif (stary != nowy) {                          // inaczej pętla bez końca\n    queue<pair<int, int>> q;\n    g[sx][sy] = nowy;\n    q.push({sx, sy});\n    while (!q.empty()) {\n        auto [x, y] = q.front(); q.pop();\n        for (int d = 0; d < 4; d++) {\n            int nx = x + dx[d], ny = y + dy[d];\n            if (nx < 0 || ny < 0 || nx >= n || ny >= m || g[nx][ny] != stary) continue;\n            g[nx][ny] = nowy;\n            q.push({nx, ny});\n        }\n    }\n}\nfor (auto& r : g) cout << r << '\\n';          // aaz azz ccz"
+    },
+    {
+     "q": [
+      "największa wyspa",
+      "rozmiar największego obszaru",
+      "max area of island",
+      "pole największego jeziora",
+      "największa spójna grupa pól",
+      "najwiekszy pokoj na mapie",
+      "rozmiar wyspy flood fill"
+     ],
+     "a": "W trakcie flood filla licz pola zdjęte z kolejki — to rozmiar obszaru; bierz maksimum. Program „Liczba wysp, rozmiar największej…” w treści zapisuje od razu `sz[c]` każdego obszaru.",
+     "code": "vector<string> g = {\"##.\", \"#..\", \"..#\"};\nint n = 3, m = 3, best = 0;\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nvector<vector<bool>> vis(n, vector<bool>(m));\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < m; j++) {\n        if (g[i][j] != '#' || vis[i][j]) continue;\n        int rozmiar = 0;\n        queue<pair<int, int>> q;\n        vis[i][j] = true; q.push({i, j});\n        while (!q.empty()) {\n            auto [x, y] = q.front(); q.pop();\n            rozmiar++;\n            for (int d = 0; d < 4; d++) {\n                int nx = x + dx[d], ny = y + dy[d];\n                if (nx < 0 || ny < 0 || nx >= n || ny >= m || g[nx][ny] != '#' || vis[nx][ny]) continue;\n                vis[nx][ny] = true; q.push({nx, ny});\n            }\n        }\n        best = max(best, rozmiar);\n    }\ncout << best << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "flood fill rekurencja segfault",
+      "dfs na planszy 1000x1000 wywala",
+      "przepełnienie stosu flood fill",
+      "flood fill bez rekurencji",
+      "stack overflow dfs grid",
+      "dfs rekurencyjny za głęboki plansza"
+     ],
+     "a": "Obszar w kształcie węża może mieć 10^6 pól, więc rekurencja ma 10^6 poziomów i kończy się stos (RE). Zamień na BFS z `queue` albo DFS z jawnym stosem — przy liczeniu obszarów kolejność odwiedzania nie ma znaczenia.",
+     "code": "vector<string> g = {\"###\", \"..#\", \"###\"};\nint n = 3, m = 3, licz = 0;\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nvector<vector<bool>> vis(n, vector<bool>(m));\nvector<pair<int, int>> st = {{0, 0}};         // jawny stos zamiast rekurencji\nvis[0][0] = true;\nwhile (!st.empty()) {\n    auto [x, y] = st.back(); st.pop_back();\n    licz++;\n    for (int d = 0; d < 4; d++) {\n        int nx = x + dx[d], ny = y + dy[d];\n        if (nx < 0 || ny < 0 || nx >= n || ny >= m || g[nx][ny] != '#' || vis[nx][ny]) continue;\n        vis[nx][ny] = true;\n        st.push_back({nx, ny});\n    }\n}\ncout << licz << '\\n';   // 7"
+    },
+    {
+     "q": [
+      "wyspy online dsu",
+      "dodawanie lądu po kolei liczba wysp",
+      "liczba wysp po każdej operacji",
+      "number of islands 2",
+      "pola zamieniają się w ląd ile obszarów",
+      "dsu na planszy wyspy"
+     ],
+     "a": "Gdy ląd pojawia się pole po polu, nie rób flood filla od nowa (O(q·n·m)). DSU na indeksach `x·m + y`: nowe pole = `wyspy++`, każde udane połączenie z lądowym sąsiadem = `wyspy--`. Gdy pola **znikają** (zalewanie), odwróć kolejność operacji i dodawaj od końca. Pełny program „Wyspy online” w treści.",
+     "code": "int n, m, wyspy = 0;\nvector<int> par;                               // par: iota(0..n*m-1)\nvector<char> lad;                              // lad: n*m zer\nint findp(int v) { return par[v] == v ? v : par[v] = findp(par[v]); }\nvoid dodajLad(int x, int y) {\n    int id = x * m + y;\n    if (lad[id]) return;\n    lad[id] = 1;\n    wyspy++;\n    int dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\n    for (int d = 0; d < 4; d++) {\n        int nx = x + dx[d], ny = y + dy[d];\n        if (nx < 0 || ny < 0 || nx >= n || ny >= m || !lad[nx * m + ny]) continue;\n        int a = findp(id), b = findp(nx * m + ny);\n        if (a != b) { par[a] = b; wyspy--; }\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liczenie jezior",
+      "jeziora nie dotykające brzegu",
+      "obszary zamknięte otoczone lądem",
+      "surrounded regions",
+      "ile jest zamkniętych obszarów",
+      "woda niepołączona z morzem"
+     ],
+     "a": "Najpierw zalej wszystkie obszary wody dotykające brzegu planszy (to morze), potem każdy nieoznaczony obszar wody to jezioro. Najprościej: dodaj ramkę z wody — pierwszy zalany obszar (od rogu) to morze, reszta to jeziora.",
+     "code": "vector<string> wej = {\"####\", \"#..#\", \"####\", \".#..\"};\nint n = wej.size(), m = wej[0].size();\nvector<string> g(n + 2, string(m + 2, '.'));            // ramka z wody = morze\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < m; j++) g[i + 1][j + 1] = wej[i][j];\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1}, obszary = 0;\nfor (int i = 0; i < n + 2; i++)\n    for (int j = 0; j < m + 2; j++) {\n        if (g[i][j] != '.') continue;\n        obszary++;\n        queue<pair<int, int>> q;\n        g[i][j] = '~'; q.push({i, j});\n        while (!q.empty()) {\n            auto [x, y] = q.front(); q.pop();\n            for (int d = 0; d < 4; d++) {\n                int nx = x + dx[d], ny = y + dy[d];\n                if (nx < 0 || ny < 0 || nx >= n + 2 || ny >= m + 2 || g[nx][ny] != '.') continue;\n                g[nx][ny] = '~'; q.push({nx, ny});\n            }\n        }\n    }\ncout << obszary - 1 << '\\n';   // pierwszy obszar (od rogu) to morze -> jezior: 1"
+    },
+    {
+     "q": [
+      "wyspy 8 kierunków",
+      "wyspy stykające się rogiem",
+      "flood fill 8 sąsiadów",
+      "obszary po przekątnej też połączone",
+      "8-connectivity islands"
+     ],
+     "a": "Zmień tylko listę sąsiadów na 8 przesunięć (wszystkie `(dx, dy)` z `{-1, 0, 1}²` bez `(0, 0)`). Reszta bez zmian. Uwaga: gdy ląd jest 8-spójny, wodę zwykle traktuje się jako 4-spójną (np. przy jeziorach) — sprawdź treść.",
+     "code": "int dx8[] = {-1, -1, -1, 0, 0, 1, 1, 1};\nint dy8[] = {-1, 0, 1, -1, 1, -1, 0, 1};\nint x = 0, y = 0, n = 2, m = 2, sasiedzi = 0;\nfor (int d = 0; d < 8; d++) {\n    int nx = x + dx8[d], ny = y + dy8[d];\n    if (nx >= 0 && ny >= 0 && nx < n && ny < m) sasiedzi++;\n}\ncout << sasiedzi << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "rozmiar obszaru zawierającego pole x y",
+      "zapytania o wielkość obszaru",
+      "ile pól ma wyspa na której stoję",
+      "numerowanie obszarów na planszy",
+      "connected component labeling grid",
+      "id obszaru dla każdego pola"
+     ],
+     "a": "Raz policz `comp[x][y]` (numer obszaru) i `sz[c]` flood fillem — każde zapytanie to potem `sz[comp[x][y]]` w O(1). Nie puszczaj BFS-a na każde zapytanie (q·n·m).",
+     "code": "// po flood fillu z programu w treści: comp[x][y] = numer obszaru (-1 = woda), sz[c] = rozmiar\nvector<vector<int>> comp = {{0, 0, -1}, {-1, 1, 1}};\nvector<int> sz = {2, 2};\nint x = 1, y = 2;\ncout << (comp[x][y] == -1 ? 0 : sz[comp[x][y]]) << '\\n';   // 2"
+    }
+   ],
+   "related": [
+    "graph-bfs-grid",
+    "graph-connected-components",
+    "graph-dfs",
+    "graph-dsu",
+    "graph-multi-source-bfs",
+    "cpp-stack-overflow"
+   ]
+  },
+  {
+   "id": "graph-hamiltonian",
+   "title": "Ścieżka i cykl Hamiltona — DP na maskach O(2^n·n²) dla n ≤ 20, komiwojażer (TSP)",
+   "category": "Grafy",
+   "tags": [
+    "hamilton",
+    "ścieżka hamiltona",
+    "cykl hamiltona",
+    "dp na maskach",
+    "bitmask",
+    "komiwojażer",
+    "tsp",
+    "np-trudny",
+    "turniej",
+    "dirac",
+    "held-karp"
+   ],
+   "aliases": [
+    "ścieżka hamiltona",
+    "sciezka hamiltona",
+    "cykl hamiltona",
+    "cykl hamiltona dp",
+    "hamiltonian path",
+    "hamiltonian cycle",
+    "droga hamiltona",
+    "hamilton dp maski",
+    "graf hamiltonowski",
+    "odwiedzić każdy wierzchołek dokładnie raz",
+    "ścieżka przez wszystkie wierzchołki",
+    "komiwojażer z odtworzeniem trasy",
+    "hamiltonian flights",
+    "liczba ścieżek hamiltona",
+    "turniej ścieżka hamiltona"
+   ],
+   "summary": "Ścieżka Hamiltona odwiedza każdy wierzchołek dokładnie raz (cykl — i wraca do startu). Problem jest NP-trudny, więc na zawodach rozwiązuje się go DP na maskach `dp[mask][v]` w O(2^n·n²) dla n ≤ 20; ten sam stan daje komiwojażera (TSP) i zliczanie ścieżek.",
+   "complexity": "O(2^n·n²) czasu, O(2^n·n) pamięci; samo istnienie ścieżki: O(2^n·n) z maskami końców",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Stan:** `dp[mask][v]` = czy (albo: ile sposobów / minimalny koszt) istnieje ścieżka, która odwiedziła **dokładnie** wierzchołki z `mask` i kończy się w `v`. **Przejście:** krawędzią `v → u` do nieodwiedzonego `u` — stan `dp[mask | 1<<u][u]`. **Start:** `dp[1<<s][s]` (dla każdego `s`, gdy start dowolny). **Wynik:** ścieżka — któreś `dp[pełna][v]`; cykl — `dp[pełna][v]` plus krawędź `v → start`."
+    },
+    {
+     "type": "text",
+     "md": "Maski przetwarzamy **rosnąco** — `mask | 1<<u > mask`, więc stan jest gotowy, zanim z niego skorzystamy. Sygnały: „odwiedź wszystkie miasta/punkty dokładnie raz”, „ustaw elementy w kolejności, sąsiednie muszą pasować”, `n ≤ 16..20`. Przy dużym n zadanie ma ukrytą strukturę (turniej, graf pełny, warunek Diraca, siatka) — wtedy szukaj konstrukcji, nie DP."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Pytanie",
+      "dp[mask][v]",
+      "Wynik",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "Czy istnieje ścieżka Hamiltona",
+       "bool",
+       "OR po v z dp[pełna][v]",
+       "O(2^n·n²), z maskami O(2^n·n)"
+      ],
+      [
+       "Czy istnieje cykl Hamiltona",
+       "bool, start ustalony w 0",
+       "dp[pełna][v] && kraw(v, 0)",
+       "O(2^n·n²)"
+      ],
+      [
+       "Liczba ścieżek Hamiltona s → t",
+       "liczba sposobów mod p",
+       "dp[pełna][t]",
+       "O(2^n·n²)"
+      ],
+      [
+       "Komiwojażer (TSP): najtańszy cykl",
+       "min koszt, start w 0",
+       "min dp[pełna][v] + c[v][0]",
+       "O(2^n·n²)"
+      ],
+      [
+       "Najtańsza ścieżka przez wszystkie (bez powrotu)",
+       "min koszt, dowolny start",
+       "min po v z dp[pełna][v]",
+       "O(2^n·n²)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Komiwojażer (TSP): najtańszy cykl przez wszystkie miasta + odtworzenie trasy",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 16;\nconst long long INF = LLONG_MAX / 4;\nlong long dp[1 << MAXN][MAXN];   // dp[mask][v] = min koszt ścieżki z 0 przez DOKŁADNIE mask, kończącej się w v\nint par[1 << MAXN][MAXN];        // poprzednik v na tej ścieżce (do odtworzenia)\n\nint main() {\n    int n;\n    cin >> n;                                     // n <= 16, miasta 0..n-1\n    vector<vector<long long>> c(n, vector<long long>(n));\n    for (auto& r : c)\n        for (auto& x : r) cin >> x;               // c[i][j] = koszt przejazdu i -> j\n    if (n == 1) { cout << \"0\\n0 0\\n\"; return 0; }\n    int full = (1 << n) - 1;\n    for (int mask = 0; mask <= full; mask++)\n        for (int v = 0; v < n; v++) dp[mask][v] = INF;\n    dp[1][0] = 0;                                 // start w mieście 0\n    for (int mask = 1; mask <= full; mask += 2)   // tylko maski z bitem 0 (nieparzyste)\n        for (int v = 0; v < n; v++) {\n            if (dp[mask][v] >= INF) continue;\n            for (int u = 0; u < n; u++) {\n                if (mask >> u & 1) continue;      // u już odwiedzone\n                int nm = mask | 1 << u;\n                long long cand = dp[mask][v] + c[v][u];\n                if (cand < dp[nm][u]) { dp[nm][u] = cand; par[nm][u] = v; }\n            }\n        }\n    long long best = INF;\n    int last = -1;\n    for (int v = 1; v < n; v++)                   // zamknięcie cyklu: v -> 0\n        if (dp[full][v] + c[v][0] < best) { best = dp[full][v] + c[v][0]; last = v; }\n    cout << best << '\\n';\n    vector<int> path;\n    for (int mask = full, v = last; v != 0;) {    // cofamy się po par aż do startu\n        path.push_back(v);\n        int p = par[mask][v];\n        mask ^= 1 << v;\n        v = p;\n    }\n    path.push_back(0);\n    reverse(path.begin(), path.end());\n    for (int v : path) cout << v << ' ';\n    cout << 0 << '\\n';                            // wracamy do 0\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Czy istnieje ścieżka Hamiltona — O(2^n·n) z maskami końców",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, m;\n    cin >> n >> m;                                // n <= 20, wierzchołki 0..n-1\n    vector<int> adj(n, 0);                        // adj[v] = MASKA sąsiadów v\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        adj[a] |= 1 << b;                         // skierowany: tylko adj[b] |= 1 << a (poprzednicy b)\n        adj[b] |= 1 << a;\n    }\n    // ends[mask] = maska wierzchołków v, w których może się kończyć ścieżka\n    //              przechodząca dokładnie przez wierzchołki z mask\n    vector<int> ends(1 << n, 0);\n    for (int v = 0; v < n; v++) ends[1 << v] = 1 << v;\n    for (int mask = 1; mask < (1 << n); mask++)\n        for (int v = 0; v < n; v++)\n            if ((mask >> v & 1) && mask != (1 << v) && (ends[mask ^ (1 << v)] & adj[v]))\n                ends[mask] |= 1 << v;             // jakaś ścieżka po mask\\{v} kończy się u sąsiada v\n    cout << (ends[(1 << n) - 1] ? \"TAK\" : \"NIE\") << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Liczba ścieżek Hamiltona z 1 do n modulo 10^9+7 (CSES Hamiltonian Flights)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MOD = 1e9 + 7;\nint dp[1 << 20][20];   // 80 MB: liczba ścieżek z 0 przez dokładnie mask, kończących się w v\n\nint main() {\n    int n, m;\n    cin >> n >> m;                                 // skierowany, wierzchołki 1..n, multikrawędzie\n    vector<vector<int>> in(n);                     // in[v] = poprzednicy v (z powtórzeniami)\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        in[b - 1].push_back(a - 1);\n    }\n    dp[1][0] = 1;\n    for (int mask = 2; mask < (1 << n); mask++) {\n        if (!(mask & 1)) continue;                                    // musi zawierać start\n        if ((mask >> (n - 1) & 1) && mask != (1 << n) - 1) continue;  // meta dopiero na końcu\n        for (int v = 1; v < n; v++) {\n            if (!(mask >> v & 1)) continue;\n            int prev = mask ^ (1 << v);\n            long long s = 0;\n            for (int u : in[v])\n                if (prev >> u & 1) s += dp[prev][u];\n            dp[mask][v] = s % MOD;\n        }\n    }\n    cout << dp[(1 << n) - 1][n - 1] << '\\n';      // ścieżki Hamiltona 1 -> n\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Gdy start jest ustalony (cykl, ścieżka z `1`), przetwarzaj tylko maski zawierające start (`mask & 1`) — połowa pracy. Przy zliczaniu ścieżek do mety `n` pomijaj maski z metą, które nie są pełne — meta musi być ostatnia."
+    },
+    {
+     "type": "tip",
+     "md": "**Fakty na duże n:** turniej (między każdą parą dokładnie jedna skierowana krawędź) ZAWSZE ma ścieżkę Hamiltona — wstawiaj wierzchołki po kolei (kod w pytaniach). **Dirac:** graf nieskierowany, n ≥ 3, każdy stopień ≥ n/2 ⇒ istnieje cykl Hamiltona. **Ore:** wystarczy deg(u) + deg(v) ≥ n dla każdej pary niesąsiednich u, v. Graf pełny: cykl 1, 2, …, n."
+    },
+    {
+     "type": "warn",
+     "md": "Pamięć: `dp[1<<20][20]` z `long long` to 160 MB, z `int` 80 MB. Przy ustalonym starcie wyrzuć go z maski (2^(n−1)·n). Tablica `par` do odtwarzania trasy podwaja zużycie — przy ciasnym limicie odtwarzaj bez niej: szukaj `u` z `dp[mask ^ 1<<v][u] + c[u][v] == dp[mask][v]`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dp[mask | 1 << u][u]",
+     "desc": "przejście: dopisanie nieodwiedzonego u na koniec ścieżki",
+     "complexity": "O(1)",
+     "example": "if (!(mask >> u & 1)) dp[mask | 1 << u][u] |= dp[mask][v];"
+    },
+    {
+     "sig": "ends[mask]",
+     "desc": "maska wierzchołków, w których może się kończyć ścieżka po mask",
+     "complexity": "O(2^n·n) dla wszystkich masek",
+     "example": "ok = ends[mask ^ (1 << v)] & adj[v];"
+    }
+   ],
+   "pitfalls": [
+    "Pętla po maskach malejąco albo „v na zewnątrz, maska w środku” — korzystasz ze stanów jeszcze niepoliczonych.",
+    "`1 << n` przy n ≥ 31 to UB; praktyczna granica to n ≈ 20 (2^20·20 ≈ 2·10^7 stanów, ·n ≈ 4·10^8 przejść).",
+    "Zliczanie cykli bez ustalenia startu liczy każdy cykl n razy (i 2 razy przez kierunek w grafie nieskierowanym) — ustal start w 0 i ewentualnie podziel przez 2.",
+    "Mylenie Hamiltona z Eulerem: Euler = każda **krawędź** raz (łatwy, O(m)); Hamilton = każdy **wierzchołek** raz (NP-trudny).",
+    "TSP z `INF = LLONG_MAX`: `dp + c` przepełnia się — używaj `LLONG_MAX / 4` albo pomijaj stany `INF`.",
+    "n = 1: cykl/TSP to przypadek brzegowy (koszt 0, brak krawędzi) — obsłuż osobno."
+   ],
+   "qa": [
+    {
+     "q": [
+      "ścieżka hamiltona",
+      "sciezka hamiltona",
+      "hamiltonian path",
+      "czy istnieje ścieżka przez wszystkie wierzchołki",
+      "odwiedzić każdy wierzchołek dokładnie raz",
+      "ścieżka hamiltona algorytm",
+      "hamilton dp maski"
+     ],
+     "a": "Ścieżka Hamiltona przechodzi przez każdy wierzchołek **dokładnie raz**. Ogólnie NP-trudne, ale dla n ≤ 20: `dp[mask][v]` = czy da się przejść dokładnie przez `mask` i skończyć w `v`. Przejście krawędzią `v → u` do `u ∉ mask`. Odpowiedź: czy któreś `dp[pełna][v]` jest prawdą. O(2^n·n²).",
+     "code": "int n = 4;\nvector<vector<int>> adj = {{1}, {0, 2}, {1, 3}, {2}};   // ścieżka 0-1-2-3\nvector<vector<char>> dp(1 << n, vector<char>(n, 0));\nfor (int v = 0; v < n; v++) dp[1 << v][v] = 1;        // start w dowolnym wierzchołku\nfor (int mask = 1; mask < (1 << n); mask++)\n    for (int v = 0; v < n; v++) {\n        if (!dp[mask][v]) continue;\n        for (int u : adj[v])\n            if (!(mask >> u & 1)) dp[mask | 1 << u][u] = 1;\n    }\nbool jest = false;\nfor (int v = 0; v < n; v++) jest |= dp[(1 << n) - 1][v];\ncout << (jest ? \"TAK\" : \"NIE\") << '\\n';               // TAK"
+    },
+    {
+     "q": [
+      "cykl hamiltona",
+      "hamiltonian cycle",
+      "czy graf ma cykl hamiltona",
+      "cykl przechodzący przez wszystkie wierzchołki",
+      "cykl hamiltona dp maski",
+      "cykl hamiltona kod c++"
+     ],
+     "a": "Ustal start w `0` (cykl i tak przez niego przechodzi). Licz `dp[mask][v]` tylko od `dp[1][0]`, a na końcu sprawdź, czy dla jakiegoś `v` jest `dp[pełna][v]` **i krawędź `v → 0`**. Bez ustalenia startu robisz n razy więcej pracy.",
+     "code": "int n = 4;\nvector<vector<bool>> e(n, vector<bool>(n, false));\nauto kraw = [&](int a, int b) { e[a][b] = e[b][a] = true; };\nkraw(0, 1); kraw(1, 2); kraw(2, 3); kraw(3, 0);            // kwadrat\nvector<vector<char>> dp(1 << n, vector<char>(n, 0));\ndp[1][0] = 1;                                               // start w 0\nfor (int mask = 1; mask < (1 << n); mask += 2)              // tylko maski z bitem 0\n    for (int v = 0; v < n; v++)\n        if (dp[mask][v])\n            for (int u = 0; u < n; u++)\n                if (e[v][u] && !(mask >> u & 1)) dp[mask | 1 << u][u] = 1;\nbool cykl = false;\nfor (int v = 1; v < n; v++) cykl |= dp[(1 << n) - 1][v] && e[v][0];\ncout << (cykl ? \"TAK\" : \"NIE\") << '\\n';                     // TAK"
+    },
+    {
+     "q": [
+      "komiwojażer odtworzenie trasy",
+      "tsp z wypisaniem kolejności miast",
+      "problem komiwojażera wypisz trasę",
+      "travelling salesman bitmask path reconstruction",
+      "najkrótsza trasa przez wszystkie miasta i powrót",
+      "komiwojazer wypisz trase"
+     ],
+     "a": "To cykl Hamiltona o minimalnej wadze: `dp[mask][v]` = min koszt, start w 0, wynik `min dp[pełna][v] + c[v][0]`. Żeby wypisać trasę, trzymaj `par[mask][v]` (skąd przyszliśmy) i cofaj się od końca. Pełny program w treści; ogólne DP na maskach — artykuł `dp-bitmask`.",
+     "code": "// po policzeniu dp i par (jak w programie TSP w treści):\nint full = 7, last = 2;\nvector<vector<int>> par(8, vector<int>(3, -1));\npar[7][2] = 1; par[3][1] = 0;                 // przykładowe dane: 0 -> 1 -> 2\nvector<int> trasa;\nfor (int mask = full, v = last; v != 0;) {\n    trasa.push_back(v);\n    int p = par[mask][v];\n    mask ^= 1 << v;\n    v = p;\n}\ntrasa.push_back(0);\nreverse(trasa.begin(), trasa.end());\nfor (int v : trasa) cout << v << ' ';         // 0 1 2"
+    },
+    {
+     "q": [
+      "liczba ścieżek hamiltona",
+      "liczba sciezek hamiltona",
+      "liczba ścieżek hamiltona z 1 do n",
+      "ile jest ścieżek hamiltona",
+      "hamiltonian flights cses",
+      "zliczanie ścieżek hamiltona modulo",
+      "ile tras odwiedzających każde miasto raz",
+      "count hamiltonian paths"
+     ],
+     "a": "`dp[mask][v]` = liczba ścieżek z `1` przez dokładnie `mask`, kończących się w `v` (mod p). Przyspieszenia: tylko maski zawierające start; pomijaj maski z metą, które nie są pełne; trzymaj `int`, nie `long long` (80 MB zamiast 160 MB). Pełny program w treści.",
+     "code": "const int MOD = 1e9 + 7;\nint n = 3;\nvector<vector<int>> in = {{}, {0}, {0, 1}};          // krawędzie 0->1, 0->2, 1->2\nvector<vector<int>> dp(1 << n, vector<int>(n, 0));\ndp[1][0] = 1;\nfor (int mask = 1; mask < (1 << n); mask += 2)\n    for (int v = 1; v < n; v++) {\n        if (!(mask >> v & 1)) continue;\n        int prev = mask ^ (1 << v);\n        long long s = 0;\n        for (int u : in[v]) if (prev >> u & 1) s += dp[prev][u];\n        dp[mask][v] = s % MOD;\n    }\ncout << dp[(1 << n) - 1][n - 1] << '\\n';             // 1  (0 -> 1 -> 2)"
+    },
+    {
+     "q": [
+      "szybsza ścieżka hamiltona 2^n n",
+      "hamilton maski bitowe przyspieszenie",
+      "dp hamilton O(2^n * n)",
+      "hamilton maska końców",
+      "hamilton n=20 tle"
+     ],
+     "a": "Zamiast `bool dp[mask][v]` trzymaj **maskę** `ends[mask]` wierzchołków, w których może kończyć się ścieżka po `mask`. Wtedy `v ∈ ends[mask]` ⇔ `ends[mask ^ 1<<v] & adj[v] != 0` (`adj[v]` = maska sąsiadów). O(2^n·n) operacji i 4 MB pamięci dla n = 20.",
+     "code": "int n = 3;\nvector<int> adj = {0b010, 0b101, 0b010};               // ścieżka 0-1-2\nvector<int> ends(1 << n, 0);\nfor (int v = 0; v < n; v++) ends[1 << v] = 1 << v;\nfor (int mask = 1; mask < (1 << n); mask++)\n    for (int v = 0; v < n; v++)\n        if ((mask >> v & 1) && mask != (1 << v) && (ends[mask ^ (1 << v)] & adj[v]))\n            ends[mask] |= 1 << v;\ncout << (ends[(1 << n) - 1] ? \"TAK\" : \"NIE\") << '\\n';  // TAK"
+    },
+    {
+     "q": [
+      "turniej ścieżka hamiltona",
+      "tournament hamiltonian path",
+      "graf turniejowy kolejność graczy",
+      "ustaw graczy tak żeby każdy wygrał z następnym",
+      "ranking z wyników meczów każdy z każdym",
+      "turniej hamilton duże n"
+     ],
+     "a": "W turnieju (każda para połączona dokładnie jedną skierowaną krawędzią) ścieżka Hamiltona **zawsze istnieje** i buduje się ją bez masek: wstawiaj wierzchołki po kolei przed pierwszy `path[i]`, który `v` pokonuje. Wtedy `path[i-1] → v → path[i]`. O(n²).",
+     "code": "// beats[a][b] == true <=> krawędź a -> b; w turnieju dla a != b dokładnie jedno z beats[a][b], beats[b][a]\nvector<int> hamiltonInTournament(int n, const vector<vector<bool>>& beats) {\n    vector<int> path;\n    for (int v = 0; v < n; v++) {\n        int i = 0;\n        while (i < (int)path.size() && !beats[v][path[i]]) i++;   // pierwsza pozycja z v -> path[i]\n        path.insert(path.begin() + i, v);                         // path[i-1] -> v -> path[i]\n    }\n    return path;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kiedy na pewno istnieje cykl hamiltona",
+      "twierdzenie diraca",
+      "twierdzenie ore",
+      "dirac theorem hamiltonian",
+      "stopnie co najmniej n/2 cykl hamiltona",
+      "cykl hamiltona dla dużego n"
+     ],
+     "a": "Dirac: graf nieskierowany, n ≥ 3, każdy stopień ≥ n/2 ⇒ istnieje cykl Hamiltona. Ore (mocniejsze): deg(u) + deg(v) ≥ n dla każdej pary **niesąsiednich** u, v ⇒ cykl istnieje. To warunki wystarczające, nie konieczne (cykl C_n ma stopnie 2). Gdy n = 10^5 i trzeba „przejść przez wszystkie”, szukaj takiej struktury lub konstrukcji, nie DP.",
+     "code": "int n = 4;\nvector<int> deg = {2, 2, 2, 2};                       // np. cykl C4\nbool dirac = n >= 3 && *min_element(deg.begin(), deg.end()) * 2 >= n;\ncout << (dirac ? \"cykl Hamiltona na pewno istnieje\" : \"nie wiadomo\") << '\\n';"
+    },
+    {
+     "q": [
+      "dp hamilton za dużo pamięci",
+      "hamilton maski mle",
+      "ile pamięci komiwojażer n=20",
+      "pamięć dp[mask][v] hamilton",
+      "tsp memory limit"
+     ],
+     "a": "`dp[1<<20][20]`: `long long` = 160 MB, `int` = 80 MB, `char` = 20 MB. Ratunek: (1) `int` zamiast `long long` (reszta mod 10^9+7 się mieści); (2) ustalony start → maski bez jego bitu (połowa); (3) przy samym istnieniu — maski końców `ends[mask]` (4 MB); (4) bez tablicy `par`, trasę odtwarzaj z `dp`.",
+     "code": "int n = 20;\nlong long stany = (1LL << n) * n;\ncout << \"long long: \" << stany * 8 / (1 << 20) << \" MB\\n\";   // 160\ncout << \"int:       \" << stany * 4 / (1 << 20) << \" MB\\n\";   // 80"
+    }
+   ],
+   "related": [
+    "dp-bitmask",
+    "tech-bitmask-brute-force",
+    "graph-euler",
+    "graph-state-bfs",
+    "stl-permutations"
+   ]
+  },
+  {
+   "id": "tree-virtual",
+   "title": "Drzewo wirtualne (virtual tree, auxiliary tree) — zapytania o zbiory wierzchołków",
+   "category": "Drzewa",
+   "tags": [
+    "drzewo wirtualne",
+    "virtual tree",
+    "auxiliary tree",
+    "drzewo pomocnicze",
+    "lca",
+    "tin",
+    "zapytania",
+    "suma k",
+    "dp na drzewie",
+    "kompresja drzewa",
+    "steiner"
+   ],
+   "aliases": [
+    "drzewo wirtualne",
+    "virtual tree",
+    "auxiliary tree",
+    "wirtualne drzewo",
+    "drzewo pomocnicze",
+    "skompresowane drzewo",
+    "virtual tree lca",
+    "budowa drzewa wirtualnego",
+    "drzewo na wybranych wierzchołkach",
+    "kompresja drzewa do k wierzchołków"
+   ],
+   "summary": "Gdy zapytanie podaje zbiór k wierzchołków (a suma k po zapytaniach jest mała), budujemy drzewo wirtualne: te wierzchołki + LCA sąsiednich w kolejności DFS (razem ≤ 2k−1), połączone relacją przodek–potomek. DP na nim kosztuje O(k log n) zamiast O(n) na zapytanie.",
+   "complexity": "budowa O(k log k + k log n) na zapytanie (sortowanie + LCA); preprocessing LCA O(n log n)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Kiedy:** „q zapytań, w każdym zbiór k_i wierzchołków, Σk_i ≤ 2·10^5” i dla jednego zapytania umiesz zrobić DP na całym drzewie w O(n). Przejście całego drzewa w każdym zapytaniu to O(n·q) — za wolno. Ale większość wierzchołków jest „nieciekawa”: ścieżki bez zaznaczonych wierzchołków i bez rozgałęzień da się skleić w jedną krawędź."
+    },
+    {
+     "type": "text",
+     "md": "**Drzewo wirtualne** zbioru `S` zawiera: wierzchołki `S`, LCA par z `S` (wystarczy LCA **sąsiednich** w kolejności `tin`) i — jeśli DP tego wymaga — korzeń. Krawędź `p → v` oznacza, że `p` jest najbliższym przodkiem `v` w tym zbiorze; odpowiada jej cała ścieżka w oryginale (długość `dep[v] − dep[p]`, inne dane, np. minimum, liczymy binary liftingiem lub prefiksami od korzenia). Wierzchołków jest ≤ 2k − 1."
+    },
+    {
+     "type": "text",
+     "md": "**Budowa (wersja z sortowaniem):** 1) posortuj `S` po `tin`; 2) dopisz `lca(a_i, a_{i+1})` sąsiednich; 3) posortuj ponownie po `tin` i usuń duplikaty; 4) dla każdego `i ≥ 1` ojcem `v_i` jest `lca(v_{i−1}, v_i)`. Odwrotna kolejność `tin` to porządek „dzieci przed rodzicem” — gotowy do DP bez rekurencji."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Klasyk: najtańsze odcięcie korzenia od k zaznaczonych wierzchołków (DP na drzewie wirtualnym)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\n\nconst int LOG = 18;                     // 2^18 > 2·10^5\nconst ll INF = LLONG_MAX / 4;\nvector<vector<pair<int, int>>> g;       // (sąsiad, waga)\nvector<int> tin, dep;\nvector<ll> mn;                          // mn[v] = najtańsza krawędź na ścieżce korzeń -> v\nvector<array<int, LOG>> up;\n\nint lca(int a, int b) {\n    if (dep[a] < dep[b]) swap(a, b);\n    for (int k = LOG - 1; k >= 0; k--)\n        if (dep[a] - (1 << k) >= dep[b]) a = up[a][k];\n    if (a == b) return a;\n    for (int k = LOG - 1; k >= 0; k--)\n        if (up[a][k] != up[b][k]) a = up[a][k], b = up[b][k];\n    return up[a][0];\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    g.resize(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n    tin.assign(n + 1, 0); dep.assign(n + 1, 0); mn.assign(n + 1, INF); up.resize(n + 1);\n    vector<char> seen(n + 1, 0);\n    vector<int> st = {1};               // DFS iteracyjny od korzenia 1; kolejność zdejmowania = preorder\n    seen[1] = 1;\n    up[1].fill(1);\n    int timer = 0;\n    while (!st.empty()) {\n        int v = st.back();\n        st.pop_back();\n        tin[v] = timer++;\n        for (auto [u, w] : g[v])\n            if (!seen[u]) {\n                seen[u] = 1;\n                dep[u] = dep[v] + 1;\n                mn[u] = min(mn[v], (ll)w);\n                up[u][0] = v;\n                for (int k = 1; k < LOG; k++) up[u][k] = up[up[u][k - 1]][k - 1];\n                st.push_back(u);\n            }\n    }\n\n    vector<vector<int>> ch(n + 1);      // dzieci w drzewie WIRTUALNYM\n    vector<char> marked(n + 1, 0);\n    vector<ll> dp(n + 1, 0);\n    auto byTin = [&](int a, int b) { return tin[a] < tin[b]; };\n    int q;\n    cin >> q;\n    while (q--) {\n        int k;\n        cin >> k;\n        vector<int> vs(k);\n        for (auto& v : vs) { cin >> v; marked[v] = 1; }   // zaznaczone (różne od korzenia 1)\n        vs.push_back(1);                                  // korzeń zawsze w drzewie wirtualnym\n        // 1) sortuj po tin, 2) dodaj LCA sąsiednich, 3) sortuj i usuń powtórzenia\n        sort(vs.begin(), vs.end(), byTin);\n        int s = vs.size();\n        for (int i = 0; i + 1 < s; i++) vs.push_back(lca(vs[i], vs[i + 1]));\n        sort(vs.begin(), vs.end(), byTin);\n        vs.erase(unique(vs.begin(), vs.end()), vs.end());\n        // 4) ojciec vs[i] w drzewie wirtualnym = lca(vs[i-1], vs[i])\n        for (int i = 1; i < (int)vs.size(); i++) ch[lca(vs[i - 1], vs[i])].push_back(vs[i]);\n        // DP od liści: odwrotna kolejność tin = dzieci przed rodzicem\n        for (int i = (int)vs.size() - 1; i >= 0; i--) {\n            int v = vs[i];\n            ll sum = 0;\n            for (int c : ch[v]) sum += dp[c];\n            dp[v] = marked[v] ? mn[v] : min(mn[v], sum);  // odetnij nad v albo w każdym poddrzewie\n        }\n        cout << dp[1] << '\\n';\n        for (int v : vs) { ch[v].clear(); marked[v] = 0; } // sprzątamy TYLKO użyte wierzchołki\n    }\n}"
+    },
+    {
+     "type": "text",
+     "md": "W programie: `mn[v]` = najtańsza krawędź na ścieżce korzeń → v (to „waga” cięcia nad v). `dp[v]` = minimalny koszt odcięcia od korzenia wszystkich zaznaczonych w poddrzewie v: jeśli v jest zaznaczony — trzeba ciąć nad nim (`mn[v]`); inaczej taniej z dwóch: ciąć nad v albo osobno w każdym dziecku."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zadanie na zbiorze S",
+      "DP na drzewie wirtualnym"
+     ],
+     "rows": [
+      [
+       "Odciąć korzeń od wszystkich z S (min koszt)",
+       "dp[v] = marked ? mn[v] : min(mn[v], Σ dp[dziecko])"
+      ],
+      [
+       "Waga minimalnego poddrzewa łączącego S (Steiner)",
+       "suma długości krawędzi drzewa wirtualnego bez korzenia — albo trik z tin bez budowy (pytania niżej)"
+      ],
+      [
+       "Suma odległości po wszystkich parach z S",
+       "krawędź p→v długości L dodaje L · cnt[v] · (k − cnt[v])"
+      ],
+      [
+       "Najbliższa para w S",
+       "DP: najmniejsza głębokość zaznaczonego w poddrzewie, łączenie dwóch dzieci"
+      ],
+      [
+       "Liczba wierzchołków na ścieżkach między S",
+       "jak Steiner, ale długości w wierzchołkach (+1)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Sprzątaj tylko wierzchołki z bieżącego drzewa wirtualnego (`ch[v].clear()`, `marked[v] = 0` dla `v` z `vs`). `assign`/`memset` całych tablic w każdym zapytaniu daje O(n·q)."
+    },
+    {
+     "type": "warn",
+     "md": "Korzeń: jeśli DP liczy coś „względem korzenia” (jak odcinanie), dodaj korzeń do `vs` ręcznie. Jeśli nie, nie musisz — korzeniem drzewa wirtualnego jest wtedy `vs[0]` (LCA całego zbioru)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "sort(vs, po tin); dopisz lca(vs[i], vs[i+1]); sort + unique",
+     "desc": "wierzchołki drzewa wirtualnego (≤ 2k − 1)",
+     "complexity": "O(k log k + k log n)"
+    },
+    {
+     "sig": "ch[lca(vs[i-1], vs[i])].push_back(vs[i])",
+     "desc": "krawędź ojciec → syn w drzewie wirtualnym",
+     "complexity": "O(log n)"
+    }
+   ],
+   "pitfalls": [
+    "Zbiór sortujesz po `tin`, nie po numerach wierzchołków — inaczej LCA „sąsiednich” nie wystarcza.",
+    "Brak `unique` po dodaniu LCA → wierzchołek dwa razy w `vs`, zdublowane krawędzie i złe DP.",
+    "Czyszczenie całych tablic O(n) w każdym zapytaniu → TLE przy q = 10^5.",
+    "Waga skompresowanej krawędzi to cała ścieżka w oryginale (suma/min/max po niej), a nie jedna krawędź.",
+    "Rekurencyjny DFS do `tin` na drzewie-ścieżce 2·10^5 może przepełnić stos — użyj iteracyjnego jak w programie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "drzewo wirtualne",
+      "virtual tree",
+      "auxiliary tree",
+      "co to jest drzewo wirtualne",
+      "wirtualne drzewo lca",
+      "drzewo pomocnicze dla zbioru wierzchołków"
+     ],
+     "a": "To skompresowane drzewo dla zbioru `S` (k wierzchołków): zawiera `S` i LCA sąsiednich po `tin` wierzchołków — razem ≤ 2k − 1. Krawędź = ścieżka w oryginale. Pozwala zrobić DP na drzewie w O(k log n) na zapytanie, gdy Σk jest małe.",
+     "code": "vector<int> tin;                 // czas wejścia DFS\nint lca(int a, int b);           // dowolne LCA (binary lifting / Euler + RMQ)\n// zwraca wierzchołki drzewa wirtualnego posortowane po tin; vpar[v] = ojciec w drzewie wirtualnym\nvector<int> buildVirtual(vector<int> vs, vector<int>& vpar) {\n    auto byTin = [](int a, int b) { return tin[a] < tin[b]; };\n    sort(vs.begin(), vs.end(), byTin);\n    int k = vs.size();\n    for (int i = 0; i + 1 < k; i++) vs.push_back(lca(vs[i], vs[i + 1]));\n    sort(vs.begin(), vs.end(), byTin);\n    vs.erase(unique(vs.begin(), vs.end()), vs.end());\n    vpar[vs[0]] = -1;                                       // korzeń drzewa wirtualnego\n    for (int i = 1; i < (int)vs.size(); i++) vpar[vs[i]] = lca(vs[i - 1], vs[i]);\n    return vs;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "jak zbudować drzewo wirtualne",
+      "budowa drzewa wirtualnego",
+      "virtual tree construction",
+      "drzewo wirtualne sortowanie po tin",
+      "drzewo wirtualne stos czy sortowanie",
+      "jak połączyć wierzchołki w drzewie wirtualnym"
+     ],
+     "a": "Sortuj po `tin` → dopisz LCA sąsiednich → sortuj i `unique` → ojcem `v_i` jest `lca(v_{i−1}, v_i)`. Działa, bo poprzednik w kolejności DFS „zahacza” o najniższe rozgałęzienie nad `v_i`, które należy do zbioru. Jest też wersja ze stosem (jedno sortowanie), ale ta jest prostsza i trudniej o błąd.",
+     "code": "vector<vector<int>> ch;          // dzieci w drzewie wirtualnym (czyszczone po zapytaniu)\nint lca(int a, int b);\nvoid connect(const vector<int>& vs) {   // vs: po tin, z dopisanymi LCA, bez powtórzeń\n    for (int i = 1; i < (int)vs.size(); i++)\n        ch[lca(vs[i - 1], vs[i])].push_back(vs[i]);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile wierzchołków ma drzewo wirtualne",
+      "dlaczego drzewo wirtualne ma 2k-1 wierzchołków",
+      "ile lca trzeba dodać do drzewa wirtualnego",
+      "rozmiar virtual tree",
+      "czy wystarczy lca sąsiednich"
+     ],
+     "a": "Wystarczą LCA **sąsiednich** po `tin` par — to k − 1 dodatkowych wierzchołków, więc razem ≤ 2k − 1. LCA dowolnej pary `a_i`, `a_j` (i < j) to najpłytszy z `lca(a_t, a_{t+1})` dla i ≤ t < j, więc żadne inne LCA nie jest potrzebne."
+    },
+    {
+     "q": [
+      "zapytania o zbiory wierzchołków w drzewie",
+      "wiele zapytań każde z k wierzchołkami",
+      "suma k po zapytaniach 2e5 drzewo",
+      "dp na drzewie dla każdego zapytania za wolno",
+      "query on subset of vertices tree",
+      "zapytanie o zbiór wierzchołków dp na drzewie"
+     ],
+     "a": "To sygnał na drzewo wirtualne: preprocessing LCA (O(n log n)), a w każdym zapytaniu budujesz drzewo na k wierzchołkach i robisz to samo DP, które zrobiłbyś na całym drzewie — tylko krawędź ma teraz „wagę ścieżki”. Łącznie O((n + Σk) log n).",
+     "code": "// vs posortowane po tin; ch = dzieci w drzewie wirtualnym; DP od liści do korzenia\nvector<int> vs = {1, 4, 5};\nvector<vector<int>> ch(6);\nch[1] = {4, 5};\nvector<char> marked = {0, 0, 0, 0, 1, 1};\nvector<long long> dp(6, 0);\nfor (int i = (int)vs.size() - 1; i >= 0; i--) {     // odwrotny tin = dzieci przed rodzicem\n    int v = vs[i];\n    dp[v] = marked[v];                               // np. liczba zaznaczonych w poddrzewie\n    for (int c : ch[v]) dp[v] += dp[c];\n}\ncout << dp[1] << '\\n';                               // 2"
+    },
+    {
+     "q": [
+      "minimalne poddrzewo zawierające zadane wierzchołki",
+      "steiner tree w drzewie",
+      "suma krawędzi łączących wybrane wierzchołki",
+      "ile krawędzi trzeba żeby połączyć k wierzchołków drzewa",
+      "najmniejsze spójne poddrzewo zbioru",
+      "steiner drzewo tin"
+     ],
+     "a": "Nie trzeba nawet budować drzewa wirtualnego: posortuj zbiór po `tin` i zsumuj `dist(v_i, v_{i+1})` **cyklicznie** (ostatni z pierwszym). Każda krawędź minimalnego poddrzewa jest przechodzona dokładnie dwa razy, więc wynik = suma / 2. O(k log n) z LCA.",
+     "code": "vector<int> tin;\nlong long dist(int a, int b);                       // odległość w drzewie przez LCA\nlong long steiner(vector<int> vs) {\n    sort(vs.begin(), vs.end(), [](int a, int b) { return tin[a] < tin[b]; });\n    long long s = 0;\n    for (size_t i = 0; i < vs.size(); i++) s += dist(vs[i], vs[(i + 1) % vs.size()]);\n    return s / 2;                                   // każda krawędź liczona 2 razy\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "waga krawędzi w drzewie wirtualnym",
+      "długość krawędzi virtual tree",
+      "odległość między ojcem a synem w drzewie wirtualnym",
+      "minimum na skompresowanej krawędzi",
+      "krawędź drzewa wirtualnego to ścieżka"
+     ],
+     "a": "Krawędź `p → v` w drzewie wirtualnym to ścieżka w oryginale: długość `dep[v] − dep[p]` (z wagami `d[v] − d[p]`, `d` = suma wag od korzenia). Minimum/maksimum na niej — binary lifting z min/max jak w LCA, a jeśli dotyczy ścieżki od korzenia — prefiksowe `mn[v]` jak w programie.",
+     "code": "vector<long long> d = {0, 0, 5, 7, 12};   // d[v] = suma wag od korzenia 1\nint p = 2, v = 4;                          // p jest przodkiem v w drzewie wirtualnym\ncout << d[v] - d[p] << '\\n';               // 7"
+    },
+    {
+     "q": [
+      "jak czyścić drzewo wirtualne między zapytaniami",
+      "reset tablic po zapytaniu drzewo",
+      "memset w każdym zapytaniu tle",
+      "czyszczenie po zapytaniu drzewo wirtualne",
+      "clear virtual tree"
+     ],
+     "a": "Czyść tylko to, czego dotknąłeś: `for (int v : vs) { ch[v].clear(); marked[v] = 0; }`. Zerowanie całych tablic rozmiaru n w każdym z q zapytań to O(n·q) — dokładnie to, czego drzewo wirtualne miało uniknąć.",
+     "code": "int n = 10;\nvector<vector<int>> ch(n + 1);\nvector<char> marked(n + 1, 0);\nvector<int> vs = {1, 3, 7};\nch[1] = {3, 7}; marked[3] = marked[7] = 1;\nfor (int v : vs) { ch[v].clear(); marked[v] = 0; }   // O(|vs|), nie O(n)"
+    },
+    {
+     "q": [
+      "odciąć korzeń od zaznaczonych wierzchołków",
+      "przeciąć krawędzie żeby oddzielić wierzchołki od korzenia",
+      "minimalny koszt odcięcia wysp od stolicy",
+      "sdoi wojna drzewo wirtualne",
+      "min cut korzeń zaznaczone wierzchołki drzewo zapytania"
+     ],
+     "a": "Klasyk na drzewo wirtualne (pełny program w treści). `mn[v]` = najtańsza krawędź na ścieżce korzeń → v. Na drzewie wirtualnym: `dp[v] = mn[v]`, jeśli `v` zaznaczony; inaczej `min(mn[v], Σ dp[dzieci])`. Wynik `dp[korzeń]`; korzeń dodajesz do zbioru ręcznie.",
+     "code": "long long mnv = 4, sumaDzieci = 7;     // mn[v] i suma dp dzieci w drzewie wirtualnym\nbool zaznaczony = false;\nlong long dpv = zaznaczony ? mnv : min(mnv, sumaDzieci);\ncout << dpv << '\\n';                   // 4: taniej ciąć nad v"
+    }
+   ],
+   "related": [
+    "tree-lca",
+    "tree-lca-euler",
+    "tree-dfs-order",
+    "tree-dp",
+    "tree-distance",
+    "tree-small-to-large"
+   ]
+  },
+  {
+   "id": "tree-isomorphism",
+   "title": "Izomorfizm drzew — postać kanoniczna (AHU) i hashowanie drzew ukorzenionych i nieukorzenionych",
+   "category": "Drzewa",
+   "tags": [
+    "izomorfizm",
+    "izomorfizm drzew",
+    "ahu",
+    "postać kanoniczna",
+    "hash drzewa",
+    "tree hashing",
+    "środek drzewa",
+    "poddrzewa",
+    "kształt drzewa",
+    "nawiasy"
+   ],
+   "aliases": [
+    "izomorfizm drzew",
+    "izomorfizm drzewa",
+    "tree isomorphism",
+    "czy drzewa są izomorficzne",
+    "czy dwa drzewa są takie same",
+    "hashowanie drzew",
+    "hash drzewa",
+    "tree hashing",
+    "algorytm ahu",
+    "postać kanoniczna drzewa",
+    "kanoniczna forma drzewa",
+    "ile różnych poddrzew",
+    "izomorfizm drzew nieukorzenionych"
+   ],
+   "summary": "Dwa drzewa są izomorficzne, gdy po przenumerowaniu wierzchołków mają te same krawędzie. Ukorzenione porównujemy postacią kanoniczną (AHU: numer kształtu = posortowana lista numerów dzieci) albo hashem; nieukorzenione — ukorzeniając w środku (1 lub 2 wierzchołki).",
+   "complexity": "AHU z map<vector<int>, int>: O(n log n); hash: O(n); środek drzewa: O(n)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Drzewa ukorzenione.** Kształt liścia to `()`, kształt wierzchołka = multizbiór kształtów dzieci. Algorytm AHU (Aho–Hopcroft–Ullman) nadaje kształtom **numery**: dla wierzchołka bierze posortowaną listę numerów dzieci i sprawdza w `map<vector<int>, int>`, czy taka lista już była — jeśli nie, przydziela nowy numer. Ten sam numer ⇔ izomorficzne poddrzewa, bez żadnych kolizji. Mapa musi być **wspólna** dla obu porównywanych drzew."
+    },
+    {
+     "type": "text",
+     "md": "**Drzewa nieukorzenione.** Izomorfizm przeprowadza środek na środek (środek = 1 lub 2 wierzchołki po obcinaniu liści — `tree-center`). Liczba środków musi się zgadzać; potem ukorzeń A w jednym środku i porównaj z B ukorzenionym w każdym z jego (≤ 2) środków."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Izomorfizm dwóch drzew nieukorzenionych: środki + AHU (bez rekurencji)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nmap<vector<int>, int> ids;   // WSPÓLNA dla obu drzew: posortowane numery dzieci -> numer kształtu\n\n// AHU: numer kształtu (postać kanoniczna) drzewa g ukorzenionego w root; bez rekurencji\nint canon(const vector<vector<int>>& g, int root) {\n    int n = g.size();\n    vector<int> order = {root}, par(n, -1), id(n);\n    vector<vector<int>> kids(n);\n    par[root] = root;\n    for (int i = 0; i < (int)order.size(); i++)          // BFS: rodzic przed dziećmi\n        for (int u : g[order[i]])\n            if (par[u] == -1) { par[u] = order[i]; order.push_back(u); }\n    for (int i = n - 1; i >= 0; i--) {                    // od liści w górę\n        int v = order[i];\n        sort(kids[v].begin(), kids[v].end());\n        auto it = ids.find(kids[v]);\n        if (it == ids.end()) it = ids.emplace(kids[v], (int)ids.size()).first;\n        id[v] = it->second;\n        if (v != root) kids[par[v]].push_back(id[v]);\n    }\n    return id[root];\n}\n\nvector<int> centers(const vector<vector<int>>& g) {       // 1 lub 2 środki (obcinanie liści)\n    int n = g.size();\n    if (n == 1) return {0};\n    vector<int> deg(n), leaves;\n    for (int v = 0; v < n; v++) {\n        deg[v] = g[v].size();\n        if (deg[v] == 1) leaves.push_back(v);\n    }\n    int left = n;\n    while (left > 2) {\n        left -= leaves.size();\n        vector<int> nxt;\n        for (int v : leaves)\n            for (int u : g[v])\n                if (--deg[u] == 1) nxt.push_back(u);\n        leaves = nxt;\n    }\n    return leaves;\n}\n\nvector<vector<int>> readTree(int n) {\n    vector<vector<int>> g(n);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a - 1].push_back(b - 1);\n        g[b - 1].push_back(a - 1);\n    }\n    return g;\n}\n\nint main() {\n    int n;\n    cin >> n;\n    auto A = readTree(n), B = readTree(n);\n    auto ca = centers(A), cb = centers(B);\n    bool ok = false;\n    if (ca.size() == cb.size()) {\n        int ha = canon(A, ca[0]);                         // jeden środek A...\n        for (int c : cb) if (canon(B, c) == ha) ok = true; // ...porównaj z każdym środkiem B\n    }\n    cout << (ok ? \"TAK\" : \"NIE\") << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Metoda",
+      "Złożoność",
+      "Kolizje",
+      "Kiedy"
+     ],
+     "rows": [
+      [
+       "AHU: map<vector<int>, int>",
+       "O(n log n)",
+       "brak (deterministyczne)",
+       "domyślny wybór"
+      ],
+      [
+       "Napisy nawiasowe „(()())”, sortowane",
+       "O(n²) w złym przypadku (ścieżka)",
+       "brak",
+       "tylko małe n"
+      ],
+      [
+       "Hash: 1 + Σ mix(h(dziecko))",
+       "O(n)",
+       "praktycznie zero (64 bity, losowe ziarno)",
+       "dużo porównań, rerooting"
+      ],
+      [
+       "Hash wielomianowy po posortowanych dzieciach",
+       "O(n log n)",
+       "zależnie od modułu",
+       "klasyka"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Hash drzewa ukorzenionego (przemienny — bez sortowania dzieci)",
+     "code": "\nconst uint64_t SEED = chrono::steady_clock::now().time_since_epoch().count();\nuint64_t mix(uint64_t x) {                       // splitmix64\n    x += 0x9e3779b97f4a7c15ULL;\n    x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;\n    x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;\n    return x ^ (x >> 31);\n}\n// h[v] = 1 + suma mix(h[dziecko] ^ SEED): suma jest przemienna, więc kolejność dzieci nie ma znaczenia\nvector<uint64_t> treeHash(const vector<vector<int>>& g, int root) {\n    int n = g.size();\n    vector<int> order = {root}, par(n, -1);\n    par[root] = root;\n    for (int i = 0; i < (int)order.size(); i++)\n        for (int u : g[order[i]])\n            if (par[u] == -1) { par[u] = order[i]; order.push_back(u); }\n    vector<uint64_t> h(n, 1);\n    for (int i = n - 1; i > 0; i--) {            // order[0] = root; dzieci przed rodzicem\n        int v = order[i];\n        h[par[v]] += mix(h[v] ^ SEED);\n    }\n    return h;                                    // h[v] = hash poddrzewa v\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Dwa środki? Zamiast porównywać dwa ukorzenienia możesz **podzielić krawędź** między środkami nowym wierzchołkiem i ukorzenić w nim — drzewo ma wtedy jeden środek."
+    },
+    {
+     "type": "tip",
+     "md": "Liczba **różnych** (nieizomorficznych) poddrzew drzewa ukorzenionego = liczba różnych numerów AHU, czyli `ids.size()` po jednym wywołaniu `canon` na tym drzewie."
+    },
+    {
+     "type": "warn",
+     "md": "Nie hashuj sumą surowych hashy dzieci (`h(v) = 1 + Σ h(c)`) — to po prostu rozmiar poddrzewa, kolizja na każdym kroku. XOR też zawodzi (dwoje identycznych dzieci się kasuje). Potrzebna nieliniowa funkcja mieszająca (`mix`, splitmix64) albo wielomian po posortowanych dzieciach."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int canon(const vector<vector<int>>& g, int root)",
+     "desc": "numer kształtu (AHU) drzewa ukorzenionego",
+     "complexity": "O(n log n)",
+     "returns": "int",
+     "example": "bool iso = canon(A, ca[0]) == canon(B, cb[0]);"
+    },
+    {
+     "sig": "vector<uint64_t> treeHash(const vector<vector<int>>& g, int root)",
+     "desc": "hash każdego poddrzewa (przemienny, z losowym ziarnem)",
+     "complexity": "O(n)",
+     "returns": "vector<uint64_t>",
+     "example": "auto h = treeHash(g, 0); bool same = h[u] == h[v];"
+    }
+   ],
+   "pitfalls": [
+    "Osobna `map` dla każdego drzewa → te same kształty dostają różne numery i porównanie nie ma sensu.",
+    "Porównywanie nieukorzenionych drzew ukorzenionych w dowolnych wierzchołkach (np. w 1) — trzeba w środkach.",
+    "Rekurencja na drzewie-ścieżce 10^5 → przepełnienie stosu; odwrócona kolejność BFS daje „dzieci przed rodzicem”.",
+    "Hash bez losowego ziarna da się złamać anty-testem (hacki na Codeforces).",
+    "Różna liczba wierzchołków (lub różne posortowane ciągi stopni) → od razu NIE; tani test wstępny."
+   ],
+   "qa": [
+    {
+     "q": [
+      "izomorfizm drzew",
+      "czy dwa drzewa są takie same",
+      "tree isomorphism",
+      "czy drzewa są izomorficzne",
+      "izomorficzne drzewa jak sprawdzić",
+      "porównanie kształtu dwóch drzew",
+      "izomorfizm drzew c++"
+     ],
+     "a": "Ukorzenione: nadaj każdemu poddrzewu numer kształtu (AHU — posortowana lista numerów dzieci → numer z `map`) i porównaj numery korzeni. Nieukorzenione: ukorzeń oba w środkach (1 lub 2 wierzchołki) i porównaj. O(n log n). Pełny program w treści.",
+     "code": "map<vector<int>, int> ids;   // WSPÓLNA dla porównywanych drzew: posortowane numery dzieci -> numer kształtu\n\n// AHU: numer kształtu drzewa g ukorzenionego w root; bez rekurencji\nint canon(const vector<vector<int>>& g, int root) {\n    int n = g.size();\n    vector<int> order = {root}, par(n, -1), id(n);\n    vector<vector<int>> kids(n);\n    par[root] = root;\n    for (int i = 0; i < (int)order.size(); i++)          // BFS: rodzic przed dziećmi\n        for (int u : g[order[i]])\n            if (par[u] == -1) { par[u] = order[i]; order.push_back(u); }\n    for (int i = n - 1; i >= 0; i--) {                    // od liści w górę\n        int v = order[i];\n        sort(kids[v].begin(), kids[v].end());\n        auto it = ids.find(kids[v]);\n        if (it == ids.end()) it = ids.emplace(kids[v], (int)ids.size()).first;\n        id[v] = it->second;\n        if (v != root) kids[par[v]].push_back(id[v]);\n    }\n    return id[root];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "algorytm ahu",
+      "postać kanoniczna drzewa",
+      "canonical form tree",
+      "kanoniczny zapis drzewa",
+      "numer kształtu poddrzewa",
+      "ahu tree isomorphism"
+     ],
+     "a": "AHU: przetwarzaj wierzchołki od liści w górę. Dla `v`: `kids` = posortowane numery dzieci; `id[v] = ids[kids]` (nowy numer, jeśli takiej listy jeszcze nie było). Liść dostaje numer pustej listy. Ten sam numer ⇔ izomorficzne poddrzewa. Sortowanie list kosztuje łącznie O(n log n).",
+     "code": "map<vector<int>, int> ids;\nauto numer = [&](vector<int> kids) {\n    sort(kids.begin(), kids.end());\n    auto it = ids.find(kids);\n    if (it == ids.end()) it = ids.emplace(kids, (int)ids.size()).first;\n    return it->second;\n};\nint lisc = numer({});                       // 0\nint sciezka2 = numer({lisc});               // wierzchołek z jednym liściem\nint a = numer({lisc, sciezka2});\nint b = numer({sciezka2, lisc});            // te same dzieci w innej kolejności\ncout << (a == b ? \"izomorficzne\" : \"rozne\") << '\\n';"
+    },
+    {
+     "q": [
+      "hashowanie drzew",
+      "hash drzewa",
+      "tree hashing",
+      "hash poddrzewa",
+      "jak zahashować drzewo",
+      "hash drzewa ukorzenionego"
+     ],
+     "a": "Przemienny hash bez sortowania: `h(v) = 1 + Σ mix(h(c) ^ SEED)` po dzieciach `c`, gdzie `mix` to splitmix64, a `SEED` losowe. Suma nie zależy od kolejności dzieci, a `mix` jest nieliniowy, więc kolizje są praktycznie niemożliwe. O(n). Funkcja `treeHash` w treści.",
+     "code": "const uint64_t SEED = chrono::steady_clock::now().time_since_epoch().count();\nuint64_t mix(uint64_t x) {\n    x += 0x9e3779b97f4a7c15ULL;\n    x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;\n    x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;\n    return x ^ (x >> 31);\n}\nuint64_t hashWierzcholka(const vector<uint64_t>& hDzieci) {\n    uint64_t h = 1;\n    for (uint64_t c : hDzieci) h += mix(c ^ SEED);\n    return h;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "izomorfizm drzew nieukorzenionych",
+      "drzewa bez korzenia izomorfizm",
+      "unrooted tree isomorphism",
+      "izomorfizm drzew dwa środki",
+      "jak ukorzenić drzewa do porównania",
+      "nieukorzenione drzewa czy takie same"
+     ],
+     "a": "Każdy izomorfizm przeprowadza środek na środek. Znajdź środki obu drzew (obcinanie liści). Różna liczba środków → NIE. Inaczej porównaj `canon(A, środekA[0])` z `canon(B, c)` dla każdego środka `c` drzewa B (wspólna mapa!). Alternatywa: podziel krawędź między dwoma środkami nowym wierzchołkiem.",
+     "code": "int canon(const vector<vector<int>>& g, int root);     // AHU ze wspólną mapą\nvector<int> centers(const vector<vector<int>>& g);     // 1 lub 2 środki\nbool izomorficzne(const vector<vector<int>>& A, const vector<vector<int>>& B) {\n    if (A.size() != B.size()) return false;\n    auto ca = centers(A), cb = centers(B);\n    if (ca.size() != cb.size()) return false;\n    int ha = canon(A, ca[0]);\n    for (int c : cb)\n        if (canon(B, c) == ha) return true;\n    return false;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile różnych poddrzew",
+      "liczba nieizomorficznych poddrzew",
+      "distinct subtrees count",
+      "ile jest różnych kształtów poddrzew",
+      "różne poddrzewa w drzewie ukorzenionym"
+     ],
+     "a": "Policz AHU dla drzewa (jedna mapa) — liczba różnych numerów to liczba nieizomorficznych poddrzew (poddrzewo = wierzchołek ze wszystkimi potomkami). Z hashem: wrzuć `h[v]` wszystkich wierzchołków do `set` i weź rozmiar.",
+     "code": "vector<unsigned long long> h = {7, 3, 3, 5, 3};          // hashe poddrzew z treeHash\nset<unsigned long long> rozne(h.begin(), h.end());\ncout << rozne.size() << '\\n';                            // 3"
+    },
+    {
+     "q": [
+      "zapis drzewa nawiasami",
+      "drzewo jako ciąg nawiasów",
+      "kodowanie drzewa (()())",
+      "string nawiasowy drzewa izomorfizm",
+      "drzewo do napisu i sortowanie"
+     ],
+     "a": "Kod nawiasowy: `kod(v) = \"(\" + posortowane kody dzieci sklejone + \")\"`. Równe kody ⇔ izomorficzne. Proste, ale napisy mają łącznie O(n²) znaków dla głębokich drzew (ścieżka) — dla dużych n używaj numerów AHU zamiast napisów.",
+     "code": "vector<vector<int>> ch;          // dzieci w drzewie ukorzenionym\nstring kod(int v) {\n    vector<string> k;\n    for (int c : ch[v]) k.push_back(kod(c));\n    sort(k.begin(), k.end());\n    string s = \"(\";\n    for (auto& x : k) s += x;\n    return s + \")\";\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kolizje hash drzewa",
+      "czy hash drzewa może się pomylić",
+      "hash drzewa suma dzieci zły",
+      "tree hash anti test",
+      "dlaczego hash drzewa daje złą odpowiedź"
+     ],
+     "a": "Suma lub XOR **surowych** hashy dzieci to błąd: `1 + Σ h(c)` = rozmiar poddrzewa, a XOR kasuje dwoje identycznych dzieci. Każdy hash dziecka przepuść przez nieliniowy `mix` z losowym ziarnem. Gdy potrzebujesz pewności — AHU nie ma kolizji wcale.",
+     "code": "// ŹLE: suma surowych hashy dzieci daje ten sam wynik dla różnych drzew\nunsigned long long a = 1 + 3 + 1;   // dzieci o hashach 3 i 1\nunsigned long long b = 1 + 2 + 2;   // dzieci o hashach 2 i 2\ncout << (a == b) << '\\n';           // 1 -> kolizja"
+    },
+    {
+     "q": [
+      "czy poddrzewa u i v są izomorficzne",
+      "porównanie dwóch poddrzew w jednym drzewie",
+      "izomorficzne poddrzewa zapytania",
+      "same subtree shape check",
+      "takie same poddrzewa"
+     ],
+     "a": "Policz numer AHU (lub hash) dla każdego wierzchołka raz — zapytanie „czy poddrzewa u i v są izomorficzne” to potem porównanie `id[u] == id[v]` w O(1).",
+     "code": "vector<int> id = {4, 1, 1, 0, 0};          // numery AHU poddrzew wierzchołków 0..4\nint u = 1, v = 2;\ncout << (id[u] == id[v] ? \"TAK\" : \"NIE\") << '\\n';   // TAK"
+    }
+   ],
+   "related": [
+    "tree-center",
+    "tree-basics",
+    "ds-custom-hash",
+    "str-hashing",
+    "tree-rerooting",
+    "tree-dfs-order"
+   ]
+  },
+  {
+   "id": "graph-weighted-dsu",
+   "title": "DSU z wagami — parzystość (dwudzielność online) i potencjały (różnice między elementami)",
+   "category": "Grafy",
+   "tags": [
+    "dsu",
+    "find union",
+    "weighted dsu",
+    "dsu z wagami",
+    "potencjały",
+    "parzystość",
+    "dwudzielność",
+    "różnice",
+    "sprzeczność",
+    "xor",
+    "przyjaciele wrogowie",
+    "union find"
+   ],
+   "aliases": [
+    "dsu z wagami",
+    "weighted dsu",
+    "ważone dsu",
+    "dsu z potencjałami",
+    "dsu z parzystością",
+    "dsu parzystosc",
+    "dsu parity",
+    "find union z wagami",
+    "find union z parzystością",
+    "dsu z odległością do korzenia",
+    "dsu różnice",
+    "dwudzielność online",
+    "union find with weights",
+    "przyjaciele i wrogowie dsu"
+   ],
+   "summary": "DSU, w którym każdy wierzchołek pamięta „różnicę” względem rodzica (wartość, parzystość, XOR). Pozwala online dodawać warunki typu `x_b − x_a = w` albo „a i b są w różnych grupach”, wykrywać sprzeczności i odpowiadać o różnicę dwóch elementów — w O(α(n)) na operację.",
+   "complexity": "O(α(n)) zamortyzowane na find/unite (kompresja ścieżek + łączenie według rozmiaru)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Idea.** Zwykłe DSU mówi tylko „czy a i b są w jednym zbiorze”. W DSU z wagami każdy wierzchołek trzyma `d[v] = x[v] − x[p[v]]` (różnicę względem rodzica). Suma `d` na ścieżce do korzenia to `x[v] − x[korzeń]` — **potencjał** v. Dla a, b w jednym zbiorze `x[b] − x[a] = pot(b) − pot(a)`. Kompresja ścieżek działa nadal: przy przepinaniu v pod korzeń sumujemy `d` po drodze."
+    },
+    {
+     "type": "text",
+     "md": "**Łączenie** z warunkiem `x[b] − x[a] = w`: `ra = find(a)`, `rb = find(b)`, `pa = d[a]`, `pb = d[b]` (po find — względem korzeni). Podpinamy `rb` pod `ra` z `d[rb] = w + pa − pb` (bo `x[rb] = x[b] − pb`, `x[ra] = x[a] − pa`). Jeśli `ra == rb`, sprawdzamy tylko `pb − pa == w` — inaczej warunek jest **sprzeczny** z wcześniejszymi."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Potencjały: „b cięższe od a o w”, zapytania o różnicę, wykrywanie sprzeczności",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct WeightedDSU {\n    vector<int> p, sz;\n    vector<long long> d;                       // d[v] = x[v] - x[p[v]]\n    WeightedDSU(int n) : p(n), sz(n, 1), d(n, 0) { iota(p.begin(), p.end(), 0); }\n    int find(int v) {                          // po find: p[v] = korzeń, d[v] = x[v] - x[korzeń]\n        if (p[v] == v) return v;\n        int r = find(p[v]);\n        d[v] += d[p[v]];                       // NAJPIERW doliczamy wagę rodzica (już względem korzenia)\n        return p[v] = r;                       // dopiero potem przepinamy v pod korzeń\n    }\n    // dodaje warunek x[b] - x[a] = w; zwraca false, gdy jest sprzeczny z wcześniejszymi\n    bool unite(int a, int b, long long w) {\n        int ra = find(a), rb = find(b);\n        long long pa = d[a], pb = d[b];        // x[a] - x[ra], x[b] - x[rb]\n        if (ra == rb) return pb - pa == w;\n        if (sz[ra] < sz[rb]) { swap(ra, rb); swap(pa, pb); w = -w; }\n        p[rb] = ra;                            // rb pod ra: x[rb] - x[ra] = w + pa - pb\n        sz[ra] += sz[rb];\n        d[rb] = w + pa - pb;\n        return true;\n    }\n    bool same(int a, int b) { return find(a) == find(b); }\n    long long diff(int a, int b) { find(a); find(b); return d[b] - d[a]; }   // x[b] - x[a], gdy same(a, b)\n};\n\nint main() {\n    int n, q;\n    cin >> n >> q;\n    WeightedDSU dsu(n + 1);\n    while (q--) {\n        char t;\n        int a, b;\n        cin >> t >> a >> b;\n        if (t == '!') {                        // \"! a b w\": b jest o w cięższe od a\n            long long w;\n            cin >> w;\n            if (!dsu.unite(a, b, w)) cout << \"SPRZECZNOSC\\n\";\n        } else {                               // \"? a b\": ile wynosi x[b] - x[a]\n            if (dsu.same(a, b)) cout << dsu.diff(a, b) << '\\n';\n            else cout << \"NIEZNANE\\n\";\n        }\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "d[v] względem rodzica",
+      "Składanie po ścieżce",
+      "Typowe zadanie"
+     ],
+     "rows": [
+      [
+       "Potencjały (różnice)",
+       "x[v] − x[p]",
+       "suma",
+       "„b jest o w cięższe od a”, układy x_b − x_a = w"
+      ],
+      [
+       "Parzystość / 2 kolory",
+       "kolor(v) XOR kolor(p)",
+       "XOR",
+       "dwudzielność online, przyjaciele/wrogowie"
+      ],
+      [
+       "XOR wartości",
+       "x[v] XOR x[p]",
+       "XOR",
+       "„a XOR b = c”, równania nad bitami"
+      ],
+      [
+       "Modulo k (relacje cykliczne)",
+       "(x[v] − x[p]) mod k",
+       "suma mod k",
+       "łańcuch pokarmowy (k = 3)"
+      ],
+      [
+       "Iloraz",
+       "x[v] / x[p]",
+       "iloczyn (double lub ułamki)",
+       "kursy walut, „a/b = 2.5”"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Parzystość: pierwsza krawędź, po której graf przestaje być dwudzielny",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvector<int> p, sz, par;                        // par[v] = kolor(v) XOR kolor(p[v])\nint findp(int v) {\n    if (p[v] == v) return v;\n    int r = findp(p[v]);\n    par[v] ^= par[p[v]];                       // teraz par[v] = kolor(v) XOR kolor(korzenia)\n    return p[v] = r;\n}\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    p.resize(n + 1);\n    sz.assign(n + 1, 1);\n    par.assign(n + 1, 0);\n    iota(p.begin(), p.end(), 0);\n    for (int i = 1; i <= m; i++) {\n        int a, b;\n        cin >> a >> b;                         // krawędź = „a i b mają RÓŻNE kolory”\n        int ra = findp(a), rb = findp(b);\n        if (ra == rb) {\n            if (par[a] == par[b]) {            // ten sam kolor na obu końcach -> cykl nieparzysty\n                cout << i << '\\n';             // numer krawędzi, która psuje dwudzielność\n                return 0;\n            }\n            continue;\n        }\n        if (sz[ra] < sz[rb]) swap(ra, rb);\n        p[rb] = ra;\n        sz[ra] += sz[rb];\n        par[rb] = par[a] ^ par[b] ^ 1;         // wymusza kolor(a) != kolor(b)\n    }\n    cout << -1 << '\\n';                        // graf cały czas dwudzielny\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Przyjaciele/wrogowie: „ta sama drużyna” = parzystość 0, „różne” = 1. Ogólnie łączenie z relacją `r`: `par[rb] = par[a] ^ par[b] ^ r`, a sprzeczność, gdy w jednym zbiorze `(par[a] ^ par[b]) != r`."
+    },
+    {
+     "type": "warn",
+     "md": "W `find` kolejność jest kluczowa: najpierw rekurencyjnie `find(p[v])` (wtedy `d[p[v]]` jest już względem korzenia), potem `d[v] += d[p[v]]`, a dopiero na końcu `p[v] = r`. Przepięcie przed dodaniem gubi wagę rodzica."
+    },
+    {
+     "type": "tip",
+     "md": "Rekurencyjny `find` jest bezpieczny przy łączeniu według rozmiaru (głębokość O(log n)). Bez tego drzewo może mieć głębokość n i rekurencja wywróci stos. Wersja z cofaniem (bez kompresji): `ds-dsu-rollback`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int find(int v)",
+     "desc": "korzeń zbioru; po wywołaniu d[v] = x[v] − x[korzeń]",
+     "complexity": "O(α(n))",
+     "returns": "int"
+    },
+    {
+     "sig": "bool unite(int a, int b, long long w)",
+     "desc": "dodaje warunek x[b] − x[a] = w; false = sprzeczność",
+     "complexity": "O(α(n))",
+     "returns": "bool",
+     "example": "if (!dsu.unite(a, b, w)) cout << \"SPRZECZNOSC\\n\";"
+    },
+    {
+     "sig": "long long diff(int a, int b)",
+     "desc": "x[b] − x[a] (tylko gdy same(a, b))",
+     "complexity": "O(α(n))",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Zamiana `ra`/`rb` przy łączeniu według rozmiaru bez zamiany `pa`, `pb` i zmiany znaku `w` — cichy błąd znaku.",
+    "Odczyt `d[v]` bez wcześniejszego `find(v)` — `d[v]` jest wtedy względem rodzica, nie korzenia.",
+    "Przepełnienie: suma wag po wielu połączeniach przekracza `int` — trzymaj `long long`.",
+    "Wersja modulo: `(a − b) % k` w C++ bywa ujemne — normalizuj `((x % k) + k) % k`.",
+    "Pomylony kierunek warunku (`x_b − x_a` vs `x_a − x_b`) — ustal jedną konwencję w `unite` i w zapytaniu."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dsu z wagami",
+      "weighted dsu",
+      "ważone find union",
+      "find union z wagami kod",
+      "dsu z potencjałami",
+      "union find with weights",
+      "dsu z odległością do korzenia"
+     ],
+     "a": "Każdy wierzchołek trzyma `d[v] = x[v] − x[rodzic]`. `find` z kompresją sumuje `d` po drodze, więc po nim `d[v] = x[v] − x[korzeń]`. Łączenie z warunkiem `x[b] − x[a] = w`: `d[rb] = w + d[a] − d[b]` (po `find`). Gdy `a`, `b` są już w jednym zbiorze — sprawdzasz zgodność.",
+     "code": "struct WeightedDSU {\n    vector<int> p, sz;\n    vector<long long> d;                       // d[v] = x[v] - x[p[v]]\n    WeightedDSU(int n) : p(n), sz(n, 1), d(n, 0) { iota(p.begin(), p.end(), 0); }\n    int find(int v) {                          // po find: p[v] = korzeń, d[v] = x[v] - x[korzeń]\n        if (p[v] == v) return v;\n        int r = find(p[v]);\n        d[v] += d[p[v]];                       // NAJPIERW doliczamy wagę rodzica (już względem korzenia)\n        return p[v] = r;                       // dopiero potem przepinamy v pod korzeń\n    }\n    // dodaje warunek x[b] - x[a] = w; zwraca false, gdy jest sprzeczny z wcześniejszymi\n    bool unite(int a, int b, long long w) {\n        int ra = find(a), rb = find(b);\n        long long pa = d[a], pb = d[b];        // x[a] - x[ra], x[b] - x[rb]\n        if (ra == rb) return pb - pa == w;\n        if (sz[ra] < sz[rb]) { swap(ra, rb); swap(pa, pb); w = -w; }\n        p[rb] = ra;                            // rb pod ra: x[rb] - x[ra] = w + pa - pb\n        sz[ra] += sz[rb];\n        d[rb] = w + pa - pb;\n        return true;\n    }\n    bool same(int a, int b) { return find(a) == find(b); }\n    long long diff(int a, int b) { find(a); find(b); return d[b] - d[a]; }   // x[b] - x[a], gdy same(a, b)\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dsu z parzystością",
+      "dsu parzystosc",
+      "dsu parity",
+      "union find parity",
+      "find union z parzystością",
+      "dsu xor kolor wierzchołka"
+     ],
+     "a": "Wersja z bitem: `par[v] = kolor(v) XOR kolor(rodzica)`, w `find` składasz XOR-em. Krawędź (a, b) w grafie dwudzielnym znaczy „różne kolory”: jeśli `find(a) == find(b)` i `par[a] == par[b]` — cykl nieparzysty; inaczej łączysz z `par[rb] = par[a] ^ par[b] ^ 1`.",
+     "code": "vector<int> p, par;                    // par[v] = kolor(v) XOR kolor(p[v])\nint findp(int v) {\n    if (p[v] == v) return v;\n    int r = findp(p[v]);\n    par[v] ^= par[p[v]];\n    return p[v] = r;\n}\nbool dodajRozne(int a, int b) {        // false = cykl nieparzysty (dla dużych n łącz według rozmiaru)\n    int ra = findp(a), rb = findp(b);\n    if (ra == rb) return par[a] != par[b];\n    p[rb] = ra;\n    par[rb] = par[a] ^ par[b] ^ 1;\n    return true;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sprawdzanie dwudzielności online",
+      "dwudzielność przy dodawaniu krawędzi",
+      "kiedy graf przestaje być dwudzielny",
+      "pierwsza krawędź tworząca cykl nieparzysty",
+      "bipartite check online",
+      "nieparzysty cykl po dodaniu krawędzi"
+     ],
+     "a": "Dodawaj krawędzie do DSU z parzystością. Krawędź wewnątrz jednego zbioru z `par[a] == par[b]` zamyka cykl nieparzysty — od tej chwili graf nie jest dwudzielny (i już nie będzie, bo krawędzie tylko dochodzą). Program „Parzystość” w treści wypisuje numer tej krawędzi. Gdy krawędzie też znikają: DSU z cofaniem + dziel i zwyciężaj po czasie.",
+     "code": "// po findp(a) i findp(b) w DSU z parzystością:\nint ra = 3, rb = 3, para = 1, parb = 1;\nif (ra == rb && para == parb) cout << \"cykl nieparzysty - graf nie jest dwudzielny\\n\";"
+    },
+    {
+     "q": [
+      "różnica między elementami zapytania",
+      "ile b jest cięższe od a",
+      "x_b - x_a = w zapytania online",
+      "never wait for weights",
+      "różnice wag próbek dsu",
+      "relacje różnicowe między zmiennymi"
+     ],
+     "a": "DSU z potencjałami: informacja „b jest o w cięższe od a” to `unite(a, b, w)`; pytanie — jeśli `same(a, b)`, odpowiedź `d[b] − d[a]` po `find`, inaczej „nieznane”. Każda operacja O(α(n)). Pełny program w treści.",
+     "code": "// d[] po find(a) i find(b) — potencjały względem wspólnego korzenia\nvector<long long> d = {0, 0, 3, 10};\nint a = 2, b = 3;\ncout << d[b] - d[a] << '\\n';     // 7 = x[b] - x[a]"
+    },
+    {
+     "q": [
+      "czy warunki są sprzeczne",
+      "wykryj sprzeczność w równaniach",
+      "sprzeczne ograniczenia dsu",
+      "sprawdzanie spójności równań x_b - x_a",
+      "contradiction constraints union find",
+      "pierwsza fałszywa informacja"
+     ],
+     "a": "Przy `unite(a, b, w)`, gdy `a` i `b` są już w jednym zbiorze, wartość `x[b] − x[a] = d[b] − d[a]` jest wyznaczona — jeśli różni się od `w`, informacja jest sprzeczna (typowe: „wypisz numer pierwszej fałszywej informacji”). Sprzecznej informacji nie dodajesz.",
+     "code": "long long da = 3, db = 10, w = 5;   // d[a], d[b] po find; ten sam korzeń\nbool sprzeczne = (db - da != w);     // 7 != 5\ncout << sprzeczne << '\\n';           // 1"
+    },
+    {
+     "q": [
+      "przyjaciele i wrogowie dsu",
+      "wróg mojego wroga jest przyjacielem",
+      "dwie drużyny warunki takie same różne",
+      "enemy friend union find",
+      "podział na dwie grupy z warunkami",
+      "a xor b = c równania dsu"
+     ],
+     "a": "To DSU z parzystością z relacją `r`: „ta sama drużyna” `r = 0`, „różne” `r = 1` (albo równanie `x_a XOR x_b = r`). Łączenie: `par[rb] = par[a] ^ par[b] ^ r`; sprzeczność w jednym zbiorze, gdy `(par[a] ^ par[b]) != r`. Wróg wroga = przyjaciel, bo 1 XOR 1 = 0.",
+     "code": "vector<int> p, par;\nint findp(int v) {\n    if (p[v] == v) return v;\n    int r = findp(p[v]);\n    par[v] ^= par[p[v]];\n    return p[v] = r;\n}\n// r = 0: a i b w tej samej drużynie, r = 1: w różnych; false = sprzeczność\nbool relacja(int a, int b, int r) {\n    int ra = findp(a), rb = findp(b);\n    if (ra == rb) return (par[a] ^ par[b]) == r;\n    p[rb] = ra;\n    par[rb] = par[a] ^ par[b] ^ r;\n    return true;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "łańcuch pokarmowy dsu",
+      "food chain poj",
+      "relacja zjada modulo 3 dsu",
+      "dsu modulo k",
+      "dsu z relacjami cyklicznymi",
+      "a zjada b b zjada c c zjada a"
+     ],
+     "a": "Trzy gatunki w cyklu (A zjada B, B zjada C, C zjada A): `d[v] = (x[v] − x[p]) mod 3`. „a i b tego samego gatunku” = różnica 0, „a zjada b” = `x[a] − x[b] ≡ 1`. Wszystko jak w potencjałach, tylko mod 3 (z normalizacją ujemnych reszt).",
+     "code": "const int K = 3;\nvector<int> p, d;                          // d[v] = (x[v] - x[p[v]]) mod K\nint findp(int v) {\n    if (p[v] == v) return v;\n    int r = findp(p[v]);\n    d[v] = (d[v] + d[p[v]]) % K;\n    return p[v] = r;\n}\n// warunek (x[a] - x[b]) mod K == rel; false = sprzeczność (nie dodajemy)\nbool dodaj(int a, int b, int rel) {\n    int ra = findp(a), rb = findp(b);\n    if (ra == rb) return ((d[a] - d[b]) % K + K) % K == rel;\n    p[ra] = rb;                            // x[ra] - x[rb] = rel - d[a] + d[b]\n    d[ra] = ((rel - d[a] + d[b]) % K + K) % K;\n    return true;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kompresja ścieżki dsu z wagami",
+      "jak aktualizować wagi przy kompresji ścieżki",
+      "find z wagami źle liczy",
+      "dsu z wagami błąd w find",
+      "path compression weighted union find"
+     ],
+     "a": "Najpierw `r = find(p[v])` — po tym `d[p[v]]` jest już względem korzenia; potem `d[v] += d[p[v]]`; dopiero na końcu `p[v] = r`. Jeśli przepniesz `p[v]` przed dodaniem, dodasz `d` korzenia (0) zamiast rodzica.",
+     "code": "vector<int> p;\nvector<long long> d;\nint findp(int v) {\n    if (p[v] == v) return v;\n    int r = findp(p[v]);     // 1) skompresuj rodzica\n    d[v] += d[p[v]];         // 2) dolicz jego wagę (już względem korzenia)\n    return p[v] = r;         // 3) dopiero teraz przepnij\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "graph-dsu",
+    "graph-bipartite",
+    "ds-dsu-rollback",
+    "graph-2sat",
+    "math-parity-invariants"
+   ]
+  },
+  {
+   "id": "graph-mst-path-max",
+   "title": "Maksimum na ścieżce w MST — drugie najlepsze MST, MST z wymuszoną krawędzią, krawędzie w jakimś/każdym MST",
+   "category": "Grafy",
+   "tags": [
+    "mst",
+    "drugie mst",
+    "second best mst",
+    "binary lifting",
+    "maksimum na ścieżce",
+    "własność cyklu",
+    "kruskal",
+    "minimax",
+    "drzewo kruskala",
+    "krt",
+    "drzewo rozpinające"
+   ],
+   "aliases": [
+    "drugie najlepsze mst",
+    "drugie mst",
+    "second best mst",
+    "second minimum spanning tree",
+    "drugie minimalne drzewo rozpinające",
+    "maksimum na ścieżce w mst",
+    "max krawędź na ścieżce w mst",
+    "mst z wymuszoną krawędzią dla każdej krawędzi",
+    "czy krawędź należy do mst",
+    "krawędź w każdym mst",
+    "krawędź w jakimś mst",
+    "drzewo kruskala",
+    "kruskal reconstruction tree"
+   ],
+   "summary": "Kluczowy fakt: dodanie krawędzi (u, v, w) spoza MST tworzy cykl i można nią zastąpić **najcięższą** krawędź na ścieżce u–v w MST. Maksimum na ścieżce liczymy binary liftingiem w O(log n) — to daje drugie MST, MST z wymuszoną krawędzią i testy „czy krawędź jest w jakimś/każdym MST”.",
+   "complexity": "O(m log m) Kruskal + O(n log n) preprocessing + O(log n) na zapytanie o maksimum na ścieżce",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Własność cyklu.** Niech `T` to MST o wadze `W`. Dla krawędzi `e = (u, v, w)` spoza `T` niech `M` = maksimum wag na ścieżce u–v w `T`. Zawsze `w ≥ M` (inaczej `T` nie byłoby minimalne). Najlżejsze drzewo rozpinające **zawierające** `e` ma wagę `W − M + w`: dodajemy `e` i usuwamy najcięższą krawędź z powstałego cyklu."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Pytanie",
+      "Odpowiedź"
+     ],
+     "rows": [
+      [
+       "Najlżejsze drzewo zawierające krawędź e = (u, v, w)",
+       "W − maxPath(u, v) + w (dla krawędzi z T: W)"
+      ],
+      [
+       "Drugie MST (waga może być równa W)",
+       "min po e ∉ T z W − maxPath(u, v) + w"
+      ],
+      [
+       "Ściśle drugie MST (waga > W)",
+       "jak wyżej, ale gdy w == max, wymień z drugim największym RÓŻNYM"
+      ],
+      [
+       "Czy e jest w JAKIMŚ MST",
+       "e ∈ T albo w == maxPath(u, v); bez LCA: u, v rozłączone krawędziami o wadze < w"
+      ],
+      [
+       "Czy e jest w KAŻDYM MST",
+       "u, v rozłączone krawędziami ≠ e o wadze ≤ w (szybko: mosty w grupie równych wag)"
+      ],
+      [
+       "Czy MST jest jednoznaczne",
+       "tak ⇔ żadna krawędź spoza T nie ma w == maxPath(u, v)"
+      ],
+      [
+       "Ścieżka u–v minimalizująca największą krawędź (minimax)",
+       "maxPath(u, v) w MST"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Dla każdej krawędzi: najlżejsze drzewo rozpinające ją zawierające (Kruskal + binary lifting z max)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\n\nconst int LOG = 18;                              // 2^18 > 2·10^5\nvector<int> dsu;\nint findp(int v) { return dsu[v] == v ? v : dsu[v] = findp(dsu[v]); }\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;                               // graf spójny, wagi >= 0\n    vector<array<int, 3>> e(m);                  // {u, v, w}\n    for (auto& [u, v, w] : e) cin >> u >> v >> w;\n    // 1) Kruskal: MST o wadze W\n    vector<int> ord(m);\n    iota(ord.begin(), ord.end(), 0);\n    sort(ord.begin(), ord.end(), [&](int a, int b) { return e[a][2] < e[b][2]; });\n    dsu.resize(n + 1);\n    iota(dsu.begin(), dsu.end(), 0);\n    vector<vector<pair<int, int>>> t(n + 1);     // MST: (sąsiad, waga)\n    ll W = 0;\n    for (int i : ord) {\n        auto [u, v, w] = e[i];\n        if (findp(u) == findp(v)) continue;\n        dsu[findp(u)] = findp(v);\n        W += w;\n        t[u].push_back({v, w});\n        t[v].push_back({u, w});\n    }\n    // 2) binary lifting po MST: up[v][k] = przodek o 2^k, mx[v][k] = max waga na tych 2^k krawędziach\n    vector<array<int, LOG>> up(n + 1), mx(n + 1);\n    vector<int> dep(n + 1, -1);\n    vector<int> st = {1};\n    dep[1] = 0;\n    up[1].fill(1);\n    mx[1].fill(0);\n    while (!st.empty()) {\n        int v = st.back();\n        st.pop_back();\n        for (auto [u, w] : t[v])\n            if (dep[u] == -1) {\n                dep[u] = dep[v] + 1;\n                up[u][0] = v;\n                mx[u][0] = w;\n                for (int k = 1; k < LOG; k++) {\n                    up[u][k] = up[up[u][k - 1]][k - 1];\n                    mx[u][k] = max(mx[u][k - 1], mx[up[u][k - 1]][k - 1]);\n                }\n                st.push_back(u);\n            }\n    }\n    auto pathMax = [&](int a, int b) {           // max waga krawędzi na ścieżce a–b w MST\n        int res = 0;\n        if (dep[a] < dep[b]) swap(a, b);\n        for (int k = LOG - 1; k >= 0; k--)\n            if (dep[a] - (1 << k) >= dep[b]) { res = max(res, mx[a][k]); a = up[a][k]; }\n        if (a == b) return res;\n        for (int k = LOG - 1; k >= 0; k--)\n            if (up[a][k] != up[b][k]) {\n                res = max({res, mx[a][k], mx[b][k]});\n                a = up[a][k];\n                b = up[b][k];\n            }\n        return max({res, mx[a][0], mx[b][0]});\n    };\n    // 3) najlżejsze drzewo rozpinające ZAWIERAJĄCE krawędź (u, v, w): W - pathMax(u, v) + w\n    for (auto [u, v, w] : e) cout << W - pathMax(u, v) + w << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Ściśle drugie MST: dwie największe różne wagi na ścieżce",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\n\nconst int LOG = 18;\nconst int NEG = INT_MIN;                         // „brak wartości”\ntypedef pair<int, int> Top2;                     // {największa, druga ŚCIŚLE mniejsza}\nTop2 comb(Top2 a, Top2 b) {\n    int v[4] = {a.first, a.second, b.first, b.second};\n    int m1 = *max_element(v, v + 4), m2 = NEG;\n    for (int x : v)\n        if (x < m1) m2 = max(m2, x);\n    return {m1, m2};\n}\nvector<int> dsu;\nint findp(int v) { return dsu[v] == v ? v : dsu[v] = findp(dsu[v]); }\n\nint main() {\n    int n, m;\n    cin >> n >> m;                               // graf spójny\n    vector<array<int, 3>> e(m);\n    for (auto& [u, v, w] : e) cin >> u >> v >> w;\n    sort(e.begin(), e.end(), [](const auto& a, const auto& b) { return a[2] < b[2]; });\n    dsu.resize(n + 1);\n    iota(dsu.begin(), dsu.end(), 0);\n    vector<vector<pair<int, int>>> t(n + 1);\n    vector<bool> inTree(m, false);\n    ll W = 0;\n    for (int i = 0; i < m; i++) {\n        auto [u, v, w] = e[i];\n        if (findp(u) == findp(v)) continue;\n        dsu[findp(u)] = findp(v);\n        W += w;\n        inTree[i] = true;\n        t[u].push_back({v, w});\n        t[v].push_back({u, w});\n    }\n    vector<array<int, LOG>> up(n + 1);\n    vector<array<Top2, LOG>> mx(n + 1);\n    vector<int> dep(n + 1, -1);\n    vector<int> st = {1};\n    dep[1] = 0;\n    up[1].fill(1);\n    mx[1].fill({NEG, NEG});\n    while (!st.empty()) {\n        int v = st.back();\n        st.pop_back();\n        for (auto [u, w] : t[v])\n            if (dep[u] == -1) {\n                dep[u] = dep[v] + 1;\n                up[u][0] = v;\n                mx[u][0] = {w, NEG};\n                for (int k = 1; k < LOG; k++) {\n                    up[u][k] = up[up[u][k - 1]][k - 1];\n                    mx[u][k] = comb(mx[u][k - 1], mx[up[u][k - 1]][k - 1]);\n                }\n                st.push_back(u);\n            }\n    }\n    auto path = [&](int a, int b) {              // dwie największe RÓŻNE wagi na ścieżce a–b\n        Top2 r = {NEG, NEG};\n        if (dep[a] < dep[b]) swap(a, b);\n        for (int k = LOG - 1; k >= 0; k--)\n            if (dep[a] - (1 << k) >= dep[b]) { r = comb(r, mx[a][k]); a = up[a][k]; }\n        if (a == b) return r;\n        for (int k = LOG - 1; k >= 0; k--)\n            if (up[a][k] != up[b][k]) {\n                r = comb(r, comb(mx[a][k], mx[b][k]));\n                a = up[a][k];\n                b = up[b][k];\n            }\n        return comb(r, comb(mx[a][0], mx[b][0]));\n    };\n    ll best = LLONG_MAX;                         // ŚCIŚLE drugie MST\n    for (int i = 0; i < m; i++) {\n        if (inTree[i]) continue;\n        auto [u, v, w] = e[i];\n        if (u == v) continue;                    // pętla nie wchodzi do żadnego drzewa\n        auto [m1, m2] = path(u, v);\n        if (w > m1) best = min(best, W - m1 + w);            // wymiana z największą krawędzią\n        else if (m2 != NEG) best = min(best, W - m2 + w);    // w == m1: wymiana z drugą największą\n    }\n    cout << W << ' ' << (best == LLONG_MAX ? -1 : best) << '\\n';   // -1: brak ściśle gorszego drzewa\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Wiele zapytań o minimax offline? Zamiast LCA z max zbuduj **drzewo Kruskala** (Kruskal reconstruction tree): każde połączenie dwóch zbiorów tworzy nowy węzeł z wagą krawędzi, a `maxPath(u, v) = val[lca(u, v)]`. Przydaje się też do „do których wierzchołków dojdę z v krawędziami o wadze ≤ x” — to liście poddrzewa najwyższego przodka v z `val ≤ x`."
+    },
+    {
+     "type": "warn",
+     "md": "Ściśle drugie MST: jeśli krawędź spoza drzewa ma wagę równą maksimum na ścieżce, wymiana daje drzewo o tej **samej** wadze W. Dlatego na każdym skoku trzymamy dwie największe **różne** wartości (`comb` w programie) i wtedy wymieniamy z drugą."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int pathMax(int a, int b)",
+     "desc": "maksymalna waga krawędzi na ścieżce a–b w MST",
+     "complexity": "O(log n)",
+     "returns": "int",
+     "example": "long long z = W - pathMax(u, v) + w;"
+    },
+    {
+     "sig": "mx[u][k] = max(mx[u][k-1], mx[up[u][k-1]][k-1])",
+     "desc": "budowa tablicy maksimów binary liftingu",
+     "complexity": "O(n log n) łącznie"
+    }
+   ],
+   "pitfalls": [
+    "Graf niespójny: MST nie istnieje (las) — sprawdź, czy Kruskal dodał n − 1 krawędzi.",
+    "Suma wag MST w `int` — przy m = 2·10^5 i wagach do 10^9 potrzebny `long long`.",
+    "Binary lifting z max: przy skoku o 2^k bierz `mx[v][k]` PRZED przesunięciem `v = up[v][k]`.",
+    "Ściśle drugie MST: samo maksimum nie wystarcza — remisy wag dają drzewo o tej samej wadze.",
+    "Pętle (u == v) nigdy nie wchodzą do drzewa — pomijaj je; krawędź wielokrotna to zwykła krawędź spoza MST."
+   ],
+   "qa": [
+    {
+     "q": [
+      "maksimum na ścieżce w mst",
+      "max krawędź na ścieżce w mst",
+      "najcięższa krawędź między u i v w drzewie rozpinającym",
+      "max edge on path mst",
+      "max na ścieżce mst binary lifting",
+      "maksymalna waga na ścieżce w minimalnym drzewie"
+     ],
+     "a": "Zbuduj MST (Kruskal), ukorzeń je i zrób binary lifting z dwiema tablicami: `up[v][k]` (przodek o 2^k) i `mx[v][k]` (max waga na tych 2^k krawędziach). Zapytanie jak LCA, tylko po drodze bierzesz max z `mx`. O(log n) na zapytanie.",
+     "code": "const int LOG = 18;\nvector<int> dep;\nvector<array<int, LOG>> up, mx;     // mx[v][k] = max waga na 2^k krawędziach w górę od v\nint pathMax(int a, int b) {\n    int res = 0;\n    if (dep[a] < dep[b]) swap(a, b);\n    for (int k = LOG - 1; k >= 0; k--)\n        if (dep[a] - (1 << k) >= dep[b]) { res = max(res, mx[a][k]); a = up[a][k]; }\n    if (a == b) return res;\n    for (int k = LOG - 1; k >= 0; k--)\n        if (up[a][k] != up[b][k]) {\n            res = max({res, mx[a][k], mx[b][k]});\n            a = up[a][k]; b = up[b][k];\n        }\n    return max({res, mx[a][0], mx[b][0]});\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "drugie najlepsze mst",
+      "drugie mst",
+      "second best mst",
+      "second minimum spanning tree",
+      "drugie minimalne drzewo rozpinające",
+      "drugie najtańsze drzewo rozpinające"
+     ],
+     "a": "Drugie MST różni się od MST jedną wymianą: dodaj krawędź `(u, v, w)` spoza drzewa, usuń najcięższą na ścieżce u–v. Wynik: `min(W − maxPath(u, v) + w)` po krawędziach spoza MST. Jeśli ma być **ściśle** większe od W — przy `w == max` użyj drugiego największego różnego (program „Ściśle drugie MST”). O(m log n).",
+     "code": "long long W = 10;                                     // waga MST\nvector<array<int, 3>> spoza = {{1, 3, 6}, {2, 4, 5}}; // krawędzie spoza MST: u, v, w\nvector<int> maxNaSciezce = {4, 5};                    // maxPath(u, v) dla nich\nlong long drugie = LLONG_MAX;\nfor (int i = 0; i < 2; i++) drugie = min(drugie, W - maxNaSciezce[i] + spoza[i][2]);\ncout << drugie << '\\n';                               // 10 (remis 10 - 5 + 5: MST nie jest jednoznaczne)"
+    },
+    {
+     "q": [
+      "mst zawierające daną krawędź dla każdej krawędzi",
+      "minimalne drzewo rozpinające z wymuszoną krawędzią",
+      "mst with edge e codeforces 609e",
+      "koszt mst jeśli musimy wziąć krawędź",
+      "dla każdej krawędzi najmniejsze drzewo rozpinające"
+     ],
+     "a": "Dla krawędzi `(u, v, w)`: `W − maxPath(u, v) + w`, gdzie `maxPath` to maksimum na ścieżce u–v w MST (dla krawędzi z MST wychodzi `W`). Dla wszystkich m krawędzi: Kruskal + binary lifting, O(m log n) — to pierwszy program w treści.",
+     "code": "long long W = 15;\nint w = 7, maxPath = 4;           // krawędź (u, v, 7); max na ścieżce u-v w MST = 4\ncout << W - maxPath + w << '\\n';  // 18"
+    },
+    {
+     "q": [
+      "czy krawędź należy do jakiegoś mst",
+      "które krawędzie mogą być w mst",
+      "edge in some mst",
+      "krawędź w którymś minimalnym drzewie rozpinającym",
+      "czy krawędź może być w mst"
+     ],
+     "a": "Krawędź `(u, v, w)` jest w jakimś MST ⇔ `u` i `v` **nie** są połączone krawędziami o wadze **ściśle mniejszej** niż `w`. Dla wszystkich krawędzi naraz: Kruskal po grupach równych wag — najpierw sprawdź całą grupę (`find(u) != find(v)`), dopiero potem ją połącz. O(m log m).",
+     "code": "// res[i] = czy krawędź i (u, v, w) należy do JAKIEGOŚ MST; grupy równych wag w Kruskalu\nvector<bool> inSomeMST(int n, const vector<array<int, 3>>& e) {\n    int m = e.size();\n    vector<int> ord(m), p(n + 1);\n    iota(ord.begin(), ord.end(), 0);\n    iota(p.begin(), p.end(), 0);\n    function<int(int)> f = [&](int v) { return p[v] == v ? v : p[v] = f(p[v]); };\n    sort(ord.begin(), ord.end(), [&](int a, int b) { return e[a][2] < e[b][2]; });\n    vector<bool> res(m);\n    for (int i = 0, j; i < m; i = j) {\n        for (j = i; j < m && e[ord[j]][2] == e[ord[i]][2]; j++)   // najpierw SPRAWDŹ całą grupę...\n            res[ord[j]] = f(e[ord[j]][0]) != f(e[ord[j]][1]);\n        for (int k = i; k < j; k++) {                               // ...potem ją połącz\n            int a = f(e[ord[k]][0]), b = f(e[ord[k]][1]);\n            if (a != b) p[a] = b;\n        }\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy krawędź należy do każdego mst",
+      "krawędź w każdym minimalnym drzewie rozpinającym",
+      "edge in all mst",
+      "any some none mst",
+      "codeforces 160d mst",
+      "krawędź niezbędna w mst"
+     ],
+     "a": "Krawędź `e = (u, v, w)` jest w **każdym** MST ⇔ `u` i `v` są rozłączone w grafie krawędzi `≠ e` o wadze `≤ w`. Szybko dla wszystkich: Kruskal po grupach; w grupie wagi `w` zamień końce na korzenie DSU i znajdź **mosty** w multigrafie krawędzi tej grupy — krawędź „w jakimś MST”, która jest mostem, jest w każdym. Poniżej prosta wersja O(m²) do małych danych i brute-force'a.",
+     "code": "// wolna, ale prosta wersja O(m · m · α): czy krawędź i jest w KAŻDYM MST\nbool inEveryMST(int n, const vector<array<int, 3>>& e, int i) {\n    vector<int> p(n + 1);\n    iota(p.begin(), p.end(), 0);\n    function<int(int)> f = [&](int v) { return p[v] == v ? v : p[v] = f(p[v]); };\n    for (int j = 0; j < (int)e.size(); j++)\n        if (j != i && e[j][2] <= e[i][2]) p[f(e[j][0])] = f(e[j][1]);\n    return f(e[i][0]) != f(e[i][1]);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ścieżka minimalizująca maksymalną krawędź wiele zapytań",
+      "minimax path queries",
+      "bottleneck path zapytania u v",
+      "najmniejsza możliwa największa waga drogi dla wielu par",
+      "ładowność ciężarówki maksymalne drzewo rozpinające"
+     ],
+     "a": "Najlepsza możliwa „najcięższa krawędź” na drodze u–v to `maxPath(u, v)` w MST. Dla wielu zapytań: MST + binary lifting z max (O(log n) na zapytanie) albo drzewo Kruskala + LCA. Wersja „maksymalizuj najlżejszą krawędź” (ładowność ciężarówki) — to samo na **maksymalnym** drzewie rozpinającym, z minimum zamiast max.",
+     "code": "vector<array<int, 3>> e = {{1, 2, 5}, {2, 3, 2}, {1, 3, 4}};\n// ładowność ciężarówki: maksymalne drzewo rozpinające (sort malejąco), potem MIN na ścieżce\nsort(e.begin(), e.end(), [](const auto& a, const auto& b) { return a[2] > b[2]; });\nfor (auto [u, v, w] : e) cout << u << '-' << v << ' ' << w << '\\n';"
+    },
+    {
+     "q": [
+      "drzewo kruskala",
+      "kruskal reconstruction tree",
+      "krt drzewo",
+      "drzewo rekonstrukcji kruskala",
+      "do których wierzchołków dojdę krawędziami o wadze co najwyżej x"
+     ],
+     "a": "Robisz Kruskala, ale przy każdym połączeniu zbiorów A i B tworzysz nowy węzeł o wadze `w` z dziećmi = korzenie A i B. Wychodzi drzewo z 2n − 1 węzłami, w którym wagi rosną ku korzeniowi. `maxPath(u, v) = val[lca(u, v)]`, a wierzchołki osiągalne z v krawędziami ≤ x to liście poddrzewa najwyższego przodka v z `val ≤ x`.",
+     "code": "// Drzewo Kruskala: liście 0..n-1 = wierzchołki grafu, węzły n..2n-2 = krawędzie MST (val = waga).\n// max waga na ścieżce u–v w MST (= minimax u–v w grafie) = val[lca(u, v)] w tym drzewie.\nvoid buildKRT(int n, vector<array<int, 3>> e, vector<int>& par, vector<int>& val) {\n    sort(e.begin(), e.end(), [](const auto& a, const auto& b) { return a[2] < b[2]; });\n    vector<int> d(2 * n);\n    iota(d.begin(), d.end(), 0);\n    function<int(int)> f = [&](int v) { return d[v] == v ? v : d[v] = f(d[v]); };\n    par.assign(2 * n, -1);\n    val.assign(2 * n, 0);\n    int cnt = n;\n    for (auto [u, v, w] : e) {\n        int a = f(u), b = f(v);\n        if (a == b) continue;\n        val[cnt] = w;\n        par[a] = par[b] = cnt;                   // nowy węzeł nad dwoma łączonymi zbiorami\n        d[a] = d[b] = cnt;\n        cnt++;\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy mst jest unikalne binary lifting",
+      "jedno mst czy wiele sprawdzenie",
+      "is mst unique",
+      "unikalność minimalnego drzewa rozpinającego szybko"
+     ],
+     "a": "MST jest jednoznaczne ⇔ dla żadnej krawędzi spoza MST nie zachodzi `w == maxPath(u, v)` (wtedy wymiana daje inne drzewo o tej samej wadze). Równoważnie: drugie MST (nie ściśle) ma wagę > W.",
+     "code": "int w = 5, maxPath = 5;            // krawędź spoza MST i maksimum na jej ścieżce w MST\nbool jednoznaczne = (w != maxPath);\ncout << (jednoznaczne ? \"jedno MST\" : \"wiele MST\") << '\\n';   // wiele MST"
+    }
+   ],
+   "related": [
+    "graph-mst-kruskal",
+    "graph-mst-prim",
+    "tree-lca",
+    "graph-dsu",
+    "graph-bridges-articulation",
+    "tree-path-sum"
+   ]
+  },
+  {
+   "id": "graph-k-shortest",
+   "title": "Druga najkrótsza ścieżka i K najkrótszych tras — Dijkstra z licznikiem wyjęć z kolejki",
+   "category": "Grafy",
+   "tags": [
+    "dijkstra",
+    "k najkrótszych",
+    "k shortest paths",
+    "druga najkrótsza",
+    "second shortest path",
+    "spacer",
+    "kolejka priorytetowa",
+    "liczba najkrótszych ścieżek",
+    "yen",
+    "flight routes"
+   ],
+   "aliases": [
+    "k najkrótszych ścieżek",
+    "k najkrotszych sciezek",
+    "k shortest paths",
+    "k shortest walks",
+    "k najkrótszych tras",
+    "k-ta najkrótsza ścieżka",
+    "kth shortest path",
+    "druga najkrótsza ścieżka",
+    "druga najkrotsza sciezka",
+    "druga najkrótsza droga",
+    "second shortest path",
+    "flight routes",
+    "dijkstra z licznikiem",
+    "dijkstra k razy",
+    "roadblocks"
+   ],
+   "summary": "Zmodyfikowana Dijkstra, w której każdy wierzchołek może zejść z kolejki do K razy: j-te zdjęcie celu to j-ta najkrótsza trasa (spacer — wierzchołki mogą się powtarzać). Dla drugiej najkrótszej wystarczą dwie tablice `d1`, `d2` albo trik z odległościami od s i do t.",
+   "complexity": "K najkrótszych: O(K·m·log(K·m)); ściśle druga najkrótsza: O(m log n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**K najkrótszych tras.** W zwykłej Dijkstrze wierzchołek zdejmujemy z kolejki raz — wtedy jego odległość jest ostateczna. Pozwólmy zdjąć każdy wierzchołek do **K** razy (`cnt[v]`). Przy wagach ≥ 0 kolejka oddaje trasy w kolejności niemalejącej długości, więc j-te zdjęcie `v` to długość j-tej najkrótszej trasy do `v`. Po K zdjęciach `v` kolejne wpisy dla `v` są bezużyteczne: każdą dłuższą trasę przez `v` można zastąpić jedną z K lepszych."
+    },
+    {
+     "type": "text",
+     "md": "**Ścieżka czy spacer?** Ten algorytm liczy **spacery** (trasy mogą powtarzać wierzchołki i krawędzie, np. obejść cykl). Tak jest w większości zadań („K najtańszych lotów”, „druga najkrótsza droga, można wracać”). K najkrótszych **prostych** ścieżek to algorytm Yena — O(K·n·Dijkstra), rzadko na OI."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "K najkrótszych tras z 1 do n (CSES Flight Routes)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m, k;\n    cin >> n >> m >> k;                           // graf skierowany, wagi >= 0\n    vector<vector<pair<int, int>>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b, c;\n        cin >> a >> b >> c;\n        g[a].push_back({b, c});\n    }\n    vector<int> cnt(n + 1, 0);                    // ile razy wierzchołek zszedł już z kolejki\n    priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<>> pq;\n    pq.push({0, 1});\n    vector<ll> ans;\n    while (!pq.empty() && cnt[n] < k) {\n        auto [d, v] = pq.top();\n        pq.pop();\n        if (cnt[v] >= k) continue;                // v ma już k najlepszych tras — reszta zbędna\n        cnt[v]++;\n        if (v == n) ans.push_back(d);             // j-te zdjęcie n = j-ta najkrótsza trasa\n        for (auto [u, w] : g[v])\n            if (cnt[u] < k) pq.push({d + w, u});\n    }\n    for (ll x : ans) cout << x << ' ';            // niemalejąco; mniej niż k, jeśli tylu tras nie ma\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Ściśle druga najkrótsza trasa: d1 i d2 w jednej Dijkstrze (graf nieskierowany)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst ll INF = LLONG_MAX / 4;\n\nint main() {\n    int n, m;\n    cin >> n >> m;                                // nieskierowany, wagi > 0\n    vector<vector<pair<int, int>>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n    vector<ll> d1(n + 1, INF), d2(n + 1, INF);    // najkrótsza i ŚCIŚLE druga długość\n    priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<>> pq;\n    d1[1] = 0;\n    pq.push({0, 1});\n    while (!pq.empty()) {\n        auto [d, v] = pq.top();\n        pq.pop();\n        if (d > d2[v]) continue;                  // przeterminowany wpis\n        for (auto [u, w] : g[v]) {\n            ll nd = d + w;\n            if (nd < d1[u]) {                     // nowa najlepsza; stara najlepsza spada niżej\n                swap(nd, d1[u]);\n                pq.push({d1[u], u});\n            }\n            if (d1[u] < nd && nd < d2[u]) {       // ściśle między d1 i d2 -> nowa druga\n                d2[u] = nd;\n                pq.push({d2[u], u});\n            }\n        }\n    }\n    cout << (d2[n] >= INF ? -1 : d2[n]) << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Metoda",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "K najkrótszych tras (długości mogą się powtarzać)",
+       "Dijkstra, każdy v zdjęty ≤ K razy",
+       "O(K·m log(K·m))"
+      ],
+      [
+       "Ściśle druga najkrótsza (inna długość)",
+       "d1/d2 w jednej Dijkstrze",
+       "O(m log n)"
+      ],
+      [
+       "Ściśle druga najkrótsza z gotowych ds i dt",
+       "min po krawędziach ds[u] + w + dt[v] > D",
+       "2 Dijkstry + O(m)"
+      ],
+      [
+       "Krawędzie leżące na jakiejś najkrótszej ścieżce",
+       "ds[u] + w + dt[v] == D",
+       "2 Dijkstry + O(m)"
+      ],
+      [
+       "Liczba najkrótszych ścieżek",
+       "Dijkstra + ways[v] (przy remisie dodaj)",
+       "O(m log n)"
+      ],
+      [
+       "K najkrótszych PROSTYCH ścieżek",
+       "algorytm Yena",
+       "O(K·n·m log n)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Druga najkrótsza bez modyfikowania Dijkstry: policz `ds` (od s) i `dt` (do t, na grafie odwróconym), `D = ds[t]`. Ściśle druga trasa = `min(ds[u] + w + dt[v])` po krawędziach `u → v` z wynikiem `> D`. Działa, bo każda trasa dłuższa od D ma krawędź, na której „zbacza” z najkrótszych."
+    },
+    {
+     "type": "warn",
+     "md": "W grafie nieskierowanym druga najkrótsza trasa może iść tam i z powrotem po jednej krawędzi (D + 2·w). Jeśli treść każe brać ścieżki **proste** albo różne zbiory krawędzi — to inne zadanie (np. usuń po kolei każdą krawędź najkrótszej ścieżki i licz od nowa)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "if (cnt[v] >= K) continue; cnt[v]++;",
+     "desc": "ograniczenie liczby zdjęć wierzchołka do K",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "if (nd < d1[u]) swap(nd, d1[u]); if (d1[u] < nd && nd < d2[u]) d2[u] = nd;",
+     "desc": "relaksacja z dwiema najlepszymi długościami",
+     "complexity": "O(log n) z wrzuceniem do kolejki"
+    }
+   ],
+   "pitfalls": [
+    "`if (d > dist[v]) continue` z tablicą `dist` w wersji K-krotnej odrzuca wszystkie trasy poza pierwszą — licz `cnt[v]` zamiast tego.",
+    "Brak warunku `cnt[u] < K` przy wrzucaniu do kolejki — kolejka puchnie, MLE.",
+    "„Druga najkrótsza” w treści: ściśle dłuższa czy może mieć tę samą długość (inna trasa)? Wersja z licznikiem zwraca też remisy, d1/d2 — tylko ściśle dłuższe.",
+    "Długości w `long long` — K tras po n krawędzi o wagach do 10^9.",
+    "Zerowe wagi: liczba najkrótszych ścieżek może być nieskończona (cykl o długości 0), a `ways` z Dijkstry daje wtedy złe wyniki."
+   ],
+   "qa": [
+    {
+     "q": [
+      "k najkrótszych ścieżek",
+      "k najkrotszych sciezek",
+      "k shortest paths",
+      "k shortest walks dijkstra",
+      "k najtańszych tras z 1 do n",
+      "flight routes cses",
+      "k najkrótszych dróg"
+     ],
+     "a": "Dijkstra, w której każdy wierzchołek może zejść z kolejki do K razy (`cnt[v]`). Każde zdjęcie celu to kolejna najkrótsza trasa. Nie ma `dist[]` z odrzucaniem gorszych — zamiast tego `if (cnt[v] >= K) continue`. O(K·m log(K·m)).",
+     "code": "int n = 3, K = 2;\nvector<vector<pair<int, int>>> g(n + 1);\ng[1] = {{2, 1}, {3, 5}}; g[2] = {{3, 1}};\nvector<int> cnt(n + 1, 0);\npriority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;\npq.push({0, 1});\nwhile (!pq.empty() && cnt[n] < K) {\n    auto [d, v] = pq.top(); pq.pop();\n    if (cnt[v] >= K) continue;\n    cnt[v]++;\n    if (v == n) cout << d << ' ';                 // 2 5\n    for (auto [u, w] : g[v]) if (cnt[u] < K) pq.push({d + w, u});\n}"
+    },
+    {
+     "q": [
+      "druga najkrótsza ścieżka",
+      "druga najkrotsza sciezka",
+      "second shortest path",
+      "roadblocks",
+      "ściśle druga najkrótsza droga",
+      "druga co do długości trasa",
+      "druga najkrótsza droga dijkstra"
+     ],
+     "a": "Jedna Dijkstra z dwiema tablicami: `d1[v]` (najkrótsza) i `d2[v]` (ściśle druga). Nowa długość `nd < d1` → stara `d1` spada i staje się kandydatem na `d2`; `d1 < nd < d2` → nowa `d2`. Wpis z kolejki pomijasz tylko, gdy `d > d2[v]`. Pełny program w treści.",
+     "code": "long long d1 = 10, d2 = LLONG_MAX, nd = 7;   // nowa trasa długości 7 do u\nif (nd < d1) swap(nd, d1);                   // d1 = 7, nd = 10 (stara najlepsza)\nif (d1 < nd && nd < d2) d2 = nd;             // d2 = 10\ncout << d1 << ' ' << d2 << '\\n';             // 7 10"
+    },
+    {
+     "q": [
+      "dijkstra z licznikiem",
+      "dijkstra wyjmowanie wierzchołka k razy",
+      "ile razy zdjąć wierzchołek z kolejki",
+      "dijkstra cnt[v] < k dlaczego",
+      "dijkstra pop count",
+      "czemu wystarczy k zdjęć"
+     ],
+     "a": "Przy wagach ≥ 0 kolejka zwraca trasy niemalejąco, więc pierwsze K zdjęć `v` to K najkrótszych tras do `v`. Trasa do celu, która przechodzi przez `v` z prefiksem gorszym niż K-ty, da się zamienić na K tras nie dłuższych (te same dalsze kroki, lepsze prefiksy) — więc dalsze zdjęcia `v` nic nie zmieniają."
+    },
+    {
+     "q": [
+      "k najkrótszych ścieżek prostych",
+      "algorytm yena",
+      "yen algorithm",
+      "k shortest simple paths",
+      "k najkrótszych bez powtarzania wierzchołków",
+      "k najkrótszych ścieżek bez cykli"
+     ],
+     "a": "Dijkstra z licznikiem daje **spacery** (mogą powtarzać wierzchołki). Dla ścieżek prostych jest algorytm Yena: kolejna ścieżka to najlepsza „odnoga” od prefiksu którejś z już znalezionych, z zablokowanymi krawędziami i wierzchołkami prefiksu. O(K·n·Dijkstra) — tylko małe K i n. W DAG-u spacery = ścieżki, więc wystarczy wersja z licznikiem."
+    },
+    {
+     "q": [
+      "druga najkrótsza z dwóch dijkstr",
+      "druga najkrótsza przez dist od s i do t",
+      "ds dt krawędź druga najkrótsza",
+      "second shortest using reverse dijkstra"
+     ],
+     "a": "Policz `ds` od s i `dt` do t (Dijkstra na odwróconym grafie), `D = ds[t]`. Odpowiedź: minimum po krawędziach `u → v` z `ds[u] + w + dt[v] > D`. W grafie nieskierowanym rozważ obie orientacje krawędzi.",
+     "code": "typedef long long ll;\nconst ll INF = LLONG_MAX / 4;\n// ds = odległości od s, dt = odległości do t, D = ds[t]; INF = brak takiej trasy\nll secondShortest(const vector<array<int, 3>>& edges, const vector<ll>& ds, const vector<ll>& dt, ll D) {\n    ll best = INF;\n    for (auto [u, v, w] : edges) {               // nieskierowany: podaj obie orientacje\n        if (ds[u] >= INF || dt[v] >= INF) continue;\n        ll L = ds[u] + w + dt[v];\n        if (L > D) best = min(best, L);\n    }\n    return best;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "krawędzie na najkrótszej ścieżce",
+      "które krawędzie leżą na jakiejś najkrótszej ścieżce",
+      "czy krawędź jest na najkrótszej drodze",
+      "edges on shortest path",
+      "wierzchołki na najkrótszej ścieżce z s do t"
+     ],
+     "a": "Krawędź `u → v` o wadze `w` leży na jakiejś najkrótszej ścieżce s → t ⇔ `ds[u] + w + dt[v] == D`. Wierzchołek `v` ⇔ `ds[v] + dt[v] == D`. Dwie Dijkstry i przegląd krawędzi.",
+     "code": "// ds = odległości od s, dt = odległości do t, D = ds[t]; zwraca indeksy krawędzi\nvector<int> naNajkrotszej(const vector<array<long long, 3>>& e, const vector<long long>& ds,\n                          const vector<long long>& dt, long long D) {\n    const long long INF = LLONG_MAX / 4;\n    vector<int> res;\n    for (int i = 0; i < (int)e.size(); i++) {\n        auto [u, v, w] = e[i];\n        if (ds[u] < INF && dt[v] < INF && ds[u] + w + dt[v] == D) res.push_back(i);\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liczba najkrótszych ścieżek z wagami",
+      "ile jest najkrótszych dróg dijkstra",
+      "count shortest paths dijkstra",
+      "liczba najkrótszych tras modulo",
+      "dijkstra ways"
+     ],
+     "a": "W Dijkstrze trzymaj `ways[v]`: przy poprawie `d[u]` ustaw `ways[u] = ways[v]`, przy remisie `d[v] + w == d[u]` dodaj `ways[u] += ways[v]`. Działa przy wagach **dodatnich** (zera mogą tworzyć cykle o długości 0).",
+     "code": "const long long MOD = 1e9 + 7;\n// d[v] = odległość od s, ways[v] = liczba najkrótszych ścieżek s -> v (mod MOD); wagi > 0\nvoid countShortest(const vector<vector<pair<int, int>>>& g, int s, vector<long long>& d, vector<long long>& ways) {\n    int n = g.size();\n    d.assign(n, LLONG_MAX);\n    ways.assign(n, 0);\n    priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;\n    d[s] = 0;\n    ways[s] = 1;\n    pq.push({0, s});\n    while (!pq.empty()) {\n        auto [dd, v] = pq.top();\n        pq.pop();\n        if (dd > d[v]) continue;\n        for (auto [u, w] : g[v]) {\n            if (dd + w < d[u]) { d[u] = dd + w; ways[u] = ways[v]; pq.push({d[u], u}); }\n            else if (dd + w == d[u]) ways[u] = (ways[u] + ways[v]) % MOD;\n        }\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "k-ta najkrótsza ścieżka",
+      "k-ta najkrótsza trasa z s do t",
+      "kth shortest path",
+      "k-ty najkrótszy spacer",
+      "k-ta najmniejsza długość drogi"
+     ],
+     "a": "To K-te zdjęcie celu w Dijkstrze z licznikiem. Trasy o równej długości liczą się osobno (dwie trasy długości 5 to 1. i 2.). Jeśli chodzi o K-tą **różną** długość — pomijaj powtórzenia.",
+     "code": "vector<long long> trasy = {5, 5, 7, 9};      // kolejne zdjęcia celu z kolejki\nint K = 2;\ncout << trasy[K - 1] << '\\n';                // 5 (z powtórzeniami)\nvector<long long> rozne = trasy;\nrozne.erase(unique(rozne.begin(), rozne.end()), rozne.end());\ncout << rozne[K - 1] << '\\n';                // 7 (K-ta różna długość)"
+    }
+   ],
+   "related": [
+    "graph-dijkstra",
+    "graph-dijkstra-states",
+    "graph-bfs",
+    "graph-dag-dp",
+    "ds-heap"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1608 @@
+{
+ "chunk": "dp-basics",
+ "articles": [
+  {
+   "id": "dp-intro",
+   "title": "Programowanie dynamiczne — wprowadzenie (stan, przejście, kolejność, odtwarzanie)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "dp",
+    "programowanie dynamiczne",
+    "dynamika",
+    "memoizacja",
+    "bottom-up",
+    "stan",
+    "przejście",
+    "odtwarzanie rozwiązania"
+   ],
+   "aliases": [
+    "dp",
+    "dynamic programming",
+    "programowanie dynamiczne",
+    "dynamika",
+    "dynamik",
+    "memoizacja",
+    "co to jest dp",
+    "jak pisać dp",
+    "dp od zera",
+    "dp wprowadzenie",
+    "programowanie dynamiczne podstawy"
+   ],
+   "summary": "Programowanie dynamiczne (DP) rozwiązuje problem przez zapamiętywanie wyników mniejszych podproblemów. Kluczem jest dobrze zdefiniowany stan, wzór przejścia, przypadki bazowe i kolejność liczenia.",
+   "complexity": "liczba stanów × koszt jednego przejścia (np. n stanów × O(1) = O(n); n·W stanów = O(nW))",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Programowanie dynamiczne** to „sprytna rekurencja”: jeśli ten sam podproblem pojawia się wiele razy\n(*nakładające się podproblemy*), a optymalne rozwiązanie składa się z optymalnych rozwiązań mniejszych\npodproblemów (*optymalna podstruktura*), to liczymy każdy podproblem **raz** i zapisujemy wynik w tablicy.\n\nPrzepis na każde DP (warto zapisać go w komentarzu nad kodem):\n1. **Stan** — co dokładnie oznacza `dp[i]` (albo `dp[i][j]`)? Zdanie typu „`dp[i]` = minimalny koszt dojścia do pola `i`”.\n2. **Przejście** — jak policzyć `dp[i]` z mniejszych stanów (np. `dp[i] = min(dp[i-1], dp[i-2]) + c[i]`).\n3. **Przypadki bazowe** — wartości startowe (`dp[0] = 0`), a stany niemożliwe = `INF` lub `-INF`.\n4. **Kolejność liczenia** — każdy stan liczymy dopiero, gdy policzone są wszystkie stany, od których zależy.\n5. **Odpowiedź** — który stan (lub max/min po których stanach) jest wynikiem.\n6. **Złożoność** — liczba stanów × koszt przejścia. Sprawdź z limitami **zanim** zaczniesz pisać."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści zadania**, że to DP: „na ile sposobów” (zwykle *modulo 10^9+7*), „minimalny/maksymalny koszt”,\n„najdłuższy podciąg”, „czy da się uzyskać sumę”, decyzje podejmowane krok po kroku (weź/nie weź, idź w prawo/w dół),\nmałe ograniczenia typu `n ≤ 5000` (O(n²)) albo `n ≤ 20` (maski bitowe), a zachłanny pomysł ma kontrprzykład."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Podejście",
+      "Jak wygląda",
+      "Zalety",
+      "Wady"
+     ],
+     "rows": [
+      [
+       "Memoizacja (top-down)",
+       "rekurencja + tablica `memo`, liczymy tylko potrzebne stany",
+       "łatwo przepisać z rekurencji, nie trzeba myśleć o kolejności",
+       "głęboka rekurencja (stos), narzut wywołań"
+      ],
+      [
+       "Bottom-up (tablicowanie)",
+       "pętle od najmniejszych stanów do największych",
+       "szybkie, bez rekurencji, łatwo oszczędzać pamięć (tablica toczona)",
+       "trzeba ustalić poprawną kolejność pętli"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: DP bottom-up z odtwarzaniem trasy",
+     "code": "// Żaba: pola 1..n z wysokościami h[i]; skok o 1 lub 2 pola kosztuje |h[i] - h[j]|.\n// Minimalny koszt dojścia z pola 1 na pole n + odtworzenie trasy.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> h(n);\n    for (auto &x : h) cin >> x;\n\n    const long long INF = LLONG_MAX / 4;   // /4: dodanie kosztu nie przepełni typu\n    vector<long long> dp(n, INF);          // dp[i] = minimalny koszt dojścia na pole i\n    vector<int> par(n, -1);                // par[i] = skąd przyszliśmy (do odtworzenia)\n    dp[0] = 0;                             // przypadek bazowy\n\n    for (int i = 1; i < n; i++)            // kolejność: rosnąco, bo dp[i] zależy od dp[i-1], dp[i-2]\n        for (int k = 1; k <= 2; k++) {\n            if (i - k < 0) continue;\n            long long c = dp[i - k] + llabs(h[i] - h[i - k]);\n            if (c < dp[i]) { dp[i] = c; par[i] = i - k; }\n        }\n\n    cout << dp[n - 1] << \"\\n\";\n    vector<int> path;                      // odtwarzanie: cofamy się po par[] od końca\n    for (int v = n - 1; v != -1; v = par[v]) path.push_back(v);\n    reverse(path.begin(), path.end());\n    for (int v : path) cout << v + 1 << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Odtwarzanie rozwiązania**: albo zapisujemy w osobnej tablicy `par[stan]`, z którego stanu przyszło optimum,\nalbo po policzeniu całej tablicy cofamy się od stanu końcowego i sprawdzamy, które przejście daje zapisaną wartość\n(`dp[i] == dp[i-1] + koszt`?). Druga metoda nie wymaga dodatkowej pamięci, ale wymaga trzymania całej tablicy\n(nie można wtedy użyć tablicy toczonej)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Ta sama dynamika jako memoizacja",
+     "code": "// Ta sama żaba w wersji z memoizacją (top-down).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint n;\nvector<long long> h, memo;\nvector<bool> done;\n\nlong long f(int i) {                 // f(i) = minimalny koszt dojścia na pole i\n    if (i == 0) return 0;\n    if (done[i]) return memo[i];      // już policzone — zwracamy z pamięci\n    long long r = f(i - 1) + llabs(h[i] - h[i - 1]);\n    if (i >= 2) r = min(r, f(i - 2) + llabs(h[i] - h[i - 2]));\n    done[i] = true;\n    return memo[i] = r;\n}\n\nint main() {\n    cin >> n;\n    h.resize(n); memo.assign(n, 0); done.assign(n, false);\n    for (auto &x : h) cin >> x;\n    cout << f(n - 1) << \"\\n\";\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Zanim napiszesz kod, sprawdź DP na małym przykładzie **na kartce**: wypisz tabelkę `dp` dla `n = 5`.\nJeśli masz brute force, porównaj z nim wyniki na losowych testach (testerka w OI Forge)."
+    },
+    {
+     "type": "warn",
+     "md": "Memoizacja o głębokości rekurencji ~10^6 może przepełnić stos (zależnie od limitu stosu w sprawdzarce).\nPrzy dużych `n` przepisz dynamikę na pętle (bottom-up)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "vector<long long> dp(n + 1, INF)",
+     "desc": "tablica DP z wartością „niemożliwe” = INF (dla minimum)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "memset(dp, 0x3f, sizeof dp)",
+     "desc": "szybkie wypełnienie tablicy globalnej „nieskończonością” 0x3f3f3f3f (int) — dwa takie INF można dodać bez przepełnienia",
+     "complexity": "O(rozmiar)"
+    },
+    {
+     "sig": "swap(prev, cur)",
+     "desc": "tablica toczona: trzymamy tylko poprzedni i bieżący wiersz DP",
+     "complexity": "O(1) dla vector"
+    }
+   ],
+   "pitfalls": [
+    "INF = `INT_MAX` i potem `dp[j] + koszt` → przepełnienie i ujemny wynik. Używaj `1e9` dla int albo `LLONG_MAX / 4` dla long long.",
+    "Zła kolejność pętli: liczysz `dp[i]` zanim policzone są stany, od których zależy (typowe w DP na przedziałach — iteruj po długości).",
+    "Zapominanie o modulo przy dodawaniu w zadaniach „na ile sposobów” — bierz `% MOD` po KAŻDYM dodaniu.",
+    "Tablica `dp` za duża na stos: duże tablice deklaruj globalnie albo jako `vector`.",
+    "Przy memoizacji wartość 0 lub -1 jako „niepoliczone” — błąd, jeśli 0/-1 jest poprawnym wynikiem. Użyj osobnej tablicy `bool done[]`.",
+    "Tablica toczona (2 wiersze) uniemożliwia odtworzenie rozwiązania — jeśli trzeba wypisać wybór, trzymaj całą tablicę albo `par[]`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "co to jest programowanie dynamiczne",
+      "dp co to",
+      "dynamic programming",
+      "na czym polega dp",
+      "programowanie dynamiczne wytlumaczenie"
+     ],
+     "a": "**Programowanie dynamiczne** to liczenie wyniku z wyników mniejszych podproblemów, przy czym każdy podproblem\nliczymy **raz** i zapamiętujemy w tablicy `dp`. Działa, gdy podproblemy się powtarzają (np. rekurencyjny Fibonacci\nliczy `f(3)` wiele razy) i gdy optimum składa się z optimów mniejszych części. Dzięki zapamiętywaniu wykładnicza\nrekurencja zamienia się w czas = liczba stanów × koszt przejścia, np. O(n) albo O(n·W)."
+    },
+    {
+     "q": [
+      "jak wymyślić stan dp",
+      "jak zdefiniowac stan dynamika",
+      "jak wymyslic dp",
+      "dp state jak dobrac",
+      "nie umiem wymyślić dynamika"
+     ],
+     "a": "Zadaj pytanie: *jaka minimalna informacja o „przeszłości” wystarczy, żeby podjąć dalsze decyzje?* To jest stan.\nTypowe stany: prefiks `dp[i]` (pierwsze i elementów), prefiks + zasób `dp[i][w]` (plecak), przedział `dp[l][r]`,\nmaska odwiedzonych `dp[mask][v]`, wierzchołek drzewa `dp[v][0/1]`. Zapisz zdaniem, co oznacza `dp[...]`,\ni sprawdź, czy da się z mniejszych stanów policzyć większy. Jeśli brakuje informacji — dodaj wymiar."
+    },
+    {
+     "q": [
+      "memoizacja czy bottom up",
+      "memoization vs tabulation",
+      "rekurencja z zapamietywaniem czy petle",
+      "top down czy bottom up dp"
+     ],
+     "a": "Obie dają tę samą złożoność. **Memoizacja** jest łatwiejsza do napisania (przepisujesz rekurencję i dodajesz\ntablicę `memo`) i liczy tylko potrzebne stany. **Bottom-up** jest szybszy (brak narzutu wywołań), nie grozi\nprzepełnieniem stosu i pozwala oszczędzać pamięć (tablica toczona). Na OI przy dużych `n` wybieraj bottom-up;\nmemoizacja jest dobra, gdy kolejność stanów jest nieoczywista (np. DP po cyfrach, gry).",
+     "code": "long long memo[1000];\nbool done[1000];\nlong long fib(int n) {\n    if (n < 2) return n;\n    if (done[n]) return memo[n];\n    done[n] = true;\n    return memo[n] = fib(n - 1) + fib(n - 2);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "jak odtworzyć rozwiązanie dp",
+      "dp odtwarzanie wyniku",
+      "jak wypisac ktore elementy wybrane w dp",
+      "reconstruct dp solution",
+      "odtwarzanie dynamika"
+     ],
+     "a": "Dwie metody: (1) w trakcie liczenia zapisuj `par[stan]` = stan, z którego przyszło optimum, a na końcu idź\npo `par` od stanu końcowego i odwróć listę; (2) po policzeniu pełnej tablicy cofaj się od końca i sprawdzaj,\nktóre przejście daje dokładnie zapisaną wartość (np. w plecaku: `dp[i][w] != dp[i-1][w]` ⇒ przedmiot `i` wzięty).\nOdtwarzanie kosztuje O(długość ścieżki), ale wymaga trzymania całej tablicy, a nie tylko dwóch wierszy.",
+     "code": "// par[i] = poprzedni stan na optymalnej ścieżce, -1 = start\nvector<int> par = {-1, 0, 0, 2};   // przykładowo: 0 -> 2 -> 3\nvector<int> path;\nfor (int v = 3; v != -1; v = par[v]) path.push_back(v);\nreverse(path.begin(), path.end());\nfor (int v : path) cout << v << \" \";   // 0 2 3"
+    },
+    {
+     "q": [
+      "w jakiej kolejności liczyć dp",
+      "kolejnosc petli dp",
+      "dp order of computation",
+      "jak ustalic kolejnosc petli w dynamice"
+     ],
+     "a": "Stan może być liczony dopiero, gdy wszystkie stany po prawej stronie wzoru są już gotowe. Jeśli `dp[i]` zależy\nod `dp[i-1]`, iteruj `i` rosnąco; jeśli `dp[l][r]` zależy od krótszych przedziałów — iteruj po **długości**\nprzedziału; jeśli zależności tworzą DAG — liczy się w porządku topologicznym. W plecaku 1D kierunek pętli po\npojemności decyduje, czy przedmiot można wziąć raz (od tyłu), czy wiele razy (od przodu)."
+    },
+    {
+     "q": [
+      "kiedy używać dp",
+      "skąd wiedzieć że zadanie jest na dynamike",
+      "kiedy dp a kiedy zachlanny",
+      "jak rozpoznac zadanie na dp"
+     ],
+     "a": "Sygnały: „na ile sposobów” (często *modulo 10^9+7*), „minimalny/maksymalny koszt/zysk”, „najdłuższy podciąg”,\n„czy da się uzyskać sumę”, wybory krok po kroku, ograniczenia rzędu `n ≤ 5000` (O(n²)), `n·W ≤ 10^8` (plecak)\nlub `n ≤ 20` (maski). Jeśli zachłanny pomysł ma kontrprzykład (np. monety {1, 3, 4} i kwota 6), a brute force\nma powtarzające się podproblemy — to DP."
+    },
+    {
+     "q": [
+      "złożoność dp jak policzyć",
+      "dp complexity",
+      "jaka zlozonosc dynamiki",
+      "ile operacji ma dp"
+     ],
+     "a": "Złożoność czasowa = **liczba stanów × koszt jednego przejścia**. Np. plecak: `n·W` stanów × O(1) = O(nW);\nLIS naiwnie: `n` stanów × O(n) = O(n²); DP na przedziałach z podziałem: `n²` stanów × O(n) = O(n³).\nPamięć = liczba jednocześnie trzymanych stanów (często można zredukować do jednego/dwóch wierszy).\nNa OI zakładaj ~10^8–5·10^8 prostych operacji na sekundę."
+    },
+    {
+     "q": [
+      "dp za dużo pamięci",
+      "dp memory limit exceeded",
+      "jak zmniejszyć pamięć dp",
+      "tablica toczona",
+      "rolling array dp"
+     ],
+     "a": "Jeśli wiersz `i` zależy tylko od wiersza `i-1`, trzymaj dwa wiersze (`prev`, `cur`) i zamieniaj je `swap`-em —\npamięć spada z O(n·W) do O(W). W plecaku 0/1 wystarczy nawet jedna tablica z pętlą od tyłu. Uwaga: wtedy\nnie odtworzysz rozwiązania z tablicy — jeśli trzeba, trzymaj pełną tablicę bitów decyzji (`vector<vector<bool>>`\nzajmuje 1 bit na pole).",
+     "code": "int n = 3, W = 5;\nvector<int> w = {2, 3, 4}, v = {3, 4, 5};\nvector<long long> prev(W + 1, 0), cur(W + 1, 0);\nfor (int i = 0; i < n; i++) {\n    for (int c = 0; c <= W; c++) {\n        cur[c] = prev[c];\n        if (c >= w[i]) cur[c] = max(cur[c], prev[c - w[i]] + v[i]);\n    }\n    swap(prev, cur);\n}\ncout << prev[W] << \"\\n\";   // 7"
+    },
+    {
+     "q": [
+      "dp inicjalizacja nieskonczonosc",
+      "jak ustawic INF w dp",
+      "memset 0x3f",
+      "INF w dynamice przepelnienie"
+     ],
+     "a": "Dla minimum stany niemożliwe ustaw na INF, które **po dodaniu kosztu nie przepełni typu**: `1e9` dla `int`\n(bo 2·10^9 < 2^31−1 ≈ 2,147·10^9), `LLONG_MAX / 4` lub `(long long)4e18` dla `long long`. Popularne\n`memset(dp, 0x3f, sizeof dp)` daje 0x3f3f3f3f ≈ 1,06·10^9 — dwa takie INF można dodać bez przepełnienia.\nNie używaj `INT_MAX`, bo `INT_MAX + 1` to UB (w praktyce liczba ujemna, która „wygrywa” minimum).",
+     "code": "int dp[10];\nmemset(dp, 0x3f, sizeof dp);\ncout << dp[0] << \" \" << (dp[0] + dp[1] > 0) << \"\\n\";   // 1061109567 1"
+    },
+    {
+     "q": [
+      "dp modulo 10^9+7",
+      "liczba sposobów modulo",
+      "jak liczyć modulo w dp",
+      "mod 1e9+7 dynamika"
+     ],
+     "a": "Gdy zadanie każe podać liczbę sposobów modulo `10^9+7`, bierz modulo **po każdym dodaniu/mnożeniu**, a nie\ntylko na końcu (pośrednie wyniki rosną wykładniczo). Dodawanie dwóch liczb < MOD mieści się w `int`\n(2·(10^9+7) < 2^31), ale mnożenie wymaga `long long`. Przy odejmowaniu dodaj MOD: `(a - b + MOD) % MOD`.",
+     "code": "const int MOD = 1'000'000'007;\nint n = 1000;\nvector<int> dp(n + 1, 0);\ndp[0] = 1;\nfor (int i = 1; i <= n; i++) {\n    dp[i] = dp[i - 1];\n    if (i >= 2) { dp[i] += dp[i - 2]; if (dp[i] >= MOD) dp[i] -= MOD; }\n}\ncout << dp[n] << \"\\n\";"
+    },
+    {
+     "q": [
+      "stack overflow rekurencja dp",
+      "memoizacja segmentation fault",
+      "rekurencja za gleboka dp",
+      "przepełnienie stosu memoizacja"
+     ],
+     "a": "Każde wywołanie rekurencyjne zajmuje miejsce na stosie; memoizacja z głębokością ~10^5–10^6 może go\nprzepełnić (Segmentation fault / RE), zależnie od limitu stosu w sprawdzarce. Rozwiązanie: przepisz DP na\npętle w kolejności od najmniejszych stanów (bottom-up). Jeśli kolejność jest trudna, policz kolejność\ntopologiczną stanów iteracyjnie albo zmniejsz głębokość (np. wywołuj `f(i)` dla rosnących `i` w pętli,\nżeby rekurencja schodziła płytko)."
+    },
+    {
+     "q": [
+      "dp na pozycji i ostatni element",
+      "dp z dodatkowym wymiarem",
+      "kiedy dodać wymiar do dp",
+      "dp[i][j] co oznacza j"
+     ],
+     "a": "Dodaj wymiar, gdy sama pozycja `i` nie wystarcza do podjęcia decyzji: np. „ile już wzięliśmy elementów”\n(`dp[i][k]`), „jaki był ostatni wybór” (`dp[i][kolor]`), „ile zostało pojemności” (`dp[i][w]`). Każdy wymiar\nmnoży liczbę stanów, więc licz złożoność: `n = 10^5` i drugi wymiar 3 wartości to OK, ale `n·n` przy\n`n = 10^5` już nie."
+    }
+   ],
+   "related": [
+    "dp-stairs-fibonacci",
+    "dp-knapsack-01",
+    "dp-lis",
+    "dp-grid-paths",
+    "dp-interval",
+    "dp-bitmask",
+    "dp-dag",
+    "num-inf-constants",
+    "math-derangements-stirling",
+    "tech-intervals",
+    "tech-kadane"
+   ]
+  },
+  {
+   "id": "dp-stairs-fibonacci",
+   "title": "Schody i ciąg Fibonacciego — pierwsze DP",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "fibonacci",
+    "schody",
+    "liczba sposobów",
+    "rekurencja",
+    "dp liniowe",
+    "modulo"
+   ],
+   "aliases": [
+    "fibonacci",
+    "ciąg fibonacciego",
+    "schody dp",
+    "climbing stairs",
+    "na ile sposobów wejść po schodach",
+    "fib",
+    "fibonaci",
+    "fibbonacci",
+    "liczby fibonacciego"
+   ],
+   "summary": "Liczba sposobów wejścia na n-ty schodek krokami 1 lub 2 spełnia ways[n] = ways[n-1] + ways[n-2], czyli jest liczbą Fibonacciego. To wzorcowe, najprostsze DP liniowe.",
+   "complexity": "iteracyjnie O(n) czasu i O(1) pamięci; kroki 1..k z sumą przesuwną O(n); n do 10^18: O(log n) (potęgowanie macierzy / fast doubling)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Schody:** na ile sposobów wejść na schodek `n`, robiąc kroki o 1 lub 2 stopnie? Ostatni krok był albo o 1\n(wtedy wcześniej byliśmy na `n-1`), albo o 2 (byliśmy na `n-2`). Te przypadki się wykluczają, więc\n`ways[n] = ways[n-1] + ways[n-2]`, `ways[0] = 1` (pusta droga), `ways[1] = 1`. To ciąg Fibonacciego\nprzesunięty o jeden: `ways[n] = F(n+1)`, gdzie `F(0)=0, F(1)=1`.\n\nUogólnienie: dozwolone kroki ze zbioru `S` ⇒ `ways[n] = Σ ways[n-s]` po `s ∈ S`, `s ≤ n`.\nZakazane (zepsute) stopnie ⇒ `ways[i] = 0` dla takich `i`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: schody z krokami 1..k (modulo)",
+     "code": "// Schody: kroki o 1..k stopni, wynik modulo 10^9+7. Suma przesuwna => O(n) niezależnie od k.\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\n\nint main() {\n    long long n, k;\n    cin >> n >> k;\n    vector<long long> ways(n + 1, 0);\n    ways[0] = 1;\n    long long window = 1;            // suma ways[i-k .. i-1]\n    for (long long i = 1; i <= n; i++) {\n        ways[i] = window;\n        window = (window + ways[i]) % MOD;              // wchodzi ways[i]\n        if (i - k >= 0)                                 // wychodzi ways[i-k]\n            window = (window - ways[i - k] + MOD) % MOD;\n    }\n    cout << ways[n] << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Fibonacci iteracyjnie",
+     "code": "// Fibonacci iteracyjnie, O(n) czasu, O(1) pamięci.\nlong long fib(int n) {             // F(0)=0, F(1)=1; mieści się w long long do n = 92\n    long long a = 0, b = 1;\n    for (int i = 0; i < n; i++) {\n        long long c = a + b;\n        a = b;\n        b = c;\n    }\n    return a;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Wzór / technika",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "kroki 1 lub 2",
+       "ways[n] = ways[n-1] + ways[n-2]",
+       "O(n), O(1) pamięci"
+      ],
+      [
+       "kroki ze zbioru S",
+       "ways[n] = Σ_{s∈S} ways[n-s]",
+       "O(n·|S|)"
+      ],
+      [
+       "kroki 1..k",
+       "suma przesuwna okna długości k",
+       "O(n)"
+      ],
+      [
+       "zepsute stopnie",
+       "ways[i] = 0 dla zepsutych",
+       "O(n)"
+      ],
+      [
+       "minimalny koszt",
+       "cost[n] = c[n] + min(cost[n-1], cost[n-2])",
+       "O(n)"
+      ],
+      [
+       "n do 10^18",
+       "potęgowanie macierzy [[1,1],[1,0]] lub fast doubling",
+       "O(log n)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Rekurencja `fib(n) = fib(n-1) + fib(n-2)` bez zapamiętywania ma złożoność wykładniczą (~1,618^n wywołań) —\n`fib(50)` liczy się już bardzo długo. Zawsze iteracyjnie albo z memoizacją."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "long long fib(int n)",
+     "desc": "F(n) iteracyjnie; bez modulo poprawne do n = 92 w long long (F(93) mieści się tylko w unsigned long long)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "pair<long long,long long> fibPair(long long n)",
+     "desc": "fast doubling: zwraca (F(n), F(n+1)) modulo MOD",
+     "complexity": "O(log n)"
+    }
+   ],
+   "pitfalls": [
+    "F(93) = 12200160415121876738 nie mieści się w `long long` (max ≈ 9,22·10^18) — bez modulo maksymalnie F(92) w long long, F(93) w unsigned long long.",
+    "Odejmowanie w sumie przesuwnej modulo: `(window - x + MOD) % MOD`, inaczej wynik może być ujemny.",
+    "Mylenie indeksów: ways[n] = F(n+1). Sprawdź na małym n (n=1 → 1, n=2 → 2, n=3 → 3, n=4 → 5).",
+    "Wykładnicza rekurencja bez memoizacji — TLE już dla n ≈ 45."
+   ],
+   "qa": [
+    {
+     "q": [
+      "fibonacci c++",
+      "ciąg fibonacciego kod",
+      "fibonacci iteracyjnie",
+      "fib dp",
+      "jak policzyc fibonacciego"
+     ],
+     "a": "Iteracyjnie trzymaj dwie ostatnie wartości i przesuwaj je w pętli — O(n) czasu i O(1) pamięci. W `long long`\nbez modulo zmieścisz F(n) do n = 92. Rekurencja bez zapamiętywania jest wykładnicza i nie nadaje się do niczego\npoza n ≈ 40.",
+     "code": "int n = 10;\nlong long a = 0, b = 1;            // a = F(i), b = F(i+1)\nfor (int i = 0; i < n; i++) { long long c = a + b; a = b; b = c; }\ncout << a << \"\\n\";                 // F(10) = 55"
+    },
+    {
+     "q": [
+      "fibonacci rekurencja wolna",
+      "dlaczego fibonacci rekurencyjnie jest wolny",
+      "fib rekurencyjnie tle",
+      "fibonacci złożoność rekurencji"
+     ],
+     "a": "Naiwna rekurencja wywołuje `fib(n-1)` i `fib(n-2)`, które znowu liczą te same wartości — drzewo wywołań ma\nrozmiar rzędu F(n) ≈ 1,618^n. To podręcznikowy przykład **nakładających się podproblemów**: wystarczy\nzapamiętać wynik każdego `fib(k)` (memoizacja) albo liczyć od dołu, by zejść do O(n)."
+    },
+    {
+     "q": [
+      "na ile sposobów wejść po schodach",
+      "schody 1 lub 2 kroki",
+      "stairs dp",
+      "climbing stairs",
+      "schody dp ile sposobow"
+     ],
+     "a": "Ostatni krok to 1 albo 2 stopnie, więc `ways[n] = ways[n-1] + ways[n-2]`, z bazą `ways[0] = 1`, `ways[1] = 1`.\nWychodzi `ways[n] = F(n+1)`: 1, 1, 2, 3, 5, 8… Złożoność O(n), a zwykle trzeba brać wynik modulo 10^9+7.",
+     "code": "const int MOD = 1'000'000'007;\nint n = 5;\nvector<long long> ways(n + 1);\nways[0] = 1; ways[1] = 1;\nfor (int i = 2; i <= n; i++) ways[i] = (ways[i - 1] + ways[i - 2]) % MOD;\ncout << ways[n] << \"\\n\";   // 8"
+    },
+    {
+     "q": [
+      "schody kroki od 1 do k",
+      "schody k krokow",
+      "schody dowolny krok do k",
+      "stairs k steps"
+     ],
+     "a": "`ways[n] = ways[n-1] + … + ways[n-k]`. Liczone wprost to O(n·k); trzymaj **sumę przesuwną** ostatnich `k`\nwartości (dodaj nową, odejmij tę sprzed k kroków), co daje O(n). Pamiętaj o `+ MOD` przy odejmowaniu modulo.\nPełny program jest w treści artykułu."
+    },
+    {
+     "q": [
+      "fibonacci modulo 10^9+7",
+      "fib mod",
+      "fibonacci modulo m",
+      "fibonacci duze liczby modulo"
+     ],
+     "a": "Licz iteracyjnie i bierz modulo po każdym dodaniu: `c = (a + b) % MOD`. Dla n ≤ 10^7 to wystarczy (O(n)).\nDla n do 10^18 użyj fast doubling lub potęgowania macierzy — O(log n).",
+     "code": "const long long MOD = 1'000'000'007;\nlong long n = 100, a = 0, b = 1;\nfor (long long i = 0; i < n; i++) { long long c = (a + b) % MOD; a = b; b = c; }\ncout << a << \"\\n\";   // F(100) mod 1e9+7 = 687995182"
+    },
+    {
+     "q": [
+      "fibonacci duże n 10^18",
+      "fibonacci log n",
+      "fast doubling fibonacci",
+      "fibonacci w czasie logarytmicznym",
+      "n-ty fibonacci szybko"
+     ],
+     "a": "**Fast doubling** korzysta ze wzorów F(2k) = F(k)·(2F(k+1) − F(k)) oraz F(2k+1) = F(k)² + F(k+1)². Rekurencja\npo bitach `n` daje O(log n) — działa dla n do 10^18. Alternatywa: potęgowanie macierzy [[1,1],[1,0]]^n\n(patrz potęgowanie macierzy).",
+     "code": "const long long MOD = 1'000'000'007;\npair<long long, long long> fibPair(long long n) {      // (F(n), F(n+1)) mod MOD\n    if (n == 0) return {0, 1};\n    auto [a, b] = fibPair(n >> 1);                        // a = F(k), b = F(k+1)\n    long long c = a * ((2 * b - a + MOD) % MOD) % MOD;    // F(2k)\n    long long d = (a * a + b * b) % MOD;                  // F(2k+1)\n    if (n & 1) return {d, (c + d) % MOD};\n    return {c, d};\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "fibonacci long long przepełnienie",
+      "do ktorego fibonacciego starczy long long",
+      "fibonacci overflow",
+      "jaki największy fibonacci w long long"
+     ],
+     "a": "F(92) = 7540113804746346429 to największa liczba Fibonacciego mieszcząca się w `long long` (max ≈ 9,22·10^18).\nF(93) = 12200160415121876738 mieści się już tylko w `unsigned long long` (max ≈ 1,84·10^19), a F(94) nie\nmieści się w żadnym 64-bitowym typie. Dla większych n licz modulo albo użyj arytmetyki dużych liczb."
+    },
+    {
+     "q": [
+      "schody z zepsutymi stopniami",
+      "schody zakazane pola",
+      "schody nie mozna stanac na niektorych",
+      "broken stairs dp"
+     ],
+     "a": "Ten sam wzór, ale dla zepsutego stopnia `i` ustaw `ways[i] = 0` (nie wolno tam stanąć, więc nie da się\nteż z niego dalej iść). Złożoność bez zmian: O(n).",
+     "code": "const int MOD = 1'000'000'007;\nint n = 6;\nvector<bool> broken(n + 1, false);\nbroken[3] = true;\nvector<long long> ways(n + 1, 0);\nways[0] = 1;\nfor (int i = 1; i <= n; i++) {\n    if (broken[i]) { ways[i] = 0; continue; }\n    ways[i] = ways[i - 1];\n    if (i >= 2) ways[i] = (ways[i] + ways[i - 2]) % MOD;\n}\ncout << ways[n] << \"\\n\";   // 4"
+    },
+    {
+     "q": [
+      "minimalny koszt wejścia po schodach",
+      "min cost climbing stairs",
+      "schody z kosztem",
+      "schody minimalna suma"
+     ],
+     "a": "Gdy wejście na stopień `i` kosztuje `c[i]`: `cost[i] = c[i] + min(cost[i-1], cost[i-2])`. Zamiast sumy mamy\nminimum, bo szukamy najlepszej, a nie wszystkich dróg. Złożoność O(n). To samo DP co „żaba” z artykułu\no wprowadzeniu do DP.",
+     "code": "vector<long long> c = {0, 10, 15, 20, 5, 1};   // c[0] = start (darmowy)\nint n = c.size() - 1;\nvector<long long> cost(n + 1);\ncost[0] = 0; cost[1] = c[1];\nfor (int i = 2; i <= n; i++) cost[i] = c[i] + min(cost[i - 1], cost[i - 2]);\ncout << cost[n] << \"\\n\";   // 0 -> 2 -> 4 -> 5 : 15 + 5 + 1 = 21"
+    },
+    {
+     "q": [
+      "ciągi binarne bez dwóch sąsiednich jedynek",
+      "ile ciagow zero jedynkowych bez 11",
+      "binary strings without consecutive ones",
+      "napisy 01 bez dwoch jedynek obok"
+     ],
+     "a": "Niech `e[n]` = liczba dobrych ciągów długości `n` kończących się zerem, `o[n]` — jedynką. Zero można dopisać\ndo wszystkiego, jedynkę tylko po zerze: `e[n] = e[n−1] + o[n−1]`, `o[n] = e[n−1]`. Suma spełnia rekurencję\nFibonacciego i wynosi F(n+2): 2, 3, 5, 8, 13… Czas O(n), a dla n do 10^18 — potęgowanie macierzy.",
+     "code": "int n = 5;\nlong long e = 1, o = 1;           // długość 1: \"0\" i \"1\"\nfor (int i = 2; i <= n; i++) { long long ne = e + o, no = e; e = ne; o = no; }\ncout << e + o << \"\\n\";            // 13 = F(7)"
+    },
+    {
+     "q": [
+      "kafelkowanie 2xn domino",
+      "ile sposobów ułożyć domino na planszy 2 x n",
+      "domino tiling 2xn",
+      "pokrycie paska 2 na n kostkami"
+     ],
+     "a": "Patrz na lewy brzeg paska 2×n: albo stoi tam jedno pionowe domino (zostaje 2×(n−1)), albo dwa poziome jedno nad\ndrugim (zostaje 2×(n−2)). Stąd `t[n] = t[n−1] + t[n−2]`, `t[0] = t[1] = 1` — znowu Fibonacci: t[n] = F(n+1).\nDla szerszych plansz (m ≤ ~12) — DP po profilu na maskach bitowych.",
+     "code": "int n = 7;\nvector<long long> t(n + 1);\nt[0] = 1; t[1] = 1;\nfor (int i = 2; i <= n; i++) t[i] = t[i - 1] + t[i - 2];\ncout << t[4] << \" \" << t[n] << \"\\n\";   // 5 21"
+    }
+   ],
+   "related": [
+    "dp-intro",
+    "math-matrix-pow",
+    "dp-coin-change",
+    "dp-grid-paths",
+    "dp-bitmask",
+    "cpp-recursion-basics"
+   ]
+  },
+  {
+   "id": "dp-knapsack-01",
+   "title": "Problem plecakowy 0/1 (2D i 1D z pętlą od tyłu)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "plecak",
+    "knapsack",
+    "0/1",
+    "subset sum",
+    "suma podzbioru",
+    "bitset",
+    "dp"
+   ],
+   "aliases": [
+    "plecak",
+    "problem plecakowy",
+    "knapsack",
+    "0/1 knapsack",
+    "plecak 0 1",
+    "plecak dyskretny",
+    "plecak dp",
+    "knapsack c++",
+    "plecak dynamik",
+    "subset sum"
+   ],
+   "summary": "Każdy przedmiot ma wagę i wartość; wybierz podzbiór o łącznej wadze ≤ W i maksymalnej wartości. dp[w] = najlepsza wartość przy pojemności w; w wersji 1D pętla po pojemności MUSI iść od tyłu.",
+   "complexity": "O(n·W) czasu; O(n·W) pamięci w wersji 2D (z odtwarzaniem) lub O(W) w wersji 1D",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Mamy `n` przedmiotów, przedmiot `i` waży `w[i]` i jest wart `v[i]`. Każdy można wziąć **co najwyżej raz**.\nStan: `dp[i][c]` = maksymalna wartość, używając tylko pierwszych `i` przedmiotów, przy łącznej wadze ≤ `c`.\nPrzejście — przedmiot `i` albo pomijamy, albo bierzemy:\n\n`dp[i][c] = max(dp[i-1][c], dp[i-1][c - w[i]] + v[i])` (drugi wariant tylko gdy `c ≥ w[i]`).\n\nBaza: `dp[0][c] = 0`. Odpowiedź: `dp[n][W]`. Czas O(n·W) — to złożoność *pseudowielomianowa*\n(zależy od wartości W, nie od liczby bitów), więc działa dla `n·W` do ok. 10^8."
+    },
+    {
+     "type": "text",
+     "md": "**Wersja 1D:** wiersz `i` zależy tylko od wiersza `i-1`, więc wystarczy jedna tablica `dp[c]`. Pętla po `c`\nmusi iść **od W w dół do w[i]**: wtedy `dp[c - w[i]]` jest jeszcze wartością z poprzedniego wiersza\n(bez przedmiotu `i`). Pętla w górę pozwoliłaby wziąć ten sam przedmiot wielokrotnie — to byłby plecak nieograniczony."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: plecak 2D z odtworzeniem wyboru",
+     "code": "// Plecak 0/1: wejście n W, potem n par (waga, wartość).\n// Wyjście: maksymalna wartość oraz numery wybranych przedmiotów (odtworzenie z tablicy 2D).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, W;\n    cin >> n >> W;\n    vector<int> w(n + 1), v(n + 1);\n    for (int i = 1; i <= n; i++) cin >> w[i] >> v[i];\n\n    // dp[i][c] = najlepsza wartość z przedmiotów 1..i przy pojemności c\n    vector<vector<long long>> dp(n + 1, vector<long long>(W + 1, 0));\n    for (int i = 1; i <= n; i++)\n        for (int c = 0; c <= W; c++) {\n            dp[i][c] = dp[i - 1][c];                                   // nie bierzemy i\n            if (c >= w[i]) dp[i][c] = max(dp[i][c], dp[i - 1][c - w[i]] + v[i]);  // bierzemy i\n        }\n    cout << dp[n][W] << \"\\n\";\n\n    // odtwarzanie: jeśli dp[i][c] != dp[i-1][c], to przedmiot i został wzięty\n    vector<int> chosen;\n    for (int i = n, c = W; i >= 1; i--)\n        if (dp[i][c] != dp[i - 1][c]) { chosen.push_back(i); c -= w[i]; }\n    reverse(chosen.begin(), chosen.end());\n    for (int x : chosen) cout << x << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: plecak 1D (najczęściej używany)",
+     "code": "// Plecak 0/1 w pamięci O(W) — pętla po pojemności OD TYŁU.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, W;\n    cin >> n >> W;\n    vector<long long> dp(W + 1, 0);       // dp[c] = najlepsza wartość przy pojemności c\n    for (int i = 0; i < n; i++) {\n        int w, v;\n        cin >> w >> v;\n        for (int c = W; c >= w; c--)       // od tyłu: każdy przedmiot użyty co najwyżej raz\n            dp[c] = max(dp[c], dp[c - w] + v);\n    }\n    cout << dp[W] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Inicjalizacja / zmiana",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "waga ≤ W (klasyczny)",
+       "dp[c] = 0 dla wszystkich c",
+       "odpowiedź dp[W]"
+      ],
+      [
+       "waga dokładnie W",
+       "dp[0] = 0, reszta = -INF",
+       "odpowiedź dp[W] (jeśli < 0 — niemożliwe)"
+      ],
+      [
+       "czy da się uzyskać sumę (subset sum)",
+       "bool dp[0] = true; dp[c] |= dp[c-w]",
+       "bitset: `b |= b << w`, O(nW/64)"
+      ],
+      [
+       "liczba podzbiorów o sumie S",
+       "dp[0] = 1; dp[c] += dp[c-w] (mod)",
+       "pętla od tyłu"
+      ],
+      [
+       "duże W, małe wartości",
+       "dp[val] = minimalna waga dla wartości val",
+       "O(n·Σv)"
+      ],
+      [
+       "minimalna liczba przedmiotów do sumy S",
+       "dp[0] = 0, reszta INF; dp[c] = min(dp[c], dp[c-w]+1)",
+       "pętla od tyłu"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Najczęstszy błąd: w wersji 1D pętla `for (c = w; c <= W; c++)` (od przodu). Wtedy `dp[c - w]` mogło już\nzawierać przedmiot `i`, więc bierzesz go wielokrotnie — wynik jest za duży."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (int c = W; c >= w; c--) dp[c] = max(dp[c], dp[c-w] + v);",
+     "desc": "przejście plecaka 0/1 w wersji 1D",
+     "complexity": "O(W) na przedmiot"
+    },
+    {
+     "sig": "bitset<N> b; b[0] = 1; b |= b << w;",
+     "desc": "subset sum: po wszystkich przedmiotach b[s] = 1 ⇔ da się uzyskać sumę s",
+     "complexity": "O(N/64) na przedmiot"
+    }
+   ],
+   "pitfalls": [
+    "Pętla po pojemności od przodu w wersji 1D = plecak nieograniczony, nie 0/1.",
+    "Tablica 2D `long long dp[n+1][W+1]` przy n = 1000, W = 10^5 to 800 MB — użyj wersji 1D albo bitów decyzji.",
+    "Wariant „dokładnie W” wymaga inicjalizacji -INF (poza dp[0] = 0), inaczej dostajesz wynik dla „≤ W”.",
+    "Wartości mogą przekroczyć int (n·v_max) — trzymaj dp w long long.",
+    "Gdy W ≤ 10^9, a suma wartości jest mała — odwróć DP: dp[wartość] = minimalna waga.",
+    "Zachłanny wybór po stosunku v/w działa tylko dla plecaka ułamkowego, nie 0/1."
+   ],
+   "qa": [
+    {
+     "q": [
+      "plecak dp",
+      "problem plecakowy",
+      "knapsack c++",
+      "plecak 0 1",
+      "0/1 knapsack",
+      "plecak kod",
+      "wybór przedmiotów o łącznej wadze co najwyżej W z maksymalną wartością",
+      "przedmioty z wagą i wartością, plecak o pojemności W"
+     ],
+     "a": "`dp[c]` = największa wartość przy łącznej wadze ≤ `c`. Dla każdego przedmiotu `(w, v)` przechodzimy `c` od `W`\nw dół do `w` i robimy `dp[c] = max(dp[c], dp[c-w] + v)`. Wynik to `dp[W]`. Czas O(n·W), pamięć O(W).",
+     "code": "int W = 5;\nvector<pair<int,int>> items = {{2, 3}, {3, 4}, {4, 5}, {5, 6}};   // (waga, wartość)\nvector<long long> dp(W + 1, 0);\nfor (auto [w, v] : items)\n    for (int c = W; c >= w; c--)\n        dp[c] = max(dp[c], dp[c - w] + v);\ncout << dp[W] << \"\\n\";   // 7"
+    },
+    {
+     "q": [
+      "plecak dlaczego pętla od tyłu",
+      "plecak 1d od tylu",
+      "knapsack reverse loop why",
+      "dlaczego w plecaku petla w dol",
+      "plecak od konca"
+     ],
+     "a": "W wersji 1D `dp[c - w]` ma oznaczać wynik **bez** bieżącego przedmiotu (poprzedni wiersz). Idąc od dużych `c`\ndo małych, modyfikujesz `dp[c]` zanim zmienisz `dp[c - w]` (mniejszy indeks), więc czytasz starą wartość.\nIdąc od przodu, `dp[c - w]` już zawiera ten przedmiot, więc mógłbyś go wziąć drugi, trzeci raz — to plecak\nnieograniczony."
+    },
+    {
+     "q": [
+      "plecak odtworzenie przedmiotów",
+      "jakie przedmioty wziąć plecak",
+      "knapsack reconstruct",
+      "plecak wypisz wybrane",
+      "plecak które przedmioty"
+     ],
+     "a": "Trzymaj pełną tablicę `dp[i][c]`. Idź od `i = n`, `c = W` w dół: jeśli `dp[i][c] != dp[i-1][c]`, przedmiot `i`\nzostał wzięty — dopisz go i zmniejsz `c -= w[i]`. Koszt odtwarzania O(n). Gdy brakuje pamięci na `long long`,\ntrzymaj tylko bity decyzji `vector<vector<bool>> take(n+1, vector<bool>(W+1))` i liczbę w wersji 1D.",
+     "code": "int n = 3, W = 5;\nvector<int> w = {0, 2, 3, 4}, v = {0, 3, 4, 5};   // indeksy od 1\nvector<long long> dp(W + 1, 0);\nvector<vector<bool>> take(n + 1, vector<bool>(W + 1, false));\nfor (int i = 1; i <= n; i++)\n    for (int c = W; c >= w[i]; c--)\n        if (dp[c - w[i]] + v[i] > dp[c]) { dp[c] = dp[c - w[i]] + v[i]; take[i][c] = true; }\nfor (int i = n, c = W; i >= 1; i--)\n    if (take[i][c]) { cout << i << \" \"; c -= w[i]; }\ncout << \"\\n\";   // 2 1"
+    },
+    {
+     "q": [
+      "plecak duża pojemność",
+      "plecak W do 10^9",
+      "knapsack large weight",
+      "plecak duze wagi male wartosci",
+      "plecak po wartościach"
+     ],
+     "a": "Gdy W jest ogromne (np. 10^9), ale suma wartości mała (np. ≤ 10^5), odwróć role: `dp[s]` = **minimalna waga**,\nby uzyskać wartość dokładnie `s`. Przejście od tyłu: `dp[s] = min(dp[s], dp[s - v] + w)`. Odpowiedź: największe\n`s` z `dp[s] ≤ W`. Czas O(n·Σv).",
+     "code": "long long W = 1000000000;\nvector<pair<long long,int>> items = {{600000000, 3}, {500000000, 4}, {400000000, 2}};  // (waga, wartość)\nint S = 0; for (auto &it : items) S += it.second;\nconst long long INF = LLONG_MAX / 4;\nvector<long long> dp(S + 1, INF);\ndp[0] = 0;\nfor (auto [w, v] : items)\n    for (int s = S; s >= v; s--)\n        dp[s] = min(dp[s], dp[s - v] + w);\nint best = 0;\nfor (int s = 0; s <= S; s++) if (dp[s] <= W) best = s;\ncout << best << \"\\n\";   // 6 (przedmioty o wartościach 4 i 2)"
+    },
+    {
+     "q": [
+      "subset sum",
+      "czy da się uzyskać sumę",
+      "suma podzbioru dp",
+      "bitset plecak",
+      "czy mozna wybrac liczby o sumie S"
+     ],
+     "a": "To plecak na wartościach logicznych: `can[0] = true`, dla każdej liczby `x` od tyłu `can[s] |= can[s - x]`.\nNajszybciej przez `bitset`: `b |= b << x` przetwarza 64 sumy naraz — O(n·S/64), co dla n·S ≈ 10^9 wciąż się\nmieści w limicie.",
+     "code": "const int MAXS = 100000;\nbitset<MAXS + 1> b;\nb[0] = 1;\nvector<int> a = {3, 34, 4, 12, 5, 2};\nfor (int x : a) b |= b << x;\ncout << b[9] << \" \" << b[30] << \"\\n\";   // 1 0"
+    },
+    {
+     "q": [
+      "plecak dokładnie W",
+      "plecak pełny",
+      "knapsack exact capacity",
+      "plecak dokladna waga",
+      "plecak wypełniony do końca"
+     ],
+     "a": "Zainicjalizuj `dp[0] = 0`, a resztę `-INF` (stany nieosiągalne). Przejście jak zwykle. Teraz `dp[c]` to najlepsza\nwartość przy wadze **dokładnie** `c`; jeśli `dp[W] < 0` (przy nieujemnych wartościach), to nie da się wypełnić\nplecaka. Bez -INF dostaniesz wynik dla wagi ≤ W.",
+     "code": "int W = 7;\nvector<pair<int,int>> items = {{3, 4}, {5, 7}, {2, 1}};\nconst long long NEG = LLONG_MIN / 4;\nvector<long long> dp(W + 1, NEG);\ndp[0] = 0;\nfor (auto [w, v] : items)\n    for (int c = W; c >= w; c--)\n        if (dp[c - w] != NEG) dp[c] = max(dp[c], dp[c - w] + v);\ncout << dp[W] << \"\\n\";   // 8 (wagi 5 + 2)"
+    },
+    {
+     "q": [
+      "plecak memory limit",
+      "plecak pamiec 2d za duzo",
+      "knapsack mle",
+      "plecak za dużo pamięci"
+     ],
+     "a": "Tablica `long long dp[n+1][W+1]` przy n = 1000 i W = 10^5 zajmuje ok. 800 MB. Wersja 1D zajmuje O(W)\n(tu 800 KB). Jeśli potrzebujesz odtworzenia, trzymaj tylko bity decyzji (`vector<bool>` lub `bitset`) —\n1 bit na pole, czyli n·W/8 bajtów."
+    },
+    {
+     "q": [
+      "plecak zachłanny nie działa",
+      "dlaczego zachłanny w plecaku nie działa",
+      "plecak greedy",
+      "plecak ułamkowy a 0 1"
+     ],
+     "a": "Zachłanny wybór po stosunku wartość/waga jest optymalny tylko w plecaku **ułamkowym** (można wziąć część\nprzedmiotu). W 0/1 kontrprzykład: W = 50, przedmioty (10, 60), (20, 100), (30, 120). Zachłanny bierze 10 i 20\n(wartość 160), a optimum to 20 + 30 = 220. Dlatego plecak 0/1 rozwiązujemy DP w O(n·W)."
+    },
+    {
+     "q": [
+      "plecak liczba sposobów",
+      "ile podzbiorów o sumie S",
+      "liczba podzbiorów sumujących się do",
+      "count subsets with sum"
+     ],
+     "a": "`cnt[0] = 1`, dla każdej liczby `x` od tyłu `cnt[s] = (cnt[s] + cnt[s - x]) % MOD`. Każdy element liczy się\nco najwyżej raz (pętla od tyłu), więc liczymy podzbiory, nie ciągi. Czas O(n·S).",
+     "code": "const int MOD = 1'000'000'007;\nint S = 10;\nvector<int> a = {2, 3, 5, 6, 8, 10};\nvector<long long> cnt(S + 1, 0);\ncnt[0] = 1;\nfor (int x : a)\n    for (int s = S; s >= x; s--)\n        cnt[s] = (cnt[s] + cnt[s - x]) % MOD;\ncout << cnt[S] << \"\\n\";   // 3: {2,8}, {10}, {2,3,5}"
+    },
+    {
+     "q": [
+      "plecak złożoność",
+      "knapsack complexity",
+      "plecak pseudowielomianowy",
+      "jaka zlozonosc plecaka"
+     ],
+     "a": "O(n·W) czasu i O(W) pamięci (wersja 1D). To złożoność **pseudowielomianowa** — zależy od wartości W, a nie\nod długości jego zapisu. Praktycznie: n·W ≤ ok. 10^8 prostych operacji mieści się w sekundzie; dla\nwersji logicznej z `bitset` — n·W/64."
+    },
+    {
+     "q": [
+      "podział na dwa zbiory o minimalnej różnicy",
+      "partition equal subset sum",
+      "podzielić liczby na dwie grupy o równej sumie",
+      "minimalna roznica sum dwoch grup"
+     ],
+     "a": "Policz subset sum dla całkowitej sumy `T`. Dla każdej osiągalnej sumy `s` druga grupa ma `T - s`, różnica\n`|T - 2s|`. Wystarczy sprawdzić osiągalne `s ≤ T/2` i wziąć największe. Podział na równe części istnieje\n⇔ `T` parzyste i `s = T/2` osiągalne. Czas O(n·T/64) z bitsetem.",
+     "code": "vector<int> a = {1, 6, 11, 5};\nint T = 0; for (int x : a) T += x;\nbitset<100001> b; b[0] = 1;\nfor (int x : a) b |= b << x;\nint best = 0;\nfor (int s = 0; s <= T / 2; s++) if (b[s]) best = s;\ncout << T - 2 * best << \"\\n\";   // 1 ({1,5,6} i {11})"
+    }
+   ],
+   "related": [
+    "dp-knapsack-unbounded",
+    "dp-knapsack-bounded",
+    "dp-coin-change",
+    "dp-intro",
+    "ds-bitset",
+    "stl-ref-bitset-all"
+   ]
+  },
+  {
+   "id": "dp-knapsack-unbounded",
+   "title": "Plecak nieograniczony (każdy przedmiot dowolnie wiele razy)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "plecak",
+    "knapsack",
+    "unbounded knapsack",
+    "plecak nieograniczony",
+    "cięcie pręta",
+    "rod cutting"
+   ],
+   "aliases": [
+    "plecak nieograniczony",
+    "unbounded knapsack",
+    "plecak z powtórzeniami",
+    "plecak bez limitu sztuk",
+    "complete knapsack",
+    "cięcie pręta",
+    "rod cutting"
+   ],
+   "summary": "Każdy przedmiot można wziąć dowolnie wiele razy. Różnica względem plecaka 0/1: pętla po pojemności idzie od przodu (od w do W), więc dp[c - w] może już zawierać ten sam przedmiot.",
+   "complexity": "O(n·W) czasu, O(W) pamięci",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`dp[c]` = maksymalna wartość przy łącznej wadze ≤ `c`, gdy każdego przedmiotu mamy nieskończenie wiele.\nRównoważnie: `dp[c] = max(dp[c-1]?, max_i (dp[c - w[i]] + v[i]))` — ostatni wzięty przedmiot to któryś `i`.\nW implementacji 1D wystarczy plecak 0/1 z pętlą **od przodu**: `for c = w..W: dp[c] = max(dp[c], dp[c-w] + v)`.\n`dp[c - w]` jest już zaktualizowane w tej samej iteracji, więc może zawierać ten sam przedmiot — o to chodzi."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program z odtworzeniem liczby sztuk",
+     "code": "// Plecak nieograniczony: n W, potem n par (waga, wartość). Wypisuje max wartość i jeden optymalny zestaw.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, W;\n    cin >> n >> W;\n    vector<int> w(n), v(n);\n    for (int i = 0; i < n; i++) cin >> w[i] >> v[i];\n\n    vector<long long> dp(W + 1, 0);   // dp[c] = najlepsza wartość przy wadze <= c\n    vector<int> last(W + 1, -1);      // ostatni wzięty przedmiot w optimum dla c (-1 = żaden)\n    for (int c = 1; c <= W; c++) {\n        dp[c] = dp[c - 1]; last[c] = -2;          // -2: \"zmarnuj\" jednostkę pojemności\n        for (int i = 0; i < n; i++)\n            if (w[i] <= c && dp[c - w[i]] + v[i] > dp[c]) {\n                dp[c] = dp[c - w[i]] + v[i];\n                last[c] = i;\n            }\n    }\n    cout << dp[W] << \"\\n\";\n\n    vector<int> cnt(n, 0);            // odtworzenie: ile sztuk każdego przedmiotu\n    for (int c = W; c > 0; ) {\n        if (last[c] == -2) { c--; continue; }\n        cnt[last[c]]++;\n        c -= w[last[c]];\n    }\n    for (int i = 0; i < n; i++) cout << cnt[i] << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersja 1D (pętla od przodu)",
+     "code": "// Najkrótsza wersja: zmiana kierunku pętli względem plecaka 0/1.\nint W = 7;\nvector<pair<int,int>> items = {{3, 5}, {4, 7}, {2, 3}};\nvector<long long> dp(W + 1, 0);\nfor (auto [w, v] : items)\n    for (int c = w; c <= W; c++)          // OD PRZODU: przedmiot można wziąć wiele razy\n        dp[c] = max(dp[c], dp[c - w] + v);\ncout << dp[W] << \"\\n\";   // 12"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "",
+      "Plecak 0/1",
+      "Plecak nieograniczony"
+     ],
+     "rows": [
+      [
+       "ile razy przedmiot",
+       "co najwyżej 1",
+       "dowolnie wiele"
+      ],
+      [
+       "pętla po c (1D)",
+       "od W w dół do w",
+       "od w w górę do W"
+      ],
+      [
+       "złożoność",
+       "O(nW)",
+       "O(nW)"
+      ],
+      [
+       "typowe zadania",
+       "wybór podzbioru",
+       "cięcie pręta, wydawanie reszty, rozmienianie"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Wydawanie reszty (minimalna liczba monet, liczba sposobów) to szczególny przypadek plecaka nieograniczonego —\npatrz artykuł o wydawaniu reszty, gdzie omówiona jest też kolejność pętli przy liczeniu sposobów."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (int c = w; c <= W; c++) dp[c] = max(dp[c], dp[c-w] + v);",
+     "desc": "przejście plecaka nieograniczonego",
+     "complexity": "O(W) na przedmiot"
+    }
+   ],
+   "pitfalls": [
+    "Pomylenie kierunku pętli z plecakiem 0/1 — od przodu = nieograniczony, od tyłu = 0/1.",
+    "Przy liczeniu liczby sposobów kolejność pętli (przedmioty na zewnątrz czy pojemność na zewnątrz) zmienia, czy liczysz zbiory, czy ciągi.",
+    "Przedmiot o wadze 0 i dodatniej wartości daje nieskończony wynik — sprawdź ograniczenia (zwykle w ≥ 1).",
+    "Wartości rosną szybko (W/w_min sztuk) — trzymaj dp w long long."
+   ],
+   "qa": [
+    {
+     "q": [
+      "plecak nieograniczony",
+      "unbounded knapsack",
+      "plecak z powtórzeniami",
+      "przedmioty nieskończenie wiele razy",
+      "plecak każdy przedmiot wiele razy"
+     ],
+     "a": "To plecak 0/1 z pętlą po pojemności **od przodu**: `for (c = w; c <= W; c++) dp[c] = max(dp[c], dp[c-w] + v)`.\nPonieważ `dp[c-w]` jest już policzone z uwzględnieniem bieżącego przedmiotu, można go dobierać wielokrotnie.\nCzas O(n·W), pamięć O(W).",
+     "code": "int W = 10;\nvector<pair<int,int>> items = {{3, 4}, {5, 7}};\nvector<long long> dp(W + 1, 0);\nfor (auto [w, v] : items)\n    for (int c = w; c <= W; c++) dp[c] = max(dp[c], dp[c - w] + v);\ncout << dp[W] << \"\\n\";   // 14 (dwa razy waga 5)"
+    },
+    {
+     "q": [
+      "różnica między plecakiem 0/1 a nieograniczonym",
+      "plecak 0 1 vs nieograniczony",
+      "kiedy petla od przodu a kiedy od tylu plecak"
+     ],
+     "a": "Jedyna różnica w kodzie 1D to kierunek pętli po pojemności. **Od tyłu** (W → w): `dp[c-w]` pochodzi z poprzedniego\nwiersza, więc przedmiot użyty max raz (0/1). **Od przodu** (w → W): `dp[c-w]` może już zawierać ten przedmiot,\nwięc można go brać wiele razy (nieograniczony). Złożoność taka sama: O(n·W)."
+    },
+    {
+     "q": [
+      "cięcie pręta dp",
+      "rod cutting",
+      "pocięcie pręta na kawałki max zysk",
+      "cięcie deski na części"
+     ],
+     "a": "Pręt długości `L`, kawałek długości `k` wart `p[k]`. To plecak nieograniczony z przedmiotami (waga k, wartość\np[k]): `best[len] = max_k (best[len - k] + p[k])`. Czas O(L²) (albo O(L·liczba długości)).",
+     "code": "vector<long long> p = {0, 1, 5, 8, 9, 10, 17, 17, 20};   // p[k] = cena kawałka długości k\nint L = 8;\nvector<long long> best(L + 1, 0);\nfor (int len = 1; len <= L; len++)\n    for (int k = 1; k <= len; k++)\n        best[len] = max(best[len], best[len - k] + p[k]);\ncout << best[L] << \"\\n\";   // 22 = 2 + 6 (5 + 17)"
+    },
+    {
+     "q": [
+      "plecak nieograniczony odtworzenie",
+      "ile sztuk każdego przedmiotu plecak",
+      "unbounded knapsack reconstruct"
+     ],
+     "a": "Zapisuj `last[c]` = indeks przedmiotu, który dał optimum dla pojemności `c`. Potem od `c = W` cofaj się:\nzwiększ licznik `last[c]` i zmniejsz `c -= w[last[c]]`. Pełny program z odtworzeniem jest w treści.\nOdtwarzanie kosztuje O(W)."
+    },
+    {
+     "q": [
+      "plecak nieograniczony liczba sposobów",
+      "na ile sposobów uzyskać wagę z powtórzeniami",
+      "ile kombinacji z powtórzeniami do sumy"
+     ],
+     "a": "`ways[0] = 1`; dla każdego przedmiotu (pętla zewnętrzna) przejdź `c` od `w` do `W`: `ways[c] += ways[c - w]`.\nTaka kolejność liczy **multizbiory** (kolejność nieistotna). Zamiana pętli (sumy na zewnątrz, przedmioty\nwewnątrz) liczyłaby ciągi (kolejność istotna). Patrz wydawanie reszty.",
+     "code": "const int MOD = 1'000'000'007;\nint S = 5;\nvector<int> w = {1, 2, 5};\nvector<long long> ways(S + 1, 0);\nways[0] = 1;\nfor (int x : w)\n    for (int c = x; c <= S; c++) ways[c] = (ways[c] + ways[c - x]) % MOD;\ncout << ways[S] << \"\\n\";   // 4"
+    },
+    {
+     "q": [
+      "plecak nieograniczony dokładnie W",
+      "czy da się uzyskać dokładnie wagę W z powtórzeniami",
+      "unbounded knapsack exact"
+     ],
+     "a": "Jak w plecaku 0/1: `dp[0] = 0`, pozostałe `-INF`, pętla od przodu i pomijanie stanów `-INF`. Jeśli na końcu\n`dp[W]` jest `-INF`, waga W jest nieosiągalna. Wersja logiczna: `can[c] |= can[c - w]` od przodu.",
+     "code": "int W = 7;\nvector<int> w = {3, 5};\nvector<bool> can(W + 1, false);\ncan[0] = true;\nfor (int x : w)\n    for (int c = x; c <= W; c++) if (can[c - x]) can[c] = true;\ncout << can[W] << \" \" << can[6] << \"\\n\";   // 0 1"
+    }
+   ],
+   "related": [
+    "dp-knapsack-01",
+    "dp-knapsack-bounded",
+    "dp-coin-change"
+   ]
+  },
+  {
+   "id": "dp-knapsack-bounded",
+   "title": "Plecak z ograniczeniami (ograniczona liczba sztuk, rozbicie na potęgi 2)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "plecak",
+    "bounded knapsack",
+    "plecak ograniczony",
+    "potęgi dwójki",
+    "binary splitting",
+    "multiple knapsack"
+   ],
+   "aliases": [
+    "plecak ograniczony",
+    "bounded knapsack",
+    "plecak z ilościami",
+    "rozbicie na potęgi dwójki",
+    "binary splitting knapsack",
+    "multiple knapsack",
+    "plecak wielokrotny",
+    "plecak z limitem sztuk"
+   ],
+   "summary": "Przedmiot i można wziąć co najwyżej c_i razy. Rozbijamy c_i na paczki 1, 2, 4, …, 2^k i resztę — każda paczka to zwykły przedmiot 0/1, a każdą liczbę sztuk 0..c_i da się złożyć z paczek.",
+   "complexity": "naiwnie O(W·Σc_i); rozbicie na potęgi 2: O(W·Σ log c_i); kolejka monotoniczna: O(n·W)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Przedmiot `i` (waga `w`, wartość `v`) występuje w `c` egzemplarzach. Naiwnie: `c` kopii przedmiotu w plecaku 0/1\n— O(W·Σc), za wolno przy dużych `c`.\n\n**Rozbicie na potęgi dwójki:** zamieniamy `c` sztuk na paczki o rozmiarach `1, 2, 4, …, 2^(k-1)` oraz resztę\n`r = c − (2^k − 1)` (gdzie `k` maksymalne z `2^k − 1 ≤ c`). Paczka rozmiaru `s` to przedmiot 0/1 o wadze `s·w`\ni wartości `s·v`. Dowolną liczbę `0..c` można zapisać jako sumę różnych paczek (paczki 1..2^(k-1) dają 0..2^k−1,\na dodanie reszty `r ≤ 2^k` pokrywa resztę zakresu), a żadna suma paczek nie przekracza `c`.\nLiczba paczek to O(log c), więc czas O(W·Σ log c_i)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: rozbicie na potęgi 2 + plecak 0/1",
+     "code": "// Plecak ograniczony: n W, potem n trójek (waga, wartość, liczba sztuk).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, W;\n    cin >> n >> W;\n    vector<pair<long long, long long>> packs;      // (waga, wartość) paczek 0/1\n    for (int i = 0; i < n; i++) {\n        long long w, v, c;\n        cin >> w >> v >> c;\n        for (long long s = 1; c > 0; s *= 2) {      // paczki 1, 2, 4, ... i reszta\n            long long take = min(s, c);\n            packs.push_back({take * w, take * v});\n            c -= take;\n        }\n    }\n    vector<long long> dp(W + 1, 0);\n    for (auto [pw, pv] : packs)                     // zwykły plecak 0/1 na paczkach\n        for (long long cap = W; cap >= pw; cap--)\n            dp[cap] = max(dp[cap], dp[cap - pw] + pv);\n    cout << dp[W] << \"\\n\";\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Tylko pytanie „czy da się uzyskać sumę S”** (np. monety z limitem sztuk) ma prosty algorytm O(n·S):\ndla każdego typu monety idziemy po sumach rosnąco i pamiętamy `used[s]` — ile sztuk bieżącej monety zużyliśmy,\nby pierwszy raz dojść do `s`. Suma `s` staje się osiągalna, jeśli `s − a` była osiągalna i `used[s − a] < c`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Osiągalność sum przy ograniczonej liczbie monet",
+     "code": "// Monety a[i] w liczbie c[i] sztuk: które sumy 0..S są osiągalne? O(n·S).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, S;\n    cin >> n >> S;\n    vector<char> can(S + 1, 0);\n    can[0] = 1;\n    vector<int> used(S + 1);\n    for (int i = 0; i < n; i++) {\n        int a, c;\n        cin >> a >> c;\n        fill(used.begin(), used.end(), 0);\n        for (int s = a; s <= S; s++)\n            if (!can[s] && can[s - a] && used[s - a] < c) {\n                can[s] = 1;\n                used[s] = used[s - a] + 1;\n            }\n    }\n    int cnt = 0;\n    for (int s = 1; s <= S; s++) cnt += can[s];\n    cout << cnt << \"\\n\";     // ile sum z zakresu 1..S da się uzyskać\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Wersja optymalizacyjna w czasie O(n·W) używa **kolejki monotonicznej** osobno dla każdej reszty `c mod w`\n(patrz „kolejka monotoniczna w DP”). Na OI zwykle wystarcza rozbicie na potęgi 2."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (long long s = 1; c > 0; s *= 2) { take = min(s, c); ...; c -= take; }",
+     "desc": "rozbicie liczby sztuk c na paczki 1, 2, 4, …, reszta",
+     "complexity": "O(log c)"
+    }
+   ],
+   "pitfalls": [
+    "Paczka ma wagę `take·w` i wartość `take·v` — iloczyny mogą przekroczyć int, używaj long long.",
+    "Po rozbiciu paczki to przedmioty 0/1 — pętla po pojemności OD TYŁU.",
+    "Ostatnia paczka to reszta (min(s, c)), a nie kolejna potęga dwójki — inaczej można przekroczyć limit sztuk.",
+    "W algorytmie z `used[]` zeruj tablicę przed każdym typem monety."
+   ],
+   "qa": [
+    {
+     "q": [
+      "plecak ograniczony",
+      "bounded knapsack",
+      "plecak z ilościami",
+      "plecak przedmiot c razy",
+      "multiple knapsack"
+     ],
+     "a": "Każdy przedmiot ma limit `c` sztuk. Rozbij `c` na paczki 1, 2, 4, …, 2^(k−1) i resztę; każda paczka to przedmiot\n0/1 o wadze i wartości pomnożonych przez jej rozmiar. Dalej zwykły plecak 0/1 (pętla od tyłu).\nCzas O(W·Σ log c_i) zamiast O(W·Σ c_i).",
+     "code": "int W = 10;\nvector<array<long long,3>> items = {{3, 4, 3}, {4, 5, 2}};   // (waga, wartość, sztuk)\nvector<long long> dp(W + 1, 0);\nfor (auto [w, v, c] : items)\n    for (long long s = 1; c > 0; s *= 2) {\n        long long t = min(s, c); c -= t;\n        for (long long cap = W; cap >= t * w; cap--)\n            dp[cap] = max(dp[cap], dp[cap - t * w] + t * v);\n    }\ncout << dp[W] << \"\\n\";   // 13"
+    },
+    {
+     "q": [
+      "rozbicie na potęgi dwójki",
+      "dlaczego rozbicie na potęgi 2 działa",
+      "binary splitting knapsack",
+      "potegi dwojki plecak dowod"
+     ],
+     "a": "Paczki 1, 2, …, 2^(k−1) to bity liczby, więc ich podzbiory dają każdą liczbę 0..2^k − 1. Reszta\n`r = c − (2^k − 1)` spełnia `r ≤ 2^k`, więc dodanie jej do tych sum pokrywa zakres r..c, który łączy się\nz 0..2^k − 1 bez dziury. Suma wszystkich paczek to dokładnie `c`, więc nigdy nie przekroczymy limitu.\nPrzykład: c = 10 → paczki 1, 2, 4, 3."
+    },
+    {
+     "q": [
+      "plecak ograniczony złożoność",
+      "bounded knapsack complexity",
+      "plecak z limitem jak szybko"
+     ],
+     "a": "Naiwnie (każda sztuka osobno) O(W·Σc_i). Po rozbiciu na potęgi 2: O(W·Σ log c_i). Najszybciej O(n·W) —\nkolejką monotoniczną dla każdej reszty modulo `w_i`. Dla typowych OI-owych limitów (n ≤ 100, W ≤ 10^5,\nc ≤ 10^4) rozbicie wystarcza."
+    },
+    {
+     "q": [
+      "plecak ograniczony kolejka monotoniczna",
+      "bounded knapsack monotone queue",
+      "plecak ograniczony O(nW)"
+     ],
+     "a": "Dla przedmiotu (w, v, c) i ustalonej reszty `r` rozważ pojemności `r, r+w, r+2w, …`; dla `cap = r + j·w`:\n`dp_new[cap] = max_{j−c ≤ t ≤ j} (dp_old[r + t·w] − t·v) + j·v`. Maksimum z okna długości c+1 utrzymujemy\nkolejką monotoniczną (deque), więc każdy przedmiot kosztuje O(W). Szczegóły w artykule o kolejce monotonicznej w DP."
+    },
+    {
+     "q": [
+      "monety z ograniczoną liczbą sztuk czy da się wydać",
+      "czy da się zapłacić monetami z limitem",
+      "suma osiągalna ograniczone monety",
+      "coins with limited count"
+     ],
+     "a": "Dla każdego typu monety (a, c) idź po sumach rosnąco z tablicą `used[s]` — ile sztuk tej monety potrzeba, by\npierwszy raz osiągnąć `s`. `s` staje się osiągalne, gdy `can[s − a]` i `used[s − a] < c`. Czas O(n·S), bez\nlogarytmu. Pełny program jest w treści."
+    },
+    {
+     "q": [
+      "ile sztuk wziąć plecak ograniczony odtworzenie",
+      "plecak ograniczony odtworzenie",
+      "bounded knapsack which items"
+     ],
+     "a": "Zapamiętaj dla każdej paczki, z którego przedmiotu pochodzi i ile sztuk zawiera. Zrób zwykłe odtwarzanie plecaka\n0/1 (tablica 2D albo bity decyzji `take[paczka][c]`), a potem zsumuj rozmiary wybranych paczek dla każdego\nprzedmiotu."
+    }
+   ],
+   "related": [
+    "dp-knapsack-01",
+    "dp-knapsack-unbounded",
+    "dp-monotonic-queue",
+    "dp-coin-change"
+   ]
+  },
+  {
+   "id": "dp-coin-change",
+   "title": "Wydawanie reszty — minimalna liczba monet i liczba sposobów",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "wydawanie reszty",
+    "coin change",
+    "monety",
+    "liczba sposobów",
+    "rozmienianie",
+    "plecak nieograniczony"
+   ],
+   "aliases": [
+    "wydawanie reszty",
+    "coin change",
+    "minimalna liczba monet",
+    "rozmienianie pieniędzy",
+    "na ile sposobów rozmienić",
+    "monety dp",
+    "reszta dp",
+    "change making problem"
+   ],
+   "summary": "Minimalna liczba monet: dp[s] = min(dp[s - c] + 1). Liczba sposobów: dp[s] += dp[s - c], przy czym kolejność pętli decyduje, czy liczymy zbiory monet (monety na zewnątrz), czy ciągi (suma na zewnątrz).",
+   "complexity": "O(n·S) czasu, O(S) pamięci (n — liczba nominałów, S — kwota)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Nominały `c_1, …, c_n` (każdego dowolnie dużo), kwota `S`.\n\n**Minimalna liczba monet:** `dp[0] = 0`, `dp[s] = min_i (dp[s − c_i] + 1)` po `c_i ≤ s`, nieosiągalne = INF.\n\n**Liczba sposobów (kolejność monet nieistotna, 1+2 = 2+1):** `ways[0] = 1`, **pętla zewnętrzna po monetach**,\nwewnętrzna po sumach rosnąco: `ways[s] += ways[s − c]`. Każdy zbiór liczymy raz, bo monety „dokładamy”\nw ustalonej kolejności nominałów.\n\n**Liczba ciągów (kolejność istotna, 1+2 ≠ 2+1):** pętla zewnętrzna po sumach, wewnętrzna po monetach."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: minimum monet, liczba sposobów, liczba ciągów",
+     "code": "// Wejście: n S, potem n nominałów. Wyjście: minimalna liczba monet (lub -1) + użyte monety,\n// liczba sposobów (zbiory) i liczba ciągów, obie modulo 10^9+7.\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\n\nint main() {\n    int n, S;\n    cin >> n >> S;\n    vector<int> c(n);\n    for (auto &x : c) cin >> x;\n\n    const int INF = 1e9;\n    vector<int> best(S + 1, INF), from(S + 1, -1);\n    best[0] = 0;\n    for (int s = 1; s <= S; s++)\n        for (int x : c)\n            if (x <= s && best[s - x] != INF && best[s - x] + 1 < best[s]) {\n                best[s] = best[s - x] + 1;\n                from[s] = x;                     // ostatnia użyta moneta\n            }\n    if (best[S] == INF) cout << -1 << \"\\n\";\n    else {\n        cout << best[S] << \":\";\n        for (int s = S; s > 0; s -= from[s]) cout << \" \" << from[s];\n        cout << \"\\n\";\n    }\n\n    vector<long long> ways(S + 1, 0);           // zbiory monet: monety na zewnątrz\n    ways[0] = 1;\n    for (int x : c)\n        for (int s = x; s <= S; s++) ways[s] = (ways[s] + ways[s - x]) % MOD;\n\n    vector<long long> seq(S + 1, 0);            // ciągi monet: suma na zewnątrz\n    seq[0] = 1;\n    for (int s = 1; s <= S; s++)\n        for (int x : c)\n            if (x <= s) seq[s] = (seq[s] + seq[s - x]) % MOD;\n\n    cout << ways[S] << \" \" << seq[S] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Pytanie",
+      "Pętla zewnętrzna",
+      "Wzór",
+      "Przykład {1,2}, S=3"
+     ],
+     "rows": [
+      [
+       "min liczba monet",
+       "dowolna",
+       "dp[s] = min(dp[s-c] + 1)",
+       "2 (1+2)"
+      ],
+      [
+       "liczba sposobów (zbiory)",
+       "monety",
+       "ways[s] += ways[s-c]",
+       "2: {1,1,1}, {1,2}"
+      ],
+      [
+       "liczba ciągów (permutacje)",
+       "sumy",
+       "seq[s] += seq[s-c]",
+       "3: 111, 12, 21"
+      ],
+      [
+       "czy osiągalne",
+       "dowolna",
+       "can[s] |= can[s-c]",
+       "tak"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Zachłanny algorytm („bierz największą monetę, jaka się mieści”) działa dla nominałów PLN/EUR, ale **nie zawsze**:\ndla monet {1, 3, 4} i kwoty 6 zachłanny daje 4+1+1 (3 monety), a optimum to 3+3 (2 monety). Jeśli nominały\nsą dowolne — DP."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "best[s] = min(best[s], best[s - c] + 1)",
+     "desc": "minimalna liczba monet dla kwoty s",
+     "complexity": "O(n) na kwotę"
+    },
+    {
+     "sig": "ways[s] = (ways[s] + ways[s - c]) % MOD",
+     "desc": "liczba sposobów (pętla po monetach na zewnątrz)",
+     "complexity": "O(S) na monetę"
+    }
+   ],
+   "pitfalls": [
+    "INF = INT_MAX i `best[s - c] + 1` → przepełnienie. Użyj 1e9 albo sprawdzaj `!= INF` przed dodaniem.",
+    "Zamiana kolejności pętli zmienia wynik liczby sposobów: monety na zewnątrz = zbiory, sumy na zewnątrz = ciągi.",
+    "Zapominanie o modulo — liczba sposobów rośnie wykładniczo.",
+    "Gdy kwota nieosiągalna, wypisz to, czego żąda zadanie (np. -1), a nie INF.",
+    "Zachłanny algorytm nie jest poprawny dla dowolnych nominałów."
+   ],
+   "qa": [
+    {
+     "q": [
+      "wydawanie reszty dp",
+      "coin change",
+      "minimalna liczba monet",
+      "min coins dp",
+      "najmniej monet do kwoty"
+     ],
+     "a": "`dp[0] = 0`, reszta INF; dla każdej kwoty `s` od 1 do S: `dp[s] = min(dp[s − c] + 1)` po monetach `c ≤ s`.\nTo plecak nieograniczony z kosztem 1 za monetę. Czas O(n·S). Jeśli `dp[S] == INF`, kwoty nie da się wydać.",
+     "code": "vector<int> c = {1, 3, 4};\nint S = 6;\nconst int INF = 1e9;\nvector<int> dp(S + 1, INF);\ndp[0] = 0;\nfor (int s = 1; s <= S; s++)\n    for (int x : c)\n        if (x <= s && dp[s - x] != INF) dp[s] = min(dp[s], dp[s - x] + 1);\ncout << (dp[S] == INF ? -1 : dp[S]) << \"\\n\";   // 2 (3+3)"
+    },
+    {
+     "q": [
+      "liczba sposobów wydania reszty",
+      "na ile sposobów rozmienić",
+      "coin change ways",
+      "ile sposobów wydać kwotę",
+      "coin change 2"
+     ],
+     "a": "`ways[0] = 1`; **pętla zewnętrzna po monetach**, wewnętrzna po kwotach rosnąco: `ways[s] += ways[s − c]` (mod).\nDzięki temu każdy zbiór monet liczony jest raz (1+2 i 2+1 to ten sam sposób). Czas O(n·S).",
+     "code": "const int MOD = 1'000'000'007;\nvector<int> c = {1, 2, 5};\nint S = 11;\nvector<long long> ways(S + 1, 0);\nways[0] = 1;\nfor (int x : c)\n    for (int s = x; s <= S; s++) ways[s] = (ways[s] + ways[s - x]) % MOD;\ncout << ways[S] << \"\\n\";   // 11"
+    },
+    {
+     "q": [
+      "kombinacje vs permutacje coin change",
+      "kolejność pętli liczba sposobów",
+      "dlaczego zamiana petli zmienia wynik",
+      "coin change order matters"
+     ],
+     "a": "Monety na zewnątrz: najpierw rozważamy wszystkie użycia monety 1, potem dokładamy monety 2 itd., więc każdy zbiór\npojawia się w jednym „posortowanym” porządku — liczymy **zbiory**. Kwoty na zewnątrz: dla każdej kwoty\npróbujemy każdej monety jako **ostatniej**, więc 1+2 i 2+1 to różne ścieżki — liczymy **ciągi**.\nDla {1, 2} i S = 4: zbiorów jest 3, ciągów 5."
+    },
+    {
+     "q": [
+      "czy zachłanny działa wydawanie reszty",
+      "greedy coin change counterexample",
+      "zachłanny monety kontrprzykład",
+      "kiedy zachłanne wydawanie reszty działa"
+     ],
+     "a": "Zachłanny jest optymalny dla tzw. kanonicznych systemów monet (np. 1, 2, 5, 10, 20, 50, …), ale nie w ogólności.\nKontrprzykład: {1, 3, 4}, kwota 6 — zachłanny 4+1+1 (3 monety), optimum 3+3 (2). Jeśli w zadaniu nominały\nsą dowolne, użyj DP O(n·S); zachłanny można sprawdzić brute force'em na małych kwotach."
+    },
+    {
+     "q": [
+      "odtworzenie monet",
+      "jakie monety wydać",
+      "wypisz monety coin change",
+      "coin change reconstruct"
+     ],
+     "a": "Przy liczeniu minimum zapisuj `from[s]` = moneta, która dała optimum dla `s`. Potem od `s = S` wypisuj `from[s]`\ni rób `s -= from[s]`, aż dojdziesz do 0. Koszt O(liczba monet w wyniku). Pełny program jest w treści."
+    },
+    {
+     "q": [
+      "reszta nie da się wydać",
+      "coin change -1",
+      "kwota nieosiągalna monety",
+      "nie da sie rozmienic"
+     ],
+     "a": "Jeśli po DP `dp[S]` zostało INF, kwoty nie da się złożyć — wypisz to, czego wymaga zadanie (często `-1`).\nWażne: przy przejściu sprawdzaj `dp[s − c] != INF` albo użyj INF = 1e9, aby `INF + 1` nie przepełniło `int`.\nNp. monety {2} i kwota 3 — nieosiągalna."
+    },
+    {
+     "q": [
+      "liczba ciągów monet",
+      "na ile sposobów ułożyć monety w kolejności",
+      "liczba kompozycji z części",
+      "coin change permutations"
+     ],
+     "a": "Gdy kolejność ma znaczenie, pętla zewnętrzna po kwocie `s`, wewnętrzna po monetach: `seq[s] += seq[s − c]`.\nTo uogólnienie schodów (kroki = nominały). Czas O(n·S). Dla {1, 2} wychodzą liczby Fibonacciego.",
+     "code": "const int MOD = 1'000'000'007;\nvector<int> c = {1, 2};\nint S = 4;\nvector<long long> seq(S + 1, 0);\nseq[0] = 1;\nfor (int s = 1; s <= S; s++)\n    for (int x : c) if (x <= s) seq[s] = (seq[s] + seq[s - x]) % MOD;\ncout << seq[S] << \"\\n\";   // 5"
+    },
+    {
+     "q": [
+      "monety ograniczona liczba wydawanie reszty",
+      "każda moneta raz wydawanie reszty",
+      "coin change each coin once"
+     ],
+     "a": "Gdy każdą monetę można użyć tylko raz, to plecak 0/1 — pętla po kwotach **od tyłu**. Przy limicie `c` sztuk\n— rozbicie na potęgi 2 albo algorytm z tablicą `used[]` (artykuł o plecaku z ograniczeniami)."
+    },
+    {
+     "q": [
+      "coin change modulo",
+      "liczba sposobów wydania reszty modulo 10^9+7",
+      "rozmienianie mod"
+     ],
+     "a": "Bierz `% MOD` po każdym dodawaniu: `ways[s] = (ways[s] + ways[s - c]) % MOD`. Liczba sposobów rośnie bardzo\nszybko i nawet `long long` się przepełni dla kwot rzędu kilku tysięcy. Wartości < MOD dodane do siebie mieszczą\nsię w `long long` (i w `int`, bo 2·(10^9+7) < 2^31)."
+    },
+    {
+     "q": [
+      "wydawanie reszty duża kwota",
+      "coin change large amount",
+      "minimalna liczba monet kwota 10^18",
+      "reszta ogromna kwota male nominaly"
+     ],
+     "a": "Gdy kwota S jest ogromna, a największy nominał `c` mały, skorzystaj z zasady szufladkowej: wśród dowolnych `c`\nmonet mniejszych od `c` jest niepusty podzbiór o sumie podzielnej przez `c`, który można zastąpić **mniejszą**\nliczbą monet `c`. Istnieje więc optimum, w którym monety ≠ c sumują się do mniej niż `c²`. Stąd dla `S ≥ c²`:\n`opt(S) = 1 + opt(S − c)`. Zredukuj S do przedziału `[c² − c, c²)`, a resztę policz zwykłym DP — O(n·c²).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n// minimalna liczba monet dla dowolnie dużego S (-1 gdy się nie da); nominały dodatnie, różne\nlong long minCoinsLarge(vector<long long> coins, long long S) {\n    long long c = *max_element(coins.begin(), coins.end());\n    long long t = 0;\n    if (S >= c * c) { t = (S - c * c) / c + 1; S -= t * c; }   // teraz S < c*c\n    const long long INF = LLONG_MAX / 4;\n    vector<long long> dp(S + 1, INF);\n    dp[0] = 0;\n    for (long long s = 1; s <= S; s++)\n        for (long long x : coins) if (x <= s && dp[s - x] + 1 < dp[s]) dp[s] = dp[s - x] + 1;\n    return dp[S] >= INF ? -1 : dp[S] + t;\n}\nint main() {\n    mt19937 rng(1);\n    for (int it = 0; it < 300; it++) {                     // porównanie z pełnym DP\n        set<long long> st;\n        int k = rng() % 3 + 1;\n        while ((int)st.size() < k) st.insert(rng() % 12 + 1);\n        vector<long long> coins(st.begin(), st.end());\n        long long S = rng() % 2000;\n        vector<long long> dp(S + 1, LLONG_MAX / 4); dp[0] = 0;\n        for (long long s = 1; s <= S; s++) for (long long x : coins) if (x <= s) dp[s] = min(dp[s], dp[s - x] + 1);\n        long long full = dp[S] >= LLONG_MAX / 4 ? -1 : dp[S];\n        if (full != minCoinsLarge(coins, S)) { cout << \"BŁĄD\\n\"; return 0; }\n    }\n    cout << \"OK \" << minCoinsLarge({1, 3, 4}, 1000000000000000000LL) << \"\\n\";\n}"
+    }
+   ],
+   "related": [
+    "dp-knapsack-unbounded",
+    "dp-knapsack-01",
+    "dp-knapsack-bounded",
+    "dp-stairs-fibonacci",
+    "math-pigeonhole"
+   ]
+  },
+  {
+   "id": "dp-grid-paths",
+   "title": "Liczenie ścieżek na siatce i ścieżka o maksymalnej sumie",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "siatka",
+    "plansza",
+    "ścieżki",
+    "grid",
+    "dp 2d",
+    "przeszkody",
+    "dwumian"
+   ],
+   "aliases": [
+    "liczba ścieżek na siatce",
+    "grid paths",
+    "ścieżki na planszy",
+    "ile dróg w prawo i w dół",
+    "dp na siatce",
+    "dp na planszy",
+    "max sum path",
+    "unique paths"
+   ],
+   "summary": "Ruch tylko w prawo i w dół ⇒ dp[i][j] = dp[i-1][j] + dp[i][j-1] (liczba ścieżek) albo max/min z tych dwóch + wartość pola (najlepsza ścieżka). Przeszkody zerują pole.",
+   "complexity": "O(n·m) czasu, O(m) pamięci (wiersz po wierszu); bez przeszkód wzór C(n+m-2, n-1)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Plansza `n × m`, start w lewym górnym rogu, meta w prawym dolnym, ruchy **tylko w prawo lub w dół**.\nNa pole `(i, j)` można wejść z góry `(i−1, j)` albo z lewej `(i, j−1)`, więc:\n\n* liczba ścieżek: `dp[i][j] = dp[i−1][j] + dp[i][j−1]` (mod), `dp[0][0] = 1`, przeszkoda ⇒ `dp = 0`;\n* najlepsza ścieżka: `best[i][j] = a[i][j] + max(best[i−1][j], best[i][j−1])`.\n\nKolejność: wiersze od góry, w wierszu od lewej — wtedy oba „poprzedniki” są gotowe. Ruch w 4 kierunkach tworzy\ncykle i to już nie jest DP, tylko BFS/Dijkstra."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba ścieżek z przeszkodami",
+     "code": "// Liczba ścieżek (prawo/dół) na planszy z przeszkodami '#', modulo 10^9+7.\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<string> g(n);\n    for (auto &row : g) cin >> row;\n    vector<vector<long long>> dp(n, vector<long long>(m, 0));\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++) {\n            if (g[i][j] == '#') { dp[i][j] = 0; continue; }\n            if (i == 0 && j == 0) { dp[i][j] = 1; continue; }\n            long long up = i > 0 ? dp[i - 1][j] : 0;\n            long long left = j > 0 ? dp[i][j - 1] : 0;\n            dp[i][j] = (up + left) % MOD;\n        }\n    cout << dp[n - 1][m - 1] << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: maksymalna suma na ścieżce + odtworzenie",
+     "code": "// Ścieżka o maksymalnej sumie (prawo/dół) z odtworzeniem jako ciąg liter R/D.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<long long>> a(n, vector<long long>(m)), best(n, vector<long long>(m));\n    for (auto &row : a) for (auto &x : row) cin >> x;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++) {\n            if (i == 0 && j == 0) best[i][j] = a[i][j];\n            else if (i == 0) best[i][j] = best[i][j - 1] + a[i][j];\n            else if (j == 0) best[i][j] = best[i - 1][j] + a[i][j];\n            else best[i][j] = max(best[i - 1][j], best[i][j - 1]) + a[i][j];\n        }\n    cout << best[n - 1][m - 1] << \"\\n\";\n    string path;\n    for (int i = n - 1, j = m - 1; i > 0 || j > 0; ) {      // cofamy się od mety\n        if (i > 0 && (j == 0 || best[i - 1][j] >= best[i][j - 1])) { path += 'D'; i--; }\n        else { path += 'R'; j--; }\n    }\n    reverse(path.begin(), path.end());\n    cout << path << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Technika",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "liczba ścieżek, bez przeszkód",
+       "C(n+m−2, n−1) (dwumian Newtona)",
+       "O(n+m) lub O(1) po preprocessingu silni"
+      ],
+      [
+       "liczba ścieżek z przeszkodami",
+       "dp[i][j] = góra + lewo, przeszkoda = 0",
+       "O(nm)"
+      ],
+      [
+       "max/min suma",
+       "best = a[i][j] + max/min(góra, lewo)",
+       "O(nm)"
+      ],
+      [
+       "ogromna plansza, k przeszkód",
+       "sortowanie przeszkód + dwumiany + włączenia-wyłączenia",
+       "O(k²)"
+      ],
+      [
+       "dwie ścieżki naraz",
+       "dp po przekątnych: dp[krok][x1][x2]",
+       "O((n+m)·n²)"
+      ],
+      [
+       "ruch w 4 kierunkach",
+       "nie DP — BFS (koszt 1) / Dijkstra",
+       "O(nm log nm)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dp[i][j] = (dp[i-1][j] + dp[i][j-1]) % MOD",
+     "desc": "liczba ścieżek prawo/dół",
+     "complexity": "O(1) na pole"
+    },
+    {
+     "sig": "best[i][j] = a[i][j] + max(best[i-1][j], best[i][j-1])",
+     "desc": "najlepsza ścieżka prawo/dół",
+     "complexity": "O(1) na pole"
+    }
+   ],
+   "pitfalls": [
+    "Brzegi planszy: w pierwszym wierszu nie ma pola „z góry”, w pierwszej kolumnie — „z lewej”.",
+    "Przeszkoda na starcie lub mecie ⇒ wynik 0 (sprawdź, czy kod nie ustawia dp[0][0] = 1 mimo '#').",
+    "Liczba ścieżek bez modulo przepełnia long long już dla planszy ~35×35 (C(68, 34) ≈ 2,8·10^19).",
+    "Wartości pól mogą być ujemne — przy maksimum nie inicjalizuj brzegów zerem, tylko licz je jawnie.",
+    "Ruch w 4 kierunkach ⇒ cykle, DP nie działa (użyj BFS/Dijkstry)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "liczba ścieżek na siatce",
+      "ile dróg w prawo i w dół",
+      "grid paths dp",
+      "sciezki na planszy ile",
+      "unique paths",
+      "ile jest ścieżek z lewego górnego rogu do prawego dolnego",
+      "liczba dróg z lewego górnego do prawego dolnego rogu planszy"
+     ],
+     "a": "Na pole `(i, j)` wchodzi się z góry albo z lewej, więc `dp[i][j] = dp[i−1][j] + dp[i][j−1]`, `dp[0][0] = 1`.\nLiczymy wiersz po wierszu, od lewej. Czas O(n·m); wynik zwykle modulo 10^9+7. Bez przeszkód wynik to\nC(n+m−2, n−1).",
+     "code": "int n = 3, m = 7;\nvector<vector<long long>> dp(n, vector<long long>(m, 1));   // pierwszy wiersz/kolumna = 1\nfor (int i = 1; i < n; i++)\n    for (int j = 1; j < m; j++) dp[i][j] = dp[i - 1][j] + dp[i][j - 1];\ncout << dp[n - 1][m - 1] << \"\\n\";   // 28 = C(8, 2)"
+    },
+    {
+     "q": [
+      "siatka z przeszkodami",
+      "plansza z przeszkodami liczba drog",
+      "grid paths obstacles",
+      "sciezki omijajace pola zakazane"
+     ],
+     "a": "Dla pola z przeszkodą ustaw `dp[i][j] = 0` (żadna ścieżka przez nie nie przechodzi), dla reszty wzór\ngóra + lewo. Jeśli przeszkoda stoi na starcie lub mecie, wynik to 0. Pełny program jest w treści."
+    },
+    {
+     "q": [
+      "ścieżka o maksymalnej sumie",
+      "max sum path grid",
+      "minimalny koszt przejścia przez planszę",
+      "min path sum",
+      "najlepsza droga na planszy"
+     ],
+     "a": "`best[i][j] = a[i][j] + max(best[i−1][j], best[i][j−1])` (albo `min` dla kosztu), z osobno liczonym pierwszym\nwierszem i kolumną. Odtworzenie: od mety cofaj się do tego sąsiada (góra/lewo), który ma większe `best`.\nCzas O(n·m).",
+     "code": "vector<vector<int>> a = {{1, 3, 1}, {1, 5, 1}, {4, 2, 1}};\nint n = 3, m = 3;\nvector<vector<long long>> c(n, vector<long long>(m));\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < m; j++) {\n        long long p = LLONG_MAX;\n        if (i > 0) p = min(p, c[i - 1][j]);\n        if (j > 0) p = min(p, c[i][j - 1]);\n        c[i][j] = a[i][j] + (p == LLONG_MAX ? 0 : p);\n    }\ncout << c[n - 1][m - 1] << \"\\n\";   // 7 (min suma: 1+3+1+1+1)"
+    },
+    {
+     "q": [
+      "liczba ścieżek wzór dwumian",
+      "ścieżki bez przeszkód wzór",
+      "grid paths combinatorics",
+      "ile sciezek wzor newton"
+     ],
+     "a": "Każda ścieżka to ciąg `n−1` ruchów w dół i `m−1` w prawo w dowolnej kolejności, więc ich liczba to\nC(n+m−2, n−1). Modulo liczba pierwsza: silnie i odwrotności silni (patrz dwumian Newtona) — O(n+m)\npreprocessingu, potem O(1)."
+    },
+    {
+     "q": [
+      "wielka plansza mało przeszkód",
+      "grid 10^5 x 10^5 przeszkody",
+      "liczba sciezek duza plansza kilka zablokowanych pol",
+      "paths with few obstacles combinatorics"
+     ],
+     "a": "Posortuj przeszkody (po wierszu, potem kolumnie), metę dodaj jako ostatni „punkt”. `f[i]` = liczba ścieżek od\nstartu do punktu `i`, nieprzechodzących przez wcześniejsze przeszkody:\n`f[i] = C(drogi start→i) − Σ_{j przed i, j ≤ i po obu współrzędnych} f[j]·C(drogi j→i)`. Każde C liczysz\nz silni modulo p. Czas O(k²) dla k przeszkód — nie zależy od rozmiaru planszy."
+    },
+    {
+     "q": [
+      "odtworzenie ścieżki na planszy",
+      "wypisz drogę RD",
+      "jak wypisac sciezke dp siatka",
+      "path reconstruction grid"
+     ],
+     "a": "Po policzeniu `best` startuj z mety i w każdym kroku idź do poprzednika (góra lub lewo), który ma lepszą wartość;\ndopisuj odpowiednio `D` lub `R`, na końcu odwróć napis. Na brzegach planszy jest tylko jeden poprzednik.\nPełny program w treści wypisuje np. `RDDR`."
+    },
+    {
+     "q": [
+      "dwie ścieżki jednocześnie",
+      "cherry pickup",
+      "dwie osoby ida po planszy dp",
+      "dwa przejscia przez plansze max suma"
+     ],
+     "a": "Prowadź obie ścieżki jednocześnie krok po kroku: po `k` krokach obie są na przekątnej `i + j = k`, więc stan\nto `dp[k][i1][i2]` (wiersze obu osób), a kolumny wyliczasz jako `k − i`. Przejście z 4 kombinacji ruchów,\na gdy obie stoją na tym samym polu, jego wartość dodaj raz. Czas O((n+m)·n²)."
+    },
+    {
+     "q": [
+      "ruch w 4 kierunkach dp nie działa",
+      "dp na planszy w gore i w lewo",
+      "plansza dowolny ruch najkrotsza droga"
+     ],
+     "a": "Przy ruchach we wszystkich kierunkach zależności między polami tworzą cykle — nie da się ustalić kolejności\nliczenia, więc to nie jest DP. Dla najkrótszej drogi (każdy ruch koszt 1) użyj BFS w O(n·m), dla kosztów\npól — Dijkstry w O(n·m·log(n·m))."
+    }
+   ],
+   "related": [
+    "dp-intro",
+    "math-binomial",
+    "dp-stairs-fibonacci",
+    "graph-bfs"
+   ]
+  },
+  {
+   "id": "dp-lis",
+   "title": "Najdłuższy podciąg rosnący (LIS) — O(n²) i O(n log n) z odtworzeniem",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "lis",
+    "najdłuższy podciąg rosnący",
+    "longest increasing subsequence",
+    "lower_bound",
+    "podciąg",
+    "patience sorting"
+   ],
+   "aliases": [
+    "lis",
+    "najdłuższy podciąg rosnący",
+    "longest increasing subsequence",
+    "lis nlogn",
+    "lis c++",
+    "najdluzszy podciag rosnacy",
+    "podciąg rosnący",
+    "lis n log n",
+    "najdłuższy podciąg niemalejący"
+   ],
+   "summary": "LIS liczymy w O(n log n): tails[k] = najmniejszy możliwy ostatni element rosnącego podciągu długości k+1; każdy element wstawiamy przez lower_bound. Odtworzenie wymaga zapamiętania indeksów i poprzedników.",
+   "complexity": "O(n²) prosto; O(n log n) z tablicą tails i wyszukiwaniem binarnym; pamięć O(n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Podciąg** to elementy wybrane z zachowaniem kolejności (niekoniecznie sąsiednie). Szukamy najdłuższego\n**ściśle rosnącego**.\n\n**O(n²):** `dp[i]` = długość najdłuższego rosnącego podciągu kończącego się na `a[i]`;\n`dp[i] = 1 + max(dp[j])` po `j < i` z `a[j] < a[i]`. Wynik = `max dp[i]`.\n\n**O(n log n):** `tails[k]` = najmniejszy możliwy **ostatni element** rosnącego podciągu długości `k+1`\nspośród dotąd przejrzanych. Tablica `tails` jest rosnąca. Dla nowego `x` znajdujemy\n`lower_bound(tails, x)` — pierwszą pozycję z wartością ≥ x — i wstawiamy tam `x` (przedłużamy podciąg\nkrótszy o jeden albo poprawiamy końcówkę). Jeśli pozycja = koniec, LIS rośnie o 1. Uwaga: sama tablica\n`tails` **nie jest** podciągiem wejścia — do odtworzenia trzymamy indeksy i poprzedników."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: LIS O(n log n) + odtworzenie",
+     "code": "// LIS (ściśle rosnący) w O(n log n) z odtworzeniem jednego optymalnego podciągu.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> a(n);\n    for (auto &x : a) cin >> x;\n\n    vector<long long> tails;     // tails[k] = najmniejszy koniec podciągu długości k+1\n    vector<int> tailIdx;         // indeks w a elementu tails[k]\n    vector<int> par(n, -1);      // poprzednik a[i] w podciągu kończącym się na a[i]\n    for (int i = 0; i < n; i++) {\n        int k = lower_bound(tails.begin(), tails.end(), a[i]) - tails.begin();  // upper_bound => niemalejący\n        if (k == (int)tails.size()) { tails.push_back(a[i]); tailIdx.push_back(i); }\n        else { tails[k] = a[i]; tailIdx[k] = i; }\n        par[i] = (k > 0 ? tailIdx[k - 1] : -1);\n    }\n\n    int len = tails.size();\n    vector<long long> seq;\n    for (int i = tailIdx[len - 1]; i != -1; i = par[i]) seq.push_back(a[i]);\n    reverse(seq.begin(), seq.end());\n    cout << len << \"\\n\";\n    for (auto x : seq) cout << x << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: LIS O(n²)",
+     "code": "// LIS w O(n^2) — prostsze, łatwo modyfikować (np. liczba LIS, warunek na parach).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<int> a(n);\n    for (auto &x : a) cin >> x;\n    vector<int> dp(n, 1), par(n, -1);\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < i; j++)\n            if (a[j] < a[i] && dp[j] + 1 > dp[i]) { dp[i] = dp[j] + 1; par[i] = j; }\n    int best = max_element(dp.begin(), dp.end()) - dp.begin();\n    vector<int> seq;\n    for (int i = best; i != -1; i = par[i]) seq.push_back(a[i]);\n    reverse(seq.begin(), seq.end());\n    cout << dp[best] << \"\\n\";\n    for (int x : seq) cout << x << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Zmiana w O(n log n)"
+     ],
+     "rows": [
+      [
+       "ściśle rosnący",
+       "lower_bound(tails, x)"
+      ],
+      [
+       "niemalejący",
+       "upper_bound(tails, x)"
+      ],
+      [
+       "ściśle malejący",
+       "odwróć znaki (−x) i licz rosnący, albo lower_bound z greater<>()"
+      ],
+      [
+       "min. elementów do usunięcia, by ciąg był rosnący",
+       "n − LIS"
+      ],
+      [
+       "min. liczba podciągów nierosnących pokrywających ciąg",
+       "= długość LIS (ściśle rosnącego) — tw. Dilwortha/Mirsky'ego"
+      ],
+      [
+       "pary (w, h) zagnieżdżone (koperty)",
+       "sortuj w rosnąco, przy równych w — h malejąco, potem LIS po h"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`tails` po zakończeniu algorytmu to zwykle NIE jest poprawny podciąg (np. dla 3 1 4 1 5 9 2 6 tails = 1 2 5 6,\na 2 występuje w ciągu po 5). Do wypisania podciągu używaj `tailIdx` + `par`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "lower_bound(tails.begin(), tails.end(), x)",
+     "desc": "pozycja wstawienia dla LIS ściśle rosnącego (pierwszy element ≥ x)",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "upper_bound(tails.begin(), tails.end(), x)",
+     "desc": "pozycja wstawienia dla podciągu niemalejącego (pierwszy element > x)",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    }
+   ],
+   "pitfalls": [
+    "Pomylenie lower_bound (ściśle rosnący) z upper_bound (niemalejący) — dla ciągu z powtórzeniami wynik się różni.",
+    "Wypisywanie tablicy tails jako odpowiedzi — to nie jest podciąg wejścia.",
+    "O(n²) przy n = 10^5 to 10^10 operacji — TLE; potrzebne O(n log n).",
+    "Przy kopertach (dwa wymiary) zapominanie o sortowaniu równych szerokości malejąco po wysokości — wtedy liczysz koperty o równych szerokościach jako zagnieżdżone.",
+    "Pusty ciąg: tailIdx[len-1] przy len = 0 to wyjście poza tablicę — obsłuż n = 0, jeśli możliwe."
+   ],
+   "qa": [
+    {
+     "q": [
+      "lis",
+      "najdłuższy podciąg rosnący",
+      "longest increasing subsequence",
+      "lis c++",
+      "najdluzszy podciag rosnacy kod"
+     ],
+     "a": "Najszybciej w O(n log n): trzymaj `tails`, gdzie `tails[k]` to najmniejszy koniec rosnącego podciągu długości\n`k+1`. Dla każdego `x` zamień `*lower_bound(tails, x)` na `x` (albo dopisz na koniec). Długość `tails` = LIS.\nDla n ≤ 5000 wystarczy też prosta dynamika O(n²).",
+     "code": "vector<int> a = {10, 9, 2, 5, 3, 7, 101, 18};\nvector<int> tails;\nfor (int x : a) {\n    auto it = lower_bound(tails.begin(), tails.end(), x);\n    if (it == tails.end()) tails.push_back(x);\n    else *it = x;\n}\ncout << tails.size() << \"\\n\";   // 4 (np. 2 3 7 18)"
+    },
+    {
+     "q": [
+      "lis nlogn",
+      "lis n log n jak dziala",
+      "lis lower_bound dlaczego",
+      "lis szybko",
+      "lis binary search"
+     ],
+     "a": "Kluczowa obserwacja: dla danej długości opłaca się pamiętać tylko **najmniejszy** możliwy koniec podciągu, bo\nłatwiej go przedłużyć. Te końce rosną wraz z długością, więc można w nich szukać binarnie. Nowy `x` przedłuża\nnajdłuższy podciąg o końcu < x — czyli trafia na pozycję `lower_bound(tails, x)`. n elementów × O(log n) =\nO(n log n)."
+    },
+    {
+     "q": [
+      "lis odtworzenie",
+      "jak wypisać podciąg rosnący",
+      "lis reconstruct",
+      "lis wypisz elementy",
+      "odtworzenie lis nlogn"
+     ],
+     "a": "Obok `tails` trzymaj `tailIdx[k]` — indeks elementu, który teraz jest końcem podciągu długości `k+1`, oraz\n`par[i] = tailIdx[k−1]` w chwili wstawienia `a[i]` na pozycję `k`. Na końcu startuj z `tailIdx[len−1]` i idź po\n`par`, potem odwróć. Pełny program z odtworzeniem jest w treści; to wciąż O(n log n)."
+    },
+    {
+     "q": [
+      "lis niemalejący upper_bound",
+      "najdłuższy podciąg niemalejący",
+      "longest non decreasing subsequence",
+      "lis z powtorzeniami"
+     ],
+     "a": "Dla podciągu niemalejącego (równe elementy dozwolone) użyj `upper_bound` zamiast `lower_bound` — równy element\nma przedłużać podciąg, a nie zastępować końca. Przykład 1 2 2 3: ściśle rosnący ma długość 3, niemalejący 4.",
+     "code": "vector<int> a = {1, 2, 2, 3, 3, 1};\nvector<int> tails;\nfor (int x : a) {\n    auto it = upper_bound(tails.begin(), tails.end(), x);\n    if (it == tails.end()) tails.push_back(x); else *it = x;\n}\ncout << tails.size() << \"\\n\";   // 5 (1 2 2 3 3)"
+    },
+    {
+     "q": [
+      "lis n^2",
+      "lis kwadratowo",
+      "lis prosta dynamika",
+      "lis o(n^2)"
+     ],
+     "a": "`dp[i] = 1 + max(dp[j])` po `j < i` z `a[j] < a[i]` (lub 1, gdy brak takiego `j`). Wynik `max dp[i]`. Czas O(n²) —\ndobre dla n ≤ ~5000 i łatwe do modyfikacji (inne warunki przedłużenia, liczenie liczby LIS, wagi).",
+     "code": "vector<int> a = {3, 1, 4, 1, 5, 9, 2, 6};\nint n = a.size();\nvector<int> dp(n, 1);\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < i; j++)\n        if (a[j] < a[i]) dp[i] = max(dp[i], dp[j] + 1);\ncout << *max_element(dp.begin(), dp.end()) << \"\\n\";   // 4"
+    },
+    {
+     "q": [
+      "lis malejący",
+      "najdłuższy podciąg malejący",
+      "longest decreasing subsequence",
+      "podciag malejacy"
+     ],
+     "a": "Zamień każdy element na `−a[i]` i policz zwykły LIS (ściśle rosnący) — ściśle malejący podciąg `a` to ściśle\nrosnący podciąg `−a`. Alternatywnie `lower_bound(..., x, greater<>())` na malejącej tablicy `tails`.",
+     "code": "vector<int> a = {5, 1, 4, 2, 3, 0};\nvector<int> tails;\nfor (int x : a) {\n    auto it = lower_bound(tails.begin(), tails.end(), -x);\n    if (it == tails.end()) tails.push_back(-x); else *it = -x;\n}\ncout << tails.size() << \"\\n\";   // 4 (5 4 2 0 lub 5 4 3 0)"
+    },
+    {
+     "q": [
+      "ile minimalnie usunąć by ciąg był rosnący",
+      "minimalna liczba usunięć ciąg rosnący",
+      "min removals increasing",
+      "ile elementow wyrzucic zeby bylo rosnaco"
+     ],
+     "a": "Zostawiamy jak najdłuższy rosnący podciąg, resztę usuwamy: odpowiedź `n − LIS`. Jeśli wolno **zmieniać**\nwartości na dowolne liczby całkowite (a nie usuwać), to klasyczny trik: ciąg `b[i] = a[i] − i` i liczba\nzmian = `n − (najdłuższy niemalejący podciąg b)`."
+    },
+    {
+     "q": [
+      "minimalna liczba podciągów malejących pokrywających",
+      "dilworth lis",
+      "ile ciągów nierosnących potrzeba",
+      "minimalne pokrycie podciągami nierosnącymi"
+     ],
+     "a": "Minimalna liczba **nierosnących** podciągów, na które da się podzielić ciąg, jest równa długości najdłuższego\n**ściśle rosnącego** podciągu (twierdzenie Mirsky'ego / dualne do Dilwortha). Liczysz więc zwykły LIS w O(n log n).\nKlasyczne zadanie: ile „systemów obrony” potrzeba, by zestrzelić wszystkie rakiety."
+    },
+    {
+     "q": [
+      "lis w 2D koperty",
+      "russian doll envelopes",
+      "zagnieżdżanie pudełek lis",
+      "lis na parach"
+     ],
+     "a": "Posortuj pary rosnąco po pierwszej współrzędnej, a przy równej — **malejąco** po drugiej; potem policz LIS ściśle\nrosnący po drugiej współrzędnej. Malejące sortowanie przy remisie zapobiega wybraniu dwóch par o tej samej\nszerokości. Czas O(n log n).",
+     "code": "vector<pair<int,int>> e = {{5, 4}, {6, 4}, {6, 7}, {2, 3}};\nsort(e.begin(), e.end(), [](auto &p, auto &q) {\n    return p.first != q.first ? p.first < q.first : p.second > q.second;\n});\nvector<int> tails;\nfor (auto &[w, h] : e) {\n    auto it = lower_bound(tails.begin(), tails.end(), h);\n    if (it == tails.end()) tails.push_back(h); else *it = h;\n}\ncout << tails.size() << \"\\n\";   // 3: (2,3) -> (5,4) -> (6,7)"
+    },
+    {
+     "q": [
+      "liczba najdłuższych podciągów rosnących",
+      "ile jest lis",
+      "count lis",
+      "number of longest increasing subsequences"
+     ],
+     "a": "Rozszerz DP O(n²) o `cnt[i]` = liczba najdłuższych podciągów kończących się na `i`: gdy `dp[j] + 1 > dp[i]`,\nustaw `dp[i] = dp[j] + 1, cnt[i] = cnt[j]`; gdy równe — `cnt[i] += cnt[j]`. Wynik: suma `cnt[i]` po `i` z\n`dp[i] = max`. Dla dużych n — drzewo przedziałowe/Fenwick trzymające pary (długość, liczba).",
+     "code": "vector<int> a = {1, 3, 5, 4, 7};\nint n = a.size();\nvector<int> dp(n, 1);\nvector<long long> cnt(n, 1);\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < i; j++)\n        if (a[j] < a[i]) {\n            if (dp[j] + 1 > dp[i]) { dp[i] = dp[j] + 1; cnt[i] = cnt[j]; }\n            else if (dp[j] + 1 == dp[i]) cnt[i] += cnt[j];\n        }\nint L = *max_element(dp.begin(), dp.end());\nlong long total = 0;\nfor (int i = 0; i < n; i++) if (dp[i] == L) total += cnt[i];\ncout << total << \"\\n\";   // 2: 1 3 5 7 oraz 1 3 4 7"
+    },
+    {
+     "q": [
+      "lis fenwick",
+      "lis drzewo przedzialowe",
+      "lis z kompresją współrzędnych",
+      "lis with bit"
+     ],
+     "a": "Alternatywa O(n log n): skompresuj wartości, przeglądaj elementy po kolei i dla `a[i]` zapytaj Fenwicka o maksimum\n`dp` na wartościach < `a[i]`, potem wpisz `dp[i]` na pozycję `a[i]`. Ta wersja łatwo się uogólnia (wagi\nelementów, liczba LIS), a wersja z `tails` jest krótsza."
+    }
+   ],
+   "related": [
+    "dp-intro",
+    "dp-lcs",
+    "stl-binary-search",
+    "ds-fenwick",
+    "tech-binary-search",
+    "tech-coordinate-compression",
+    "tech-elementary-sorts"
+   ]
+  }
+ ]
+}

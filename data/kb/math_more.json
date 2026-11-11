@@ -1,0 +1,2124 @@
+{
+ "chunk": "math_more",
+ "articles": [
+  {
+   "id": "math-fft",
+   "title": "FFT — szybkie mnożenie wielomianów i dużych liczb (splot w O(n log n))",
+   "category": "Matematyka",
+   "tags": [
+    "fft",
+    "szybka transformata fouriera",
+    "mnożenie wielomianów",
+    "splot",
+    "convolution",
+    "complex",
+    "pierwiastki z jedności",
+    "duże liczby",
+    "dft"
+   ],
+   "aliases": [
+    "fft",
+    "szybka transformata fouriera",
+    "fast fourier transform",
+    "mnożenie wielomianów",
+    "mnozenie wielomianow",
+    "mnożenie wielomianów fft",
+    "splot",
+    "splot ciągów",
+    "convolution",
+    "polynomial multiplication",
+    "transformata fouriera",
+    "mnożenie dużych liczb fft",
+    "fft c++",
+    "dft"
+   ],
+   "summary": "FFT liczy iloczyn (splot) dwóch wielomianów w O(n log n) zamiast O(n·m): oblicza wartości w zespolonych pierwiastkach z jedności, mnoży je punktowo i wraca do współczynników transformatą odwrotną. Na complex<double> wynik jest dokładny, dopóki współczynniki iloczynu nie przekraczają ~10^14. Do obliczeń modulo służy NTT.",
+   "complexity": "O(n log n), n = najmniejsza potęga 2 ≥ |A| + |B| − 1; pamięć O(n) (16 B na complex<double>)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Splot** ciągów `a` i `b` to `c[k] = Σ a[i]·b[k−i]` — dokładnie współczynniki iloczynu wielomianów\n`A(x)·B(x)`. Naiwnie O(n·m), co dla n = m = 10^5 daje 10^10 operacji. FFT robi to w trzech krokach:\n\n1. **Ewaluacja**: wartości A i B w n punktach `ω^0, ω^1, …, ω^(n−1)`, gdzie `ω = e^(2πi/n)` (pierwiastki\n   z jedności). Dzięki `A(x) = A_parz(x²) + x·A_nieparz(x²)` i temu, że kwadraty pierwiastków stopnia n\n   to pierwiastki stopnia n/2, problem dzieli się na dwa o połowę mniejsze → O(n log n).\n2. **Mnożenie punktowe**: `C(ω^k) = A(ω^k)·B(ω^k)` — O(n).\n3. **Interpolacja**: ta sama procedura z `ω^(−1)` i dzieleniem przez n daje współczynniki C.\n\nn musi być potęgą dwójki i **≥ |A| + |B| − 1**, bo FFT liczy splot cykliczny (indeksy mod n).\n\n**Sygnały w zadaniu:** „dla każdego s policz, ile par (i, j) ma `a_i + b_j = s`”, „dla każdego przesunięcia\nwzorca policz zgodne pozycje”, iloczyn liczb o 10^5–10^6 cyfrach, naiwny splot O(n·m) za wolny."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: mnożenie wielomianów przez FFT (iteracyjne)",
+     "code": "// Mnożenie wielomianów przez FFT. Wejście: n m, potem n współczynników A i m współczynników B (od a_0).\n// Wyjście: n + m - 1 współczynników C = A * B. Współczynniki całkowite, wynik do ~10^14.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef complex<double> cd;\nconst double PI = acos(-1.0);\n\nvoid fft(vector<cd> &a, bool invert) {\n    int n = a.size();\n    for (int i = 1, j = 0; i < n; i++) {          // permutacja bit-reverse\n        int bit = n >> 1;\n        for (; j & bit; bit >>= 1) j ^= bit;\n        j ^= bit;\n        if (i < j) swap(a[i], a[j]);\n    }\n    vector<cd> root(n / 2);                       // pierwiastki z cos/sin wprost — bez kumulacji błędu\n    for (int i = 0; i < n / 2; i++) root[i] = polar(1.0, (invert ? -2 : 2) * PI * i / n);\n    for (int len = 2; len <= n; len <<= 1) {      // motylki: łączymy bloki długości len/2\n        int step = n / len;\n        for (int i = 0; i < n; i += len)\n            for (int j = 0; j < len / 2; j++) {\n                cd u = a[i + j], v = a[i + j + len / 2] * root[j * step];\n                a[i + j] = u + v;\n                a[i + j + len / 2] = u - v;\n            }\n    }\n    if (invert) for (cd &x : a) x /= n;\n}\n\nvector<long long> multiply(const vector<long long> &a, const vector<long long> &b) {\n    if (a.empty() || b.empty()) return {};\n    int need = a.size() + b.size() - 1, n = 1;\n    while (n < need) n <<= 1;                     // potęga dwójki >= |A| + |B| - 1 (inaczej splot się „zawinie”)\n    vector<cd> fa(a.begin(), a.end()), fb(b.begin(), b.end());\n    fa.resize(n); fb.resize(n);\n    fft(fa, false); fft(fb, false);               // wartości w n pierwiastkach z jedności\n    for (int i = 0; i < n; i++) fa[i] *= fb[i];   // iloczyn wielomianów = iloczyn wartości\n    fft(fa, true);                                // z powrotem do współczynników\n    vector<long long> res(need);\n    for (int i = 0; i < need; i++) res[i] = llround(fa[i].real());   // llround, NIE (long long)!\n    return res;\n}\n\nint main() {\n    ios::sync_with_stdio(false); cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<long long> a(n), b(m);\n    for (auto &x : a) cin >> x;\n    for (auto &x : b) cin >> x;\n    vector<long long> c = multiply(a, b);\n    for (size_t i = 0; i < c.size(); i++) cout << c[i] << \" \\n\"[i + 1 == c.size()];\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Metoda",
+      "Złożoność",
+      "Kiedy"
+     ],
+     "rows": [
+      [
+       "Naiwny splot (2 pętle)",
+       "O(n·m)",
+       "n·m ≤ ~10^8"
+      ],
+      [
+       "Karatsuba",
+       "O(n^1,58)",
+       "rzadko na OI; gdy nie chcesz liczb zespolonych"
+      ],
+      [
+       "FFT na complex<double>",
+       "O(n log n)",
+       "liczby całkowite, wynik ≤ ~10^14 (bez modulo)"
+      ],
+      [
+       "NTT modulo 998244353",
+       "O(n log n)",
+       "wynik modulo 998244353 (albo inna liczba c·2^k + 1)"
+      ],
+      [
+       "3 × NTT + CRT / FFT z podziałem",
+       "O(n log n), stała ×3",
+       "modulo dowolna liczba, np. 10^9+7"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Zastosowania na OI:**\n- **Sumy par**: `ca[x]` = ile razy x występuje w A, `cb[y]` — w B; splot `ca * cb` w indeksie s daje liczbę par\n  z sumą s (wartości ≤ 10^6 → splot długości 2·10^6).\n- **Dopasowanie z przesunięciem**: odwróć wzorzec; splot tekstu z odwróconym wzorcem w indeksie `i + m − 1`\n  to `Σ t[i+j]·p[j]`. Dla każdej litery osobno (indykatory 0/1) — liczba zgodnych pozycji przy każdym przesunięciu.\n- **Duże liczby**: cyfry to współczynniki wielomianu w punkcie x = 10; po splocie robimy przeniesienia."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: iloczyn dwóch liczb o ~10^6 cyfrach",
+     "code": "// Iloczyn dwóch wielkich liczb naturalnych (do ~10^6 cyfr) przez FFT. Wejście: dwie liczby w osobnych wierszach.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef complex<double> cd;\nconst double PI = acos(-1.0);\n\nvoid fft(vector<cd> &a, bool invert) {\n    int n = a.size();\n    for (int i = 1, j = 0; i < n; i++) {          // permutacja bit-reverse\n        int bit = n >> 1;\n        for (; j & bit; bit >>= 1) j ^= bit;\n        j ^= bit;\n        if (i < j) swap(a[i], a[j]);\n    }\n    vector<cd> root(n / 2);                       // pierwiastki z cos/sin wprost — bez kumulacji błędu\n    for (int i = 0; i < n / 2; i++) root[i] = polar(1.0, (invert ? -2 : 2) * PI * i / n);\n    for (int len = 2; len <= n; len <<= 1) {      // motylki: łączymy bloki długości len/2\n        int step = n / len;\n        for (int i = 0; i < n; i += len)\n            for (int j = 0; j < len / 2; j++) {\n                cd u = a[i + j], v = a[i + j + len / 2] * root[j * step];\n                a[i + j] = u + v;\n                a[i + j + len / 2] = u - v;\n            }\n    }\n    if (invert) for (cd &x : a) x /= n;\n}\n\nint main() {\n    string s, t;\n    cin >> s >> t;\n    int need = s.size() + t.size() - 1, n = 1;\n    while (n < need) n <<= 1;\n    vector<cd> a(n), b(n);\n    for (size_t i = 0; i < s.size(); i++) a[i] = s[s.size() - 1 - i] - '0';   // cyfry od najmłodszej\n    for (size_t i = 0; i < t.size(); i++) b[i] = t[t.size() - 1 - i] - '0';\n    fft(a, false); fft(b, false);\n    for (int i = 0; i < n; i++) a[i] *= b[i];\n    fft(a, true);\n    vector<long long> d(need + 1, 0);\n    long long carry = 0;\n    for (int i = 0; i < need; i++) {                      // przeniesienia (wartości ≤ 81·10^6)\n        long long v = llround(a[i].real()) + carry;\n        d[i] = v % 10; carry = v / 10;\n    }\n    int len = need;\n    while (carry > 0) { if (len == (int)d.size()) d.push_back(0); d[len++] = carry % 10; carry /= 10; }\n    while (len > 1 && d[len - 1] == 0) len--;             // zera wiodące (np. gdy jedna liczba to 0)\n    string res;\n    for (int i = len - 1; i >= 0; i--) res += char('0' + d[i]);\n    cout << res << \"\\n\";\n}"
+    },
+    {
+     "type": "tip",
+     "md": "**Precyzja (zmierzone):** pierwiastki `ω^j` licz **wprost** z `polar(1.0, kąt)` — jak w kodzie wyżej.\nPopularna wersja z `w *= wlen` w pętli kumuluje błąd: dla n = 10^6 i współczynników ≤ 1000 daje błędne\nwyniki (błąd 0,5), a wersja z tablicą — błąd 0,0002. Bezpieczna reguła: największy współczynnik WYNIKU\n≲ 10^14 (np. n = 10^6 i a_i ≤ 10^4). Przy ~10^15 i więcej → NTT albo rozbicie `a = a1·2^15 + a0`."
+    },
+    {
+     "type": "warn",
+     "md": "`(long long)fa[i].real()` **obcina**: 14,9999999 → 14. Zawsze `llround(fa[i].real())`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "void fft(vector<complex<double>> &a, bool invert)",
+     "desc": "transformata w miejscu; invert = true liczy odwrotną (z dzieleniem przez n); a.size() = potęga 2",
+     "complexity": "O(n log n)",
+     "returns": "void"
+    },
+    {
+     "sig": "vector<long long> multiply(const vector<long long> &a, const vector<long long> &b)",
+     "desc": "współczynniki iloczynu A·B (długość |A| + |B| − 1), zaokrąglone llround",
+     "complexity": "O(n log n)",
+     "returns": "vector<long long>",
+     "example": "multiply({1, 2, 3}, {4, 5}) == {4, 13, 22, 15}"
+    }
+   ],
+   "pitfalls": [
+    "Rozmiar transformaty < |A| + |B| − 1 — splot jest cykliczny, końcowe wyrazy dodają się do początkowych.",
+    "Rzutowanie `(long long)x.real()` zamiast `llround` — wyniki o 1 za małe.",
+    "Pierwiastki liczone przez `w *= wlen` — błąd narasta; przy n ~ 10^6 wyniki bywają złe. Licz `polar(1.0, kąt)`.",
+    "Wyniki > ~10^15 nie mieszczą się dokładnie w double (53 bity mantysy) — FFT po cichu zwraca bzdury.",
+    "Zwykłe FFT nie liczy modulo 10^9+7: współczynniki ~10^9 dają iloczyny ~10^18·n. Potrzebne 3 × NTT + CRT albo podział.",
+    "Brak dzielenia przez n w transformacie odwrotnej — wszystkie wyniki n razy za duże.",
+    "Pamięć: complex<double> = 16 B, n = 2^21 → 32 MB na jedną tablicę; trzy takie tablice to już ~100 MB."
+   ],
+   "qa": [
+    {
+     "q": [
+      "mnozenie wielomianow fft",
+      "mnożenie wielomianów szybko",
+      "fft c++",
+      "fft kod",
+      "jak pomnożyć dwa wielomiany w n log n",
+      "polynomial multiplication fft",
+      "szybka transformata fouriera kod",
+      "fft implementacja"
+     ],
+     "a": "Rozszerz oba ciągi zerami do potęgi dwójki `n ≥ |A| + |B| − 1`, zrób `fft` obu, pomnóż tablice punktowo,\nzrób `fft` odwrotne i zaokrąglij `llround`. Całość O(n log n); dla n = 2^20 ok. 0,15 s.",
+     "code": "typedef complex<double> cd;\nconst double PI = acos(-1.0);\n\nvoid fft(vector<cd> &a, bool invert) {\n    int n = a.size();\n    for (int i = 1, j = 0; i < n; i++) {          // permutacja bit-reverse\n        int bit = n >> 1;\n        for (; j & bit; bit >>= 1) j ^= bit;\n        j ^= bit;\n        if (i < j) swap(a[i], a[j]);\n    }\n    vector<cd> root(n / 2);                       // pierwiastki z cos/sin wprost — bez kumulacji błędu\n    for (int i = 0; i < n / 2; i++) root[i] = polar(1.0, (invert ? -2 : 2) * PI * i / n);\n    for (int len = 2; len <= n; len <<= 1) {      // motylki: łączymy bloki długości len/2\n        int step = n / len;\n        for (int i = 0; i < n; i += len)\n            for (int j = 0; j < len / 2; j++) {\n                cd u = a[i + j], v = a[i + j + len / 2] * root[j * step];\n                a[i + j] = u + v;\n                a[i + j + len / 2] = u - v;\n            }\n    }\n    if (invert) for (cd &x : a) x /= n;\n}\n\nvector<long long> multiply(const vector<long long> &a, const vector<long long> &b) {\n    int need = a.size() + b.size() - 1, n = 1;\n    while (n < need) n <<= 1;\n    vector<cd> fa(a.begin(), a.end()), fb(b.begin(), b.end());\n    fa.resize(n); fb.resize(n);\n    fft(fa, false); fft(fb, false);\n    for (int i = 0; i < n; i++) fa[i] *= fb[i];\n    fft(fa, true);\n    vector<long long> res(need);\n    for (int i = 0; i < need; i++) res[i] = llround(fa[i].real());\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "co to jest splot",
+      "splot ciagow",
+      "splot dwoch tablic",
+      "convolution c++",
+      "c[k] = suma a[i]*b[k-i]",
+      "splot dyskretny",
+      "what is convolution"
+     ],
+     "a": "Splot `c = a * b`: `c[k] = Σ a[i]·b[k−i]` po wszystkich i, dla których oba indeksy istnieją. To dokładnie\nwspółczynniki iloczynu wielomianów o współczynnikach a i b. Naiwnie O(n·m) — wystarcza do n·m ≈ 10^8;\ndla większych FFT/NTT w O(n log n).",
+     "code": "vector<long long> a = {1, 2, 3}, b = {4, 5};      // (1 + 2x + 3x^2)(4 + 5x)\nvector<long long> c(a.size() + b.size() - 1, 0);\nfor (size_t i = 0; i < a.size(); i++)\n    for (size_t j = 0; j < b.size(); j++) c[i + j] += a[i] * b[j];\nfor (long long x : c) cout << x << \" \";         // 4 13 22 15"
+    },
+    {
+     "q": [
+      "fft precyzja",
+      "fft zle wyniki",
+      "fft blad zaokraglenia",
+      "fft double dokladnosc",
+      "fft precision error",
+      "fft wynik o 1 za maly",
+      "fft llround",
+      "fft daje zle liczby"
+     ],
+     "a": "Trzy przyczyny: (1) `(long long)x.real()` obcina — używaj `llround`; (2) pierwiastki z `w *= wlen`\nkumulują błąd — licz je wprost `polar(1.0, 2·π·j/n)`; (3) wynik za duży dla double — bezpiecznie do ~10^14\nna współczynnik. Większe wartości: NTT (modulo) albo rozbij liczby na części `a = a1·2^15 + a0`\ni zrób kilka splotów mniejszych liczb.",
+     "code": "complex<double> z(14.9999999, 0);\ncout << (long long)z.real() << \" \" << llround(z.real()) << \"\\n\";   // 14 15"
+    },
+    {
+     "q": [
+      "mnozenie duzych liczb fft",
+      "mnożenie wielkich liczb",
+      "iloczyn liczb milion cyfr",
+      "big integer multiplication fft",
+      "mnozenie bignum szybko",
+      "mnozenie liczb jako stringi fft",
+      "mnozenie dlugich liczb"
+     ],
+     "a": "Cyfry od najmłodszej to współczynniki wielomianu (liczba = jego wartość w x = 10). Splot cyfr daje\n„kolumny” mnożenia pisemnego (każda ≤ 81·n), potem przeniesienia od najmłodszej. Pełny program jest\nw artykule. Przeniesienia po splocie:",
+     "code": "vector<long long> c = {18, 21, 6};   // splot cyfr 23 = {3, 2} i 36 = {6, 3}\nstring res;\nlong long carry = 0;\nfor (size_t i = 0; i < c.size() || carry; i++) {\n    long long v = carry + (i < c.size() ? c[i] : 0);\n    res += char('0' + v % 10);\n    carry = v / 10;\n}\nwhile (res.size() > 1 && res.back() == '0') res.pop_back();\nreverse(res.begin(), res.end());\ncout << res << \"\\n\";   // 828"
+    },
+    {
+     "q": [
+      "fft czy ntt",
+      "kiedy ntt a kiedy fft",
+      "fft modulo",
+      "fft vs ntt",
+      "fft modulo 998244353",
+      "fft modulo 1e9+7",
+      "co wybrac fft czy ntt"
+     ],
+     "a": "- Wynik **bez modulo**, wartości ≤ ~10^14 → FFT na `complex<double>`.\n- Wynik **modulo 998244353** (albo inna liczba c·2^k + 1) → NTT: dokładne, bez problemów z precyzją.\n- Modulo **10^9+7** lub dowolne → trzy NTT na różnych liczbach pierwszych + CRT (Garner), albo FFT z podziałem\n  liczb na połówki 15-bitowe."
+    },
+    {
+     "q": [
+      "ile par daje sume s fft",
+      "liczba par o sumie k",
+      "zliczanie sum par fft",
+      "count pairs with sum fft",
+      "wszystkie mozliwe sumy a_i + b_j",
+      "sumy par z dwoch zbiorow",
+      "ile sposobow sumy dwoch liczb"
+     ],
+     "a": "Zrób tablice zliczeń `ca[x]` (ile razy x w A) i `cb[y]`. Ich splot w indeksie s to liczba par (i, j)\nz `a_i + b_j = s`. Wartości do 10^6 → splot długości 2·10^6, O(V log V). Dla par z jednego zbioru (i < j)\nodejmij przypadki i = j (`ca[x]` dla sumy 2x) i podziel przez 2.",
+     "code": "vector<int> A = {1, 2, 2}, B = {3, 5};\nint V = 5;\nvector<long long> ca(V + 1, 0), cb(V + 1, 0);\nfor (int x : A) ca[x]++;\nfor (int y : B) cb[y]++;\n// vector<long long> c = multiply(ca, cb);   // c[s] = liczba par z sumą s, np. c[4] = 1, c[5] = 2, c[7] = 2"
+    },
+    {
+     "q": [
+      "dopasowanie wzorca z jokerami fft",
+      "wzorzec ze znakami zapytania fft",
+      "pattern matching wildcard fft",
+      "liczba zgodnych pozycji dla kazdego przesuniecia",
+      "string matching fft",
+      "wyszukiwanie wzorca fft"
+     ],
+     "a": "Dla wzorca p (długość m) i tekstu t: przy dopasowaniu w pozycji i suma `Σ p_j·t_{i+j}·(p_j − t_{i+j})²`\njest zerem (joker = 0, litery = 1..26). Rozpisz kwadrat → trzy sploty (`p³·t`, `p²·t²`, `p·t³`) z odwróconym\nwzorcem, O((n + m) log(n + m)). Dla liczby zgodnych znaków: osobny splot indykatorów dla każdej litery\n(małe alfabety, np. DNA). Bez jokerów wystarczy KMP/Z/haszowanie."
+    },
+    {
+     "q": [
+      "fft rekurencyjnie",
+      "fft rekurencyjne",
+      "najprostsze fft",
+      "fft recursive",
+      "fft dziel i zwyciezaj",
+      "jak dziala fft"
+     ],
+     "a": "Podziel współczynniki na parzyste i nieparzyste, policz rekurencyjnie oba FFT rozmiaru n/2 i połącz:\n`A(ω^k) = A0(ω^2k) + ω^k·A1(ω^2k)`, `A(ω^(k+n/2)) = A0(ω^2k) − ω^k·A1(ω^2k)`. Najłatwiej zrozumieć,\nale alokuje wektory na każdym poziomie — 2–3× wolniejsze od iteracyjnego.",
+     "code": "typedef complex<double> cd;\nvoid fftRec(vector<cd> &a, bool invert) {          // a.size() = potęga dwójki\n    int n = a.size();\n    if (n == 1) return;\n    vector<cd> a0(n / 2), a1(n / 2);\n    for (int i = 0; 2 * i < n; i++) { a0[i] = a[2 * i]; a1[i] = a[2 * i + 1]; }   // parzyste / nieparzyste\n    fftRec(a0, invert);\n    fftRec(a1, invert);\n    double ang = 2 * acos(-1.0) / n * (invert ? -1 : 1);\n    for (int k = 0; 2 * k < n; k++) {\n        cd w = polar(1.0, ang * k);                 // ω^k\n        a[k] = a0[k] + w * a1[k];                   // A(ω^k)       = A0(ω^2k) + ω^k A1(ω^2k)\n        a[k + n / 2] = a0[k] - w * a1[k];           // A(ω^(k+n/2)) = A0(ω^2k) - ω^k A1(ω^2k)\n        if (invert) { a[k] /= 2; a[k + n / 2] /= 2; }   // na wszystkich poziomach razem: / n\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "fft zlozonosc",
+      "jak szybkie jest fft",
+      "fft czas dzialania",
+      "fft complexity",
+      "fft dla n 10^6",
+      "fft limit czasu"
+     ],
+     "a": "O(n log n) dla n = potęga 2 ≥ |A| + |B| − 1. Zmierzone (g++ -O2): pełne mnożenie (3 transformaty)\ndla n = 2^18 ≈ 0,03 s, 2^20 ≈ 0,15 s, 2^21 ≈ 0,35 s. Splot dwóch ciągów po 10^6 wymaga n = 2^21."
+    }
+   ],
+   "related": [
+    "math-ntt",
+    "math-bignum",
+    "math-fast-pow",
+    "str-hashing",
+    "math-matrix-pow"
+   ]
+  },
+  {
+   "id": "math-ntt",
+   "title": "NTT — mnożenie wielomianów modulo 998244353 (transformata liczbowa)",
+   "category": "Matematyka",
+   "tags": [
+    "ntt",
+    "number theoretic transform",
+    "998244353",
+    "pierwiastek pierwotny",
+    "splot modulo",
+    "mnożenie wielomianów modulo",
+    "crt",
+    "garner"
+   ],
+   "aliases": [
+    "ntt",
+    "ntt c++",
+    "number theoretic transform",
+    "transformata liczbowa",
+    "998244353",
+    "fft modulo",
+    "splot modulo",
+    "mnożenie wielomianów modulo",
+    "mnozenie wielomianow modulo p",
+    "pierwiastek pierwotny",
+    "primitive root",
+    "ntt modulo",
+    "convolution modulo"
+   ],
+   "summary": "NTT to FFT w arytmetyce modulo liczba pierwsza p: zamiast zespolonych pierwiastków z jedności używa potęg pierwiastka pierwotnego g. Wynik jest dokładny (modulo p), bez błędów zaokrągleń. Wymaga p = c·2^k + 1, np. 998244353 = 119·2^23 + 1 z g = 3; modulo 10^9+7 — trzy NTT + CRT.",
+   "complexity": "O(n log n) mnożeń modulo; n = potęga 2 ≤ 2^23 dla 998244353",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "FFT potrzebuje elementu ω rzędu dokładnie n (`ω^n = 1`, `ω^(n/2) = −1`). Modulo liczba pierwsza p grupa\nniezerowych reszt jest cykliczna rzędu p − 1 i generuje ją **pierwiastek pierwotny** g. Jeśli n dzieli p − 1,\nto `ω_n = g^((p−1)/n)` ma rząd n i spełnia te same tożsamości co `e^(2πi/n)`. Dlatego p ma postać\n`c·2^k + 1`: dla 998244353 − 1 = 2^23·7·17 można robić transformaty do n = 2^23 ≈ 8,4·10^6.\n\nKod jest identyczny z FFT: `complex<double>` → `long long` modulo p, `ω = g^((p−1)/len)`, w transformacie\nodwrotnej `ω^(−1)` i mnożenie przez `n^(−1) mod p` zamiast dzielenia przez n."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: mnożenie wielomianów modulo 998244353",
+     "code": "// Mnożenie wielomianów modulo 998244353 przez NTT. Wejście: n, m, współczynniki A (n), B (m).\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst ll MOD = 998244353, G = 3;   // 998244353 = 119 * 2^23 + 1, pierwiastek pierwotny 3\n\nll power(ll a, ll e) {\n    ll r = 1; a %= MOD;\n    for (; e > 0; e >>= 1, a = a * a % MOD)\n        if (e & 1) r = r * a % MOD;\n    return r;\n}\n\nvoid ntt(vector<ll> &a, bool invert) {\n    int n = a.size();\n    for (int i = 1, j = 0; i < n; i++) {          // permutacja bit-reverse (jak w FFT)\n        int bit = n >> 1;\n        for (; j & bit; bit >>= 1) j ^= bit;\n        j ^= bit;\n        if (i < j) swap(a[i], a[j]);\n    }\n    for (int len = 2; len <= n; len <<= 1) {\n        ll wlen = power(G, (MOD - 1) / len);      // pierwiastek z jedności stopnia len\n        if (invert) wlen = power(wlen, MOD - 2);  // odwrotny dla transformaty odwrotnej\n        for (int i = 0; i < n; i += len) {\n            ll w = 1;\n            for (int j = 0; j < len / 2; j++) {\n                ll u = a[i + j], v = a[i + j + len / 2] * w % MOD;\n                a[i + j] = u + v < MOD ? u + v : u + v - MOD;\n                a[i + j + len / 2] = u - v >= 0 ? u - v : u - v + MOD;\n                w = w * wlen % MOD;\n            }\n        }\n    }\n    if (invert) {\n        ll inv_n = power(n, MOD - 2);\n        for (ll &x : a) x = x * inv_n % MOD;\n    }\n}\n\nvector<ll> multiply(vector<ll> a, vector<ll> b) {\n    if (a.empty() || b.empty()) return {};\n    int need = a.size() + b.size() - 1, n = 1;\n    while (n < need) n <<= 1;\n    a.resize(n); b.resize(n);\n    ntt(a, false); ntt(b, false);\n    for (int i = 0; i < n; i++) a[i] = a[i] * b[i] % MOD;\n    ntt(a, true);\n    a.resize(need);\n    return a;\n}\n\nint main() {\n    ios::sync_with_stdio(false); cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<ll> a(n), b(m);\n    for (auto &x : a) { cin >> x; x %= MOD; if (x < 0) x += MOD; }\n    for (auto &x : b) { cin >> x; x %= MOD; if (x < 0) x += MOD; }\n    vector<ll> c = multiply(a, b);\n    for (size_t i = 0; i < c.size(); i++) cout << c[i] << \" \\n\"[i + 1 == c.size()];\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "p",
+      "p − 1",
+      "g (pierwiastek pierwotny)",
+      "max n"
+     ],
+     "rows": [
+      [
+       "998244353",
+       "2^23 · 7 · 17",
+       "3",
+       "2^23 ≈ 8,4·10^6"
+      ],
+      [
+       "167772161",
+       "2^25 · 5",
+       "3",
+       "2^25"
+      ],
+      [
+       "469762049",
+       "2^26 · 7",
+       "3",
+       "2^26"
+      ],
+      [
+       "754974721",
+       "2^24 · 3^2 · 5",
+       "11",
+       "2^24"
+      ],
+      [
+       "7340033",
+       "2^20 · 7",
+       "3",
+       "2^20"
+      ],
+      [
+       "1000000007",
+       "2 · 500000003",
+       "5",
+       "tylko 2 — NIE nadaje się do NTT"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Modulo dowolna liczba (np. 10^9+7).** Prawdziwy współczynnik splotu (przed modulo) jest < n·mod² ≈ 10^24.\nLiczymy go modulo trzy liczby NTT (998244353, 167772161, 469762049 — iloczyn ≈ 7,8·10^25), odtwarzamy\nmetodą Garnera (CRT krok po kroku, bez __int128) i dopiero wtedy bierzemy modulo docelowe."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: splot modulo 10^9+7 (3 × NTT + CRT)",
+     "code": "// Splot modulo DOWOLNA liczba (np. 10^9+7): trzy NTT na różnych liczbach pierwszych + CRT (Garner).\n// Działa, gdy prawdziwy współczynnik < m1*m2*m3 ≈ 7,8·10^25 (np. n ≤ 10^6, wartości < 10^9+7).\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\n\nll power(ll a, ll e, ll m) {\n    ll r = 1; a %= m;\n    for (; e > 0; e >>= 1, a = a * a % m)\n        if (e & 1) r = r * a % m;\n    return r;\n}\n\ntemplate <ll MOD, ll G>\nvector<ll> mulMod(vector<ll> a, vector<ll> b) {   // zwykłe NTT dla jednej liczby pierwszej\n    int need = a.size() + b.size() - 1, n = 1;\n    while (n < need) n <<= 1;\n    a.resize(n); b.resize(n);\n    auto ntt = [&](vector<ll> &x, bool inv) {\n        for (int i = 1, j = 0; i < n; i++) {\n            int bit = n >> 1;\n            for (; j & bit; bit >>= 1) j ^= bit;\n            j ^= bit;\n            if (i < j) swap(x[i], x[j]);\n        }\n        for (int len = 2; len <= n; len <<= 1) {\n            ll wl = power(G, (MOD - 1) / len, MOD);\n            if (inv) wl = power(wl, MOD - 2, MOD);\n            for (int i = 0; i < n; i += len) {\n                ll w = 1;\n                for (int j = 0; j < len / 2; j++, w = w * wl % MOD) {\n                    ll u = x[i + j], v = x[i + j + len / 2] * w % MOD;\n                    x[i + j] = (u + v) % MOD;\n                    x[i + j + len / 2] = (u - v + MOD) % MOD;\n                }\n            }\n        }\n        if (inv) { ll ni = power(n, MOD - 2, MOD); for (ll &v : x) v = v * ni % MOD; }\n    };\n    for (ll &v : a) v %= MOD;\n    for (ll &v : b) v %= MOD;\n    ntt(a, false); ntt(b, false);\n    for (int i = 0; i < n; i++) a[i] = a[i] * b[i] % MOD;\n    ntt(a, true);\n    a.resize(need);\n    return a;\n}\n\nvector<ll> multiplyAnyMod(const vector<ll> &a, const vector<ll> &b, ll mod) {\n    const ll m1 = 998244353, m2 = 167772161, m3 = 469762049;\n    auto c1 = mulMod<m1, 3>(a, b), c2 = mulMod<m2, 3>(a, b), c3 = mulMod<m3, 3>(a, b);\n    const ll inv_m1_m2 = power(m1, m2 - 2, m2);               // m1^(-1) mod m2\n    const ll inv_m12_m3 = power(m1 % m3 * m2 % m3, m3 - 2, m3); // (m1*m2)^(-1) mod m3\n    const ll m12_mod = m1 % mod * (m2 % mod) % mod;\n    vector<ll> res(c1.size());\n    for (size_t i = 0; i < c1.size(); i++) {\n        ll x1 = c1[i];                                                   // x = x1 + x2*m1 + x3*m1*m2\n        ll x2 = (c2[i] - x1 % m2 + m2) % m2 * inv_m1_m2 % m2;\n        ll t = (x1 + x2 * m1) % m3;                                      // x2*m1 < 1,7·10^17 — mieści się\n        ll x3 = (c3[i] - t + m3) % m3 * inv_m12_m3 % m3;\n        res[i] = (x1 % mod + x2 % mod * (m1 % mod) + x3 % mod * m12_mod) % mod;\n    }\n    return res;\n}\n\nint main() {\n    const ll MOD = 1'000'000'007;\n    int n, m;\n    cin >> n >> m;\n    vector<ll> a(n), b(m);\n    for (auto &x : a) cin >> x;\n    for (auto &x : b) cin >> x;\n    auto c = multiplyAnyMod(a, b, MOD);\n    for (size_t i = 0; i < c.size(); i++) cout << c[i] << \" \\n\"[i + 1 == c.size()];\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Mnożenie `a * b % MOD` dla a, b < 998244353 < 2^30 mieści się w `long long` (< 2^60). Szybsza wersja\nna `int`/`unsigned` wymaga rzutowania iloczynu na 64 bity — w `int` przepełni się."
+    },
+    {
+     "type": "warn",
+     "md": "NTT liczy wynik **modulo p**. Jeśli potrzebujesz prawdziwych wartości (np. liczby par ≤ 10^12) i mogą\nprzekroczyć p, użyj FFT na double albo dwóch liczb pierwszych + CRT."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "void ntt(vector<long long> &a, bool invert)",
+     "desc": "transformata modulo 998244353 w miejscu; invert = true — odwrotna (z mnożeniem przez n^(−1))",
+     "complexity": "O(n log n)",
+     "returns": "void"
+    },
+    {
+     "sig": "vector<long long> multiply(vector<long long> a, vector<long long> b)",
+     "desc": "splot modulo 998244353, długość |A| + |B| − 1",
+     "complexity": "O(n log n)",
+     "returns": "vector<long long>"
+    },
+    {
+     "sig": "vector<long long> multiplyAnyMod(const vector<long long> &a, const vector<long long> &b, long long mod)",
+     "desc": "splot modulo dowolna liczba ≤ ~2·10^9 (3 × NTT + Garner)",
+     "complexity": "O(n log n), stała ×3",
+     "returns": "vector<long long>"
+    }
+   ],
+   "pitfalls": [
+    "NTT z MOD = 10^9+7 — p − 1 = 2·500000003, brak pierwiastków stopnia 2^k, wyniki są śmieciami.",
+    "Rozmiar transformaty większy niż 2^23 przy 998244353 — `(MOD − 1) / len` przestaje być całkowite.",
+    "Ujemne współczynniki na wejściu — znormalizuj do [0, p) przed transformatą.",
+    "Zapomniane mnożenie przez `n^(−1)` w transformacie odwrotnej.",
+    "Iloczyn w `int` — przepełnienie; licz `(long long)a * b % MOD`.",
+    "Wynik jest modulo p — prawdziwe wartości większe niż p są tracone.",
+    "Liczenie `power(G, …)` w najgłębszej pętli zamiast raz na poziom — dodatkowe log p na każdy motylek."
+   ],
+   "qa": [
+    {
+     "q": [
+      "ntt",
+      "ntt c++",
+      "ntt kod",
+      "number theoretic transform",
+      "mnozenie wielomianow modulo 998244353",
+      "jak napisac ntt",
+      "transformata liczbowa",
+      "ntt implementacja"
+     ],
+     "a": "Weź kod FFT i zamień `complex<double>` na `long long` modulo 998244353: pierwiastek stopnia len to\n`power(3, (MOD−1)/len)`, w odwrotnej — jego odwrotność, a na końcu pomnóż przez `n^(−1)`.\nWynik jest dokładny modulo p. Pełny program z `multiply` jest w artykule.",
+     "code": "const long long MOD = 998244353, G = 3;\nlong long power(long long a, long long e) {\n    long long r = 1; a %= MOD;\n    for (; e > 0; e >>= 1, a = a * a % MOD) if (e & 1) r = r * a % MOD;\n    return r;\n}\nvoid ntt(vector<long long> &a, bool invert) {\n    int n = a.size();\n    for (int i = 1, j = 0; i < n; i++) {\n        int bit = n >> 1;\n        for (; j & bit; bit >>= 1) j ^= bit;\n        j ^= bit;\n        if (i < j) swap(a[i], a[j]);\n    }\n    for (int len = 2; len <= n; len <<= 1) {\n        long long wl = power(G, (MOD - 1) / len);\n        if (invert) wl = power(wl, MOD - 2);\n        for (int i = 0; i < n; i += len) {\n            long long w = 1;\n            for (int j = 0; j < len / 2; j++, w = w * wl % MOD) {\n                long long u = a[i + j], v = a[i + j + len / 2] * w % MOD;\n                a[i + j] = (u + v) % MOD;\n                a[i + j + len / 2] = (u - v + MOD) % MOD;\n            }\n        }\n    }\n    if (invert) { long long ni = power(n, MOD - 2); for (auto &x : a) x = x * ni % MOD; }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dlaczego 998244353",
+      "czemu modulo 998244353",
+      "998244353 dlaczego taka liczba",
+      "why 998244353",
+      "skad sie bierze 998244353",
+      "co jest specjalnego w 998244353"
+     ],
+     "a": "998244353 = 119·2^23 + 1 jest pierwsza, a p − 1 dzieli się przez 2^23. Dzięki temu istnieją pierwiastki\nz jedności stopnia 2, 4, …, 2^23 (`g^((p−1)/n)` dla g = 3) i można robić NTT do n ≈ 8,4·10^6. Mieści się\nw `int` (< 2^30), więc iloczyn dwóch reszt mieści się w `long long`. Zadania z odpowiedzią „modulo 998244353”\nto często podpowiedź, że rozwiązanie wzorcowe używa NTT.",
+     "code": "cout << (998244353 - 1) / (1 << 23) << \" \" << (998244353 - 1) % (1 << 23) << \"\\n\";   // 119 0"
+    },
+    {
+     "q": [
+      "pierwiastek pierwotny",
+      "pierwiastek pierwotny modulo p",
+      "primitive root modulo",
+      "generator modulo p",
+      "jak znalezc pierwiastek pierwotny",
+      "g = 3 ntt",
+      "primitive root c++"
+     ],
+     "a": "g jest pierwiastkiem pierwotnym modulo p ⇔ `g^((p−1)/q) ≠ 1` dla każdego pierwszego dzielnika q liczby p − 1.\nRozłóż p − 1, sprawdzaj g = 2, 3, … — mały pierwiastek znajduje się szybko. Dla 998244353, 167772161,\n469762049 jest to 3; dla 10^9+7 — 5.",
+     "code": "long long pw(long long a, long long e, long long m) {\n    long long r = 1; a %= m;\n    for (; e > 0; e >>= 1, a = a * a % m) if (e & 1) r = r * a % m;\n    return r;\n}\nlong long primitiveRoot(long long p) {              // p pierwsze\n    vector<long long> q;                            // dzielniki pierwsze p - 1\n    long long m = p - 1;\n    for (long long d = 2; d * d <= m; d++)\n        if (m % d == 0) { q.push_back(d); while (m % d == 0) m /= d; }\n    if (m > 1) q.push_back(m);\n    for (long long g = 2; ; g++) {\n        bool ok = true;\n        for (long long d : q)\n            if (pw(g, (p - 1) / d, p) == 1) { ok = false; break; }\n        if (ok) return g;\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ntt modulo 1e9+7",
+      "ntt 10^9+7",
+      "splot modulo dowolna liczba",
+      "arbitrary mod convolution",
+      "mnozenie wielomianow mod 1000000007",
+      "ntt dowolny modul",
+      "fft modulo 1e9+7 jak"
+     ],
+     "a": "Bezpośrednio się nie da (10^9+7 − 1 = 2·500000003). Policz splot trzema NTT modulo 998244353, 167772161\ni 469762049, a potem odtwórz prawdziwą wartość (< 7,8·10^25) metodą Garnera: `x = x1 + x2·m1 + x3·m1·m2`\ni weź ją modulo 10^9+7. Pełny program `multiplyAnyMod` jest w artykule. Alternatywa: FFT z podziałem\nliczb na części 15-bitowe (4–5 transformat na double)."
+    },
+    {
+     "q": [
+      "ntt zle wyniki",
+      "ntt nie dziala",
+      "ntt bledy",
+      "ntt overflow",
+      "ntt wrong answer",
+      "ntt sie psuje"
+     ],
+     "a": "Sprawdź: (1) MOD ma postać c·2^k + 1 i n ≤ 2^k; (2) g to pierwiastek pierwotny tego MOD; (3) iloczyny w\n`long long`, nie w `int`; (4) wejście znormalizowane do [0, MOD) (ujemne!); (5) w odwrotnej użyto `ω^(−1)`\ni pomnożono przez `n^(−1)`; (6) rozmiar ≥ |A| + |B| − 1; (7) potrzebujesz wyniku modulo p, a nie dokładnego."
+    },
+    {
+     "q": [
+      "potega wielomianu ntt",
+      "wielomian do potegi k",
+      "polynomial power",
+      "podnies wielomian do potegi",
+      "(1+x+x^2)^n modulo",
+      "szybkie potegowanie wielomianu"
+     ],
+     "a": "Szybkie potęgowanie, gdzie mnożeniem jest NTT, a po każdym mnożeniu obcinasz wielomian do potrzebnego\nstopnia D (wyższe współczynniki nie wpłyną na niższe). Koszt O(D log D · log k).",
+     "code": "vector<long long> multiply(vector<long long> a, vector<long long> b);   // NTT z artykułu\nvector<long long> polyPow(vector<long long> a, long long k, int D) {      // a^k do stopnia D\n    vector<long long> r = {1};\n    a.resize(min((int)a.size(), D + 1));\n    while (k > 0) {\n        if (k & 1) { r = multiply(r, a); if ((int)r.size() > D + 1) r.resize(D + 1); }\n        k >>= 1;\n        if (k) { a = multiply(a, a); if ((int)a.size() > D + 1) a.resize(D + 1); }\n    }\n    return r;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ntt fft roznica",
+      "czym rozni sie ntt od fft",
+      "ntt vs fft",
+      "ntt czy fft co wybrac",
+      "ntt zamiast fft"
+     ],
+     "a": "Algorytm ten sam (motylki, bit-reverse). FFT działa na liczbach zespolonych (double) — szybkie, ale z błędem\nzaokrąglenia, wynik ≤ ~10^14. NTT działa na resztach modulo p — dokładne, ale daje wynik modulo p\ni wymaga p = c·2^k + 1. Gdy zadanie każe liczyć modulo 998244353 — NTT; gdy potrzebny dokładny wynik\nrzędu ≤ 10^14 — FFT."
+    },
+    {
+     "q": [
+      "ntt maksymalny rozmiar",
+      "ile wynosi max rozmiar ntt",
+      "ntt 2^23",
+      "ntt dla n 10^7",
+      "ntt za duzy rozmiar"
+     ],
+     "a": "Dla 998244353 rozmiar transformaty n ≤ 2^23 = 8 388 608, czyli |A| + |B| − 1 ≤ ~8,4·10^6. Większe:\n469762049 (2^26) albo 167772161 (2^25). Czas: n = 2^20 ok. 0,25 s z prostym kodem (mnożenie z `%`)."
+    }
+   ],
+   "related": [
+    "math-fft",
+    "math-fast-pow",
+    "math-mod-inverse",
+    "math-crt",
+    "math-binomial"
+   ]
+  },
+  {
+   "id": "math-gauss",
+   "title": "Eliminacja Gaussa — układy równań (double i modulo p), wyznacznik, rząd macierzy",
+   "category": "Matematyka",
+   "tags": [
+    "eliminacja gaussa",
+    "gauss",
+    "gauss-jordan",
+    "układ równań",
+    "wyznacznik",
+    "rząd macierzy",
+    "macierz",
+    "modulo p",
+    "xor",
+    "kirchhoff"
+   ],
+   "aliases": [
+    "eliminacja gaussa",
+    "eliminacja gaussa c++",
+    "gauss",
+    "gaussian elimination",
+    "gauss jordan",
+    "układ równań liniowych",
+    "uklad rownan liniowych",
+    "rozwiązywanie układu równań",
+    "system of linear equations",
+    "wyznacznik macierzy",
+    "determinant",
+    "rząd macierzy",
+    "matrix rank",
+    "gauss modulo p"
+   ],
+   "summary": "Eliminacja Gaussa sprowadza macierz do postaci schodkowej operacjami na wierszach (zamiana, mnożenie, odejmowanie wielokrotności). Rozwiązuje układ n równań z m niewiadomymi (0, 1 lub nieskończenie wiele rozwiązań), liczy wyznacznik i rząd w O(n³). Modulo liczba pierwsza — dokładnie; na double — z EPS i wyborem elementu głównego.",
+   "complexity": "O(n·m·min(n, m)) — dla macierzy n×n O(n³); wersja XOR na bitset O(n³/64)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Dla każdej kolumny po kolei: wybierz wiersz z niezerowym elementem (**element główny**, pivot), zamień go\nz bieżącym i wyzeruj tę kolumnę w pozostałych wierszach, odejmując jego wielokrotność. W wariancie\n**Gaussa–Jordana** zerujemy kolumnę we wszystkich wierszach (nad i pod), więc rozwiązanie czytamy od razu.\n\n- Kolumna bez elementu głównego → **zmienna wolna** (można jej nadać dowolną wartość).\n- Wiersz `0 0 … 0 | b` z b ≠ 0 → układ **sprzeczny**.\n- **Rząd** = liczba elementów głównych. Rozwiązanie jedyne ⇔ rząd = liczba niewiadomych i brak sprzeczności.\n\nNa double zawsze wybieraj **największy co do modułu** element w kolumnie (partial pivoting) — dzielenie przez\nmałą liczbę wzmacnia błędy. Modulo p wystarczy dowolny niezerowy, a dzielenie to mnożenie przez odwrotność."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: Gauss–Jordan na double (0 / 1 / nieskończenie wiele rozwiązań)",
+     "code": "// Układ n równań liniowych z m niewiadomymi (double). Wejście: n m, potem n wierszy: a_i1 ... a_im b_i.\n// Wynik: NIE (brak rozwiązań), NIESKONCZENIE (wiele) albo wartości x_1..x_m.\n#include <bits/stdc++.h>\nusing namespace std;\nconst double EPS = 1e-9;\n\n// a: n wierszy po m+1 liczb (ostatnia kolumna = prawa strona). Zwraca 0 / 1 / 2 (= nieskończenie wiele).\nint gauss(vector<vector<double>> a, vector<double> &ans) {\n    int n = a.size(), m = (int)a[0].size() - 1;\n    vector<int> where(m, -1);                 // where[c] = wiersz, w którym zmienna c jest wiodąca\n    for (int col = 0, row = 0; col < m && row < n; col++) {\n        int sel = row;                        // częściowy wybór elementu głównego: największy |a[i][col]|\n        for (int i = row; i < n; i++)\n            if (fabs(a[i][col]) > fabs(a[sel][col])) sel = i;\n        if (fabs(a[sel][col]) < EPS) continue;   // kolumna zerowa -> zmienna wolna\n        swap(a[sel], a[row]);\n        where[col] = row;\n        for (int i = 0; i < n; i++)\n            if (i != row) {                   // zerujemy kolumnę col we WSZYSTKICH innych wierszach (Gauss–Jordan)\n                double c = a[i][col] / a[row][col];\n                for (int j = col; j <= m; j++) a[i][j] -= a[row][j] * c;\n            }\n        row++;\n    }\n    ans.assign(m, 0);\n    for (int c = 0; c < m; c++)\n        if (where[c] != -1) ans[c] = a[where[c]][m] / a[where[c]][c];\n    for (int i = 0; i < n; i++) {             // sprawdzenie: sprzeczny wiersz 0 = b, b ≠ 0\n        double s = 0;\n        for (int j = 0; j < m; j++) s += ans[j] * a[i][j];\n        if (fabs(s - a[i][m]) > EPS) return 0;\n    }\n    for (int c = 0; c < m; c++)\n        if (where[c] == -1) return 2;\n    return 1;\n}\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<double>> a(n, vector<double>(m + 1));\n    for (auto &row : a)\n        for (auto &x : row) cin >> x;\n    vector<double> x;\n    int r = gauss(a, x);\n    if (r == 0) cout << \"NIE\\n\";\n    else if (r == 2) cout << \"NIESKONCZENIE\\n\";\n    else {\n        cout << fixed << setprecision(6);\n        for (double v : x) cout << v + 0.0 << \"\\n\";   // + 0.0 usuwa \"-0.000000\"\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: Gauss modulo 10^9+7 — układ, wyznacznik, rząd",
+     "code": "// Gauss modulo liczba pierwsza p: rozwiązanie układu, wyznacznik i rząd macierzy — dokładnie, bez EPS.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst ll MOD = 1'000'000'007;\n\nll power(ll a, ll e) {\n    ll r = 1; a %= MOD;\n    for (; e > 0; e >>= 1, a = a * a % MOD)\n        if (e & 1) r = r * a % MOD;\n    return r;\n}\nll inv(ll a) { return power(a, MOD - 2); }   // MOD pierwsze -> Fermat\n\n// a: n wierszy po m+1 (ostatnia kolumna = b), wartości w [0, MOD). Zwraca 0 / 1 / 2 (nieskończenie wiele,\n// wtedy w ans jedno z rozwiązań: zmienne wolne = 0). Liczba rozwiązań przy 2 to MOD^(liczba zmiennych wolnych).\nint gaussMod(vector<vector<ll>> a, vector<ll> &ans) {\n    int n = a.size(), m = (int)a[0].size() - 1;\n    vector<int> where(m, -1);\n    int row = 0;\n    for (int col = 0; col < m && row < n; col++) {\n        int sel = -1;\n        for (int i = row; i < n; i++) if (a[i][col] != 0) { sel = i; break; }   // dowolny niezerowy\n        if (sel == -1) continue;\n        swap(a[sel], a[row]);\n        ll iv = inv(a[row][col]);\n        for (int j = col; j <= m; j++) a[row][j] = a[row][j] * iv % MOD;   // wiodący = 1\n        for (int i = 0; i < n; i++)\n            if (i != row && a[i][col] != 0) {\n                ll c = a[i][col];\n                for (int j = col; j <= m; j++) a[i][j] = (a[i][j] - c * a[row][j] % MOD + MOD) % MOD;\n            }\n        where[col] = row++;\n    }\n    for (int i = row; i < n; i++)             // wiersz 0 ... 0 | b z b ≠ 0 -> sprzeczność\n        if (a[i][m] != 0) return 0;\n    ans.assign(m, 0);\n    for (int c = 0; c < m; c++)\n        if (where[c] != -1) ans[c] = a[where[c]][m];\n    return row < m ? 2 : 1;                   // rząd < liczba zmiennych -> są zmienne wolne\n}\n\n// Wyznacznik macierzy kwadratowej modulo MOD w O(n^3).\nll detMod(vector<vector<ll>> a) {\n    int n = a.size();\n    ll det = 1;\n    for (int col = 0; col < n; col++) {\n        int sel = -1;\n        for (int i = col; i < n; i++) if (a[i][col] != 0) { sel = i; break; }\n        if (sel == -1) return 0;\n        if (sel != col) { swap(a[sel], a[col]); det = (MOD - det) % MOD; }   // zamiana wierszy = zmiana znaku\n        det = det * a[col][col] % MOD;\n        ll iv = inv(a[col][col]);\n        for (int i = col + 1; i < n; i++) {\n            ll c = a[i][col] * iv % MOD;\n            for (int j = col; j < n; j++) a[i][j] = (a[i][j] - c * a[col][j] % MOD + MOD) % MOD;\n        }\n    }\n    return det;\n}\n\n// Rząd macierzy n x m modulo MOD (liczba niezależnych wierszy).\nint rankMod(vector<vector<ll>> a) {\n    int n = a.size(), m = a[0].size(), row = 0;\n    for (int col = 0; col < m && row < n; col++) {\n        int sel = -1;\n        for (int i = row; i < n; i++) if (a[i][col] != 0) { sel = i; break; }\n        if (sel == -1) continue;\n        swap(a[sel], a[row]);\n        ll iv = inv(a[row][col]);\n        for (int i = row + 1; i < n; i++) {\n            ll c = a[i][col] * iv % MOD;\n            for (int j = col; j < m; j++) a[i][j] = (a[i][j] - c * a[row][j] % MOD + MOD) % MOD;\n        }\n        row++;\n    }\n    return row;\n}\n\nint main() {\n    int n, m;\n    cin >> n >> m;                            // n równań, m niewiadomych; wiersz: a_1 .. a_m b\n    vector<vector<ll>> a(n, vector<ll>(m + 1));\n    for (auto &r : a)\n        for (auto &x : r) { cin >> x; x %= MOD; if (x < 0) x += MOD; }\n    vector<ll> x;\n    int res = gaussMod(a, x);\n    if (res == 0) { cout << \"NIE\\n\"; return 0; }\n    if (res == 2) cout << \"wiele rozwiazan, przykladowe:\\n\";\n    for (ll v : x) cout << v << \" \";\n    cout << \"\\n\";\n    if (n == m) {                             // dla macierzy kwadratowej: wyznacznik i rząd części A\n        vector<vector<ll>> A(n, vector<ll>(m));\n        for (int i = 0; i < n; i++)\n            for (int j = 0; j < m; j++) A[i][j] = a[i][j];\n        cout << \"det = \" << detMod(A) << \", rank = \" << rankMod(A) << \"\\n\";\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sytuacja po eliminacji",
+      "Wynik"
+     ],
+     "rows": [
+      [
+       "wiersz 0 … 0 | b, b ≠ 0",
+       "brak rozwiązań"
+      ],
+      [
+       "rząd = m (liczba niewiadomych), brak sprzeczności",
+       "dokładnie jedno rozwiązanie"
+      ],
+      [
+       "rząd < m, brak sprzeczności",
+       "nieskończenie wiele (modulo p: p^(m − rząd), mod 2: 2^(m − rząd))"
+      ],
+      [
+       "macierz kwadratowa, wyznacznik ≠ 0",
+       "rząd = n, jedno rozwiązanie dla każdego b"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Wyznacznik** to iloczyn elementów głównych po eliminacji do postaci trójkątnej, ze zmianą znaku przy każdej\nzamianie wierszy (odejmowanie wielokrotności wiersza go nie zmienia). **Układy XOR** (modulo 2): wiersz\ntrzymamy w `bitset`, odejmowanie to `^=` całego wiersza — O(n³/64), więc n ≈ 2000 przechodzi."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Gauss modulo 2 na bitset (układ równań XOR)",
+     "code": "const int MAXM = 1000;                              // max liczba zmiennych\n// Układ XOR: wiersz i = współczynniki bitowe (bity 0..m-1) i prawa strona w bicie m.\n// Zwraca -1 (sprzeczny) albo liczbę zmiennych wolnych (rozwiązań jest 2^wolne); x = jedno rozwiązanie.\nint gaussXor(vector<bitset<MAXM + 1>> a, int m, bitset<MAXM> &x) {\n    int n = a.size(), row = 0;\n    vector<int> where(m, -1);\n    for (int col = 0; col < m && row < n; col++) {\n        for (int i = row; i < n; i++)\n            if (a[i][col]) { swap(a[i], a[row]); break; }\n        if (!a[row][col]) continue;\n        where[col] = row;\n        for (int i = 0; i < n; i++)\n            if (i != row && a[i][col]) a[i] ^= a[row];     // cały wiersz naraz: O(m/64)\n        row++;\n    }\n    for (int i = row; i < n; i++) if (a[i][m]) return -1;   // 0 = 1\n    x.reset();\n    for (int c = 0; c < m; c++) if (where[c] != -1) x[c] = a[where[c]][m];\n    return m - row;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Typowe zastosowania na OI: **wartości oczekiwane** w grafie z cyklami (E[v] = 1 + Σ p·E[u] — układ równań),\n„lampki/przełączniki” (XOR), **liczba drzew rozpinających** (twierdzenie Kirchhoffa = wyznacznik),\ninterpolacja wielomianu z n punktów. n ≤ ~500 dla O(n³) w 1 s."
+    },
+    {
+     "type": "warn",
+     "md": "Na double porównuj z zerem przez `fabs(x) < EPS` (np. 1e-9), nigdy `x == 0`. Gdy dane są całkowite\ni wynik ma być dokładny (np. modulo), licz modulo liczba pierwsza — bez EPS i bez ułamków."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int gauss(vector<vector<double>> a, vector<double> &ans)",
+     "desc": "Gauss–Jordan na double, a: n × (m+1); zwraca 0 (brak), 1 (jedno), 2 (nieskończenie wiele)",
+     "complexity": "O(n·m·min(n,m))",
+     "returns": "int"
+    },
+    {
+     "sig": "int gaussMod(vector<vector<long long>> a, vector<long long> &ans)",
+     "desc": "to samo modulo liczba pierwsza; przy 2 zwraca przykładowe rozwiązanie (zmienne wolne = 0)",
+     "complexity": "O(n·m·min(n,m))",
+     "returns": "int"
+    },
+    {
+     "sig": "long long detMod(vector<vector<long long>> a)",
+     "desc": "wyznacznik modulo p",
+     "complexity": "O(n³)",
+     "returns": "long long"
+    },
+    {
+     "sig": "int rankMod(vector<vector<long long>> a)",
+     "desc": "rząd macierzy modulo p",
+     "complexity": "O(n·m·min(n,m))",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Brak wyboru elementu głównego (lub wybór pierwszego niezerowego) na double — dzielenie przez 1e-12 daje śmieci.",
+    "Porównanie `a[i][col] == 0` na double — używaj EPS.",
+    "Modulo liczba złożona — nie każdy niezerowy element ma odwrotność; Gauss modulo p wymaga p pierwszego.",
+    "Zapomniana zmiana znaku wyznacznika przy zamianie wierszy.",
+    "Wypisywanie „-0.000000” — dodaj `+ 0.0` albo zamieniaj |x| < EPS na 0.",
+    "Uznanie układu za jednoznaczny bez sprawdzenia wierszy zerowych z niezerową prawą stroną (sprzeczność).",
+    "Ujemne wartości na wejściu w wersji modulo — normalizuj do [0, p)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "eliminacja gaussa",
+      "eliminacja gaussa c++",
+      "gauss kod",
+      "jak rozwiazac uklad rownan",
+      "rozwiązanie układu równań liniowych",
+      "gaussian elimination c++",
+      "uklad rownan liniowych program",
+      "gauss jordan"
+     ],
+     "a": "Dla kolumny col: znajdź wiersz z największym |a[i][col]|, zamień go z bieżącym, wyzeruj col w pozostałych\nwierszach. Kolumna bez niezerowego elementu → zmienna wolna. Na końcu: wiersz `0 = b ≠ 0` → brak rozwiązań;\nzmienne wolne → nieskończenie wiele; inaczej `x_c = b / a[c][c]`. O(n³). Pełny program w artykule."
+    },
+    {
+     "q": [
+      "wyznacznik macierzy",
+      "wyznacznik c++",
+      "jak policzyc wyznacznik",
+      "determinant c++",
+      "det macierzy",
+      "wyznacznik gauss",
+      "wyznacznik modulo p"
+     ],
+     "a": "Sprowadź macierz do trójkątnej eliminacją Gaussa; wyznacznik = iloczyn elementów na przekątnej, ×(−1) za\nkażdą zamianę wierszy. O(n³) zamiast O(n!) z definicji. Dla dokładnego wyniku licz modulo p (`detMod`\nw artykule); poniżej wersja double.",
+     "code": "double det(vector<vector<double>> a) {\n    int n = a.size();\n    double d = 1;\n    for (int c = 0; c < n; c++) {\n        int sel = c;\n        for (int i = c + 1; i < n; i++) if (fabs(a[i][c]) > fabs(a[sel][c])) sel = i;\n        if (fabs(a[sel][c]) < 1e-12) return 0;\n        if (sel != c) { swap(a[sel], a[c]); d = -d; }     // zamiana wierszy zmienia znak\n        d *= a[c][c];\n        for (int i = c + 1; i < n; i++) {\n            double k = a[i][c] / a[c][c];\n            for (int j = c; j < n; j++) a[i][j] -= k * a[c][j];\n        }\n    }\n    return d;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "rzad macierzy",
+      "rząd macierzy c++",
+      "matrix rank",
+      "ile liniowo niezaleznych wierszy",
+      "rank macierzy",
+      "liniowa niezaleznosc wektorow"
+     ],
+     "a": "Rząd = liczba elementów głównych po eliminacji Gaussa (liczba niezerowych wierszy w postaci schodkowej).\nWektory są liniowo niezależne ⇔ rząd = ich liczba. Modulo p — `rankMod` z artykułu; dla wektorów bitowych\n(XOR) — baza XOR, rząd = rozmiar bazy."
+    },
+    {
+     "q": [
+      "gauss modulo",
+      "gauss modulo p",
+      "uklad rownan modulo liczba pierwsza",
+      "gauss mod 1e9+7",
+      "eliminacja gaussa modulo",
+      "linear equations mod p",
+      "rownania modulo p"
+     ],
+     "a": "Tak samo jak na double, ale: element główny = dowolny niezerowy, dzielenie = mnożenie przez odwrotność\n(`a^(p−2)` z małego Fermata), odejmowanie `(x − c·y % p + p) % p`. Wynik dokładny, bez EPS. Liczba\nrozwiązań przy zmiennych wolnych: `p^(m − rząd)`.",
+     "code": "const long long P = 1'000'000'007;\nauto inv = [&](long long a) {\n    long long r = 1, e = P - 2;\n    a %= P;\n    for (; e; e >>= 1, a = a * a % P)\n        if (e & 1) r = r * a % P;\n    return r;\n};\nlong long a = 2, b = 3;            // równanie 2x = 3 (mod P)\nlong long x = b * inv(a) % P;\ncout << x << \"\\n\";               // 500000005, bo 2·500000005 ≡ 3"
+    },
+    {
+     "q": [
+      "gauss xor",
+      "uklad rownan xor",
+      "gauss modulo 2",
+      "gauss bitset",
+      "lights out",
+      "zapalanie lampek uklad rownan",
+      "xor equations",
+      "przelaczniki lampki gauss"
+     ],
+     "a": "Każde równanie: XOR wybranych zmiennych = 0/1. Wiersz trzymaj w `bitset<M+1>` (ostatni bit = prawa strona),\neliminacja to `a[i] ^= a[row]` — 64 kolumny naraz, O(n³/64). Liczba rozwiązań = `2^(m − rząd)`\n(albo 0 przy sprzeczności). Kod `gaussXor` w artykule."
+    },
+    {
+     "q": [
+      "gauss epsilon",
+      "gauss precyzja",
+      "gauss double bledy",
+      "gauss pivot",
+      "czesciowy wybor elementu glownego",
+      "partial pivoting",
+      "gauss niedokladny wynik"
+     ],
+     "a": "Na double: (1) wybieraj w kolumnie element o **największym** |a| (partial pivoting); (2) zero to\n`fabs(x) < EPS`, EPS ≈ 1e-9 dla danych rzędu 1..10^3; (3) sprawdzaj sprzeczność też z EPS. Jeśli dane są\ncałkowite, a odpowiedź ma być dokładna (ułamek, modulo) — licz modulo liczba pierwsza albo na ułamkach."
+    },
+    {
+     "q": [
+      "ile rozwiazan ma uklad",
+      "nieskonczenie wiele rozwiazan",
+      "uklad sprzeczny",
+      "zmienne wolne",
+      "uklad nieoznaczony",
+      "liczba rozwiazan ukladu modulo p",
+      "uklad rownan brak rozwiazan"
+     ],
+     "a": "Po eliminacji: wiersz `0 … 0 | b` z b ≠ 0 → 0 rozwiązań. Inaczej, jeśli rząd r = liczba niewiadomych m → jedno.\nJeśli r < m → zmienne bez elementu głównego są wolne: nad ciałem rzeczywistym nieskończenie wiele, modulo p\ndokładnie `p^(m − r)`, w XOR `2^(m − r)`. Zawsze rozważ oba przypadki — n równań ≠ m niewiadomych."
+    },
+    {
+     "q": [
+      "liczba drzew rozpinajacych",
+      "twierdzenie kirchhoffa",
+      "ile drzew rozpinajacych ma graf",
+      "matrix tree theorem",
+      "kirchhoff wyznacznik",
+      "spanning trees count",
+      "liczba drzew rozpinajacych modulo"
+     ],
+     "a": "Twierdzenie Kirchhoffa: zbuduj Laplasjan L (L[v][v] = stopień, L[u][v] = −liczba krawędzi u–v), usuń jeden\nwiersz i tę samą kolumnę — wyznacznik to liczba drzew rozpinających. O(n³). Dla K_n wychodzi n^(n−2)\n(K4 → 16), dla cyklu C_n → n, dla grafu niespójnego → 0.",
+     "code": "long long pw(long long a, long long e, long long m) {\n    long long r = 1; a %= m;\n    for (; e > 0; e >>= 1, a = a * a % m) if (e & 1) r = r * a % m;\n    return r;\n}\n// Liczba drzew rozpinających multigrafu (wierzchołki 0..n-1) modulo p = det Laplasjanu bez wiersza i kolumny 0.\nlong long spanningTrees(int n, const vector<pair<int, int>> &edges) {\n    const long long P = 1'000'000'007;\n    vector<vector<long long>> L(n, vector<long long>(n, 0));\n    for (auto [u, v] : edges) {\n        if (u == v) continue;                       // pętle nie wpływają na drzewa\n        L[u][u]++; L[v][v]++;\n        L[u][v] = (L[u][v] + P - 1) % P;\n        L[v][u] = (L[v][u] + P - 1) % P;\n    }\n    int m = n - 1;                                  // usuwamy wiersz i kolumnę 0\n    vector<vector<long long>> a(m, vector<long long>(m));\n    for (int i = 0; i < m; i++)\n        for (int j = 0; j < m; j++) a[i][j] = L[i + 1][j + 1];\n    long long det = 1;\n    for (int c = 0; c < m; c++) {\n        int sel = -1;\n        for (int i = c; i < m; i++) if (a[i][c]) { sel = i; break; }\n        if (sel == -1) return 0;                    // graf niespójny\n        if (sel != c) { swap(a[sel], a[c]); det = (P - det) % P; }\n        det = det * a[c][c] % P;\n        long long iv = pw(a[c][c], P - 2, P);\n        for (int i = c + 1; i < m; i++) {\n            long long k = a[i][c] * iv % P;\n            for (int j = c; j < m; j++) a[i][j] = (a[i][j] - k * a[c][j] % P + P) % P;\n        }\n    }\n    return det;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wartosc oczekiwana gauss",
+      "oczekiwana liczba krokow uklad rownan",
+      "random walk uklad rownan",
+      "spacer losowy wartosc oczekiwana",
+      "expected value system of equations",
+      "ile krokow srednio do celu"
+     ],
+     "a": "Gdy stany tworzą cykle, DP nie ma kolejności — zapisz równania: dla v ≠ cel `E[v] = 1 + Σ p(v→u)·E[u]`,\n`E[cel] = 0`. Przenieś niewiadome na lewo: `E[v] − Σ p·E[u] = 1` i rozwiąż Gaussem (double albo modulo p,\ngdy wynik ma być „modulo”). n ≤ ~500 stanów."
+    }
+   ],
+   "related": [
+    "math-xor-basis",
+    "math-matrix-pow",
+    "math-mod-inverse",
+    "math-probability",
+    "graph-mst-kruskal"
+   ]
+  },
+  {
+   "id": "math-xor-basis",
+   "title": "Baza liniowa XOR — maksymalny XOR podzbioru, reprezentowalność, liczba różnych XOR-ów",
+   "category": "Matematyka",
+   "tags": [
+    "baza xor",
+    "xor basis",
+    "baza liniowa",
+    "linear basis",
+    "maksymalny xor",
+    "xor podzbioru",
+    "gauss modulo 2",
+    "przestrzeń liniowa",
+    "xor"
+   ],
+   "aliases": [
+    "baza xor",
+    "baza liniowa xor",
+    "xor basis",
+    "linear basis",
+    "baza liniowa",
+    "maksymalny xor podzbioru",
+    "max xor podzbioru",
+    "max xor subset",
+    "maksymalny xor",
+    "xor podzbioru",
+    "liczba roznych xorow",
+    "k-ty najmniejszy xor",
+    "max xor path",
+    "xor gauss"
+   ],
+   "summary": "Liczby traktujemy jako wektory bitów nad ciałem {0, 1}, a XOR jako dodawanie. Baza (≤ 60 liczb dla wartości < 2^60) budowana „Gaussem w locie” odpowiada na pytania o XOR-y podzbiorów: maksymalny XOR, czy x jest XOR-em podzbioru, ile jest różnych wyników (2^rząd), k-ty najmniejszy.",
+   "complexity": "wstawienie / zapytanie O(B), B = liczba bitów (≤ 60); budowa z n liczb O(n·B); pamięć O(B)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "XOR podzbioru liczb a_1..a_n to kombinacja liniowa wektorów bitowych nad GF(2). Zbiór wszystkich możliwych\nXOR-ów to **przestrzeń liniowa** rozpięta przez a_i. Trzymamy jej bazę w tablicy `b[i]` = wektor, którego\n**najstarszy bit to i** (postać schodkowa). Wstawianie x: idąc od najstarszego bitu, jeśli bit i jest\nzapalony — gdy `b[i]` puste, x staje się `b[i]`; w przeciwnym razie `x ^= b[i]`. Gdy x spadnie do 0, był\nzależny od bazy (da się go uzyskać z poprzednich).\n\n**Maksimum**: idąc od najstarszego bitu, `r = max(r, r ^ b[i])` — zachłanność działa, bo `b[i]` jako jedyny\nz pozostałych może zmienić bit i, a starszy bit przeważa nad wszystkimi młodszymi."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: baza XOR — max, reprezentowalność, k-ty najmniejszy",
+     "code": "// Baza liniowa XOR dla liczb < 2^60. Wejście: n, n liczb, potem q zapytań \"x k\":\n// czy x jest XOR-em podzbioru oraz k-ty najmniejszy możliwy XOR (k od 0; XOR pustego zbioru = 0 to k = 0).\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst int B = 60;                              // liczba bitów\n\nstruct XorBasis {\n    ll b[B] = {};                              // b[i] = wektor bazowy z najstarszym bitem i (albo 0)\n    int sz = 0;                                // rząd = liczba wektorów w bazie\n    bool insert(ll x) {                        // true, jeśli x był niezależny (powiększył bazę)\n        for (int i = B - 1; i >= 0; i--) {\n            if (!(x >> i & 1)) continue;\n            if (!b[i]) { b[i] = x; sz++; return true; }\n            x ^= b[i];                         // kasujemy bit i i redukujemy dalej\n        }\n        return false;                          // x zredukował się do 0 -> zależny od bazy\n    }\n    bool canMake(ll x) const {                 // czy x = XOR pewnego podzbioru\n        for (int i = B - 1; i >= 0; i--)\n            if (x >> i & 1) {\n                if (!b[i]) return false;\n                x ^= b[i];\n            }\n        return true;\n    }\n    ll maxXor(ll start = 0) const {            // max (start ^ XOR podzbioru), zachłannie od najstarszego bitu\n        ll r = start;\n        for (int i = B - 1; i >= 0; i--) r = max(r, r ^ b[i]);\n        return r;\n    }\n    ll kth(ll k) const {                       // k-ty najmniejszy z 2^sz możliwych XOR-ów (0 <= k < 2^sz)\n        ll c[B];\n        copy(b, b + B, c);\n        for (int i = B - 1; i >= 0; i--)       // postać zredukowana: bit wiodący i tylko w c[i]\n            for (int j = i - 1; j >= 0; j--)\n                if (c[j] && (c[i] >> j & 1)) c[i] ^= c[j];\n        ll r = 0;\n        int t = 0;\n        for (int i = 0; i < B; i++)\n            if (c[i]) { if (k >> t & 1) r ^= c[i]; t++; }   // t-ty bit k <-> t-ty wektor (rosnąco)\n        return r;\n    }\n};\n\nint main() {\n    int n, q;\n    cin >> n;\n    XorBasis xb;\n    for (int i = 0; i < n; i++) { ll a; cin >> a; xb.insert(a); }\n    cout << \"rzad \" << xb.sz << \", roznych XOR-ow: \" << (1LL << xb.sz) << \", max: \" << xb.maxXor() << \"\\n\";\n    cin >> q;\n    while (q--) {\n        ll x, k;\n        cin >> x >> k;\n        cout << (xb.canMake(x) ? \"TAK \" : \"NIE \");\n        if (k < (1LL << xb.sz)) cout << xb.kth(k) << \"\\n\";\n        else cout << \"-1\\n\";\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Pytanie (r = rząd bazy, n = liczba liczb)",
+      "Odpowiedź"
+     ],
+     "rows": [
+      [
+       "ile różnych XOR-ów podzbiorów (z pustym = 0)",
+       "2^r"
+      ],
+      [
+       "ile podzbiorów daje XOR = x (x osiągalne)",
+       "2^(n − r)"
+      ],
+      [
+       "czy istnieje niepusty podzbiór z XOR = 0",
+       "tak ⇔ n > r"
+      ],
+      [
+       "maksymalny XOR",
+       "zachłannie od najstarszego bitu"
+      ],
+      [
+       "minimalny niezerowy XOR",
+       "b[i] o najmniejszym i (gdy n > r, minimum niepustego podzbioru to 0)"
+      ],
+      [
+       "k-ty najmniejszy (k od 0)",
+       "baza zredukowana, bity k wybierają wektory"
+      ],
+      [
+       "max (y ^ XOR podzbioru)",
+       "zachłannie, start od r = y"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Klasyka: maksymalny XOR ścieżki 1 → n w grafie** (krawędzie można powtarzać). Policz DFS-em `d[v]` = XOR\nwag na drzewie przeszukiwania od 1. Każda krawędź spoza drzewa (u, v, w) zamyka cykl o XOR `d[u]^d[v]^w`;\nprzejście po cyklu i powrót „dokłada” ten XOR. Wstaw wszystkie cykle do bazy i licz `maxXor(d[n])`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: maksymalny XOR ścieżki w grafie",
+     "code": "// Maksymalny XOR wag na ścieżce (spacerze) 1 -> n w spójnym grafie nieskierowanym.\n// d[v] = XOR wag na drzewie DFS od 1; każda krawędź spoza drzewa daje cykl o XOR d[u]^d[v]^w do bazy.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int, ll>>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int u, v; ll w;\n        cin >> u >> v >> w;\n        g[u].push_back({v, w});\n        g[v].push_back({u, w});\n    }\n    ll b[60] = {};\n    auto insert = [&](ll x) {\n        for (int i = 59; i >= 0 && x; i--)\n            if (x >> i & 1) {\n                if (!b[i]) { b[i] = x; return; }\n                x ^= b[i];\n            }\n    };\n    vector<ll> d(n + 1, -1);\n    d[1] = 0;\n    vector<int> st = {1};                      // DFS iteracyjny (bez ryzyka przepełnienia stosu)\n    while (!st.empty()) {\n        int u = st.back(); st.pop_back();\n        for (auto [v, w] : g[u]) {\n            if (d[v] == -1) { d[v] = d[u] ^ w; st.push_back(v); }\n            else insert(d[u] ^ d[v] ^ w);      // cykl (dla krawędzi drzewa daje 0 — nic nie psuje)\n        }\n    }\n    ll r = d[n];\n    for (int i = 59; i >= 0; i--) r = max(r, r ^ b[i]);\n    cout << r << \"\\n\";\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Bazy można **łączyć** (wstaw wszystkie wektory jednej do drugiej, O(B²)) — przydaje się w drzewie\nprzedziałowym nad bazami albo przy łączeniu poddrzew. Dla zapytań „max XOR podzbioru a[l..r]” stosuje się\nbazę prefiksową: przy każdym b[i] pamiętaj pozycję i przy wstawianiu preferuj nowsze (większe) indeksy."
+    },
+    {
+     "type": "warn",
+     "md": "**Maksymalny XOR dwóch** elementów (pary) to inny problem — rozwiązuje go trie bitowe w O(n·B), a nie baza.\nBaza odpowiada na pytania o **dowolne podzbiory**."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bool insert(long long x)",
+     "desc": "dodaje x do bazy; false, gdy x jest XOR-em już wstawionych",
+     "complexity": "O(B)",
+     "returns": "bool"
+    },
+    {
+     "sig": "bool canMake(long long x) const",
+     "desc": "czy x jest XOR-em pewnego podzbioru",
+     "complexity": "O(B)",
+     "returns": "bool"
+    },
+    {
+     "sig": "long long maxXor(long long start = 0) const",
+     "desc": "max (start ^ XOR podzbioru)",
+     "complexity": "O(B)",
+     "returns": "long long"
+    },
+    {
+     "sig": "long long kth(long long k) const",
+     "desc": "k-ty najmniejszy z 2^r możliwych XOR-ów (k od 0)",
+     "complexity": "O(B²)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "`1 << i` dla i ≥ 31 — przepełnienie int; przy 60 bitach testuj `x >> i & 1` na long long.",
+    "Liczenie maksimum przez XOR wszystkich elementów bazy — nie zawsze daje maksimum; trzeba zachłannie `max(r, r ^ b[i])`.",
+    "Zachłanne max działa tylko, gdy b[i] ma najstarszy bit dokładnie i (postać schodkowa) — nie mieszaj z dowolną listą wektorów.",
+    "k-ty najmniejszy bez wcześniejszej redukcji bazy (wyzerowania bitów wiodących w innych wektorach) — zła kolejność.",
+    "Mylenie „liczby różnych XOR-ów” (2^r) z „liczbą podzbiorów o danym XOR” (2^(n−r)).",
+    "Pusty podzbiór daje 0 — sprawdź, czy zadanie go dopuszcza (min niezerowy, k-ty liczony od 1?).",
+    "Max XOR pary elementów to trie, nie baza."
+   ],
+   "qa": [
+    {
+     "q": [
+      "maksymalny xor podzbioru",
+      "max xor podzbioru",
+      "maksymalny xor z wybranych liczb",
+      "max subset xor",
+      "najwiekszy xor dowolnego podzbioru",
+      "baza xor max",
+      "maksymalny xor ciagu"
+     ],
+     "a": "Zbuduj bazę XOR (O(n·60)), potem zachłannie od najstarszego bitu: `r = max(r, r ^ b[i])`.\nStarszy bit jest wart więcej niż wszystkie młodsze razem, a tylko `b[i]` (z pozostałych) może zmienić bit i.",
+     "code": "vector<long long> a = {3, 10, 5, 25, 2, 8};\nlong long b[60] = {};\nfor (long long x : a)\n    for (int i = 59; i >= 0; i--) {\n        if (!(x >> i & 1)) continue;\n        if (!b[i]) { b[i] = x; break; }\n        x ^= b[i];\n    }\nlong long r = 0;\nfor (int i = 59; i >= 0; i--) r = max(r, r ^ b[i]);\ncout << r << \"\\n\";   // 31"
+    },
+    {
+     "q": [
+      "baza xor",
+      "baza liniowa xor",
+      "xor basis c++",
+      "linear basis xor",
+      "jak zrobic baze xor",
+      "baza xor kod",
+      "xor basis implementation",
+      "baza liniowa"
+     ],
+     "a": "Tablica `b[60]`, gdzie `b[i]` ma najstarszy bit i. Wstaw x: od bitu 59 w dół, jeśli bit i zapalony — puste\n`b[i]` → zapisz x i koniec; inaczej `x ^= b[i]`. Zależny x zredukuje się do 0. Rząd = liczba niepustych `b[i]`.\nPełna struktura (insert, canMake, maxXor, kth) w artykule."
+    },
+    {
+     "q": [
+      "czy liczba jest xorem podzbioru",
+      "czy da sie uzyskac x jako xor",
+      "can x be represented as xor of subset",
+      "xor podzbioru rowny x",
+      "czy x nalezy do przestrzeni xor",
+      "czy istnieje podzbior o xor x"
+     ],
+     "a": "Zredukuj x bazą jak przy wstawianiu: dla zapalonego bitu i, jeśli `b[i]` puste → NIE; inaczej `x ^= b[i]`.\nDoszedłeś do 0 → TAK. O(60) na zapytanie.",
+     "code": "long long b[60] = {};\nfor (long long v : {3LL, 5LL, 9LL})\n    for (int i = 59; i >= 0; i--)\n        if (v >> i & 1) { if (!b[i]) { b[i] = v; break; } v ^= b[i]; }\nlong long x = 10;                          // 10 = 3 ^ 9\nbool ok = true;\nfor (int i = 59; i >= 0 && ok; i--)\n    if (x >> i & 1) { if (b[i]) x ^= b[i]; else ok = false; }\ncout << (ok ? \"TAK\" : \"NIE\") << \"\\n\";"
+    },
+    {
+     "q": [
+      "liczba roznych xorow",
+      "ile roznych xorow podzbiorow",
+      "ile roznych wartosci xor",
+      "number of distinct subset xors",
+      "liczba podzbiorow o xor rownym x",
+      "ile podzbiorow ma xor 0"
+     ],
+     "a": "Przy rzędzie r jest dokładnie `2^r` różnych XOR-ów (licząc 0 z pustego podzbioru). Każda osiągalna wartość\npowstaje z dokładnie `2^(n − r)` podzbiorów — w tym 0, więc niepustych podzbiorów z XOR = 0 jest\n`2^(n − r) − 1`. Liczby duże → licz modulo (szybkie potęgowanie)."
+    },
+    {
+     "q": [
+      "k-ty najmniejszy xor",
+      "k ty xor podzbioru",
+      "kth smallest subset xor",
+      "k-ta wartosc xor",
+      "posortowane xory podzbiorow",
+      "k-ty xor"
+     ],
+     "a": "Zredukuj bazę: dla i malejąco, dla j < i, jeśli `b[i]` ma bit j i `b[j]` niepuste → `b[i] ^= b[j]`. Teraz\nniepuste wektory posortowane rosnąco v_0 < v_1 < … odpowiadają bitom k: wynik = XOR v_t po zapalonych\nbitach t liczby k (k od 0, gdzie k = 0 to 0). Jeśli pusty podzbiór jest zabroniony i n > r, 0 nadal jest\nosiągalne; gdy n = r — przesuń k o 1. Kod `kth` w artykule."
+    },
+    {
+     "q": [
+      "max xor sciezki",
+      "maksymalny xor na sciezce w grafie",
+      "xor path graf",
+      "najwiekszy xor drogi z 1 do n",
+      "max xor path graph",
+      "xor sciezki cykle baza",
+      "minimalny xor sciezki"
+     ],
+     "a": "DFS od 1 liczy `d[v]` (XOR na drzewie). Każda krawędź niedrzewowa daje cykl `d[u]^d[v]^w` do bazy.\nDowolna ścieżka 1 → n = `d[n]` XOR kombinacja cykli, więc odpowiedź to `maxXor(d[n])` (minimum: zachłannie\n`r = min(r, r ^ b[i])`). O((n + m)·60). Pełny program w artykule."
+    },
+    {
+     "q": [
+      "max xor dwoch liczb",
+      "maksymalny xor pary",
+      "max xor pair",
+      "dwie liczby z najwiekszym xor",
+      "maksymalny xor dwoch elementow tablicy"
+     ],
+     "a": "To nie baza — tu wybierasz **dokładnie dwie** liczby. Wstaw liczby do trie bitowego (od najstarszego bitu)\ni dla każdej idź w przeciwną gałąź, gdy istnieje. O(n·B). Baza XOR odpowiada na pytania o dowolne podzbiory."
+    },
+    {
+     "q": [
+      "minimalny xor podzbioru",
+      "najmniejszy niezerowy xor",
+      "min xor subset",
+      "minimalny xor niepustego podzbioru",
+      "najmniejszy xor podzbioru"
+     ],
+     "a": "Jeśli któraś liczba nie weszła do bazy (n > r), pewien niepusty podzbiór ma XOR 0. W przeciwnym razie minimum\nto `b[i]` o **najmniejszym** i: każda inna kombinacja ma najstarszy bit > i.",
+     "code": "vector<long long> a = {6, 12, 10};\nlong long b[60] = {};\nint r = 0;\nfor (long long x : a)\n    for (int i = 59; i >= 0; i--)\n        if (x >> i & 1) { if (!b[i]) { b[i] = x; r++; break; } x ^= b[i]; }\nlong long mn = 0;\nif (r == (int)a.size())\n    for (int i = 0; i < 60; i++) if (b[i]) { mn = b[i]; break; }\ncout << mn << \"\\n\";   // 0, bo 6 ^ 12 ^ 10 = 0"
+    }
+   ],
+   "related": [
+    "math-gauss",
+    "tech-prefix-xor",
+    "ds-trie",
+    "tech-bit-tricks",
+    "graph-dfs"
+   ]
+  },
+  {
+   "id": "math-derangements-stirling",
+   "title": "Nieporządki, liczby Stirlinga II rodzaju i liczby Bella (podziały zbioru)",
+   "category": "Matematyka",
+   "tags": [
+    "nieporządki",
+    "derangements",
+    "liczby stirlinga",
+    "stirling",
+    "liczby bella",
+    "podziały zbioru",
+    "suriekcje",
+    "punkty stałe",
+    "kule i pudełka",
+    "kombinatoryka"
+   ],
+   "aliases": [
+    "nieporządki",
+    "nieporzadki",
+    "derangements",
+    "derangement",
+    "permutacja bez punktów stałych",
+    "liczby stirlinga",
+    "liczby stirlinga ii rodzaju",
+    "stirling drugiego rodzaju",
+    "stirling numbers",
+    "liczby bella",
+    "bell numbers",
+    "podziały zbioru",
+    "podział zbioru na k podzbiorów",
+    "suriekcje",
+    "kule i pudełka"
+   ],
+   "summary": "D(n) — permutacje bez punktów stałych: D(n) = (n−1)(D(n−1) + D(n−2)). S(n, k) — podziały n-elementowego zbioru na k niepustych bloków: S(n,k) = k·S(n−1,k) + S(n−1,k−1). B(n) = Σ_k S(n,k) — wszystkie podziały zbioru. Suriekcje n → k to k!·S(n,k).",
+   "complexity": "D(n): O(n); tablica S do n: O(n²); S(n,k) wzorem jawnym: O(k log n); B(n): O(n²)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Nieporządek** to permutacja, w której żaden element nie stoi na swoim miejscu („nikt nie dostaje swojego\nprezentu”). Rekurencja: element 1 trafia na pozycję j (n − 1 możliwości). Jeśli j trafia na pozycję 1, zostaje\nnieporządek n − 2 elementów; jeśli nie — sytuacja jest jak nieporządek n − 1 elementów (j „udaje” 1).\nStąd `D(n) = (n−1)·(D(n−1) + D(n−2))`, `D(0) = 1`, `D(1) = 0`. Równoważnie `D(n) = n·D(n−1) + (−1)^n`\nalbo z włączeń-wyłączeń `D(n) = Σ (−1)^i · n!/i!`, więc `D(n) ≈ n!/e`. Dokładnie k punktów stałych:\n`C(n, k)·D(n − k)`.\n\n**Stirling II rodzaju** S(n, k): na ile sposobów podzielić n **rozróżnialnych** elementów na k **niepustych,\nnierozróżnialnych** grup. Element n albo tworzy własną grupę (S(n−1, k−1)), albo dołącza do jednej z k grup\npodziału pozostałych (k·S(n−1, k)). **Liczba Bella** B(n) = liczba wszystkich podziałów zbioru = Σ_k S(n, k)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "n",
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8"
+     ],
+     "rows": [
+      [
+       "D(n)",
+       "1",
+       "0",
+       "1",
+       "2",
+       "9",
+       "44",
+       "265",
+       "1854",
+       "14833"
+      ],
+      [
+       "B(n)",
+       "1",
+       "1",
+       "2",
+       "5",
+       "15",
+       "52",
+       "203",
+       "877",
+       "4140"
+      ],
+      [
+       "S(n, 2)",
+       "0",
+       "0",
+       "1",
+       "3",
+       "7",
+       "15",
+       "31",
+       "63",
+       "127"
+      ],
+      [
+       "S(n, 3)",
+       "0",
+       "0",
+       "0",
+       "1",
+       "6",
+       "25",
+       "90",
+       "301",
+       "966"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: D(n), S(n, k), B(n) modulo 10^9+7",
+     "code": "// Nieporządki D(n), liczby Stirlinga II rodzaju S(n,k) i liczby Bella B(n) modulo 10^9+7 dla n <= N.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst ll MOD = 1'000'000'007;\nconst int N = 1000;\n\nll D[N + 1], S[N + 1][N + 1], Bell[N + 1];\n\nint main() {\n    D[0] = 1; D[1] = 0;                                   // D(n) = (n-1) * (D(n-1) + D(n-2))\n    for (int n = 2; n <= N; n++) D[n] = (n - 1) * ((D[n - 1] + D[n - 2]) % MOD) % MOD;\n\n    S[0][0] = 1;                                          // S(n,k) = k*S(n-1,k) + S(n-1,k-1)\n    for (int n = 1; n <= N; n++)\n        for (int k = 1; k <= n; k++)\n            S[n][k] = (k * S[n - 1][k] + S[n - 1][k - 1]) % MOD;\n\n    for (int n = 0; n <= N; n++) {                        // B(n) = suma S(n,k) po k\n        Bell[n] = 0;\n        for (int k = 0; k <= n; k++) Bell[n] = (Bell[n] + S[n][k]) % MOD;\n    }\n\n    int n, k;\n    cin >> n >> k;                                        // 0 <= k <= n <= N\n    cout << \"D(\" << n << \") = \" << D[n] << \"\\n\";\n    cout << \"S(\" << n << \",\" << k << \") = \" << S[n][k] << \"\\n\";\n    cout << \"B(\" << n << \") = \" << Bell[n] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Kule",
+      "Pudełka",
+      "Puste pudełka?",
+      "Liczba sposobów"
+     ],
+     "rows": [
+      [
+       "rozróżnialne (n)",
+       "rozróżnialne (k)",
+       "dozwolone",
+       "k^n"
+      ],
+      [
+       "rozróżnialne",
+       "rozróżnialne",
+       "zabronione (suriekcje)",
+       "k!·S(n, k)"
+      ],
+      [
+       "rozróżnialne",
+       "nierozróżnialne",
+       "zabronione",
+       "S(n, k)"
+      ],
+      [
+       "rozróżnialne",
+       "nierozróżnialne",
+       "dozwolone",
+       "S(n, 1) + … + S(n, k)"
+      ],
+      [
+       "identyczne",
+       "rozróżnialne",
+       "dozwolone",
+       "C(n + k − 1, k − 1)"
+      ],
+      [
+       "identyczne",
+       "rozróżnialne",
+       "zabronione",
+       "C(n − 1, k − 1)"
+      ],
+      [
+       "identyczne",
+       "nierozróżnialne",
+       "—",
+       "podziały liczby n na k składników (DP)"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Wzór jawny** z włączeń-wyłączeń (liczymy suriekcje i dzielimy przez k!):\n`S(n, k) = (1/k!)·Σ_{j=0..k} (−1)^j·C(k, j)·(k − j)^n` — działa dla ogromnego n (np. 10^18) i k do ~10^6.\n\n**Stirling I rodzaju** (bez znaku) c(n, k) = liczba permutacji n elementów o dokładnie k cyklach:\n`c(n, k) = c(n−1, k−1) + (n−1)·c(n−1, k)` (nowy element tworzy cykl albo wchodzi za jeden z n − 1 elementów).\n\n**Trójkąt Bella**: wiersz zaczyna się od ostatniego elementu poprzedniego, kolejny element = poprzedni w wierszu\n+ element nad nim; pierwszy element wiersza n to B(n). O(n²) czasu, O(n) pamięci."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "S(n, k) dla dużego n — wzór z włączeń-wyłączeń, O(k log n)",
+     "code": "// S(n, k) dla dużego n (np. 10^18) i k <= ~10^6: wzór z włączeń-wyłączeń, O(k log n).\n// S(n,k) = 1/k! * sum_{j=0..k} (-1)^j * C(k,j) * (k-j)^n\nconst long long MOD = 1'000'000'007;\nlong long pw(long long a, long long e) {\n    long long r = 1; a %= MOD;\n    for (; e > 0; e >>= 1, a = a * a % MOD) if (e & 1) r = r * a % MOD;\n    return r;\n}\nlong long stirling2(long long n, int k) {\n    vector<long long> f(k + 1, 1), inv(k + 1, 1);\n    for (int i = 1; i <= k; i++) f[i] = f[i - 1] * i % MOD;\n    inv[k] = pw(f[k], MOD - 2);\n    for (int i = k; i > 0; i--) inv[i - 1] = inv[i] * i % MOD;\n    long long s = 0;\n    for (int j = 0; j <= k; j++) {\n        long long term = f[k] * inv[j] % MOD * inv[k - j] % MOD * pw(k - j, n) % MOD;   // C(k,j)*(k-j)^n\n        s = (j % 2 ? s - term + MOD : s + term) % MOD;\n    }\n    return s * inv[k] % MOD;                // dzielimy przez k!\n}",
+     "scope": "global"
+    },
+    {
+     "type": "warn",
+     "md": "Wzrost: D(20) ≈ 8,95·10^17 to ostatni nieporządek w `long long` (D(21) ≈ 1,9·10^19), B(25) ≈ 4,6·10^18 —\nostatnia liczba Bella w `long long`. Dalej licz modulo."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "D[n] = (n - 1) * (D[n-1] + D[n-2]) % MOD",
+     "desc": "nieporządki, D[0] = 1, D[1] = 0",
+     "complexity": "O(n)",
+     "returns": "long long"
+    },
+    {
+     "sig": "S[n][k] = (k * S[n-1][k] + S[n-1][k-1]) % MOD",
+     "desc": "Stirling II rodzaju, S[0][0] = 1",
+     "complexity": "O(n·k)",
+     "returns": "long long"
+    },
+    {
+     "sig": "long long stirling2(long long n, int k)",
+     "desc": "S(n, k) mod p wzorem jawnym",
+     "complexity": "O(k log n)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "D(0) = 1 (pusta permutacja jest nieporządkiem), D(1) = 0 — złe warunki początkowe psują cały ciąg.",
+    "`(n−1)·(D(n−1) + D(n−2))` modulo: najpierw `% MOD` sumy, potem mnożenie — inaczej przepełnienie.",
+    "S(n, 0) = 0 dla n ≥ 1, ale S(0, 0) = 1.",
+    "Mylenie S(n, k) (grupy nierozróżnialne) z k!·S(n, k) (grupy ponumerowane / suriekcje).",
+    "Tablica S[N][N] long long dla N = 5000 to 200 MB — trzymaj tylko dwa wiersze, jeśli potrzebujesz jednego n.",
+    "We wzorze jawnym `(−1)^j`: odejmując modulo, dodaj MOD przed `%`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "nieporzadki",
+      "nieporządki",
+      "derangements",
+      "permutacja bez punktow stalych",
+      "nikt nie dostanie swojego prezentu",
+      "listy w zlych kopertach",
+      "derangement formula",
+      "ile permutacji bez punktu stalego"
+     ],
+     "a": "`D(n) = (n−1)·(D(n−1) + D(n−2))`, `D(0) = 1`, `D(1) = 0`. Ciąg: 1, 0, 1, 2, 9, 44, 265, 1854, …\nInaczej: `D(n) = n·D(n−1) + (−1)^n` albo `D(n) = round(n!/e)` dla n ≥ 1 (tylko małe n, bez modulo).",
+     "code": "const long long MOD = 1'000'000'007;\nint n = 10;\nvector<long long> D(max(n + 1, 2));\nD[0] = 1; D[1] = 0;\nfor (int i = 2; i <= n; i++) D[i] = (i - 1) * ((D[i - 1] + D[i - 2]) % MOD) % MOD;\ncout << D[n] << \"\\n\";   // 1334961"
+    },
+    {
+     "q": [
+      "nieporzadki rekurencja dowod",
+      "skad wzor na nieporzadki",
+      "dlaczego D(n) = (n-1)(D(n-1)+D(n-2))",
+      "derangement recurrence proof",
+      "wyprowadzenie wzoru nieporzadki"
+     ],
+     "a": "Element 1 idzie na pozycję j ≠ 1 (n − 1 wyborów). (a) j idzie na pozycję 1 — zamiana, reszta n − 2 elementów\nto dowolny nieporządek: D(n−2). (b) j nie idzie na 1 — zabraniamy j pozycji 1, czyli pozycja 1 jest „własna”\ndla j: nieporządek n − 1 elementów, D(n−1). Razem `(n−1)·(D(n−1) + D(n−2))`. Z włączeń-wyłączeń:\n`D(n) = Σ_{i=0..n} (−1)^i·C(n, i)·(n − i)!`."
+    },
+    {
+     "q": [
+      "dokladnie k punktow stalych",
+      "permutacje z k punktami stalymi",
+      "k osob dostaje swoj prezent",
+      "partial derangements",
+      "rencontres numbers",
+      "permutacje z dokladnie k elementami na miejscu"
+     ],
+     "a": "Wybierz, które k elementów zostaje na miejscu (C(n, k)), a reszta musi być nieporządkiem: `C(n, k)·D(n − k)`.\nCo najmniej k punktów stałych — zsumuj po j ≥ k.",
+     "code": "int n = 5, k = 2;\nlong long C = 1;\nfor (int i = 1; i <= k; i++) C = C * (n - k + i) / i;   // C(5,2) = 10\nlong long D[6] = {1, 0, 1, 2, 9, 44};\ncout << C * D[n - k] << \"\\n\";   // 10 * 2 = 20"
+    },
+    {
+     "q": [
+      "liczby stirlinga drugiego rodzaju",
+      "stirling ii rodzaju",
+      "podzial zbioru na k podzbiorow",
+      "stirling numbers second kind",
+      "S(n,k)",
+      "na ile sposobow podzielic n osob na k grup",
+      "liczby stirlinga",
+      "stirling c++"
+     ],
+     "a": "`S(n, k) = k·S(n−1, k) + S(n−1, k−1)`, `S(0, 0) = 1`: n-ty element tworzy nową grupę albo dołącza do jednej\nz k istniejących. Grupy są nierozróżnialne i niepuste; dla grup ponumerowanych pomnóż przez k!.",
+     "code": "const long long MOD = 1'000'000'007;\nint n = 5, k = 3;\nvector<vector<long long>> S(n + 1, vector<long long>(k + 1, 0));\nS[0][0] = 1;\nfor (int i = 1; i <= n; i++)\n    for (int j = 1; j <= min(i, k); j++)\n        S[i][j] = (j * S[i - 1][j] + S[i - 1][j - 1]) % MOD;\ncout << S[n][k] << \"\\n\";   // 25"
+    },
+    {
+     "q": [
+      "suriekcje",
+      "liczba suriekcji",
+      "ile funkcji na",
+      "n kul do k pudelek zadne puste",
+      "surjections count",
+      "rozdziel n roznych przedmiotow na k osob kazdy cos dostanie",
+      "kazdy dostanie co najmniej jeden"
+     ],
+     "a": "Suriekcji ze zbioru n-elementowego na k-elementowy jest `k!·S(n, k) = Σ_{j=0..k} (−1)^j·C(k, j)·(k − j)^n`\n(włączenia-wyłączenia po pustych pudełkach). Przykład: 4 różne przedmioty dla 2 osób, każda coś dostaje:\n2^4 − 2 = 14 = 2!·S(4, 2) = 2·7."
+    },
+    {
+     "q": [
+      "liczby bella",
+      "bell numbers",
+      "liczba podzialow zbioru",
+      "na ile sposobow podzielic zbior",
+      "B(n) bell",
+      "trojkat bella",
+      "wszystkie podzialy zbioru"
+     ],
+     "a": "`B(n) = Σ_k S(n, k)`: 1, 1, 2, 5, 15, 52, 203, 877, 4140, … Szybko: trójkąt Bella — wiersz zaczyna się\nod ostatniego elementu poprzedniego wiersza, każdy kolejny = poprzedni + element nad nim. Albo\n`B(n+1) = Σ_k C(n, k)·B(k)`.",
+     "code": "int n = 8;\nvector<long long> row = {1};\nvector<long long> B = {1};\nfor (int i = 1; i <= n; i++) {\n    vector<long long> nr = {row.back()};\n    for (long long x : row) nr.push_back(nr.back() + x);\n    row = nr;\n    B.push_back(row[0]);\n}\ncout << B[n] << \"\\n\";   // 4140"
+    },
+    {
+     "q": [
+      "stirling dla duzego n",
+      "S(n,k) dla n = 10^18",
+      "stirling wzor jawny",
+      "stirling inclusion exclusion",
+      "stirling modulo duze n",
+      "liczby stirlinga szybko"
+     ],
+     "a": "`S(n, k) = (1/k!)·Σ_{j=0..k} (−1)^j·C(k, j)·(k − j)^n` — k + 1 szybkich potęgowań, O(k log n). Działa dla\nn do 10^18, k do ~10^6 (silnie i odwrotności silni do k). Funkcja `stirling2` w artykule."
+    },
+    {
+     "q": [
+      "liczby stirlinga pierwszego rodzaju",
+      "stirling i rodzaju",
+      "permutacje z k cyklami",
+      "stirling first kind",
+      "ile permutacji ma k cykli",
+      "liczba permutacji o k cyklach"
+     ],
+     "a": "c(n, k) (bez znaku) = liczba permutacji n elementów z dokładnie k cyklami:\n`c(n, k) = c(n−1, k−1) + (n−1)·c(n−1, k)`, `c(0, 0) = 1`. Suma po k daje n!.",
+     "code": "int n = 4;\nvector<vector<long long>> c(n + 1, vector<long long>(n + 1, 0));\nc[0][0] = 1;\nfor (int i = 1; i <= n; i++)\n    for (int k = 1; k <= i; k++) c[i][k] = c[i - 1][k - 1] + (i - 1) * c[i - 1][k];\ncout << c[4][1] << \" \" << c[4][2] << \"\\n\";   // 6 11"
+    },
+    {
+     "q": [
+      "kule i pudelka",
+      "n kul k pudelek wzory",
+      "rozmieszczenie kul w pudelkach",
+      "balls into boxes",
+      "twelvefold way",
+      "kule rozroznialne pudelka nierozroznialne"
+     ],
+     "a": "Rozróżnialne kule → rozróżnialne pudełka: `k^n` (puste dozwolone), `k!·S(n, k)` (bez pustych).\nRozróżnialne → nierozróżnialne: `S(n, k)` (bez pustych), `Σ_{j≤k} S(n, j)` (z pustymi).\nIdentyczne → rozróżnialne: `C(n+k−1, k−1)` (puste dozwolone), `C(n−1, k−1)` (bez pustych).\nIdentyczne → nierozróżnialne: podziały liczby (DP). Pełna tabela w artykule."
+    }
+   ],
+   "related": [
+    "math-combinatorics",
+    "math-inclusion-exclusion",
+    "math-binomial",
+    "math-mod-inverse",
+    "dp-intro"
+   ]
+  },
+  {
+   "id": "math-mobius",
+   "title": "Funkcja Möbiusa, sito liniowe i zliczanie par względnie pierwszych",
+   "category": "Matematyka",
+   "tags": [
+    "möbius",
+    "mobius",
+    "funkcja möbiusa",
+    "sito liniowe",
+    "funkcje multiplikatywne",
+    "względnie pierwsze",
+    "nwd",
+    "odwracanie möbiusa",
+    "włączenia i wyłączenia",
+    "floor n/d"
+   ],
+   "aliases": [
+    "funkcja möbiusa",
+    "funkcja mobiusa",
+    "mobius",
+    "möbius function",
+    "mobius function",
+    "mu(n)",
+    "sito liniowe",
+    "linear sieve",
+    "pary względnie pierwsze",
+    "pary wzglednie pierwsze",
+    "liczba par względnie pierwszych",
+    "coprime pairs",
+    "pary z nwd 1",
+    "ile par ma nwd 1",
+    "pary z gcd 1",
+    "odwracanie möbiusa",
+    "mobius inversion",
+    "funkcje multiplikatywne"
+   ],
+   "summary": "μ(n) = 0, gdy n dzieli się przez kwadrat liczby pierwszej, a w przeciwnym razie (−1)^(liczba czynników pierwszych). Kluczowa tożsamość Σ_{d|n} μ(d) = [n = 1] zamienia warunek NWD = 1 na sumę po dzielnikach. Sito liniowe liczy μ, φ i inne funkcje multiplikatywne w O(N); pary (i, j) z NWD = 1 liczymy w O(√n).",
+   "complexity": "sito liniowe O(N); pary 1..n × 1..m z NWD = 1: O(√n + √m) po sumach prefiksowych μ; pary w tablicy: O(V log V)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Definicja:** μ(1) = 1; μ(n) = (−1)^k, gdy n jest iloczynem k **różnych** liczb pierwszych; μ(n) = 0, gdy\np² | n dla pewnej pierwszej p. μ jest multiplikatywna: μ(ab) = μ(a)·μ(b) dla NWD(a, b) = 1.\n\n**Kluczowa tożsamość:** `Σ_{d | n} μ(d) = 1` dla n = 1 i 0 dla n > 1. Zatem\n`[NWD(i, j) = 1] = Σ_{d | NWD(i,j)} μ(d) = Σ_{d | i, d | j} μ(d)`. Zamieniamy kolejność sumowania:\n`#{(i, j) : NWD = 1} = Σ_d μ(d)·(ile par ma oba elementy podzielne przez d)`. To są **włączenia-wyłączenia**\npo zbiorach liczb pierwszych — μ(d) jest znakiem, a d = 0 dla nie-bezkwadratowych odpada.\n\n**Odwracanie Möbiusa:** jeśli `g(n) = Σ_{d|n} f(d)`, to `f(n) = Σ_{d|n} μ(d)·g(n/d)`. Wersja „po\nwielokrotnościach” (częstsza w zadaniach): jeśli `G(d) = Σ_{d|k} F(k)` (np. G = pary z NWD podzielnym\nprzez d, F = pary z NWD dokładnie d), to `F(d) = Σ_{d|k} μ(k/d)·G(k)`."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "n",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "30"
+     ],
+     "rows": [
+      [
+       "μ(n)",
+       "1",
+       "−1",
+       "−1",
+       "0",
+       "−1",
+       "1",
+       "−1",
+       "0",
+       "0",
+       "1",
+       "−1",
+       "0",
+       "−1"
+      ],
+      [
+       "φ(n)",
+       "1",
+       "1",
+       "2",
+       "2",
+       "4",
+       "2",
+       "6",
+       "4",
+       "6",
+       "4",
+       "10",
+       "4",
+       "8"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: sito liniowe (μ, φ, najmniejszy dzielnik) + pary względnie pierwsze",
+     "code": "// Sito liniowe: liczby pierwsze, mu(n), phi(n), najmniejszy dzielnik pierwszy — wszystko w O(N).\n// Potem: liczba par (i, j), 1 <= i <= n, 1 <= j <= m, z NWD(i, j) = 1 w O(sqrt n + sqrt m) na zapytanie.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\nconst int N = 1'000'000;            // 4 tablice int: ~16 MB (dla 10^7 już 160 MB!)\n\nint mu[N + 1], phi[N + 1], lp[N + 1], prefMu[N + 1];\nvector<int> primes;\n\nvoid sieve() {\n    mu[1] = 1; phi[1] = 1;\n    for (int i = 2; i <= N; i++) {\n        if (lp[i] == 0) { lp[i] = i; primes.push_back(i); mu[i] = -1; phi[i] = i - 1; }\n        for (int p : primes) {\n            if (p > lp[i] || (ll)i * p > N) break;\n            lp[i * p] = p;                     // każda liczba złożona zostaje skreślona DOKŁADNIE raz\n            if (p == lp[i]) {                  // p dzieli i: p^2 | i*p\n                mu[i * p] = 0;\n                phi[i * p] = phi[i] * p;\n            } else {                           // p nie dzieli i: NWD(i, p) = 1 -> multiplikatywność\n                mu[i * p] = -mu[i];\n                phi[i * p] = phi[i] * (p - 1);\n            }\n        }\n    }\n    for (int i = 1; i <= N; i++) prefMu[i] = prefMu[i - 1] + mu[i];\n}\n\n// sum_{d >= 1} mu(d) * floor(n/d) * floor(m/d); bloki, w których floor(n/d) i floor(m/d) są stałe.\nll coprimePairs(ll n, ll m) {\n    ll res = 0;\n    for (ll d = 1, nd; d <= min(n, m); d = nd + 1) {\n        nd = min(n / (n / d), m / (m / d));\n        res += (ll)(prefMu[nd] - prefMu[d - 1]) * (n / d) * (m / d);\n    }\n    return res;\n}\n\nint main() {\n    sieve();\n    int q;\n    cin >> q;\n    while (q--) {\n        ll n, m;\n        cin >> n >> m;                         // n, m <= N\n        cout << coprimePairs(n, m) << \"\\n\";\n    }\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Sito liniowe:** każda liczba złożona `i·p` jest skreślana dokładnie raz — przez swój najmniejszy dzielnik\npierwszy p (pętla po p przerywa się, gdy p > lp[i]). Przy tym od razu liczymy funkcję multiplikatywną f:\n- p ∤ i: NWD(i, p) = 1, więc `f(i·p) = f(i)·f(p)`;\n- p | i (p = lp[i]): trzeba wiedzieć, jak f zachowuje się na potęgach p (μ → 0, φ → ·p, liczba dzielników →\n  trzymaj wykładnik lp).\n\n**Bloki ⌊n/d⌋:** wyrażenie ⌊n/d⌋ przyjmuje tylko O(√n) różnych wartości; dla bieżącego d największe d' z tą\nsamą wartością to `n / (n / d)`. Z sumami prefiksowymi μ cała suma kosztuje O(√n) na zapytanie."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pary względnie pierwsze w tablicy: Σ μ(d)·C(cnt_d, 2)",
+     "code": "// Liczba par i < j z NWD(a_i, a_j) = 1; wartości 1 <= a_i <= V. Razem O(V log V).\nconst int V = 1'000'000;\nint n;\ncin >> n;\nvector<int> cnt(V + 1, 0), mu(V + 1, 1);\nvector<bool> comp(V + 1, false);\nfor (int i = 0; i < n; i++) { int a; cin >> a; cnt[a]++; }\nfor (int p = 2; p <= V; p++) {                 // mu prostym sitem: -1 za każdą liczbę pierwszą, 0 przy p^2\n    if (comp[p]) continue;\n    for (int k = p; k <= V; k += p) { if (k > p) comp[k] = true; mu[k] = -mu[k]; }\n    for (long long k = (long long)p * p; k <= V; k += (long long)p * p) mu[k] = 0;\n}\nlong long ans = 0;\nfor (int d = 1; d <= V; d++) {\n    if (mu[d] == 0) continue;\n    long long c = 0;                           // c = ile a_i jest podzielnych przez d\n    for (int k = d; k <= V; k += d) c += cnt[k];\n    ans += mu[d] * (c * (c - 1) / 2);\n}\ncout << ans << \"\\n\";"
+    },
+    {
+     "type": "tip",
+     "md": "**Pary z NWD dokładnie g** wśród 1..n × 1..m: podziel przez g — to pary względnie pierwsze w\n1..⌊n/g⌋ × 1..⌊m/g⌋, czyli `coprimePairs(n / g, m / g)`."
+    },
+    {
+     "type": "warn",
+     "md": "Pamięć sita: każda tablica `int` dla N = 10^7 to 40 MB — cztery takie (μ, φ, lp, prefiks) to 160 MB.\nTrzymaj tylko potrzebne; μ zmieści się w `signed char`. Sumy po parach liczysz w `long long` (n² ~ 10^14)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "void sieve()",
+     "desc": "sito liniowe: primes, mu, phi, lp (najmniejszy dzielnik pierwszy), prefMu",
+     "complexity": "O(N)",
+     "returns": "void"
+    },
+    {
+     "sig": "long long coprimePairs(long long n, long long m)",
+     "desc": "liczba par (i, j), 1 ≤ i ≤ n, 1 ≤ j ≤ m, NWD(i, j) = 1",
+     "complexity": "O(√n + √m)",
+     "returns": "long long",
+     "example": "coprimePairs(10, 10) == 63"
+    }
+   ],
+   "pitfalls": [
+    "Warunek przerwania w sicie liniowym: `p > lp[i]` — bez niego liczby są skreślane wielokrotnie i μ/φ wychodzą złe.",
+    "`i * p` w int dla i ~ 10^7 i p ~ 10^7 — przepełnienie przed porównaniem z N; licz `(long long)i * p > N`.",
+    "μ(1) = 1 i φ(1) = 1 trzeba ustawić ręcznie.",
+    "W blokach ⌊n/d⌋ dla dwóch liczb koniec bloku to `min(n / (n / d), m / (m / d))`, a pętla idzie do min(n, m).",
+    "Pary uporządkowane vs nieuporządkowane: Σ μ(d)·⌊n/d⌋² liczy pary (i, j) i (j, i) osobno oraz (1, 1).",
+    "Wynik `μ(d)·⌊n/d⌋·⌊m/d⌋` w int — przepełnienie; rzutuj na long long."
+   ],
+   "qa": [
+    {
+     "q": [
+      "funkcja mobiusa",
+      "funkcja möbiusa",
+      "mobius function",
+      "co to jest mu(n)",
+      "mobius c++",
+      "jak policzyc mu",
+      "mobius definicja",
+      "möbius"
+     ],
+     "a": "μ(1) = 1; μ(n) = 0, jeśli n ma czynnik pierwszy w potędze ≥ 2; inaczej (−1)^(liczba czynników pierwszych).\nDla jednej liczby — rozkład w O(√n); dla wszystkich do N — sito liniowe O(N) (w artykule).",
+     "code": "auto mu = [](long long n) {\n    int res = 1;\n    for (long long p = 2; p * p <= n; p++)\n        if (n % p == 0) {\n            n /= p;\n            if (n % p == 0) return 0;   // p^2 | n\n            res = -res;\n        }\n    if (n > 1) res = -res;\n    return res;\n};\ncout << mu(30) << \" \" << mu(12) << \" \" << mu(7) << \"\\n\";   // -1 0 -1"
+    },
+    {
+     "q": [
+      "sito liniowe",
+      "linear sieve",
+      "sito liniowe c++",
+      "sito o(n)",
+      "sito eulera liniowe",
+      "linear sieve multiplicative function",
+      "sito liniowe phi mu"
+     ],
+     "a": "Dla każdego i przechodź po liczbach pierwszych p ≤ lp[i] i ustaw lp[i·p] = p — każda liczba złożona\ndostaje wartość dokładnie raz, więc O(N). Funkcję multiplikatywną liczysz przy okazji: gdy p = lp[i], to\n`f(i·p)` z „potęgowego” przypadku, inaczej `f(i)·f(p)`.",
+     "code": "const int N = 100;\nvector<int> lp(N + 1, 0), pr, mu(N + 1, 0);\nmu[1] = 1;\nfor (int i = 2; i <= N; i++) {\n    if (!lp[i]) { lp[i] = i; pr.push_back(i); mu[i] = -1; }\n    for (int p : pr) {\n        if (p > lp[i] || i * p > N) break;\n        lp[i * p] = p;\n        mu[i * p] = (p == lp[i]) ? 0 : -mu[i];\n    }\n}\ncout << mu[30] << \" \" << mu[18] << \"\\n\";   // -1 0"
+    },
+    {
+     "q": [
+      "pary wzglednie pierwsze",
+      "liczba par wzglednie pierwszych",
+      "ile par ma nwd 1",
+      "pary z nwd 1",
+      "count coprime pairs",
+      "ile par (i,j) nwd(i,j)=1",
+      "liczba par z nwd rownym 1",
+      "pary z gcd 1 do n"
+     ],
+     "a": "`Σ_{d≥1} μ(d)·⌊n/d⌋·⌊m/d⌋` — dla każdego d liczymy pary podzielne przez d ze znakiem μ(d). Naiwnie O(n),\nblokami ⌊n/d⌋ z sumami prefiksowymi μ — O(√n). Dla n = m wynik ≈ (6/π²)·n². Pełny program w artykule.",
+     "code": "int n = 10, m = 10;\nvector<int> mu(n + 1, 1), comp(n + 1, 0);\nfor (int p = 2; p <= n; p++) if (!comp[p]) {\n    for (int k = p; k <= n; k += p) { if (k > p) comp[k] = 1; mu[k] = -mu[k]; }\n    for (long long k = 1LL * p * p; k <= n; k += 1LL * p * p) mu[k] = 0;\n}\nlong long ans = 0;\nfor (int d = 1; d <= min(n, m); d++) ans += 1LL * mu[d] * (n / d) * (m / d);\ncout << ans << \"\\n\";   // 63"
+    },
+    {
+     "q": [
+      "pary wzglednie pierwsze w tablicy",
+      "ile par w tablicy ma nwd 1",
+      "coprime pairs in array",
+      "liczba par elementow z gcd 1",
+      "pary liczb wzglednie pierwszych z ciagu",
+      "ile par a_i a_j ma gcd 1"
+     ],
+     "a": "Dla każdego d policz `c_d` = ile elementów dzieli się przez d (przejście po wielokrotnościach d — razem\nO(V log V)). Odpowiedź: `Σ_d μ(d)·c_d·(c_d − 1)/2`. Pełny kod w artykule (blok „Pary względnie pierwsze w tablicy”)."
+    },
+    {
+     "q": [
+      "pary z nwd rownym k",
+      "ile par ma nwd dokladnie k",
+      "gcd equal k pairs",
+      "liczba par z gcd = d",
+      "pary nwd = g",
+      "ile par ma gcd rowne g"
+     ],
+     "a": "NWD(i, j) = g ⇔ g | i, g | j i NWD(i/g, j/g) = 1. Więc liczba par w 1..n × 1..m z NWD = g to\n`coprimePairs(n / g, m / g)`. Dla tablicy: `F(g) = G(g) − Σ_{k = 2g, 3g, …} F(k)`, licząc od największego g,\ngdzie G(g) = C(c_g, 2) — bez μ, O(V log V)."
+    },
+    {
+     "q": [
+      "odwracanie mobiusa",
+      "mobius inversion",
+      "wzor odwrocenia mobiusa",
+      "inwersja mobiusa",
+      "suma po dzielnikach mobius",
+      "mobius inversion formula"
+     ],
+     "a": "Jeśli `g(n) = Σ_{d|n} f(d)`, to `f(n) = Σ_{d|n} μ(d)·g(n/d)`. Wersja po wielokrotnościach: jeśli\n`G(d) = Σ_{d|k} F(k)`, to `F(d) = Σ_{d|k} μ(k/d)·G(k)`. Typowo G („NWD podzielne przez d”) łatwo policzyć\nwprost, a F („NWD dokładnie d”) — przez odwrócenie."
+    },
+    {
+     "q": [
+      "suma nwd wszystkich par",
+      "suma gcd(i,j)",
+      "sum of gcd pairs",
+      "suma nwd(i, j) dla i,j do n",
+      "sum gcd 1..n",
+      "suma gcd po parach"
+     ],
+     "a": "Skoro `g = Σ_{d|g} φ(d)`, to `Σ_{i,j ≤ n} NWD(i, j) = Σ_d φ(d)·⌊n/d⌋²`. O(n) po sicie φ (albo O(√n)\nz sumami prefiksowymi φ).",
+     "code": "int n = 1000;\nvector<int> phi(n + 1);\niota(phi.begin(), phi.end(), 0);\nfor (int p = 2; p <= n; p++)\n    if (phi[p] == p)                              // p pierwsze\n        for (int k = p; k <= n; k += p) phi[k] -= phi[k] / p;\nlong long sum = 0;\nfor (int d = 1; d <= n; d++) sum += (long long)phi[d] * (n / d) * (n / d);\ncout << sum << \"\\n\";   // 4449880"
+    },
+    {
+     "q": [
+      "bloki floor n/d",
+      "dzielenie na bloki n/i",
+      "floor division blocks",
+      "n/d przyjmuje sqrt n wartosci",
+      "suma floor(n/i) szybko",
+      "harmonic lemma"
+     ],
+     "a": "⌊n/d⌋ ma O(√n) różnych wartości. Dla bloku zaczynającego się w d jego koniec to `n / (n / d)`; dla dwóch\nliczb `min(n / (n / d), m / (m / d))`. W bloku mnożysz wartość przez sumę (prefiksową) funkcji na przedziale.",
+     "code": "long long n = 1'000'000'000'000LL, sum = 0;      // suma floor(n/d) dla d = 1..n\nfor (long long d = 1, nd; d <= n; d = nd + 1) {\n    nd = n / (n / d);\n    sum += (n / d) * (nd - d + 1);\n}\ncout << sum << \"\\n\";"
+    },
+    {
+     "q": [
+      "liczba dzielnikow sito liniowe",
+      "funkcja multiplikatywna sito",
+      "d(n) dla wszystkich n",
+      "liczba dzielnikow do 10^6",
+      "multiplicative function linear sieve",
+      "sito liczby dzielnikow"
+     ],
+     "a": "Trzymaj e[i] = wykładnik najmniejszego czynnika. Gdy p = lp[i]: `e[i·p] = e[i] + 1`,\n`d(i·p) = d(i) / (e[i] + 1) · (e[i] + 2)`; inaczej `e = 1`, `d(i·p) = 2·d(i)`. O(N).",
+     "code": "const int N = 1'000'000;\nint lp[N + 1], dcnt[N + 1], e[N + 1];        // e[i] = wykładnik lp[i] w i\nvector<int> pr;\nvoid sieveDivisors() {\n    dcnt[1] = 1;\n    for (int i = 2; i <= N; i++) {\n        if (!lp[i]) { lp[i] = i; pr.push_back(i); dcnt[i] = 2; e[i] = 1; }\n        for (int p : pr) {\n            if (p > lp[i] || (long long)i * p > N) break;\n            lp[i * p] = p;\n            if (p == lp[i]) {                     // ten sam najmniejszy czynnik: wykładnik rośnie o 1\n                e[i * p] = e[i] + 1;\n                dcnt[i * p] = dcnt[i] / (e[i] + 1) * (e[i] + 2);\n            } else {                              // nowy czynnik pierwszy: d(i*p) = d(i) * 2\n                e[i * p] = 1;\n                dcnt[i * p] = dcnt[i] * 2;\n            }\n        }\n    }\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "math-sieve",
+    "math-euler-phi",
+    "math-inclusion-exclusion",
+    "math-gcd-lcm",
+    "math-series",
+    "math-factorization"
+   ]
+  },
+  {
+   "id": "geo-distances",
+   "title": "Odległości: euklidesowa, Manhattan, Czebyszew i obrót o 45° (x+y, x−y)",
+   "category": "Geometria",
+   "tags": [
+    "odległość",
+    "manhattan",
+    "czebyszew",
+    "chebyshev",
+    "euklidesowa",
+    "metryka taksówkowa",
+    "obrót o 45 stopni",
+    "hypot",
+    "mediana",
+    "ruchy króla"
+   ],
+   "aliases": [
+    "odległość manhattan",
+    "odleglosc manhattan",
+    "manhattan distance",
+    "metryka taksówkowa",
+    "odległość taksówkowa",
+    "odległość czebyszewa",
+    "odleglosc czebyszewa",
+    "chebyshev distance",
+    "odległość euklidesowa",
+    "euclidean distance",
+    "odległość między punktami",
+    "odleglosc miedzy punktami",
+    "obrót o 45 stopni",
+    "x+y x-y",
+    "max odległość manhattan"
+   ],
+   "summary": "Euklidesowa √(dx² + dy²) (porównuj kwadraty w long long), Manhattan |dx| + |dy| (ruchy w 4 kierunkach), Czebyszew max(|dx|, |dy|) (ruchy króla). Zamiana (x, y) → (x + y, x − y) zamienia Manhattan w Czebyszewa, co daje m.in. maksymalną odległość Manhattan w O(n).",
+   "complexity": "pojedyncza odległość O(1); max Manhattan w zbiorze O(n); suma odległości po wszystkich parach O(n log n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Metryka",
+      "Wzór",
+      "Kiedy w zadaniu",
+      "„Okrąg” o promieniu r",
+      "Typ"
+     ],
+     "rows": [
+      [
+       "euklidesowa",
+       "√(dx² + dy²)",
+       "linia prosta, „w linii prostej”",
+       "okrąg",
+       "double; porównania na dx² + dy² w long long"
+      ],
+      [
+       "Manhattan (taksówkowa)",
+       "|dx| + |dy|",
+       "ruchy góra/dół/lewo/prawo po kratce bez przeszkód",
+       "romb (kwadrat obrócony o 45°)",
+       "long long"
+      ],
+      [
+       "Czebyszewa",
+       "max(|dx|, |dy|)",
+       "ruchy króla (8 kierunków), dwie osie naraz",
+       "kwadrat",
+       "long long"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Obrót o 45°.** Dla `u = x + y`, `v = x − y` zachodzi `|dx| + |dy| = max(|du|, |dv|)` (bo |a| + |b| =\nmax(|a + b|, |a − b|)). Czyli odległość Manhattan w (x, y) = odległość Czebyszewa w (u, v). W drugą stronę:\nCzebyszew w (x, y) = Manhattan w ((x + y)/2, (x − y)/2) — żeby nie mieć ułamków, licz Manhattan na\n(x + y, x − y) i podziel wynik przez 2.\n\nZastosowania: **maksymalna odległość Manhattan** = `max(maxU − minU, maxV − minV)`; zbiór punktów w odległości\nManhattan ≤ d od punktu (romb) staje się kwadratem równoległym do osi → sumy prefiksowe 2D, zamiatanie;\nsumy odległości Czebyszewa sprowadzamy do Manhattan, a Manhattan rozkłada się na osie niezależnie."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: max odległość Manhattan i suma odległości po wszystkich parach",
+     "code": "// n punktów kratowych: maksymalna odległość Manhattan (obrót o 45°) i suma odległości Manhattan\n// po wszystkich parach (osobno po osiach, sortowanie + sumy prefiksowe). Razem O(n log n).\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<ll> x(n), y(n);\n    for (int i = 0; i < n; i++) cin >> x[i] >> y[i];\n\n    // |dx| + |dy| = max(|du|, |dv|) dla u = x + y, v = x - y\n    ll maxU = LLONG_MIN, minU = LLONG_MAX, maxV = LLONG_MIN, minV = LLONG_MAX;\n    for (int i = 0; i < n; i++) {\n        ll u = x[i] + y[i], v = x[i] - y[i];\n        maxU = max(maxU, u); minU = min(minU, u);\n        maxV = max(maxV, v); minV = min(minV, v);\n    }\n    cout << \"max Manhattan: \" << max(maxU - minU, maxV - minV) << \"\\n\";\n\n    // suma |x_i - x_j| po parach i < j: po posortowaniu x_i wnosi x_i * i - (suma poprzednich)\n    auto pairSum = [](vector<ll> c) {\n        sort(c.begin(), c.end());\n        ll res = 0, pref = 0;\n        for (int i = 0; i < (int)c.size(); i++) {\n            res += c[i] * i - pref;\n            pref += c[i];\n        }\n        return res;\n    };\n    cout << \"suma Manhattan po parach: \" << pairSum(x) + pairSum(y) << \"\\n\";\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Punkt minimalizujący **sumę** odległości Manhattan do zbioru punktów: mediana x-ów i (niezależnie) mediana\ny-ów. W 1D Σ|x − x_i| jest najmniejsza dla mediany, a średnia minimalizuje sumę **kwadratów**."
+    },
+    {
+     "type": "warn",
+     "md": "Kwadrat odległości dla współrzędnych do 10^9: dx² + dy² ≤ 2·(2·10^9)² = 8·10^18 — mieści się w `long long`\n(≤ 9,22·10^18), ale ledwo. Dla współrzędnych do 2·10^9 albo sum wielu takich wartości → `__int128`.\nSuma odległości Manhattan po wszystkich parach przy n = 2·10^5 i |x| ≤ 10^9 też może przekroczyć `long long`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "llabs(x1 - x2) + llabs(y1 - y2)",
+     "desc": "odległość Manhattan",
+     "complexity": "O(1)",
+     "returns": "long long"
+    },
+    {
+     "sig": "max(llabs(x1 - x2), llabs(y1 - y2))",
+     "desc": "odległość Czebyszewa",
+     "complexity": "O(1)",
+     "returns": "long long"
+    },
+    {
+     "sig": "hypot(dx, dy)",
+     "desc": "odległość euklidesowa bez pośredniego przepełnienia",
+     "complexity": "O(1)",
+     "returns": "double"
+    }
+   ],
+   "pitfalls": [
+    "Porównywanie odległości przez `sqrt` na double — porównuj kwadraty `dx*dx + dy*dy` dokładnie w long long.",
+    "`int dx` i `dx * dx` — przepełnienie int przed przypisaniem do long long.",
+    "`abs()` na long long bez właściwego przeciążenia (stare nagłówki C) — używaj `llabs` lub `std::abs` z <cstdlib>.",
+    "Odległość na kratce z przeszkodami to BFS, nie wzór Manhattan.",
+    "Ruchy króla to Czebyszew (przekątna = 1 ruch), a nie Manhattan.",
+    "Obrót (x + y, x − y) podwaja „skalę” przy przejściu Czebyszew → Manhattan — nie zapomnij podzielić przez 2.",
+    "Mediana przy parzystej liczbie punktów: każdy punkt między dwiema środkowymi daje tę samą sumę."
+   ],
+   "qa": [
+    {
+     "q": [
+      "odleglosc manhattan",
+      "odległość manhattan",
+      "manhattan distance c++",
+      "metryka taksowkowa",
+      "odleglosc taksowkowa",
+      "|x1-x2|+|y1-y2|",
+      "manhattan odleglosc wzor",
+      "manhatan distance"
+     ],
+     "a": "`|x1 − x2| + |y1 − y2|` — liczba kroków góra/dół/lewo/prawo po kratce bez przeszkód. Licz w `long long`.",
+     "code": "long long x1 = 1, y1 = 2, x2 = -3, y2 = 7;\nlong long d = llabs(x1 - x2) + llabs(y1 - y2);\ncout << d << \"\\n\";   // 9"
+    },
+    {
+     "q": [
+      "odleglosc czebyszewa",
+      "odległość czebyszewa",
+      "chebyshev distance",
+      "ruchy krola odleglosc",
+      "ile ruchow krolem",
+      "max(|dx|,|dy|)",
+      "krol szachowy ile ruchow",
+      "czebyszew"
+     ],
+     "a": "`max(|dx|, |dy|)` — tyle ruchów potrzebuje król szachowy (ruch po przekątnej zmienia obie współrzędne naraz).",
+     "code": "long long x1 = 0, y1 = 0, x2 = 3, y2 = -5;\ncout << max(llabs(x1 - x2), llabs(y1 - y2)) << \"\\n\";   // 5"
+    },
+    {
+     "q": [
+      "odleglosc euklidesowa",
+      "odległość między dwoma punktami",
+      "euclidean distance c++",
+      "odleglosc miedzy punktami wzor",
+      "sqrt dx dy",
+      "hypot c++",
+      "dlugosc odcinka",
+      "odleglosc punktow c++"
+     ],
+     "a": "`sqrt(dx*dx + dy*dy)` albo `hypot(dx, dy)`. Do **porównań** nie pierwiastkuj — porównuj kwadraty w\n`long long`. Wypisuj z `fixed << setprecision(k)`.",
+     "code": "long long x1 = 0, y1 = 0, x2 = 3, y2 = 4;\nlong long dx = x2 - x1, dy = y2 - y1;\ncout << fixed << setprecision(6) << hypot((double)dx, (double)dy) << \"\\n\";   // 5.000000\nlong long d2 = dx * dx + dy * dy;                 // do porównań: dokładnie, bez sqrt\ncout << d2 << \"\\n\";                              // 25"
+    },
+    {
+     "q": [
+      "obrot o 45 stopni",
+      "x+y x-y",
+      "zamiana manhattan na czebyszew",
+      "manhattan to chebyshev",
+      "transformacja (x+y, x-y)",
+      "obrot ukladu wspolrzednych 45",
+      "rotate 45 degrees manhattan"
+     ],
+     "a": "Podstaw `u = x + y`, `v = x − y`. Wtedy `|dx| + |dy| = max(|du|, |dv|)`: Manhattan → Czebyszew. Odwrotnie\nCzebyszew(x, y) = Manhattan(u, v) / 2. Romb |dx| + |dy| ≤ d staje się kwadratem |du| ≤ d, |dv| ≤ d —\nwtedy działają sumy prefiksowe 2D i zamiatanie po osiach.",
+     "code": "long long x = 3, y = 5;\nlong long u = x + y, v = x - y;          // (8, -2)\n// dist_M(p, q) == max(|u_p - u_q|, |v_p - v_q|)\ncout << u << \" \" << v << \"\\n\";"
+    },
+    {
+     "q": [
+      "maksymalna odleglosc manhattan",
+      "max manhattan distance",
+      "najdalsza para punktow manhattan",
+      "najwieksza odleglosc manhattan miedzy punktami",
+      "max |x1-x2|+|y1-y2|",
+      "najdalsze punkty manhattan"
+     ],
+     "a": "Po obrocie: `max(maxU − minU, maxV − minV)` dla u = x + y, v = x − y. O(n) zamiast O(n²).",
+     "code": "vector<pair<long long, long long>> p = {{0, 0}, {3, 4}, {-2, 5}, {6, -1}};\nlong long mxU = LLONG_MIN, mnU = LLONG_MAX, mxV = LLONG_MIN, mnV = LLONG_MAX;\nfor (auto [x, y] : p) {\n    mxU = max(mxU, x + y); mnU = min(mnU, x + y);\n    mxV = max(mxV, x - y); mnV = min(mnV, x - y);\n}\ncout << max(mxU - mnU, mxV - mnV) << \"\\n\";   // 14: (-2,5) i (6,-1)"
+    },
+    {
+     "q": [
+      "suma odleglosci manhattan wszystkich par",
+      "suma odleglosci miedzy wszystkimi parami",
+      "sum of manhattan distances",
+      "suma |xi-xj| po parach",
+      "suma odleglosci par punktow",
+      "suma odleglosci wszystkich par punktow"
+     ],
+     "a": "Osie są niezależne: wynik = Σ|x_i − x_j| + Σ|y_i − y_j|. Posortuj współrzędne; element na pozycji i\n(od 0) wnosi `x_i·i − (suma poprzednich)`. O(n log n). Uwaga na przepełnienie przy dużych n i współrzędnych.",
+     "code": "vector<long long> xs = {1, 5, 3, 10};\nsort(xs.begin(), xs.end());\nlong long res = 0, pref = 0;\nfor (int i = 0; i < (int)xs.size(); i++) {\n    res += xs[i] * i - pref;\n    pref += xs[i];\n}\ncout << res << \"\\n\";   // 2+4+9 + 2+7 + 5 = 29"
+    },
+    {
+     "q": [
+      "punkt minimalizujacy sume odleglosci",
+      "mediana minimalizuje sume",
+      "gdzie postawic sklep manhattan",
+      "minimize sum of distances",
+      "punkt o najmniejszej sumie odleglosci",
+      "mediana odleglosci",
+      "optymalne miejsce spotkania"
+     ],
+     "a": "Dla Manhattan: x = mediana x-ów, y = mediana y-ów (niezależnie). W 1D funkcja Σ|x − x_i| maleje do mediany\ni potem rośnie. `nth_element` daje medianę w O(n). (Dla Czebyszewa — obrót o 45° i mediany w (u, v),\npamiętając, że u i v muszą mieć tę samą parzystość.)",
+     "code": "vector<long long> xs = {1, 7, 3, 9, 4};\nnth_element(xs.begin(), xs.begin() + xs.size() / 2, xs.end());\nlong long med = xs[xs.size() / 2];             // 4\nlong long s = 0;\nfor (long long x : xs) s += llabs(x - med);\ncout << med << \" \" << s << \"\\n\";            // 4 12"
+    },
+    {
+     "q": [
+      "porownanie odleglosci bez sqrt",
+      "porownywanie odleglosci kwadraty",
+      "czy uzywac sqrt do odleglosci",
+      "compare distances without sqrt",
+      "kwadrat odleglosci long long",
+      "najblizszy punkt bez pierwiastka"
+     ],
+     "a": "Pierwiastek jest monotoniczny, więc `d1 < d2 ⇔ d1² < d2²`. Licz `dx*dx + dy*dy` w `long long` — wynik\ndokładny, bez EPS. Pierwiastkuj dopiero przy wypisywaniu."
+    },
+    {
+     "q": [
+      "suma odleglosci czebyszewa",
+      "sum of chebyshev distances",
+      "suma ruchow krola wszystkich par",
+      "czebyszew na manhattan",
+      "chebyshev to manhattan"
+     ],
+     "a": "Zamień punkty na (x + y, x − y), policz sumę odległości Manhattan po parach (sortowanie + prefiksy\nosobno dla obu osi) i podziel przez 2 — wynik zawsze jest całkowity."
+    }
+   ],
+   "related": [
+    "geo-point-vector",
+    "geo-pitfalls",
+    "geo-circles",
+    "ds-prefix-sums-2d",
+    "tech-sweep-line",
+    "stl-nth-element"
+   ]
+  },
+  {
+   "id": "geo-circles",
+   "title": "Okręgi i koła — punkt w kole, przecięcie z prostą i z okręgiem, pole, π (M_PI vs acos(-1))",
+   "category": "Geometria",
+   "tags": [
+    "okrąg",
+    "koło",
+    "circle",
+    "przecięcie okręgów",
+    "prosta i okrąg",
+    "pole koła",
+    "pi",
+    "M_PI",
+    "acos(-1)",
+    "okrąg opisany",
+    "punkty kratowe"
+   ],
+   "aliases": [
+    "okrąg",
+    "okrag",
+    "koło",
+    "circle",
+    "punkt w kole",
+    "punkt w okręgu",
+    "point in circle",
+    "przecięcie okręgów",
+    "przeciecie dwoch okregow",
+    "circle circle intersection",
+    "przecięcie prostej z okręgiem",
+    "line circle intersection",
+    "pole koła",
+    "M_PI",
+    "acos(-1)",
+    "liczba pi c++",
+    "punkty kratowe w kole",
+    "okrąg opisany"
+   ],
+   "summary": "Okrąg (c, r) to punkty w odległości r od c. Punkt w kole sprawdzaj dokładnie: (x−cx)² + (y−cy)² ≤ r² w long long. Przecięcia z prostą i z drugim okręgiem liczy się z rzutu środka i twierdzenia Pitagorasa (double, EPS, max(0, ·) pod pierwiastkiem). π: acos(-1) lub std::numbers::pi zamiast niestandardowego M_PI.",
+   "complexity": "każda operacja O(1); punkty kratowe w kole O(r)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Punkt w kole** (dane całkowite): `d² = (x − cx)² + (y − cy)²`; `d² < r²` — wewnątrz, `= r²` — na okręgu,\n`> r²` — na zewnątrz. Wszystko w `long long`, bez pierwiastka i bez EPS.\n\n**Prosta AB i okrąg (c, r):** rzutuj c na prostą (punkt H). Jeśli `|cH| > r` — brak przecięcia; inaczej punkty\nto `H ± t·(B − A)/|B − A|` dla `t = √(r² − |cH|²)`.\n\n**Dwa okręgi:** d = |c1c2|. Rozłączne gdy `d > r1 + r2`, jeden w drugim gdy `d < |r1 − r2|`, współśrodkowe\n(d = 0) — brak albo nieskończenie wiele (r1 = r2). W pozostałych przypadkach cięciwa wspólna leży w odległości\n`a = (r1² − r2² + d²) / (2d)` od c1, a jej połowa ma długość `h = √(r1² − a²)`."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Położenie dwóch okręgów (d = |c1c2|)",
+      "Punkty wspólne"
+     ],
+     "rows": [
+      [
+       "d > r1 + r2",
+       "0 (rozłączne zewnętrznie)"
+      ],
+      [
+       "d = r1 + r2",
+       "1 (styczne zewnętrznie)"
+      ],
+      [
+       "|r1 − r2| < d < r1 + r2",
+       "2 (przecinają się)"
+      ],
+      [
+       "d = |r1 − r2| > 0",
+       "1 (styczne wewnętrznie)"
+      ],
+      [
+       "d < |r1 − r2|",
+       "0 (jeden wewnątrz drugiego)"
+      ],
+      [
+       "d = 0, r1 = r2",
+       "nieskończenie wiele (te same okręgi)"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "Na danych całkowitych warunki z tabeli sprawdzaj **dokładnie**, podnosząc do kwadratu:\n`d² > (r1 + r2)²`, `d² < (r1 − r2)²` itd. — wszystko w `long long`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: przecięcie prostej z okręgiem, dwóch okręgów, pole części wspólnej kół",
+     "code": "// Okręgi na double: przecięcie prostej z okręgiem, dwóch okręgów i pole części wspólnej dwóch kół.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long double ld;\nconst ld PI = acosl(-1.0L), EPS = 1e-12;\n\nstruct P {\n    ld x, y;\n    P operator+(P o) const { return {x + o.x, y + o.y}; }\n    P operator-(P o) const { return {x - o.x, y - o.y}; }\n    P operator*(ld k) const { return {x * k, y * k}; }\n    ld dot(P o) const { return x * o.x + y * o.y; }\n    ld norm2() const { return x * x + y * y; }\n    P perp() const { return {-y, x}; }          // obrót o 90° w lewo\n};\n\n// Prosta przez A i B (A != B) a okrąg (c, r): 0, 1 (styczna) albo 2 punkty.\nvector<P> lineCircle(P a, P b, P c, ld r) {\n    P d = b - a;\n    P h = a + d * ((c - a).dot(d) / d.norm2());   // rzut środka na prostą\n    ld dist2 = (c - h).norm2();\n    if (dist2 > r * r + EPS) return {};\n    ld t = sqrtl(max((ld)0, r * r - dist2)) / sqrtl(d.norm2());\n    if (t < EPS) return {h};\n    return {h - d * t, h + d * t};\n}\n\n// Okręgi (c1, r1) i (c2, r2): 0, 1 albo 2 punkty. Dla identycznych okręgów (nieskończenie wiele) zwraca {}.\nvector<P> circleCircle(P c1, ld r1, P c2, ld r2) {\n    P v = c2 - c1;\n    ld d2 = v.norm2(), d = sqrtl(d2);\n    if (d < EPS) return {};                               // współśrodkowe\n    if (d > r1 + r2 + EPS || d < fabsl(r1 - r2) - EPS) return {};   // rozłączne / jeden w drugim\n    ld a = (r1 * r1 - r2 * r2 + d2) / (2 * d);            // odległość od c1 do cięciwy\n    ld h = sqrtl(max((ld)0, r1 * r1 - a * a));            // połowa długości cięciwy\n    P m = c1 + v * (a / d);\n    if (h < EPS) return {m};                              // styczne\n    P off = v.perp() * (h / d);\n    return {m + off, m - off};\n}\n\n// Pole części wspólnej dwóch kół.\nld intersectionArea(P c1, ld r1, P c2, ld r2) {\n    ld d = sqrtl((c2 - c1).norm2());\n    if (d >= r1 + r2) return 0;\n    if (d <= fabsl(r1 - r2)) { ld r = min(r1, r2); return PI * r * r; }   // mniejsze koło w większym\n    ld al = acosl((d * d + r1 * r1 - r2 * r2) / (2 * d * r1));            // połowa kąta środkowego w c1\n    ld be = acosl((d * d + r2 * r2 - r1 * r1) / (2 * d * r2));\n    return r1 * r1 * (al - sinl(2 * al) / 2) + r2 * r2 * (be - sinl(2 * be) / 2);   // dwa odcinki koła\n}\n\nint main() {\n    cout << fixed << setprecision(6);\n    for (P p : lineCircle({-5, 0}, {5, 0}, {0, 0}, 2)) cout << p.x << \" \" << p.y << \"\\n\";        // (-2,0) (2,0)\n    for (P p : circleCircle({0, 0}, 5, {8, 0}, 5)) cout << p.x << \" \" << p.y << \"\\n\";           // (4,-3) (4,3)\n    cout << intersectionArea({0, 0}, 1, {1, 0}, 1) << \"\\n\";                                     // 1.228370\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wielkość",
+      "Wzór (θ w radianach)"
+     ],
+     "rows": [
+      [
+       "pole koła",
+       "π·r²"
+      ],
+      [
+       "obwód",
+       "2·π·r"
+      ],
+      [
+       "długość łuku",
+       "r·θ"
+      ],
+      [
+       "pole wycinka",
+       "r²·θ / 2"
+      ],
+      [
+       "pole odcinka koła (między cięciwą a łukiem)",
+       "r²·(θ − sin θ) / 2"
+      ],
+      [
+       "długość cięciwy",
+       "2·r·sin(θ/2)"
+      ],
+      [
+       "stopnie → radiany",
+       "θ_rad = θ_deg · π / 180"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Stała π.** `M_PI` nie należy do standardu C++ — to rozszerzenie POSIX. Na g++ (Linux, macOS, SIO2) działa,\nale np. MSVC wymaga `#define _USE_MATH_DEFINES` przed `<cmath>`. Przenośnie: `const double PI = acos(-1.0);`\nalbo w C++20 `std::numbers::pi` z `<numbers>` (nie istnieje w `-std=c++17`). Wszystkie dają tę samą wartość double."
+    },
+    {
+     "type": "warn",
+     "md": "`long double` na macOS z procesorem Apple (ARM) ma **tę samą precyzję co double** (64 bity), a na Linuksie\nx86 (sprawdzarka) — 80 bitów. Program może więc zachowywać się inaczej lokalnie i na SIO2; nie polegaj na\ndodatkowej precyzji long double przy testach na Macu."
+    },
+    {
+     "type": "tip",
+     "md": "Pod pierwiastkiem i w `acos` zawsze przycinaj: `sqrt(max(0.0, x))`, `acos(clamp(x, -1.0, 1.0))` — błąd\nzaokrąglenia potrafi dać −1e-17 albo 1,0000000002 i wynik NaN."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "vector<P> lineCircle(P a, P b, P c, ld r)",
+     "desc": "punkty przecięcia prostej AB z okręgiem (0, 1 lub 2)",
+     "complexity": "O(1)",
+     "returns": "vector<P>"
+    },
+    {
+     "sig": "vector<P> circleCircle(P c1, ld r1, P c2, ld r2)",
+     "desc": "punkty przecięcia dwóch okręgów (0, 1 lub 2)",
+     "complexity": "O(1)",
+     "returns": "vector<P>"
+    },
+    {
+     "sig": "ld intersectionArea(P c1, ld r1, P c2, ld r2)",
+     "desc": "pole części wspólnej dwóch kół",
+     "complexity": "O(1)",
+     "returns": "long double"
+    }
+   ],
+   "pitfalls": [
+    "Punkt w kole liczony przez `sqrt` i porównanie double — przy danych całkowitych porównuj kwadraty w long long.",
+    "`r * r` lub `dx * dx` w int — przepełnienie już przy 46341.",
+    "`sqrt` z liczby ujemnej (np. −1e-16 z zaokrągleń) → NaN; pisz `sqrt(max(0.0, x))`.",
+    "`acos` z argumentu minimalnie > 1 → NaN; przytnij do [−1, 1].",
+    "`sin`/`cos` przyjmują radiany, nie stopnie.",
+    "`M_PI` poza g++ (MSVC) bez `_USE_MATH_DEFINES` — błąd kompilacji; `acos(-1.0)` działa wszędzie.",
+    "Okręgi współśrodkowe (d = 0) — dzielenie przez d w przecięciu; obsłuż osobno.",
+    "Przypadek styczności przy double — porównania z EPS, inaczej 1 punkt raz wychodzi jako 0, raz jako 2."
+   ],
+   "qa": [
+    {
+     "q": [
+      "punkt w kole",
+      "czy punkt lezy w kole",
+      "point in circle",
+      "czy punkt jest w okregu",
+      "punkt wewnatrz okregu",
+      "punkt w kole long long",
+      "czy punkt nalezy do kola"
+     ],
+     "a": "Porównaj kwadrat odległości od środka z r² — dokładnie, w `long long`, bez `sqrt`.",
+     "code": "long long cx = 0, cy = 0, r = 5, x = 3, y = 4;\nlong long d2 = (x - cx) * (x - cx) + (y - cy) * (y - cy);\nif (d2 < r * r) cout << \"wewnatrz\\n\";\nelse if (d2 == r * r) cout << \"na okregu\\n\";   // ten przypadek\nelse cout << \"na zewnatrz\\n\";"
+    },
+    {
+     "q": [
+      "przeciecie dwoch okregow",
+      "przecięcie okręgów",
+      "punkty przeciecia okregow",
+      "circle circle intersection",
+      "czy okregi sie przecinaja",
+      "wspolne punkty dwoch okregow",
+      "przeciecie okregow c++"
+     ],
+     "a": "Czy się przecinają (dane całkowite): `(r1 − r2)² ≤ d² ≤ (r1 + r2)²` w long long (i nie d = 0). Punkty:\n`a = (r1² − r2² + d²)/(2d)`, `h = √(r1² − a²)`, M = c1 + (c2 − c1)·a/d, punkty = M ± prostopadły(c2 − c1)·h/d.\nFunkcja `circleCircle` w artykule.",
+     "code": "long long x1 = 0, y1 = 0, r1 = 5, x2 = 8, y2 = 0, r2 = 5;\nlong long d2 = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);\nbool meet = d2 > 0 && d2 <= (r1 + r2) * (r1 + r2) && d2 >= (r1 - r2) * (r1 - r2);\ncout << (meet ? \"przecinaja sie\" : \"nie\") << \"\\n\";   // (4, 3) i (4, -3)"
+    },
+    {
+     "q": [
+      "przeciecie prostej z okregiem",
+      "prosta i okrag",
+      "line circle intersection",
+      "punkty przeciecia prostej i okregu",
+      "czy prosta przecina kolo",
+      "odcinek przecina okrag",
+      "prosta styczna do okregu"
+     ],
+     "a": "Rzutuj środek c na prostą (punkt H). Odległość |cH| > r → brak, = r → styczna (1 punkt), < r → dwa punkty\nH ± kierunek·√(r² − |cH|²). Dla **odcinka** dodatkowo sprawdź, czy punkty leżą między końcami\n(parametr t ∈ [0, 1]). Funkcja `lineCircle` w artykule; czy prosta przecina koło (całkowicie dokładnie):\n`cross² ≤ r²·|AB|²`.",
+     "code": "long long ax = -5, ay = 1, bx = 5, by = 1, cx = 0, cy = 0, r = 2;   // prosta y = 1\nlong long dx = bx - ax, dy = by - ay;\nlong long cr = dx * (cy - ay) - dy * (cx - ax);   // |cross| = dist * |AB|; duże dane: __int128\nbool hits = cr * cr <= r * r * (dx * dx + dy * dy);\ncout << (hits ? \"TAK\" : \"NIE\") << \"\\n\";   // TAK"
+    },
+    {
+     "q": [
+      "pole kola",
+      "pole koła c++",
+      "obwod kola",
+      "area of circle",
+      "pi r kwadrat",
+      "pole i obwod okregu",
+      "obwod okregu c++"
+     ],
+     "a": "Pole `π·r²`, obwód `2·π·r`. π weź z `acos(-1.0)`. Wypisuj `fixed << setprecision(k)`.",
+     "code": "const double PI = acos(-1.0);\ndouble r = 2.5;\ncout << fixed << setprecision(4) << PI * r * r << \" \" << 2 * PI * r << \"\\n\";   // 19.6350 15.7080"
+    },
+    {
+     "q": [
+      "M_PI",
+      "m_pi nie dziala",
+      "jak zapisac pi w c++",
+      "liczba pi c++",
+      "acos(-1)",
+      "pi constant c++",
+      "numbers::pi",
+      "stala pi"
+     ],
+     "a": "`M_PI` to rozszerzenie POSIX, nie standard C++ — na g++ działa, ale np. MSVC wymaga `_USE_MATH_DEFINES`.\nPewnie: `const double PI = acos(-1.0);` (long double: `acosl(-1.0L)`), w C++20 `std::numbers::pi`\nz `<numbers>`. Nie wpisuj ręcznie 3.14 — za mało cyfr.",
+     "code": "const double PI = acos(-1.0);\nconst long double PIL = acosl(-1.0L);\ncout << setprecision(17) << PI << \" \" << std::numbers::pi << \" \" << (double)PIL << \"\\n\";"
+    },
+    {
+     "q": [
+      "pole czesci wspolnej dwoch kol",
+      "pole przeciecia kol",
+      "intersection area of two circles",
+      "wspolne pole dwoch okregow",
+      "pole soczewki",
+      "pole wspolne kol"
+     ],
+     "a": "Jeśli d ≥ r1 + r2 → 0; jeśli d ≤ |r1 − r2| → π·min(r)². Inaczej suma dwóch odcinków koła:\n`α = acos((d² + r1² − r2²)/(2·d·r1))`, `β` analogicznie, pole = `r1²(α − sin 2α / 2) + r2²(β − sin 2β / 2)`.\nFunkcja `intersectionArea` w artykule (sprawdzona całkowaniem numerycznym)."
+    },
+    {
+     "q": [
+      "okrag opisany na trojkacie",
+      "srodek okregu przez 3 punkty",
+      "circumcircle",
+      "okrag przez trzy punkty",
+      "circumcenter c++",
+      "okrag opisany c++"
+     ],
+     "a": "Środek okręgu opisanego to przecięcie symetralnych boków. Wzór zamknięty poniżej; mianownik d = 0 oznacza\npunkty współliniowe (okrąg nie istnieje).",
+     "code": "// okrąg opisany na trójkącie ABC; false, gdy punkty współliniowe\nbool circumcircle(double ax, double ay, double bx, double by, double cx, double cy,\n                  double &ox, double &oy, double &r) {\n    double d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));\n    if (fabs(d) < 1e-12) return false;\n    double a2 = ax * ax + ay * ay, b2 = bx * bx + by * by, c2 = cx * cx + cy * cy;\n    ox = (a2 * (by - cy) + b2 * (cy - ay) + c2 * (ay - by)) / d;\n    oy = (a2 * (cx - bx) + b2 * (ax - cx) + c2 * (bx - ax)) / d;\n    r = hypot(ax - ox, ay - oy);\n    return true;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "punkty kratowe w kole",
+      "ile punktow calkowitych w kole",
+      "lattice points in circle",
+      "x^2+y^2<=r^2 ile punktow",
+      "punkty o wspolrzednych calkowitych w okregu",
+      "punkty kratowe okrag"
+     ],
+     "a": "Dla każdego x z [−r, r] policz największe y z `y² ≤ r² − x²` (całkowity pierwiastek z korektą) i dodaj\n`2y + 1`. O(r); dla r = 10^6 wynik ≈ π·10^12.",
+     "code": "long long latticeInCircle(long long r) {\n    long long cnt = 0;\n    for (long long x = -r; x <= r; x++) {\n        long long rest = r * r - x * x;                    // y^2 <= rest\n        long long y = sqrtl((long double)rest);\n        while (y * y > rest) y--;                          // korekta zaokrąglenia sqrt\n        while ((y + 1) * (y + 1) <= rest) y++;\n        cnt += 2 * y + 1;                                  // y z [-y, y]\n    }\n    return cnt;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wzajemne polozenie okregow",
+      "okregi styczne",
+      "jeden okrag w drugim",
+      "relacja dwoch okregow",
+      "circles tangent",
+      "czy okregi sa styczne",
+      "polozenie dwoch okregow"
+     ],
+     "a": "Porównaj d² z `(r1 + r2)²` i `(r1 − r2)²` (całkowicie, w long long): większe od pierwszego → rozłączne,\nrówne → styczne zewnętrznie, między → przecinają się (2 punkty), równe drugiemu → styczne wewnętrznie,\nmniejsze → jeden w drugim; d = 0 i r1 = r2 → te same okręgi.",
+     "code": "long long d2 = 25, r1 = 3, r2 = 2;               // d = 5\nif (d2 > (r1 + r2) * (r1 + r2)) cout << \"rozlaczne\\n\";\nelse if (d2 == (r1 + r2) * (r1 + r2)) cout << \"styczne zewn.\\n\";   // ten przypadek\nelse if (d2 > (r1 - r2) * (r1 - r2)) cout << \"2 punkty\\n\";\nelse if (d2 == (r1 - r2) * (r1 - r2)) cout << (d2 == 0 ? \"te same okregi\\n\" : \"styczne wewn.\\n\");\nelse cout << \"jeden w drugim\\n\";"
+    }
+   ],
+   "related": [
+    "geo-point-vector",
+    "geo-point-line-distance",
+    "geo-pitfalls",
+    "geo-distances",
+    "io-precision",
+    "geo-pick"
+   ]
+  }
+ ]
+}

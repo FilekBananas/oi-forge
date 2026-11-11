@@ -1,0 +1,19 @@
+Nawiasy
+Napis złożony z nawiasów okrągłych, kwadratowych i klamrowych jest poprawny, jeśli każdy nawias otwierający ma
+odpowiadający mu nawias zamykający tego samego rodzaju, a pary nawiasów są poprawnie zagnieżdżone, np. „([]{})” jest
+poprawny, a „([)]” nie jest.
+Wejście
+W jedynym wierszu wejścia znajduje się napis złożony ze znaków ( ) [ ] { } o długości od 1 do 10^6.
+Wyjście
+Wypisz TAK, jeśli nawiasowanie jest poprawne, w przeciwnym razie wypisz NIE.
+Przykład 1
+Wejście:
+([]{})
+Wyjście:
+TAK
+
+Przykład 2
+Wejście:
+([)]
+Wyjście:
+NIE

@@ -1,0 +1,715 @@
+{
+ "chunk": "graphs-flow",
+ "articles": [
+  {
+   "id": "graph-bipartite-matching",
+   "title": "Skojarzenia w grafie dwudzielnym — Kuhn, Hopcroft-Karp, twierdzenie Königa",
+   "category": "Grafy",
+   "tags": [
+    "skojarzenie",
+    "matching",
+    "graf dwudzielny",
+    "kuhn",
+    "hopcroft-karp",
+    "ścieżka powiększająca",
+    "könig",
+    "pokrycie wierzchołkowe",
+    "zbiór niezależny",
+    "przydział"
+   ],
+   "aliases": [
+    "skojarzenie w grafie dwudzielnym",
+    "maksymalne skojarzenie",
+    "bipartite matching",
+    "algorytm kuhna",
+    "kuhn",
+    "hopcroft karp",
+    "hopcroft-karp",
+    "twierdzenie koniga",
+    "przydział zadań pracownikom",
+    "maximum matching",
+    "skojarzenia"
+   ],
+   "summary": "Maksymalne skojarzenie to największy zbiór krawędzi bez wspólnych końców. W grafie dwudzielnym liczy je algorytm Kuhna (ścieżki powiększające, O(n·m)) albo Hopcroft-Karp (O(m√n)). Z twierdzenia Königa rozmiar skojarzenia = minimalne pokrycie wierzchołkowe.",
+   "complexity": "Kuhn: O(n·m); Hopcroft-Karp: O(m·√n)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "Mamy dwie strony: lewą (np. pracownicy) i prawą (zadania), krawędź = „może wykonać”. **Skojarzenie**\nto wybór par bez powtórzeń. **Ścieżka powiększająca** zaczyna się w wolnym lewym wierzchołku, idzie na\nprzemian krawędzią spoza skojarzenia i ze skojarzenia, i kończy w wolnym prawym. Zamiana krawędzi na tej\nścieżce zwiększa skojarzenie o 1. Twierdzenie Berge’a: skojarzenie jest maksymalne ⇔ nie ma ścieżki\npowiększającej.\n\n**Kuhn:** dla każdego lewego `v` szukamy DFS-em ścieżki powiększającej: próbujemy każdego sąsiada `u`;\njeśli `u` wolny — bierzemy go, jeśli zajęty przez `w` — próbujemy rekurencyjnie „przesadzić” `w`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „przydziel każdemu pracownikowi co najwyżej jedno zadanie”, „pary chłopak–dziewczyna”,\n„maksymalna liczba par”, „ułóż maksymalnie wiele kostek domina na planszy” (szachownica jest dwudzielna),\n„minimalna liczba wierzchołków pokrywająca wszystkie krawędzie”, „minimalna liczba ścieżek pokrywających\nDAG”, „największy zbiór obiektów bez konfliktów” w grafie dwudzielnym."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Algorytm Kuhna — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 100005;\nvector<int> g[MAXN];             // g[v] = prawi sąsiedzi lewego v\nint mR[MAXN];                    // mR[u] = lewy skojarzony z prawym u (0 = wolny)\nint vis[MAXN], stamp = 0;        // znacznik odwiedzin z „datą” — bez czyszczenia tablicy\n\nbool kuhn(int v) {\n    if (vis[v] == stamp) return false;\n    vis[v] = stamp;\n    for (int u : g[v])\n        if (mR[u] == 0 || kuhn(mR[u])) {   // u wolny albo da się przesadzić jego partnera\n            mR[u] = v;\n            return true;\n        }\n    return false;\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n1, n2, m;\n    cin >> n1 >> n2 >> m;        // lewa strona 1..n1, prawa 1..n2\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n    }\n    int res = 0;\n    for (int v = 1; v <= n1; v++) {\n        stamp++;\n        if (kuhn(v)) res++;\n    }\n    cout << res << '\\n';\n    vector<int> mL(n1 + 1, 0);\n    for (int u = 1; u <= n2; u++) if (mR[u]) mL[mR[u]] = u;\n    for (int v = 1; v <= n1; v++) if (mL[v]) cout << v << ' ' << mL[v] << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Szybki trik: przed Kuhnem skojarz zachłannie (każdy lewy bierze pierwszego wolnego sąsiada). Kuhn\nmusi wtedy poprawić znacznie mniej wierzchołków — w praktyce kilkukrotne przyspieszenie."
+    },
+    {
+     "type": "warn",
+     "md": "Kuhn ma pesymistycznie O(n·m): dla `n = m = 10^5` może być za wolny. Wtedy Hopcroft-Karp (O(m√n))\nalbo Dinic na sieci jednostkowej (też O(m√n))."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "kuhn(v)",
+     "desc": "szuka ścieżki powiększającej z lewego v; true = skojarzenie wzrosło o 1",
+     "complexity": "O(m) na wywołanie"
+    },
+    {
+     "sig": "mR[u]",
+     "desc": "lewy partner prawego u (0 = wolny)",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Brak czyszczenia `vis` przed każdym lewym wierzchołkiem — użyj znacznika `stamp++` zamiast `memset`.",
+    "Te same numery dla lewej i prawej strony w jednej tablicy (`mR` i `vis` dla różnych stron) — trzymaj osobne tablice dla lewej i prawej strony.",
+    "Graf musi być dwudzielny; dla ogólnych grafów skojarzenie liczy się algorytmem Edmondsa (blossom) — rzadkość na OI.",
+    "Kuhn rekurencyjny ma głębokość do n — przy n = 10^5 zwykle OK, ale pamiętaj o stosie.",
+    "Krawędzie dodawaj tylko w kierunku lewa → prawa (nie w obie strony)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "skojarzenie w grafie dwudzielnym",
+      "maksymalne skojarzenie",
+      "bipartite matching c++",
+      "algorytm kuhna",
+      "kuhn kod",
+      "max matching"
+     ],
+     "a": "Algorytm Kuhna: dla każdego lewego wierzchołka szukaj DFS-em ścieżki powiększającej — próbuj sąsiadów\n`u`; jeśli `u` jest wolny albo jego obecnego partnera da się przesadzić gdzie indziej (rekurencja),\nprzypisz `u` do `v`. Każde wyszukiwanie to O(m), więc całość **O(n·m)**. Dla `n, m` rzędu 10^4–10^5\nz zachłanną inicjalizacją zwykle wystarcza.",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint mR[MAXN], vis[MAXN], stamp_ = 0;\nbool kuhn(int v) {\n    if (vis[v] == stamp_) return false;\n    vis[v] = stamp_;\n    for (int u : g[v])\n        if (!mR[u] || kuhn(mR[u])) { mR[u] = v; return true; }\n    return false;\n}\nint maxMatching(int n1) {\n    int res = 0;\n    for (int v = 1; v <= n1; v++) { stamp_++; if (kuhn(v)) res++; }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "hopcroft karp",
+      "hopcroft-karp c++",
+      "szybkie skojarzenie",
+      "matching 10^5 wierzchołków",
+      "skojarzenie m sqrt n"
+     ],
+     "a": "Hopcroft-Karp w każdej fazie robi BFS od wszystkich wolnych lewych wierzchołków (warstwy odległości),\na potem DFS-ami znajduje naraz maksymalny zbiór **najkrótszych**, rozłącznych ścieżek powiększających.\nFaz jest O(√n), każda kosztuje O(m) → **O(m√n)**. Dla `n, m ≈ 2·10^5` działa w ułamku sekundy.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct HopcroftKarp {\n    int n1, n2;\n    vector<vector<int>> g;\n    vector<int> mL, mR, dist;\n    HopcroftKarp(int n1, int n2) : n1(n1), n2(n2), g(n1 + 1), mL(n1 + 1, 0), mR(n2 + 1, 0), dist(n1 + 1) {}\n    void addEdge(int a, int b) { g[a].push_back(b); }\n    bool bfs() {\n        queue<int> q;\n        bool found = false;\n        for (int v = 1; v <= n1; v++) {\n            if (!mL[v]) { dist[v] = 0; q.push(v); }\n            else dist[v] = -1;\n        }\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int u : g[v]) {\n                int w = mR[u];\n                if (!w) found = true;\n                else if (dist[w] == -1) { dist[w] = dist[v] + 1; q.push(w); }\n            }\n        }\n        return found;\n    }\n    bool dfs(int v) {\n        for (int u : g[v]) {\n            int w = mR[u];\n            if (!w || (dist[w] == dist[v] + 1 && dfs(w))) { mL[v] = u; mR[u] = v; return true; }\n        }\n        dist[v] = -1;                      // ślepy zaułek w tej fazie\n        return false;\n    }\n    int maxMatching() {\n        int res = 0;\n        while (bfs())\n            for (int v = 1; v <= n1; v++)\n                if (!mL[v] && dfs(v)) res++;\n        return res;\n    }\n};\nint main() {\n    int n1, n2, m;\n    cin >> n1 >> n2 >> m;\n    HopcroftKarp hk(n1, n2);\n    for (int i = 0; i < m; i++) { int a, b; cin >> a >> b; hk.addEdge(a, b); }\n    cout << hk.maxMatching() << '\\n';\n}"
+    },
+    {
+     "q": [
+      "twierdzenie koniga",
+      "minimalne pokrycie wierzchołkowe dwudzielny",
+      "min vertex cover bipartite",
+      "konig theorem"
+     ],
+     "a": "**König:** w grafie dwudzielnym rozmiar maksymalnego skojarzenia = rozmiar minimalnego pokrycia\nwierzchołkowego (najmniejszy zbiór wierzchołków dotykający każdej krawędzi). Konstrukcja: z każdego\nwolnego lewego wierzchołka idź ścieżkami naprzemiennymi (lewy → prawy dowolną krawędzią, prawy → lewy\nkrawędzią skojarzenia). Pokrycie = lewe **nieodwiedzone** ∪ prawe **odwiedzone**. O(n·m) z Kuhnem.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 1005;\nvector<int> g[MAXN];\nint mR[MAXN], mL[MAXN], vis[MAXN], stamp_ = 0;\nbool visL[MAXN], visR[MAXN];\nbool kuhn(int v) {\n    if (vis[v] == stamp_) return false;\n    vis[v] = stamp_;\n    for (int u : g[v]) if (!mR[u] || kuhn(mR[u])) { mR[u] = v; mL[v] = u; return true; }\n    return false;\n}\nvoid alt(int v) {                          // ścieżki naprzemienne z lewego v\n    visL[v] = true;\n    for (int u : g[v])\n        if (!visR[u]) { visR[u] = true; if (mR[u] && !visL[mR[u]]) alt(mR[u]); }\n}\nint main() {\n    int n1, n2, m;\n    cin >> n1 >> n2 >> m;\n    for (int i = 0; i < m; i++) { int a, b; cin >> a >> b; g[a].push_back(b); }\n    int res = 0;\n    for (int v = 1; v <= n1; v++) { stamp_++; if (kuhn(v)) res++; }\n    for (int v = 1; v <= n1; v++) if (!mL[v]) alt(v);\n    cout << res << \"\\nL:\";\n    for (int v = 1; v <= n1; v++) if (!visL[v]) cout << ' ' << v;\n    cout << \"\\nP:\";\n    for (int u = 1; u <= n2; u++) if (visR[u]) cout << ' ' << u;\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "maksymalny zbiór niezależny dwudzielny",
+      "max independent set bipartite",
+      "największy zbiór bez konfliktów",
+      "zbiór niezależny graf dwudzielny"
+     ],
+     "a": "Dopełnienie pokrycia wierzchołkowego jest zbiorem niezależnym, więc w grafie dwudzielnym\n**max zbiór niezależny = n1 + n2 − max skojarzenie**. Np. „wybierz najwięcej osób, z których żadne\ndwie się nie kłócą” (gdy kłótnie są tylko między dwiema grupami). Same wierzchołki to dopełnienie\npokrycia z konstrukcji Königa. W ogólnym grafie to problem NP-trudny.",
+     "code": "int n1 = 3, n2 = 2, matching = 2;\ncout << n1 + n2 - matching << '\\n';   // 3, np. {L1, L2, P2}"
+    },
+    {
+     "q": [
+      "pokrycie ścieżkami dag",
+      "minimum path cover",
+      "minimalna liczba ścieżek pokrywających dag",
+      "ile minimum łańcuchów"
+     ],
+     "a": "Minimalna liczba **wierzchołkowo rozłącznych** ścieżek pokrywających DAG = `n − M`, gdzie `M` to\nmaksymalne skojarzenie w grafie dwudzielnym: lewa kopia `v_out`, prawa `u_in`, krawędź `v_out – u_in`\ndla każdej krawędzi `v → u`. Każda krawędź skojarzenia „skleja” dwa wierzchołki w jedną ścieżkę.\nJeśli ścieżki mogą się przecinać, najpierw policz domknięcie przechodnie.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 1005;\nvector<int> g[MAXN];\nint mR[MAXN], vis[MAXN], stamp_ = 0;\nbool kuhn(int v) {\n    if (vis[v] == stamp_) return false;\n    vis[v] = stamp_;\n    for (int u : g[v]) if (!mR[u] || kuhn(mR[u])) { mR[u] = v; return true; }\n    return false;\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < m; i++) { int a, b; cin >> a >> b; g[a].push_back(b); }   // a_out -> b_in\n    int M = 0;\n    for (int v = 1; v <= n; v++) { stamp_++; if (kuhn(v)) M++; }\n    cout << n - M << '\\n';\n}"
+    },
+    {
+     "q": [
+      "przydział zadań pracownikom",
+      "każdy pracownik jedno zadanie",
+      "assignment bez kosztów",
+      "pary maksymalna liczba"
+     ],
+     "a": "Gdy każdy może dostać **co najwyżej jedno** zadanie, a każde zadanie jednego wykonawcę, to maksymalne\nskojarzenie (Kuhn/Hopcroft-Karp). Gdy pracownik może wziąć do `k` zadań — przepływ: źródło → pracownik\n(przepustowość `k`), pracownik → zadanie (1), zadanie → ujście (1). Gdy przydziały mają **koszty**\ni chcesz najtańszy — przepływ o minimalnym koszcie (albo algorytm węgierski).",
+     "code": "// sieć dla „pracownik może wziąć do k zadań”: wierzchołki 0 = źródło, 1..P, P+1..P+Z, P+Z+1 = ujście\nint P = 2, Z = 3, k = 2;\nvector<array<int, 3>> siec;                         // {a, b, przepustowość}\nint S = 0, T = P + Z + 1;\nfor (int i = 1; i <= P; i++) siec.push_back({S, i, k});\nvector<pair<int,int>> moze = {{1, 1}, {1, 2}, {2, 2}, {2, 3}};\nfor (auto [p, z] : moze) siec.push_back({p, P + z, 1});\nfor (int j = 1; j <= Z; j++) siec.push_back({P + j, T, 1});\ncout << siec.size() << '\\n';   // 9 krawędzi -> dalej Dinic(S, T)"
+    },
+    {
+     "q": [
+      "skojarzenie przez przepływ",
+      "matching dinic",
+      "dinic na grafie dwudzielnym",
+      "skojarzenie max flow"
+     ],
+     "a": "Dodaj źródło połączone z każdym lewym (przepustowość 1), krawędzie lewy → prawy (1), każdy prawy →\nujście (1). Maksymalny przepływ = maksymalne skojarzenie, a krawędzie lewy → prawy z przepływem 1 to\npary. Dinic na takiej sieci jednostkowej działa w O(m√n) — tak jak Hopcroft-Karp. Wygodne, gdy i tak\nmasz gotowego Dinica albo pojemności inne niż 1.",
+     "code": "int n1 = 2, n2 = 2;\nint S = 0, T = n1 + n2 + 1;                 // prawy u -> wierzchołek n1 + u\nvector<array<int, 3>> siec;\nfor (int v = 1; v <= n1; v++) siec.push_back({S, v, 1});\nfor (int u = 1; u <= n2; u++) siec.push_back({n1 + u, T, 1});\nsiec.push_back({1, n1 + 1, 1});\nsiec.push_back({2, n1 + 1, 1});\ncout << siec.size() << ' ' << T << '\\n';   // 6 5"
+    },
+    {
+     "q": [
+      "kuhn złożoność",
+      "kuhn optymalizacja",
+      "kuhn za wolny",
+      "przyspieszenie algorytmu kuhna"
+     ],
+     "a": "Kuhn: n wywołań, każde O(m) → **O(n·m)**. Przyspieszenia: (1) znacznik `stamp` zamiast czyszczenia\n`vis` (O(1) zamiast O(n)), (2) zachłanna inicjalizacja skojarzenia, (3) w każdej rundzie próbuj\nwszystkich wolnych wierzchołków bez resetu `vis`, powtarzaj, dopóki coś się poprawia, (4) losowa\nkolejność sąsiadów. Gdy to nie wystarcza — Hopcroft-Karp.",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint mL[MAXN], mR[MAXN], vis[MAXN], stamp_ = 0;\nbool kuhn(int v) {\n    if (vis[v] == stamp_) return false;\n    vis[v] = stamp_;\n    for (int u : g[v]) if (!mR[u] || kuhn(mR[u])) { mR[u] = v; mL[v] = u; return true; }\n    return false;\n}\nint fastMatching(int n1) {\n    int res = 0;\n    for (int v = 1; v <= n1; v++)                     // zachłanna inicjalizacja\n        for (int u : g[v]) if (!mR[u]) { mR[u] = v; mL[v] = u; res++; break; }\n    bool poprawa = true;\n    while (poprawa) {                                 // rundy bez resetu vis\n        poprawa = false;\n        stamp_++;\n        for (int v = 1; v <= n1; v++)\n            if (!mL[v] && kuhn(v)) { res++; poprawa = true; }\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "skojarzenie doskonałe",
+      "czy wszyscy dostaną parę",
+      "twierdzenie halla",
+      "perfect matching"
+     ],
+     "a": "Skojarzenie doskonałe (każdy lewy wierzchołek skojarzony) istnieje ⇔ maksymalne skojarzenie = `n1`.\n**Twierdzenie Halla:** tak jest wtedy i tylko wtedy, gdy każdy podzbiór `X` lewej strony ma co najmniej\n`|X|` sąsiadów. W praktyce nie sprawdzasz podzbiorów, tylko liczysz skojarzenie; twierdzenie Halla\nprzydaje się do dowodów i zadań, gdzie trzeba ocenić sąsiedztwa przedziałami.",
+     "code": "int n1 = 3, wynikSkojarzenia = 3;\ncout << (wynikSkojarzenia == n1 ? \"doskonale\" : \"nie\") << '\\n';   // doskonale"
+    },
+    {
+     "q": [
+      "domino na planszy maksymalna liczba",
+      "ile kostek domina zmieści się",
+      "domino tiling matching",
+      "pokrycie planszy dominem"
+     ],
+     "a": "Plansza jest dwudzielna: pola z `(x + y)` parzystym po lewej, nieparzystym po prawej, krawędź między\nsąsiadującymi wolnymi polami. Każde domino to krawędź skojarzenia, więc maksymalna liczba kostek =\nmaksymalne skojarzenie. Dla planszy do ~100×100 (10^4 pól) Kuhn wystarczy; dla większych —\nHopcroft-Karp.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint n, m;\nvector<string> s;\nvector<vector<int>> g;\nvector<int> mR, vis;\nint stamp_ = 0;\nbool kuhn(int v) {\n    if (vis[v] == stamp_) return false;\n    vis[v] = stamp_;\n    for (int u : g[v]) if (mR[u] == -1 || kuhn(mR[u])) { mR[u] = v; return true; }\n    return false;\n}\nint main() {\n    cin >> n >> m;\n    s.resize(n);\n    for (auto& r : s) cin >> r;\n    g.assign(n * m, {}); mR.assign(n * m, -1); vis.assign(n * m, 0);\n    int dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\n    for (int x = 0; x < n; x++)\n        for (int y = 0; y < m; y++) {\n            if (s[x][y] != '.' || (x + y) % 2) continue;      // lewa strona: pola „białe”\n            for (int d = 0; d < 4; d++) {\n                int nx = x + dx[d], ny = y + dy[d];\n                if (nx >= 0 && ny >= 0 && nx < n && ny < m && s[nx][ny] == '.')\n                    g[x * m + y].push_back(nx * m + ny);\n            }\n        }\n    int res = 0;\n    for (int v = 0; v < n * m; v++) { stamp_++; if (kuhn(v)) res++; }\n    cout << res << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "graph-bipartite",
+    "graph-max-flow",
+    "graph-min-cost-flow",
+    "graph-dfs",
+    "graph-min-cut"
+   ]
+  },
+  {
+   "id": "graph-max-flow",
+   "title": "Maksymalny przepływ — algorytm Dinica (i Edmonds-Karp)",
+   "category": "Grafy",
+   "tags": [
+    "przepływ",
+    "max flow",
+    "maksymalny przepływ",
+    "dinic",
+    "edmonds-karp",
+    "ford-fulkerson",
+    "sieć residualna",
+    "krawędź odwrotna",
+    "super źródło"
+   ],
+   "aliases": [
+    "maksymalny przepływ",
+    "max flow",
+    "maxflow",
+    "przepływ w sieci",
+    "dinic",
+    "algorytm dinica",
+    "dinic c++",
+    "edmonds karp",
+    "ford fulkerson",
+    "sieć przepływowa",
+    "flow c++"
+   ],
+   "summary": "Ile maksymalnie „wody” przepłynie ze źródła s do ujścia t, gdy krawędzie mają przepustowości. Dinic (BFS warstwowy + blokujący DFS) liczy to w O(V²E), a w praktyce bardzo szybko; Edmonds-Karp (najkrótsze ścieżki BFS-em) w O(VE²).",
+   "complexity": "Dinic: O(V²·E) ogólnie, O(E·√V) na sieciach jednostkowych; Edmonds-Karp: O(V·E²)",
+   "level": 5,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Sieć residualna:** dla każdej krawędzi `a → b` o przepustowości `c` trzymamy też krawędź odwrotną\n`b → a` o przepustowości 0. Wysłanie `d` jednostek po `a → b` zmniejsza jej pozostałą przepustowość\no `d` i **zwiększa** odwrotną o `d` — to pozwala później „wycofać” przepływ, jeśli inna droga okaże się\nlepsza. Ford-Fulkerson: dopóki istnieje ścieżka s → t w sieci residualnej, puść nią tyle, ile się da.\n\n**Dinic:** (1) BFS od `s` liczy poziomy `level[v]` po krawędziach z wolną przepustowością; (2) DFS-y\npuszczają przepływ tylko krawędziami `level[u] = level[v] + 1`, ze wskaźnikiem `it[v]`, żeby nie\nsprawdzać martwych krawędzi drugi raz. Powtarzamy, aż `t` stanie się nieosiągalne. Krawędzie trzymamy\nparami: krawędź `i` i odwrotna `i ^ 1`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „ile maksymalnie jednostek/ludzi/danych można przesłać”, „ile rozłącznych dróg”,\n„minimalna liczba krawędzi/wierzchołków do usunięcia, żeby rozdzielić A i B” (min cut), przydziały\nz pojemnościami („każdy pokój mieści k osób”), limity rzędu `n ≤ 500–5000`, `m ≤ 10^4–10^5`.\nNa OI przepływy pojawiają się rzadko, ale modelowanie (super-źródło, rozdzielanie wierzchołków) bywa\nkluczem do zadania."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Dinic — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct Dinic {\n    struct Edge { int to; long long cap; };\n    vector<Edge> e;                    // krawędź i oraz odwrotna i^1 leżą obok siebie\n    vector<vector<int>> g;\n    vector<int> level, it;\n    Dinic(int n) : g(n + 1), level(n + 1), it(n + 1) {}\n    int addEdge(int a, int b, long long c) {\n        g[a].push_back(e.size()); e.push_back({b, c});\n        g[b].push_back(e.size()); e.push_back({a, 0});    // krawędź odwrotna, przepustowość 0\n        return e.size() - 2;                              // numer krawędzi „w przód”\n    }\n    bool bfs(int s, int t) {\n        fill(level.begin(), level.end(), -1);\n        queue<int> q;\n        level[s] = 0;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int id : g[v])\n                if (e[id].cap > 0 && level[e[id].to] == -1) {\n                    level[e[id].to] = level[v] + 1;\n                    q.push(e[id].to);\n                }\n        }\n        return level[t] != -1;\n    }\n    long long dfs(int v, int t, long long f) {\n        if (v == t) return f;\n        for (int& i = it[v]; i < (int)g[v].size(); i++) {\n            int id = g[v][i], u = e[id].to;\n            if (e[id].cap > 0 && level[u] == level[v] + 1) {\n                long long d = dfs(u, t, min(f, e[id].cap));\n                if (d > 0) {\n                    e[id].cap -= d;\n                    e[id ^ 1].cap += d;\n                    return d;\n                }\n            }\n        }\n        return 0;\n    }\n    long long maxflow(int s, int t) {\n        long long flow = 0;\n        while (bfs(s, t)) {\n            fill(it.begin(), it.end(), 0);\n            while (long long f = dfs(s, t, LLONG_MAX)) flow += f;\n        }\n        return flow;\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;                     // źródło = 1, ujście = n\n    Dinic d(n);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        long long c;\n        cin >> a >> b >> c;            // krawędź skierowana a -> b o przepustowości c\n        d.addEdge(a, b, c);\n    }\n    cout << d.maxflow(1, n) << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Algorytm",
+      "Złożoność",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "Ford-Fulkerson (DFS)",
+       "O(E·F)",
+       "F = wartość przepływu; tylko dla małych całkowitych przepustowości"
+      ],
+      [
+       "Edmonds-Karp (BFS)",
+       "O(V·E²)",
+       "najprostszy poprawny; ok dla V ≤ ~500"
+      ],
+      [
+       "Dinic",
+       "O(V²·E)",
+       "standard; na sieciach jednostkowych O(E√V)"
+      ],
+      [
+       "Dinic + skalowanie",
+       "O(V·E·log C)",
+       "rzadko potrzebny na OI"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Krawędzie trzymaj w jednym `vector<Edge>` i dodawaj parami: krawędź „w przód” ma numer parzysty,\nodwrotna — następny nieparzysty, więc odwrotna do `i` to zawsze `i ^ 1`."
+    },
+    {
+     "type": "warn",
+     "md": "Przepustowości i wynik w `long long`, jeśli suma może przekroczyć 2·10^9. W `dfs` startuj z\n`LLONG_MAX`, nie z `INT_MAX`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "addEdge(a, b, c)",
+     "desc": "dodaje krawędź a→b (przepustowość c) i odwrotną b→a (0); zwraca numer krawędzi",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "maxflow(s, t)",
+     "desc": "maksymalny przepływ z s do t; modyfikuje sieć residualną",
+     "complexity": "O(V²E)",
+     "returns": "long long"
+    },
+    {
+     "sig": "e[id].cap",
+     "desc": "pozostała przepustowość krawędzi id; przepływ = początkowa − pozostała",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Brak krawędzi odwrotnych (albo odwrotna z pełną przepustowością w grafie skierowanym) — algorytm nie może cofać przepływu i daje za mały/zły wynik.",
+    "Krawędź nieskierowana o przepustowości c: dodaj ją z odwrotną także o przepustowości c (jedna para), a nie dwie osobne pary.",
+    "`int` przy dużych przepustowościach → przepełnienie; używaj `long long`.",
+    "Bez wskaźnika `it[v]` (resetowanego po każdym BFS-ie) Dinic traci gwarancję złożoności i bywa bardzo wolny.",
+    "Numeracja wierzchołków: Dinic(n) tworzy tablice rozmiaru n + 1 — przy sztucznych wierzchołkach (super-źródło, kopie wierzchołków) zwiększ rozmiar.",
+    "Rekurencja DFS ma głębokość ≤ liczbie poziomów (≤ V) — zwykle bezpieczna."
+   ],
+   "qa": [
+    {
+     "q": [
+      "maksymalny przepływ",
+      "max flow c++",
+      "dinic kod",
+      "algorytm dinica",
+      "jak policzyć przepływ"
+     ],
+     "a": "Dinic: powtarzaj BFS od źródła (poziomy po krawędziach z wolną przepustowością); dopóki ujście jest\nosiągalne, puszczaj DFS-ami przepływ tylko „w dół” poziomów, zmniejszając przepustowość krawędzi `i`\ni zwiększając odwrotnej `i ^ 1`. Wskaźnik `it[v]` pomija wyczerpane krawędzie. Złożoność O(V²E),\nw praktyce dla tysięcy wierzchołków i 10^5 krawędzi — milisekundy.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct Dinic {\n    struct Edge { int to; long long cap; };\n    vector<Edge> e;                    // krawędź i oraz odwrotna i^1 leżą obok siebie\n    vector<vector<int>> g;\n    vector<int> level, it;\n    Dinic(int n) : g(n + 1), level(n + 1), it(n + 1) {}\n    int addEdge(int a, int b, long long c) {\n        g[a].push_back(e.size()); e.push_back({b, c});\n        g[b].push_back(e.size()); e.push_back({a, 0});    // krawędź odwrotna, przepustowość 0\n        return e.size() - 2;                              // numer krawędzi „w przód”\n    }\n    bool bfs(int s, int t) {\n        fill(level.begin(), level.end(), -1);\n        queue<int> q;\n        level[s] = 0;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int id : g[v])\n                if (e[id].cap > 0 && level[e[id].to] == -1) {\n                    level[e[id].to] = level[v] + 1;\n                    q.push(e[id].to);\n                }\n        }\n        return level[t] != -1;\n    }\n    long long dfs(int v, int t, long long f) {\n        if (v == t) return f;\n        for (int& i = it[v]; i < (int)g[v].size(); i++) {\n            int id = g[v][i], u = e[id].to;\n            if (e[id].cap > 0 && level[u] == level[v] + 1) {\n                long long d = dfs(u, t, min(f, e[id].cap));\n                if (d > 0) {\n                    e[id].cap -= d;\n                    e[id ^ 1].cap += d;\n                    return d;\n                }\n            }\n        }\n        return 0;\n    }\n    long long maxflow(int s, int t) {\n        long long flow = 0;\n        while (bfs(s, t)) {\n            fill(it.begin(), it.end(), 0);\n            while (long long f = dfs(s, t, LLONG_MAX)) flow += f;\n        }\n        return flow;\n    }\n};\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    Dinic d(n);\n    for (int i = 0; i < m; i++) { int a, b; long long c; cin >> a >> b >> c; d.addEdge(a, b, c); }\n    cout << d.maxflow(1, n) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "edmonds karp",
+      "ford fulkerson",
+      "przepływ bfs",
+      "edmonds-karp c++",
+      "najprostszy algorytm przepływu"
+     ],
+     "a": "Edmonds-Karp: dopóki BFS znajduje ścieżkę s → t w sieci residualnej, znajdź na niej minimalną wolną\nprzepustowość i puść ją, aktualizując krawędzie i odwrotne. BFS (najkrótsze ścieżki) gwarantuje\n**O(V·E²)** niezależnie od przepustowości. Ford-Fulkerson z DFS-em ma O(E·F) i może być wykładniczo\nwolny przy dużych wagach. Dinic jest szybszy, ale EK jest krótszy.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<int> to, head(n + 1, -1), nxt;\n    vector<long long> cap;\n    auto add = [&](int a, int b, long long c) {\n        to.push_back(b); cap.push_back(c); nxt.push_back(head[a]); head[a] = to.size() - 1;\n        to.push_back(a); cap.push_back(0); nxt.push_back(head[b]); head[b] = to.size() - 1;\n    };\n    for (int i = 0; i < m; i++) { int a, b; long long c; cin >> a >> b >> c; add(a, b, c); }\n    int s = 1, t = n;\n    long long flow = 0;\n    while (true) {\n        vector<int> pe(n + 1, -1);\n        vector<bool> vis(n + 1, false);\n        queue<int> q; q.push(s); vis[s] = true;\n        while (!q.empty() && !vis[t]) {\n            int v = q.front(); q.pop();\n            for (int e = head[v]; e != -1; e = nxt[e])\n                if (cap[e] > 0 && !vis[to[e]]) { vis[to[e]] = true; pe[to[e]] = e; q.push(to[e]); }\n        }\n        if (!vis[t]) break;\n        long long f = LLONG_MAX;\n        for (int v = t; v != s; v = to[pe[v] ^ 1]) f = min(f, cap[pe[v]]);\n        for (int v = t; v != s; v = to[pe[v] ^ 1]) { cap[pe[v]] -= f; cap[pe[v] ^ 1] += f; }\n        flow += f;\n    }\n    cout << flow << '\\n';\n}"
+    },
+    {
+     "q": [
+      "sieć residualna",
+      "krawędź odwrotna po co",
+      "dlaczego e^1",
+      "residual graph",
+      "cofanie przepływu"
+     ],
+     "a": "Krawędź odwrotna pozwala „odesłać” przepływ: jeśli wcześniej wysłaliśmy 5 jednostek `a → b`, to `b → a`\nma przepustowość 5 i inna ścieżka może przekierować te jednostki. Bez tego zachłanne wybory byłyby\nnieodwracalne i wynik mógłby nie być maksymalny. Dodając krawędzie parami do jednego wektora, odwrotna\ndo krawędzi `i` ma numer `i ^ 1` (0↔1, 2↔3, …).",
+     "code": "struct Edge { int to; long long cap; };\nvector<Edge> e;\nvector<vector<int>> g(3);\nauto add = [&](int a, int b, long long c) {\n    g[a].push_back(e.size()); e.push_back({b, c});\n    g[b].push_back(e.size()); e.push_back({a, 0});\n};\nadd(1, 2, 5);\nint id = 0;\ne[id].cap -= 3; e[id ^ 1].cap += 3;          // puszczamy 3 jednostki 1 -> 2\ncout << e[0].cap << ' ' << e[1].cap << '\\n';  // 2 3"
+    },
+    {
+     "q": [
+      "wiele źródeł przepływ",
+      "super źródło",
+      "kilka źródeł i ujść",
+      "multiple sources max flow"
+     ],
+     "a": "Dodaj sztuczne **super-źródło** `S` z krawędziami `S → s_i` o przepustowości równej podaży źródła\n(albo „nieskończonej”) i **super-ujście** `T` z krawędziami `t_j → T`. Przepływ `S → T` jest\nmaksymalnym łącznym przepływem. Pamiętaj, by zwiększyć rozmiar sieci o 2 wierzchołki.",
+     "code": "int n = 5;\nvector<int> zrodla = {1, 2}, ujscia = {5};\nvector<long long> podaz = {10, 7};\nint S = n + 1, T = n + 2;                         // sieć ma teraz n + 2 wierzchołki\nvector<array<long long, 3>> siec;\nfor (int i = 0; i < (int)zrodla.size(); i++) siec.push_back({S, zrodla[i], podaz[i]});\nfor (int t : ujscia) siec.push_back({t, T, LLONG_MAX / 4});\ncout << siec.size() << ' ' << S << ' ' << T << '\\n';   // 3 6 7"
+    },
+    {
+     "q": [
+      "przepustowość wierzchołka",
+      "rozdzielenie wierzchołka na dwa",
+      "vertex capacity flow",
+      "limit przez wierzchołek przepływ"
+     ],
+     "a": "Przepływ ogranicza się tylko na krawędziach, więc wierzchołek `v` z limitem `c_v` rozdziel na `v_in`\ni `v_out` z krawędzią `v_in → v_out` o przepustowości `c_v`. Wszystkie krawędzie wchodzące do `v`\nprowadzą do `v_in`, wychodzące — z `v_out`. Wygodna numeracja: `v_in = v`, `v_out = v + n`. Tak też\nliczy się wierzchołkowo rozłączne ścieżki (`c_v = 1`).",
+     "code": "int n = 3;\nvector<long long> limit = {0, 100, 2, 100};          // limit[v]\nvector<pair<int,int>> kraw = {{1, 2}, {2, 3}};\nvector<array<long long, 3>> siec;\nfor (int v = 1; v <= n; v++) siec.push_back({v, v + n, limit[v]});   // v_in -> v_out\nfor (auto [a, b] : kraw) siec.push_back({a + n, b, LLONG_MAX / 4});   // a_out -> b_in\n// przepływ liczymy z 1_out (= 1 + n) do 3_in (= 3)\ncout << siec.size() << '\\n';   // 5"
+    },
+    {
+     "q": [
+      "dinic złożoność",
+      "jak szybki jest dinic",
+      "dinic complexity",
+      "czy dinic zmieści się w czasie"
+     ],
+     "a": "Ogólnie **O(V²·E)**, ale to bardzo pesymistyczne oszacowanie — w praktyce Dinic dla V ~ 10^4,\nE ~ 10^5 działa w milisekundach. Na sieciach jednostkowych (wszystkie przepustowości 1, np. skojarzenia)\n**O(E·√V)**. Liczba faz BFS jest ≤ V, bo w każdej fazie odległość s → t rośnie.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct Dinic {\n    struct Edge { int to; long long cap; };\n    vector<Edge> e;                    // krawędź i oraz odwrotna i^1 leżą obok siebie\n    vector<vector<int>> g;\n    vector<int> level, it;\n    Dinic(int n) : g(n + 1), level(n + 1), it(n + 1) {}\n    int addEdge(int a, int b, long long c) {\n        g[a].push_back(e.size()); e.push_back({b, c});\n        g[b].push_back(e.size()); e.push_back({a, 0});    // krawędź odwrotna, przepustowość 0\n        return e.size() - 2;                              // numer krawędzi „w przód”\n    }\n    bool bfs(int s, int t) {\n        fill(level.begin(), level.end(), -1);\n        queue<int> q;\n        level[s] = 0;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int id : g[v])\n                if (e[id].cap > 0 && level[e[id].to] == -1) {\n                    level[e[id].to] = level[v] + 1;\n                    q.push(e[id].to);\n                }\n        }\n        return level[t] != -1;\n    }\n    long long dfs(int v, int t, long long f) {\n        if (v == t) return f;\n        for (int& i = it[v]; i < (int)g[v].size(); i++) {\n            int id = g[v][i], u = e[id].to;\n            if (e[id].cap > 0 && level[u] == level[v] + 1) {\n                long long d = dfs(u, t, min(f, e[id].cap));\n                if (d > 0) {\n                    e[id].cap -= d;\n                    e[id ^ 1].cap += d;\n                    return d;\n                }\n            }\n        }\n        return 0;\n    }\n    long long maxflow(int s, int t) {\n        long long flow = 0;\n        while (bfs(s, t)) {\n            fill(it.begin(), it.end(), 0);\n            while (long long f = dfs(s, t, LLONG_MAX)) flow += f;\n        }\n        return flow;\n    }\n};\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    Dinic d(n);\n    for (int i = 0; i < m; i++) { int a, b; long long c; cin >> a >> b >> c; d.addEdge(a, b, c); }\n    long long flow = 0;\n    int fazy = 0;\n    while (d.bfs(1, n)) {                       // jedna faza: BFS + przepływ blokujący\n        fazy++;\n        fill(d.it.begin(), d.it.end(), 0);\n        while (long long f = d.dfs(1, n, LLONG_MAX)) flow += f;\n    }\n    cout << flow << ' ' << (fazy <= n) << '\\n';   // faz jest co najwyżej V\n}"
+    },
+    {
+     "q": [
+      "przepływ graf nieskierowany",
+      "nieskierowana krawędź w przepływie",
+      "undirected max flow",
+      "dwukierunkowa rura przepływ"
+     ],
+     "a": "Krawędź nieskierowaną `a – b` o przepustowości `c` dodaj jako parę: `a → b` z `c` i odwrotną `b → a`\nteż z `c` (zamiast 0). Przepływ w jedną stronę automatycznie zwiększa możliwość w drugą — tak jak\npowinno. Dwie niezależne pary też dają poprawny wynik, ale zużywają 2× więcej krawędzi.",
+     "code": "struct Edge { int to; long long cap; };\nvector<Edge> e;\nvector<vector<int>> g(3);\nauto addUndirected = [&](int a, int b, long long c) {\n    g[a].push_back(e.size()); e.push_back({b, c});\n    g[b].push_back(e.size()); e.push_back({a, c});   // odwrotna też z przepustowością c\n};\naddUndirected(1, 2, 4);\ncout << e[0].cap << ' ' << e[1].cap << '\\n';   // 4 4"
+    },
+    {
+     "q": [
+      "ścieżki rozłączne krawędziowo",
+      "ile dróg bez wspólnych krawędzi",
+      "edge disjoint paths",
+      "maksymalna liczba rozłącznych ścieżek"
+     ],
+     "a": "Nadaj każdej krawędzi przepustowość 1 i policz maksymalny przepływ s → t — to liczba ścieżek\nrozłącznych krawędziowo (twierdzenie Mengera). Ścieżki odtworzysz, idąc od `s` po krawędziach\nz przepływem 1. Dla rozłącznych **wierzchołkowo** dodatkowo rozdziel wierzchołki z przepustowością 1.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct Dinic {\n    struct Edge { int to; long long cap; };\n    vector<Edge> e;                    // krawędź i oraz odwrotna i^1 leżą obok siebie\n    vector<vector<int>> g;\n    vector<int> level, it;\n    Dinic(int n) : g(n + 1), level(n + 1), it(n + 1) {}\n    int addEdge(int a, int b, long long c) {\n        g[a].push_back(e.size()); e.push_back({b, c});\n        g[b].push_back(e.size()); e.push_back({a, 0});    // krawędź odwrotna, przepustowość 0\n        return e.size() - 2;                              // numer krawędzi „w przód”\n    }\n    bool bfs(int s, int t) {\n        fill(level.begin(), level.end(), -1);\n        queue<int> q;\n        level[s] = 0;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int id : g[v])\n                if (e[id].cap > 0 && level[e[id].to] == -1) {\n                    level[e[id].to] = level[v] + 1;\n                    q.push(e[id].to);\n                }\n        }\n        return level[t] != -1;\n    }\n    long long dfs(int v, int t, long long f) {\n        if (v == t) return f;\n        for (int& i = it[v]; i < (int)g[v].size(); i++) {\n            int id = g[v][i], u = e[id].to;\n            if (e[id].cap > 0 && level[u] == level[v] + 1) {\n                long long d = dfs(u, t, min(f, e[id].cap));\n                if (d > 0) {\n                    e[id].cap -= d;\n                    e[id ^ 1].cap += d;\n                    return d;\n                }\n            }\n        }\n        return 0;\n    }\n    long long maxflow(int s, int t) {\n        long long flow = 0;\n        while (bfs(s, t)) {\n            fill(it.begin(), it.end(), 0);\n            while (long long f = dfs(s, t, LLONG_MAX)) flow += f;\n        }\n        return flow;\n    }\n};\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    Dinic d(n);\n    for (int i = 0; i < m; i++) { int a, b; cin >> a >> b; d.addEdge(a, b, 1); }\n    cout << d.maxflow(1, n) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "odczyt przepływu na krawędziach",
+      "ile płynie każdą krawędzią",
+      "flow on each edge",
+      "wypisz przepływ krawędzi"
+     ],
+     "a": "Zapamiętaj numer krawędzi „w przód” zwrócony przez `addEdge` i początkową przepustowość. Po\n`maxflow` przepływ krawędzią to `początkowa − e[id].cap` (równoważnie: `e[id ^ 1].cap` dla krawędzi\nskierowanej, bo odwrotna startowała z 0).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct Dinic {\n    struct Edge { int to; long long cap; };\n    vector<Edge> e;                    // krawędź i oraz odwrotna i^1 leżą obok siebie\n    vector<vector<int>> g;\n    vector<int> level, it;\n    Dinic(int n) : g(n + 1), level(n + 1), it(n + 1) {}\n    int addEdge(int a, int b, long long c) {\n        g[a].push_back(e.size()); e.push_back({b, c});\n        g[b].push_back(e.size()); e.push_back({a, 0});    // krawędź odwrotna, przepustowość 0\n        return e.size() - 2;                              // numer krawędzi „w przód”\n    }\n    bool bfs(int s, int t) {\n        fill(level.begin(), level.end(), -1);\n        queue<int> q;\n        level[s] = 0;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int id : g[v])\n                if (e[id].cap > 0 && level[e[id].to] == -1) {\n                    level[e[id].to] = level[v] + 1;\n                    q.push(e[id].to);\n                }\n        }\n        return level[t] != -1;\n    }\n    long long dfs(int v, int t, long long f) {\n        if (v == t) return f;\n        for (int& i = it[v]; i < (int)g[v].size(); i++) {\n            int id = g[v][i], u = e[id].to;\n            if (e[id].cap > 0 && level[u] == level[v] + 1) {\n                long long d = dfs(u, t, min(f, e[id].cap));\n                if (d > 0) {\n                    e[id].cap -= d;\n                    e[id ^ 1].cap += d;\n                    return d;\n                }\n            }\n        }\n        return 0;\n    }\n    long long maxflow(int s, int t) {\n        long long flow = 0;\n        while (bfs(s, t)) {\n            fill(it.begin(), it.end(), 0);\n            while (long long f = dfs(s, t, LLONG_MAX)) flow += f;\n        }\n        return flow;\n    }\n};\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    Dinic d(n);\n    vector<int> id(m);\n    vector<long long> c(m);\n    for (int i = 0; i < m; i++) { int a, b; cin >> a >> b >> c[i]; id[i] = d.addEdge(a, b, c[i]); }\n    cout << d.maxflow(1, n) << '\\n';\n    for (int i = 0; i < m; i++) cout << c[i] - d.e[id[i]].cap << '\\n';\n}"
+    },
+    {
+     "q": [
+      "kiedy przepływ",
+      "jak rozpoznać zadanie na przepływ",
+      "sygnały max flow w treści",
+      "czy to zadanie na przepływ"
+     ],
+     "a": "Szukaj: (1) zasobu „płynącego” z miejsc do miejsc z limitami na krawędziach/wierzchołkach,\n(2) przydziału z pojemnościami (k miejsc, każdy co najwyżej raz), (3) pytania o minimalną liczbę\nrzeczy do usunięcia, by coś rozdzielić (min cut), (4) wyboru podzbioru z zależnościami „jeśli A, to B”\ni zyskami/kosztami (project selection). Ograniczenia rzędu setek–tysięcy wierzchołków to dodatkowa\nwskazówka.",
+     "code": "// Szkic modelowania: P osób, R pokoi o pojemnościach cap[r]; osoba może iść tylko do wybranych pokoi.\nint P = 3, R = 2;\nvector<int> cap = {0, 2, 1};\nvector<pair<int,int>> chce = {{1, 1}, {2, 1}, {2, 2}, {3, 1}};      // (osoba, pokój)\nint S = 0, T = P + R + 1;                                            // osoby 1..P, pokoje P+1..P+R\nvector<array<int, 3>> siec;                                          // {a, b, przepustowość}\nfor (int o = 1; o <= P; o++) siec.push_back({S, o, 1});              // każda osoba raz\nfor (auto [o, r] : chce) siec.push_back({o, P + r, 1});\nfor (int r = 1; r <= R; r++) siec.push_back({P + r, T, cap[r]});     // limit pokoju\ncout << \"wierzcholki: \" << T + 1 << \", krawedzie: \" << siec.size() << '\\n';   // 7, 9 -> Dinic(S, T)"
+    }
+   ],
+   "related": [
+    "graph-min-cut",
+    "graph-min-cost-flow",
+    "graph-bipartite-matching",
+    "graph-bfs",
+    "graph-representation"
+   ]
+  },
+  {
+   "id": "graph-min-cut",
+   "title": "Minimalny przekrój (min cut) — twierdzenie max-flow min-cut",
+   "category": "Grafy",
+   "tags": [
+    "min cut",
+    "minimalny przekrój",
+    "przekrój",
+    "max flow min cut",
+    "przepływ",
+    "project selection",
+    "stoer-wagner",
+    "rozdzielenie s i t"
+   ],
+   "aliases": [
+    "minimalny przekrój",
+    "min cut",
+    "mincut",
+    "max flow min cut",
+    "przekrój s-t",
+    "minimalne cięcie",
+    "które krawędzie przeciąć",
+    "project selection",
+    "problem wyboru projektów",
+    "stoer wagner"
+   ],
+   "summary": "Minimalny przekrój s–t to najtańszy zbiór krawędzi, po którego usunięciu z s nie da się dojść do t. Jego koszt jest równy maksymalnemu przepływowi, a same krawędzie odczytuje się z sieci residualnej po policzeniu przepływu.",
+   "complexity": "jak przepływ (Dinic O(V²E)) + O(V + E) na odczyt przekroju",
+   "level": 5,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Twierdzenie (max-flow min-cut):** wartość maksymalnego przepływu z `s` do `t` = minimalna suma\nprzepustowości krawędzi, które trzeba usunąć, by rozdzielić `s` od `t`. Intuicja: przepływ nie może być\nwiększy niż „najwęższe gardło”, a algorytm kończy się dokładnie wtedy, gdy wszystkie krawędzie\njakiegoś przekroju są nasycone.\n\n**Odczyt przekroju:** po `maxflow` puść BFS/DFS od `s` po krawędziach residualnych z `cap > 0`.\nZbiór osiągniętych wierzchołków to `S`, reszta to `T`. Krawędzie oryginalnej sieci prowadzące z `S`\ndo `T` tworzą minimalny przekrój (wszystkie są nasycone)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „minimalny koszt zablokowania, żeby A nie mogło dojść do B”, „usuń najmniej krawędzi/\nwierzchołków, by rozspójnić”, „podziel elementy na dwie grupy; za każdy element koszt zależny od grupy,\nza parę w różnych grupach kara” (min cut na dwóch stronach), „wybierz projekty z zależnościami,\nmaksymalizując zysk”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Minimalny przekrój: wartość i krawędzie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct Dinic {\n    struct Edge { int to; long long cap; };\n    vector<Edge> e;                    // krawędź i oraz odwrotna i^1 leżą obok siebie\n    vector<vector<int>> g;\n    vector<int> level, it;\n    Dinic(int n) : g(n + 1), level(n + 1), it(n + 1) {}\n    int addEdge(int a, int b, long long c) {\n        g[a].push_back(e.size()); e.push_back({b, c});\n        g[b].push_back(e.size()); e.push_back({a, 0});    // krawędź odwrotna, przepustowość 0\n        return e.size() - 2;                              // numer krawędzi „w przód”\n    }\n    bool bfs(int s, int t) {\n        fill(level.begin(), level.end(), -1);\n        queue<int> q;\n        level[s] = 0;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int id : g[v])\n                if (e[id].cap > 0 && level[e[id].to] == -1) {\n                    level[e[id].to] = level[v] + 1;\n                    q.push(e[id].to);\n                }\n        }\n        return level[t] != -1;\n    }\n    long long dfs(int v, int t, long long f) {\n        if (v == t) return f;\n        for (int& i = it[v]; i < (int)g[v].size(); i++) {\n            int id = g[v][i], u = e[id].to;\n            if (e[id].cap > 0 && level[u] == level[v] + 1) {\n                long long d = dfs(u, t, min(f, e[id].cap));\n                if (d > 0) {\n                    e[id].cap -= d;\n                    e[id ^ 1].cap += d;\n                    return d;\n                }\n            }\n        }\n        return 0;\n    }\n    long long maxflow(int s, int t) {\n        long long flow = 0;\n        while (bfs(s, t)) {\n            fill(it.begin(), it.end(), 0);\n            while (long long f = dfs(s, t, LLONG_MAX)) flow += f;\n        }\n        return flow;\n    }\n};\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    Dinic d(n);\n    vector<int> ea(m), eb(m);\n    for (int i = 0; i < m; i++) {\n        long long c;\n        cin >> ea[i] >> eb[i] >> c;\n        d.addEdge(ea[i], eb[i], c);            // krawędź i ma numer 2i\n    }\n    cout << d.maxflow(1, n) << '\\n';\n    vector<bool> inS(n + 1, false);            // BFS po sieci residualnej\n    queue<int> q;\n    q.push(1);\n    inS[1] = true;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int id : d.g[v])\n            if (d.e[id].cap > 0 && !inS[d.e[id].to]) {\n                inS[d.e[id].to] = true;\n                q.push(d.e[id].to);\n            }\n    }\n    for (int i = 0; i < m; i++)\n        if (inS[ea[i]] && !inS[eb[i]]) cout << ea[i] << ' ' << eb[i] << '\\n';   // krawędź przekroju\n}"
+    },
+    {
+     "type": "tip",
+     "md": "„Nieskończoność” w modelowaniu (krawędzie, których nie wolno przeciąć) ustaw na dużą stałą, np.\n`LLONG_MAX / 4` albo sumę wszystkich innych przepustowości + 1 — tak, żeby dodawanie się nie przepełniło."
+    }
+   ],
+   "pitfalls": [
+    "Odczyt przekroju BFS-em po ORYGINALNYCH krawędziach zamiast residualnych (`cap > 0`) — dostaniesz cały graf.",
+    "Wypisywanie krawędzi z `S` do `T` w sieci residualnej (w tym odwrotnych) zamiast oryginalnych krawędzi wejścia.",
+    "Min cut s–t ≠ globalny min cut (najmniejszy przekrój dzielący graf na dowolne dwie części) — ten drugi to np. Stoer-Wagner albo n−1 przepływów.",
+    "„Nieskończona” przepustowość jako `LLONG_MAX` → przepełnienie przy dodawaniu; używaj `LLONG_MAX / 4`.",
+    "Przy usuwaniu wierzchołków (nie krawędzi) trzeba je rozdzielić na `v_in → v_out`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "minimalny przekrój",
+      "min cut c++",
+      "max flow min cut twierdzenie",
+      "minimalne cięcie grafu",
+      "min cut co to"
+     ],
+     "a": "Minimalny przekrój s–t to zbiór krawędzi o najmniejszej sumie przepustowości, którego usunięcie odcina\n`t` od `s`. Twierdzenie max-flow min-cut mówi, że jego wartość = maksymalny przepływ. Liczysz więc\nDinica (O(V²E)), a krawędzie przekroju odczytujesz BFS-em po sieci residualnej w O(V + E).",
+     "code": "// po maxflow: S = wierzchołki osiągalne z s po krawędziach z cap > 0\nstruct Edge { int to; long long cap; };\nvector<Edge> e = {{2, 0}, {1, 3}, {3, 2}, {1, 0}};     // 1->2 nasycona, 1->3 wolna\nvector<vector<int>> g = {{}, {0, 2}, {1}, {3}};\nvector<bool> inS(4, false);\nqueue<int> q; q.push(1); inS[1] = true;\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    for (int id : g[v]) if (e[id].cap > 0 && !inS[e[id].to]) { inS[e[id].to] = true; q.push(e[id].to); }\n}\ncout << inS[1] << inS[2] << inS[3] << '\\n';   // 101"
+    },
+    {
+     "q": [
+      "jak odczytać przekrój",
+      "które krawędzie przeciąć",
+      "krawędzie minimalnego przekroju",
+      "find min cut edges"
+     ],
+     "a": "Po policzeniu maksymalnego przepływu wykonaj BFS od `s`, przechodząc tylko krawędziami residualnymi\nz dodatnią przepustowością. Wierzchołki osiągnięte = strona `S`. Każda **oryginalna** krawędź `a → b`\nz `a ∈ S`, `b ∉ S` należy do przekroju i jest w pełni nasycona; suma ich przepustowości = przepływ.",
+     "code": "vector<bool> inS = {false, true, true, false, false};   // wynik BFS po residualnej\nvector<array<int, 2>> kraw = {{1, 2}, {2, 3}, {1, 4}, {3, 4}};\nfor (auto [a, b] : kraw)\n    if (inS[a] && !inS[b]) cout << a << ' ' << b << '\\n';   // 2 3 oraz 1 4"
+    },
+    {
+     "q": [
+      "minimalna liczba krawędzi do usunięcia",
+      "ile dróg zablokować żeby rozdzielić",
+      "rozspójnić s i t krawędzie",
+      "min edges to disconnect"
+     ],
+     "a": "Daj każdej krawędzi przepustowość 1 (w grafie nieskierowanym: para z przepustowością 1 w obie strony)\ni policz przepływ s → t. Wynik to minimalna liczba krawędzi do usunięcia, a same krawędzie odczytasz\nz sieci residualnej. To też liczba ścieżek rozłącznych krawędziowo (Menger).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct Dinic {\n    struct Edge { int to; long long cap; };\n    vector<Edge> e;                    // krawędź i oraz odwrotna i^1 leżą obok siebie\n    vector<vector<int>> g;\n    vector<int> level, it;\n    Dinic(int n) : g(n + 1), level(n + 1), it(n + 1) {}\n    int addEdge(int a, int b, long long c) {\n        g[a].push_back(e.size()); e.push_back({b, c});\n        g[b].push_back(e.size()); e.push_back({a, 0});    // krawędź odwrotna, przepustowość 0\n        return e.size() - 2;                              // numer krawędzi „w przód”\n    }\n    bool bfs(int s, int t) {\n        fill(level.begin(), level.end(), -1);\n        queue<int> q;\n        level[s] = 0;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int id : g[v])\n                if (e[id].cap > 0 && level[e[id].to] == -1) {\n                    level[e[id].to] = level[v] + 1;\n                    q.push(e[id].to);\n                }\n        }\n        return level[t] != -1;\n    }\n    long long dfs(int v, int t, long long f) {\n        if (v == t) return f;\n        for (int& i = it[v]; i < (int)g[v].size(); i++) {\n            int id = g[v][i], u = e[id].to;\n            if (e[id].cap > 0 && level[u] == level[v] + 1) {\n                long long d = dfs(u, t, min(f, e[id].cap));\n                if (d > 0) {\n                    e[id].cap -= d;\n                    e[id ^ 1].cap += d;\n                    return d;\n                }\n            }\n        }\n        return 0;\n    }\n    long long maxflow(int s, int t) {\n        long long flow = 0;\n        while (bfs(s, t)) {\n            fill(it.begin(), it.end(), 0);\n            while (long long f = dfs(s, t, LLONG_MAX)) flow += f;\n        }\n        return flow;\n    }\n};\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    Dinic d(n);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        d.g[a].push_back(d.e.size()); d.e.push_back({b, 1});   // nieskierowana: para 1/1\n        d.g[b].push_back(d.e.size()); d.e.push_back({a, 1});\n    }\n    cout << d.maxflow(1, n) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "minimalna liczba wierzchołków do usunięcia",
+      "vertex cut",
+      "zablokować skrzyżowania żeby nie przejść",
+      "min vertex cut"
+     ],
+     "a": "Rozdziel każdy wierzchołek `v` (poza `s` i `t`) na `v_in → v_out` z przepustowością 1 (albo kosztem\nblokady), a krawędzie grafu niech mają przepustowość „nieskończoną”. Minimalny przekrój przetnie\nwtedy tylko krawędzie `v_in → v_out`, czyli wierzchołki. Wartość = minimalna liczba (koszt)\nwierzchołków do usunięcia.",
+     "code": "int n = 4, s = 1, t = 4;\nconst long long INF = LLONG_MAX / 4;\nvector<pair<int,int>> kraw = {{1, 2}, {1, 3}, {2, 4}, {3, 4}};\nvector<array<long long, 3>> siec;\nfor (int v = 1; v <= n; v++) siec.push_back({v, v + n, (v == s || v == t) ? INF : 1});\nfor (auto [a, b] : kraw) {                       // nieskierowane: a_out -> b_in i b_out -> a_in\n    siec.push_back({a + n, b, INF});\n    siec.push_back({b + n, a, INF});\n}\ncout << siec.size() << '\\n';   // 12; przepływ z s_out (s + n) do t_in (t) = 2"
+    },
+    {
+     "q": [
+      "problem wyboru projektów",
+      "project selection",
+      "maximum closure",
+      "zyski i koszty z zależnościami",
+      "wybór podzbioru z zależnościami max zysk"
+     ],
+     "a": "Projekty z zyskiem `p_i > 0`: krawędź `s → i` (p_i); z kosztem `p_i < 0`: krawędź `i → t` (−p_i);\nzależność „i wymaga j”: krawędź `i → j` o przepustowości ∞. Maksymalny zysk = suma dodatnich `p_i` −\nmin cut. Wybrane projekty to strona `S` przekroju. Działa, bo przecięcie `s → i` = „rezygnuję z zysku”,\na `j → t` = „płacę koszt”, a krawędź ∞ nie pozwala wybrać `i` bez `j`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct Dinic {\n    struct Edge { int to; long long cap; };\n    vector<Edge> e;                    // krawędź i oraz odwrotna i^1 leżą obok siebie\n    vector<vector<int>> g;\n    vector<int> level, it;\n    Dinic(int n) : g(n + 1), level(n + 1), it(n + 1) {}\n    int addEdge(int a, int b, long long c) {\n        g[a].push_back(e.size()); e.push_back({b, c});\n        g[b].push_back(e.size()); e.push_back({a, 0});    // krawędź odwrotna, przepustowość 0\n        return e.size() - 2;                              // numer krawędzi „w przód”\n    }\n    bool bfs(int s, int t) {\n        fill(level.begin(), level.end(), -1);\n        queue<int> q;\n        level[s] = 0;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int id : g[v])\n                if (e[id].cap > 0 && level[e[id].to] == -1) {\n                    level[e[id].to] = level[v] + 1;\n                    q.push(e[id].to);\n                }\n        }\n        return level[t] != -1;\n    }\n    long long dfs(int v, int t, long long f) {\n        if (v == t) return f;\n        for (int& i = it[v]; i < (int)g[v].size(); i++) {\n            int id = g[v][i], u = e[id].to;\n            if (e[id].cap > 0 && level[u] == level[v] + 1) {\n                long long d = dfs(u, t, min(f, e[id].cap));\n                if (d > 0) {\n                    e[id].cap -= d;\n                    e[id ^ 1].cap += d;\n                    return d;\n                }\n            }\n        }\n        return 0;\n    }\n    long long maxflow(int s, int t) {\n        long long flow = 0;\n        while (bfs(s, t)) {\n            fill(it.begin(), it.end(), 0);\n            while (long long f = dfs(s, t, LLONG_MAX)) flow += f;\n        }\n        return flow;\n    }\n};\n\nint main() {\n    int n, m;\n    cin >> n >> m;                          // n projektów, m zależności „a wymaga b”\n    int S = n + 1, T = n + 2;\n    Dinic d(n + 2);\n    long long suma = 0;\n    for (int i = 1; i <= n; i++) {\n        long long p;\n        cin >> p;\n        if (p > 0) { d.addEdge(S, i, p); suma += p; }\n        else if (p < 0) d.addEdge(i, T, -p);\n    }\n    for (int i = 0; i < m; i++) { int a, b; cin >> a >> b; d.addEdge(a, b, LLONG_MAX / 4); }\n    cout << suma - d.maxflow(S, T) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "podział na dwie grupy min cut",
+      "dwie grupy kary za rozdzielenie par",
+      "min cut modelowanie dwóch wyborów",
+      "każdy element do A albo B koszt"
+     ],
+     "a": "Każdy element `i` idzie do grupy A albo B: koszt `a_i` za A, `b_i` za B, kara `c_ij`, jeśli `i` i `j`\nsą w różnych grupach. Sieć: `s → i` z przepustowością `b_i` (przecięcie = `i` w B), `i → t` z `a_i`\n(przecięcie = `i` w A), oraz `i ↔ j` z `c_ij` w obie strony. Minimalny przekrój = minimalny łączny koszt.\nKlasyka: segmentacja obrazu, podział na zespoły.",
+     "code": "int n = 2;\nvector<long long> a = {0, 1, 4}, b = {0, 3, 1};   // koszty przydziału do A / B\nlong long kara = 1;                               // jeśli 1 i 2 w różnych grupach\nint s = 0, t = n + 1;\nvector<array<long long, 3>> siec;\nfor (int i = 1; i <= n; i++) { siec.push_back({s, i, b[i]}); siec.push_back({i, t, a[i]}); }\nsiec.push_back({1, 2, kara});\nsiec.push_back({2, 1, kara});\ncout << siec.size() << '\\n';   // 6 krawędzi; min cut = 3: element 1 w A (1), 2 w B (1), kara 1"
+    },
+    {
+     "q": [
+      "globalny minimalny przekrój",
+      "stoer wagner",
+      "min cut bez źródła i ujścia",
+      "global min cut"
+     ],
+     "a": "Gdy nie ma ustalonych `s` i `t` („najmniej krawędzi, by graf przestał być spójny”), użyj algorytmu\n**Stoera-Wagnera** w O(n³) na macierzy wag (n ≤ ~500). Alternatywa: ustal `s = 1` i policz przepływy\ndo każdego `t` (n − 1 przepływów). Dla krawędzi o wagach 1 wynik to spójność krawędziowa grafu.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nlong long stoerWagner(vector<vector<long long>> w) {\n    int n = w.size();\n    long long best = LLONG_MAX;\n    vector<bool> merged(n, false);\n    for (int phase = n; phase > 1; phase--) {\n        vector<long long> a(n, 0);\n        vector<bool> added(n, false);\n        int prev = -1;\n        for (int i = 0; i < phase; i++) {\n            int sel = -1;\n            for (int j = 0; j < n; j++)\n                if (!merged[j] && !added[j] && (sel == -1 || a[j] > a[sel])) sel = j;\n            added[sel] = true;\n            if (i == phase - 1) {\n                best = min(best, a[sel]);             // przekrój „ostatni vs reszta”\n                for (int j = 0; j < n; j++) { w[prev][j] += w[sel][j]; w[j][prev] = w[prev][j]; }\n                merged[sel] = true;                   // sklejamy sel z prev\n            } else {\n                prev = sel;\n                for (int j = 0; j < n; j++) a[j] += w[sel][j];\n            }\n        }\n    }\n    return best;\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<long long>> w(n, vector<long long>(n, 0));\n    for (int i = 0; i < m; i++) {\n        int a, b; long long c;\n        cin >> a >> b >> c;\n        w[a - 1][b - 1] += c; w[b - 1][a - 1] += c;\n    }\n    cout << stoerWagner(w) << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "graph-max-flow",
+    "graph-bipartite-matching",
+    "graph-min-cost-flow",
+    "graph-bridges-articulation"
+   ]
+  },
+  {
+   "id": "graph-min-cost-flow",
+   "title": "Przepływ o minimalnym koszcie (min-cost max-flow)",
+   "category": "Grafy",
+   "tags": [
+    "min cost flow",
+    "mcmf",
+    "przepływ o minimalnym koszcie",
+    "spfa",
+    "bellman-ford",
+    "potencjały",
+    "problem przydziału",
+    "assignment",
+    "koszt"
+   ],
+   "aliases": [
+    "min cost max flow",
+    "przepływ o minimalnym koszcie",
+    "mcmf",
+    "min cost flow",
+    "mcmf c++",
+    "problem przydziału",
+    "assignment problem",
+    "przydział z kosztami",
+    "najtańszy przepływ",
+    "algorytm węgierski"
+   ],
+   "summary": "Każda krawędź ma przepustowość i koszt za jednostkę. Szukamy maksymalnego (lub zadanego) przepływu o najmniejszym łącznym koszcie: wielokrotnie puszczamy przepływ najtańszą ścieżką w sieci residualnej (SPFA/Bellman-Ford, bo krawędzie odwrotne mają ujemne koszty).",
+   "complexity": "O(F · V · E) w najgorszym razie z SPFA (F = wartość przepływu); z potencjałami i Dijkstrą O(F · E log V)",
+   "level": 5,
+   "body": [
+    {
+     "type": "text",
+     "md": "Rozszerzenie zwykłego przepływu: krawędź `a → b` ma przepustowość `cap` i koszt `cost` za każdą\njednostkę. Krawędź odwrotna ma koszt `−cost` (wycofanie jednostki zwraca jej koszt). Algorytm\n(successive shortest paths): dopóki istnieje ścieżka s → t w sieci residualnej, znajdź **najtańszą**,\npuść nią maksimum i dolicz `f · koszt_ścieżki`. Bo koszty ujemne pojawiają się na krawędziach odwrotnych,\ndo szukania ścieżki używa się Bellmana-Forda/SPFA (albo Dijkstry z potencjałami Johnsona)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „przydziel pracowników do zadań, minimalizując łączny koszt”, „przewieź towar z magazynów\ndo sklepów najtaniej”, „każdy może być użyty co najwyżej k razy, zminimalizuj sumę”, „wybierz k\nrozłącznych ścieżek o minimalnej łącznej długości”. Rozmiary rzędu `n ≤ 200–500`, przepływ niewielki."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Min-cost max-flow (SPFA) — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct MCMF {\n    struct Edge { int to; long long cap, cost; };\n    vector<Edge> e;\n    vector<vector<int>> g;\n    vector<long long> dist;\n    vector<int> pe;\n    vector<bool> inq;\n    MCMF(int n) : g(n + 1), dist(n + 1), pe(n + 1), inq(n + 1) {}\n    void addEdge(int a, int b, long long cap, long long cost) {\n        g[a].push_back(e.size()); e.push_back({b, cap, cost});\n        g[b].push_back(e.size()); e.push_back({a, 0, -cost});   // odwrotna: koszt ujemny!\n    }\n    bool spfa(int s, int t) {                                   // najtańsza ścieżka w sieci residualnej\n        fill(dist.begin(), dist.end(), LLONG_MAX);\n        deque<int> q;\n        dist[s] = 0;\n        q.push_back(s);\n        inq[s] = true;\n        while (!q.empty()) {\n            int v = q.front(); q.pop_front();\n            inq[v] = false;\n            for (int id : g[v]) {\n                const Edge& ed = e[id];\n                if (ed.cap > 0 && dist[v] + ed.cost < dist[ed.to]) {\n                    dist[ed.to] = dist[v] + ed.cost;\n                    pe[ed.to] = id;\n                    if (!inq[ed.to]) { inq[ed.to] = true; q.push_back(ed.to); }\n                }\n            }\n        }\n        return dist[t] != LLONG_MAX;\n    }\n    pair<long long, long long> run(int s, int t, long long maxf = LLONG_MAX) {   // (przepływ, koszt)\n        long long flow = 0, cost = 0;\n        while (flow < maxf && spfa(s, t)) {\n            long long f = maxf - flow;\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) f = min(f, e[pe[v]].cap);\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) {\n                e[pe[v]].cap -= f;\n                e[pe[v] ^ 1].cap += f;\n            }\n            flow += f;\n            cost += f * dist[t];\n        }\n        return {flow, cost};\n    }\n};\n\nint main() {\n    int n, m;\n    cin >> n >> m;                      // źródło 1, ujście n\n    MCMF f(n);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        long long cap, cost;\n        cin >> a >> b >> cap >> cost;\n        f.addEdge(a, b, cap, cost);\n    }\n    auto [flow, cost] = f.run(1, n);\n    cout << flow << ' ' << cost << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Chcesz przepłynąć dokładnie `K` jednostek (a nie maksimum)? Wywołaj `run(s, t, K)` i sprawdź, czy\nzwrócony przepływ to `K`. Najtańsze ścieżki są brane po kolei, więc koszt dla każdego `k ≤ K` jest\noptymalny."
+    },
+    {
+     "type": "warn",
+     "md": "Zwykła Dijkstra na sieci residualnej daje złe wyniki — krawędzie odwrotne mają ujemne koszty. Użyj SPFA\nalbo Dijkstry z potencjałami (koszty zredukowane `cost + h[v] − h[u] ≥ 0`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "addEdge(a, b, cap, cost)",
+     "desc": "krawędź a→b (cap, cost) + odwrotna b→a (0, −cost)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "run(s, t, maxf)",
+     "desc": "puszcza do maxf jednostek najtańszymi ścieżkami; zwraca (przepływ, koszt)",
+     "complexity": "O(F·V·E)",
+     "returns": "pair<long long,long long>"
+    }
+   ],
+   "pitfalls": [
+    "Koszt krawędzi odwrotnej musi być `−cost`, a jej przepustowość 0 — inaczej algorytm „kupuje” przepływ za darmo.",
+    "Dijkstra bez potencjałów na sieci z ujemnymi kosztami — złe ścieżki.",
+    "Koszt całkowity `f · dist[t]` może przekroczyć `int` — trzymaj w `long long`.",
+    "Maksymalizacja zysku: zaneguj koszty (pojawią się ujemne koszty na krawędziach „w przód” — SPFA je obsłuży, o ile w sieci nie ma ujemnych cykli).",
+    "Przepływ o minimalnym koszcie spośród MAKSYMALNYCH przepływów ≠ najtańszy dowolny przepływ — jeśli nie musisz przepłynąć maksimum, przerwij, gdy `dist[t] ≥ 0`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "min cost max flow",
+      "przepływ o minimalnym koszcie",
+      "mcmf c++",
+      "min cost flow kod",
+      "najtańszy przepływ"
+     ],
+     "a": "Successive shortest paths: dopóki w sieci residualnej istnieje ścieżka s → t, znajdź najtańszą\n(SPFA/Bellman-Ford — krawędzie odwrotne mają koszty ujemne), puść nią `f` = minimum wolnych\nprzepustowości i dodaj `f · dist[t]` do kosztu. Złożoność O(F · V · E) pesymistycznie, w praktyce\nszybciej. Krawędzie trzymaj parami (`i`, `i ^ 1`) jak w Dinicu.",
+     "code": "struct MCMF {\n    struct Edge { int to; long long cap, cost; };\n    vector<Edge> e;\n    vector<vector<int>> g;\n    vector<long long> dist;\n    vector<int> pe;\n    vector<bool> inq;\n    MCMF(int n) : g(n + 1), dist(n + 1), pe(n + 1), inq(n + 1) {}\n    void addEdge(int a, int b, long long cap, long long cost) {\n        g[a].push_back(e.size()); e.push_back({b, cap, cost});\n        g[b].push_back(e.size()); e.push_back({a, 0, -cost});   // odwrotna: koszt ujemny!\n    }\n    bool spfa(int s, int t) {                                   // najtańsza ścieżka w sieci residualnej\n        fill(dist.begin(), dist.end(), LLONG_MAX);\n        deque<int> q;\n        dist[s] = 0;\n        q.push_back(s);\n        inq[s] = true;\n        while (!q.empty()) {\n            int v = q.front(); q.pop_front();\n            inq[v] = false;\n            for (int id : g[v]) {\n                const Edge& ed = e[id];\n                if (ed.cap > 0 && dist[v] + ed.cost < dist[ed.to]) {\n                    dist[ed.to] = dist[v] + ed.cost;\n                    pe[ed.to] = id;\n                    if (!inq[ed.to]) { inq[ed.to] = true; q.push_back(ed.to); }\n                }\n            }\n        }\n        return dist[t] != LLONG_MAX;\n    }\n    pair<long long, long long> run(int s, int t, long long maxf = LLONG_MAX) {   // (przepływ, koszt)\n        long long flow = 0, cost = 0;\n        while (flow < maxf && spfa(s, t)) {\n            long long f = maxf - flow;\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) f = min(f, e[pe[v]].cap);\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) {\n                e[pe[v]].cap -= f;\n                e[pe[v] ^ 1].cap += f;\n            }\n            flow += f;\n            cost += f * dist[t];\n        }\n        return {flow, cost};\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "problem przydziału",
+      "assignment problem",
+      "przydział pracowników do zadań minimalny koszt",
+      "algorytm węgierski",
+      "hungarian algorithm"
+     ],
+     "a": "Sieć: źródło → każdy pracownik (cap 1, koszt 0), pracownik `i` → zadanie `j` (cap 1, koszt `c[i][j]`),\nzadanie → ujście (cap 1, koszt 0). Min-cost max-flow daje najtańsze pełne przypisanie. Złożoność\nz SPFA ok. O(n · n² · n) = O(n⁴) przy pełnej macierzy; specjalizowany **algorytm węgierski** robi to\nw O(n³) — warto go znać dla `n ≥ 300`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct MCMF {\n    struct Edge { int to; long long cap, cost; };\n    vector<Edge> e;\n    vector<vector<int>> g;\n    vector<long long> dist;\n    vector<int> pe;\n    vector<bool> inq;\n    MCMF(int n) : g(n + 1), dist(n + 1), pe(n + 1), inq(n + 1) {}\n    void addEdge(int a, int b, long long cap, long long cost) {\n        g[a].push_back(e.size()); e.push_back({b, cap, cost});\n        g[b].push_back(e.size()); e.push_back({a, 0, -cost});   // odwrotna: koszt ujemny!\n    }\n    bool spfa(int s, int t) {                                   // najtańsza ścieżka w sieci residualnej\n        fill(dist.begin(), dist.end(), LLONG_MAX);\n        deque<int> q;\n        dist[s] = 0;\n        q.push_back(s);\n        inq[s] = true;\n        while (!q.empty()) {\n            int v = q.front(); q.pop_front();\n            inq[v] = false;\n            for (int id : g[v]) {\n                const Edge& ed = e[id];\n                if (ed.cap > 0 && dist[v] + ed.cost < dist[ed.to]) {\n                    dist[ed.to] = dist[v] + ed.cost;\n                    pe[ed.to] = id;\n                    if (!inq[ed.to]) { inq[ed.to] = true; q.push_back(ed.to); }\n                }\n            }\n        }\n        return dist[t] != LLONG_MAX;\n    }\n    pair<long long, long long> run(int s, int t, long long maxf = LLONG_MAX) {   // (przepływ, koszt)\n        long long flow = 0, cost = 0;\n        while (flow < maxf && spfa(s, t)) {\n            long long f = maxf - flow;\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) f = min(f, e[pe[v]].cap);\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) {\n                e[pe[v]].cap -= f;\n                e[pe[v] ^ 1].cap += f;\n            }\n            flow += f;\n            cost += f * dist[t];\n        }\n        return {flow, cost};\n    }\n};\n\nint main() {\n    int n;\n    cin >> n;                                    // n pracowników, n zadań, macierz kosztów\n    int S = 2 * n + 1, T = 2 * n + 2;\n    MCMF f(2 * n + 2);\n    for (int i = 1; i <= n; i++) {\n        f.addEdge(S, i, 1, 0);\n        f.addEdge(n + i, T, 1, 0);\n        for (int j = 1; j <= n; j++) {\n            long long c;\n            cin >> c;\n            f.addEdge(i, n + j, 1, c);\n        }\n    }\n    cout << f.run(S, T).second << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dlaczego spfa w mcmf",
+      "ujemne koszty krawędzi odwrotnych",
+      "mcmf dijkstra nie działa",
+      "bellman ford w przepływie kosztowym"
+     ],
+     "a": "Krawędź odwrotna do `a → b` (koszt `c`) ma koszt `−c`, bo cofnięcie jednostki zwraca jej koszt. Po\npierwszej augmentacji sieć residualna ma więc ujemne krawędzie, a Dijkstra przy ujemnych wagach nie\njest poprawna. SPFA/Bellman-Ford działa przy ujemnych wagach (ujemnych cykli nie ma, bo każda\naugmentacja idzie najtańszą ścieżką). Alternatywa: Dijkstra na kosztach zredukowanych z potencjałami.",
+     "code": "long long koszt = 7;\nlong long kosztOdwrotnej = -koszt;      // cofnięcie jednostki „zwraca” 7\ncout << koszt + kosztOdwrotnej << '\\n'; // 0: tam i z powrotem nic nie kosztuje"
+    },
+    {
+     "q": [
+      "potencjały johnsona",
+      "dijkstra w mcmf",
+      "mcmf z potencjałami",
+      "reduced costs przepływ"
+     ],
+     "a": "Trzymaj potencjały `h[v]` (na start 0, gdy koszty są nieujemne; inaczej jeden Bellman-Ford). Dijkstra\nliczy odległości na kosztach zredukowanych `cost + h[a] − h[b]`, które w sieci residualnej są ≥ 0.\nPo każdej fazie `h[v] += dist[v]`. Koszt ścieżki w oryginalnych kosztach to `h[t] − h[s]`. Złożoność\nO(F · E log V) — szybciej niż SPFA na dużych sieciach.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct MCMFDijkstra {\n    struct Edge { int to; long long cap, cost; };\n    int n;\n    vector<Edge> e;\n    vector<vector<int>> g;\n    vector<long long> h, dist;\n    vector<int> pe;\n    MCMFDijkstra(int n) : n(n), g(n + 1), h(n + 1, 0), dist(n + 1), pe(n + 1) {}\n    void addEdge(int a, int b, long long cap, long long cost) {   // cost >= 0\n        g[a].push_back(e.size()); e.push_back({b, cap, cost});\n        g[b].push_back(e.size()); e.push_back({a, 0, -cost});\n    }\n    pair<long long, long long> run(int s, int t) {\n        long long flow = 0, cost = 0;\n        const long long INF = LLONG_MAX / 4;\n        while (true) {\n            fill(dist.begin(), dist.end(), INF);\n            priority_queue<pair<long long,int>, vector<pair<long long,int>>, greater<>> pq;\n            dist[s] = 0; pq.push({0, s});\n            while (!pq.empty()) {\n                auto [d, v] = pq.top(); pq.pop();\n                if (d > dist[v]) continue;\n                for (int id : g[v]) {\n                    const Edge& ed = e[id];\n                    long long nd = d + ed.cost + h[v] - h[ed.to];       // koszt zredukowany >= 0\n                    if (ed.cap > 0 && nd < dist[ed.to]) { dist[ed.to] = nd; pe[ed.to] = id; pq.push({nd, ed.to}); }\n                }\n            }\n            if (dist[t] == INF) break;\n            for (int v = 0; v <= n; v++) if (dist[v] < INF) h[v] += dist[v];\n            long long f = INF;\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) f = min(f, e[pe[v]].cap);\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) { e[pe[v]].cap -= f; e[pe[v] ^ 1].cap += f; }\n            flow += f;\n            cost += f * (h[t] - h[s]);\n        }\n        return {flow, cost};\n    }\n};\nint main() {\n    int n, m;\n    cin >> n >> m;\n    MCMFDijkstra f(n);\n    for (int i = 0; i < m; i++) { int a, b; long long c, w; cin >> a >> b >> c >> w; f.addEdge(a, b, c, w); }\n    auto [flow, cost] = f.run(1, n);\n    cout << flow << ' ' << cost << '\\n';\n}"
+    },
+    {
+     "q": [
+      "mcmf złożoność",
+      "ile działa min cost flow",
+      "min cost flow complexity",
+      "czy mcmf zdąży"
+     ],
+     "a": "Każda augmentacja zwiększa przepływ o ≥ 1, więc faz jest co najwyżej `F` (wartość przepływu). Faza\nz SPFA kosztuje pesymistycznie O(V·E), z Dijkstrą i potencjałami O(E log V). Razem O(F·V·E) lub\nO(F·E log V). Przy przydziale `n × n` (F = n) to w praktyce szybkie dla `n ≤ ~300`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct MCMF {\n    struct Edge { int to; long long cap, cost; };\n    vector<Edge> e;\n    vector<vector<int>> g;\n    vector<long long> dist;\n    vector<int> pe;\n    vector<bool> inq;\n    MCMF(int n) : g(n + 1), dist(n + 1), pe(n + 1), inq(n + 1) {}\n    void addEdge(int a, int b, long long cap, long long cost) {\n        g[a].push_back(e.size()); e.push_back({b, cap, cost});\n        g[b].push_back(e.size()); e.push_back({a, 0, -cost});   // odwrotna: koszt ujemny!\n    }\n    bool spfa(int s, int t) {                                   // najtańsza ścieżka w sieci residualnej\n        fill(dist.begin(), dist.end(), LLONG_MAX);\n        deque<int> q;\n        dist[s] = 0;\n        q.push_back(s);\n        inq[s] = true;\n        while (!q.empty()) {\n            int v = q.front(); q.pop_front();\n            inq[v] = false;\n            for (int id : g[v]) {\n                const Edge& ed = e[id];\n                if (ed.cap > 0 && dist[v] + ed.cost < dist[ed.to]) {\n                    dist[ed.to] = dist[v] + ed.cost;\n                    pe[ed.to] = id;\n                    if (!inq[ed.to]) { inq[ed.to] = true; q.push_back(ed.to); }\n                }\n            }\n        }\n        return dist[t] != LLONG_MAX;\n    }\n    pair<long long, long long> run(int s, int t, long long maxf = LLONG_MAX) {   // (przepływ, koszt)\n        long long flow = 0, cost = 0;\n        while (flow < maxf && spfa(s, t)) {\n            long long f = maxf - flow;\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) f = min(f, e[pe[v]].cap);\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) {\n                e[pe[v]].cap -= f;\n                e[pe[v] ^ 1].cap += f;\n            }\n            flow += f;\n            cost += f * dist[t];\n        }\n        return {flow, cost};\n    }\n};\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    MCMF f(n);\n    for (int i = 0; i < m; i++) { int a, b; long long c, w; cin >> a >> b >> c >> w; f.addEdge(a, b, c, w); }\n    long long fazy = 0, koszt = 0;\n    while (true) {                                // jedna faza = jedna najtańsza ścieżka\n        auto [fl, c] = f.run(1, n, 1);            // puszczamy co najwyżej 1 jednostkę\n        if (fl == 0) break;\n        fazy++;\n        koszt += c;\n    }\n    cout << fazy << ' ' << koszt << '\\n';   // faz = F (wartość przepływu)\n}"
+    },
+    {
+     "q": [
+      "przepływ k jednostek minimalny koszt",
+      "dokładnie k ścieżek najtańszych",
+      "k rozłącznych ścieżek min suma",
+      "min cost flow z limitem"
+     ],
+     "a": "Ogranicz przepływ do `K`: `run(s, t, K)` przerywa, gdy przepłynie `K` jednostek (ostatnia ścieżka\nmoże być wykorzystana częściowo). `K` rozłącznych krawędziowo ścieżek o minimalnej sumie długości =\nprzepływ `K` przy przepustowościach 1 i kosztach = długościach krawędzi. Jeśli zwrócony przepływ < K,\nzadanie nie ma rozwiązania.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nstruct MCMF {\n    struct Edge { int to; long long cap, cost; };\n    vector<Edge> e;\n    vector<vector<int>> g;\n    vector<long long> dist;\n    vector<int> pe;\n    vector<bool> inq;\n    MCMF(int n) : g(n + 1), dist(n + 1), pe(n + 1), inq(n + 1) {}\n    void addEdge(int a, int b, long long cap, long long cost) {\n        g[a].push_back(e.size()); e.push_back({b, cap, cost});\n        g[b].push_back(e.size()); e.push_back({a, 0, -cost});   // odwrotna: koszt ujemny!\n    }\n    bool spfa(int s, int t) {                                   // najtańsza ścieżka w sieci residualnej\n        fill(dist.begin(), dist.end(), LLONG_MAX);\n        deque<int> q;\n        dist[s] = 0;\n        q.push_back(s);\n        inq[s] = true;\n        while (!q.empty()) {\n            int v = q.front(); q.pop_front();\n            inq[v] = false;\n            for (int id : g[v]) {\n                const Edge& ed = e[id];\n                if (ed.cap > 0 && dist[v] + ed.cost < dist[ed.to]) {\n                    dist[ed.to] = dist[v] + ed.cost;\n                    pe[ed.to] = id;\n                    if (!inq[ed.to]) { inq[ed.to] = true; q.push_back(ed.to); }\n                }\n            }\n        }\n        return dist[t] != LLONG_MAX;\n    }\n    pair<long long, long long> run(int s, int t, long long maxf = LLONG_MAX) {   // (przepływ, koszt)\n        long long flow = 0, cost = 0;\n        while (flow < maxf && spfa(s, t)) {\n            long long f = maxf - flow;\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) f = min(f, e[pe[v]].cap);\n            for (int v = t; v != s; v = e[pe[v] ^ 1].to) {\n                e[pe[v]].cap -= f;\n                e[pe[v] ^ 1].cap += f;\n            }\n            flow += f;\n            cost += f * dist[t];\n        }\n        return {flow, cost};\n    }\n};\n\nint main() {\n    int n, m, K;\n    cin >> n >> m >> K;\n    MCMF f(n);\n    for (int i = 0; i < m; i++) { int a, b; long long w; cin >> a >> b >> w; f.addEdge(a, b, 1, w); }\n    auto [flow, cost] = f.run(1, n, K);\n    if (flow < K) cout << \"NIE\\n\";\n    else cout << cost << '\\n';\n}"
+    },
+    {
+     "q": [
+      "max cost flow",
+      "maksymalny koszt przepływu",
+      "maksymalizacja zysku przepływ",
+      "max profit flow"
+     ],
+     "a": "Zaneguj koszty (`cost = −zysk`) i licz min-cost flow; wynik zaneguj z powrotem. Ujemne koszty na\nkrawędziach „w przód” są dla SPFA w porządku, o ile sieć nie zawiera cyklu o ujemnym koszcie (np. DAG,\ngraf dwudzielny przydziału). Jeśli nie musisz przepłynąć maksimum, przerwij, gdy najtańsza ścieżka\nprzestaje być ujemna (`dist[t] >= 0`) — dalsze jednostki zmniejszyłyby zysk.",
+     "code": "vector<long long> zysk = {5, 3, 8};\nvector<long long> koszt;\nfor (long long z : zysk) koszt.push_back(-z);       // do MCMF\nlong long wynikMcmf = -(5 + 8);                     // np. wybrane dwie najlepsze\ncout << -wynikMcmf << '\\n';                         // 13"
+    }
+   ],
+   "related": [
+    "graph-max-flow",
+    "graph-bipartite-matching",
+    "graph-spfa",
+    "graph-bellman-ford",
+    "graph-dijkstra",
+    "graph-min-cut"
+   ]
+  }
+ ]
+}

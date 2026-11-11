@@ -1,0 +1,1782 @@
+{
+ "chunk": "graphs-basics",
+ "articles": [
+  {
+   "id": "graph-representation",
+   "title": "Reprezentacje grafu: lista sąsiedztwa, macierz, lista krawędzi",
+   "category": "Grafy",
+   "tags": [
+    "graf",
+    "lista sąsiedztwa",
+    "macierz sąsiedztwa",
+    "lista krawędzi",
+    "graf ważony",
+    "vector<int> g[N]",
+    "adjacency list",
+    "reprezentacja"
+   ],
+   "aliases": [
+    "reprezentacja grafu",
+    "lista sąsiedztwa",
+    "lista sasiedztwa",
+    "macierz sąsiedztwa",
+    "adjacency list",
+    "adjacency matrix",
+    "jak zapisać graf",
+    "graf w c++",
+    "vector<int> g[N]",
+    "lista krawędzi",
+    "edge list",
+    "graf ważony vector pair"
+   ],
+   "summary": "Jak trzymać graf w pamięci w C++: lista sąsiedztwa `vector<int> g[N]` (standard na OI), macierz sąsiedztwa (małe n, szybkie pytanie o krawędź), lista krawędzi (Kruskal, Bellman-Ford) i graf ważony `vector<pair<int,int>>`.",
+   "complexity": "lista sąsiedztwa: pamięć O(n+m), przejście po sąsiadach O(deg); macierz: pamięć O(n²), test krawędzi O(1); lista krawędzi: pamięć O(m)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Graf** to zbiór wierzchołków (zwykle numerowanych `1..n`) i krawędzi między nimi. Zanim uruchomisz BFS,\nDFS czy Dijkstrę, musisz graf *zapisać* tak, żeby szybko odpowiadać na pytanie „kto jest sąsiadem `v`?”.\n\nNa olimpiadzie w 95% przypadków używa się **listy sąsiedztwa**: dla każdego wierzchołka trzymamy wektor\njego sąsiadów. Zajmuje to `O(n + m)` pamięci, a przejście po wszystkich sąsiadach wszystkich wierzchołków\nkosztuje łącznie `O(n + m)` — dlatego BFS/DFS działają liniowo."
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy co wybrać (sygnały w treści zadania):**\n- `n, m ≤ 10^5..10^6` → lista sąsiedztwa (`vector<int> g[N]` albo `vector<vector<int>>`).\n- `n ≤ 500` (czasem `≤ 2000`), pytania „czy istnieje krawędź a–b”, Floyd-Warshall, graf gęsty → macierz.\n- „posortuj krawędzie po wagach”, Kruskal, Bellman-Ford → lista krawędzi (`vector<array<int,3>>` lub `struct`).\n- krawędzie mają wagi/długości/koszty → `vector<pair<int,int>> g[N]` z parami (sąsiad, waga)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Reprezentacja",
+      "Pamięć",
+      "Czy jest krawędź a–b?",
+      "Sąsiedzi v",
+      "Typowe użycie"
+     ],
+     "rows": [
+      [
+       "lista sąsiedztwa `vector<int> g[N]`",
+       "O(n+m)",
+       "O(deg a)",
+       "O(deg v)",
+       "BFS, DFS, Dijkstra, prawie wszystko"
+      ],
+      [
+       "macierz `bool A[N][N]`",
+       "O(n²)",
+       "O(1)",
+       "O(n)",
+       "Floyd-Warshall, n ≤ ~2000, grafy gęste"
+      ],
+      [
+       "lista krawędzi `vector<Edge>`",
+       "O(m)",
+       "O(m)",
+       "O(m)",
+       "Kruskal, Bellman-Ford, sortowanie krawędzi"
+      ],
+      [
+       "forward star (head/next/to)",
+       "O(n+m)",
+       "O(deg a)",
+       "O(deg v)",
+       "bardzo duże m, przepływy, mało alokacji"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Lista sąsiedztwa — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 200005;\nvector<int> g[MAXN];          // g[v] = lista sąsiadów v\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;          // wierzchołki numerowane 1..n\n        g[a].push_back(b);\n        g[b].push_back(a);      // graf NIESKIEROWANY: dodajemy w obie strony\n    }\n    for (int v = 1; v <= n; v++) {\n        cout << v << \" (stopień \" << g[v].size() << \"):\";\n        for (int u : g[v]) cout << ' ' << u;\n        cout << '\\n';\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Graf ważony: vector<pair<int,int>>",
+     "code": "const int MAXN = 200005;\nvector<pair<int, int>> adj[MAXN];   // adj[v] = {(sąsiad, waga), ...}\n\nvoid addEdge(int a, int b, int w) {\n    adj[a].push_back({b, w});\n    adj[b].push_back({a, w});        // usuń tę linię dla grafu skierowanego\n}\n\nlong long sumaWagWychodzacych(int v) {\n    long long s = 0;\n    for (auto [u, w] : adj[v]) s += w;  // structured bindings (C++17)\n    return s;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Macierz sąsiedztwa (małe n)",
+     "code": "const int N = 505;\nbool A[N][N];          // A[a][b] = czy jest krawędź (globalnie -> wyzerowane)\nint W[N][N];           // albo macierz wag\n\nvoid wczytajMacierz(int n, int m) {\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        A[a][b] = A[b][a] = true;\n        W[a][b] = W[b][a] = w;\n    }\n}",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Lista krawędzi (np. pod Kruskala)",
+     "code": "struct Edge {\n    int a, b;\n    long long w;\n};\nvector<Edge> edges;    // lista krawędzi\n\nvoid przyklad() {\n    edges.push_back({1, 2, 5});\n    edges.push_back({2, 3, 1});\n    sort(edges.begin(), edges.end(), [](const Edge& x, const Edge& y) { return x.w < y.w; });\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Globalna tablica `vector<int> g[MAXN]` jest wygodna (nie trzeba przekazywać grafu do funkcji, rozmiar\nznany z limitów). `vector<vector<int>> g(n + 1)` tworzy dokładnie tyle, ile trzeba — przydatne przy\nwielu testach, bo nowy graf = nowy obiekt."
+    },
+    {
+     "type": "warn",
+     "md": "Macierz `int A[N][N]` dla `N = 10^5` to `10^10` komórek — nie zmieści się w żadnym limicie pamięci.\nMacierz tylko dla `n` rzędu kilku tysięcy (2000×2000 intów ≈ 16 MB)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "g[a].push_back(b)",
+     "desc": "dodaje krawędź skierowaną a→b do listy sąsiedztwa",
+     "complexity": "O(1) zamortyzowane",
+     "example": "g[a].push_back(b); g[b].push_back(a); // nieskierowana"
+    },
+    {
+     "sig": "for (int u : g[v])",
+     "desc": "przejście po wszystkich sąsiadach v",
+     "complexity": "O(deg v)"
+    },
+    {
+     "sig": "g[v].size()",
+     "desc": "stopień wierzchołka v (liczba sąsiadów)",
+     "complexity": "O(1)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "for (auto [u, w] : adj[v])",
+     "desc": "przejście po sąsiadach z wagami w grafie ważonym",
+     "complexity": "O(deg v)"
+    }
+   ],
+   "pitfalls": [
+    "Graf nieskierowany: krawędź trzeba dodać w OBIE strony (`g[a].push_back(b); g[b].push_back(a);`). Zapomnienie drugiej linii to jeden z najczęstszych błędów.",
+    "Tablica `g[MAXN]` musi mieć rozmiar `n + 1` (lub więcej), gdy wierzchołki są numerowane od 1.",
+    "Przy wielu testach w jednym pliku trzeba czyścić listy: `for (int i = 1; i <= n; i++) g[i].clear();`.",
+    "Macierz sąsiedztwa ma `O(n²)` pamięci i `O(n²)` czasu na samo przejście — dla dużych `n` to TLE/MLE.",
+    "Lista krawędzi w grafie nieskierowanym ma `m` elementów, ale lista sąsiedztwa `2m` wpisów — pamiętaj o tym przy liczeniu pamięci i przy forward star (tablice rozmiaru `2*MAXM`).",
+    "W multigrafie (wiele krawędzi między tą samą parą) macierz `bool` gubi informację o krotności."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak zapisać graf w c++",
+      "reprezentacja grafu",
+      "lista sasiedztwa c++",
+      "adjacency list c++",
+      "vector<int> g[N] co to"
+     ],
+     "a": "Najprościej i najczęściej: **lista sąsiedztwa** — globalna tablica wektorów `vector<int> g[MAXN]`,\ngdzie `g[v]` to sąsiedzi `v`. Dodanie krawędzi to `push_back` (O(1)), a przejście po sąsiadach\nkosztuje O(deg v), więc BFS/DFS działają w O(n + m). Pamięć O(n + m) — mieści grafy z milionem krawędzi.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 100005;\nvector<int> g[MAXN];\nint main() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    for (int u : g[1]) cout << u << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "macierz czy lista sąsiedztwa",
+      "kiedy macierz sasiedztwa",
+      "adjacency matrix vs list",
+      "co lepsze macierz czy lista"
+     ],
+     "a": "**Lista** — gdy `n` jest duże (≥ ~5000) albo graf rzadki: pamięć O(n + m). **Macierz** — gdy `n ≤ ~2000`,\ngraf jest gęsty, często pytasz „czy jest krawędź a–b” (O(1)) albo robisz Floyda-Warshalla (i tak O(n³)).\nMacierz dla `n = 10^5` to 10^10 komórek — nierealne. W razie wątpliwości wybierz listę.",
+     "code": "const int N = 2005;\nbool A[N][N];\nbool jestKrawedz(int a, int b) { return A[a][b]; }   // O(1)",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "graf ważony c++",
+      "jak zapisać wagi krawędzi",
+      "vector pair graf",
+      "weighted graph c++",
+      "graf z wagami lista sasiedztwa"
+     ],
+     "a": "Trzymaj pary `(sąsiad, waga)`: `vector<pair<int,int>> g[MAXN]`. Przy przechodzeniu użyj\n`for (auto [u, w] : g[v])`. Jeśli wagi mogą być duże (suma > 2·10^9), trzymaj wagi lub odległości\nw `long long`. Kolejność w parze ma znaczenie — ustal jedną (zwykle `{sąsiad, waga}`) i trzymaj się jej.",
+     "code": "const int MAXN = 100005;\nvector<pair<int, int>> g[MAXN];\nvoid wczytaj(int m) {\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "lista krawędzi",
+      "edge list c++",
+      "krawędzie w struct",
+      "jak trzymać krawędzie do sortowania"
+     ],
+     "a": "Lista krawędzi to po prostu `vector` trójek `(a, b, w)`. Przydaje się, gdy algorytm patrzy na\nwszystkie krawędzie naraz: **Kruskal** (sortuje po wagach), **Bellman-Ford** (relaksuje każdą krawędź\nn−1 razy). `array<int,3>` z wagą na pierwszym miejscu sortuje się domyślnie po wadze.",
+     "code": "int m = 3;\nvector<array<int, 3>> e = {{5, 1, 2}, {1, 2, 3}, {3, 1, 3}};   // {waga, a, b}\nsort(e.begin(), e.end());                                    // po wagach rosnąco\nfor (auto [w, a, b] : e) cout << a << \"-\" << b << \" w=\" << w << '\\n';"
+    },
+    {
+     "q": [
+      "graf nieskierowany jak dodać krawędź",
+      "krawędź w obie strony",
+      "undirected graph c++",
+      "dlaczego dodaje się krawędź dwa razy"
+     ],
+     "a": "W grafie nieskierowanym krawędź `a–b` pozwala iść z `a` do `b` **i** z `b` do `a`, więc trzeba ją\nwpisać do obu list: `g[a].push_back(b); g[b].push_back(a);`. W grafie skierowanym (drogi\njednokierunkowe, „z a można przejść do b”) dodajesz tylko `g[a].push_back(b)`. Zapomnienie drugiej\nlinii daje błędne odpowiedzi (WA), bo BFS/DFS nie widzi połowy krawędzi.",
+     "code": "int n = 3;\nvector<vector<int>> g(n + 1);\nauto addUndirected = [&](int a, int b) { g[a].push_back(b); g[b].push_back(a); };\nauto addDirected = [&](int a, int b) { g[a].push_back(b); };\naddUndirected(1, 2);\naddDirected(2, 3);"
+    },
+    {
+     "q": [
+      "vector<vector<int>> czy vector<int> g[N]",
+      "globalna tablica wektorów graf",
+      "vector vector graf"
+     ],
+     "a": "Oba działają tak samo szybko. `vector<int> g[MAXN]` (globalnie) — nie trzeba przekazywać grafu do\nfunkcji, rozmiar z limitu zadania. `vector<vector<int>> g(n + 1)` — dokładny rozmiar, łatwo stworzyć\nnowy graf dla każdego testu. Przekazując `vector<vector<int>>` do funkcji, **zawsze przez referencję**\n(`const vector<vector<int>>& g`), inaczej kopiujesz cały graf przy każdym wywołaniu.",
+     "code": "int liczKrawedzie(const vector<vector<int>>& g) {   // referencja: bez kopiowania\n    int s = 0;\n    for (auto& lista : g) s += lista.size();\n    return s / 2;                                    // nieskierowany: każda krawędź 2 razy\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile pamięci zajmuje graf",
+      "graf memory limit",
+      "macierz 10^5 za dużo pamięci",
+      "MLE graf lista sasiedztwa"
+     ],
+     "a": "Lista sąsiedztwa grafu nieskierowanego: `2m` intów (4 B) plus narzut wektorów (~24 B na wierzchołek\n+ zapas pojemności do 2×). Dla `n = m = 10^6` to rząd 20–40 MB. Macierz `n×n` bajtów: dla `n = 10^4`\njuż 100 MB. Gdy pamięć jest ciasna, użyj forward star (tablice `head/nxt/to`) albo wczytaj krawędzie,\npolicz stopnie i zrób `reserve`.",
+     "code": "int n = 4, m = 3;\nvector<pair<int,int>> e = {{1, 2}, {2, 3}, {2, 4}};\nvector<int> deg(n + 1, 0);\nfor (auto [a, b] : e) { deg[a]++; deg[b]++; }\nvector<vector<int>> g(n + 1);\nfor (int v = 1; v <= n; v++) g[v].reserve(deg[v]);   // bez realokacji\nfor (auto [a, b] : e) { g[a].push_back(b); g[b].push_back(a); }"
+    },
+    {
+     "q": [
+      "jak wyczyścić graf między testami",
+      "wiele testów graf clear",
+      "zerowanie grafu",
+      "graf kilka zestawów danych"
+     ],
+     "a": "Przy kilku testach w jednym wejściu wyczyść **tylko używaną część**: `for (int i = 1; i <= n; i++)\ng[i].clear();` oraz tablice `dist`, `vis` itd. Nie rób `memset` całych ogromnych tablic przy\nkażdym teście, jeśli testów jest dużo, a suma `n` jest ograniczona — to może dać TLE.\nAlternatywa: tworzyć `vector<vector<int>> g(n + 1)` wewnątrz pętli po testach.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 100005;\nvector<int> g[MAXN];\nbool vis[MAXN];\nint main() {\n    int t;\n    cin >> t;\n    while (t--) {\n        int n, m;\n        cin >> n >> m;\n        for (int i = 1; i <= n; i++) { g[i].clear(); vis[i] = false; }\n        for (int i = 0; i < m; i++) {\n            int a, b;\n            cin >> a >> b;\n            g[a].push_back(b);\n            g[b].push_back(a);\n        }\n        cout << g[1].size() << '\\n';\n    }\n}"
+    },
+    {
+     "q": [
+      "forward star",
+      "lista sąsiedztwa na tablicach",
+      "head next to graf",
+      "graf bez vectorów"
+     ],
+     "a": "**Forward star** trzyma krawędzie w zwykłych tablicach: `to[e]` (dokąd), `nxt[e]` (następna krawędź\nz tego samego wierzchołka), `head[v]` (pierwsza krawędź z `v`, `-1` = brak). Jest bardzo szybki i nie\nalokuje pamięci dynamicznie. Popularny w przepływach, bo krawędź `e` i jej odwrotna to `e ^ 1`.\nPamiętaj: dla grafu nieskierowanego tablice mają rozmiar `2·MAXM`.",
+     "code": "const int MAXN = 100005, MAXM = 200005;\nint head[MAXN], nxt[2 * MAXM], to[2 * MAXM], cnt = 0;\nvoid init(int n) { for (int i = 0; i <= n; i++) head[i] = -1; cnt = 0; }\nvoid addEdge(int a, int b) { to[cnt] = b; nxt[cnt] = head[a]; head[a] = cnt++; }\nint stopien(int v) {\n    int d = 0;\n    for (int e = head[v]; e != -1; e = nxt[e]) d++;   // sąsiad to to[e]\n    return d;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "multigraf",
+      "krawędzie wielokrotne pętle",
+      "self loop graf",
+      "dwie krawędzie między tymi samymi"
+     ],
+     "a": "Lista sąsiedztwa naturalnie obsługuje **krawędzie wielokrotne** (ta sama para kilka razy) i **pętle**\n(`a == b`). BFS/DFS/Dijkstra działają na nich poprawnie. Uwaga przy: wykrywaniu cyklu w grafie\nnieskierowanym (dwie krawędzie a–b to już cykl — porównuj **numer krawędzi**, nie rodzica),\nmostach (krawędź wielokrotna nigdy nie jest mostem) i stopniach (pętla dodaje 2 do stopnia).\nJeśli chcesz usunąć duplikaty: posortuj każdą listę i zrób `unique`.",
+     "code": "vector<vector<int>> g = {{}, {2, 3, 2}, {1, 1}, {1}};\nfor (auto& lista : g) {\n    sort(lista.begin(), lista.end());\n    lista.erase(unique(lista.begin(), lista.end()), lista.end());\n}"
+    }
+   ],
+   "related": [
+    "graph-input",
+    "graph-bfs",
+    "graph-dfs",
+    "graph-dijkstra",
+    "graph-mst-kruskal",
+    "graph-floyd-warshall",
+    "ds-linked-list-array"
+   ]
+  },
+  {
+   "id": "graph-input",
+   "title": "Wczytywanie grafu: n m + krawędzie, drzewa, siatki, macierze",
+   "category": "Grafy",
+   "tags": [
+    "wczytywanie",
+    "wejście",
+    "graf",
+    "n m",
+    "krawędzie",
+    "indeksowanie od 1",
+    "siatka",
+    "drzewo",
+    "szybkie wejście"
+   ],
+   "aliases": [
+    "wczytywanie grafu",
+    "jak wczytać graf",
+    "wczytać krawędzie",
+    "input graf",
+    "read graph c++",
+    "format wejścia graf",
+    "n m krawędzie",
+    "wczytanie drzewa",
+    "wczytanie planszy"
+   ],
+   "summary": "Typowe formaty wejścia z grafem na OI (`n m` i `m` krawędzi, drzewo `n-1` krawędzi, tablica rodziców, plansza znaków, macierz) i jak je poprawnie i szybko wczytać do listy sąsiedztwa.",
+   "complexity": "O(n + m) czasu i pamięci",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Najczęstszy format: w pierwszym wierszu `n m` (liczba wierzchołków i krawędzi), potem `m` wierszy\n`a b` (albo `a b c` z wagą). Wierzchołki są **prawie zawsze numerowane od 1**, więc tablice robimy\nrozmiaru `n + 1` i nie przesuwamy indeksów. Treść mówi, czy drogi są **dwukierunkowe**\n(graf nieskierowany — dodaj krawędź w obie strony) czy **jednokierunkowe** (skierowany)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „miasta połączone drogami” → graf; „drogi dwukierunkowe” → nieskierowany;\n„z a można przejść do b, ale nie odwrotnie” → skierowany; „drzewo o n wierzchołkach” / „n−1 krawędzi\ni z każdego miasta da się dojechać do każdego” → drzewo; „plansza n×m złożona z `.` i `#`” → graf na siatce."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Format `n m` + `m` krawędzi z wagą",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);   // szybkie wczytywanie — obowiązkowe przy 10^5+ liczb\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int, int>>> g(n + 1);   // 1..n, para (sąsiad, waga)\n    for (int i = 0; i < m; i++) {\n        int a, b, c;\n        cin >> a >> b >> c;\n        g[a].push_back({b, c});\n        g[b].push_back({a, c});                // nieskierowany\n    }\n    long long suma = 0;\n    for (int v = 1; v <= n; v++)\n        for (auto [u, c] : g[v]) suma += c;\n    cout << suma / 2 << '\\n';                  // suma wag wszystkich krawędzi\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Drzewo: n, potem n−1 krawędzi",
+     "code": "int n;\ncin >> n;\nvector<vector<int>> g(n + 1);\nfor (int i = 0; i < n - 1; i++) {       // drzewo: dokładnie n-1 krawędzi\n    int a, b;\n    cin >> a >> b;\n    g[a].push_back(b);\n    g[b].push_back(a);\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Drzewo jako tablica rodziców p2..pn",
+     "code": "int n;\ncin >> n;\nvector<int> parent(n + 1, 0);\nvector<vector<int>> children(n + 1);\nfor (int v = 2; v <= n; v++) {          // często: „p_2, p_3, ..., p_n” — rodzic wierzchołka v\n    cin >> parent[v];\n    children[parent[v]].push_back(v);\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Plansza n×m ze znaków",
+     "code": "int n, m;\ncin >> n >> m;\nvector<string> grid(n);\nfor (auto& row : grid) cin >> row;       // każdy wiersz to napis bez spacji, np. \"..#.S\"\n// pole (i, j): grid[i][j], 0 <= i < n, 0 <= j < m"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Macierz sąsiedztwa na wejściu",
+     "code": "int n;\ncin >> n;\nvector<vector<int>> g(n + 1);\nfor (int i = 1; i <= n; i++)\n    for (int j = 1; j <= n; j++) {\n        int x;\n        cin >> x;                        // macierz 0/1: x == 1 -> krawędź i->j\n        if (x) g[i].push_back(j);\n    }"
+    },
+    {
+     "type": "tip",
+     "md": "Jeśli wolisz indeksy od 0 (np. do masek bitowych), przesuń od razu przy wczytaniu: `a--; b--;`.\nAle nie mieszaj — w jednym programie wszystko od 0 albo wszystko od 1."
+    },
+    {
+     "type": "warn",
+     "md": "Przy `m = 10^6` krawędzi `cin` bez `ios::sync_with_stdio(false); cin.tie(nullptr);` potrafi działać\nponad sekundę. Nie mieszaj wtedy `cin` z `scanf`/`printf`."
+    }
+   ],
+   "pitfalls": [
+    "Tablice rozmiaru `n` przy numeracji od 1 → wyjście poza tablicę dla wierzchołka `n`. Rób `n + 1`.",
+    "Zapomniane `g[b].push_back(a)` w grafie nieskierowanym.",
+    "Drzewo ma `n - 1` krawędzi, nie `n` — pętla `for (i = 0; i < n; i++)` wczyta o jedną krawędź za dużo i rozjedzie resztę wejścia.",
+    "Wagi/sumy powyżej 2·10^9 → `long long` już przy wczytywaniu (`long long c; cin >> c;`).",
+    "Przy planszy wczytanej jako `vector<string>` indeksy idą od 0: `grid[i][j]`, `0 ≤ i < n`, `0 ≤ j < m`.",
+    "Przy wielu testach wyczyść graf i tablice pomocnicze przed każdym testem."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wczytać graf",
+      "wczytywanie grafu c++",
+      "n m i krawedzie",
+      "read graph c++",
+      "jak wczytac krawedzie"
+     ],
+     "a": "Wczytaj `n m`, utwórz `vector<vector<int>> g(n + 1)` i w pętli `m` razy wczytaj `a b`, dodając\n`g[a].push_back(b)` (i `g[b].push_back(a)`, jeśli graf nieskierowany). Rozmiar `n + 1`, bo wierzchołki\nsą zwykle od 1. Na początku `main` dodaj `ios::sync_with_stdio(false); cin.tie(nullptr);`.\nCałość O(n + m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    for (int v = 1; v <= n; v++) cout << g[v].size() << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "wierzchołki od 1 czy od 0",
+      "0 czy 1 indeksowanie graf",
+      "indeksowanie od zera graf",
+      "numeracja wierzcholkow od 1"
+     ],
+     "a": "Zadania OI prawie zawsze numerują wierzchołki od 1. Najbezpieczniej: zostaw numerację z treści i rób\ntablice rozmiaru `n + 1` (indeks 0 niewykorzystany). Jeśli potrzebujesz 0..n−1 (maski bitowe,\n`vector` bez pustego elementu), zrób `a--; b--;` zaraz po wczytaniu — i pamiętaj, żeby przy\nwypisywaniu wierzchołków dodać z powrotem 1.",
+     "code": "int n = 3;\nvector<vector<int>> g(n);          // 0..n-1\nint a = 1, b = 3;                  // tak jak w wejściu (od 1)\na--; b--;\ng[a].push_back(b);\ng[b].push_back(a);\ncout << a + 1 << ' ' << b + 1 << '\\n';   // wypisując, wracamy do numeracji z treści"
+    },
+    {
+     "q": [
+      "szybkie wczytywanie graf",
+      "cin wolny 10^6 krawędzi",
+      "ios sync with stdio graf",
+      "tle przy wczytywaniu grafu"
+     ],
+     "a": "Dodaj na początku `main`: `ios::sync_with_stdio(false); cin.tie(nullptr);` — przyspiesza `cin`\nkilkukrotnie (wyłącza synchronizację z `stdio`). Po tym nie używaj `scanf`/`printf` w tym samym\nprogramie. Wypisuj `'\\n'` zamiast `endl` (endl opróżnia bufor przy każdym wierszu).\nDla ekstremalnych wejść (> 10^7 liczb) można napisać własny czytnik na `getchar`/`fread`.",
+     "code": "static char buf[1 << 16];\nstatic size_t len = 0, pos = 0;\ninline int gc() {\n    if (pos == len) { len = fread(buf, 1, sizeof buf, stdin); pos = 0; if (!len) return -1; }\n    return buf[pos++];\n}\ninline int readInt() {\n    int c = gc(), x = 0;\n    bool neg = false;\n    while (c != '-' && (c < '0' || c > '9')) c = gc();\n    if (c == '-') { neg = true; c = gc(); }\n    while (c >= '0' && c <= '9') { x = x * 10 + (c - '0'); c = gc(); }\n    return neg ? -x : x;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wczytanie drzewa",
+      "drzewo n-1 krawedzi wczytac",
+      "jak wczytać drzewo",
+      "read tree c++"
+     ],
+     "a": "Drzewo o `n` wierzchołkach ma dokładnie `n − 1` krawędzi, więc pętla idzie `n − 1` razy. Krawędzie\ndrzewa są nieskierowane — dodaj w obie strony, a kierunek „rodzic → dziecko” ustalisz DFS-em/BFS-em\nod korzenia (zwykle 1). Uwaga na `n = 1`: brak krawędzi, pętla wykona się 0 razy — to poprawne.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    int liscie = 0;\n    for (int v = 1; v <= n; v++) if (g[v].size() == 1) liscie++;\n    cout << liscie << '\\n';\n}"
+    },
+    {
+     "q": [
+      "wczytanie planszy",
+      "wczytać siatkę znaków",
+      "grid input c++",
+      "wczytywanie labiryntu",
+      "plansza n m kropki i hashe"
+     ],
+     "a": "Planszę bez spacji wczytuj wierszami jako `string`: `vector<string> s(n); for (auto& r : s) cin >> r;`.\nPole to `s[i][j]` z indeksami od 0. Jeśli znaki są oddzielone spacjami, wczytuj po jednym `char`\n(`cin >> c` pomija białe znaki). Wierzchołkiem grafu jest pole `(i, j)`; sąsiedzi to pola obok —\nkrawędzi nie zapisujesz, generujesz je tablicami `dx/dy`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<string> s(n);\n    for (auto& r : s) cin >> r;\n    int wolne = 0;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++)\n            if (s[i][j] == '.') wolne++;\n    cout << wolne << '\\n';\n}"
+    },
+    {
+     "q": [
+      "wczytanie macierzy sąsiedztwa",
+      "graf podany jako macierz",
+      "macierz 0 1 wejście"
+     ],
+     "a": "Gdy wejście to `n` i macierz `n×n` zer i jedynek, możesz ją trzymać bezpośrednio (`n` jest wtedy małe)\nalbo zamienić na listę sąsiedztwa: `if (x == 1) g[i].push_back(j);`. Jeśli macierz jest symetryczna\n(graf nieskierowany), nie dodawaj krawędzi drugi raz — każda para pojawi się w macierzy dwukrotnie.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= n; j++) {\n            int x;\n            cin >> x;\n            if (x) g[i].push_back(j);\n        }\n    cout << g[1].size() << '\\n';\n}"
+    },
+    {
+     "q": [
+      "drzewo z tablicy rodziców wczytać",
+      "p2 p3 pn rodzic",
+      "parent array input"
+     ],
+     "a": "Format „w drugim wierszu `n − 1` liczb `p_2 … p_n`, gdzie `p_i` to rodzic `i`” daje od razu\nukorzenione drzewo (korzeń 1). Wczytuj w pętli `for (v = 2; v <= n; v++)`. Jeśli dodatkowo\n`p_i < i`, to wierzchołki są w kolejności topologicznej — wiele DP można policzyć pętlą od `n` w dół\nbez DFS-u.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<int> p(n + 1, 0), sz(n + 1, 1);\n    for (int v = 2; v <= n; v++) cin >> p[v];\n    for (int v = n; v >= 2; v--) sz[p[v]] += sz[v];   // działa, gdy p[v] < v\n    for (int v = 1; v <= n; v++) cout << sz[v] << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "graf skierowany wczytać",
+      "drogi jednokierunkowe",
+      "directed graph input",
+      "krawedz z a do b"
+     ],
+     "a": "W grafie skierowanym dodajesz tylko `g[a].push_back(b)`. Często przydaje się też **graf odwrócony**\n`rg[b].push_back(a)` — np. żeby BFS-em od celu policzyć odległości *do* celu, w algorytmie Kosaraju\nalbo do liczenia stopni wejściowych w sortowaniu topologicznym (`indeg[b]++`).",
+     "code": "int n = 3;\nvector<vector<int>> g(n + 1), rg(n + 1);\nvector<int> indeg(n + 1, 0);\nvector<pair<int,int>> kraw = {{1, 2}, {2, 3}};\nfor (auto [a, b] : kraw) {\n    g[a].push_back(b);\n    rg[b].push_back(a);\n    indeg[b]++;\n}"
+    },
+    {
+     "q": [
+      "wczytywanie do końca pliku",
+      "nie wiem ile krawędzi",
+      "while cin krawedzie",
+      "eof graf"
+     ],
+     "a": "Jeśli liczba krawędzi nie jest podana, wczytuj w pętli `while (cin >> a >> b)` — warunek staje się\nfałszywy na końcu danych. Na OI to rzadkość (zwykle `m` jest podane), ale zdarza się w zadaniach\ntreningowych.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    int a, b, m = 0;\n    while (cin >> a >> b) {\n        g[a].push_back(b);\n        g[b].push_back(a);\n        m++;\n    }\n    cout << m << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "graph-representation",
+    "tree-basics",
+    "graph-bfs-grid",
+    "tree-from-parents"
+   ]
+  },
+  {
+   "id": "graph-bfs",
+   "title": "BFS — przeszukiwanie wszerz i najkrótsze ścieżki w grafie nieważonym",
+   "category": "Grafy",
+   "tags": [
+    "bfs",
+    "przeszukiwanie wszerz",
+    "najkrótsza ścieżka",
+    "kolejka",
+    "queue",
+    "odległość",
+    "graf nieważony",
+    "wiele źródeł",
+    "odtwarzanie ścieżki"
+   ],
+   "aliases": [
+    "bfs",
+    "bfs c++",
+    "jak zrobić bfs",
+    "przeszukiwanie wszerz",
+    "breadth first search",
+    "najkrótsza ścieżka w grafie",
+    "najkrotsza sciezka bez wag",
+    "bfs kolejka",
+    "multi source bfs",
+    "bfs odtworzenie ścieżki",
+    "przeszukiwanie grafu wszerz"
+   ],
+   "summary": "BFS odwiedza wierzchołki warstwami według odległości od źródła, dlatego w grafie bez wag (każda krawędź = 1 krok) daje najkrótsze ścieżki w O(n + m). Odtwarzanie drogi: tablica rodziców; wiele źródeł: wrzuć je wszystkie do kolejki na start.",
+   "complexity": "O(n + m) czasu, O(n) pamięci dodatkowej",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja:** wrzucasz kamień do wody — fala rozchodzi się okręgami. BFS najpierw odwiedza wszystkie\nwierzchołki w odległości 1 od źródła, potem 2, potem 3… Kolejka FIFO pilnuje tej kolejności: każdy\nwierzchołek zdjęty z kolejki ma odległość nie mniejszą niż poprzednio zdjęte.\n\nDlatego **pierwsze** dotarcie do wierzchołka jest najkrótszą drogą — wystarczy zapisać `dist[u] =\ndist[v] + 1` i więcej go nie ruszać."
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy używać (sygnały):** „najmniejsza liczba ruchów/kroków/przesiadek”, „najkrótsza droga, każda\nkrawędź ma długość 1”, „w ilu minimum operacjach”, „odległość od najbliższego …” (wiele źródeł),\nplansza/labirynt. Jeśli krawędzie mają **różne** wagi — BFS nie działa, potrzebna jest Dijkstra\n(albo 0-1 BFS dla wag 0/1)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "BFS: odległość z s do t i odtworzenie ścieżki",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    int s, t;\n    cin >> s >> t;\n\n    vector<int> dist(n + 1, -1), par(n + 1, 0);   // -1 = nieodwiedzony\n    queue<int> q;\n    dist[s] = 0;\n    q.push(s);\n    while (!q.empty()) {\n        int v = q.front();\n        q.pop();\n        for (int u : g[v]) {\n            if (dist[u] == -1) {          // oznaczamy PRZY WRZUCANIU do kolejki\n                dist[u] = dist[v] + 1;\n                par[u] = v;\n                q.push(u);\n            }\n        }\n    }\n\n    if (dist[t] == -1) {\n        cout << \"NIE\\n\";\n        return 0;\n    }\n    cout << dist[t] << '\\n';\n    vector<int> path;\n    for (int v = t; v != s; v = par[v]) path.push_back(v);\n    path.push_back(s);\n    reverse(path.begin(), path.end());\n    for (int v : path) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "BFS jako funkcja (do wklejenia)",
+     "code": "vector<int> bfs(const vector<vector<int>>& g, int s) {\n    vector<int> dist(g.size(), -1);\n    queue<int> q;\n    dist[s] = 0;\n    q.push(s);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int u : g[v])\n            if (dist[u] == -1) {\n                dist[u] = dist[v] + 1;\n                q.push(u);\n            }\n    }\n    return dist;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "BFS z wielu źródeł",
+     "code": "vector<int> multiBfs(const vector<vector<int>>& g, const vector<int>& zrodla) {\n    vector<int> dist(g.size(), -1);\n    queue<int> q;\n    for (int s : zrodla) {           // wszystkie źródła mają odległość 0\n        if (dist[s] == -1) { dist[s] = 0; q.push(s); }\n    }\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int u : g[v])\n            if (dist[u] == -1) { dist[u] = dist[v] + 1; q.push(u); }\n    }\n    return dist;                     // dist[v] = odległość do NAJBLIŻSZEGO źródła\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "BFS z wielu źródeł działa jak BFS z jednego sztucznego wierzchołka połączonego krawędziami z każdym\nźródłem — tylko bez dodawania go. Typowe: „odległość każdego pola od najbliższego szpitala/ognia/wyjścia”."
+    },
+    {
+     "type": "warn",
+     "md": "Oznaczaj wierzchołek jako odwiedzony **w momencie wrzucenia do kolejki**, a nie zdjęcia. Inaczej ten sam\nwierzchołek trafi do kolejki wiele razy — w gęstym grafie kolejka urośnie do O(m), a na siatce program\nmoże dostać TLE/MLE."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bfs(g, s)",
+     "desc": "zwraca wektor odległości (liczba krawędzi) od s; -1 dla nieosiągalnych",
+     "complexity": "O(n + m)",
+     "returns": "vector<int>",
+     "example": "auto d = bfs(g, 1); cout << d[n];"
+    },
+    {
+     "sig": "multiBfs(g, zrodla)",
+     "desc": "odległość każdego wierzchołka od najbliższego ze źródeł",
+     "complexity": "O(n + m)",
+     "returns": "vector<int>"
+    },
+    {
+     "sig": "q.push(x) / q.front() / q.pop()",
+     "desc": "operacje kolejki FIFO `queue<int>`",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Oznaczanie odwiedzenia dopiero po zdjęciu z kolejki → duplikaty w kolejce, TLE/MLE.",
+    "BFS liczy najkrótsze ścieżki tylko w grafie, gdzie każda krawędź ma tę samą długość. Dla wag — Dijkstra.",
+    "`dist` zainicjalizowany zerami zamiast -1/INF → źródło i nieodwiedzone są nie do odróżnienia.",
+    "Odtwarzanie ścieżki: idziesz od celu po `par[]` do źródła — pamiętaj o `reverse` i o dodaniu samego źródła.",
+    "Graf niespójny: `dist[t] == -1` znaczy „nie da się dojść” — trzeba to obsłużyć (wypisać -1/NIE).",
+    "W grafie skierowanym odległość DO celu z każdego wierzchołka liczysz BFS-em od celu na grafie odwróconym."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak zrobic bfs",
+      "bfs c++",
+      "bfs kod",
+      "przeszukiwanie wszerz",
+      "breadth first search c++"
+     ],
+     "a": "BFS: wrzuć źródło do kolejki z `dist = 0`; dopóki kolejka niepusta, zdejmij `v` i każdego\nnieodwiedzonego sąsiada `u` oznacz `dist[u] = dist[v] + 1` i wrzuć do kolejki. Każdy wierzchołek\ni każda krawędź jest przetwarzana raz → **O(n + m)**. Kolejka FIFO gwarantuje, że wierzchołki są\nzdejmowane w kolejności rosnącej odległości.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> dist(n + 1, -1);\n    queue<int> q;\n    dist[1] = 0;\n    q.push(1);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int u : g[v])\n            if (dist[u] == -1) { dist[u] = dist[v] + 1; q.push(u); }\n    }\n    for (int v = 1; v <= n; v++) cout << dist[v] << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "najkrotsza sciezka w grafie",
+      "najkrótsza ścieżka bez wag",
+      "najmniejsza liczba krawędzi",
+      "shortest path unweighted graph",
+      "minimalna liczba kroków graf"
+     ],
+     "a": "Jeśli każda krawędź „kosztuje” tyle samo (1 krok, 1 przesiadka), najkrótsza ścieżka = **BFS** od\nźródła, O(n + m). Odległość do `t` to `dist[t]`. Gdy krawędzie mają różne długości, BFS daje złe\nwyniki — wtedy Dijkstra (O(m log n)), a przy wagach tylko 0 i 1 — 0-1 BFS.",
+     "code": "vector<int> bfs(const vector<vector<int>>& g, int s) {\n    vector<int> dist(g.size(), -1);\n    queue<int> q;\n    dist[s] = 0; q.push(s);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int u : g[v]) if (dist[u] == -1) { dist[u] = dist[v] + 1; q.push(u); }\n    }\n    return dist;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "odtworzenie ścieżki bfs",
+      "jak wypisać ścieżkę bfs",
+      "bfs wypisz trase",
+      "bfs parent path",
+      "odtwarzanie drogi bfs"
+     ],
+     "a": "Przy odwiedzaniu zapamiętaj, skąd przyszedłeś: `par[u] = v`. Po BFS-ie idź od celu `t` po rodzicach\naż do źródła, zbierając wierzchołki, a na końcu odwróć wektor. Koszt odtworzenia to długość ścieżki.\nJeśli `dist[t] == -1`, ścieżki nie ma.",
+     "code": "vector<int> sciezka(const vector<int>& par, int s, int t) {\n    vector<int> p;\n    for (int v = t; v != s; v = par[v]) p.push_back(v);\n    p.push_back(s);\n    reverse(p.begin(), p.end());\n    return p;          // s, ..., t\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "bfs z wielu źródeł",
+      "multi source bfs",
+      "odległość do najbliższego",
+      "bfs kilka startów",
+      "bfs wiele wierzcholkow startowych"
+     ],
+     "a": "Wrzuć **wszystkie** źródła do kolejki na początku z `dist = 0` i puść zwykły BFS. Każdy wierzchołek\ndostanie odległość do najbliższego źródła — w jednym przebiegu O(n + m), zamiast osobnego BFS-a\nz każdego źródła (O(k·(n + m))). Jeśli chcesz wiedzieć, *które* źródło jest najbliższe, przepisuj\netykietę: `src[u] = src[v]`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m, k;\n    cin >> n >> m >> k;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> dist(n + 1, -1);\n    queue<int> q;\n    for (int i = 0; i < k; i++) {\n        int s;\n        cin >> s;\n        if (dist[s] == -1) { dist[s] = 0; q.push(s); }\n    }\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int u : g[v]) if (dist[u] == -1) { dist[u] = dist[v] + 1; q.push(u); }\n    }\n    for (int v = 1; v <= n; v++) cout << dist[v] << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dlaczego bfs daje najkrótszą drogę",
+      "czemu bfs znajduje najkrótszą",
+      "bfs poprawność"
+     ],
+     "a": "Kolejka FIFO zawiera w każdej chwili wierzchołki o odległości `d` (na początku) i `d + 1` (na końcu)\n— nigdy więcej różnych wartości. Więc wierzchołki są zdejmowane w kolejności niemalejącej odległości,\na pierwsze dotarcie do `u` przychodzi z wierzchołka o najmniejszym możliwym `dist`. Działa to tylko,\ngdy każda krawędź wydłuża drogę o tyle samo.",
+     "code": "vector<vector<int>> g = {{}, {2, 3}, {1, 4}, {1, 4, 5}, {2, 3, 6}, {3, 6}, {4, 5}};\nvector<int> dist(7, -1);\nqueue<int> q;\ndist[1] = 0; q.push(1);\nint ostatnia = 0;\nbool monotonicznie = true;\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    if (dist[v] < ostatnia) monotonicznie = false;   // zdejmowane odległości nigdy nie maleją\n    ostatnia = dist[v];\n    for (int u : g[v]) if (dist[u] == -1) { dist[u] = dist[v] + 1; q.push(u); }\n}\ncout << (monotonicznie ? \"TAK\" : \"NIE\") << ' ' << dist[6] << '\\n';   // TAK 3"
+    },
+    {
+     "q": [
+      "bfs złożoność",
+      "ile działa bfs",
+      "bfs complexity",
+      "czy bfs zmieści się w czasie"
+     ],
+     "a": "BFS na liście sąsiedztwa: **O(n + m)** — każdy wierzchołek wchodzi do kolejki co najwyżej raz,\na każdą listę sąsiadów przeglądamy raz. Dla `n, m ≤ 10^6` to kilka–kilkadziesiąt milisekund. Na\nmacierzy sąsiedztwa BFS kosztuje O(n²). Na planszy `n×m` — O(n·m·k), gdzie k = liczba kierunków.",
+     "code": "int n = 5;\nvector<pair<int,int>> e = {{1, 2}, {2, 3}, {3, 4}, {4, 5}, {1, 5}};   // m = 5\nvector<vector<int>> g(n + 1);\nfor (auto [a, b] : e) { g[a].push_back(b); g[b].push_back(a); }\nvector<int> dist(n + 1, -1);\nqueue<int> q;\ndist[1] = 0; q.push(1);\nlong long zdjecia = 0, sprawdzenia = 0;\nwhile (!q.empty()) {\n    int v = q.front(); q.pop(); zdjecia++;\n    for (int u : g[v]) {\n        sprawdzenia++;\n        if (dist[u] == -1) { dist[u] = dist[v] + 1; q.push(u); }\n    }\n}\ncout << zdjecia << ' ' << sprawdzenia << '\\n';   // 5 10, czyli n i 2m"
+    },
+    {
+     "q": [
+      "kiedy oznaczać visited w bfs",
+      "visited przy wrzucaniu czy zdejmowaniu",
+      "bfs duplikaty w kolejce",
+      "bfs mle tle kolejka"
+     ],
+     "a": "Oznaczaj (`dist[u] = ...`) **przy wrzucaniu** do kolejki. Gdy oznaczasz dopiero przy zdejmowaniu,\nten sam wierzchołek może zostać wrzucony przez wielu sąsiadów, zanim zostanie zdjęty — kolejka rośnie\ndo O(m) elementów, a przetwarzanie robi się wielokrotne. Wynik bywa nawet poprawny, ale czas\ni pamięć — nie.",
+     "code": "vector<vector<int>> g = {{}, {2, 3}, {1, 3}, {1, 2}};\nvector<int> dist(4, -1);\nqueue<int> q;\ndist[1] = 0; q.push(1);\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    for (int u : g[v])\n        if (dist[u] == -1) {      // DOBRZE: sprawdzamy i oznaczamy od razu\n            dist[u] = dist[v] + 1;\n            q.push(u);\n        }\n}"
+    },
+    {
+     "q": [
+      "liczba najkrótszych ścieżek",
+      "ile jest najkrótszych dróg",
+      "count shortest paths bfs",
+      "ilosc najkrotszych sciezek modulo"
+     ],
+     "a": "W BFS-ie trzymaj `cnt[v]` = liczba najkrótszych ścieżek do `v`. Przy krawędzi `v → u`: jeśli `u`\nnieodwiedzony, ustaw `dist[u] = dist[v] + 1`, `cnt[u] = cnt[v]`; jeśli `dist[u] == dist[v] + 1`,\ndodaj `cnt[u] += cnt[v]`. Działa, bo wszystkie poprzedniki `u` na najkrótszych ścieżkach są zdejmowane\nprzed `u`. Liczby rosną wykładniczo — licz modulo.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1000000007;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> dist(n + 1, -1);\n    vector<long long> cnt(n + 1, 0);\n    queue<int> q;\n    dist[1] = 0; cnt[1] = 1; q.push(1);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int u : g[v]) {\n            if (dist[u] == -1) { dist[u] = dist[v] + 1; cnt[u] = cnt[v]; q.push(u); }\n            else if (dist[u] == dist[v] + 1) cnt[u] = (cnt[u] + cnt[v]) % MOD;\n        }\n    }\n    cout << cnt[n] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "bfs warstwami",
+      "bfs poziom po poziomie",
+      "bfs level by level",
+      "bfs po warstwach"
+     ],
+     "a": "Żeby przetwarzać całe warstwy (wszystkie wierzchołki o tej samej odległości naraz), w każdej iteracji\nzapamiętaj `sz = q.size()` i zdejmij dokładnie `sz` elementów. Przydatne, gdy po każdym „kroku czasu”\ncoś się zmienia (np. ogień rozprzestrzenia się co minutę). Złożoność dalej O(n + m).",
+     "code": "vector<vector<int>> g = {{}, {2, 3}, {1, 4}, {1}, {2}};\nvector<bool> vis(5, false);\nqueue<int> q;\nq.push(1); vis[1] = true;\nint poziom = 0;\nwhile (!q.empty()) {\n    int sz = q.size();\n    cout << \"poziom \" << poziom << \":\";\n    while (sz--) {\n        int v = q.front(); q.pop();\n        cout << ' ' << v;\n        for (int u : g[v]) if (!vis[u]) { vis[u] = true; q.push(u); }\n    }\n    cout << '\\n';\n    poziom++;\n}"
+    },
+    {
+     "q": [
+      "odległość do celu z każdego wierzchołka",
+      "bfs od końca",
+      "bfs na odwróconym grafie",
+      "reverse graph bfs"
+     ],
+     "a": "W grafie nieskierowanym odległość z `v` do `t` = odległość z `t` do `v`, więc wystarczy jeden BFS\nz `t`. W **skierowanym** zbuduj graf odwrócony (`rg[b].push_back(a)` dla krawędzi `a → b`) i puść BFS\nz `t` po `rg` — dostaniesz odległość *do* `t` z każdego wierzchołka w O(n + m).",
+     "code": "int n = 3;\nvector<vector<int>> rg(n + 1);\nvector<pair<int,int>> kraw = {{1, 2}, {2, 3}, {1, 3}};\nfor (auto [a, b] : kraw) rg[b].push_back(a);       // odwracamy\nvector<int> doCelu(n + 1, -1);\nqueue<int> q;\ndoCelu[3] = 0; q.push(3);\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    for (int u : rg[v]) if (doCelu[u] == -1) { doCelu[u] = doCelu[v] + 1; q.push(u); }\n}"
+    },
+    {
+     "q": [
+      "bfs a dijkstra",
+      "kiedy bfs kiedy dijkstra",
+      "bfs czy dijkstra",
+      "bfs with weights"
+     ],
+     "a": "**BFS** — wszystkie krawędzie mają tę samą wagę: O(n + m). **0-1 BFS** — wagi 0 lub 1: O(n + m)\nz `deque`. **Dijkstra** — dowolne nieujemne wagi: O(m log n). **Bellman-Ford/SPFA** — wagi ujemne.\nCzęsty błąd: użycie BFS-a, gdy krawędzie mają różne długości — dostaniesz ścieżkę z najmniejszą liczbą\nkrawędzi, a nie najkrótszą.",
+     "code": "vector<vector<pair<int,int>>> g(4);\nauto add = [&](int a, int b, int w) { g[a].push_back({b, w}); g[b].push_back({a, w}); };\nadd(1, 3, 10); add(1, 2, 1); add(2, 3, 1);\n// BFS liczy KRAWĘDZIE\nvector<int> kroki(4, -1);\nqueue<int> q;\nkroki[1] = 0; q.push(1);\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    for (auto [u, w] : g[v]) if (kroki[u] == -1) { kroki[u] = kroki[v] + 1; q.push(u); }\n}\n// Dijkstra liczy SUMĘ WAG\nvector<long long> d(4, LLONG_MAX / 4);\npriority_queue<pair<long long,int>, vector<pair<long long,int>>, greater<>> pq;\nd[1] = 0; pq.push({0, 1});\nwhile (!pq.empty()) {\n    auto [dv, v] = pq.top(); pq.pop();\n    if (dv > d[v]) continue;\n    for (auto [u, w] : g[v]) if (dv + w < d[u]) { d[u] = dv + w; pq.push({d[u], u}); }\n}\ncout << kroki[3] << ' ' << d[3] << '\\n';   // 1 2: najmniej krawędzi != najkrótsza droga"
+    }
+   ],
+   "related": [
+    "graph-bfs-grid",
+    "graph-01-bfs",
+    "graph-dijkstra",
+    "graph-dfs",
+    "graph-state-bfs",
+    "graph-shortest-cycle",
+    "graph-representation",
+    "graph-k-shortest",
+    "graph-multi-source-bfs",
+    "oi-py-collections"
+   ]
+  },
+  {
+   "id": "graph-bfs-grid",
+   "title": "BFS na siatce (planszy): 4 i 8 kierunków, tablice dx/dy, labirynt",
+   "category": "Grafy",
+   "tags": [
+    "bfs",
+    "siatka",
+    "plansza",
+    "grid",
+    "labirynt",
+    "dx dy",
+    "4 kierunki",
+    "8 kierunków",
+    "skoczek",
+    "flood fill"
+   ],
+   "aliases": [
+    "bfs na siatce",
+    "bfs grid",
+    "bfs plansza",
+    "labirynt najkrótsza droga",
+    "dx dy",
+    "tablice kierunków",
+    "4 kierunki",
+    "8 kierunków",
+    "ruch skoczka bfs",
+    "bfs labirynt c++",
+    "najkrotsza droga w labiryncie"
+   ],
+   "summary": "Plansza `n×m` to graf: pole = wierzchołek, sąsiedzi = pola obok. BFS z tablicami przesunięć `dx/dy` daje najmniejszą liczbę ruchów w O(n·m), bez budowania listy sąsiedztwa.",
+   "complexity": "O(n·m·k) czasu (k = liczba kierunków), O(n·m) pamięci",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "W zadaniach z planszą („labirynt”, „mapa”, „pola wolne `.` i ściany `#`”) nie budujemy grafu jawnie.\nWierzchołkiem jest para `(x, y)`, a sąsiadów generujemy w locie tablicami przesunięć:\n`dx = {-1, 0, 1, 0}`, `dy = {0, 1, 0, -1}` (góra, prawo, dół, lewo). Dla każdego kierunku\nsprawdzamy: czy nowe pole jest **na planszy**, czy **nie jest ścianą** i czy **jeszcze nieodwiedzone**."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „plansza/mapa/labirynt n×m”, „ruch w górę, dół, lewo, prawo”, „najmniejsza liczba ruchów”,\n„król/skoczek szachowy”, „rozprzestrzenianie się ognia/wody”, „ile pól jest osiągalnych”. Limity\ntypu `n, m ≤ 1000` (10^6 pól) — BFS spokojnie zdąży."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Labirynt: najmniej ruchów z S do E + droga jako litery",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int dx[4] = {-1, 0, 1, 0};\nconst int dy[4] = {0, 1, 0, -1};\nconst char dirc[4] = {'U', 'R', 'D', 'L'};\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<string> s(n);\n    for (auto& row : s) cin >> row;\n    int sx = 0, sy = 0, ex = 0, ey = 0;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++) {\n            if (s[i][j] == 'S') { sx = i; sy = j; }\n            if (s[i][j] == 'E') { ex = i; ey = j; }\n        }\n\n    vector<vector<int>> dist(n, vector<int>(m, -1)), from(n, vector<int>(m, -1));\n    queue<pair<int, int>> q;\n    dist[sx][sy] = 0;\n    q.push({sx, sy});\n    while (!q.empty()) {\n        auto [x, y] = q.front();\n        q.pop();\n        for (int d = 0; d < 4; d++) {\n            int nx = x + dx[d], ny = y + dy[d];\n            if (nx < 0 || nx >= n || ny < 0 || ny >= m) continue;   // poza planszą\n            if (s[nx][ny] == '#' || dist[nx][ny] != -1) continue;    // ściana / odwiedzone\n            dist[nx][ny] = dist[x][y] + 1;\n            from[nx][ny] = d;                                        // którym ruchem weszliśmy\n            q.push({nx, ny});\n        }\n    }\n\n    if (dist[ex][ey] == -1) {\n        cout << -1 << '\\n';\n        return 0;\n    }\n    cout << dist[ex][ey] << '\\n';\n    string path;\n    for (int x = ex, y = ey; x != sx || y != sy;) {\n        int d = from[x][y];\n        path += dirc[d];\n        x -= dx[d];\n        y -= dy[d];                       // cofamy ruch\n    }\n    reverse(path.begin(), path.end());\n    cout << path << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "8 kierunków i ruchy skoczka",
+     "code": "const int dx8[8] = {-1, -1, -1, 0, 0, 1, 1, 1};\nconst int dy8[8] = {-1, 0, 1, -1, 1, -1, 0, 1};      // król: 8 sąsiednich pól\nconst int kx[8] = {1, 2, 2, 1, -1, -2, -2, -1};\nconst int ky[8] = {2, 1, -1, -2, -2, -1, 1, 2};       // skoczek szachowy\nbool naPlanszy(int x, int y, int n, int m) { return 0 <= x && x < n && 0 <= y && y < m; }",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Zamiast sprawdzać granice, możesz otoczyć planszę ramką ze ścian (`#`) — wtedy ruch nigdy nie wyjdzie\npoza tablicę. Wczytaj planszę do tablicy `(n+2)×(m+2)` z indeksami `1..n`, `1..m`."
+    },
+    {
+     "type": "warn",
+     "md": "Kolejność warunku ma znaczenie: najpierw sprawdź granice (`nx >= 0 && nx < n ...`), dopiero potem\nczytaj `s[nx][ny]`. Odwrotnie — czytasz poza tablicą (UB, często RE albo losowe WA)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dx[d], dy[d]",
+     "desc": "przesunięcie w kierunku d (0..3: góra, prawo, dół, lewo)",
+     "complexity": "O(1)",
+     "example": "int nx = x + dx[d], ny = y + dy[d];"
+    },
+    {
+     "sig": "x * m + y",
+     "desc": "zamiana pola (x, y) na numer wierzchołka 0..n·m−1",
+     "complexity": "O(1)",
+     "example": "int id = x * m + y; int x = id / m, y = id % m;"
+    }
+   ],
+   "pitfalls": [
+    "Sprawdzanie granic PO odczycie pola (`s[nx][ny]` przed `nx < n`) → wyjście poza tablicę.",
+    "Pomylone `n` i `m` (wiersze vs kolumny) w warunku granic — błąd tylko na prostokątnych planszach, więc nie wyjdzie na kwadratowym przykładzie.",
+    "`vector<vector<int>> dist(n, vector<int>(m))` dla `n = m = 2000` to 16 MB — OK, ale kilka takich tablic + `queue<pair>` może przekroczyć limit; rozważ jedną tablicę `int` po indeksach `x*m+y`.",
+    "Start/koniec oznaczone literami (`S`, `E`) — nie traktuj ich jak ścian, a jeśli porównujesz z `'.'`, to pole `E` nigdy nie zostanie wejściem. Sprawdzaj `!= '#'`.",
+    "Przy 8 kierunkach/ruchach skoczka zawsze sprawdzaj obie współrzędne — skoczek wychodzi o 2 pola."
+   ],
+   "qa": [
+    {
+     "q": [
+      "bfs na siatce",
+      "bfs grid c++",
+      "labirynt najkrótsza droga",
+      "bfs plansza",
+      "bfs na planszy kod"
+     ],
+     "a": "Każde pole `(x, y)` to wierzchołek. Kolejka trzyma pary, `dist` to tablica 2D z `-1` jako\n„nieodwiedzone”. Dla każdego zdjętego pola sprawdzasz 4 sąsiadów z tablic `dx/dy`: w granicach,\nnie ściana, nieodwiedzone → `dist = dist + 1` i do kolejki. Czas O(n·m), więc plansza 1000×1000\nto milion pól — szybko.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<string> s(n);\n    for (auto& r : s) cin >> r;\n    vector<vector<int>> dist(n, vector<int>(m, -1));\n    queue<pair<int,int>> q;\n    dist[0][0] = 0; q.push({0, 0});\n    while (!q.empty()) {\n        auto [x, y] = q.front(); q.pop();\n        for (int d = 0; d < 4; d++) {\n            int nx = x + dx[d], ny = y + dy[d];\n            if (nx < 0 || ny < 0 || nx >= n || ny >= m) continue;\n            if (s[nx][ny] == '#' || dist[nx][ny] != -1) continue;\n            dist[nx][ny] = dist[x][y] + 1;\n            q.push({nx, ny});\n        }\n    }\n    cout << dist[n - 1][m - 1] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dx dy tablice",
+      "tablice kierunków",
+      "4 kierunki c++",
+      "jak iterować po sąsiadach na planszy",
+      "dx dy co to"
+     ],
+     "a": "`dx[d]` i `dy[d]` mówią, o ile zmienia się wiersz i kolumna przy ruchu w kierunku `d`. Zamiast\nczterech kopii kodu masz jedną pętlę `for (int d = 0; d < 4; d++)`. Kolejność kierunków jest\ndowolna, ale ustal ją, jeśli chcesz potem wypisać ruchy literami (np. `\"URDL\"`).",
+     "code": "int dx[] = {-1, 0, 1, 0};\nint dy[] = {0, 1, 0, -1};\nconst char* nazwa = \"URDL\";\nint x = 2, y = 2;\nfor (int d = 0; d < 4; d++)\n    cout << nazwa[d] << \": (\" << x + dx[d] << \", \" << y + dy[d] << \")\\n\";"
+    },
+    {
+     "q": [
+      "8 kierunków",
+      "ruch króla siatka",
+      "sąsiedzi po przekątnej",
+      "8 neighbours grid"
+     ],
+     "a": "Dla ruchu z przekątnymi użyj 8 par przesunięć — wszystkie `(dx, dy)` z `{-1,0,1}²` poza `(0,0)`.\nMożesz je wygenerować dwiema pętlami. BFS pozostaje O(8·n·m). Odległość „króla” bez przeszkód to\n`max(|dx|, |dy|)` (metryka Czebyszewa) — przydatne do sprawdzenia wyniku.",
+     "code": "int x = 1, y = 1, n = 3, m = 3, licz = 0;\nfor (int ddx = -1; ddx <= 1; ddx++)\n    for (int ddy = -1; ddy <= 1; ddy++) {\n        if (ddx == 0 && ddy == 0) continue;\n        int nx = x + ddx, ny = y + ddy;\n        if (nx >= 0 && nx < n && ny >= 0 && ny < m) licz++;\n    }\ncout << licz << '\\n';   // 8"
+    },
+    {
+     "q": [
+      "ruch skoczka bfs",
+      "knight moves bfs",
+      "skoczek szachowy najmniej ruchów",
+      "konik szachowy bfs"
+     ],
+     "a": "Skoczek ma 8 ruchów `(±1, ±2)` i `(±2, ±1)`. Puść BFS po polach planszy z tymi przesunięciami —\npierwsze dotarcie do celu to minimalna liczba skoków. Na planszy `n×n` złożoność O(8n²).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint kx[] = {1, 2, 2, 1, -1, -2, -2, -1}, ky[] = {2, 1, -1, -2, -2, -1, 1, 2};\nint main() {\n    int n, sx, sy, tx, ty;\n    cin >> n >> sx >> sy >> tx >> ty;      // pola 0..n-1\n    vector<vector<int>> d(n, vector<int>(n, -1));\n    queue<pair<int,int>> q;\n    d[sx][sy] = 0; q.push({sx, sy});\n    while (!q.empty()) {\n        auto [x, y] = q.front(); q.pop();\n        for (int k = 0; k < 8; k++) {\n            int nx = x + kx[k], ny = y + ky[k];\n            if (nx < 0 || ny < 0 || nx >= n || ny >= n || d[nx][ny] != -1) continue;\n            d[nx][ny] = d[x][y] + 1;\n            q.push({nx, ny});\n        }\n    }\n    cout << d[tx][ty] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "sprawdzanie granic planszy",
+      "wyjście poza planszę",
+      "segfault bfs siatka",
+      "out of bounds grid"
+     ],
+     "a": "Zanim odczytasz `s[nx][ny]`, sprawdź `0 <= nx && nx < n && 0 <= ny && ny < m` (dzięki skróconemu\nwartościowaniu `&&` dalsze warunki nie wykonają się poza planszą). Druga metoda: **ramka** — tablica\no rozmiarze `(n+2)×(m+2)` wypełniona ścianami na brzegach, a plansza w środku na indeksach `1..n`.",
+     "code": "int n = 2, m = 3;\nvector<string> s = {\"...\", \".#.\"};\nvector<string> b(n + 2, string(m + 2, '#'));      // ramka ze ścian\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < m; j++) b[i + 1][j + 1] = s[i][j];\n// teraz sąsiad (x±1, y±1) pola z 1..n, 1..m zawsze leży w tablicy"
+    },
+    {
+     "q": [
+      "zamiana x y na indeks",
+      "pole na numer wierzchołka",
+      "jednowymiarowy indeks siatki",
+      "x*m+y"
+     ],
+     "a": "Pole `(x, y)` na planszy `n×m` (indeksy od 0) można zakodować jako jedną liczbę `id = x * m + y`\n(0..n·m−1), a odkodować `x = id / m`, `y = id % m`. Pozwala trzymać `dist` w jednym `vector<int>`\n(mniej pamięci i szybciej niż `vector<vector<int>>`) i używać zwykłych algorytmów grafowych (DSU,\nDijkstra) na polach planszy.",
+     "code": "int n = 3, m = 4;\nvector<int> dist(n * m, -1);\nint x = 2, y = 1;\nint id = x * m + y;          // 9\ndist[id] = 0;\ncout << id / m << ' ' << id % m << '\\n';   // 2 1"
+    },
+    {
+     "q": [
+      "liczba wysp",
+      "flood fill",
+      "ile jest jezior na mapie",
+      "spójne obszary na planszy",
+      "number of islands c++"
+     ],
+     "a": "Przejdź po wszystkich polach; gdy trafisz na nieodwiedzone pole lądu, zwiększ licznik i puść z niego\nBFS (albo DFS), który oznaczy całą wyspę. Każde pole odwiedzisz raz → O(n·m). Na dużych planszach\nużywaj BFS-a (kolejka), bo rekurencyjny DFS po 10^6 polach może przepełnić stos.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<string> s(n);\n    for (auto& r : s) cin >> r;\n    vector<vector<bool>> vis(n, vector<bool>(m, false));\n    int wyspy = 0;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++) {\n            if (s[i][j] != '#' || vis[i][j]) continue;\n            wyspy++;\n            queue<pair<int,int>> q;\n            q.push({i, j}); vis[i][j] = true;\n            while (!q.empty()) {\n                auto [x, y] = q.front(); q.pop();\n                for (int d = 0; d < 4; d++) {\n                    int nx = x + dx[d], ny = y + dy[d];\n                    if (nx < 0 || ny < 0 || nx >= n || ny >= m) continue;\n                    if (s[nx][ny] != '#' || vis[nx][ny]) continue;\n                    vis[nx][ny] = true;\n                    q.push({nx, ny});\n                }\n            }\n        }\n    cout << wyspy << '\\n';\n}"
+    },
+    {
+     "q": [
+      "bfs z wielu źródeł na siatce",
+      "ogień rozprzestrzenia się bfs",
+      "odległość od najbliższego pola",
+      "multi source bfs grid"
+     ],
+     "a": "Wrzuć do kolejki wszystkie pola-źródła (np. wszystkie `F` — ogień) z odległością 0 i puść jeden BFS.\n`dist[x][y]` = czas, po którym ogień dotrze na pole. Klasyk: „czy uciekinier zdąży” — porównaj czas\ndotarcia uciekiniera z `dist` ognia (osobne BFS-y). Całość O(n·m).",
+     "code": "int n = 3, m = 3;\nvector<string> s = {\"F..\", \"...\", \"..F\"};\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nvector<vector<int>> dist(n, vector<int>(m, -1));\nqueue<pair<int,int>> q;\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < m; j++)\n        if (s[i][j] == 'F') { dist[i][j] = 0; q.push({i, j}); }\nwhile (!q.empty()) {\n    auto [x, y] = q.front(); q.pop();\n    for (int d = 0; d < 4; d++) {\n        int nx = x + dx[d], ny = y + dy[d];\n        if (nx < 0 || ny < 0 || nx >= n || ny >= m || dist[nx][ny] != -1) continue;\n        dist[nx][ny] = dist[x][y] + 1;\n        q.push({nx, ny});\n    }\n}\ncout << dist[1][1] << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "pamięć bfs siatka 2000x2000",
+      "mle bfs plansza",
+      "bfs grid memory",
+      "za dużo pamięci bfs na siatce"
+     ],
+     "a": "Plansza 2000×2000 to 4·10^6 pól. `int dist` = 16 MB, `vector<vector<bool>>` ~0,5 MB, kolejka par\ndo 32 MB w najgorszym razie. Oszczędzanie: jedna tablica `dist` (zamiast osobnego `vis`), indeks\n`x*m+y` w kolejce zamiast pary, `vector<string>` zamiast `vector<vector<char>>`. Unikaj trzymania\nkilku kopii planszy.",
+     "code": "int n = 3, m = 3;\nvector<int> dist(n * m, -1);\nqueue<int> q;                  // indeksy zamiast par: 4 B zamiast 8 B na element\ndist[0] = 0; q.push(0);\nwhile (!q.empty()) {\n    int id = q.front(); q.pop();\n    int x = id / m, y = id % m;\n    if (x + 1 < n && dist[id + m] == -1) { dist[id + m] = dist[id] + 1; q.push(id + m); }\n    if (y + 1 < m && dist[id + 1] == -1) { dist[id + 1] = dist[id] + 1; q.push(id + 1); }\n}\ncout << dist[n * m - 1] << '\\n';   // 4"
+    }
+   ],
+   "related": [
+    "graph-bfs",
+    "graph-01-bfs",
+    "graph-connected-components",
+    "graph-state-bfs",
+    "graph-dfs",
+    "graph-flood-fill",
+    "graph-multi-source-bfs"
+   ]
+  },
+  {
+   "id": "graph-01-bfs",
+   "title": "0-1 BFS — najkrótsze ścieżki przy wagach 0 i 1 (deque)",
+   "category": "Grafy",
+   "tags": [
+    "0-1 bfs",
+    "deque",
+    "wagi 0 1",
+    "najkrótsza ścieżka",
+    "dwustronna kolejka",
+    "zero one bfs"
+   ],
+   "aliases": [
+    "0-1 bfs",
+    "01 bfs",
+    "zero one bfs",
+    "bfs z deque",
+    "bfs deque",
+    "wagi 0 i 1",
+    "bfs z wagami 0 1",
+    "najmniej ścian do rozbicia",
+    "minimalna liczba odwróconych krawędzi"
+   ],
+   "summary": "Gdy każda krawędź ma wagę 0 albo 1, najkrótsze ścieżki liczy się w O(n + m) dwustronną kolejką: krawędź 0 → `push_front`, krawędź 1 → `push_back`. Szybsza i prostsza alternatywa dla Dijkstry.",
+   "complexity": "O(n + m) czasu, O(n) pamięci",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Dijkstra działa dla dowolnych nieujemnych wag, ale potrzebuje kopca (O(m log n)). Jeśli wagi są tylko\n**0 i 1**, wystarczy `deque`: wierzchołek osiągnięty krawędzią o wadze 0 ma *tę samą* odległość co\nbieżący, więc wkładamy go na **początek** (zostanie przetworzony zaraz); krawędź o wadze 1 — na\n**koniec**, jak w zwykłym BFS. W `deque` są zawsze co najwyżej dwie różne odległości `d` i `d + 1`,\nposortowane — to dokładnie to, co dawałby kopiec."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „minimalna liczba ścian do zburzenia”, „minimalna liczba zmian kierunku/odwróceń krawędzi”,\n„ruch w jednym kierunku jest darmowy, w innym kosztuje 1”, „przejście przez teleport za darmo”,\n„przesiadki kosztują 1, jazda tą samą linią 0”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "0-1 BFS — pełny program (odległości od 1)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int, int>>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b, w;                 // w = 0 albo 1\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n    const int INF = INT_MAX;\n    vector<int> dist(n + 1, INF);\n    deque<int> dq;\n    dist[1] = 0;\n    dq.push_back(1);\n    while (!dq.empty()) {\n        int v = dq.front();\n        dq.pop_front();\n        for (auto [u, w] : g[v]) {\n            if (dist[v] + w < dist[u]) {      // relaksacja jak w Dijkstrze\n                dist[u] = dist[v] + w;\n                if (w == 0) dq.push_front(u);\n                else dq.push_back(u);\n            }\n        }\n    }\n    for (int v = 1; v <= n; v++) cout << (dist[v] == INF ? -1 : dist[v]) << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Wierzchołek może trafić do `deque` więcej niż raz (gdy później znajdziemy lepszą drogę). To nie szkodzi:\nrelaksacja `dist[v] + w < dist[u]` może się udać dla danego `u` najwyżej dwa razy, więc całość dalej\njest O(n + m). Można też dodać `if (done[v]) continue; done[v] = true;` po zdjęciu."
+    },
+    {
+     "type": "warn",
+     "md": "0-1 BFS działa tylko dla wag **dokładnie 0 i 1**. Dla wag 1 i 2 (albo małych całkowitych) zamień\nkrawędź o wadze `k` na ścieżkę `k` krawędzi z wierzchołkami pośrednimi albo użyj Dijkstry."
+    }
+   ],
+   "pitfalls": [
+    "Oznaczanie „odwiedzony” przy wrzucaniu (jak w BFS) jest BŁĘDNE w 0-1 BFS — wierzchołek może później dostać mniejszą odległość krawędzią 0. Porównuj odległości (`dist[v] + w < dist[u]`).",
+    "Krawędź 0 musi iść na początek (`push_front`), 1 na koniec — zamiana daje złe wyniki.",
+    "Wagi inne niż 0/1 → algorytm przestaje być poprawny. Dla dowolnych nieujemnych wag: Dijkstra.",
+    "Na siatce koszt zwykle zależy od pola, na które wchodzisz (np. `#` kosztuje 1) — licz `w` dla pola docelowego, nie startowego."
+   ],
+   "qa": [
+    {
+     "q": [
+      "0-1 bfs",
+      "01 bfs c++",
+      "bfs z deque",
+      "zero one bfs",
+      "bfs wagi 0 i 1"
+     ],
+     "a": "Trzymasz `deque<int>`. Zdejmujesz z przodu wierzchołek `v`; dla krawędzi `(v, u, w)` jeśli\n`dist[v] + w < dist[u]`, poprawiasz `dist[u]` i wkładasz `u` na **przód** przy `w = 0`, na **tył**\nprzy `w = 1`. Deque jest wtedy zawsze posortowana po odległościach, więc działa jak Dijkstra,\nale w **O(n + m)** zamiast O(m log n).",
+     "code": "vector<int> zeroOneBfs(const vector<vector<pair<int,int>>>& g, int s) {\n    vector<int> dist(g.size(), INT_MAX);\n    deque<int> dq;\n    dist[s] = 0; dq.push_back(s);\n    while (!dq.empty()) {\n        int v = dq.front(); dq.pop_front();\n        for (auto [u, w] : g[v])\n            if (dist[v] + w < dist[u]) {\n                dist[u] = dist[v] + w;\n                if (w == 0) dq.push_front(u); else dq.push_back(u);\n            }\n    }\n    return dist;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dlaczego push_front w 0-1 bfs",
+      "czemu deque 0 na początek",
+      "0-1 bfs dlaczego działa"
+     ],
+     "a": "Krawędź o wadze 0 nie zwiększa odległości: `dist[u] = dist[v]`, a `v` miał najmniejszą odległość w deque.\nWstawiając `u` na początek, utrzymujemy deque posortowaną (z przodu odległość `d`, z tyłu `d + 1`), więc\nzdejmowany wierzchołek ma zawsze odległość ostateczną — tak jak w Dijkstrze. Gdyby `u` trafił na koniec,\nzostałby zdjęty dopiero po wierzchołkach z odległością `d + 1`: z flagą `done` wynik byłby błędny, a bez niej\npoprawny, ale z wielokrotnym poprawianiem odległości (jak w SPFA), czyli bez gwarancji O(n + m).",
+     "code": "// krawędzie skierowane (sąsiad, waga)\nvector<vector<pair<int,int>>> g = {{}, {{2, 1}, {3, 0}}, {{4, 0}}, {{2, 0}, {4, 1}}, {}};\nvector<int> dist(5, INT_MAX);\ndeque<int> dq;\ndist[1] = 0; dq.push_back(1);\nbool niezmiennik = true;\nwhile (!dq.empty()) {\n    if (dist[dq.back()] - dist[dq.front()] > 1) niezmiennik = false;   // w deque tylko d i d+1\n    int v = dq.front(); dq.pop_front();\n    for (auto [u, w] : g[v])\n        if (dist[v] + w < dist[u]) {\n            dist[u] = dist[v] + w;\n            if (w == 0) dq.push_front(u);   // ta sama odległość -> na początek\n            else dq.push_back(u);           // odległość + 1 -> na koniec\n        }\n}\ncout << niezmiennik << ' ' << dist[4] << '\\n';   // 1 0"
+    },
+    {
+     "q": [
+      "minimalna liczba ścian do zburzenia",
+      "ile murów rozbić żeby przejść",
+      "0-1 bfs siatka",
+      "najmniej przeszkód labirynt"
+     ],
+     "a": "Wejście na wolne pole kosztuje 0, na ścianę 1 (ją burzymy). To graf z wagami 0/1 — puszczamy 0-1 BFS\npo polach planszy: koszt krawędzi = `s[nx][ny] == '#'`. Wynik w `dist` celu, czas O(n·m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<string> s(n);\n    for (auto& r : s) cin >> r;\n    vector<vector<int>> dist(n, vector<int>(m, INT_MAX));\n    deque<pair<int,int>> dq;\n    dist[0][0] = 0; dq.push_back({0, 0});\n    while (!dq.empty()) {\n        auto [x, y] = dq.front(); dq.pop_front();\n        for (int d = 0; d < 4; d++) {\n            int nx = x + dx[d], ny = y + dy[d];\n            if (nx < 0 || ny < 0 || nx >= n || ny >= m) continue;\n            int w = (s[nx][ny] == '#');\n            if (dist[x][y] + w < dist[nx][ny]) {\n                dist[nx][ny] = dist[x][y] + w;\n                if (w == 0) dq.push_front({nx, ny}); else dq.push_back({nx, ny});\n            }\n        }\n    }\n    cout << dist[n - 1][m - 1] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "minimalna liczba odwróconych krawędzi",
+      "odwracanie krawędzi graf skierowany",
+      "reverse edges min",
+      "ile krawędzi odwrócić żeby dojść"
+     ],
+     "a": "Dla każdej krawędzi skierowanej `a → b` dodaj `(a, b, 0)` — jazda zgodnie z kierunkiem jest darmowa —\noraz `(b, a, 1)` — jazda pod prąd = odwrócenie krawędzi kosztuje 1. Odległość 0-1 BFS-em od `1` do\n`n` to minimalna liczba odwróceń. O(n + m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int,int>>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back({b, 0});\n        g[b].push_back({a, 1});\n    }\n    vector<int> dist(n + 1, INT_MAX);\n    deque<int> dq;\n    dist[1] = 0; dq.push_back(1);\n    while (!dq.empty()) {\n        int v = dq.front(); dq.pop_front();\n        for (auto [u, w] : g[v])\n            if (dist[v] + w < dist[u]) {\n                dist[u] = dist[v] + w;\n                if (w == 0) dq.push_front(u); else dq.push_back(u);\n            }\n    }\n    cout << (dist[n] == INT_MAX ? -1 : dist[n]) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "czy w 0-1 bfs wierzchołek może być wiele razy w kolejce",
+      "0-1 bfs visited",
+      "0-1 bfs duplikaty"
+     ],
+     "a": "Tak — wierzchołek może zostać włożony najpierw na koniec (krawędzią 1), a potem na początek (krawędzią\n0, z lepszą odległością). Dlatego **nie** oznaczamy „odwiedzony” przy wrzucaniu, tylko porównujemy\nodległości. Każdy wierzchołek jest relaksowany co najwyżej 2 razy (odległość może spaść z `d+1` na\n`d`), więc złożoność to dalej O(n + m). Starsze wpisy można pomijać flagą `done[v]`.",
+     "code": "vector<vector<pair<int,int>>> g = {{}, {{2, 1}, {3, 0}}, {}, {{2, 0}}};\nvector<int> dist(4, INT_MAX);\nvector<bool> done(4, false);\ndeque<int> dq;\ndist[1] = 0; dq.push_back(1);\nwhile (!dq.empty()) {\n    int v = dq.front(); dq.pop_front();\n    if (done[v]) continue;        // stara kopia wierzchołka\n    done[v] = true;\n    for (auto [u, w] : g[v])\n        if (dist[v] + w < dist[u]) {\n            dist[u] = dist[v] + w;\n            if (w == 0) dq.push_front(u); else dq.push_back(u);\n        }\n}\ncout << dist[2] << '\\n';   // 0 (przez 3)"
+    },
+    {
+     "q": [
+      "0-1 bfs czy dijkstra",
+      "0-1 bfs złożoność",
+      "kiedy 0-1 bfs zamiast dijkstry"
+     ],
+     "a": "Jeśli wagi to tylko 0 i 1, 0-1 BFS daje ten sam wynik co Dijkstra, ale w O(n + m) zamiast O(m log n)\ni bez `priority_queue`. Dla `m = 10^6` różnica to kilkukrotne przyspieszenie. Dijkstra też by\nzadziałała — 0-1 BFS to optymalizacja, nie konieczność (chyba że limit czasu jest ciasny).",
+     "code": "typedef long long ll;\n// 0-1 BFS: O(n + m), tylko wagi 0/1\nvector<ll> zeroJeden(const vector<vector<pair<int,int>>>& g, int s) {\n    vector<ll> d(g.size(), LLONG_MAX / 4);\n    deque<int> dq;\n    d[s] = 0; dq.push_back(s);\n    while (!dq.empty()) {\n        int v = dq.front(); dq.pop_front();\n        for (auto [u, w] : g[v])\n            if (d[v] + w < d[u]) { d[u] = d[v] + w; if (w == 0) dq.push_front(u); else dq.push_back(u); }\n    }\n    return d;\n}\n// Dijkstra: O(m log n), dowolne wagi >= 0 — na grafie 0/1 da ten sam wynik\nvector<ll> dijkstra(const vector<vector<pair<int,int>>>& g, int s) {\n    vector<ll> d(g.size(), LLONG_MAX / 4);\n    priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>> pq;\n    d[s] = 0; pq.push({0, s});\n    while (!pq.empty()) {\n        auto [dv, v] = pq.top(); pq.pop();\n        if (dv > d[v]) continue;\n        for (auto [u, w] : g[v]) if (dv + w < d[u]) { d[u] = dv + w; pq.push({d[u], u}); }\n    }\n    return d;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wagi 1 i 2 bfs",
+      "bfs dla małych wag",
+      "dial algorithm",
+      "kubełkowa dijkstra"
+     ],
+     "a": "Dla małych wag całkowitych `0..K` są dwie opcje: (1) podziel krawędź o wadze `k` na `k` krawędzi\njednostkowych z nowymi wierzchołkami i zrób BFS (dobre, gdy K bardzo małe); (2) **algorytm Diala**:\ntablica kubełków `bucket[d]` z wierzchołkami o odległości `d`, przeglądana po kolei — O(n·K + m).\nW praktyce zwykła Dijkstra też wystarcza.",
+     "code": "int n = 3, K = 2;\nvector<vector<pair<int,int>>> g = {{}, {{2, 2}, {3, 1}}, {}, {{2, 1}}};\nvector<int> dist(n + 1, INT_MAX);\nvector<vector<int>> bucket(n * K + 1);\ndist[1] = 0; bucket[0].push_back(1);\nfor (int d = 0; d <= n * K; d++)\n    for (size_t i = 0; i < bucket[d].size(); i++) {\n        int v = bucket[d][i];\n        if (dist[v] != d) continue;           // nieaktualny wpis\n        for (auto [u, w] : g[v])\n            if (d + w < dist[u]) { dist[u] = d + w; bucket[d + w].push_back(u); }\n    }\ncout << dist[2] << '\\n';   // 2"
+    }
+   ],
+   "related": [
+    "graph-bfs",
+    "graph-bfs-grid",
+    "graph-dijkstra",
+    "graph-dijkstra-states",
+    "graph-multi-source-bfs"
+   ]
+  },
+  {
+   "id": "graph-dfs",
+   "title": "DFS — przeszukiwanie w głąb (rekurencyjnie i iteracyjnie ze stosem)",
+   "category": "Grafy",
+   "tags": [
+    "dfs",
+    "przeszukiwanie w głąb",
+    "rekurencja",
+    "stos",
+    "stack overflow",
+    "dfs iteracyjny",
+    "preorder",
+    "postorder",
+    "czasy wejścia"
+   ],
+   "aliases": [
+    "dfs",
+    "dfs c++",
+    "jak zrobić dfs",
+    "przeszukiwanie w głąb",
+    "depth first search",
+    "dfs rekurencyjny",
+    "dfs iteracyjny",
+    "dfs ze stosem",
+    "dfs bez rekurencji",
+    "dfs stack overflow",
+    "dfs segfault"
+   ],
+   "summary": "DFS wchodzi jak najgłębiej, a potem się cofa. Podstawa wielu algorytmów (składowe, cykle, toposort, mosty, SCC, drzewa). Wersja rekurencyjna jest krótka, ale przy głębokości ~10^6 może przepełnić stos — wtedy wersja iteracyjna.",
+   "complexity": "O(n + m) czasu, O(n) pamięci (stos rekurencji lub jawny)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja:** chodzisz po labiryncie, trzymając się zasady „idź do pierwszego nieodwiedzonego\nkorytarza; jak nie ma — cofnij się”. DFS odwiedza każdy wierzchołek raz i przegląda każdą krawędź raz\n(w grafie nieskierowanym dwa razy), więc działa w **O(n + m)**.\n\nDFS **nie** daje najkrótszych ścieżek (to robi BFS), ale za to porządek „wejście → wszystkie dzieci →\nwyjście” jest kluczowy dla: wykrywania cykli, sortowania topologicznego, mostów i punktów artykulacji,\nsilnie spójnych składowych i wszystkich algorytmów na drzewach."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „czy da się dojść z a do b”, „ile jest spójnych kawałków”, „czy jest cykl”, „kolejność\nwykonywania zadań”, „drzewo, policz dla każdego poddrzewa …”, „przejdź wszystkie możliwości”\n(backtracking to też DFS po drzewie stanów)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "DFS rekurencyjny — kolejność odwiedzin i czasy",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 200005;\nvector<int> g[MAXN];\nbool vis[MAXN];\nint tin[MAXN], tout[MAXN], timer_ = 0;\nvector<int> order;\n\nvoid dfs(int v) {\n    vis[v] = true;\n    tin[v] = timer_++;          // czas wejścia\n    order.push_back(v);         // preorder\n    for (int u : g[v])\n        if (!vis[u]) dfs(u);\n    tout[v] = timer_++;         // czas wyjścia (postorder)\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    dfs(1);\n    for (int v : order) cout << v << ' ';\n    cout << '\\n';\n    int osiagalne = order.size();\n    cout << \"osiągalne z 1: \" << osiagalne << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "DFS iteracyjny (bez rekurencji)",
+     "code": "// Iteracyjny DFS z indeksem „następnego sąsiada” — ta sama kolejność co rekurencja,\n// obsługuje też postorder (moment wyjścia). Bezpieczny dla n = 10^6.\nvector<int> dfsIter(const vector<vector<int>>& g, int s, vector<int>& post) {\n    int n = g.size();\n    vector<int> pre, it(n, 0);\n    vector<bool> vis(n, false);\n    vector<int> st = {s};\n    vis[s] = true;\n    pre.push_back(s);\n    while (!st.empty()) {\n        int v = st.back();\n        if (it[v] < (int)g[v].size()) {\n            int u = g[v][it[v]++];\n            if (!vis[u]) {\n                vis[u] = true;\n                pre.push_back(u);       // wejście do u\n                st.push_back(u);\n            }\n        } else {\n            post.push_back(v);          // wyjście z v\n            st.pop_back();\n        }\n    }\n    return pre;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "warn",
+     "md": "**Głębokość rekurencji.** Ścieżka o `n = 10^6` wierzchołkach to 10^6 zagnieżdżonych wywołań `dfs`.\nPrzy domyślnym stosie (8 MB na Linuksie, 1 MB na Windowsie) program kończy się *segmentation fault*.\nNa sprawdzarkach OI (sio2) stos jest zwykle ograniczony tylko limitem pamięci, ale nie licz na to\nw każdym systemie — przy `n ≥ ~10^5` w grafie, który może być ścieżką, rozważ wersję iteracyjną albo\nBFS (jeśli kolejność DFS nie jest potrzebna). Zmienne lokalne w `dfs` też zajmują stos — trzymaj je\nw tablicach globalnych."
+    },
+    {
+     "type": "tip",
+     "md": "Rekurencyjna lambda w C++: `auto dfs = [&](auto&& self, int v) -> void { ... self(self, u); };`\ni wywołanie `dfs(dfs, 1);`. Działa szybciej niż `function<void(int)>`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dfs(v)",
+     "desc": "odwiedza wszystko osiągalne z v, ustawia vis/tin/tout",
+     "complexity": "O(n + m)"
+    },
+    {
+     "sig": "dfsIter(g, s, post)",
+     "desc": "iteracyjny DFS; zwraca preorder, w `post` dopisuje postorder",
+     "complexity": "O(n + m)",
+     "returns": "vector<int>"
+    }
+   ],
+   "pitfalls": [
+    "Rekurencja głębokości 10^5–10^6 (graf-ścieżka) → przepełnienie stosu (RE/segfault) przy małym stosie.",
+    "Brak `vis[v] = true` na początku `dfs` → nieskończona rekurencja w grafie z cyklem.",
+    "Duże tablice lokalne wewnątrz rekurencyjnej funkcji (np. `int tmp[1000]`) mnożą zużycie stosu.",
+    "Prosty iteracyjny DFS „wrzuć wszystkich sąsiadów na stos” daje INNĄ kolejność i nie daje poprawnego postorderu — do toposortu/mostów użyj wersji z indeksem `it[v]`.",
+    "`function<void(int)> dfs` jest wolniejsze od zwykłej funkcji (wywołanie pośrednie) — przy 10^6 wywołań różnica bywa odczuwalna.",
+    "DFS nie liczy najkrótszych ścieżek. Do odległości w grafie nieważonym — BFS."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak zrobic dfs",
+      "dfs c++",
+      "dfs kod",
+      "przeszukiwanie w głąb",
+      "depth first search c++"
+     ],
+     "a": "DFS: oznacz `v` jako odwiedzony, potem dla każdego nieodwiedzonego sąsiada wywołaj `dfs(u)`\nrekurencyjnie. Każdy wierzchołek jest odwiedzony raz, każda krawędź sprawdzona raz z każdej strony →\n**O(n + m)**. Tablice `g` i `vis` trzymaj globalnie, żeby nie przekazywać ich w każdym wywołaniu.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 100005;\nvector<int> g[MAXN];\nbool vis[MAXN];\nvoid dfs(int v) {\n    vis[v] = true;\n    for (int u : g[v]) if (!vis[u]) dfs(u);\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    dfs(1);\n    cout << (vis[n] ? \"TAK\" : \"NIE\") << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dfs iteracyjny",
+      "dfs bez rekurencji",
+      "dfs ze stosem",
+      "iterative dfs c++",
+      "dfs na stosie"
+     ],
+     "a": "Trzymaj własny stos wierzchołków i dla każdego `it[v]` — indeks następnego sąsiada do sprawdzenia.\nPatrzysz na wierzchołek ze szczytu: jeśli ma jeszcze sąsiada, przesuń `it[v]` i ewentualnie wejdź\ndo niego (push); jeśli nie — to moment wyjścia z `v` (pop). Kolejność jest identyczna jak\nw rekurencji, a stos jest na stercie, więc nie ma limitu głębokości. O(n + m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> it(n + 1, 0), st = {1};\n    vector<bool> vis(n + 1, false);\n    vis[1] = true;\n    cout << 1;\n    while (!st.empty()) {\n        int v = st.back();\n        if (it[v] < (int)g[v].size()) {\n            int u = g[v][it[v]++];\n            if (!vis[u]) { vis[u] = true; cout << ' ' << u; st.push_back(u); }\n        } else st.pop_back();\n    }\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "stack overflow dfs",
+      "segmentation fault dfs",
+      "dfs głęboka rekurencja",
+      "dfs 10^6 wierzchołków crash",
+      "przepełnienie stosu rekurencja"
+     ],
+     "a": "Każde wywołanie rekurencyjne zajmuje kilkadziesiąt bajtów stosu. Ścieżka 10^6 wierzchołków = 10^6\nramek ≈ 50–100 MB, a domyślny stos ma 8 MB (Linux) lub 1 MB (Windows) → segfault. Rozwiązania:\n(1) DFS iteracyjny z własnym stosem, (2) BFS, jeśli kolejność nie ma znaczenia, (3) lokalnie\n`ulimit -s unlimited` (Linux) — ale to nie zmienia limitu na sprawdzarce. W OI Forge program\nuruchamiany jest z dużym stosem (512 MB), więc lokalnie problem może się nie ujawnić.",
+     "code": "// Zamiast rekurencji: liczenie rozmiarów poddrzew bez stosu wywołań.\nint n = 5;\nvector<vector<int>> g = {{}, {2}, {1, 3}, {2, 4}, {3, 5}, {4}};   // ścieżka\nvector<int> par(n + 1, 0), ord, sz(n + 1, 1);\nvector<int> st = {1};\npar[1] = -1;\nwhile (!st.empty()) {\n    int v = st.back(); st.pop_back();\n    ord.push_back(v);\n    for (int u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); }\n}\nfor (int i = n - 1; i > 0; i--) sz[par[ord[i]]] += sz[ord[i]];   // od liści w górę\ncout << sz[1] << '\\n';   // 5"
+    },
+    {
+     "q": [
+      "dfs czasy wejścia i wyjścia",
+      "tin tout dfs",
+      "preorder postorder dfs",
+      "entry exit time dfs"
+     ],
+     "a": "Zapisz licznik przy wejściu (`tin[v] = timer++`) i przy wyjściu (`tout[v] = timer++`). Wtedy `u` jest\nw poddrzewie DFS-a wierzchołka `v` ⇔ `tin[v] <= tin[u] && tout[u] <= tout[v]`. To podstawa Euler\ntour (zapytania o poddrzewa drzewem przedziałowym), sprawdzania „czy przodek” w O(1) i klasyfikacji\nkrawędzi (drzewowa / powrotna / w przód / poprzeczna).",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint tin[MAXN], tout[MAXN], timer_ = 0;\nvoid dfs(int v, int p) {\n    tin[v] = timer_++;\n    for (int u : g[v]) if (u != p) dfs(u, v);\n    tout[v] = timer_++;\n}\nbool przodek(int v, int u) { return tin[v] <= tin[u] && tout[u] <= tout[v]; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dfs vs bfs",
+      "różnica dfs bfs",
+      "kiedy dfs a kiedy bfs",
+      "bfs czy dfs"
+     ],
+     "a": "Oba odwiedzają wszystko w O(n + m). **BFS** (kolejka) idzie warstwami — daje najkrótsze ścieżki\nw grafie nieważonym. **DFS** (rekurencja/stos) idzie w głąb — daje strukturę drzewa przeszukiwania:\nczasy wejścia/wyjścia, krawędzie powrotne, porządek postorder. Do samej spójności/osiągalności\nnadaje się dowolny; do odległości — BFS; do cykli, toposortu, mostów, SCC, DP na drzewie — DFS.",
+     "code": "vector<vector<int>> g = {{}, {2, 3}, {1, 4}, {1, 5}, {2}, {3}};\n// BFS: warstwami (kolejka)\nvector<bool> vis(6, false);\nqueue<int> q;\nq.push(1); vis[1] = true;\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    cout << v << ' ';\n    for (int u : g[v]) if (!vis[u]) { vis[u] = true; q.push(u); }\n}\ncout << \"| \";\n// DFS: w głąb (stos + indeks następnego sąsiada)\nvector<bool> vis2(6, false);\nvector<int> it(6, 0), st = {1};\nvis2[1] = true;\ncout << 1 << ' ';\nwhile (!st.empty()) {\n    int v = st.back();\n    if (it[v] < (int)g[v].size()) {\n        int u = g[v][it[v]++];\n        if (!vis2[u]) { vis2[u] = true; cout << u << ' '; st.push_back(u); }\n    } else st.pop_back();\n}\ncout << '\\n';   // 1 2 3 4 5 | 1 2 4 3 5"
+    },
+    {
+     "q": [
+      "dfs lambda c++",
+      "rekurencyjna lambda",
+      "function<void(int)> dfs",
+      "auto self dfs"
+     ],
+     "a": "Lambda nie może wprost wywołać samej siebie. Dwie opcje: `function<void(int)> dfs = [&](int v){...}`\n(proste, ale wolniejsze — wywołanie przez wskaźnik), albo generyczna lambda z parametrem `self`:\n`auto dfs = [&](auto&& self, int v) -> void {...}` wywoływana `dfs(dfs, 1)` — szybka jak zwykła\nfunkcja. W C++23 jest też „deducing this”. Zwykła funkcja globalna jest najprostsza i najszybsza.",
+     "code": "int n = 4;\nvector<vector<int>> g = {{}, {2, 3}, {1, 4}, {1}, {2}};\nvector<int> depth(n + 1, 0);\nauto dfs = [&](auto&& self, int v, int p) -> void {\n    for (int u : g[v])\n        if (u != p) { depth[u] = depth[v] + 1; self(self, u, v); }\n};\ndfs(dfs, 1, 0);\ncout << depth[4] << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "dfs złożoność",
+      "ile działa dfs",
+      "dfs complexity"
+     ],
+     "a": "**O(n + m)**: każdy wierzchołek odwiedzamy raz (dzięki `vis`), a jego listę sąsiadów przeglądamy raz.\nNa macierzy sąsiedztwa — O(n²). Pamięć: O(n) na `vis` i stos (rekurencyjny lub jawny). Jeśli\nDFS „bez vis” (np. backtracking po wszystkich ścieżkach), złożoność może być wykładnicza.",
+     "code": "int n = 4;\nvector<vector<int>> g = {{}, {2, 3}, {1, 3}, {1, 2, 4}, {3}};   // m = 4 krawędzie\nvector<bool> vis(n + 1, false);\nlong long wywolania = 0, sprawdzenia = 0;\nauto dfs = [&](auto&& self, int v) -> void {\n    vis[v] = true;\n    wywolania++;\n    for (int u : g[v]) {\n        sprawdzenia++;\n        if (!vis[u]) self(self, u);\n    }\n};\ndfs(dfs, 1);\ncout << wywolania << ' ' << sprawdzenia << '\\n';   // 4 8, czyli n i 2m"
+    },
+    {
+     "q": [
+      "czy da się dojść z a do b",
+      "osiągalność w grafie",
+      "czy istnieje droga między wierzchołkami",
+      "reachability graph",
+      "czy z jednego miasta da się dojechać do drugiego",
+      "czy da się dojechać z miasta a do b",
+      "czy wierzchołki są połączone ścieżką"
+     ],
+     "a": "Puść DFS (albo BFS) z `a` i sprawdź `vis[b]`. O(n + m) na jedno zapytanie. Przy wielu zapytaniach\nw grafie nieskierowanym policz raz spójne składowe (`comp[v]`) i odpowiadaj `comp[a] == comp[b]`\nw O(1). W skierowanym przy wielu zapytaniach — SCC + DAG albo (dla małych `n`) bitsety.",
+     "code": "int n = 5;\nvector<vector<int>> g = {{}, {2}, {1, 3}, {2}, {5}, {4}};\nvector<int> comp(n + 1, 0);\nint c = 0;\nfor (int s = 1; s <= n; s++) {\n    if (comp[s]) continue;\n    c++;\n    vector<int> st = {s};\n    comp[s] = c;\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        for (int u : g[v]) if (!comp[u]) { comp[u] = c; st.push_back(u); }\n    }\n}\ncout << (comp[1] == comp[3]) << (comp[1] == comp[4]) << '\\n';   // 10"
+    },
+    {
+     "q": [
+      "dfs na siatce",
+      "dfs plansza rekurencja",
+      "dfs grid",
+      "flood fill dfs"
+     ],
+     "a": "Na planszy DFS rekurencyjny jest wygodny, ale plansza 1000×1000 w kształcie węża daje głębokość\nrekurencji do 10^6. Bezpieczniej użyć BFS-a albo iteracyjnego DFS-a ze stosem par. Kod jest\ntaki sam jak BFS, tylko `queue` zamieniasz na `vector`/`stack` (kolejność odwiedzin się zmienia,\nale zbiór odwiedzonych pól — nie).",
+     "code": "int n = 3, m = 3;\nvector<string> s = {\"..#\", \".##\", \"#..\"};\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nvector<vector<bool>> vis(n, vector<bool>(m, false));\nvector<pair<int,int>> st = {{0, 0}};\nvis[0][0] = true;\nint ile = 0;\nwhile (!st.empty()) {\n    auto [x, y] = st.back(); st.pop_back();\n    ile++;\n    for (int d = 0; d < 4; d++) {\n        int nx = x + dx[d], ny = y + dy[d];\n        if (nx < 0 || ny < 0 || nx >= n || ny >= m || s[nx][ny] == '#' || vis[nx][ny]) continue;\n        vis[nx][ny] = true;\n        st.push_back({nx, ny});\n    }\n}\ncout << ile << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "postorder iteracyjnie",
+      "kolejność wyjścia dfs bez rekurencji",
+      "iterative postorder graph"
+     ],
+     "a": "Prosty trik dla drzew i DAG-ów: zapisz kolejność odwiedzin z iteracyjnego DFS/BFS (`ord`) — dla\nkażdego wierzchołka jego potomkowie są w `ord` dalej niż on. Przetwarzając `ord` od końca, masz\nkażde dziecko przed rodzicem (to wystarcza do DP na drzewie). Do prawdziwego postorderu w grafie\nogólnym (toposort, SCC) użyj wersji z `it[v]`: moment `pop` to wyjście z wierzchołka.",
+     "code": "vector<int> postorder(const vector<vector<int>>& g, int s) {\n    vector<int> it(g.size(), 0), post, st = {s};\n    vector<bool> vis(g.size(), false);\n    vis[s] = true;\n    while (!st.empty()) {\n        int v = st.back();\n        if (it[v] < (int)g[v].size()) {\n            int u = g[v][it[v]++];\n            if (!vis[u]) { vis[u] = true; st.push_back(u); }\n        } else { post.push_back(v); st.pop_back(); }\n    }\n    return post;\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "graph-bfs",
+    "graph-connected-components",
+    "graph-cycle-detection",
+    "graph-toposort",
+    "tree-dfs-order",
+    "graph-bridges-articulation",
+    "graph-scc",
+    "cpp-recursion-basics",
+    "graph-flood-fill",
+    "math-xor-basis",
+    "oi-py-recursion"
+   ]
+  },
+  {
+   "id": "graph-connected-components",
+   "title": "Spójne składowe grafu nieskierowanego",
+   "category": "Grafy",
+   "tags": [
+    "spójne składowe",
+    "spójność",
+    "connected components",
+    "bfs",
+    "dfs",
+    "dsu",
+    "flood fill",
+    "czy graf spójny"
+   ],
+   "aliases": [
+    "spójne składowe",
+    "spojne skladowe",
+    "liczba spójnych składowych",
+    "connected components",
+    "czy graf jest spójny",
+    "graf spójny",
+    "ile składowych",
+    "składowe spójności",
+    "największa spójna składowa"
+   ],
+   "summary": "Spójna składowa to maksymalny zbiór wierzchołków, między którymi da się przejść. Liczy się je BFS-em/DFS-em z każdego nieodwiedzonego wierzchołka (O(n + m)) albo DSU (gdy krawędzie dochodzą).",
+   "complexity": "O(n + m) przez BFS/DFS; O((n + m)·α(n)) przez DSU",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Przechodzisz po wierzchołkach `1..n`. Gdy trafisz na nieodwiedzony — to początek **nowej składowej**:\nzwiększasz licznik i BFS-em (lub DFS-em) oznaczasz wszystko, co z niego osiągalne, numerem składowej.\nKażdy wierzchołek i krawędź przetwarzasz raz, więc całość jest liniowa."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „ile jest grup/wysp/sieci”, „czy z każdego miasta da się dojechać do każdego” (spójność),\n„ile dróg trzeba dobudować, żeby wszystko było połączone” (składowe − 1), „rozmiar największej grupy\nznajomych”, „czy a i b są w tej samej grupie” (porównanie `comp[a] == comp[b]`)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Liczba składowych, największa składowa, spójność",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> comp(n + 1, 0);      // 0 = jeszcze bez składowej\n    vector<int> rozmiar;             // rozmiar[c-1] = liczba wierzchołków składowej c\n    int c = 0;\n    for (int s = 1; s <= n; s++) {\n        if (comp[s]) continue;\n        c++;\n        int ile = 0;\n        queue<int> q;\n        q.push(s);\n        comp[s] = c;\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            ile++;\n            for (int u : g[v])\n                if (!comp[u]) { comp[u] = c; q.push(u); }\n        }\n        rozmiar.push_back(ile);\n    }\n    cout << c << '\\n';                                    // liczba składowych\n    cout << *max_element(rozmiar.begin(), rozmiar.end()) << '\\n';   // największa\n    cout << (c == 1 ? \"SPÓJNY\" : \"NIESPÓJNY\") << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Wierzchołki izolowane (bez krawędzi) to też składowe — rozmiaru 1. Pętla po **wszystkich** `s = 1..n`\nłapie je automatycznie; częsty błąd to liczenie składowych tylko z wierzchołków występujących w krawędziach."
+    }
+   ],
+   "pitfalls": [
+    "Pominięcie wierzchołków izolowanych — muszą być liczone jako osobne składowe.",
+    "BFS/DFS tylko z wierzchołka 1 sprawdza spójność, ale nie liczy składowych.",
+    "W grafie SKIEROWANYM „spójne składowe” to co innego: słabo spójne (ignorujemy kierunki) albo silnie spójne (SCC — Tarjan/Kosaraju).",
+    "Rekurencyjny DFS na dużym grafie-ścieżce może przepełnić stos — BFS jest bezpieczny.",
+    "Gdy krawędzie dochodzą stopniowo i po każdej trzeba znać liczbę składowych — nie puszczaj BFS-a od nowa (O(m·(n+m))), tylko użyj DSU."
+   ],
+   "qa": [
+    {
+     "q": [
+      "spójne składowe",
+      "liczba spójnych składowych",
+      "connected components c++",
+      "ile jest składowych",
+      "spojne skladowe kod"
+     ],
+     "a": "Dla każdego nieodwiedzonego wierzchołka `s` zwiększ licznik i puść BFS/DFS oznaczający całą jego\nskładową. Liczba uruchomień BFS-a = liczba składowych. Złożoność **O(n + m)**. Tablica `comp[v]`\nprzy okazji mówi, do której składowej należy `v`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<bool> vis(n + 1, false);\n    int c = 0;\n    for (int s = 1; s <= n; s++) {\n        if (vis[s]) continue;\n        c++;\n        vector<int> st = {s};\n        vis[s] = true;\n        while (!st.empty()) {\n            int v = st.back(); st.pop_back();\n            for (int u : g[v]) if (!vis[u]) { vis[u] = true; st.push_back(u); }\n        }\n    }\n    cout << c << '\\n';\n}"
+    },
+    {
+     "q": [
+      "czy graf jest spójny",
+      "sprawdzić spójność grafu",
+      "is graph connected",
+      "graf spojny jak sprawdzic"
+     ],
+     "a": "Puść jeden BFS/DFS z wierzchołka 1 i sprawdź, czy odwiedził wszystkie `n` wierzchołków. O(n + m).\nUwaga: graf z jednym wierzchołkiem jest spójny; graf z `n` wierzchołkami i mniej niż `n − 1`\nkrawędziami na pewno nie jest spójny (szybki test).",
+     "code": "bool spojny(const vector<vector<int>>& g, int n) {\n    vector<bool> vis(n + 1, false);\n    queue<int> q;\n    q.push(1); vis[1] = true;\n    int ile = 0;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        ile++;\n        for (int u : g[v]) if (!vis[u]) { vis[u] = true; q.push(u); }\n    }\n    return ile == n;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "rozmiar składowej",
+      "największa spójna składowa",
+      "ile wierzchołków w każdej składowej",
+      "size of each component"
+     ],
+     "a": "Licz wierzchołki zdejmowane z kolejki w trakcie BFS-a danej składowej i zapisuj w `rozmiar[c]`.\nRozmiar składowej wierzchołka `v` to `rozmiar[comp[v]]`. Z DSU: `sz[find(v)]`. Oba sposoby O(n + m).",
+     "code": "int n = 6;\nvector<vector<int>> g = {{}, {2}, {1, 3}, {2}, {5}, {4}, {}};\nvector<int> comp(n + 1, 0), rozmiar(1, 0);\nint c = 0;\nfor (int s = 1; s <= n; s++) {\n    if (comp[s]) continue;\n    rozmiar.push_back(0);\n    c++;\n    queue<int> q; q.push(s); comp[s] = c;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        rozmiar[c]++;\n        for (int u : g[v]) if (!comp[u]) { comp[u] = c; q.push(u); }\n    }\n}\ncout << rozmiar[comp[2]] << ' ' << rozmiar[comp[6]] << '\\n';   // 3 1"
+    },
+    {
+     "q": [
+      "spójne składowe dsu",
+      "składowe find union",
+      "liczba składowych union find"
+     ],
+     "a": "Z DSU: zacznij od `n` składowych, dla każdej krawędzi `(a, b)` jeśli `find(a) != find(b)`, połącz je\ni zmniejsz licznik. Przydaje się, gdy krawędzie przychodzą online („po dodaniu każdej drogi wypisz\nliczbę składowych”) — każda operacja prawie O(1).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> p;\nint find(int x) { return p[x] == x ? x : p[x] = find(p[x]); }\nint main() {\n    int n, m;\n    cin >> n >> m;\n    p.resize(n + 1);\n    iota(p.begin(), p.end(), 0);\n    int skladowe = n;\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        a = find(a); b = find(b);\n        if (a != b) { p[a] = b; skladowe--; }\n        cout << skladowe << '\\n';\n    }\n}"
+    },
+    {
+     "q": [
+      "ile krawędzi dodać żeby graf był spójny",
+      "minimalna liczba dróg do dobudowania",
+      "połączyć wszystkie składowe"
+     ],
+     "a": "Jeśli graf ma `c` składowych, wystarczy i trzeba dodać `c − 1` krawędzi (łącząc składowe w łańcuch,\nnp. reprezentanta składowej `i` z reprezentantem `i + 1`). Mniej się nie da, bo każda nowa krawędź\nzmniejsza liczbę składowych co najwyżej o 1.",
+     "code": "// reprezentanci składowych zebrani BFS-em: rep = {1, 4, 6}\nvector<int> rep = {1, 4, 6};\nfor (size_t i = 0; i + 1 < rep.size(); i++)\n    cout << rep[i] << ' ' << rep[i + 1] << '\\n';   // nowe drogi: c - 1 sztuk"
+    },
+    {
+     "q": [
+      "słabo spójne składowe",
+      "składowe w grafie skierowanym",
+      "spójność grafu skierowanego"
+     ],
+     "a": "W grafie skierowanym są dwa pojęcia. **Słabo spójne** składowe — ignorujesz kierunki (dodajesz\nkrawędzie w obie strony) i liczysz zwykłe składowe. **Silnie spójne** (SCC) — z każdego do każdego\nda się dojść zgodnie z kierunkami; liczysz algorytmem Tarjana lub Kosaraju w O(n + m). Zadania typu\n„z każdego skrzyżowania da się dojechać do każdego (ulice jednokierunkowe)” pytają o SCC.",
+     "code": "int n = 5;\nvector<pair<int,int>> kraw = {{1, 2}, {3, 2}, {4, 5}};          // krawędzie skierowane\nvector<vector<int>> g(n + 1);\nfor (auto [a, b] : kraw) { g[a].push_back(b); g[b].push_back(a); }   // ignorujemy kierunek\nvector<bool> vis(n + 1, false);\nint slabo = 0;\nfor (int s = 1; s <= n; s++) {\n    if (vis[s]) continue;\n    slabo++;\n    vector<int> st = {s};\n    vis[s] = true;\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        for (int u : g[v]) if (!vis[u]) { vis[u] = true; st.push_back(u); }\n    }\n}\ncout << slabo << '\\n';   // 2 słabo spójne (silnie spójnych jest tu 5)"
+    },
+    {
+     "q": [
+      "wierzchołki izolowane składowe",
+      "wierzchołek bez krawędzi",
+      "izolowany wierzcholek graf"
+     ],
+     "a": "Wierzchołek bez żadnej krawędzi to osobna składowa rozmiaru 1. Jeśli iterujesz `for (s = 1; s <= n;\ns++)`, policzysz go automatycznie. Błąd pojawia się, gdy liczysz składowe np. z mapy/zbioru\nwierzchołków, które wystąpiły w krawędziach — izolowane się wtedy gubią.",
+     "code": "int n = 5;\nvector<pair<int,int>> kraw = {{1, 2}, {2, 3}};                 // 4 i 5 są izolowane\nvector<int> p(n + 1);\niota(p.begin(), p.end(), 0);\nfunction<int(int)> find = [&](int x) { return p[x] == x ? x : p[x] = find(p[x]); };\nset<int> wKrawedziach;\nfor (auto [a, b] : kraw) { p[find(a)] = find(b); wKrawedziach.insert(a); wKrawedziach.insert(b); }\nint dobrze = 0, zle = 0;\nfor (int v = 1; v <= n; v++) if (find(v) == v) dobrze++;      // wszystkie wierzchołki\nfor (int v : wKrawedziach) if (find(v) == v) zle++;           // tylko te z krawędzi — BŁĄD\ncout << dobrze << ' ' << zle << '\\n';   // 3 1"
+    }
+   ],
+   "related": [
+    "graph-dfs",
+    "graph-bfs",
+    "graph-dsu",
+    "graph-scc",
+    "graph-bfs-grid",
+    "graph-flood-fill"
+   ]
+  },
+  {
+   "id": "graph-cycle-detection",
+   "title": "Wykrywanie cyklu w grafie skierowanym i nieskierowanym",
+   "category": "Grafy",
+   "tags": [
+    "cykl",
+    "wykrywanie cyklu",
+    "kolory dfs",
+    "biały szary czarny",
+    "graf skierowany",
+    "dag",
+    "dsu",
+    "krawędź powrotna"
+   ],
+   "aliases": [
+    "wykrywanie cyklu",
+    "jak wykryć cykl w grafie",
+    "cykl w grafie skierowanym",
+    "cykl w grafie nieskierowanym",
+    "czy graf ma cykl",
+    "detect cycle graph",
+    "kolory dfs",
+    "wypisz cykl",
+    "czy graf jest drzewem"
+   ],
+   "summary": "Cykl w grafie skierowanym wykrywa DFS z trzema kolorami (krawędź do wierzchołka „szarego” = cykl); w nieskierowanym wystarczy krawędź do odwiedzonego wierzchołka innego niż rodzic albo DSU.",
+   "complexity": "O(n + m)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Graf skierowany.** DFS z kolorami: **biały** (0) — nieodwiedzony, **szary** (1) — wierzchołek jest\nteraz na stosie rekurencji (weszliśmy, nie wyszliśmy), **czarny** (2) — całkowicie przetworzony.\nKrawędź `v → u` do **szarego** `u` oznacza, że `u` jest przodkiem `v` na bieżącej ścieżce — mamy cykl.\nKrawędź do czarnego wierzchołka cyklu nie tworzy (to tylko inna gałąź, która już się zakończyła).\n\n**Graf nieskierowany.** Każda krawędź do już odwiedzonego wierzchołka, który **nie jest rodzicem**,\nzamyka cykl. Prościej: DSU — jeśli krawędź łączy dwa wierzchołki już w tej samej składowej, to cykl."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „czy da się wykonać wszystkie zadania przy zależnościach” (skierowany: cykl = nie da się),\n„czy rozkład jest sprzeczny”, „wypisz cykl”, „czy sieć jest drzewem”, „krawędź, której dodanie tworzy cykl”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Graf skierowany: znajdź i wypisz cykl",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 200005;\nvector<int> g[MAXN];\nint color[MAXN], par[MAXN];\nint cycStart = -1, cycEnd = -1;\n\nbool dfs(int v) {\n    color[v] = 1;                        // szary: na stosie\n    for (int u : g[v]) {\n        if (color[u] == 0) {\n            par[u] = v;\n            if (dfs(u)) return true;\n        } else if (color[u] == 1) {      // krawędź do szarego = cykl\n            cycStart = u;\n            cycEnd = v;\n            return true;\n        }\n    }\n    color[v] = 2;                        // czarny: przetworzony\n    return false;\n}\n\nint main() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);               // graf skierowany\n    }\n    for (int v = 1; v <= n; v++)\n        if (color[v] == 0 && dfs(v)) break;\n    if (cycStart == -1) {\n        cout << \"BRAK\\n\";\n        return 0;\n    }\n    vector<int> cyc;\n    for (int v = cycEnd; v != cycStart; v = par[v]) cyc.push_back(v);\n    cyc.push_back(cycStart);\n    reverse(cyc.begin(), cyc.end());\n    for (int v : cyc) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Graf nieskierowany: DFS z id krawędzi rodzica",
+     "code": "// Graf nieskierowany (może mieć krawędzie wielokrotne): porównujemy NUMER krawędzi, nie rodzica.\nconst int MAXN = 200005;\nvector<pair<int, int>> adj[MAXN];   // (sąsiad, id krawędzi)\nbool vis[MAXN];\n\nbool maCykl(int v, int parentEdge) {\n    vis[v] = true;\n    for (auto [u, id] : adj[v]) {\n        if (id == parentEdge) continue;     // nie wracamy tą samą krawędzią\n        if (vis[u]) return true;            // odwiedzony innym kanałem -> cykl\n        if (maCykl(u, id)) return true;\n    }\n    return false;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Szybki test bez DFS-u w grafie nieskierowanym: graf jest **drzewem** ⇔ jest spójny i ma `m = n − 1`\nkrawędzi; jest **lasem** (bez cykli) ⇔ `m = n − c`, gdzie `c` to liczba składowych."
+    }
+   ],
+   "pitfalls": [
+    "W grafie skierowanym samo „krawędź do odwiedzonego” NIE oznacza cyklu (np. romb 1→2, 1→3, 2→4, 3→4). Potrzebne są trzy kolory.",
+    "W nieskierowanym trzeba pominąć krawędź, którą przyszliśmy (rodzica), inaczej każda krawędź wygląda jak cykl długości 2.",
+    "Krawędzie wielokrotne a–b w grafie nieskierowanym tworzą cykl; sprawdzanie `u != parent` je przegapi — porównuj id krawędzi.",
+    "Pętla `a → a` to cykl długości 1 — kod z kolorami wykrywa ją poprawnie (sam do siebie, szary).",
+    "Rekurencja na grafie z 10^6 wierzchołków — rozważ Kahna (toposort) do wykrywania cyklu w skierowanym.",
+    "Nie zapomnij uruchomić DFS z każdego białego wierzchołka — graf może być niespójny."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wykryć cykl w grafie skierowanym",
+      "cykl graf skierowany dfs",
+      "detect cycle directed graph",
+      "kolory dfs biały szary czarny",
+      "czy graf skierowany ma cykl"
+     ],
+     "a": "DFS z trzema stanami: 0 = nieodwiedzony, 1 = w trakcie (na stosie), 2 = zakończony. Gdy z `v`\nwidzisz krawędź do wierzchołka w stanie 1, to on jest przodkiem `v` na bieżącej ścieżce — cykl.\nKrawędź do stanu 2 jest nieszkodliwa. Każdy wierzchołek i krawędź raz → **O(n + m)**. Alternatywa\nbez rekurencji: algorytm Kahna — jeśli toposort nie obejmie wszystkich wierzchołków, jest cykl.",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint color[MAXN];\nbool dfs(int v) {\n    color[v] = 1;\n    for (int u : g[v]) {\n        if (color[u] == 1) return true;\n        if (color[u] == 0 && dfs(u)) return true;\n    }\n    color[v] = 2;\n    return false;\n}\nbool maCykl(int n) {\n    for (int v = 1; v <= n; v++) if (color[v] == 0 && dfs(v)) return true;\n    return false;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "cykl w grafie nieskierowanym",
+      "wykrywanie cyklu nieskierowany",
+      "detect cycle undirected",
+      "dfs parent cykl"
+     ],
+     "a": "DFS, w którym pamiętasz rodzica: krawędź `v – u` do odwiedzonego `u ≠ parent` oznacza cykl.\nJeszcze prościej DSU: dla każdej krawędzi `(a, b)` — jeśli `find(a) == find(b)`, to a i b są już\npołączone, więc ta krawędź zamyka cykl; w przeciwnym razie `unite(a, b)`. Oba sposoby O(n + m)\n(DSU z `α(n)`).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> p;\nint find(int x) { return p[x] == x ? x : p[x] = find(p[x]); }\nint main() {\n    int n, m;\n    cin >> n >> m;\n    p.resize(n + 1);\n    iota(p.begin(), p.end(), 0);\n    for (int i = 1; i <= m; i++) {\n        int a, b;\n        cin >> a >> b;\n        int ra = find(a), rb = find(b);\n        if (ra == rb) { cout << \"cykl przy krawedzi \" << i << '\\n'; return 0; }\n        p[ra] = rb;\n    }\n    cout << \"brak cyklu\\n\";\n}"
+    },
+    {
+     "q": [
+      "wypisać cykl",
+      "odtworzenie cyklu",
+      "jak znaleźć wierzchołki cyklu",
+      "print cycle graph"
+     ],
+     "a": "W DFS-ie zapisuj `par[u] = v`. W chwili znalezienia krawędzi `v → u` do szarego `u` cykl to:\n`u → … → v → u`. Idź od `v` po `par` aż do `u`, zbierając wierzchołki, i odwróć listę. W grafie\nnieskierowanym analogicznie, z warunkiem „odwiedzony i nie rodzic”.",
+     "code": "vector<int> zbierzCykl(const vector<int>& par, int u, int v) {   // krawędź v -> u zamyka cykl\n    vector<int> c;\n    for (int x = v; x != u; x = par[x]) c.push_back(x);\n    c.push_back(u);\n    reverse(c.begin(), c.end());\n    return c;                                                // u, ..., v\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "cykl przez toposort",
+      "kahn wykrywanie cyklu",
+      "czy da się wykonać zadania zależności",
+      "zależności cykliczne"
+     ],
+     "a": "Algorytm Kahna: licz stopnie wejściowe, wrzucaj do kolejki wierzchołki o stopniu 0 i „usuwaj” je.\nJeśli na końcu przetworzono mniej niż `n` wierzchołków, pozostałe leżą na cyklu (albo za nim) —\nkolejności wykonania nie ma. Iteracyjnie, O(n + m), bez problemu ze stosem.",
+     "code": "bool jestDAG(const vector<vector<int>>& g, int n) {\n    vector<int> indeg(n + 1, 0);\n    for (int v = 1; v <= n; v++) for (int u : g[v]) indeg[u]++;\n    queue<int> q;\n    for (int v = 1; v <= n; v++) if (indeg[v] == 0) q.push(v);\n    int ile = 0;\n    while (!q.empty()) {\n        int v = q.front(); q.pop(); ile++;\n        for (int u : g[v]) if (--indeg[u] == 0) q.push(u);\n    }\n    return ile == n;     // false -> jest cykl\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy graf jest drzewem",
+      "sprawdzić czy graf to drzewo",
+      "is graph a tree",
+      "graf drzewo warunek"
+     ],
+     "a": "Graf nieskierowany o `n` wierzchołkach jest drzewem ⇔ ma dokładnie `n − 1` krawędzi **i** jest\nspójny (równoważnie: `n − 1` krawędzi i brak cyklu). Sprawdź `m == n - 1` i jednym BFS-em, czy\nodwiedzono wszystkie wierzchołki — O(n + m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<bool> vis(n + 1, false);\n    queue<int> q; q.push(1); vis[1] = true;\n    int ile = 0;\n    while (!q.empty()) {\n        int v = q.front(); q.pop(); ile++;\n        for (int u : g[v]) if (!vis[u]) { vis[u] = true; q.push(u); }\n    }\n    cout << (m == n - 1 && ile == n ? \"TAK\" : \"NIE\") << '\\n';\n}"
+    },
+    {
+     "q": [
+      "krawędzie wielokrotne cykl",
+      "multigraf cykl długości 2",
+      "dwie krawędzie między a i b cykl"
+     ],
+     "a": "W nieskierowanym multigrafie dwie krawędzie `a–b` tworzą cykl długości 2. Warunek `u != parent`\ngo nie wykryje (oba końce to rodzic). Rozwiązanie: trzymaj w liście sąsiedztwa pary\n`(sąsiad, id_krawędzi)` i pomijaj tylko **tę samą krawędź** (`id == parentEdge`), a nie wszystkie\nkrawędzie do rodzica. To samo dotyczy mostów.",
+     "code": "int n = 2;\nvector<vector<pair<int,int>>> adj(n + 1);\nvector<pair<int,int>> e = {{1, 2}, {1, 2}};\nfor (int i = 0; i < (int)e.size(); i++) {\n    adj[e[i].first].push_back({e[i].second, i});\n    adj[e[i].second].push_back({e[i].first, i});\n}\n// z wierzchołka 2 wchodzimy krawędzią 0; krawędź 1 prowadzi do odwiedzonego 1 -> cykl\nbool cykl = false;\nfor (auto [u, id] : adj[2]) if (id != 0 && u == 1) cykl = true;\ncout << cykl << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "dlaczego krawędź do odwiedzonego nie oznacza cyklu w skierowanym",
+      "romb dag fałszywy cykl",
+      "visited a cykl skierowany błąd"
+     ],
+     "a": "W grafie skierowanym 1→2, 1→3, 2→4, 3→4 DFS dochodzi do 4 przez 2, a potem z 3 widzi krawędź do\nodwiedzonego 4 — ale cyklu nie ma. Wierzchołek 4 jest wtedy **czarny** (zakończony), a nie na\nbieżącej ścieżce. Cykl jest tylko przy krawędzi do **szarego** wierzchołka. Dlatego potrzebne są\ntrzy kolory, a nie `bool vis`.",
+     "code": "vector<vector<int>> g = {{}, {2, 3}, {4}, {4}, {}};   // romb 1->2->4, 1->3->4: to jest DAG\nvector<int> color(5, 0);\nbool zlyAlarm = false, cykl = false;\nauto dfs = [&](auto&& self, int v) -> void {\n    color[v] = 1;\n    for (int u : g[v]) {\n        if (color[u] != 0) zlyAlarm = true;   // „już odwiedzony” — fałszywy alarm\n        if (color[u] == 1) cykl = true;       // „na stosie” — prawdziwy cykl\n        if (color[u] == 0) self(self, u);\n    }\n    color[v] = 2;\n};\ndfs(dfs, 1);\ncout << zlyAlarm << ' ' << cykl << '\\n';   // 1 0"
+    }
+   ],
+   "related": [
+    "graph-dfs",
+    "graph-toposort",
+    "graph-dsu",
+    "graph-shortest-cycle",
+    "graph-functional",
+    "graph-scc"
+   ]
+  },
+  {
+   "id": "graph-bipartite",
+   "title": "Graf dwudzielny — sprawdzanie i kolorowanie na dwa kolory",
+   "category": "Grafy",
+   "tags": [
+    "graf dwudzielny",
+    "bipartite",
+    "kolorowanie",
+    "dwa kolory",
+    "cykl nieparzysty",
+    "bfs",
+    "dsu z parzystością"
+   ],
+   "aliases": [
+    "graf dwudzielny",
+    "dwudzielność",
+    "sprawdź czy graf dwudzielny",
+    "bipartite graph",
+    "bipartite check",
+    "kolorowanie grafu dwoma kolorami",
+    "podział na dwie grupy graf",
+    "cykl nieparzysty"
+   ],
+   "summary": "Graf jest dwudzielny, gdy wierzchołki da się pokolorować na dwa kolory tak, by każda krawędź łączyła różne kolory — równoważnie: nie ma cyklu nieparzystego. Sprawdza się BFS-em w O(n + m).",
+   "complexity": "O(n + m)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Kolorujemy BFS-em: źródło dostaje kolor 0, jego sąsiedzi kolor 1, ich sąsiedzi 0 itd. (kolor =\nparzystość odległości). Jeśli kiedyś krawędź łączy dwa wierzchołki **tego samego** koloru — graf nie\njest dwudzielny (jest cykl nieparzystej długości). Trzeba to zrobić w **każdej** składowej osobno."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „podziel na dwie drużyny tak, żeby wrogowie byli w różnych”, „dwa dni/dwie sale”,\n„czy da się pokolorować szachownicowo”, „pary skłóconych osób”, „skojarzenie / przydział” (skojarzenia\ndziałają w grafach dwudzielnych), „cykl nieparzysty”, drzewa (zawsze dwudzielne)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Sprawdzenie dwudzielności i kolorowanie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> color(n + 1, -1);\n    bool ok = true;\n    for (int s = 1; s <= n && ok; s++) {\n        if (color[s] != -1) continue;    // każda składowa osobno\n        color[s] = 0;\n        queue<int> q;\n        q.push(s);\n        while (!q.empty() && ok) {\n            int v = q.front(); q.pop();\n            for (int u : g[v]) {\n                if (color[u] == -1) {\n                    color[u] = color[v] ^ 1;      // przeciwny kolor\n                    q.push(u);\n                } else if (color[u] == color[v]) {\n                    ok = false;                    // cykl nieparzysty\n                    break;\n                }\n            }\n        }\n    }\n    if (!ok) { cout << \"NIE\\n\"; return 0; }\n    cout << \"TAK\\n\";\n    for (int v = 1; v <= n; v++) cout << color[v] << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Każde drzewo i każdy las jest dwudzielny (nie ma cykli w ogóle). Kolor wierzchołka w drzewie to\nparzystość głębokości."
+    }
+   ],
+   "pitfalls": [
+    "Kolorowanie tylko składowej wierzchołka 1 — pozostałe składowe też trzeba sprawdzić.",
+    "Pętla `a – a` (krawędź do samego siebie) od razu psuje dwudzielność — kod z porównaniem kolorów to wykrywa.",
+    "Kolor `0` jako „nieodwiedzony” myli się z kolorem 0 — używaj `-1` jako „brak koloru”.",
+    "W każdej składowej kolory można zamienić miejscami — jeśli zadanie pyta o min/max liczność jednej strony, wybieraj w każdej składowej osobno.",
+    "Rekurencyjne kolorowanie DFS-em na dużych grafach — uważaj na głębokość stosu."
+   ],
+   "qa": [
+    {
+     "q": [
+      "graf dwudzielny",
+      "sprawdz czy graf jest dwudzielny",
+      "bipartite check c++",
+      "czy graf dwudzielny",
+      "dwudzielnosc grafu kod"
+     ],
+     "a": "BFS z kolorowaniem: `color[s] = 0`, każdy nowo odwiedzony sąsiad dostaje `color[v] ^ 1`. Jeśli\nznajdziesz krawędź między wierzchołkami tego samego koloru — graf nie jest dwudzielny. Powtórz dla\nkażdej składowej. **O(n + m)**. Poprawność: kolor = parzystość odległości od źródła, a konflikt\noznacza cykl nieparzysty.",
+     "code": "bool dwudzielny(const vector<vector<int>>& g, int n, vector<int>& color) {\n    color.assign(n + 1, -1);\n    for (int s = 1; s <= n; s++) {\n        if (color[s] != -1) continue;\n        color[s] = 0;\n        queue<int> q; q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int u : g[v]) {\n                if (color[u] == -1) { color[u] = color[v] ^ 1; q.push(u); }\n                else if (color[u] == color[v]) return false;\n            }\n        }\n    }\n    return true;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kolorowanie dwoma kolorami",
+      "podział na dwie drużyny",
+      "dwie grupy wrogowie osobno",
+      "2-coloring graph"
+     ],
+     "a": "„Wrogowie muszą być w różnych drużynach” = krawędź między wrogami, a podział na 2 drużyny =\n2-kolorowanie. Da się ⇔ graf jest dwudzielny. Kolor z BFS-a od razu mówi, kto do której drużyny.\nJeśli dodatkowo trzeba zrównoważyć drużyny — w każdej składowej masz dwie strony `(a_i, b_i)`\ni wybierasz orientację (to już plecak/DP po składowych).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;                     // n osób, m par wrogów\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> c(n + 1, -1);\n    for (int s = 1; s <= n; s++) {\n        if (c[s] != -1) continue;\n        c[s] = 0;\n        queue<int> q;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front(); q.pop();\n            for (int u : g[v]) {\n                if (c[u] == -1) { c[u] = c[v] ^ 1; q.push(u); }\n                else if (c[u] == c[v]) { cout << \"NIE\\n\"; return 0; }\n            }\n        }\n    }\n    for (int v = 1; v <= n; v++) if (c[v] == 0) cout << v << ' ';   // skład drużyny A\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dwudzielny a cykl nieparzysty",
+      "dlaczego cykl nieparzysty",
+      "twierdzenie konig dwudzielny cykl"
+     ],
+     "a": "Graf jest dwudzielny **wtedy i tylko wtedy**, gdy nie ma cyklu o nieparzystej długości. Na cyklu\nkolory muszą się zmieniać przy każdej krawędzi, więc po nieparzystej liczbie krawędzi wrócisz do\nstartu z innym kolorem — sprzeczność. Dlatego trójkąt (cykl 3) nie jest dwudzielny, a kwadrat (cykl 4)\njest.",
+     "code": "for (int k = 3; k <= 6; k++) {               // cykl 0-1-...-(k-1)-0\n    vector<int> c(k);\n    c[0] = 0;\n    for (int i = 1; i < k; i++) c[i] = c[i - 1] ^ 1;   // kolory są wymuszone wzdłuż cyklu\n    bool ok = c[k - 1] != c[0];              // krawędź zamykająca (k-1, 0)\n    cout << \"C\" << k << \": \" << (ok ? \"dwudzielny\" : \"nie\") << '\\n';\n}\n// C3: nie, C4: dwudzielny, C5: nie, C6: dwudzielny"
+    },
+    {
+     "q": [
+      "dwudzielny dsu",
+      "dsu z parzystością",
+      "union find parity",
+      "dwudzielność online"
+     ],
+     "a": "Gdy krawędzie przychodzą online i po każdej trzeba wiedzieć, czy graf jest nadal dwudzielny, użyj DSU\nz parzystością: `par[x]` = parzystość ścieżki od `x` do rodzica. `find` zwraca korzeń i parzystość\ndo korzenia. Krawędź `(a, b)`: jeśli ten sam korzeń i parzystości równe → konflikt; inaczej łączysz\nz odpowiednią parzystością. Prawie O(1) na operację.",
+     "code": "const int MAXN = 100005;\nint p[MAXN], parity[MAXN], sz[MAXN];\nvoid init(int n) { for (int i = 1; i <= n; i++) { p[i] = i; parity[i] = 0; sz[i] = 1; } }\npair<int, int> find(int x) {          // (korzeń, parzystość x względem korzenia)\n    if (p[x] == x) return {x, 0};\n    auto [r, q] = find(p[x]);\n    parity[x] ^= q;\n    p[x] = r;\n    return {r, parity[x]};\n}\nbool addEdge(int a, int b) {          // false = graf przestaje być dwudzielny\n    auto [ra, pa] = find(a);\n    auto [rb, pb] = find(b);\n    if (ra == rb) return pa != pb;\n    if (sz[ra] < sz[rb]) { swap(ra, rb); swap(pa, pb); }\n    p[rb] = ra;\n    parity[rb] = pa ^ pb ^ 1;         // a i b mają mieć różne kolory\n    sz[ra] += sz[rb];\n    return true;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy drzewo jest dwudzielne",
+      "drzewo dwudzielne",
+      "las dwudzielny"
+     ],
+     "a": "Tak — każde drzewo (i las) jest dwudzielne, bo nie ma żadnego cyklu, więc tym bardziej nieparzystego.\nKolorowanie: kolor = głębokość mod 2. Często wykorzystywane: w drzewie wierzchołki parzystej\ni nieparzystej głębokości tworzą dwie strony.",
+     "code": "int n = 6;\nvector<pair<int,int>> e = {{1, 2}, {1, 3}, {2, 4}, {2, 5}, {3, 6}};   // drzewo\nvector<vector<int>> g(n + 1);\nfor (auto [a, b] : e) { g[a].push_back(b); g[b].push_back(a); }\nvector<int> depth(n + 1, -1);\nqueue<int> q;\ndepth[1] = 0; q.push(1);\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    for (int u : g[v]) if (depth[u] == -1) { depth[u] = depth[v] + 1; q.push(u); }\n}\nbool ok = true;\nfor (auto [a, b] : e) if (depth[a] % 2 == depth[b] % 2) ok = false;   // kolor = głębokość mod 2\ncout << (ok ? \"dwudzielne\" : \"nie\") << '\\n';   // dwudzielne"
+    },
+    {
+     "q": [
+      "znajdź cykl nieparzysty",
+      "wypisz cykl nieparzysty",
+      "odd cycle find"
+     ],
+     "a": "Przy BFS-ie zapamiętuj `par` i `dist`. Gdy krawędź `(v, u)` łączy ten sam kolor, cofaj się od `v`\ni `u` po rodzicach, aż się spotkacie (najniższy wspólny przodek w drzewie BFS). Ścieżka `u → … → LCA`\n+ `LCA → … → v` + krawędź `v–u` to cykl nieparzysty (bo `dist[u] == dist[v]` mod 2).",
+     "code": "vector<int> cyklNieparzysty(const vector<int>& par, const vector<int>& dist, int u, int v) {\n    vector<int> a, b;\n    while (dist[u] > dist[v]) { a.push_back(u); u = par[u]; }\n    while (dist[v] > dist[u]) { b.push_back(v); v = par[v]; }\n    while (u != v) { a.push_back(u); b.push_back(v); u = par[u]; v = par[v]; }\n    a.push_back(u);                      // LCA\n    reverse(b.begin(), b.end());\n    a.insert(a.end(), b.begin(), b.end());\n    return a;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "szachownica kolorowanie siatka dwudzielna",
+      "siatka jest dwudzielna",
+      "(x+y)%2 kolor"
+     ],
+     "a": "Plansza z ruchami w 4 kierunkach jest grafem dwudzielnym: kolor pola to `(x + y) % 2` (jak\nszachownica), bo każdy ruch zmienia sumę współrzędnych o 1. To częsty trik: np. „domino zawsze\npokrywa jedno białe i jedno czarne pole” albo dwudzielne skojarzenie na planszy.",
+     "code": "int n = 3, m = 3, biale = 0;\nfor (int x = 0; x < n; x++)\n    for (int y = 0; y < m; y++)\n        if ((x + y) % 2 == 0) biale++;\ncout << biale << '\\n';   // 5"
+    }
+   ],
+   "related": [
+    "graph-bfs",
+    "graph-bipartite-matching",
+    "graph-dsu",
+    "graph-2sat",
+    "graph-cycle-detection",
+    "graph-weighted-dsu"
+   ]
+  },
+  {
+   "id": "graph-state-bfs",
+   "title": "Graf stanów — BFS po stanach (dzbanki, klucze, bitmaski)",
+   "category": "Grafy",
+   "tags": [
+    "graf stanów",
+    "bfs po stanach",
+    "stan",
+    "dzbanki",
+    "bitmaska",
+    "przestrzeń stanów",
+    "kodowanie stanu",
+    "bfs dwukierunkowy"
+   ],
+   "aliases": [
+    "graf stanów",
+    "bfs po stanach",
+    "bfs stany",
+    "problem dzbanków",
+    "przelewanie wody bfs",
+    "state space search",
+    "bfs z kluczami",
+    "bfs bitmaska",
+    "minimalna liczba operacji bfs",
+    "kodowanie stanu"
+   ],
+   "summary": "Gdy pytanie brzmi „minimalna liczba operacji, żeby przejść z sytuacji A do B”, wierzchołkami grafu są całe stany (np. ilości wody, pozycja + zebrane klucze), a krawędziami — dozwolone ruchy. BFS po takim grafie daje minimum ruchów.",
+   "complexity": "O(S · R), gdzie S = liczba stanów, R = liczba ruchów z jednego stanu",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Nie każdy graf jest podany w wejściu. Często trzeba go **wymyślić**: stan = wszystko, co trzeba\nwiedzieć, żeby kontynuować (pozycja, kierunek, zebrane przedmioty, liczba użytych bonusów, ilości\npłynów…). Krawędź = jedna operacja. Jeśli każda operacja kosztuje tyle samo, BFS od stanu startowego\nda najmniejszą liczbę operacji do każdego stanu.\n\nKluczowe pytanie: **ile jest stanów?** Iloczyn zakresów składowych musi być rzędu ≤ 10^7, żeby BFS\nzmieścił się w czasie i pamięci."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „minimalna liczba ruchów/operacji/przelań”, „klucze i drzwi”, „może użyć co najwyżej k razy\nspecjalnego ruchu”, „robot z kierunkiem”, „układanka/przesuwanka”, małe parametry (np. `k ≤ 10`\nprzedmiotów → bitmaska `2^k`)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Problem dzbanków — BFS po stanach (a, b)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Dzbanki o pojemnościach A i B. Operacje: napełnij, wylej, przelej jeden do drugiego.\n// Minimalna liczba operacji, by w którymś dzbanku było dokładnie C litrów.\nint main() {\n    int A, B, C;\n    cin >> A >> B >> C;\n    auto id = [&](int a, int b) { return a * (B + 1) + b; };   // stan (a, b) -> liczba\n    vector<int> dist((A + 1) * (B + 1), -1);\n    queue<pair<int, int>> q;\n    dist[id(0, 0)] = 0;\n    q.push({0, 0});\n    while (!q.empty()) {\n        auto [a, b] = q.front(); q.pop();\n        int d = dist[id(a, b)];\n        if (a == C || b == C) { cout << d << '\\n'; return 0; }\n        int p1 = min(a, B - b), p2 = min(b, A - a);            // ile da się przelać\n        pair<int, int> nast[6] = {{A, b}, {a, B}, {0, b}, {a, 0},\n                                  {a - p1, b + p1}, {a + p2, b - p2}};\n        for (auto [na, nb] : nast) {\n            if (dist[id(na, nb)] == -1) {\n                dist[id(na, nb)] = d + 1;\n                q.push({na, nb});\n            }\n        }\n    }\n    cout << -1 << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Stan z bitmaską: pozycja + zebrane klucze",
+     "code": "// Labirynt z kluczami a..d i drzwiami A..D: stan = (x, y, maska zebranych kluczy).\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nint najkrotszaZKluczami(const vector<string>& s, int sx, int sy, int ex, int ey) {\n    int n = s.size(), m = s[0].size(), K = 4;\n    vector<int> dist(n * m << K, -1);\n    auto id = [&](int x, int y, int mask) { return ((x * m + y) << K) | mask; };\n    queue<array<int, 3>> q;\n    dist[id(sx, sy, 0)] = 0;\n    q.push({sx, sy, 0});\n    while (!q.empty()) {\n        auto [x, y, mask] = q.front(); q.pop();\n        int d = dist[id(x, y, mask)];\n        if (x == ex && y == ey) return d;\n        for (int k = 0; k < 4; k++) {\n            int nx = x + dx[k], ny = y + dy[k];\n            if (nx < 0 || ny < 0 || nx >= n || ny >= m) continue;\n            char c = s[nx][ny];\n            if (c == '#') continue;\n            if (c >= 'A' && c <= 'D' && !(mask >> (c - 'A') & 1)) continue;  // brak klucza\n            int nm = mask;\n            if (c >= 'a' && c <= 'd') nm |= 1 << (c - 'a');                 // podnosimy klucz\n            if (dist[id(nx, ny, nm)] != -1) continue;\n            dist[id(nx, ny, nm)] = d + 1;\n            q.push({nx, ny, nm});\n        }\n    }\n    return -1;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Najpierw policz liczbę stanów! Plansza 100×100 × 2^4 klucze = 160 000 stanów — świetnie.\nPlansza 1000×1000 × 2^10 = 10^9 — za dużo; trzeba szukać innej obserwacji."
+    },
+    {
+     "type": "warn",
+     "md": "Jeśli operacje mają **różne koszty** (np. przelanie kosztuje tyle, ile litrów), BFS nie wystarczy —\nużyj Dijkstry po stanach."
+    }
+   ],
+   "pitfalls": [
+    "Zbyt mały stan: zapomnienie o składowej, która wpływa na przyszłe ruchy (np. kierunek robota, czy bonus już użyty) → BFS „skleja” różne sytuacje i daje złe odpowiedzi.",
+    "Za duży stan: dodanie zbędnych składowych mnoży liczbę stanów i daje TLE/MLE.",
+    "`map<vector<int>, int>` jako `dist` jest bardzo wolne — koduj stan w jedną liczbę i używaj tablicy; `unordered_map` tylko, gdy stany są rzadkie.",
+    "Przy kodowaniu `a * (B + 1) + b` mnożnik to liczba możliwych wartości `b` (B + 1, nie B).",
+    "Różne koszty operacji → Dijkstra, nie BFS."
+   ],
+   "qa": [
+    {
+     "q": [
+      "graf stanów",
+      "bfs po stanach",
+      "bfs stany",
+      "state space bfs",
+      "co to graf stanow"
+     ],
+     "a": "Wierzchołek = stan całej sytuacji (np. ilości wody w dzbankach, pozycja + zebrane klucze), krawędź =\njedna dozwolona operacja. BFS od stanu początkowego daje minimalną liczbę operacji do każdego stanu\nw O(S·R) (S stanów, R ruchów z każdego). Graf zwykle generujesz w locie — nie budujesz list sąsiedztwa.",
+     "code": "// Szablon BFS po stanach: stan zakodowany jako int 0..S-1, ruchy generuje funkcja.\nvector<int> ruchy(int s, int S) {             // przykład: z s można przejść do s+1 albo 2s (mod S)\n    return {(s + 1) % S, (s * 2) % S};\n}\nint bfsStany(int start, int cel, int S) {\n    vector<int> dist(S, -1);\n    queue<int> q;\n    dist[start] = 0;\n    q.push(start);\n    while (!q.empty()) {\n        int s = q.front(); q.pop();\n        if (s == cel) return dist[s];\n        for (int t : ruchy(s, S))\n            if (dist[t] == -1) { dist[t] = dist[s] + 1; q.push(t); }\n    }\n    return -1;                                 // stan celu nieosiągalny\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "problem dzbanków",
+      "dzbanki z wodą bfs",
+      "przelewanie wody minimalna liczba ruchów",
+      "water jug bfs"
+     ],
+     "a": "Stan to `(a, b)` — ile litrów jest w każdym dzbanku: `(A+1)(B+1)` stanów. Z każdego 6 ruchów:\nnapełnij A, napełnij B, wylej A, wylej B, przelej A→B (`min(a, B−b)` litrów), przelej B→A. BFS\nod `(0, 0)` do pierwszego stanu z `a == C` lub `b == C`. Odpowiedź istnieje tylko, gdy `C` jest\nwielokrotnością `gcd(A, B)` i `C ≤ max(A, B)`.",
+     "code": "int A = 3, B = 5, C = 4;\nvector<vector<int>> d(A + 1, vector<int>(B + 1, -1));\nqueue<pair<int,int>> q;\nd[0][0] = 0; q.push({0, 0});\nint wynik = -1;\nwhile (!q.empty()) {\n    auto [a, b] = q.front(); q.pop();\n    if (a == C || b == C) { wynik = d[a][b]; break; }\n    int p1 = min(a, B - b), p2 = min(b, A - a);\n    pair<int,int> nx[6] = {{A, b}, {a, B}, {0, b}, {a, 0}, {a - p1, b + p1}, {a + p2, b - p2}};\n    for (auto [x, y] : nx) if (d[x][y] == -1) { d[x][y] = d[a][b] + 1; q.push({x, y}); }\n}\ncout << wynik << '\\n';   // 6"
+    },
+    {
+     "q": [
+      "jak zakodować stan jako liczbę",
+      "stan pair do int",
+      "kodowanie stanu bfs",
+      "encode state integer"
+     ],
+     "a": "Jeśli składowe mają zakresy `0..X−1`, `0..Y−1`, `0..Z−1`, to `id = (x·Y + y)·Z + z` — bijekcja na\n`0..X·Y·Z−1`. Dzięki temu `dist` jest zwykłym `vector<int>`, co jest wielokrotnie szybsze niż\n`map`. Dla masek bitowych wygodnie: `id = (pozycja << K) | maska`.",
+     "code": "int X = 4, Y = 5, Z = 3;\nauto enc = [&](int x, int y, int z) { return (x * Y + y) * Z + z; };\nint id = enc(2, 3, 1);\nint z = id % Z, y = (id / Z) % Y, x = id / Z / Y;\ncout << id << ' ' << x << y << z << '\\n';   // 40 231"
+    },
+    {
+     "q": [
+      "bfs z kluczami i drzwiami",
+      "bfs bitmaska w stanie",
+      "labirynt klucze drzwi",
+      "keys and doors bfs"
+     ],
+     "a": "Stan = `(x, y, maska)`, gdzie bit `i` maski mówi, czy masz klucz `i`. Wejście na pole z kluczem\nustawia bit, wejście w drzwi wymaga bitu. Liczba stanów: `n·m·2^K`. BFS po stanach daje\nnajmniejszą liczbę kroków. Z `K ≤ 10` i planszą 50×50 to 2,5 mln stanów — OK.",
+     "code": "int mask = 0;\nchar c = 'c';\nif (c >= 'a' && c <= 'j') mask |= 1 << (c - 'a');        // podnosimy klucz c\nchar drzwi = 'C';\nbool moge = mask >> (drzwi - 'A') & 1;                    // czy mamy klucz do C\ncout << moge << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "map czy tablica visited dla stanów",
+      "unordered_map stany bfs",
+      "stany jako string bfs"
+     ],
+     "a": "Jeśli da się zakodować stan w liczbę z rozsądnego zakresu — **tablica** (`vector<int> dist`).\nGdy stany są rzadkie albo złożone (np. permutacja planszy w układance 3×3), użyj `unordered_map<string,int>`\nlub `unordered_map<long long,int>`. `map` działa w O(log S) na operację — zwykle za wolno przy\nmilionach stanów.",
+     "code": "// Przesuwanka 2x3: stan jako string, '0' = puste pole\nstring start = \"123405\", cel = \"123450\";\nunordered_map<string, int> dist;\nqueue<string> q;\ndist[start] = 0; q.push(start);\nint dr[] = {-1, 0, 1, 0}, dc[] = {0, 1, 0, -1};\nwhile (!q.empty()) {\n    string s = q.front(); q.pop();\n    if (s == cel) break;\n    int z = s.find('0'), r = z / 3, c = z % 3;\n    for (int k = 0; k < 4; k++) {\n        int nr = r + dr[k], nc = c + dc[k];\n        if (nr < 0 || nr >= 2 || nc < 0 || nc >= 3) continue;\n        string t = s;\n        swap(t[z], t[nr * 3 + nc]);\n        if (!dist.count(t)) { dist[t] = dist[s] + 1; q.push(t); }\n    }\n}\ncout << dist[cel] << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "ile stanów oszacowanie",
+      "czy bfs po stanach zmieści się",
+      "liczba stanów za duża"
+     ],
+     "a": "Pomnóż zakresy wszystkich składowych stanu: np. pozycja na planszy 200×200 × kierunek 4 × użyte\nbonusy 0..5 = 960 000 stanów. Czas ≈ stany × ruchy, pamięć ≈ stany × 4 B na `dist`. Do ~10^7 stanów\njest zwykle OK; powyżej trzeba zmniejszyć stan (czy naprawdę potrzebujesz każdej składowej?) albo\nzmienić podejście.",
+     "code": "long long n = 200, m = 200, kierunki = 4, bonusy = 6;      // bonusy 0..5\nlong long stany = n * m * kierunki * bonusy;\nlong long pamiecMB = stany * 4 / (1 << 20);                 // int dist na każdy stan\ncout << stany << \" stanów, ok. \" << pamiecMB << \" MB na dist\\n\";   // 960000 stanów, ok. 3 MB"
+    },
+    {
+     "q": [
+      "bfs dwukierunkowy",
+      "bidirectional bfs",
+      "bfs z obu stron",
+      "meet in the middle bfs"
+     ],
+     "a": "Gdy graf stanów jest ogromny, ale znasz stan docelowy i ruchy są odwracalne, puść BFS jednocześnie\nod startu i od celu (warstwami, zawsze rozwijając mniejszą stronę). Gdy fronty się spotkają, wynik\n= `d1 + d2 + 1`. Przy rozgałęzieniu `b` i odległości `d` zamiast `b^d` stanów przeglądasz ~`2·b^(d/2)`.",
+     "code": "// Graf jawny dla ilustracji: ścieżka 1-2-3-4-5\nvector<vector<int>> g = {{}, {2}, {1, 3}, {2, 4}, {3, 5}, {4}};\nint s = 1, t = 5, n = 5;\nvector<int> ds(n + 1, -1), dt(n + 1, -1);\nqueue<int> qs, qt;\nds[s] = 0; qs.push(s); dt[t] = 0; qt.push(t);\nint wynik = (s == t) ? 0 : -1;\nauto krok = [&](queue<int>& q, vector<int>& d, vector<int>& inne) {\n    int sz = q.size();\n    while (sz--) {\n        int v = q.front(); q.pop();\n        for (int u : g[v]) {\n            if (inne[u] != -1) return d[v] + 1 + inne[u];\n            if (d[u] == -1) { d[u] = d[v] + 1; q.push(u); }\n        }\n    }\n    return -1;\n};\nwhile (wynik == -1 && !qs.empty() && !qt.empty())\n    wynik = (qs.size() <= qt.size()) ? krok(qs, ds, dt) : krok(qt, dt, ds);\ncout << wynik << '\\n';   // 4"
+    },
+    {
+     "q": [
+      "bfs robot z kierunkiem",
+      "stan pozycja i kierunek",
+      "obrót kosztuje ruch bfs"
+     ],
+     "a": "Jeśli robot może iść do przodu albo obrócić się (każda operacja = 1 ruch), sama pozycja nie wystarcza —\nstan to `(x, y, kierunek)`, czyli `4·n·m` stanów. Z każdego stanu: obrót w lewo, obrót w prawo, krok\ndo przodu. BFS po tych stanach; odpowiedź = minimum po 4 kierunkach w polu docelowym.",
+     "code": "int n = 2, m = 2;\nvector<string> s = {\"..\", \"..\"};\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nvector<int> dist(n * m * 4, -1);\nauto id = [&](int x, int y, int k) { return (x * m + y) * 4 + k; };\nqueue<array<int,3>> q;\ndist[id(0, 0, 1)] = 0; q.push({0, 0, 1});            // start w (0,0), patrzy w prawo\nwhile (!q.empty()) {\n    auto [x, y, k] = q.front(); q.pop();\n    int d = dist[id(x, y, k)];\n    array<array<int,3>,3> nxt = {{{x, y, (k + 1) % 4}, {x, y, (k + 3) % 4},\n                                  {x + dx[k], y + dy[k], k}}};\n    for (auto [nx, ny, nk] : nxt) {\n        if (nx < 0 || ny < 0 || nx >= n || ny >= m || s[nx][ny] == '#') continue;\n        if (dist[id(nx, ny, nk)] == -1) { dist[id(nx, ny, nk)] = d + 1; q.push({nx, ny, nk}); }\n    }\n}\nint best = INT_MAX;\nfor (int k = 0; k < 4; k++) if (dist[id(1, 1, k)] != -1) best = min(best, dist[id(1, 1, k)]);\ncout << best << '\\n';   // 3: krok, obrót, krok"
+    }
+   ],
+   "related": [
+    "graph-bfs",
+    "graph-bfs-grid",
+    "graph-dijkstra-states",
+    "graph-01-bfs",
+    "graph-hamiltonian"
+   ]
+  }
+ ]
+}

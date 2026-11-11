@@ -1,0 +1,1029 @@
+{
+  "snippets": [
+    {
+      "trigger": "main",
+      "name": "Szablon programu z szybkim IO",
+      "tags": [
+        "szablon",
+        "template",
+        "main",
+        "fast io"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Pusty program z `#include <bits/stdc++.h>`, aliasem `ll` i szybkim wejściem/wyjściem — punkt startowy każdego rozwiązania.",
+      "complexity": "—",
+      "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Szablon rozwiązania: szybkie wejście/wyjście, alias ll. Wypisuj '\\n' zamiast endl.\nusing ll = long long;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n\n    return 0;\n}",
+      "usage": "Wklej na początek pustego pliku i pisz rozwiązanie w main.",
+      "kb": "io-fast-io"
+    },
+    {
+      "trigger": "multi",
+      "name": "Szablon z wieloma testami (multitest)",
+      "tags": [
+        "szablon",
+        "multitest",
+        "wiele testów",
+        "solve"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Program, w którym pierwsza liczba wejścia to liczba testów, a każdy test obsługuje funkcja `solve()`. Pamiętaj o czyszczeniu struktur globalnych między testami.",
+      "complexity": "—",
+      "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Szablon z wieloma testami: pierwsza liczba wejścia to t, potem t niezależnych testów.\n// Uwaga: struktury globalne czyść na początku solve() (inaczej dane „przeciekają” między testami).\nusing ll = long long;\n\nvoid solve() {\n\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int t;\n    cin >> t;\n    while (t--) solve();\n    return 0;\n}",
+      "usage": "Wklej jako cały plik; logikę jednego testu pisz w solve().",
+      "kb": "pit-multitest-reset"
+    },
+    {
+      "trigger": "fastio",
+      "name": "Szybkie wejście/wyjście (cin/cout)",
+      "tags": [
+        "fast io",
+        "szybkie wczytywanie",
+        "sync_with_stdio",
+        "cin.tie"
+      ],
+      "lang": "cpp",
+      "scope": "local",
+      "description": "Dwie linijki na początek `main`: wyłączają synchronizację strumieni C++ z C i wiązanie `cin` z `cout`. Wczytywanie 10^6 liczb przyspiesza kilkukrotnie.",
+      "complexity": "O(1); przyspiesza każde wczytanie/wypisanie",
+      "code": "// Szybkie IO: po tych liniach nie mieszaj cin/cout z scanf/printf; wypisuj '\\n' zamiast endl.\nios::sync_with_stdio(false);\ncin.tie(nullptr);",
+      "usage": "Pierwsze linie w main().",
+      "kb": "io-fast-io"
+    },
+    {
+      "trigger": "seg",
+      "name": "Drzewo przedziałowe (suma, punkt-przedział)",
+      "tags": [
+        "segment tree",
+        "drzewo przedziałowe",
+        "suma na przedziale",
+        "punkt-przedział"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Rekurencyjne drzewo przedziałowe: przypisanie wartości w punkcie i suma na przedziale [l, r] (indeksy 0..n-1). Dla innej operacji zmień `+` i element neutralny `0`.",
+      "complexity": "budowa O(n), update i query O(log n), pamięć O(4n)",
+      "code": "// Drzewo przedziałowe (suma): przypisanie w punkcie, suma na przedziale [l, r], indeksy 0..n-1.\n// Użycie: SegTree st(n);  albo  SegTree st(a);   st.update(i, v);   st.query(l, r);\n// Złożoność: budowa O(n), update i query O(log n), pamięć O(4n).\nstruct SegTree {\n    int n;\n    vector<long long> t;\n\n    SegTree(int n) : n(n), t(4 * max(n, 1), 0) {}\n    SegTree(const vector<long long>& a) : SegTree((int)a.size()) {\n        if (n > 0) build(1, 0, n - 1, a);\n    }\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { t[v] = a[tl]; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        t[v] = t[2 * v] + t[2 * v + 1];\n    }\n    void update(int v, int tl, int tr, int pos, long long val) {\n        if (tl == tr) { t[v] = val; return; }\n        int tm = (tl + tr) / 2;\n        if (pos <= tm) update(2 * v, tl, tm, pos, val);\n        else update(2 * v + 1, tm + 1, tr, pos, val);\n        t[v] = t[2 * v] + t[2 * v + 1];\n    }\n    long long query(int v, int tl, int tr, int l, int r) const {\n        if (r < tl || tr < l) return 0;                  // rozłączne: element neutralny\n        if (l <= tl && tr <= r) return t[v];\n        int tm = (tl + tr) / 2;\n        return query(2 * v, tl, tm, l, r) + query(2 * v + 1, tm + 1, tr, l, r);\n    }\n    void update(int pos, long long val) { update(1, 0, n - 1, pos, val); }      // a[pos] = val\n    long long query(int l, int r) const { return query(1, 0, n - 1, l, r); }   // suma a[l..r]\n};",
+      "usage": "SegTree st(a); st.update(i, v); long long s = st.query(l, r);",
+      "kb": "ds-segment-tree"
+    },
+    {
+      "trigger": "segmin",
+      "name": "Drzewo przedziałowe minimum (iteracyjne)",
+      "tags": [
+        "segment tree",
+        "minimum",
+        "rmq",
+        "bottom-up",
+        "iteracyjne"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Iteracyjne drzewo przedziałowe (bottom-up, 2n pamięci): przypisanie w punkcie i minimum na domkniętym przedziale [l, r]. Dla maksimum zamień `min` na `max` i `INF` na `LLONG_MIN`.",
+      "complexity": "budowa O(n), update i query O(log n), pamięć 2n",
+      "code": "// Drzewo przedziałowe (minimum), iteracyjne: przypisanie w punkcie, minimum na [l, r] (domknięty), indeksy 0..n-1.\n// Użycie: SegTreeMin st(a);  st.update(i, v);  st.query(l, r);   (maksimum: min -> max, INF -> LLONG_MIN)\n// Złożoność: budowa O(n), update i query O(log n), pamięć 2n.\nstruct SegTreeMin {\n    static constexpr long long INF = LLONG_MAX;\n    int n;\n    vector<long long> t;\n\n    SegTreeMin(int n) : n(n), t(2 * n, INF) {}\n    SegTreeMin(const vector<long long>& a) : SegTreeMin((int)a.size()) {\n        for (int i = 0; i < n; i++) t[n + i] = a[i];\n        for (int i = n - 1; i > 0; i--) t[i] = min(t[2 * i], t[2 * i + 1]);\n    }\n    void update(int pos, long long val) {          // a[pos] = val\n        pos += n;\n        t[pos] = val;\n        for (pos /= 2; pos >= 1; pos /= 2) t[pos] = min(t[2 * pos], t[2 * pos + 1]);\n    }\n    long long query(int l, int r) const {          // min a[l..r]\n        long long res = INF;\n        for (l += n, r += n + 1; l < r; l /= 2, r /= 2) {\n            if (l & 1) res = min(res, t[l++]);\n            if (r & 1) res = min(res, t[--r]);\n        }\n        return res;\n    }\n};",
+      "usage": "SegTreeMin st(a); st.update(i, v); long long m = st.query(l, r);",
+      "kb": "ds-segment-tree-iterative"
+    },
+    {
+      "trigger": "lazy",
+      "name": "Drzewo przedziałowe z lazy (dodawanie + suma)",
+      "tags": [
+        "lazy propagation",
+        "segment tree",
+        "range add",
+        "range sum",
+        "przedział-przedział"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Leniwa propagacja: dodanie wartości na przedziale i suma na przedziale, obie w O(log n). Indeksy 0..n-1, przedziały domknięte.",
+      "complexity": "O(log n) na operację, pamięć O(4n)",
+      "code": "// Drzewo przedziałowe z leniwą propagacją: dodawanie na [l, r] i suma na [l, r], indeksy 0..n-1.\n// Użycie: LazySegTree st(n);  albo  LazySegTree st(a);   st.add(l, r, v);   st.query(l, r);\n// Złożoność: O(log n) na operację, pamięć O(4n).\nstruct LazySegTree {\n    int n;\n    vector<long long> sum, lazy;   // lazy[v] = dodatek czekający na zepchnięcie do dzieci v\n\n    LazySegTree(int n) : n(n), sum(4 * max(n, 1), 0), lazy(4 * max(n, 1), 0) {}\n    LazySegTree(const vector<long long>& a) : LazySegTree((int)a.size()) {\n        if (n > 0) build(1, 0, n - 1, a);\n    }\n    void build(int v, int tl, int tr, const vector<long long>& a) {\n        if (tl == tr) { sum[v] = a[tl]; return; }\n        int tm = (tl + tr) / 2;\n        build(2 * v, tl, tm, a);\n        build(2 * v + 1, tm + 1, tr, a);\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n    }\n    void apply(int v, int tl, int tr, long long val) {\n        sum[v] += val * (tr - tl + 1);\n        lazy[v] += val;\n    }\n    void push(int v, int tl, int tr) {\n        if (lazy[v] != 0) {\n            int tm = (tl + tr) / 2;\n            apply(2 * v, tl, tm, lazy[v]);\n            apply(2 * v + 1, tm + 1, tr, lazy[v]);\n            lazy[v] = 0;\n        }\n    }\n    void add(int v, int tl, int tr, int l, int r, long long val) {\n        if (r < tl || tr < l) return;\n        if (l <= tl && tr <= r) { apply(v, tl, tr, val); return; }\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        add(2 * v, tl, tm, l, r, val);\n        add(2 * v + 1, tm + 1, tr, l, r, val);\n        sum[v] = sum[2 * v] + sum[2 * v + 1];\n    }\n    long long query(int v, int tl, int tr, int l, int r) {\n        if (r < tl || tr < l) return 0;\n        if (l <= tl && tr <= r) return sum[v];\n        push(v, tl, tr);\n        int tm = (tl + tr) / 2;\n        return query(2 * v, tl, tm, l, r) + query(2 * v + 1, tm + 1, tr, l, r);\n    }\n    void add(int l, int r, long long val) { add(1, 0, n - 1, l, r, val); }    // a[l..r] += val\n    long long query(int l, int r) { return query(1, 0, n - 1, l, r); }        // suma a[l..r]\n};",
+      "usage": "LazySegTree st(a); st.add(l, r, v); long long s = st.query(l, r);",
+      "kb": "ds-lazy-propagation"
+    },
+    {
+      "trigger": "fen",
+      "name": "Drzewo Fenwicka (BIT)",
+      "tags": [
+        "fenwick",
+        "bit",
+        "binary indexed tree",
+        "suma prefiksowa",
+        "k-ty element"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Fenwick 1-indeksowany: dodanie w punkcie, suma prefiksu i przedziału, oraz `kth(k)` — najmniejszy indeks z sumą prefiksu ≥ k (dla nieujemnych wartości, np. liczników).",
+      "complexity": "O(log n) na operację, pamięć O(n)",
+      "code": "// Drzewo Fenwicka (BIT): dodawanie w punkcie i suma prefiksu/przedziału, indeksy 1..n.\n// Użycie: Fenwick fw(n);  fw.add(i, v);  fw.sum(i);  fw.sum(l, r);  fw.kth(k)  (kth: wartości nieujemne)\n// Złożoność: O(log n) na operację, pamięć O(n).\nstruct Fenwick {\n    int n;\n    vector<long long> t;\n\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, long long v) {                 // a[i] += v, 1 <= i <= n\n        for (; i <= n; i += i & -i) t[i] += v;\n    }\n    long long sum(int i) const {                   // a[1] + ... + a[i]\n        long long s = 0;\n        for (; i > 0; i -= i & -i) s += t[i];\n        return s;\n    }\n    long long sum(int l, int r) const {            // a[l] + ... + a[r]\n        return l > r ? 0 : sum(r) - sum(l - 1);\n    }\n    int kth(long long k) const {                   // najmniejsze i z sum(i) >= k; n + 1, gdy brak\n        int pos = 0, step = 1;\n        while (step * 2 <= n) step *= 2;\n        for (; step > 0; step /= 2)\n            if (pos + step <= n && t[pos + step] < k) {\n                pos += step;\n                k -= t[pos];\n            }\n        return pos + 1;\n    }\n};",
+      "usage": "Fenwick fw(n); fw.add(i, v); long long s = fw.sum(l, r);",
+      "kb": "ds-fenwick"
+    },
+    {
+      "trigger": "fen2d",
+      "name": "Fenwick 2D",
+      "tags": [
+        "fenwick 2d",
+        "bit 2d",
+        "suma w prostokącie",
+        "plansza"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Dwuwymiarowy Fenwick: dodanie w polu (x, y) i suma dowolnego prostokąta, indeksy 1..n × 1..m.",
+      "complexity": "O(log n · log m) na operację, pamięć O(n·m)",
+      "code": "// Fenwick 2D: dodawanie w polu (x, y) i suma prostokąta, indeksy 1..n x 1..m.\n// Użycie: Fenwick2D fw(n, m);  fw.add(x, y, v);  fw.sum(x1, y1, x2, y2);\n// Złożoność: O(log n · log m) na operację, pamięć O(n·m).\nstruct Fenwick2D {\n    int n, m;\n    vector<vector<long long>> t;\n\n    Fenwick2D(int n, int m) : n(n), m(m), t(n + 1, vector<long long>(m + 1, 0)) {}\n    void add(int x, int y, long long v) {\n        for (int i = x; i <= n; i += i & -i)\n            for (int j = y; j <= m; j += j & -j) t[i][j] += v;\n    }\n    long long sum(int x, int y) const {              // prostokąt [1..x] x [1..y]\n        long long s = 0;\n        for (int i = x; i > 0; i -= i & -i)\n            for (int j = y; j > 0; j -= j & -j) s += t[i][j];\n        return s;\n    }\n    long long sum(int x1, int y1, int x2, int y2) const {\n        if (x1 > x2 || y1 > y2) return 0;\n        return sum(x2, y2) - sum(x1 - 1, y2) - sum(x2, y1 - 1) + sum(x1 - 1, y1 - 1);\n    }\n};",
+      "usage": "Fenwick2D fw(n, m); fw.add(x, y, v); long long s = fw.sum(x1, y1, x2, y2);",
+      "kb": "ds-fenwick-2d"
+    },
+    {
+      "trigger": "sparse",
+      "name": "Sparse table (RMQ w O(1))",
+      "tags": [
+        "sparse table",
+        "rmq",
+        "minimum na przedziale",
+        "statyczne"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Tablica rzadka dla statycznej tablicy: minimum na [l, r] w O(1). Działa dla operacji idempotentnych (min, max, gcd, and, or) — zamień `min` w dwóch miejscach.",
+      "complexity": "budowa O(n log n), zapytanie O(1), pamięć O(n log n)",
+      "code": "// Sparse table: minimum na [l, r] w O(1) dla tablicy bez zmian, indeksy 0..n-1.\n// Użycie: SparseTable st(a);  st.query(l, r);    (max / gcd: zamień min w dwóch miejscach)\n// Złożoność: budowa O(n log n), zapytanie O(1), pamięć O(n log n).\ntemplate <class T>\nstruct SparseTable {\n    vector<vector<T>> st;   // st[k][i] = min(a[i .. i + 2^k - 1])\n\n    SparseTable(const vector<T>& a) {\n        int n = a.size();\n        int levels = __lg(max(n, 1)) + 1;\n        st.assign(levels, vector<T>(n));\n        st[0] = a;\n        for (int k = 1; k < levels; k++)\n            for (int i = 0; i + (1 << k) <= n; i++)\n                st[k][i] = min(st[k - 1][i], st[k - 1][i + (1 << (k - 1))]);\n    }\n    T query(int l, int r) const {                    // l <= r\n        int k = __lg(r - l + 1);\n        return min(st[k][l], st[k][r - (1 << k) + 1]);\n    }\n};",
+      "usage": "SparseTable st(a); auto m = st.query(l, r);",
+      "kb": "ds-sparse-table"
+    },
+    {
+      "trigger": "dsu",
+      "name": "DSU (Find & Union)",
+      "tags": [
+        "dsu",
+        "find union",
+        "union find",
+        "zbiory rozłączne",
+        "spójność"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Struktura zbiorów rozłącznych z kompresją ścieżek (połowienie) i łączeniem według rozmiaru: łączenie, sprawdzenie, rozmiar zbioru, liczba składowych.",
+      "complexity": "O(α(n)) zamortyzowanie na operację",
+      "code": "// DSU (Find & Union): kompresja ścieżek + łączenie według rozmiaru, elementy 0..n-1.\n// Użycie: DSU dsu(n);  dsu.unite(a, b);  dsu.same(a, b);  dsu.size(a);  dsu.components\n// Złożoność: O(α(n)) zamortyzowanie na operację (praktycznie stała).\nstruct DSU {\n    vector<int> parent, sz;\n    int components;\n\n    DSU(int n) : parent(n), sz(n, 1), components(n) { iota(parent.begin(), parent.end(), 0); }\n    int find(int x) {\n        while (parent[x] != x) {\n            parent[x] = parent[parent[x]];   // połowienie ścieżki\n            x = parent[x];\n        }\n        return x;\n    }\n    bool unite(int a, int b) {               // false, gdy już były w jednym zbiorze\n        a = find(a), b = find(b);\n        if (a == b) return false;\n        if (sz[a] < sz[b]) swap(a, b);\n        parent[b] = a;\n        sz[a] += sz[b];\n        components--;\n        return true;\n    }\n    bool same(int a, int b) { return find(a) == find(b); }\n    int size(int x) { return sz[find(x)]; }\n};",
+      "usage": "DSU dsu(n); if (dsu.unite(a, b)) {...}; dsu.same(a, b);",
+      "kb": "graph-dsu"
+    },
+    {
+      "trigger": "bs",
+      "name": "Binsearch po wyniku (z funkcją check)",
+      "tags": [
+        "binsearch",
+        "wyszukiwanie binarne po wyniku",
+        "binary search on answer",
+        "check"
+      ],
+      "lang": "cpp",
+      "scope": "local",
+      "description": "Szablon wyszukiwania najmniejszego x z [lo, hi], dla którego `check(x)` jest prawdą. Wymaga monotoniczności i `check(hi) == true`. Dla największego x z prawdą: `lo = mid` i `mid = lo + (hi - lo + 1) / 2`.",
+      "complexity": "O(log(hi − lo) · koszt check)",
+      "code": "// Binsearch po wyniku: najmniejsze x z [lo, hi], dla którego check(x) == true.\n// Wymaga: check monotoniczny (false...false true...true) i check(hi) == true.\n// Złożoność: O(log(hi - lo) · koszt check).\nauto check = [&](long long x) -> bool {\n    return x * x >= 1000;                  // tu warunek z zadania\n};\nlong long lo = 0, hi = 1000000000;\nwhile (lo < hi) {\n    long long mid = lo + (hi - lo) / 2;\n    if (check(mid)) hi = mid;\n    else lo = mid + 1;\n}\n// lo = najmniejsza odpowiedź",
+      "usage": "Wklej w main, podmień warunek w check i zakres [lo, hi].",
+      "kb": "tech-binary-search-answer"
+    },
+    {
+      "trigger": "lb",
+      "name": "Ręczne lower_bound / upper_bound",
+      "tags": [
+        "lower_bound",
+        "upper_bound",
+        "binsearch",
+        "wyszukiwanie binarne"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Ręczne wyszukiwanie binarne na posortowanym wektorze: pierwszy indeks z `a[i] >= x` i pierwszy z `a[i] > x` (zwracają n, gdy brak).",
+      "complexity": "O(log n)",
+      "code": "// Ręczne lower_bound / upper_bound na posortowanym (niemalejąco) wektorze; zwracają indeks, n gdy brak.\n// lowerBound: pierwszy i z a[i] >= x;  upperBound: pierwszy i z a[i] > x;  liczba x = upper - lower.\n// Złożoność: O(log n).\ntemplate <class T>\nint lowerBound(const vector<T>& a, const type_identity_t<T>& x) {\n    int lo = 0, hi = a.size();           // odpowiedź zawsze w [lo, hi]\n    while (lo < hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (a[mid] >= x) hi = mid;\n        else lo = mid + 1;\n    }\n    return lo;\n}\ntemplate <class T>\nint upperBound(const vector<T>& a, const type_identity_t<T>& x) {\n    int lo = 0, hi = a.size();\n    while (lo < hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (a[mid] > x) hi = mid;\n        else lo = mid + 1;\n    }\n    return lo;\n}",
+      "usage": "int i = lowerBound(a, x); int cnt = upperBound(a, x) - lowerBound(a, x);",
+      "kb": "tech-binary-search"
+    },
+    {
+      "trigger": "bfs",
+      "name": "BFS — najkrótsze ścieżki w grafie bez wag",
+      "tags": [
+        "bfs",
+        "przeszukiwanie wszerz",
+        "najkrótsza ścieżka",
+        "graf bez wag"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "BFS od wierzchołka startowego: odległości w liczbie krawędzi, -1 dla nieosiągalnych. Graf jako lista sąsiedztwa.",
+      "complexity": "O(n + m)",
+      "code": "// BFS: najkrótsze odległości (liczba krawędzi) od start; -1 = nieosiągalny.\n// Użycie: vector<vector<int>> adj(n);  ...  vector<int> dist = bfs(adj, s);\n// Złożoność: O(n + m).\nvector<int> bfs(const vector<vector<int>>& adj, int start) {\n    vector<int> dist(adj.size(), -1);\n    queue<int> q;\n    dist[start] = 0;\n    q.push(start);\n    while (!q.empty()) {\n        int v = q.front();\n        q.pop();\n        for (int u : adj[v])\n            if (dist[u] == -1) {\n                dist[u] = dist[v] + 1;\n                q.push(u);\n            }\n    }\n    return dist;\n}",
+      "usage": "vector<int> dist = bfs(adj, start);",
+      "kb": "graph-bfs"
+    },
+    {
+      "trigger": "bfsgrid",
+      "name": "BFS na planszy (siatce)",
+      "tags": [
+        "bfs",
+        "plansza",
+        "grid",
+        "labirynt",
+        "siatka"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "BFS po polach planszy (`vector<string>`), ściany to `'#'`, ruch w 4 kierunkach. Zwraca macierz odległości (-1 = nieosiągalne).",
+      "complexity": "O(n·m)",
+      "code": "// BFS na planszy: odległości od (sr, sc) po polach różnych od '#', ruch w 4 kierunkach; -1 = nieosiągalne.\n// Użycie: vector<string> grid(n);  ...  auto dist = bfsGrid(grid, sr, sc);   dist[r][c]\n// Złożoność: O(n·m).\nvector<vector<int>> bfsGrid(const vector<string>& grid, int sr, int sc) {\n    static const int dr[4] = {-1, 0, 1, 0}, dc[4] = {0, 1, 0, -1};\n    int n = grid.size(), m = grid[0].size();\n    vector<vector<int>> dist(n, vector<int>(m, -1));\n    queue<pair<int, int>> q;\n    dist[sr][sc] = 0;\n    q.push({sr, sc});\n    while (!q.empty()) {\n        auto [r, c] = q.front();\n        q.pop();\n        for (int d = 0; d < 4; d++) {\n            int nr = r + dr[d], nc = c + dc[d];\n            if (nr < 0 || nr >= n || nc < 0 || nc >= m) continue;\n            if (grid[nr][nc] == '#' || dist[nr][nc] != -1) continue;\n            dist[nr][nc] = dist[r][c] + 1;\n            q.push({nr, nc});\n        }\n    }\n    return dist;\n}",
+      "usage": "auto dist = bfsGrid(grid, sr, sc); int d = dist[tr][tc];",
+      "kb": "graph-bfs-grid"
+    },
+    {
+      "trigger": "dfs",
+      "name": "DFS rekurencyjny",
+      "tags": [
+        "dfs",
+        "przeszukiwanie w głąb",
+        "spójne składowe",
+        "rekurencja"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Rekurencyjny DFS zaznaczający odwiedzone wierzchołki; podstawa spójnych składowych, wykrywania cykli i dynamik na drzewach. Przy grafach-ścieżkach o 10^5+ wierzchołków uważaj na głębokość rekurencji.",
+      "complexity": "O(n + m)",
+      "code": "// DFS: odwiedza wszystkie wierzchołki osiągalne z v (visited[u] = true).\n// Użycie: vector<bool> visited(n, false);  dfs(start, adj, visited);\n//         liczba składowych: for (v) if (!visited[v]) { dfs(v, adj, visited); comps++; }\n// Złożoność: O(n + m); głębokość rekurencji do n (uwaga na stos przy bardzo długich ścieżkach).\nvoid dfs(int v, const vector<vector<int>>& adj, vector<bool>& visited) {\n    visited[v] = true;\n    for (int u : adj[v])\n        if (!visited[u]) dfs(u, adj, visited);\n}",
+      "usage": "vector<bool> visited(n, false); dfs(s, adj, visited);",
+      "kb": "graph-dfs"
+    },
+    {
+      "trigger": "dij",
+      "name": "Dijkstra (kopiec)",
+      "tags": [
+        "dijkstra",
+        "najkrótsza ścieżka",
+        "graf ważony",
+        "priority_queue"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Dijkstra z kolejką priorytetową i pomijaniem nieaktualnych wpisów. Wagi nieujemne; nieosiągalne wierzchołki mają odległość `LLONG_MAX`.",
+      "complexity": "O((n + m) log m)",
+      "code": "// Dijkstra: najkrótsze odległości od src przy NIEUJEMNYCH wagach; nieosiągalne: dist[v] == LLONG_MAX.\n// Użycie: vector<vector<pair<int, long long>>> adj(n);  adj[a].push_back({b, w});  auto dist = dijkstra(adj, s);\n// Złożoność: O((n + m) log m).\nvector<long long> dijkstra(const vector<vector<pair<int, long long>>>& adj, int src) {\n    vector<long long> dist(adj.size(), LLONG_MAX);\n    priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;   // (odległość, wierzchołek)\n    dist[src] = 0;\n    pq.push({0, src});\n    while (!pq.empty()) {\n        auto [d, v] = pq.top();\n        pq.pop();\n        if (d != dist[v]) continue;           // nieaktualny wpis — v już przetworzony\n        for (auto [u, w] : adj[v])\n            if (d + w < dist[u]) {\n                dist[u] = d + w;\n                pq.push({dist[u], u});\n            }\n    }\n    return dist;\n}",
+      "usage": "auto dist = dijkstra(adj, s); if (dist[t] == LLONG_MAX) ...",
+      "kb": "graph-dijkstra"
+    },
+    {
+      "trigger": "bellman",
+      "name": "Bellman–Ford (ujemne wagi, ujemne cykle)",
+      "tags": [
+        "bellman ford",
+        "ujemne wagi",
+        "ujemny cykl",
+        "najkrótsza ścieżka"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Bellman–Ford na liście krawędzi: najkrótsze ścieżki przy ujemnych wagach i wykrywanie ujemnego cyklu osiągalnego ze źródła.",
+      "complexity": "O(n·m)",
+      "code": "// Bellman–Ford: najkrótsze ścieżki od src, wagi mogą być ujemne. Krawędzie skierowane (a, b, w).\n// Zwraca false, gdy z src osiągalny jest ujemny cykl. Nieosiągalne: dist[v] == LLONG_MAX.\n// Użycie: vector<long long> dist;  bool ok = bellmanFord(n, edges, s, dist);\n// Złożoność: O(n·m).\nbool bellmanFord(int n, const vector<tuple<int, int, long long>>& edges, int src, vector<long long>& dist) {\n    dist.assign(n, LLONG_MAX);\n    dist[src] = 0;\n    for (int round = 0; round < n - 1; round++) {\n        bool changed = false;\n        for (auto [a, b, w] : edges)\n            if (dist[a] != LLONG_MAX && dist[a] + w < dist[b]) {\n                dist[b] = dist[a] + w;\n                changed = true;\n            }\n        if (!changed) break;\n    }\n    for (auto [a, b, w] : edges)\n        if (dist[a] != LLONG_MAX && dist[a] + w < dist[b]) return false;   // dalej się poprawia — ujemny cykl\n    return true;\n}",
+      "usage": "vector<long long> dist; if (!bellmanFord(n, edges, s, dist)) cout << \"ujemny cykl\";",
+      "kb": "graph-bellman-ford"
+    },
+    {
+      "trigger": "floyd",
+      "name": "Floyd–Warshall",
+      "tags": [
+        "floyd warshall",
+        "wszystkie pary",
+        "najkrótsze ścieżki",
+        "macierz odległości"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Odległości między wszystkimi parami wierzchołków na macierzy sąsiedztwa (`LLONG_MAX` = brak krawędzi). Po wywołaniu `d[i][i] < 0` oznacza ujemny cykl przez i.",
+      "complexity": "O(n³), pamięć O(n²)",
+      "code": "// Floyd–Warshall: najkrótsze ścieżki między wszystkimi parami.\n// Wejście: d[i][j] = waga krawędzi i->j (LLONG_MAX = brak), d[i][i] = 0. Po wywołaniu d[i][j] = odległość.\n// d[i][i] < 0 po wywołaniu oznacza ujemny cykl przez i.\n// Złożoność: O(n^3).\nvoid floydWarshall(vector<vector<long long>>& d) {\n    int n = d.size();\n    for (int k = 0; k < n; k++)\n        for (int i = 0; i < n; i++) {\n            if (d[i][k] == LLONG_MAX) continue;\n            for (int j = 0; j < n; j++)\n                if (d[k][j] != LLONG_MAX && d[i][k] + d[k][j] < d[i][j]) d[i][j] = d[i][k] + d[k][j];\n        }\n}",
+      "usage": "vector<vector<long long>> d(n, vector<long long>(n, LLONG_MAX)); ... floydWarshall(d);",
+      "kb": "graph-floyd-warshall"
+    },
+    {
+      "trigger": "topo",
+      "name": "Sortowanie topologiczne (Kahn)",
+      "tags": [
+        "toposort",
+        "sortowanie topologiczne",
+        "kahn",
+        "dag",
+        "stopnie wejściowe"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Algorytm Kahna: kolejka wierzchołków o stopniu wejściowym 0. Jeśli wynik ma mniej niż n wierzchołków, graf ma cykl. Dla najmniejszej leksykograficznie kolejności użyj min-kopca zamiast kolejki.",
+      "complexity": "O(n + m)",
+      "code": "// Sortowanie topologiczne (Kahn): kolejność wierzchołków 0..n-1 taka, że każda krawędź v->u idzie w przód.\n// Jeśli wynik ma mniej niż n elementów, graf ma cykl. Leksykograficznie najmniejsza: priority_queue z greater.\n// Użycie: vector<int> order = topoSort(adj);  bool hasCycle = order.size() < adj.size();\n// Złożoność: O(n + m).\nvector<int> topoSort(const vector<vector<int>>& adj) {\n    int n = adj.size();\n    vector<int> indegree(n, 0), order;\n    for (int v = 0; v < n; v++)\n        for (int u : adj[v]) indegree[u]++;\n    queue<int> q;\n    for (int v = 0; v < n; v++)\n        if (indegree[v] == 0) q.push(v);\n    while (!q.empty()) {\n        int v = q.front();\n        q.pop();\n        order.push_back(v);\n        for (int u : adj[v])\n            if (--indegree[u] == 0) q.push(u);\n    }\n    return order;\n}",
+      "usage": "vector<int> order = topoSort(adj); if ((int)order.size() < n) cout << \"cykl\";",
+      "kb": "graph-toposort"
+    },
+    {
+      "trigger": "scc",
+      "name": "Silnie spójne składowe (Tarjan)",
+      "tags": [
+        "scc",
+        "silnie spójne składowe",
+        "tarjan",
+        "graf skierowany",
+        "kondensacja"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Algorytm Tarjana: `comp[v]` = numer silnie spójnej składowej. Składowe są numerowane w odwrotnej kolejności topologicznej — krawędź między różnymi składowymi prowadzi z większego numeru do mniejszego.",
+      "complexity": "O(n + m)",
+      "code": "// Silnie spójne składowe (Tarjan). comp[v] = numer składowej, count = liczba składowych.\n// Numeracja w odwrotnej kolejności topologicznej: krawędź u->v między składowymi ma comp[u] > comp[v].\n// Użycie: TarjanSCC scc(adj);  scc.comp[v];  scc.count\n// Złożoność: O(n + m); rekurencja do głębokości n.\nstruct TarjanSCC {\n    int n, timer = 0, count = 0;\n    vector<int> tin, low, comp, stk;\n    vector<bool> onStack;\n\n    TarjanSCC(const vector<vector<int>>& adj)\n        : n(adj.size()), tin(n, -1), low(n, 0), comp(n, -1), onStack(n, false) {\n        for (int v = 0; v < n; v++)\n            if (tin[v] == -1) dfs(v, adj);\n    }\n    void dfs(int v, const vector<vector<int>>& adj) {\n        tin[v] = low[v] = timer++;\n        stk.push_back(v);\n        onStack[v] = true;\n        for (int u : adj[v]) {\n            if (tin[u] == -1) {\n                dfs(u, adj);\n                low[v] = min(low[v], low[u]);\n            } else if (onStack[u]) {\n                low[v] = min(low[v], tin[u]);\n            }\n        }\n        if (low[v] == tin[v]) {             // v jest korzeniem składowej\n            while (true) {\n                int u = stk.back();\n                stk.pop_back();\n                onStack[u] = false;\n                comp[u] = count;\n                if (u == v) break;\n            }\n            count++;\n        }\n    }\n};",
+      "usage": "TarjanSCC scc(adj); if (scc.comp[a] == scc.comp[b]) ...",
+      "kb": "graph-scc"
+    },
+    {
+      "trigger": "bridges",
+      "name": "Mosty i punkty artykulacji",
+      "tags": [
+        "mosty",
+        "bridges",
+        "punkty artykulacji",
+        "low link",
+        "graf nieskierowany"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Wyszukiwanie mostów i punktów artykulacji w grafie nieskierowanym (low-link). Krawędzie identyfikowane numerami, więc multikrawędzie są obsłużone poprawnie.",
+      "complexity": "O(n + m)",
+      "code": "// Mosty i punkty artykulacji w grafie nieskierowanym (wierzchołki 0..n-1, krawędzie {a, b}); multikrawędzie OK.\n// Użycie: Bridges br(n, edges);  br.bridges = numery krawędzi będących mostami;  br.isCut[v] = punkt artykulacji?\n// Złożoność: O(n + m); rekurencja do głębokości n.\nstruct Bridges {\n    int n, timer = 0;\n    vector<vector<pair<int, int>>> adj;   // (sąsiad, numer krawędzi)\n    vector<int> tin, low, bridges;\n    vector<bool> isCut;\n\n    Bridges(int n, const vector<pair<int, int>>& edges) : n(n), adj(n), tin(n, -1), low(n, 0), isCut(n, false) {\n        for (int i = 0; i < (int)edges.size(); i++) {\n            auto [a, b] = edges[i];\n            adj[a].push_back({b, i});\n            adj[b].push_back({a, i});\n        }\n        for (int v = 0; v < n; v++)\n            if (tin[v] == -1) dfs(v, -1);\n    }\n    void dfs(int v, int parentEdge) {\n        tin[v] = low[v] = timer++;\n        int children = 0;\n        for (auto [u, id] : adj[v]) {\n            if (id == parentEdge) continue;              // nie wracamy tą samą krawędzią\n            if (tin[u] != -1) {\n                low[v] = min(low[v], tin[u]);            // krawędź powrotna\n            } else {\n                dfs(u, id);\n                low[v] = min(low[v], low[u]);\n                if (low[u] > tin[v]) bridges.push_back(id);\n                if (parentEdge != -1 && low[u] >= tin[v]) isCut[v] = true;\n                children++;\n            }\n        }\n        if (parentEdge == -1 && children > 1) isCut[v] = true;   // korzeń DFS\n    }\n};",
+      "usage": "Bridges br(n, edges); for (int id : br.bridges) ...; if (br.isCut[v]) ...",
+      "kb": "graph-bridges-articulation"
+    },
+    {
+      "trigger": "kruskal",
+      "name": "Kruskal (minimalne drzewo rozpinające)",
+      "tags": [
+        "kruskal",
+        "mst",
+        "minimalne drzewo rozpinające",
+        "dsu"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Kruskal z wbudowanym, minimalnym DSU: sortuje krawędzie po wadze i dodaje te, które łączą różne składowe. Dla grafu niespójnego zwraca wagę lasu rozpinającego.",
+      "complexity": "O(m log m)",
+      "code": "// Kruskal: waga minimalnego drzewa (lasu) rozpinającego. Krawędzie (w, a, b), wierzchołki 0..n-1.\n// Graf spójny ⇔ wybrano n - 1 krawędzi (przekaż wektor usedEdges, żeby je dostać).\n// Użycie: long long w = kruskal(n, edges);   albo   kruskal(n, edges, &used);\n// Złożoność: O(m log m).\nlong long kruskal(int n, vector<tuple<long long, int, int>> edges, vector<tuple<long long, int, int>>* usedEdges = nullptr) {\n    sort(edges.begin(), edges.end());\n    vector<int> parent(n);\n    iota(parent.begin(), parent.end(), 0);\n    auto findRoot = [&](int x) {\n        while (parent[x] != x) {\n            parent[x] = parent[parent[x]];\n            x = parent[x];\n        }\n        return x;\n    };\n    long long total = 0;\n    for (const auto& [w, a, b] : edges) {\n        int ra = findRoot(a), rb = findRoot(b);\n        if (ra == rb) continue;                 // krawędź zamknęłaby cykl\n        parent[ra] = rb;\n        total += w;\n        if (usedEdges) usedEdges->push_back({w, a, b});\n    }\n    return total;\n}",
+      "usage": "long long mst = kruskal(n, edges);",
+      "kb": "graph-mst-kruskal"
+    },
+    {
+      "trigger": "prim",
+      "name": "Prim (MST z kopcem)",
+      "tags": [
+        "prim",
+        "mst",
+        "minimalne drzewo rozpinające",
+        "priority_queue"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Algorytm Prima z kolejką priorytetową na liście sąsiedztwa; zwraca wagę MST albo -1, gdy graf jest niespójny.",
+      "complexity": "O(m log m)",
+      "code": "// Prim: waga minimalnego drzewa rozpinającego; adj[v] = {(u, w)} (graf nieskierowany — dodaj obie strony).\n// Zwraca -1, gdy graf jest niespójny.\n// Użycie: long long w = prim(adj);\n// Złożoność: O(m log m).\nlong long prim(const vector<vector<pair<int, long long>>>& adj) {\n    int n = adj.size();\n    if (n == 0) return 0;\n    vector<bool> inTree(n, false);\n    priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;   // (waga krawędzi, wierzchołek)\n    pq.push({0, 0});\n    long long total = 0;\n    int added = 0;\n    while (!pq.empty() && added < n) {\n        auto [w, v] = pq.top();\n        pq.pop();\n        if (inTree[v]) continue;\n        inTree[v] = true;\n        total += w;\n        added++;\n        for (auto [u, wu] : adj[v])\n            if (!inTree[u]) pq.push({wu, u});\n    }\n    return added == n ? total : -1;\n}",
+      "usage": "long long w = prim(adj); if (w == -1) cout << \"niespójny\";",
+      "kb": "graph-mst-prim"
+    },
+    {
+      "trigger": "lca",
+      "name": "LCA — binary lifting",
+      "tags": [
+        "lca",
+        "najniższy wspólny przodek",
+        "binary lifting",
+        "skoki potęgowe",
+        "drzewo"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Najniższy wspólny przodek metodą skoków o potęgi dwójki. Budowa przez BFS (bez rekurencji), dodatkowo odległość w drzewie i k-ty przodek.",
+      "complexity": "budowa O(n log n), zapytanie O(log n)",
+      "code": "// LCA (binary lifting) dla drzewa o wierzchołkach 0..n-1, adj = lista sąsiedztwa (krawędzie w obie strony).\n// Użycie: LCA lca(adj, root);  lca.lca(u, v);  lca.dist(u, v);  lca.kthAncestor(v, k);  lca.depth[v]\n// Złożoność: budowa O(n log n), zapytanie O(log n).\nstruct LCA {\n    int n, LOG;\n    vector<vector<int>> up;     // up[j][v] = przodek v o 2^j poziomów wyżej (korzeń wskazuje na siebie)\n    vector<int> depth;\n\n    LCA(const vector<vector<int>>& adj, int root) : n(adj.size()) {\n        LOG = 1;\n        while ((1 << LOG) < n) LOG++;\n        up.assign(LOG, vector<int>(n, root));\n        depth.assign(n, 0);\n        vector<int> order = {root};          // BFS — bez ryzyka przepełnienia stosu\n        vector<bool> seen(n, false);\n        seen[root] = true;\n        for (size_t i = 0; i < order.size(); i++) {\n            int v = order[i];\n            for (int u : adj[v])\n                if (!seen[u]) {\n                    seen[u] = true;\n                    depth[u] = depth[v] + 1;\n                    up[0][u] = v;\n                    order.push_back(u);\n                }\n        }\n        for (int j = 1; j < LOG; j++)\n            for (int v = 0; v < n; v++) up[j][v] = up[j - 1][up[j - 1][v]];\n    }\n    int kthAncestor(int v, int k) const {    // k <= depth[v]\n        for (int j = 0; j < LOG; j++)\n            if ((k >> j) & 1) v = up[j][v];\n        return v;\n    }\n    int lca(int a, int b) const {\n        if (depth[a] < depth[b]) swap(a, b);\n        a = kthAncestor(a, depth[a] - depth[b]);\n        if (a == b) return a;\n        for (int j = LOG - 1; j >= 0; j--)\n            if (up[j][a] != up[j][b]) {\n                a = up[j][a];\n                b = up[j][b];\n            }\n        return up[0][a];\n    }\n    int dist(int a, int b) const { return depth[a] + depth[b] - 2 * depth[lca(a, b)]; }\n};",
+      "usage": "LCA lca(adj, 0); int w = lca.lca(u, v); int d = lca.dist(u, v);",
+      "kb": "tree-lca"
+    },
+    {
+      "trigger": "dinic",
+      "name": "Dinic — maksymalny przepływ",
+      "tags": [
+        "dinic",
+        "max flow",
+        "maksymalny przepływ",
+        "minimalny przekrój",
+        "sieć przepływowa"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Algorytm Dinica: BFS buduje graf warstwowy, DFS z wskaźnikami pcha przepływ blokujący. Po `maxFlow` wierzchołki z `level[v] != -1` tworzą stronę źródła minimalnego przekroju.",
+      "complexity": "O(V²·E) ogólnie, O(E·√V) dla skojarzeń dwudzielnych",
+      "code": "// Dinic: maksymalny przepływ, wierzchołki 0..n-1. Po maxFlow: level[v] != -1 ⇔ v po stronie s w min. przekroju.\n// Użycie: Dinic flow(n);  flow.addEdge(a, b, cap);  long long f = flow.maxFlow(s, t);\n// Krawędź nieskierowana: addEdge(a, b, c) i addEdge(b, a, c).\n// Złożoność: O(V^2 E) ogólnie, O(E sqrt V) dla grafów dwudzielnych z przepustowościami 1.\nstruct Dinic {\n    struct Edge {\n        int to;\n        long long cap;\n    };\n    int n;\n    vector<Edge> edges;             // krawędź i oraz i ^ 1 to para (prosta, odwrotna)\n    vector<vector<int>> adj;\n    vector<int> level, ptr;\n\n    Dinic(int n) : n(n), adj(n), level(n), ptr(n) {}\n    void addEdge(int a, int b, long long cap) {\n        adj[a].push_back(edges.size());\n        edges.push_back({b, cap});\n        adj[b].push_back(edges.size());\n        edges.push_back({a, 0});\n    }\n    bool bfs(int s, int t) {\n        fill(level.begin(), level.end(), -1);\n        level[s] = 0;\n        queue<int> q;\n        q.push(s);\n        while (!q.empty()) {\n            int v = q.front();\n            q.pop();\n            for (int id : adj[v])\n                if (edges[id].cap > 0 && level[edges[id].to] == -1) {\n                    level[edges[id].to] = level[v] + 1;\n                    q.push(edges[id].to);\n                }\n        }\n        return level[t] != -1;\n    }\n    long long dfs(int v, int t, long long pushed) {\n        if (v == t || pushed == 0) return pushed;\n        for (int& i = ptr[v]; i < (int)adj[v].size(); i++) {\n            int id = adj[v][i], u = edges[id].to;\n            if (level[u] != level[v] + 1 || edges[id].cap == 0) continue;\n            long long got = dfs(u, t, min(pushed, edges[id].cap));\n            if (got > 0) {\n                edges[id].cap -= got;\n                edges[id ^ 1].cap += got;\n                return got;\n            }\n        }\n        return 0;\n    }\n    long long maxFlow(int s, int t) {\n        long long flow = 0;\n        while (bfs(s, t)) {\n            fill(ptr.begin(), ptr.end(), 0);\n            while (long long pushed = dfs(s, t, LLONG_MAX)) flow += pushed;\n        }\n        return flow;\n    }\n};",
+      "usage": "Dinic flow(n); flow.addEdge(a, b, c); long long f = flow.maxFlow(s, t);",
+      "kb": "graph-max-flow"
+    },
+    {
+      "trigger": "kuhn",
+      "name": "Skojarzenie w grafie dwudzielnym (Kuhn)",
+      "tags": [
+        "kuhn",
+        "skojarzenie",
+        "matching",
+        "graf dwudzielny",
+        "ścieżka powiększająca"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Algorytm Kuhna (ścieżki powiększające DFS-em) dla grafu dwudzielnego: lewa strona 0..n-1, prawa 0..m-1. `matchRight[r]` to wierzchołek lewy skojarzony z r albo -1.",
+      "complexity": "O(n · E)",
+      "code": "// Maksymalne skojarzenie w grafie dwudzielnym (Kuhn). Lewa strona 0..n-1, prawa 0..m-1.\n// Użycie: Kuhn k(n, m);  k.addEdge(l, r);  int size = k.maxMatching();  k.matchLeft[l], k.matchRight[r] (-1 = wolny)\n// Złożoność: O(n · E); w praktyce szybko (przetasowanie list sąsiedztwa dodatkowo pomaga).\nstruct Kuhn {\n    int n, m, stamp = 0;\n    vector<vector<int>> adj;\n    vector<int> matchLeft, matchRight, visited;\n\n    Kuhn(int n, int m) : n(n), m(m), adj(n), matchLeft(n, -1), matchRight(m, -1), visited(n, 0) {}\n    void addEdge(int l, int r) { adj[l].push_back(r); }\n    bool tryAugment(int v) {\n        if (visited[v] == stamp) return false;\n        visited[v] = stamp;\n        for (int r : adj[v])\n            if (matchRight[r] == -1 || tryAugment(matchRight[r])) {\n                matchRight[r] = v;\n                matchLeft[v] = r;\n                return true;\n            }\n        return false;\n    }\n    int maxMatching() {\n        int result = 0;\n        for (int v = 0; v < n; v++) {\n            if (matchLeft[v] != -1) { result++; continue; }\n            stamp++;\n            if (tryAugment(v)) result++;\n        }\n        return result;\n    }\n};",
+      "usage": "Kuhn k(n, m); k.addEdge(l, r); int matched = k.maxMatching();",
+      "kb": "graph-bipartite-matching"
+    },
+    {
+      "trigger": "kmp",
+      "name": "KMP — funkcja prefiksowa i wyszukiwanie wzorca",
+      "tags": [
+        "kmp",
+        "funkcja prefiksowa",
+        "prefix function",
+        "wyszukiwanie wzorca",
+        "teksty"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Funkcja prefiksowa `pi` oraz wyszukiwanie wszystkich wystąpień wzorca w tekście algorytmem Knutha–Morrisa–Pratta.",
+      "complexity": "O(|tekst| + |wzorzec|)",
+      "code": "// KMP: pi[i] = długość najdłuższego właściwego prefiksu s[0..i], który jest też jego sufiksem.\n// kmpSearch zwraca pozycje (0-indeksowane) wszystkich wystąpień wzorca w tekście.\n// Użycie: auto pi = prefixFunction(s);  auto pos = kmpSearch(text, pattern);\n// Złożoność: O(|text| + |pattern|).\nvector<int> prefixFunction(const string& s) {\n    int n = s.size();\n    vector<int> pi(n, 0);\n    for (int i = 1; i < n; i++) {\n        int k = pi[i - 1];\n        while (k > 0 && s[i] != s[k]) k = pi[k - 1];\n        if (s[i] == s[k]) k++;\n        pi[i] = k;\n    }\n    return pi;\n}\nvector<int> kmpSearch(const string& text, const string& pattern) {\n    vector<int> result;\n    if (pattern.empty()) return result;\n    vector<int> pi = prefixFunction(pattern);\n    int k = 0;\n    for (int i = 0; i < (int)text.size(); i++) {\n        while (k > 0 && text[i] != pattern[k]) k = pi[k - 1];\n        if (text[i] == pattern[k]) k++;\n        if (k == (int)pattern.size()) {\n            result.push_back(i - k + 1);\n            k = pi[k - 1];\n        }\n    }\n    return result;\n}",
+      "usage": "vector<int> pos = kmpSearch(text, pattern);",
+      "kb": "str-kmp"
+    },
+    {
+      "trigger": "zf",
+      "name": "Funkcja Z",
+      "tags": [
+        "z-function",
+        "funkcja z",
+        "z algorithm",
+        "wyszukiwanie wzorca",
+        "teksty"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Tablica Z: `z[i]` = długość najdłuższego wspólnego prefiksu napisu i jego sufiksu od pozycji i. Wyszukiwanie wzorca: `zFunction(pattern + '#' + text)`.",
+      "complexity": "O(n)",
+      "code": "// Funkcja Z: z[i] = długość najdłuższego wspólnego prefiksu s i s[i..]; z[0] = n.\n// Wyszukiwanie: z = zFunction(p + '#' + t) ('#' spoza alfabetu), wystąpienie na pozycji i - |p| - 1, gdy z[i] == |p|.\n// Złożoność: O(n).\nvector<int> zFunction(const string& s) {\n    int n = s.size();\n    vector<int> z(n, 0);\n    if (n > 0) z[0] = n;\n    for (int i = 1, l = 0, r = 0; i < n; i++) {          // [l, r) = najdalej sięgający znany „z-blok”\n        if (i < r) z[i] = min(r - i, z[i - l]);\n        while (i + z[i] < n && s[z[i]] == s[i + z[i]]) z[i]++;\n        if (i + z[i] > r) {\n            l = i;\n            r = i + z[i];\n        }\n    }\n    return z;\n}",
+      "usage": "vector<int> z = zFunction(s);",
+      "kb": "str-z-function"
+    },
+    {
+      "trigger": "hash",
+      "name": "Hashowanie napisów (dwa moduły)",
+      "tags": [
+        "hashowanie",
+        "string hashing",
+        "hash podsłowa",
+        "rabin karp",
+        "rolling hash"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Hash wielomianowy modulo 10^9+7 i 998244353 z losową podstawą (wspólną dla wszystkich obiektów, więc hashe różnych napisów są porównywalne). `get(l, r)` zwraca hash podsłowa s[l..r) jako jedną liczbę.",
+      "complexity": "budowa O(n), hash podsłowa O(1)",
+      "code": "// Hashowanie napisów: dwa moduły + losowa podstawa (ta sama dla wszystkich obiektów StringHash).\n// get(l, r) = hash podsłowa s[l..r) (r wyłącznie) zakodowany jako jedna liczba long long.\n// Użycie: StringHash h(s);  if (h.get(a, a + len) == h.get(b, b + len)) ...\n// Złożoność: budowa O(n), zapytanie O(1).\nstruct StringHash {\n    static constexpr long long MOD1 = 1000000007, MOD2 = 998244353;\n    vector<long long> h1, h2, p1, p2;\n\n    StringHash(const string& s) {\n        static const long long BASE = 100000 + mt19937(chrono::steady_clock::now().time_since_epoch().count())() % 900000000;\n        int n = s.size();\n        h1.assign(n + 1, 0); h2.assign(n + 1, 0);\n        p1.assign(n + 1, 1); p2.assign(n + 1, 1);\n        for (int i = 0; i < n; i++) {\n            long long c = (unsigned char)s[i] + 1;          // znak nigdy nie ma wartości 0\n            h1[i + 1] = (h1[i] * BASE + c) % MOD1;\n            h2[i + 1] = (h2[i] * BASE + c) % MOD2;\n            p1[i + 1] = p1[i] * BASE % MOD1;\n            p2[i + 1] = p2[i] * BASE % MOD2;\n        }\n    }\n    long long get(int l, int r) const {\n        long long x1 = (h1[r] - h1[l] * p1[r - l] % MOD1 + MOD1) % MOD1;\n        long long x2 = (h2[r] - h2[l] * p2[r - l] % MOD2 + MOD2) % MOD2;\n        return x1 * MOD2 + x2;\n    }\n};",
+      "usage": "StringHash h(s); bool eq = h.get(l1, r1) == h.get(l2, r2);",
+      "kb": "ds-string-hashing"
+    },
+    {
+      "trigger": "trie",
+      "name": "Trie (drzewo prefiksowe)",
+      "tags": [
+        "trie",
+        "drzewo prefiksowe",
+        "prefiksy",
+        "słownik"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Trie na małych literach: wstawianie, liczba słów z danym prefiksem i liczba wystąpień słowa. Węzły w wektorze tablic (bez wskaźników).",
+      "complexity": "wstawienie i zapytanie O(|s|), pamięć O(suma długości · 26)",
+      "code": "// Trie na literach 'a'..'z': wstawianie, liczba słów z prefiksem, liczba wystąpień słowa.\n// Użycie: Trie tr;  tr.insert(w);  tr.countPrefix(p);  tr.countWord(w);\n// Złożoność: O(|s|) na operację, pamięć ~104 B na węzeł.\nstruct Trie {\n    vector<array<int, 26>> next;   // 0 = brak syna (korzeń to węzeł 0)\n    vector<int> passCount, endCount;\n\n    Trie() { newNode(); }\n    int newNode() {\n        next.push_back({});\n        passCount.push_back(0);\n        endCount.push_back(0);\n        return (int)next.size() - 1;\n    }\n    void insert(const string& s) {\n        int v = 0;\n        passCount[0]++;\n        for (char ch : s) {\n            int c = ch - 'a';\n            if (next[v][c] == 0) {\n                int u = newNode();          // najpierw tworzymy węzeł (wektor może się przenieść)\n                next[v][c] = u;\n            }\n            v = next[v][c];\n            passCount[v]++;\n        }\n        endCount[v]++;\n    }\n    int findNode(const string& s) const {\n        int v = 0;\n        for (char ch : s) {\n            v = next[v][ch - 'a'];\n            if (v == 0) return -1;\n        }\n        return v;\n    }\n    int countPrefix(const string& p) const { int v = findNode(p); return v == -1 ? 0 : passCount[v]; }\n    int countWord(const string& w) const { int v = findNode(w); return v == -1 ? 0 : endCount[v]; }\n};",
+      "usage": "Trie tr; tr.insert(\"ala\"); int k = tr.countPrefix(\"al\");",
+      "kb": "ds-trie"
+    },
+    {
+      "trigger": "manacher",
+      "name": "Algorytm Manachera (palindromy)",
+      "tags": [
+        "manacher",
+        "palindromy",
+        "najdłuższy palindrom",
+        "teksty"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Promienie palindromów o środku w każdej pozycji: `d1[i]` dla nieparzystych (środek i), `d2[i]` dla parzystych (środek między i−1 a i). Najdłuższy palindrom ma długość max(2·d1[i] − 1, 2·d2[i]).",
+      "complexity": "O(n)",
+      "code": "// Manacher: d1[i] = liczba palindromów nieparzystych o środku i (s[i-d1+1 .. i+d1-1] jest palindromem),\n//           d2[i] = liczba palindromów parzystych o środku między i-1 a i (s[i-d2 .. i+d2-1]).\n// Najdłuższy palindrom: max po i z (2*d1[i] - 1) i (2*d2[i]). Liczba podsłów-palindromów: suma d1 + suma d2.\n// Złożoność: O(n).\npair<vector<int>, vector<int>> manacher(const string& s) {\n    int n = s.size();\n    vector<int> d1(n), d2(n);\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 1 : min(d1[l + r - i], r - i + 1);\n        while (i - k >= 0 && i + k < n && s[i - k] == s[i + k]) k++;\n        d1[i] = k--;\n        if (i + k > r) { l = i - k; r = i + k; }\n    }\n    for (int i = 0, l = 0, r = -1; i < n; i++) {\n        int k = (i > r) ? 0 : min(d2[l + r - i + 1], r - i + 1);\n        while (i - k - 1 >= 0 && i + k < n && s[i - k - 1] == s[i + k]) k++;\n        d2[i] = k--;\n        if (i + k > r) { l = i - k - 1; r = i + k; }\n    }\n    return {d1, d2};\n}",
+      "usage": "auto [d1, d2] = manacher(s);",
+      "kb": "str-manacher"
+    },
+    {
+      "trigger": "sieve",
+      "name": "Sito Eratostenesa",
+      "tags": [
+        "sito",
+        "sieve",
+        "liczby pierwsze",
+        "eratostenes"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Sito Eratostenesa do n: tablica `isPrime` i lista liczb pierwszych.",
+      "complexity": "O(n log log n), pamięć O(n)",
+      "code": "// Sito Eratostenesa: isPrime[i] dla i w [0, n] i lista liczb pierwszych <= n.\n// Użycie: vector<int> primes;  vector<bool> isPrime = sieve(n, primes);\n// Złożoność: O(n log log n), pamięć O(n).\nvector<bool> sieve(int n, vector<int>& primes) {\n    vector<bool> isPrime(n + 1, true);\n    isPrime[0] = false;\n    if (n >= 1) isPrime[1] = false;\n    for (long long i = 2; i * i <= n; i++)\n        if (isPrime[i])\n            for (long long j = i * i; j <= n; j += i) isPrime[j] = false;\n    primes.clear();\n    for (int i = 2; i <= n; i++)\n        if (isPrime[i]) primes.push_back(i);\n    return isPrime;\n}",
+      "usage": "vector<int> primes; auto isPrime = sieve(1000000, primes);",
+      "kb": "math-sieve"
+    },
+    {
+      "trigger": "spf",
+      "name": "Sito najmniejszych dzielników + faktoryzacja",
+      "tags": [
+        "spf",
+        "smallest prime factor",
+        "faktoryzacja",
+        "rozkład na czynniki",
+        "sito"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Sito wyznaczające najmniejszy dzielnik pierwszy każdej liczby do n; potem rozkład dowolnego x ≤ n na czynniki pierwsze w O(log x).",
+      "complexity": "budowa O(n log log n), rozkład O(log x)",
+      "code": "// Sito najmniejszych dzielników pierwszych (spf) + rozkład na czynniki w O(log x).\n// Użycie: SmallestPrimeFactor sp(1000000);  auto f = sp.factorize(x);  // pary (p, wykładnik) rosnąco, 1 <= x <= n\n// Złożoność: budowa O(n log log n), rozkład O(log x), pamięć O(n).\nstruct SmallestPrimeFactor {\n    vector<int> spf;               // spf[x] = najmniejszy dzielnik pierwszy x (x >= 2)\n\n    SmallestPrimeFactor(int n) : spf(n + 1, 0) {\n        for (int i = 2; i <= n; i++)\n            if (spf[i] == 0)       // i jest pierwsza\n                for (int j = i; j <= n; j += i)\n                    if (spf[j] == 0) spf[j] = i;\n    }\n    vector<pair<int, int>> factorize(int x) const {\n        vector<pair<int, int>> factors;\n        while (x > 1) {\n            int p = spf[x], e = 0;\n            while (x % p == 0) {\n                x /= p;\n                e++;\n            }\n            factors.push_back({p, e});\n        }\n        return factors;\n    }\n};",
+      "usage": "SmallestPrimeFactor sp(MAXV); for (auto [p, e] : sp.factorize(x)) ...",
+      "kb": "math-factorization"
+    },
+    {
+      "trigger": "pw",
+      "name": "Szybkie potęgowanie modulo",
+      "tags": [
+        "szybkie potęgowanie",
+        "fast pow",
+        "potęgowanie modulo",
+        "binpow",
+        "modpow"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Potęgowanie przez podnoszenie do kwadratu: base^exp mod m w O(log exp). Działa dla m do ok. 3·10^9 (iloczyny mieszczą się w long long).",
+      "complexity": "O(log exp)",
+      "code": "// Szybkie potęgowanie: base^exp mod m, exp >= 0, 1 <= m <= ~3·10^9 (iloczyn dwóch reszt mieści się w long long).\n// Użycie: power(2, 10, 1000000007) == 1024;  odwrotność dla m pierwszego: power(a, m - 2, m)\n// Złożoność: O(log exp).\nlong long power(long long base, long long exp, long long mod) {\n    long long result = 1 % mod;\n    base %= mod;\n    if (base < 0) base += mod;\n    while (exp > 0) {\n        if (exp & 1) result = result * base % mod;\n        base = base * base % mod;\n        exp >>= 1;\n    }\n    return result;\n}",
+      "usage": "long long x = power(a, b, MOD);",
+      "kb": "math-fast-pow"
+    },
+    {
+      "trigger": "inv",
+      "name": "Odwrotność modularna",
+      "tags": [
+        "odwrotność modularna",
+        "modular inverse",
+        "inverse",
+        "euklides"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Odwrotność a⁻¹ mod m rozszerzonym algorytmem Euklidesa (iteracyjnie). Działa dla dowolnego m, o ile gcd(a, m) = 1; w przeciwnym razie zwraca -1.",
+      "complexity": "O(log m)",
+      "code": "// Odwrotność modularna: x z (a * x) % m == 1, rozszerzony Euklides (m nie musi być pierwsze).\n// Zwraca -1, gdy gcd(a, m) != 1. Dla m pierwszego to samo da power(a, m - 2, m).\n// Złożoność: O(log m).\nlong long modInverse(long long a, long long m) {\n    a %= m;\n    if (a < 0) a += m;\n    long long oldR = a, r = m, oldS = 1, s = 0;       // niezmiennik: oldR ≡ oldS·a, r ≡ s·a (mod m)\n    while (r != 0) {\n        long long q = oldR / r, tmp;\n        tmp = oldR - q * r; oldR = r; r = tmp;\n        tmp = oldS - q * s; oldS = s; s = tmp;\n    }\n    if (oldR != 1) return -1;                         // a i m nie są względnie pierwsze\n    oldS %= m;\n    if (oldS < 0) oldS += m;\n    return oldS;\n}",
+      "usage": "long long ia = modInverse(a, MOD);",
+      "kb": "math-mod-inverse"
+    },
+    {
+      "trigger": "ncr",
+      "name": "Silnie, odwrotności i nCr mod p",
+      "tags": [
+        "dwumian newtona",
+        "ncr",
+        "silnia",
+        "kombinatoryka",
+        "binomial",
+        "modulo"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Preprocessing silni i odwrotności silni modulo liczba pierwsza (domyślnie 10^9+7), potem C(n, k) w O(1). Odwrotności silni liczone wstecz z jednej potęgi.",
+      "complexity": "budowa O(N + log MOD), zapytanie O(1)",
+      "code": "// Silnie i odwrotności silni modulo liczba pierwsza MOD; C(n, k) w O(1). Wymaga N < MOD.\n// Użycie: Binomial bin(1000000);  bin.C(n, k);  bin.fact[n];  bin.invFact[n]\n// Złożoność: budowa O(N + log MOD), zapytanie O(1).\nstruct Binomial {\n    static constexpr long long MOD = 1000000007;\n    vector<long long> fact, invFact;\n\n    static long long power(long long b, long long e) {\n        long long r = 1;\n        b %= MOD;\n        while (e > 0) {\n            if (e & 1) r = r * b % MOD;\n            b = b * b % MOD;\n            e >>= 1;\n        }\n        return r;\n    }\n    Binomial(int N) : fact(N + 1), invFact(N + 1) {\n        fact[0] = 1;\n        for (int i = 1; i <= N; i++) fact[i] = fact[i - 1] * i % MOD;\n        invFact[N] = power(fact[N], MOD - 2);              // małe twierdzenie Fermata\n        for (int i = N; i > 0; i--) invFact[i - 1] = invFact[i] * i % MOD;\n    }\n    long long C(int n, int k) const {                     // 0, gdy k < 0 lub k > n\n        if (n < 0 || k < 0 || k > n) return 0;\n        return fact[n] * invFact[k] % MOD * invFact[n - k] % MOD;\n    }\n};",
+      "usage": "Binomial bin(n); long long ways = bin.C(n, k);",
+      "kb": "math-binomial"
+    },
+    {
+      "trigger": "egcd",
+      "name": "Rozszerzony algorytm Euklidesa",
+      "tags": [
+        "rozszerzony euklides",
+        "extended gcd",
+        "egcd",
+        "równanie diofantyczne",
+        "bezout"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Zwraca g = gcd(a, b) oraz współczynniki x, y spełniające a·x + b·y = g (dla a, b ≥ 0). Podstawa odwrotności modularnej i równań diofantycznych.",
+      "complexity": "O(log min(a, b))",
+      "code": "// Rozszerzony Euklides: zwraca g = gcd(a, b) i ustawia x, y tak, że a*x + b*y = g (a, b >= 0).\n// Równanie a*x + b*y = c ma rozwiązanie ⇔ g | c; wtedy (x·c/g, y·c/g) jest jednym z nich.\n// Złożoność: O(log min(a, b)), rekurencja głębokości O(log).\nlong long extGcd(long long a, long long b, long long& x, long long& y) {\n    if (b == 0) {\n        x = 1;\n        y = 0;\n        return a;\n    }\n    long long x1, y1;\n    long long g = extGcd(b, a % b, x1, y1);\n    x = y1;\n    y = x1 - (a / b) * y1;\n    return g;\n}",
+      "usage": "long long x, y; long long g = extGcd(a, b, x, y);",
+      "kb": "math-extended-euclid"
+    },
+    {
+      "trigger": "mat",
+      "name": "Mnożenie i potęgowanie macierzy",
+      "tags": [
+        "macierz",
+        "potęgowanie macierzy",
+        "matrix exponentiation",
+        "fibonacci",
+        "rekurencja liniowa"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Mnożenie macierzy i szybkie potęgowanie modulo — n-ty wyraz rekurencji liniowej (np. Fibonacciego) w O(k³ log n).",
+      "complexity": "mnożenie O(k³), potęgowanie O(k³ log e)",
+      "code": "// Macierze modulo mod: mnożenie i szybkie potęgowanie (wyrazy mod ograniczone przez ~3·10^9).\n// Użycie: Matrix M = {{1, 1}, {1, 0}};  Matrix R = matPow(M, n, MOD);   // R[0][1] = F(n)\n// Złożoność: mnożenie O(k^3), potęgowanie O(k^3 log e).\nusing Matrix = vector<vector<long long>>;\n\nMatrix matMul(const Matrix& A, const Matrix& B, long long mod) {\n    int n = A.size(), inner = B.size(), m = B[0].size();\n    Matrix C(n, vector<long long>(m, 0));\n    for (int i = 0; i < n; i++)\n        for (int k = 0; k < inner; k++) {\n            if (A[i][k] == 0) continue;\n            for (int j = 0; j < m; j++) C[i][j] = (C[i][j] + A[i][k] * B[k][j]) % mod;\n        }\n    return C;\n}\nMatrix matPow(Matrix base, long long exp, long long mod) {\n    int n = base.size();\n    Matrix result(n, vector<long long>(n, 0));\n    for (int i = 0; i < n; i++) result[i][i] = 1 % mod;   // macierz jednostkowa\n    while (exp > 0) {\n        if (exp & 1) result = matMul(result, base, mod);\n        base = matMul(base, base, mod);\n        exp >>= 1;\n    }\n    return result;\n}",
+      "usage": "Matrix R = matPow({{1, 1}, {1, 0}}, n, MOD); long long fib = R[0][1];",
+      "kb": "math-matrix-pow"
+    },
+    {
+      "trigger": "gcd",
+      "name": "NWD i NWW",
+      "tags": [
+        "gcd",
+        "nwd",
+        "lcm",
+        "nww",
+        "euklides"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Algorytm Euklidesa dla `long long` oraz NWW z dzieleniem przed mnożeniem (mniejsze ryzyko przepełnienia). W C++17 są też `std::gcd` i `std::lcm`.",
+      "complexity": "O(log min(a, b))",
+      "code": "// NWD i NWW (Euklides) dla long long; wynik nieujemny. W C++17 są też std::gcd / std::lcm z <numeric>.\n// lcmLL dzieli przed mnożeniem: a / gcd(a, b) * b (wynik musi mieścić się w long long).\n// Złożoność: O(log min(a, b)).\nlong long gcdLL(long long a, long long b) {\n    a = llabs(a);\n    b = llabs(b);\n    while (b != 0) {\n        long long t = a % b;\n        a = b;\n        b = t;\n    }\n    return a;\n}\nlong long lcmLL(long long a, long long b) {\n    if (a == 0 || b == 0) return 0;\n    return llabs(a) / gcdLL(a, b) * llabs(b);\n}",
+      "usage": "long long g = gcdLL(a, b), l = lcmLL(a, b);",
+      "kb": "math-gcd-lcm"
+    },
+    {
+      "trigger": "hull",
+      "name": "Otoczka wypukła (monotone chain)",
+      "tags": [
+        "otoczka wypukła",
+        "convex hull",
+        "monotone chain",
+        "andrew",
+        "geometria"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Algorytm Andrewa (monotone chain) na punktach całkowitych `pair<long long, long long>`: wierzchołki otoczki przeciwnie do ruchu wskazówek zegara, bez punktów współliniowych na bokach.",
+      "complexity": "O(n log n)",
+      "code": "// Otoczka wypukła (monotone chain / Andrew): wierzchołki przeciwnie do ruchu wskazówek zegara,\n// zaczynając od najmniejszego (x, y); punkty współliniowe na bokach są pomijane.\n// Użycie: vector<pair<long long, long long>> hull = convexHull(points);\n// Złożoność: O(n log n).\nvector<pair<long long, long long>> convexHull(vector<pair<long long, long long>> pts) {\n    sort(pts.begin(), pts.end());\n    pts.erase(unique(pts.begin(), pts.end()), pts.end());\n    int n = pts.size();\n    if (n <= 2) return pts;\n    auto cross = [](const pair<long long, long long>& o, const pair<long long, long long>& a,\n                    const pair<long long, long long>& b) {\n        return (a.first - o.first) * (b.second - o.second) - (a.second - o.second) * (b.first - o.first);\n    };\n    vector<pair<long long, long long>> hull(2 * n);\n    int k = 0;\n    for (int i = 0; i < n; i++) {                          // dolna otoczka\n        while (k >= 2 && cross(hull[k - 2], hull[k - 1], pts[i]) <= 0) k--;\n        hull[k++] = pts[i];\n    }\n    for (int i = n - 2, lower = k + 1; i >= 0; i--) {      // górna otoczka\n        while (k >= lower && cross(hull[k - 2], hull[k - 1], pts[i]) <= 0) k--;\n        hull[k++] = pts[i];\n    }\n    hull.resize(k - 1);                                    // ostatni punkt powtarza pierwszy\n    return hull;\n}",
+      "usage": "auto hull = convexHull(points);",
+      "kb": "geo-convex-hull"
+    },
+    {
+      "trigger": "cross",
+      "name": "Geometria: punkt, iloczyn wektorowy, przecięcie odcinków",
+      "tags": [
+        "geometria",
+        "iloczyn wektorowy",
+        "cross product",
+        "orientacja",
+        "przecięcie odcinków",
+        "punkt"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Struktura `Point` na liczbach całkowitych z operatorami, iloczyn wektorowy i skalarny, orientacja trzech punktów, punkt na odcinku i test przecięcia odcinków (z przypadkami współliniowymi).",
+      "complexity": "O(1) na operację",
+      "code": "// Geometria na liczbach całkowitych (long long): punkt/wektor, iloczyn wektorowy i skalarny, orientacja, odcinki.\n// cross(a, b) > 0 ⇔ b jest na lewo od a (obrót przeciwny do ruchu wskazówek zegara).\n// Użycie: Point a{0, 0}, b{3, 1};  long long c = cross(b - a, p - a);  orientation(a, b, p);  segmentsIntersect(a, b, c, d);\n// Złożoność: O(1); współrzędne do ~10^9 (iloczyny do ~4·10^18).\nstruct Point {\n    long long x, y;\n    Point operator+(const Point& o) const { return {x + o.x, y + o.y}; }\n    Point operator-(const Point& o) const { return {x - o.x, y - o.y}; }\n    Point operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const Point& o) const { return x == o.x && y == o.y; }\n    bool operator<(const Point& o) const { return x != o.x ? x < o.x : y < o.y; }\n};\nlong long cross(const Point& a, const Point& b) { return a.x * b.y - a.y * b.x; }\nlong long dot(const Point& a, const Point& b) { return a.x * b.x + a.y * b.y; }\nlong long norm2(const Point& a) { return dot(a, a); }                 // kwadrat długości\nint orientation(const Point& a, const Point& b, const Point& c) {     // 1 = w lewo, -1 = w prawo, 0 = współliniowe\n    long long v = cross(b - a, c - a);\n    return (v > 0) - (v < 0);\n}\nbool onSegment(const Point& a, const Point& b, const Point& p) {      // p na odcinku [a, b]\n    return cross(b - a, p - a) == 0 && min(a.x, b.x) <= p.x && p.x <= max(a.x, b.x) &&\n           min(a.y, b.y) <= p.y && p.y <= max(a.y, b.y);\n}\nbool segmentsIntersect(const Point& a, const Point& b, const Point& c, const Point& d) {   // wspólny punkt?\n    int o1 = orientation(a, b, c), o2 = orientation(a, b, d);\n    int o3 = orientation(c, d, a), o4 = orientation(c, d, b);\n    if (o1 * o2 < 0 && o3 * o4 < 0) return true;                      // przecięcie „na krzyż”\n    return onSegment(a, b, c) || onSegment(a, b, d) || onSegment(c, d, a) || onSegment(c, d, b);\n}",
+      "usage": "Point a{x1, y1}, b{x2, y2}; if (segmentsIntersect(a, b, c, d)) ...",
+      "kb": "geo-cross-dot"
+    },
+    {
+      "trigger": "mo",
+      "name": "Algorytm Mo (zapytania offline na przedziałach)",
+      "tags": [
+        "algorytm mo",
+        "mo's algorithm",
+        "zapytania offline",
+        "sqrt",
+        "przedziały"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Ogólny szablon algorytmu Mo: przekazujesz funkcje `add(i)`, `remove(i)` i `answer()`, a dostajesz odpowiedzi na zapytania [l, r] w oryginalnej kolejności. Bloki z sortowaniem parzysto-nieparzystym.",
+      "complexity": "O((n + q)·√n) wywołań add/remove + O(q log q)",
+      "code": "// Algorytm Mo: odpowiedzi offline na zapytania o przedziały [l, r] (0-indeksowane, domknięte).\n// add(i) / remove(i) — dodanie / usunięcie pozycji i z bieżącego przedziału; answer() — wynik dla bieżącego przedziału.\n// Użycie: auto res = moSolve(n, queries, [&](int i) {...}, [&](int i) {...}, [&]() { return wynik; });\n// Złożoność: O((n + q) · sqrt(n)) wywołań add/remove (muszą być O(1) — liczniki w tablicy, nie w map).\ntemplate <class Add, class Remove, class Answer>\nauto moSolve(int n, const vector<pair<int, int>>& queries, Add add, Remove remove, Answer answer) {\n    int q = queries.size();\n    int block = max(1, (int)(n / sqrt(max(q, 1))));\n    vector<int> order(q);\n    iota(order.begin(), order.end(), 0);\n    sort(order.begin(), order.end(), [&](int a, int b) {\n        int ba = queries[a].first / block, bb = queries[b].first / block;\n        if (ba != bb) return ba < bb;\n        return (ba & 1) ? queries[a].second > queries[b].second : queries[a].second < queries[b].second;\n    });\n    vector<decltype(answer())> result(q);\n    int curL = 0, curR = -1;                       // pusty przedział\n    for (int idx : order) {\n        auto [l, r] = queries[idx];\n        while (curL > l) add(--curL);               // najpierw rozszerzamy...\n        while (curR < r) add(++curR);\n        while (curL < l) remove(curL++);            // ...potem zwężamy\n        while (curR > r) remove(curR--);\n        result[idx] = answer();\n    }\n    return result;\n}",
+      "usage": "auto res = moSolve(n, qs, add, remove, answer);",
+      "kb": "ds-mo"
+    },
+    {
+      "trigger": "cht",
+      "name": "Convex hull trick (monotoniczny)",
+      "tags": [
+        "convex hull trick",
+        "cht",
+        "optymalizacja dp",
+        "proste",
+        "otoczka prostych"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Minimum z prostych y = k·x + b, gdy proste dochodzą z malejącymi współczynnikami k (np. dp z posortowanymi wagami). Zapytania w dowolnej kolejności przez binsearch; porównania przecięć w `__int128`.",
+      "complexity": "addLine O(1) zamortyzowanie, query O(log n)",
+      "code": "// Convex hull trick (monotoniczny): minimum z prostych y = k*x + b.\n// Proste dodawaj z NIEROSNĄCYMI k (maksimum: wstaw (-k, -b) i zaneguj wynik). Zapytania w dowolnej kolejności.\n// Użycie: MonotoneCHT cht;  cht.addLine(k, b);  long long best = cht.query(x);   (query wymaga >= 1 prostej)\n// Złożoność: addLine O(1) zamortyzowanie, query O(log n).\nstruct MonotoneCHT {\n    struct Line {\n        long long k, b;\n        long long eval(long long x) const { return k * x + b; }\n    };\n    vector<Line> hull;\n\n    // m jest zbędna między l i r (k_l > k_m > k_r), gdy przecięcie l z r nie leży na prawo od przecięcia l z m\n    static bool useless(const Line& l, const Line& m, const Line& r) {\n        return (__int128)(r.b - l.b) * (l.k - m.k) <= (__int128)(m.b - l.b) * (l.k - r.k);\n    }\n    void addLine(long long k, long long b) {\n        Line nw{k, b};\n        if (!hull.empty() && hull.back().k == k) {         // równe nachylenie: zostaje mniejsze b\n            if (hull.back().b <= b) return;\n            hull.pop_back();\n        }\n        while (hull.size() >= 2 && useless(hull[hull.size() - 2], hull.back(), nw)) hull.pop_back();\n        hull.push_back(nw);\n    }\n    long long query(long long x) const {\n        int lo = 0, hi = (int)hull.size() - 1;\n        while (lo < hi) {                                  // wartości na otoczce są „unimodalne” względem indeksu\n            int mid = (lo + hi) / 2;\n            if (hull[mid].eval(x) >= hull[mid + 1].eval(x)) lo = mid + 1;\n            else hi = mid;\n        }\n        return hull[lo].eval(x);\n    }\n};",
+      "usage": "MonotoneCHT cht; cht.addLine(k, b); long long v = cht.query(x);",
+      "kb": "dp-cht"
+    },
+    {
+      "trigger": "lichao",
+      "name": "Li Chao tree (minimum z prostych)",
+      "tags": [
+        "li chao",
+        "li chao tree",
+        "proste",
+        "convex hull trick",
+        "optymalizacja dp"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Drzewo Li Chao na zakresie x ∈ [lo, hi] z węzłami tworzonymi na żądanie: dodawanie prostych w dowolnej kolejności i minimum w punkcie. Dla maksimum wstaw (−k, −b) i zaneguj wynik.",
+      "complexity": "dodanie i zapytanie O(log(hi − lo)), pamięć O(liczba prostych)",
+      "code": "// Li Chao tree: minimum z prostych y = k*x + b w punkcie x z [lo, hi]; proste w dowolnej kolejności.\n// Użycie: LiChao lc(-1e9, 1e9);  lc.addLine(k, b);  long long v = lc.query(x);   (query wymaga >= 1 prostej)\n// Maksimum: addLine(-k, -b) i -query(x). Uwaga na przepełnienie k*x + b.\n// Złożoność: O(log(hi - lo)) na operację, pamięć O(liczba prostych).\nstruct LiChao {\n    struct Line {\n        long long k, b;\n        long long eval(long long x) const { return k * x + b; }\n    };\n    struct Node {\n        Line line;\n        int left = -1, right = -1;\n    };\n    vector<Node> t;\n    long long lo, hi;\n\n    LiChao(long long lo, long long hi) : lo(lo), hi(hi) {}\n    void addLine(long long k, long long b) {\n        Line nw{k, b};\n        if (t.empty()) { t.push_back({nw}); return; }\n        int v = 0;\n        long long l = lo, r = hi;\n        while (true) {\n            long long m = l + (r - l) / 2;\n            bool betterLeft = nw.eval(l) < t[v].line.eval(l);\n            bool betterMid = nw.eval(m) < t[v].line.eval(m);\n            if (betterMid) swap(t[v].line, nw);            // w węźle zostaje prosta lepsza w środku\n            if (l == r) return;\n            if (betterLeft != betterMid) {                 // przegrana może wygrać tylko w [l, m]\n                if (t[v].left == -1) { t[v].left = t.size(); t.push_back({nw}); return; }\n                v = t[v].left;\n                r = m;\n            } else {                                       // ... albo tylko w (m, r]\n                if (t[v].right == -1) { t[v].right = t.size(); t.push_back({nw}); return; }\n                v = t[v].right;\n                l = m + 1;\n            }\n        }\n    }\n    long long query(long long x) const {\n        long long res = LLONG_MAX;\n        int v = 0;\n        long long l = lo, r = hi;\n        while (v != -1) {\n            res = min(res, t[v].line.eval(x));\n            long long m = l + (r - l) / 2;\n            if (x <= m) { v = t[v].left; r = m; }\n            else { v = t[v].right; l = m + 1; }\n        }\n        return res;\n    }\n};",
+      "usage": "LiChao lc(0, 1000000); lc.addLine(k, b); long long v = lc.query(x);",
+      "kb": "ds-li-chao"
+    },
+    {
+      "trigger": "oset",
+      "name": "Ordered set (pb_ds)",
+      "tags": [
+        "ordered set",
+        "pb_ds",
+        "find_by_order",
+        "order_of_key",
+        "k-ty element"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Drzewo z biblioteki pb_ds (tylko g++): `std::set` z `find_by_order(k)` (k-ty element od 0) i `order_of_key(x)` (ile elementów < x). Multizbiór: przechowuj pary (wartość, unikalny numer).",
+      "complexity": "O(log n) na operację",
+      "code": "// Ordered set z pb_ds (tylko g++/libstdc++): set + k-ty element + ranga.\n// s.find_by_order(k) — iterator na k-ty najmniejszy (od 0) albo end();  s.order_of_key(x) — ile elementów < x.\n// Multizbiór: ordered_set<pair<T, int>> z unikalnym drugim elementem.  Złożoność: O(log n) na operację.\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\n\ntemplate <class T>\nusing ordered_set = __gnu_pbds::tree<T, __gnu_pbds::null_type, less<T>, __gnu_pbds::rb_tree_tag,\n                                     __gnu_pbds::tree_order_statistics_node_update>;",
+      "usage": "ordered_set<int> s; s.insert(x); int kth = *s.find_by_order(k); int rank = s.order_of_key(x);",
+      "kb": "ds-ordered-set"
+    },
+    {
+      "trigger": "rng",
+      "name": "Generator losowy (mt19937) i losowanie z przedziału",
+      "tags": [
+        "random",
+        "mt19937",
+        "losowanie",
+        "rand",
+        "generator testów"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "64-bitowy Mersenne Twister z ziarnem z zegara oraz `randInt(l, r)` — liczba losowa z przedziału domkniętego. Lepszy od `rand()` (zakres, jakość, brak RAND_MAX = 32767 na Windowsie).",
+      "complexity": "O(1) na losowanie",
+      "code": "// Generator losowy mt19937_64 (ziarno z zegara) i losowanie liczby z przedziału [l, r].\n// Użycie: long long x = randInt(1, 6);  shuffle(v.begin(), v.end(), rng);   (stałe ziarno do powtarzalnych testów: rng.seed(123))\n// Złożoność: O(1) na losowanie.\nmt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());\n\nlong long randInt(long long l, long long r) {\n    return uniform_int_distribution<long long>(l, r)(rng);\n}",
+      "usage": "long long x = randInt(1, n); shuffle(v.begin(), v.end(), rng);",
+      "kb": "num-random"
+    },
+    {
+      "trigger": "dbg",
+      "name": "Makro debug (wypisywanie zmiennych na cerr)",
+      "tags": [
+        "debug",
+        "dbg",
+        "cerr",
+        "wypisywanie zmiennych",
+        "debugowanie"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Makro `dbg(x, v, mp)` wypisuje na `cerr` nazwy i wartości zmiennych — także wektorów, par, map i zbiorów. Działa tylko przy kompilacji z `-DLOCAL`, więc na sprawdzarce nic nie wypisuje.",
+      "complexity": "O(rozmiar wypisywanych danych)",
+      "code": "// Debug: dbg(x, v, mp) wypisuje na cerr nazwy i wartości (liczby, napisy, pary, vectory, sety, mapy...).\n// Działa tylko z flagą -DLOCAL (g++ -DLOCAL ...); bez niej dbg(...) nic nie robi — można zostawić w wysłanym kodzie.\n// Złożoność: O(rozmiar wypisywanych danych).\ntemplate <class T> void debugValue(const T& x);\nvoid debugValue(const string& s) { cerr << '\"' << s << '\"'; }\nvoid debugValue(const char* s) { cerr << '\"' << s << '\"'; }\nvoid debugValue(char c) { cerr << '\\'' << c << '\\''; }\nvoid debugValue(bool b) { cerr << (b ? \"true\" : \"false\"); }\ntemplate <class A, class B> void debugValue(const pair<A, B>& p) {\n    cerr << '(';\n    debugValue(p.first);\n    cerr << \", \";\n    debugValue(p.second);\n    cerr << ')';\n}\ntemplate <class T> void debugValue(const T& x) {\n    if constexpr (requires { x.begin(); x.end(); }) {      // kontener\n        cerr << '{';\n        bool first = true;\n        for (const auto& e : x) {\n            if (!first) cerr << \", \";\n            first = false;\n            debugValue(e);\n        }\n        cerr << '}';\n    } else {\n        cerr << x;\n    }\n}\ntemplate <class... Args> void debugPrint(const char* names, const Args&... args) {\n    cerr << \"[\" << names << \"] = \";\n    int i = 0;\n    ((cerr << (i++ ? \" | \" : \"\"), debugValue(args)), ...);\n    cerr << '\\n';\n}\n#ifdef LOCAL\n#define dbg(...) debugPrint(#__VA_ARGS__, __VA_ARGS__)\n#else\n#define dbg(...) ((void)0)\n#endif",
+      "usage": "dbg(n, a, best);   // kompiluj lokalnie z -DLOCAL",
+      "kb": "oi-debugging"
+    },
+    {
+      "trigger": "cc",
+      "name": "Kompresja współrzędnych",
+      "tags": [
+        "kompresja współrzędnych",
+        "coordinate compression",
+        "skalowanie",
+        "sort unique",
+        "rangi"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Zamienia wartości na numery 0..k−1 z zachowaniem porządku (sort + unique + lower_bound); `vals` pozwala wrócić do oryginalnej wartości.",
+      "complexity": "O(n log n)",
+      "code": "// Kompresja współrzędnych: id[i] w 0..k-1 z zachowaniem porządku; vals[id[i]] == a[i] (vals posortowane, bez powtórzeń).\n// Użycie: vector<long long> vals;  vector<int> id = compress(a, vals);\n//         numer dowolnej wartości x: lower_bound(vals.begin(), vals.end(), x) - vals.begin()\n// Złożoność: O(n log n).\ntemplate <class T>\nvector<int> compress(const vector<T>& a, vector<T>& vals) {\n    vals = a;\n    sort(vals.begin(), vals.end());\n    vals.erase(unique(vals.begin(), vals.end()), vals.end());\n    vector<int> id(a.size());\n    for (size_t i = 0; i < a.size(); i++)\n        id[i] = lower_bound(vals.begin(), vals.end(), a[i]) - vals.begin();\n    return id;\n}",
+      "usage": "vector<long long> vals; vector<int> id = compress(a, vals);",
+      "kb": "tech-coordinate-compression"
+    },
+    {
+      "trigger": "pref2d",
+      "name": "Sumy prefiksowe 2D",
+      "tags": [
+        "sumy prefiksowe 2d",
+        "prefix sums 2d",
+        "suma prostokąta",
+        "macierz"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Sumy prefiksowe na macierzy: suma dowolnego prostokąta [x1..x2]×[y1..y2] (0-indeksowane, domknięte) w O(1) po O(n·m) budowy.",
+      "complexity": "budowa O(n·m), zapytanie O(1)",
+      "code": "// Sumy prefiksowe 2D: suma prostokąta [x1..x2] x [y1..y2] w O(1); indeksy 0-indeksowane, przedziały domknięte.\n// Użycie: Prefix2D ps(grid);  long long s = ps.sum(x1, y1, x2, y2);    grid = vector<vector<long long>>\n// Złożoność: budowa O(n·m), zapytanie O(1), pamięć O(n·m).\nstruct Prefix2D {\n    vector<vector<long long>> P;   // P[i][j] = suma grid[0..i-1][0..j-1]\n\n    Prefix2D(const vector<vector<long long>>& g) {\n        int n = g.size(), m = n ? g[0].size() : 0;\n        P.assign(n + 1, vector<long long>(m + 1, 0));\n        for (int i = 0; i < n; i++)\n            for (int j = 0; j < m; j++)\n                P[i + 1][j + 1] = g[i][j] + P[i][j + 1] + P[i + 1][j] - P[i][j];\n    }\n    long long sum(int x1, int y1, int x2, int y2) const {\n        if (x1 > x2 || y1 > y2) return 0;\n        return P[x2 + 1][y2 + 1] - P[x1][y2 + 1] - P[x2 + 1][y1] + P[x1][y1];\n    }\n};",
+      "usage": "Prefix2D ps(grid); long long s = ps.sum(x1, y1, x2, y2);",
+      "kb": "ds-prefix-sums-2d"
+    },
+    {
+      "trigger": "lis",
+      "name": "Najdłuższy rosnący podciąg (O(n log n))",
+      "tags": [
+        "lis",
+        "najdłuższy rosnący podciąg",
+        "longest increasing subsequence",
+        "patience sorting"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "LIS metodą „najmniejszych końców” z binsearchem, z odtworzeniem podciągu (zwraca indeksy). Dla podciągu niemalejącego zamień `lower_bound` na `upper_bound`.",
+      "complexity": "O(n log n)",
+      "code": "// Najdłuższy ŚCIŚLE rosnący podciąg w O(n log n); zwraca indeksy jego elementów (rosnąco).\n// Długość = wynik.size(). Niemalejący: zamień lower_bound na upper_bound.\n// Użycie: vector<int> idx = longestIncreasingSubsequence(a);\n// Złożoność: O(n log n).\nvector<int> longestIncreasingSubsequence(const vector<long long>& a) {\n    int n = a.size();\n    vector<long long> tails;       // tails[len - 1] = najmniejszy możliwy ostatni element podciągu długości len\n    vector<int> tailIdx, parent(n, -1);\n    for (int i = 0; i < n; i++) {\n        int pos = lower_bound(tails.begin(), tails.end(), a[i]) - tails.begin();\n        if (pos == (int)tails.size()) {\n            tails.push_back(a[i]);\n            tailIdx.push_back(i);\n        } else {\n            tails[pos] = a[i];\n            tailIdx[pos] = i;\n        }\n        parent[i] = pos > 0 ? tailIdx[pos - 1] : -1;   // poprzednik w odtworzeniu\n    }\n    vector<int> result;\n    for (int i = tailIdx.empty() ? -1 : tailIdx.back(); i != -1; i = parent[i]) result.push_back(i);\n    reverse(result.begin(), result.end());\n    return result;\n}",
+      "usage": "vector<int> idx = longestIncreasingSubsequence(a); int len = idx.size();",
+      "kb": "dp-lis"
+    },
+    {
+      "trigger": "knap",
+      "name": "Plecak 0/1 (tablica 1D)",
+      "tags": [
+        "plecak",
+        "knapsack",
+        "plecak 0/1",
+        "dynamika",
+        "dp"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Klasyczny plecak 0/1 na jednej tablicy: pętla po pojemności malejąco, żeby każdy przedmiot użyć co najwyżej raz.",
+      "complexity": "O(n·W) czasu, O(W) pamięci",
+      "code": "// Plecak 0/1: maksymalna wartość przedmiotów o łącznej wadze <= W (każdy przedmiot najwyżej raz).\n// Pojemność przeglądana MALEJĄCO — przy rosnącej dostalibyśmy plecak nieograniczony.\n// Użycie: long long best = knapsack01(weight, value, W);\n// Złożoność: O(n·W) czasu, O(W) pamięci.\nlong long knapsack01(const vector<int>& weight, const vector<long long>& value, int W) {\n    vector<long long> dp(W + 1, 0);   // dp[c] = najlepsza wartość przy wadze <= c\n    for (size_t i = 0; i < weight.size(); i++)\n        for (int c = W; c >= weight[i]; c--)\n            dp[c] = max(dp[c], dp[c - weight[i]] + value[i]);\n    return dp[W];\n}",
+      "usage": "long long best = knapsack01(w, v, W);",
+      "kb": "dp-knapsack-01"
+    },
+    {
+      "trigger": "bitmask",
+      "name": "Pętla po maskach i podmaskach",
+      "tags": [
+        "maski bitowe",
+        "podmaski",
+        "submask",
+        "bitmask",
+        "3^n"
+      ],
+      "lang": "cpp",
+      "scope": "local",
+      "description": "Szablon przejścia po wszystkich maskach n bitów i wszystkich ich niepustych podmaskach (malejąco). Łączny koszt dla wszystkich masek to O(3^n) — dla n ≤ 15–16.",
+      "complexity": "O(3^n) dla wszystkich masek razem",
+      "code": "// Wszystkie maski n bitów i ich niepuste podmaski (malejąco): sub = (sub - 1) & mask.\n// Pusta podmaska (sub = 0) nie jest odwiedzana — obsłuż osobno, jeśli trzeba.\n// Złożoność: O(3^n) dla wszystkich masek łącznie (n <= ~16).\nint n = 4;\nfor (int mask = 0; mask < (1 << n); mask++) {\n    for (int sub = mask; sub > 0; sub = (sub - 1) & mask) {\n        // sub — niepusta podmaska mask; dopełnienie w mask: mask ^ sub\n    }\n}",
+      "usage": "Wklej w main; ustaw n i wpisz logikę w środku pętli.",
+      "kb": "tech-bit-tricks"
+    },
+    {
+      "trigger": "monostack",
+      "name": "Stos monotoniczny (najbliższy większy / mniejszy)",
+      "tags": [
+        "stos monotoniczny",
+        "monotonic stack",
+        "next greater element",
+        "najbliższy większy"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Dla każdego elementu indeks najbliższego ściśle większego po prawej oraz najbliższego ściśle mniejszego po lewej — jednym przejściem ze stosem indeksów.",
+      "complexity": "O(n)",
+      "code": "// Stos monotoniczny: nextGreater[i] = indeks najbliższego elementu > a[i] po prawej (n, gdy brak),\n//                    previousSmaller[i] = indeks najbliższego elementu < a[i] po lewej (-1, gdy brak).\n// Inne warianty: zmień nierówność (>= / <=) albo kierunek pętli.\n// Złożoność: O(n) — każdy indeks raz wchodzi i raz wychodzi ze stosu.\nvector<int> nextGreater(const vector<long long>& a) {\n    int n = a.size();\n    vector<int> res(n, n), st;\n    for (int i = 0; i < n; i++) {\n        while (!st.empty() && a[st.back()] < a[i]) {\n            res[st.back()] = i;\n            st.pop_back();\n        }\n        st.push_back(i);\n    }\n    return res;\n}\nvector<int> previousSmaller(const vector<long long>& a) {\n    int n = a.size();\n    vector<int> res(n, -1), st;\n    for (int i = 0; i < n; i++) {\n        while (!st.empty() && a[st.back()] >= a[i]) st.pop_back();\n        res[i] = st.empty() ? -1 : st.back();\n        st.push_back(i);\n    }\n    return res;\n}",
+      "usage": "auto ng = nextGreater(a); auto ps = previousSmaller(a);",
+      "kb": "ds-monotonic-stack"
+    },
+    {
+      "trigger": "monoqueue",
+      "name": "Kolejka monotoniczna (minimum w kolejce FIFO)",
+      "tags": [
+        "kolejka monotoniczna",
+        "monotonic queue",
+        "minimum w oknie",
+        "sliding window",
+        "deque"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Kolejka FIFO z operacją minimum w O(1) zamortyzowanie: `push` na koniec, `pop` z początku, `getMin`. Idealna do minimum w oknie przesuwnym i optymalizacji dynamiki z oknem.",
+      "complexity": "O(1) zamortyzowanie na operację",
+      "code": "// Kolejka monotoniczna: kolejka FIFO z minimum w O(1) zamortyzowanie (maksimum: odwróć porównanie w push).\n// Użycie: MonotonicQueue q;  q.push(x);  q.pop();  q.getMin();  q.size()\n//         minimum w oknie długości k: push(a[i]); if (q.size() > k) q.pop(); if (i >= k - 1) wynik = q.getMin();\n// Złożoność: O(1) zamortyzowanie na operację.\nstruct MonotonicQueue {\n    deque<pair<long long, long long>> dq;   // (wartość, numer wstawienia), wartości rosną od przodu\n    long long pushed = 0, popped = 0;\n\n    void push(long long x) {\n        while (!dq.empty() && dq.back().first >= x) dq.pop_back();   // gorsi kandydaci nigdy nie będą minimum\n        dq.push_back({x, pushed++});\n    }\n    void pop() {                                   // usuwa najstarszy element (kolejka niepusta)\n        if (!dq.empty() && dq.front().second == popped) dq.pop_front();\n        popped++;\n    }\n    long long getMin() const { return dq.front().first; }   // kolejka niepusta\n    long long size() const { return pushed - popped; }\n    bool empty() const { return pushed == popped; }\n};",
+      "usage": "MonotonicQueue q; q.push(x); if (q.size() > k) q.pop(); q.getMin();",
+      "kb": "ds-monotonic-queue"
+    },
+    {
+      "trigger": "treap",
+      "name": "Treap (split/merge, k-ty element)",
+      "tags": [
+        "treap",
+        "drzewo zbalansowane",
+        "split merge",
+        "k-ty element",
+        "multizbiór"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Treap z kluczami i losowymi priorytetami (dopuszcza duplikaty): wstawianie, usuwanie jednej kopii, k-ty najmniejszy, liczba kluczy mniejszych — wszystko przez split i merge.",
+      "complexity": "O(log n) oczekiwanie na operację",
+      "code": "// Treap (multizbiór) na split/merge: insert, eraseOne, kth (k od 1), countLess. Węzeł 0 = pusty.\n// Użycie: Treap tr;  tr.insert(x);  tr.eraseOne(x);  tr.kth(k);  tr.countLess(x);  tr.size()\n// Złożoność: O(log n) oczekiwanie na operację.\nstruct Treap {\n    struct Node {\n        int key;\n        unsigned prio;\n        int size, left, right;\n    };\n    vector<Node> t;\n    int root = 0;\n    mt19937 rng{712367};\n\n    Treap() { t.push_back({0, 0, 0, 0, 0}); }\n    int sz(int v) const { return t[v].size; }\n    void pull(int v) { t[v].size = 1 + sz(t[v].left) + sz(t[v].right); }\n    void split(int v, int key, int& l, int& r) {          // l: klucze < key, r: klucze >= key\n        if (v == 0) { l = r = 0; return; }\n        if (t[v].key < key) { split(t[v].right, key, t[v].right, r); l = v; }\n        else { split(t[v].left, key, l, t[v].left); r = v; }\n        pull(v);\n    }\n    int merge(int l, int r) {                             // klucze l <= klucze r\n        if (l == 0 || r == 0) return l ? l : r;\n        if (t[l].prio > t[r].prio) { t[l].right = merge(t[l].right, r); pull(l); return l; }\n        t[r].left = merge(l, t[r].left);\n        pull(r);\n        return r;\n    }\n    void insert(int key) {\n        t.push_back({key, (unsigned)rng(), 1, 0, 0});\n        int node = (int)t.size() - 1, a, b;\n        split(root, key, a, b);\n        root = merge(merge(a, node), b);\n    }\n    void eraseOne(int key) {                              // usuwa jedną kopię key, jeśli jest\n        int a, b, c;\n        split(root, key, a, b);\n        split(b, key + 1, b, c);\n        if (b) b = merge(t[b].left, t[b].right);\n        root = merge(merge(a, b), c);\n    }\n    int kth(int k) const {                                // k-ty najmniejszy (k od 1); -1, gdy k > size\n        int v = root;\n        while (v) {\n            int leftSize = sz(t[v].left);\n            if (k <= leftSize) v = t[v].left;\n            else if (k == leftSize + 1) return t[v].key;\n            else { k -= leftSize + 1; v = t[v].right; }\n        }\n        return -1;\n    }\n    int countLess(int key) const {                        // ile kluczy < key\n        int v = root, res = 0;\n        while (v) {\n            if (t[v].key < key) { res += sz(t[v].left) + 1; v = t[v].right; }\n            else v = t[v].left;\n        }\n        return res;\n    }\n    int size() const { return sz(root); }\n};",
+      "usage": "Treap tr; tr.insert(x); int k = tr.kth(3); int r = tr.countLess(x);",
+      "kb": "ds-treap"
+    },
+    {
+      "trigger": "hashmap",
+      "name": "Własny hash do unordered_map (splitmix64)",
+      "tags": [
+        "unordered_map",
+        "custom hash",
+        "splitmix64",
+        "anty-hash",
+        "hashmapa"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Hash odporny na złośliwe dane (splitmix64 + losowe przesunięcie z zegara) dla `unordered_map`/`unordered_set` z kluczami całkowitymi, plus wariant dla par liczb.",
+      "complexity": "O(1) średnio na operację",
+      "code": "// Hash odporny na anty-testy dla unordered_map / unordered_set z kluczami całkowitymi (i parami int).\n// Użycie: unordered_map<long long, int, custom_hash> mp;   unordered_set<pair<int, int>, pair_hash> st;\n//         mp.reserve(n) — mniej przehashowań.\n// Złożoność: O(1) średnio na operację.\nstruct custom_hash {\n    static uint64_t splitmix64(uint64_t x) {\n        x += 0x9e3779b97f4a7c15ULL;\n        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;\n        x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;\n        return x ^ (x >> 31);\n    }\n    size_t operator()(uint64_t x) const {\n        static const uint64_t FIXED_RANDOM = chrono::steady_clock::now().time_since_epoch().count();\n        return splitmix64(x + FIXED_RANDOM);\n    }\n};\nstruct pair_hash {\n    size_t operator()(const pair<int, int>& p) const {\n        static const custom_hash h;\n        return h(((uint64_t)(uint32_t)p.first << 32) | (uint32_t)p.second);\n    }\n};",
+      "usage": "unordered_map<long long, int, custom_hash> mp; mp.reserve(1 << 20);",
+      "kb": "ds-custom-hash"
+    },
+    {
+      "trigger": "int128",
+      "name": "__int128 — wypisywanie i wczytywanie",
+      "tags": [
+        "__int128",
+        "int128",
+        "duże liczby",
+        "przepełnienie",
+        "128 bitów"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Konwersja `__int128` na napis, wypisywanie i wczytywanie (strumienie C++ nie obsługują tego typu). Zakres ok. ±1,7·10^38.",
+      "complexity": "O(liczba cyfr)",
+      "code": "// __int128: zamiana na napis, wypisywanie i wczytywanie (cin/cout nie obsługują tego typu). Zakres ok. ±1,7·10^38.\n// Użycie: __int128 x = readInt128();  printInt128(x * x);  string s = int128ToString(x);\n// Złożoność: O(liczba cyfr).\nstring int128ToString(__int128 x) {\n    if (x == 0) return \"0\";\n    bool negative = x < 0;\n    unsigned __int128 u = negative ? -(unsigned __int128)x : (unsigned __int128)x;\n    string s;\n    while (u > 0) {\n        s += char('0' + (int)(u % 10));\n        u /= 10;\n    }\n    if (negative) s += '-';\n    reverse(s.begin(), s.end());\n    return s;\n}\nvoid printInt128(__int128 x) { cout << int128ToString(x); }\n__int128 readInt128() {                       // liczba dziesiętna z opcjonalnym znakiem\n    string s;\n    cin >> s;\n    size_t i = (s[0] == '-' || s[0] == '+') ? 1 : 0;\n    __int128 x = 0;\n    for (; i < s.size(); i++) x = x * 10 + (s[i] - '0');\n    return s[0] == '-' ? -x : x;\n}",
+      "usage": "__int128 x = readInt128(); printInt128(x * x); cout << '\\n';",
+      "kb": "num-int128"
+    },
+    {
+      "trigger": "grid",
+      "name": "Kierunki na planszy (dx/dy) + inside",
+      "tags": [
+        "plansza",
+        "grid",
+        "dx dy",
+        "kierunki",
+        "sąsiedzi",
+        "siatka"
+      ],
+      "lang": "cpp",
+      "scope": "global",
+      "description": "Tablice przesunięć dla 4 i 8 kierunków oraz funkcja sprawdzająca, czy pole leży na planszy n×m. `dx` zmienia wiersz, `dy` kolumnę.",
+      "complexity": "O(1)",
+      "code": "// Kierunki na planszy: dx = zmiana wiersza, dy = zmiana kolumny. 4 kierunki: góra, prawo, dół, lewo; 8 — z przekątnymi.\n// Użycie: for (int d = 0; d < 4; d++) { int nr = r + dx[d], nc = c + dy[d]; if (inside(nr, nc, n, m)) ... }\n// Obrót w prawo: d = (d + 1) % 4, w lewo: d = (d + 3) % 4.\n// Złożoność: O(1).\nconst int dx[4] = {-1, 0, 1, 0};\nconst int dy[4] = {0, 1, 0, -1};\nconst int dx8[8] = {-1, -1, 0, 1, 1, 1, 0, -1};\nconst int dy8[8] = {0, 1, 1, 1, 0, -1, -1, -1};\n\nbool inside(int r, int c, int n, int m) { return r >= 0 && r < n && c >= 0 && c < m; }",
+      "usage": "int nr = r + dx[d], nc = c + dy[d]; if (inside(nr, nc, n, m)) ...",
+      "kb": "graph-bfs-grid"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+Kalkulator ONP
+W Odwrotnej Notacji Polskiej operator zapisujemy po argumentach, np. wyrażenie (2 + 3) * 4 zapisujemy jako 2 3 + 4 *.
+Oblicz wartość wyrażenia zapisanego w ONP.
+Wejście
+W jedynym wierszu wejścia znajduje się poprawne wyrażenie w ONP: liczby całkowite nieujemne oraz operatory +, - i *,
+oddzielone pojedynczymi spacjami. Wyrażenie ma co najwyżej 1000 elementów, a wartości wszystkich wyników pośrednich
+mieszczą się w zakresie od -10^18 do 10^18.
+Wyjście
+Wypisz wartość wyrażenia.
+Przykład 1
+Wejście:
+2 3 + 4 *
+Wyjście:
+20
+
+Przykład 2
+Wejście:
+5 1 2 + 4 * + 3 -
+Wyjście:
+14

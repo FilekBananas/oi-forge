@@ -1,0 +1,29 @@
+Kolejność zadań
+Bajtek ma do wykonania n zadań ponumerowanych od 1 do n. Niektóre zadania zależą od innych: para (a, b) oznacza, że
+zadanie a trzeba wykonać przed zadaniem b. Pomóż Bajtkowi ustalić kolejność wykonywania wszystkich zadań. Jeśli jest
+wiele możliwych kolejności, wypisz tę, w której zadania o mniejszych numerach są wykonywane jak najwcześniej (najmniejszą
+leksykograficznie).
+Wejście
+W pierwszym wierszu znajdują się dwie liczby całkowite n i m (1 ≤ n ≤ 100 000, 0 ≤ m ≤ 200 000). W każdym z kolejnych
+m wierszy znajdują się dwie liczby a i b (1 ≤ a, b ≤ n, a ≠ b).
+Wyjście
+Wypisz n liczb oddzielonych spacjami — numery zadań w kolejności wykonywania. Jeśli zadań nie da się wykonać (zależności
+tworzą cykl), wypisz jedno słowo NIE.
+Przykład 1
+Wejście:
+5 4
+3 1
+3 2
+2 5
+1 5
+Wyjście:
+3 1 2 4 5
+
+Przykład 2
+Wejście:
+3 3
+1 2
+2 3
+3 1
+Wyjście:
+NIE

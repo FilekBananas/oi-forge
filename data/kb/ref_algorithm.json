@@ -1,0 +1,3426 @@
+{
+ "chunk": "ref_algorithm",
+ "articles": [
+  {
+   "id": "stl-ref-nonmodifying",
+   "title": "Dokumentacja: <algorithm> — wyszukiwanie i porównywanie (bez modyfikacji)",
+   "category": "STL algorytmy",
+   "tags": [
+    "algorithm",
+    "dokumentacja",
+    "referencja",
+    "algorytmy niemodyfikujące",
+    "adjacent_find",
+    "mismatch",
+    "search_n",
+    "is_permutation",
+    "equal",
+    "find_end",
+    "find_first_of",
+    "for_each",
+    "wyszukiwanie liniowe"
+   ],
+   "aliases": [
+    "dokumentacja algorithm",
+    "algorytmy niemodyfikujące",
+    "algorytmy niemodyfikujace",
+    "non-modifying sequence operations",
+    "adjacent_find",
+    "mismatch",
+    "search_n",
+    "is_permutation",
+    "std::equal",
+    "find_end",
+    "find_first_of",
+    "for_each",
+    "for_each_n",
+    "boyer_moore_horspool_searcher",
+    "lista funkcji algorithm",
+    "algorithm reference c++"
+   ],
+   "summary": "Kompletna ściąga funkcji z `<algorithm>`, które tylko czytają zakres: sprawdzanie warunku (all_of, any_of, none_of), przechodzenie (for_each, for_each_n), wyszukiwanie (find*, adjacent_find, search, search_n, find_end, find_first_of), zliczanie (count, count_if) i porównywanie ciągów (mismatch, equal, is_permutation). Sygnatury, złożoności, wartości zwracane i przykłady.",
+   "complexity": "większość O(n); search, find_end, find_first_of: O(n·m); is_permutation: O(n²) w pesymistycznym przypadku",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Wszystkie funkcje działają na półotwartym zakresie `[first, last)` i **nie zmieniają** ani kolejności, ani wartości elementów (wyjątek: `for_each` z lambdą biorącą `int&`). Wyszukiwanie, gdy nic nie znajdzie, zwraca `last` — zawsze sprawdzaj `it != v.end()` przed `*it`. Pozycję jako indeks dostajesz przez `it - v.begin()`. Wersje z sufiksem `_if` przyjmują predykat (lambdę zwracającą `bool`). Nagłówek `<algorithm>` (jest w `bits/stdc++.h`)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Co robi",
+      "Zwraca",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "`all_of(f, l, p)`",
+       "czy wszystkie spełniają p (pusty zakres → true)",
+       "bool",
+       "O(n)"
+      ],
+      [
+       "`any_of(f, l, p)`",
+       "czy choć jeden spełnia p (pusty → false)",
+       "bool",
+       "O(n)"
+      ],
+      [
+       "`none_of(f, l, p)`",
+       "czy żaden nie spełnia p (pusty → true)",
+       "bool",
+       "O(n)"
+      ],
+      [
+       "`for_each(f, l, g)`",
+       "wywołuje g(x) dla każdego elementu",
+       "funktor g",
+       "O(n)"
+      ],
+      [
+       "`for_each_n(f, n, g)`",
+       "g(x) dla pierwszych n elementów (C++17)",
+       "iterator f + n",
+       "O(n)"
+      ],
+      [
+       "`find(f, l, x)`",
+       "pierwszy element == x",
+       "iterator / l",
+       "O(n)"
+      ],
+      [
+       "`find_if(f, l, p)`",
+       "pierwszy element z p(x) == true",
+       "iterator / l",
+       "O(n)"
+      ],
+      [
+       "`find_if_not(f, l, p)`",
+       "pierwszy element z p(x) == false",
+       "iterator / l",
+       "O(n)"
+      ],
+      [
+       "`find_end(f, l, sf, sl)`",
+       "**ostatnie** wystąpienie podciągu [sf, sl)",
+       "iterator / l",
+       "O(n·m)"
+      ],
+      [
+       "`find_first_of(f, l, sf, sl)`",
+       "pierwszy element równy któremukolwiek z [sf, sl)",
+       "iterator / l",
+       "O(n·m)"
+      ],
+      [
+       "`adjacent_find(f, l[, p])`",
+       "pierwsza para sąsiadów a == b (lub p(a, b))",
+       "iterator na 1. z pary / l",
+       "O(n)"
+      ],
+      [
+       "`count(f, l, x)`",
+       "ile razy występuje x",
+       "ptrdiff_t",
+       "O(n)"
+      ],
+      [
+       "`count_if(f, l, p)`",
+       "ile elementów spełnia p",
+       "ptrdiff_t",
+       "O(n)"
+      ],
+      [
+       "`mismatch(f1, l1, f2, l2)`",
+       "pierwsza pozycja, na której zakresy się różnią",
+       "pair iteratorów",
+       "O(n)"
+      ],
+      [
+       "`equal(f1, l1, f2, l2)`",
+       "czy zakresy są identyczne",
+       "bool",
+       "O(n)"
+      ],
+      [
+       "`search(f, l, sf, sl)`",
+       "**pierwsze** wystąpienie podciągu [sf, sl)",
+       "iterator / l",
+       "O(n·m)"
+      ],
+      [
+       "`search_n(f, l, k, x)`",
+       "pierwsza seria k kolejnych elementów == x",
+       "iterator / l",
+       "O(n)"
+      ],
+      [
+       "`is_permutation(f1, l1, f2, l2)`",
+       "czy te same elementy (z krotnościami) w innej kolejności",
+       "bool",
+       "O(n²) pesym."
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: wszystkie funkcje w akcji",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> v = {3, 1, 4, 1, 5, 9, 2, 6, 5, 5, 5};\n    auto poz = [&](auto it) { return int(it - v.begin()); };   // iterator → indeks\n\n    // warunki\n    cout << all_of(v.begin(), v.end(), [](int x) { return x > 0; }) << ' '     // 1\n         << any_of(v.begin(), v.end(), [](int x) { return x > 8; }) << ' '     // 1\n         << none_of(v.begin(), v.end(), [](int x) { return x < 0; }) << '\\n';  // 1\n\n    // zliczanie\n    cout << \"count(5) = \" << count(v.begin(), v.end(), 5) << '\\n';             // 4\n    cout << \"parzystych = \" << count_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; }) << '\\n';  // 3\n\n    // wyszukiwanie pojedynczego elementu\n    cout << \"find(9): \" << poz(find(v.begin(), v.end(), 9)) << '\\n';           // 5\n    cout << \"find_if(>4): \" << poz(find_if(v.begin(), v.end(), [](int x) { return x > 4; })) << '\\n';      // 4\n    cout << \"find_if_not(<4): \" << poz(find_if_not(v.begin(), v.end(), [](int x) { return x < 4; })) << '\\n';  // 2\n    vector<int> zbior = {9, 6};\n    cout << \"find_first_of({9,6}): \" << poz(find_first_of(v.begin(), v.end(), zbior.begin(), zbior.end())) << '\\n';  // 5\n    cout << \"adjacent_find: \" << poz(adjacent_find(v.begin(), v.end())) << '\\n';   // 8 (5, 5)\n\n    // wyszukiwanie podciągów\n    vector<int> wz = {1, 5}, piatki = {5, 5};\n    cout << \"search({1,5}): \" << poz(search(v.begin(), v.end(), wz.begin(), wz.end())) << '\\n';            // 3\n    cout << \"find_end({5,5}): \" << poz(find_end(v.begin(), v.end(), piatki.begin(), piatki.end())) << '\\n'; // 9\n    cout << \"search_n(3 x 5): \" << poz(search_n(v.begin(), v.end(), 3, 5)) << '\\n';                        // 8\n\n    // porównywanie zakresów\n    vector<int> w = {3, 1, 4, 1, 5, 8};\n    auto [it1, it2] = mismatch(v.begin(), v.end(), w.begin(), w.end());\n    cout << \"mismatch na pozycji \" << poz(it1) << \": \" << *it1 << \" vs \" << *it2 << '\\n';   // 5: 9 vs 8\n    vector<int> pre = {3, 1, 4};\n    cout << \"equal(prefiks): \" << equal(v.begin(), v.begin() + 3, pre.begin(), pre.end()) << '\\n';  // 1\n    vector<int> a = {1, 2, 3}, b = {3, 1, 2};\n    cout << \"is_permutation: \" << is_permutation(a.begin(), a.end(), b.begin(), b.end()) << '\\n';   // 1\n\n    // przejście po elementach\n    for_each(v.begin(), v.begin() + 3, [](int x) { cout << x << ' '; });     // 3 1 4\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "text",
+     "md": "### Wyszukiwanie wzorca: search, find_end, search_n\n`search` szuka **pierwszego**, a `find_end` (myląca nazwa) — **ostatniego** wystąpienia całego podciągu. Obie działają naiwnie w O(n·m), więc do długich tekstów na zawodach używaj KMP albo funkcji Z. Od C++17 `search` przyjmuje też obiekt wyszukiwarki: `search(t.begin(), t.end(), boyer_moore_horspool_searcher(p.begin(), p.end()))` — średnio szybciej, ale bez gwarancji liniowości. `search_n(f, l, k, x)` szuka serii k **takich samych** wartości i jest liniowy."
+    },
+    {
+     "type": "warn",
+     "md": "`is_permutation` porównuje krotności naiwnie — pesymistycznie **O(n²)**. Dla n ≥ 10⁴ posortuj kopie i porównaj `==` (O(n log n)) albo zlicz wystąpienia w tablicy liczników."
+    },
+    {
+     "type": "tip",
+     "md": "Na kontenerach asocjacyjnych (`set`, `map`, `unordered_*`) używaj metod `s.find(x)`, `s.count(x)` — `std::find`/`std::count` przeszukują je liniowo. Dla `string` są też metody `s.find`, `s.rfind`, `s.find_first_of` zwracające indeks (albo `string::npos`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "all_of(first, last, pred)",
+     "desc": "true, gdy każdy element spełnia pred (pusty zakres → true)",
+     "complexity": "O(n)",
+     "returns": "bool",
+     "example": "all_of(v.begin(), v.end(), [](int x) { return x > 0; })"
+    },
+    {
+     "sig": "any_of(first, last, pred)",
+     "desc": "true, gdy co najmniej jeden element spełnia pred (pusty → false)",
+     "complexity": "O(n)",
+     "returns": "bool",
+     "example": "any_of(v.begin(), v.end(), [](int x) { return x < 0; })"
+    },
+    {
+     "sig": "none_of(first, last, pred)",
+     "desc": "true, gdy żaden element nie spełnia pred (pusty → true)",
+     "complexity": "O(n)",
+     "returns": "bool",
+     "example": "none_of(s.begin(), s.end(), ::isspace)"
+    },
+    {
+     "sig": "for_each(first, last, f)",
+     "desc": "wywołuje f(x) dla każdego elementu po kolei (f z parametrem T& może modyfikować)",
+     "complexity": "O(n)",
+     "returns": "funktor f (kopia po przejściu)",
+     "example": "for_each(v.begin(), v.end(), [](int& x) { x *= 2; });"
+    },
+    {
+     "sig": "for_each_n(first, n, f)",
+     "desc": "C++17: f(x) dla pierwszych n elementów",
+     "complexity": "O(n)",
+     "returns": "iterator first + n",
+     "example": "for_each_n(v.begin(), 3, [](int& x) { x = 0; });"
+    },
+    {
+     "sig": "find(first, last, x)",
+     "desc": "pierwszy element równy x",
+     "complexity": "O(n)",
+     "returns": "iterator albo last",
+     "example": "auto it = find(v.begin(), v.end(), 7);"
+    },
+    {
+     "sig": "find_if(first, last, pred)",
+     "desc": "pierwszy element spełniający pred",
+     "complexity": "O(n)",
+     "returns": "iterator albo last",
+     "example": "find_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; })"
+    },
+    {
+     "sig": "find_if_not(first, last, pred)",
+     "desc": "pierwszy element NIE spełniający pred",
+     "complexity": "O(n)",
+     "returns": "iterator albo last",
+     "example": "find_if_not(s.begin(), s.end(), ::isdigit)"
+    },
+    {
+     "sig": "find_end(first, last, s_first, s_last[, pred])",
+     "desc": "początek OSTATNIEGO wystąpienia podciągu [s_first, s_last)",
+     "complexity": "O(n·m)",
+     "returns": "iterator albo last",
+     "example": "find_end(v.begin(), v.end(), w.begin(), w.end())"
+    },
+    {
+     "sig": "find_first_of(first, last, s_first, s_last[, pred])",
+     "desc": "pierwszy element równy któremukolwiek elementowi z [s_first, s_last)",
+     "complexity": "O(n·m)",
+     "returns": "iterator albo last",
+     "example": "find_first_of(s.begin(), s.end(), sam.begin(), sam.end())"
+    },
+    {
+     "sig": "adjacent_find(first, last[, pred])",
+     "desc": "pierwsza para sąsiadów z a == b (albo pred(a, b) == true)",
+     "complexity": "O(n)",
+     "returns": "iterator na pierwszy element pary albo last",
+     "example": "adjacent_find(v.begin(), v.end())"
+    },
+    {
+     "sig": "count(first, last, x)",
+     "desc": "liczba elementów równych x",
+     "complexity": "O(n)",
+     "returns": "ptrdiff_t (liczba ze znakiem)",
+     "example": "count(s.begin(), s.end(), 'a')"
+    },
+    {
+     "sig": "count_if(first, last, pred)",
+     "desc": "liczba elementów spełniających pred",
+     "complexity": "O(n)",
+     "returns": "ptrdiff_t",
+     "example": "count_if(v.begin(), v.end(), [](int x) { return x > 0; })"
+    },
+    {
+     "sig": "mismatch(first1, last1, first2, last2[, pred])",
+     "desc": "pierwsza pozycja, na której zakresy się różnią (albo koniec krótszego)",
+     "complexity": "O(n)",
+     "returns": "pair<It1, It2>",
+     "example": "auto [i, j] = mismatch(a.begin(), a.end(), b.begin(), b.end());"
+    },
+    {
+     "sig": "equal(first1, last1, first2, last2[, pred])",
+     "desc": "czy zakresy mają tę samą długość i równe elementy; wersja 3-argumentowa zakłada, że drugi jest co najmniej tak długi",
+     "complexity": "O(n)",
+     "returns": "bool",
+     "example": "equal(s.begin(), s.begin() + s.size() / 2, s.rbegin())"
+    },
+    {
+     "sig": "search(first, last, s_first, s_last[, pred])",
+     "desc": "początek PIERWSZEGO wystąpienia podciągu [s_first, s_last)",
+     "complexity": "O(n·m)",
+     "returns": "iterator albo last (pusty wzorzec → first)",
+     "example": "search(t.begin(), t.end(), p.begin(), p.end())"
+    },
+    {
+     "sig": "search(first, last, searcher)",
+     "desc": "C++17: wyszukiwanie wzorca obiektem default_searcher / boyer_moore_searcher / boyer_moore_horspool_searcher (<functional>)",
+     "complexity": "średnio podliniowo, pesymistycznie O(n·m)",
+     "returns": "iterator albo last",
+     "example": "search(t.begin(), t.end(), boyer_moore_horspool_searcher(p.begin(), p.end()))"
+    },
+    {
+     "sig": "search_n(first, last, count, value[, pred])",
+     "desc": "początek pierwszej serii count kolejnych elementów równych value",
+     "complexity": "O(n)",
+     "returns": "iterator albo last",
+     "example": "search_n(v.begin(), v.end(), 3, 1)"
+    },
+    {
+     "sig": "is_permutation(first1, last1, first2, last2[, pred])",
+     "desc": "czy zakresy zawierają te same elementy z tymi samymi krotnościami",
+     "complexity": "O(n²) pesymistycznie, O(n) gdy równe",
+     "returns": "bool",
+     "example": "is_permutation(a.begin(), a.end(), b.begin(), b.end())"
+    },
+    {
+     "sig": "ranges::find(r, x) / ranges::count(r, x) / ranges::equal(r1, r2)",
+     "desc": "C++20: te same algorytmy na całym kontenerze (bez begin/end), z opcjonalną projekcją",
+     "complexity": "jak wyżej",
+     "returns": "jak wyżej",
+     "example": "ranges::count(v, 5)"
+    }
+   ],
+   "pitfalls": [
+    "Funkcje wyszukujące zwracają `last`, gdy nic nie znalazły — `*find(...)` bez sprawdzenia `!= v.end()` to UB.",
+    "`equal(a.begin(), a.end(), b.begin())` i `mismatch` w wersji 3-argumentowej zakładają, że drugi zakres jest co najmniej tak długi — inaczej czytają poza tablicą. Używaj wersji 4-argumentowej (C++14) albo `a == b`.",
+    "`is_permutation` jest pesymistycznie O(n²) — przy n = 10⁵ to TLE. Sortuj kopie i porównaj albo zliczaj wystąpienia.",
+    "`search`, `find_end`, `find_first_of` są O(n·m) — do wzorców w długich tekstach używaj KMP/Z.",
+    "`std::count`/`std::find` na `set`/`map` działają liniowo — używaj metod `s.count(x)`, `s.find(x)`.",
+    "`for_each` zwraca KOPIĘ funktora — stan lambdy przechwycony przez wartość nie wraca do zmiennej; zbieraj wynik przez `[&]`.",
+    "`adjacent_find` widzi tylko SĄSIEDNIE równe elementy — do wykrycia dowolnego duplikatu najpierw posortuj.",
+    "`find_end` szuka OSTATNIEGO wystąpienia podciągu, a nie „końca” czegokolwiek — nazwa jest myląca."
+   ],
+   "qa": [
+    {
+     "q": [
+      "adjacent_find c++",
+      "czy są dwa takie same elementy obok siebie",
+      "czy sa dwa rowne sasiednie elementy",
+      "znajdź dwa sąsiednie równe",
+      "adjacent find jak działa",
+      "find two equal adjacent elements c++",
+      "adjecent_find"
+     ],
+     "a": "`adjacent_find(first, last)` zwraca iterator na **pierwszy element pierwszej pary sąsiadów** z `*it == *(it + 1)`, albo `last`, gdy takiej pary nie ma. O(n). Z predykatem `adjacent_find(f, l, pred)` szuka pary z `pred(a, b) == true` — np. `greater<int>()` znajdzie pierwsze miejsce, gdzie ciąg przestaje rosnąć. Po sortowaniu wykrywa dowolny duplikat.",
+     "code": "vector<int> v = {1, 4, 4, 2, 7, 7};\nauto it = adjacent_find(v.begin(), v.end());\nif (it != v.end()) cout << \"para \" << *it << \" na pozycji \" << it - v.begin() << '\\n';   // para 4 na pozycji 1\nauto spadek = adjacent_find(v.begin(), v.end(), greater<int>());\ncout << spadek - v.begin() << '\\n';   // 2 (bo 4 > 2)"
+    },
+    {
+     "q": [
+      "mismatch c++",
+      "gdzie dwa vectory się różnią",
+      "pierwsza różnica dwóch tablic",
+      "pierwsza pozycja na ktorej sie roznia",
+      "wspólny prefiks dwóch stringów",
+      "longest common prefix c++ mismatch",
+      "mismach c++"
+     ],
+     "a": "`mismatch(f1, l1, f2, l2)` zwraca `pair` iteratorów na pierwszą pozycję, na której zakresy się różnią (albo na koniec krótszego). Długość wspólnego prefiksu to `p.first - f1`. O(n). Używaj wersji **4-argumentowej** (C++14) — 3-argumentowa zakłada, że drugi zakres jest co najmniej tak długi, i może wyjść poza tablicę.",
+     "code": "string a = \"algorytm\", b = \"algebra\";\nauto [ia, ib] = mismatch(a.begin(), a.end(), b.begin(), b.end());\ncout << \"wspólny prefiks: \" << ia - a.begin() << '\\n';                    // 3 (\"alg\")\nif (ia != a.end() && ib != b.end()) cout << *ia << \" vs \" << *ib << '\\n';  // o vs e"
+    },
+    {
+     "q": [
+      "search_n c++",
+      "k takich samych elementów pod rząd",
+      "czy jest k jednakowych z rzędu",
+      "k jedynek pod rzad w tablicy",
+      "znajdź serię k równych elementów",
+      "find k consecutive equal elements c++",
+      "search n"
+     ],
+     "a": "`search_n(first, last, k, x)` zwraca iterator na początek pierwszej serii `k` **kolejnych** elementów równych `x` (albo `last`). Złożoność O(n). Wersja z predykatem `search_n(f, l, k, x, pred)` sprawdza `pred(element, x)` — np. k kolejnych liczb mniejszych od x.",
+     "code": "vector<int> v = {0, 1, 1, 0, 1, 1, 1, 0};\nauto it = search_n(v.begin(), v.end(), 3, 1);\nif (it != v.end()) cout << \"3 jedynki od indeksu \" << it - v.begin() << '\\n';   // 4\nauto jt = search_n(v.begin(), v.end(), 2, 5, [](int e, int x) { return e < x; });\ncout << jt - v.begin() << '\\n';   // 0 (0 i 1 są < 5)"
+    },
+    {
+     "q": [
+      "is_permutation c++",
+      "czy dwa vectory mają te same elementy",
+      "czy tablica jest permutacją drugiej",
+      "czy to anagram c++",
+      "sprawdz czy dwa ciagi sa permutacjami",
+      "check if two arrays are permutations c++",
+      "is permutation"
+     ],
+     "a": "`is_permutation(f1, l1, f2, l2)` sprawdza, czy zakresy zawierają te same elementy z tymi samymi krotnościami (w dowolnej kolejności). **Uwaga: pesymistycznie O(n²)** — dobre tylko dla małych n. Dla dużych danych posortuj kopie i porównaj `==` (O(n log n)) albo zlicz wystąpienia w tablicy liczników (O(n)).",
+     "code": "string a = \"kajak\", b = \"kajka\";\ncout << is_permutation(a.begin(), a.end(), b.begin(), b.end()) << '\\n';   // 1\n// szybciej dla dużych danych: O(n log n)\nstring x = a, y = b;\nsort(x.begin(), x.end());\nsort(y.begin(), y.end());\ncout << (x == y) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "std::equal c++",
+      "czy dwa vectory są równe",
+      "porównanie fragmentów tablic",
+      "equal palindrom",
+      "sprawdz czy fragment tablicy rowny innemu",
+      "compare two ranges c++",
+      "equal c++ jak dziala"
+     ],
+     "a": "`equal(f1, l1, f2, l2)` → `true`, gdy zakresy mają tę samą długość i równe elementy na tych samych pozycjach. Całe kontenery porównasz po prostu `a == b`; `equal` przydaje się do **fragmentów** i do porównań z iteratorami odwrotnymi — np. test palindromu: `equal(s.begin(), s.begin() + s.size() / 2, s.rbegin())`.",
+     "code": "string s = \"kajak\";\nbool pal = equal(s.begin(), s.begin() + s.size() / 2, s.rbegin());\ncout << pal << '\\n';   // 1\nvector<int> a = {1, 2, 3, 4}, b = {9, 2, 3, 7};\ncout << equal(a.begin() + 1, a.begin() + 3, b.begin() + 1, b.begin() + 3) << '\\n';   // 1 ([2,3] == [2,3])"
+    },
+    {
+     "q": [
+      "find_end c++",
+      "ostatnie wystąpienie podciągu",
+      "ostatnie wystapienie wzorca w vectorze",
+      "znajdź ostatnie wystąpienie fragmentu",
+      "last occurrence of subsequence c++",
+      "find end"
+     ],
+     "a": "`find_end(first, last, s_first, s_last)` zwraca iterator na początek **ostatniego** wystąpienia podciągu `[s_first, s_last)` (nazwa jest myląca — to „search od końca”). Gdy brak — `last`. O(n·m). Dla `string` prościej: `s.rfind(t)` (indeks albo `string::npos`).",
+     "code": "vector<int> v = {1, 2, 3, 1, 2, 3, 1};\nvector<int> w = {1, 2};\nauto it = find_end(v.begin(), v.end(), w.begin(), w.end());\ncout << it - v.begin() << '\\n';   // 3\nstring s = \"abcabc\";\ncout << s.rfind(\"bc\") << '\\n';    // 4"
+    },
+    {
+     "q": [
+      "find_first_of c++",
+      "znajdź pierwszy element z zestawu",
+      "pierwsza samogłoska w stringu",
+      "pierwszy znak z listy",
+      "find any of c++",
+      "znajdz pierwsze wystapienie ktoregokolwiek"
+     ],
+     "a": "`find_first_of(first, last, s_first, s_last)` zwraca iterator na pierwszy element zakresu równy **któremukolwiek** elementowi z `[s_first, s_last)`. O(n·m) — przy dużym zbiorze szukanych zaznacz je w tablicy `bool` i użyj `find_if`. Dla `string` jest też metoda `s.find_first_of(\"aeiouy\")` zwracająca indeks.",
+     "code": "string s = \"programowanie\", sam = \"aeiouy\";\nauto it = find_first_of(s.begin(), s.end(), sam.begin(), sam.end());\ncout << it - s.begin() << ' ' << *it << '\\n';   // 2 o\ncout << s.find_first_of(\"aeiouy\") << '\\n';      // 2"
+    },
+    {
+     "q": [
+      "for_each c++",
+      "for_each czy pętla for",
+      "for_each_n",
+      "jak działa for_each",
+      "for each lambda c++",
+      "zrob cos dla kazdego elementu vectora"
+     ],
+     "a": "`for_each(first, last, f)` wywołuje `f(x)` dla każdego elementu po kolei (jeśli `f` bierze `int&`, może je zmieniać). Zwykle czytelniejsza jest pętla `for (auto& x : v)`; `for_each` przydaje się dla fragmentu zakresu, a `for_each_n(first, n, f)` (C++17) — dla pierwszych n elementów. Zwracana jest kopia funktora, więc stan zbieraj przez `[&]`.",
+     "code": "vector<int> v = {1, 2, 3, 4, 5};\nfor_each(v.begin(), v.end(), [](int& x) { x *= 10; });   // 10 20 30 40 50\nlong long suma = 0;\nfor_each_n(v.begin(), 3, [&](int x) { suma += x; });      // 10 + 20 + 30\ncout << suma << '\\n';   // 60"
+    },
+    {
+     "q": [
+      "boyer_moore_horspool_searcher",
+      "boyer moore c++",
+      "szybki search wzorca w tekście",
+      "search z searcherem",
+      "std::search szybciej",
+      "boyer moore searcher stl"
+     ],
+     "a": "Od C++17 `search` przyjmuje obiekt wyszukiwarki z `<functional>`: `search(t.begin(), t.end(), boyer_moore_horspool_searcher(p.begin(), p.end()))`. Średnio działa szybciej niż naiwne `search`, ale pesymistycznie nadal O(n·m) — w zadaniach z gwarancją złożoności używaj KMP lub funkcji Z.",
+     "code": "string t = \"abracadabra\", p = \"cad\";\nauto it = search(t.begin(), t.end(), boyer_moore_horspool_searcher(p.begin(), p.end()));\nif (it != t.end()) cout << it - t.begin() << '\\n';   // 4"
+    }
+   ],
+   "related": [
+    "stl-count-find",
+    "stl-all-any-none",
+    "stl-unique",
+    "stl-ref-modifying",
+    "stl-ref-binary-search-minmax",
+    "stl-ref-ranges",
+    "str-kmp"
+   ]
+  },
+  {
+   "id": "stl-ref-modifying",
+   "title": "Dokumentacja: <algorithm> — algorytmy modyfikujące (copy, transform, replace, remove…)",
+   "category": "STL algorytmy",
+   "tags": [
+    "algorithm",
+    "dokumentacja",
+    "referencja",
+    "algorytmy modyfikujące",
+    "copy",
+    "copy_if",
+    "transform",
+    "replace",
+    "replace_if",
+    "copy_backward",
+    "sample",
+    "swap_ranges",
+    "shift_left",
+    "unique_copy",
+    "remove_copy"
+   ],
+   "aliases": [
+    "dokumentacja algorithm modyfikujące",
+    "algorytmy modyfikujące",
+    "algorytmy modyfikujace",
+    "modifying sequence operations",
+    "copy_if",
+    "std::copy",
+    "std::transform",
+    "transform c++",
+    "std::replace",
+    "replace_if",
+    "copy_backward",
+    "swap_ranges",
+    "unique_copy",
+    "remove_copy_if",
+    "reverse_copy",
+    "rotate_copy",
+    "shift_left",
+    "shift_right"
+   ],
+   "summary": "Ściąga wszystkich algorytmów z `<algorithm>`, które zapisują lub przestawiają elementy: kopiowanie (copy, copy_if, copy_n, copy_backward, move), wypełnianie (fill, generate), przekształcanie (transform), zamiana wartości (replace*), usuwanie (remove*, unique*) i przestawianie (reverse, rotate, shift_left/right, shuffle, sample, swap_ranges).",
+   "complexity": "wszystkie liniowe: O(n) dla zakresu długości n (iter_swap O(1))",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Trzy zasady, które tłumaczą prawie wszystkie błędy z tymi funkcjami:\n\n- **Cel musi mieć miejsce.** Algorytm piszący do `d_first` tylko nadpisuje istniejące elementy — nie powiększa kontenera. Zrób `resize` albo pisz do `back_inserter(w)`.\n- **Wersje `_copy`** zostawiają źródło w spokoju i zapisują wynik gdzie indziej; wersje bez `_copy` działają w miejscu.\n- **`remove` i `unique` nie usuwają** — przesuwają „zostające” elementy na początek i zwracają nowy logiczny koniec; fizycznie usuwa dopiero `v.erase(nowyKoniec, v.end())`.\n\nFunkcje z wyjściem zwracają iterator **za ostatnim zapisanym** elementem — z niego policzysz, ile zapisano."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Co robi",
+      "Zwraca"
+     ],
+     "rows": [
+      [
+       "`copy(f, l, out)`",
+       "kopiuje zakres",
+       "koniec zapisu"
+      ],
+      [
+       "`copy_if(f, l, out, p)`",
+       "kopiuje elementy z p(x) == true",
+       "koniec zapisu"
+      ],
+      [
+       "`copy_n(f, n, out)`",
+       "kopiuje n pierwszych",
+       "koniec zapisu"
+      ],
+      [
+       "`copy_backward(f, l, d_last)`",
+       "kopiuje od końca (przesuwanie w prawo)",
+       "początek zapisu"
+      ],
+      [
+       "`move(f, l, out)` / `move_backward`",
+       "przenosi zamiast kopiować",
+       "koniec / początek zapisu"
+      ],
+      [
+       "`fill(f, l, x)` / `fill_n(f, n, x)`",
+       "wypełnia wartością x",
+       "— / koniec"
+      ],
+      [
+       "`generate(f, l, g)` / `generate_n(f, n, g)`",
+       "przypisuje kolejne wyniki g()",
+       "— / koniec"
+      ],
+      [
+       "`transform(f, l, out, op)`",
+       "out[i] = op(a[i])",
+       "koniec zapisu"
+      ],
+      [
+       "`transform(f1, l1, f2, out, op)`",
+       "out[i] = op(a[i], b[i])",
+       "koniec zapisu"
+      ],
+      [
+       "`replace(f, l, old, nowa)` / `replace_if(f, l, p, nowa)`",
+       "zamienia wartości w miejscu",
+       "—"
+      ],
+      [
+       "`replace_copy` / `replace_copy_if`",
+       "kopia z zamienionymi wartościami",
+       "koniec zapisu"
+      ],
+      [
+       "`remove(f, l, x)` / `remove_if(f, l, p)`",
+       "zostawia elementy ≠ x / bez p",
+       "nowy logiczny koniec"
+      ],
+      [
+       "`remove_copy` / `remove_copy_if`",
+       "kopia bez wybranych elementów",
+       "koniec zapisu"
+      ],
+      [
+       "`unique(f, l[, p])` / `unique_copy`",
+       "usuwa KOLEJNE powtórzenia",
+       "nowy koniec / koniec zapisu"
+      ],
+      [
+       "`reverse(f, l)` / `reverse_copy`",
+       "odwraca kolejność",
+       "— / koniec zapisu"
+      ],
+      [
+       "`rotate(f, m, l)` / `rotate_copy`",
+       "m staje się pierwszym elementem",
+       "nowa pozycja dawnego *f"
+      ],
+      [
+       "`shift_left(f, l, k)` / `shift_right`",
+       "C++20: przesunięcie o k w obrębie zakresu",
+       "nowy koniec / początek"
+      ],
+      [
+       "`shuffle(f, l, rng)`",
+       "losowa permutacja",
+       "—"
+      ],
+      [
+       "`sample(f, l, out, k, rng)`",
+       "C++17: k losowych elementów bez powtórzeń",
+       "koniec zapisu"
+      ],
+      [
+       "`swap_ranges(f1, l1, f2)`",
+       "zamienia zawartość dwóch zakresów",
+       "koniec w 2. zakresie"
+      ],
+      [
+       "`iter_swap(a, b)`",
+       "swap(*a, *b)",
+       "—"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: wszystkie grupy funkcji",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvoid wypisz(const string& nazwa, const vector<int>& v) {\n    cout << nazwa << ':';\n    for (int x : v) cout << ' ' << x;\n    cout << '\\n';\n}\n\nint main() {\n    vector<int> a = {4, 7, 1, 8, 2, 8, 5};\n\n    vector<int> b(a.size());\n    copy(a.begin(), a.end(), b.begin());                      // cel ma już rozmiar\n    vector<int> parz;\n    copy_if(a.begin(), a.end(), back_inserter(parz), [](int x) { return x % 2 == 0; });\n    wypisz(\"copy_if\", parz);                                  // 4 8 2 8\n\n    transform(b.begin(), b.end(), b.begin(), [](int x) { return x * 10; });\n    wypisz(\"transform\", b);                                   // 40 70 10 80 20 80 50\n\n    replace(a.begin(), a.end(), 8, 0);\n    wypisz(\"replace\", a);                                     // 4 7 1 0 2 0 5\n\n    a.erase(remove(a.begin(), a.end(), 0), a.end());\n    wypisz(\"remove + erase\", a);                              // 4 7 1 2 5\n\n    reverse(a.begin(), a.end());\n    wypisz(\"reverse\", a);                                     // 5 2 1 7 4\n\n    rotate(a.begin(), a.begin() + 2, a.end());\n    wypisz(\"rotate\", a);                                      // 1 7 4 5 2\n\n    vector<int> c(5);\n    generate(c.begin(), c.end(), [k = 1]() mutable { return k *= 2; });\n    wypisz(\"generate\", c);                                    // 2 4 8 16 32\n\n    fill_n(c.begin(), 2, -1);\n    wypisz(\"fill_n\", c);                                      // -1 -1 8 16 32\n\n    swap_ranges(a.begin(), a.begin() + 2, c.begin());\n    wypisz(\"swap_ranges a\", a);                               // -1 -1 4 5 2\n    wypisz(\"swap_ranges c\", c);                               // 1 7 8 16 32\n\n    vector<int> d = {1, 1, 2, 2, 2, 3, 1};\n    d.erase(unique(d.begin(), d.end()), d.end());\n    wypisz(\"unique + erase\", d);                              // 1 2 3 1\n\n    vector<int> e = {1, 2, 3, 4, 5, 0};\n    copy_backward(e.begin() + 1, e.begin() + 5, e.end());     // przesunięcie w prawo\n    e[1] = 9;\n    wypisz(\"copy_backward\", e);                               // 1 9 2 3 4 5\n\n    mt19937 rng(123);\n    shuffle(d.begin(), d.end(), rng);                         // losowa kolejność\n    vector<int> los;\n    sample(b.begin(), b.end(), back_inserter(los), 3, rng);   // 3 różne pozycje z b\n    cout << \"sample: \" << los.size() << \" elementy\\n\";        // 3\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`copy(a.begin(), a.end(), b.begin())` przy pustym `b` pisze poza pamięcią — w najlepszym razie RE, w najgorszym cicho psuje inne zmienne. Przed kopiowaniem: `b.resize(a.size())`, albo `copy(..., back_inserter(b))`, albo po prostu `b = a` / `vector<int> b(a.begin(), a.end())`."
+    },
+    {
+     "type": "text",
+     "md": "### copy czy copy_backward?\nGdy źródło i cel **nachodzą na siebie** w tej samej tablicy: przy przesuwaniu w lewo (cel przed źródłem) użyj `copy`, przy przesuwaniu w prawo — `copy_backward` (podajesz **koniec** celu). W C++20 to samo robią `shift_left(f, l, k)` i `shift_right(f, l, k)` — zwolnione miejsca mają nieokreśloną wartość."
+    },
+    {
+     "type": "tip",
+     "md": "`transform` na znakach: `transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return toupper(c); })`. Rzutowanie na `unsigned char` chroni przed UB dla znaków spoza ASCII (ujemny `char`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "copy(first, last, d_first)",
+     "desc": "kopiuje [first, last) do d_first; cel musi mieć miejsce",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "copy(a.begin(), a.end(), back_inserter(b));"
+    },
+    {
+     "sig": "copy_if(first, last, d_first, pred)",
+     "desc": "kopiuje tylko elementy spełniające pred (kolejność zachowana)",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "copy_if(a.begin(), a.end(), back_inserter(b), [](int x) { return x > 0; });"
+    },
+    {
+     "sig": "copy_n(first, n, d_first)",
+     "desc": "kopiuje n elementów od first",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "copy_n(a.begin(), 3, b.begin());"
+    },
+    {
+     "sig": "copy_backward(first, last, d_last)",
+     "desc": "kopiuje od końca; d_last to KONIEC celu — do przesuwania w prawo",
+     "complexity": "O(n)",
+     "returns": "iterator na początek skopiowanego fragmentu",
+     "example": "copy_backward(v.begin() + i, v.end() - 1, v.end());"
+    },
+    {
+     "sig": "move(first, last, d_first)",
+     "desc": "przenosi elementy (std::move każdego); źródło zostaje w stanie „przeniesionym”",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "move(a.begin(), a.end(), back_inserter(b));"
+    },
+    {
+     "sig": "move_backward(first, last, d_last)",
+     "desc": "jak copy_backward, ale przenosi",
+     "complexity": "O(n)",
+     "returns": "iterator na początek zapisu"
+    },
+    {
+     "sig": "fill(first, last, x)",
+     "desc": "przypisuje x każdemu elementowi",
+     "complexity": "O(n)",
+     "returns": "void",
+     "example": "fill(v.begin(), v.end(), -1);"
+    },
+    {
+     "sig": "fill_n(first, n, x)",
+     "desc": "przypisuje x n kolejnym elementom",
+     "complexity": "O(n)",
+     "returns": "iterator first + n",
+     "example": "fill_n(dp, n + 1, INF);"
+    },
+    {
+     "sig": "transform(first, last, d_first, op)",
+     "desc": "d_first[i] = op(first[i]); może pisać w miejscu (d_first == first)",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "transform(v.begin(), v.end(), v.begin(), [](int x) { return x * x; });"
+    },
+    {
+     "sig": "transform(first1, last1, first2, d_first, op)",
+     "desc": "d_first[i] = op(a[i], b[i]); drugi zakres ≥ pierwszego",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "transform(a.begin(), a.end(), b.begin(), c.begin(), plus<>());"
+    },
+    {
+     "sig": "generate(first, last, g)",
+     "desc": "przypisuje kolejne wyniki g() (g bez argumentów)",
+     "complexity": "O(n)",
+     "returns": "void",
+     "example": "generate(v.begin(), v.end(), [&] { return rng() % 100; });"
+    },
+    {
+     "sig": "generate_n(first, n, g)",
+     "desc": "n razy wynik g()",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "generate_n(back_inserter(v), 5, [k = 0]() mutable { return k++; });"
+    },
+    {
+     "sig": "replace(first, last, old_value, new_value)",
+     "desc": "zamienia każde wystąpienie old_value na new_value",
+     "complexity": "O(n)",
+     "returns": "void",
+     "example": "replace(s.begin(), s.end(), ',', ' ');"
+    },
+    {
+     "sig": "replace_if(first, last, pred, new_value)",
+     "desc": "zamienia elementy spełniające pred",
+     "complexity": "O(n)",
+     "returns": "void",
+     "example": "replace_if(v.begin(), v.end(), [](int x) { return x < 0; }, 0);"
+    },
+    {
+     "sig": "replace_copy(first, last, d_first, old_value, new_value)",
+     "desc": "kopia z zamienionymi wartościami (źródło bez zmian)",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym"
+    },
+    {
+     "sig": "replace_copy_if(first, last, d_first, pred, new_value)",
+     "desc": "kopia z zamianą elementów spełniających pred",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym"
+    },
+    {
+     "sig": "remove(first, last, x)",
+     "desc": "przesuwa elementy ≠ x na początek (NIE zmienia rozmiaru)",
+     "complexity": "O(n)",
+     "returns": "nowy logiczny koniec",
+     "example": "v.erase(remove(v.begin(), v.end(), x), v.end());"
+    },
+    {
+     "sig": "remove_if(first, last, pred)",
+     "desc": "jak remove, ale usuwa elementy spełniające pred",
+     "complexity": "O(n)",
+     "returns": "nowy logiczny koniec"
+    },
+    {
+     "sig": "remove_copy(first, last, d_first, x)",
+     "desc": "kopiuje wszystko oprócz x",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym"
+    },
+    {
+     "sig": "remove_copy_if(first, last, d_first, pred)",
+     "desc": "kopiuje elementy NIE spełniające pred",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym"
+    },
+    {
+     "sig": "unique(first, last[, pred])",
+     "desc": "zostawia pierwszy z każdej serii KOLEJNYCH równych",
+     "complexity": "O(n)",
+     "returns": "nowy logiczny koniec",
+     "example": "v.erase(unique(v.begin(), v.end()), v.end());"
+    },
+    {
+     "sig": "unique_copy(first, last, d_first[, pred])",
+     "desc": "kopia bez kolejnych powtórzeń",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym"
+    },
+    {
+     "sig": "reverse(first, last)",
+     "desc": "odwraca kolejność w miejscu",
+     "complexity": "O(n)",
+     "returns": "void",
+     "example": "reverse(s.begin(), s.end());"
+    },
+    {
+     "sig": "reverse_copy(first, last, d_first)",
+     "desc": "zapisuje odwróconą kopię",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym"
+    },
+    {
+     "sig": "rotate(first, middle, last)",
+     "desc": "przesunięcie cykliczne: *middle staje się pierwszym",
+     "complexity": "O(n)",
+     "returns": "iterator first + (last − middle)",
+     "example": "rotate(v.begin(), v.begin() + k, v.end());"
+    },
+    {
+     "sig": "rotate_copy(first, middle, last, d_first)",
+     "desc": "zapisuje obróconą kopię",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym"
+    },
+    {
+     "sig": "shift_left(first, last, k)",
+     "desc": "C++20: przesuwa elementy o k w lewo w obrębie zakresu",
+     "complexity": "O(n)",
+     "returns": "iterator na nowy koniec",
+     "example": "shift_left(v.begin(), v.end(), 2);"
+    },
+    {
+     "sig": "shift_right(first, last, k)",
+     "desc": "C++20: przesuwa elementy o k w prawo w obrębie zakresu",
+     "complexity": "O(n)",
+     "returns": "iterator na nowy początek"
+    },
+    {
+     "sig": "shuffle(first, last, rng)",
+     "desc": "losowa permutacja (np. rng = mt19937)",
+     "complexity": "O(n)",
+     "returns": "void",
+     "example": "shuffle(v.begin(), v.end(), rng);"
+    },
+    {
+     "sig": "sample(first, last, d_first, k, rng)",
+     "desc": "C++17: k losowych elementów bez powtórzeń (dla vectora kolejność zachowana)",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "sample(v.begin(), v.end(), back_inserter(w), 3, rng);"
+    },
+    {
+     "sig": "swap_ranges(first1, last1, first2)",
+     "desc": "zamienia elementy dwóch rozłącznych zakresów tej samej długości",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zamienionym w 2. zakresie",
+     "example": "swap_ranges(a.begin(), a.begin() + 2, a.begin() + 4);"
+    },
+    {
+     "sig": "iter_swap(a, b)",
+     "desc": "zamienia elementy wskazywane przez iteratory",
+     "complexity": "O(1)",
+     "returns": "void",
+     "example": "iter_swap(v.begin(), v.end() - 1);"
+    }
+   ],
+   "pitfalls": [
+    "Docelowy zakres musi mieć miejsce: `copy(a.begin(), a.end(), b.begin())` na pustym `b` to zapis poza pamięcią. Zrób `b.resize(a.size())` albo użyj `back_inserter(b)`.",
+    "`remove`/`remove_if`/`unique` nie zmieniają rozmiaru kontenera — trzeba `erase` od zwróconego iteratora do `end()`.",
+    "`copy` przy nakładających się zakresach działa tylko przy kopiowaniu w lewo; przesuwając w prawo użyj `copy_backward` albo `shift_right`.",
+    "`transform(s.begin(), s.end(), s.begin(), ::toupper)` — `toupper` dla ujemnego `char` to UB; bezpieczniej lambda z `unsigned char`.",
+    "`random_shuffle` usunięto w C++17 — używaj `shuffle(..., mt19937(...))`.",
+    "`sample` dla vectora zachowuje względną kolejność wybranych elementów — jeśli potrzebna losowa kolejność, potasuj wynik.",
+    "`move(first, last, out)` z `<algorithm>` przenosi elementy; `move(x)` z `<utility>` tylko rzutuje na r-wartość — to dwie różne funkcje.",
+    "`unique` usuwa tylko KOLEJNE powtórzenia — przed nim posortuj, jeśli chcesz usunąć wszystkie duplikaty."
+   ],
+   "qa": [
+    {
+     "q": [
+      "copy_if c++",
+      "skopiuj tylko parzyste liczby",
+      "skopiuj elementy spełniające warunek",
+      "filtrowanie vectora do nowego vectora",
+      "kopiowanie z warunkiem",
+      "copy if c++ example",
+      "copyif"
+     ],
+     "a": "`copy_if(first, last, out, pred)` kopiuje do `out` tylko elementy z `pred(x) == true`, zachowując kolejność, i zwraca iterator za ostatnim zapisanym. Najwygodniej pisać do `back_inserter(w)` — wtedy nie trzeba znać rozmiaru wyniku z góry.",
+     "code": "vector<int> v = {5, 8, 1, 4, 7, 6};\nvector<int> parz;\ncopy_if(v.begin(), v.end(), back_inserter(parz), [](int x) { return x % 2 == 0; });\nfor (int x : parz) cout << x << ' ';   // 8 4 6\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "std::transform",
+      "transform c++",
+      "zamień string na wielkie litery",
+      "zamien stringa na male litery transform",
+      "toupper cały string",
+      "zastosuj funkcję do każdego elementu",
+      "transform jak uzywac",
+      "map function c++"
+     ],
+     "a": "`transform(first, last, out, f)` zapisuje `f(x)` dla każdego elementu do `out` (może to być ten sam zakres — przekształcenie w miejscu). Zwraca iterator za ostatnim zapisanym. Dla znaków używaj lambdy z `unsigned char`, bo `toupper` z ujemnym `char` to UB.",
+     "code": "string s = \"Olimpiada\";\ntransform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return toupper(c); });\ncout << s << '\\n';   // OLIMPIADA\nvector<int> v = {1, 2, 3};\nvector<long long> kw(v.size());\ntransform(v.begin(), v.end(), kw.begin(), [](int x) { return 1LL * x * x; });\ncout << kw[2] << '\\n';   // 9"
+    },
+    {
+     "q": [
+      "dodaj dwa vectory element po elemencie",
+      "suma dwóch tablic po elementach",
+      "transform dwa vectory",
+      "transform binary c++",
+      "dodawanie wektorów c++",
+      "element-wise sum two vectors c++"
+     ],
+     "a": "Wersja dwuargumentowa `transform(f1, l1, f2, out, op)` liczy `op(a[i], b[i])`. Drugi zakres musi być co najmniej tak długi jak pierwszy. Gotowe operacje z `<functional>`: `plus<>()`, `minus<>()`, `multiplies<>()`.",
+     "code": "vector<int> a = {1, 2, 3}, b = {10, 20, 30}, c(3);\ntransform(a.begin(), a.end(), b.begin(), c.begin(), plus<>());\nfor (int x : c) cout << x << ' ';   // 11 22 33\ncout << '\\n';\ntransform(a.begin(), a.end(), b.begin(), c.begin(), [](int x, int y) { return max(x, y); });\ncout << c[0] << '\\n';   // 10"
+    },
+    {
+     "q": [
+      "std::replace",
+      "zamień wszystkie wystąpienia x na y w vectorze",
+      "zamien wszystkie x na y",
+      "replace_if c++",
+      "zamień ujemne na zero",
+      "replace all occurrences in vector c++",
+      "zamiana przecinków na spacje"
+     ],
+     "a": "`replace(first, last, stara, nowa)` zamienia każde wystąpienie wartości; `replace_if(first, last, pred, nowa)` — każdy element spełniający warunek. Działa też na `string` dla pojedynczych znaków. Uwaga: metoda `s.replace(pos, len, t)` stringa to zupełnie inna funkcja (podmienia fragment).",
+     "code": "vector<int> v = {3, -1, 3, -7, 2};\nreplace(v.begin(), v.end(), 3, 30);                               // 30 -1 30 -7 2\nreplace_if(v.begin(), v.end(), [](int x) { return x < 0; }, 0);   // 30 0 30 0 2\nstring s = \"1,2,3\";\nreplace(s.begin(), s.end(), ',', ' ');\ncout << s << '\\n';   // 1 2 3"
+    },
+    {
+     "q": [
+      "copy_backward c++",
+      "przesuń elementy tablicy w prawo",
+      "przesun elementy o jedno miejsce w prawo",
+      "kopiowanie nakładających się zakresów",
+      "copy overlapping ranges",
+      "shift_right c++",
+      "shift_left c++"
+     ],
+     "a": "Przy przesuwaniu w prawo w obrębie tej samej tablicy zwykłe `copy` nadpisałoby dane, zanim je skopiuje. `copy_backward(first, last, d_last)` kopiuje od końca — podajesz **koniec** celu. W C++20 są też `shift_right(first, last, k)` / `shift_left(first, last, k)` (przesuwają w obrębie zakresu; zwolnione miejsca mają nieokreśloną wartość).",
+     "code": "vector<int> v = {1, 2, 3, 4, 5, 0};\ncopy_backward(v.begin() + 1, v.begin() + 5, v.end());   // 1 2 2 3 4 5\nv[1] = 9;                                               // 1 9 2 3 4 5 (wstawienie 9 na pozycję 1)\nvector<int> w = {1, 2, 3, 4, 5};\nshift_left(w.begin(), w.end(), 2);                      // 3 4 5 ? ?\ncout << v[1] << ' ' << w[0] << '\\n';   // 9 3"
+    },
+    {
+     "q": [
+      "sample c++",
+      "losowe k elementów bez powtórzeń",
+      "wylosuj k różnych elementów z vectora",
+      "losowanie bez zwracania c++",
+      "random subset c++",
+      "std::sample"
+     ],
+     "a": "`sample(first, last, out, k, rng)` (C++17) wybiera `k` różnych pozycji z zakresu (bez zwracania), każdy podzbiór jednakowo prawdopodobny, O(n). Dla wejścia z `vector` wynik zachowuje kolejność oryginału — gdy potrzebujesz losowej kolejności, zrób jeszcze `shuffle`.",
+     "code": "mt19937 rng(2024);\nvector<int> v(10);\niota(v.begin(), v.end(), 1);   // 1..10\nvector<int> wyb;\nsample(v.begin(), v.end(), back_inserter(wyb), 3, rng);\ncout << wyb.size() << '\\n';    // 3 (rosnąco, bo kolejność zachowana)"
+    },
+    {
+     "q": [
+      "swap_ranges c++",
+      "zamień fragmenty dwóch tablic",
+      "zamien dwa fragmenty vectora miejscami",
+      "swap części tablicy",
+      "swap two subarrays c++",
+      "swap ranges"
+     ],
+     "a": "`swap_ranges(f1, l1, f2)` zamienia element po elemencie `[f1, l1)` z zakresem tej samej długości zaczynającym się w `f2` i zwraca iterator za ostatnim zamienionym w drugim zakresie. Zakresy nie mogą na siebie nachodzić. Zamiana **sąsiednich** bloków różnej długości to `rotate`.",
+     "code": "vector<int> a = {1, 2, 3, 4, 5, 6};\nswap_ranges(a.begin(), a.begin() + 2, a.begin() + 4);   // 5 6 3 4 1 2\nfor (int x : a) cout << x << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "unique_copy c++",
+      "remove_copy_if",
+      "skopiuj bez duplikatów",
+      "kopia bez wybranych elementów",
+      "remove copy c++",
+      "skopiuj vector bez zer"
+     ],
+     "a": "Wersje `_copy` nie ruszają źródła, tylko zapisują wynik gdzie indziej: `remove_copy(f, l, out, x)` kopiuje wszystko oprócz `x`, `remove_copy_if` — oprócz elementów spełniających warunek, `unique_copy` pomija **kolejne** powtórzenia (jak `unique` — do usunięcia wszystkich duplikatów źródło musi być posortowane).",
+     "code": "vector<int> v = {1, 0, 1, 1, 0, 2, 2};\nvector<int> bezZer, bezPowt;\nremove_copy(v.begin(), v.end(), back_inserter(bezZer), 0);   // 1 1 1 2 2\nunique_copy(v.begin(), v.end(), back_inserter(bezPowt));     // 1 0 1 0 2\ncout << bezZer.size() << ' ' << bezPowt.size() << '\\n';      // 5 5"
+    },
+    {
+     "q": [
+      "copy segmentation fault",
+      "copy do pustego vectora",
+      "std::copy crash",
+      "copy nie dziala pusty vector",
+      "kopiowanie vectora do drugiego",
+      "jak skopiować vector"
+     ],
+     "a": "`copy` nie powiększa kontenera docelowego — tylko nadpisuje istniejące elementy. Pisanie do pustego `vector` to zapis poza pamięcią (RE albo cichy błąd). Rozwiązania: `b.resize(a.size())` przed kopiowaniem, `copy(..., back_inserter(b))`, albo po prostu `b = a` / `vector<int> b(a.begin(), a.end())`.",
+     "code": "vector<int> a = {1, 2, 3}, b, c;\ncopy(a.begin(), a.end(), back_inserter(b));   // OK: push_back\nc.resize(a.size());\ncopy(a.begin(), a.end(), c.begin());          // OK: miejsce przygotowane\nvector<int> d(a.begin() + 1, a.end());        // kopia fragmentu {2, 3}\ncout << b.size() << ' ' << c[2] << ' ' << d[0] << '\\n';   // 3 3 2"
+    }
+   ],
+   "related": [
+    "stl-remove-erase",
+    "stl-unique",
+    "stl-reverse-rotate",
+    "stl-iota-fill",
+    "stl-shuffle-random",
+    "stl-swap",
+    "stl-ref-functional-iterator",
+    "stl-ref-nonmodifying"
+   ]
+  },
+  {
+   "id": "stl-ref-sorting-partition",
+   "title": "Dokumentacja: <algorithm> — sortowanie i podział (partition)",
+   "category": "STL algorytmy",
+   "tags": [
+    "algorithm",
+    "dokumentacja",
+    "referencja",
+    "sortowanie",
+    "podział",
+    "partition",
+    "stable_partition",
+    "partition_point",
+    "partition_copy",
+    "is_partitioned",
+    "is_sorted_until",
+    "partial_sort_copy",
+    "is_sorted"
+   ],
+   "aliases": [
+    "dokumentacja sortowanie",
+    "funkcje sortujące c++",
+    "funkcje sortujace c++",
+    "sorting operations c++",
+    "std::partition",
+    "partition c++",
+    "stable_partition",
+    "partition_copy",
+    "is_partitioned",
+    "is_sorted_until",
+    "partial_sort_copy",
+    "podział tablicy według warunku",
+    "rozdziel vector wg warunku"
+   ],
+   "summary": "Ściąga funkcji porządkujących z `<algorithm>`: pełne sortowanie (sort, stable_sort), częściowe (partial_sort, partial_sort_copy, nth_element), sprawdzanie porządku (is_sorted, is_sorted_until) oraz podział według predykatu (partition, stable_partition, partition_copy, partition_point, is_partitioned).",
+   "complexity": "sort/stable_sort: O(n log n); partial_sort: O(n log k); nth_element, partition: O(n); stable_partition: O(n) z pamięcią; partition_point: O(log n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`sort`, `stable_sort`, `partial_sort` i `nth_element` wymagają **iteratorów swobodnego dostępu** (`vector`, `array`, `deque`, `string`, zwykła tablica) — nie działają na `list` ani `set`. Komparator `cmp(a, b)` ma zwracać `true`, gdy `a` ma stać **przed** `b`, i musi być ścisły (`<`, nigdy `<=`). Funkcje podziału (`partition*`) przyjmują predykat jednoargumentowy i dzielą zakres na część „true” i część „false”."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Co robi",
+      "Złożoność",
+      "Zwraca"
+     ],
+     "rows": [
+      [
+       "`sort(f, l[, cmp])`",
+       "sortuje (niestabilnie)",
+       "O(n log n)",
+       "—"
+      ],
+      [
+       "`stable_sort(f, l[, cmp])`",
+       "sortuje, równe zachowują kolejność",
+       "O(n log n)",
+       "—"
+      ],
+      [
+       "`partial_sort(f, m, l[, cmp])`",
+       "[f, m) = posortowane m−f najmniejszych",
+       "O(n log k)",
+       "—"
+      ],
+      [
+       "`partial_sort_copy(f, l, df, dl[, cmp])`",
+       "k najmniejszych posortowanych do innego zakresu",
+       "O(n log k)",
+       "koniec zapisu"
+      ],
+      [
+       "`nth_element(f, nth, l[, cmp])`",
+       "*nth na swoim miejscu, mniejsze przed, większe za",
+       "O(n) średnio",
+       "—"
+      ],
+      [
+       "`is_sorted(f, l[, cmp])`",
+       "czy niemalejący",
+       "O(n)",
+       "bool"
+      ],
+      [
+       "`is_sorted_until(f, l[, cmp])`",
+       "koniec najdłuższego posortowanego prefiksu",
+       "O(n)",
+       "iterator"
+      ],
+      [
+       "`partition(f, l, p)`",
+       "„true” przed „false”, kolejność dowolna",
+       "O(n)",
+       "początek grupy false"
+      ],
+      [
+       "`stable_partition(f, l, p)`",
+       "jak wyżej, kolejność w grupach zachowana",
+       "O(n) / O(n log n)",
+       "początek grupy false"
+      ],
+      [
+       "`partition_copy(f, l, outT, outF, p)`",
+       "rozdziela do dwóch wyjść",
+       "O(n)",
+       "pair końców zapisu"
+      ],
+      [
+       "`partition_point(f, l, p)`",
+       "na podzielonym zakresie: pierwszy z p == false",
+       "O(log n)",
+       "iterator"
+      ],
+      [
+       "`is_partitioned(f, l, p)`",
+       "czy wszystkie true stoją przed false",
+       "O(n)",
+       "bool"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: sortowanie, częściowe sortowanie i podział",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvoid wypisz(const string& nazwa, const vector<int>& v) {\n    cout << nazwa << ':';\n    for (int x : v) cout << ' ' << x;\n    cout << '\\n';\n}\n\nint main() {\n    vector<int> v = {8, 3, 5, 1, 9, 2, 7};\n\n    vector<int> s = v;\n    sort(s.begin(), s.end());\n    wypisz(\"sort\", s);                                         // 1 2 3 5 7 8 9\n    cout << \"is_sorted: \" << is_sorted(s.begin(), s.end()) << '\\n';   // 1\n\n    vector<int> p = v;\n    partial_sort(p.begin(), p.begin() + 3, p.end());           // 3 najmniejsze na początku\n    cout << \"3 najmniejsze: \" << p[0] << ' ' << p[1] << ' ' << p[2] << '\\n';   // 1 2 3\n\n    vector<int> n = v;\n    nth_element(n.begin(), n.begin() + 3, n.end());\n    cout << \"mediana: \" << n[3] << '\\n';                       // 5\n\n    vector<int> q = v;\n    auto mid = partition(q.begin(), q.end(), [](int x) { return x < 5; });\n    cout << \"mniejszych od 5: \" << mid - q.begin() << '\\n';    // 3\n\n    vector<int> r = v;\n    auto nieparz = [](int x) { return x % 2 == 1; };\n    stable_partition(r.begin(), r.end(), nieparz);\n    wypisz(\"stable_partition\", r);                             // 3 5 1 9 7 8 2\n    cout << \"is_partitioned: \" << is_partitioned(r.begin(), r.end(), nieparz) << '\\n';   // 1\n    auto it = partition_point(r.begin(), r.end(), nieparz);\n    cout << \"pierwszy parzysty na pozycji \" << it - r.begin() << '\\n';   // 5\n\n    vector<int> male, duze;\n    partition_copy(v.begin(), v.end(), back_inserter(male), back_inserter(duze), [](int x) { return x < 5; });\n    wypisz(\"partition_copy <5\", male);                         // 3 1 2\n    wypisz(\"partition_copy >=5\", duze);                        // 8 5 9 7\n\n    vector<int> u = {1, 4, 6, 5, 8};\n    cout << \"posortowany prefiks: \" << is_sorted_until(u.begin(), u.end()) - u.begin() << '\\n';   // 3\n\n    vector<int> top(2);\n    partial_sort_copy(v.begin(), v.end(), top.begin(), top.end(), greater<>());\n    wypisz(\"2 największe\", top);                               // 9 8\n\n    vector<pair<int, string>> os = {{2, \"Ola\"}, {1, \"Jan\"}, {2, \"Ala\"}, {1, \"Ewa\"}};\n    stable_sort(os.begin(), os.end(), [](const auto& a, const auto& b) { return a.first < b.first; });\n    for (auto& [k, im] : os) cout << k << im << ' ';           // 1Jan 1Ewa 2Ola 2Ala\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "text",
+     "md": "### partition_point = wyszukiwanie binarne po predykacie\nJeśli zakres jest podzielony (najpierw same `true`, potem same `false`), `partition_point` znajduje granicę w O(log n) porównań. `lower_bound(f, l, x)` to szczególny przypadek: `partition_point(f, l, [&](int e) { return e < x; })`. Przydaje się, gdy warunek nie jest prostym porównaniem z wartością — np. „pierwszy dzień, w którym suma przekracza K” na tablicy sum prefiksowych."
+    },
+    {
+     "type": "tip",
+     "md": "Co wybrać? Pełny porządek → `sort`. Równe mają zachować kolejność → `stable_sort`. Tylko k najmniejszych w kolejności → `partial_sort`. Tylko k-ty element / mediana → `nth_element`. Tylko podział „spełnia / nie spełnia” → `partition` (lub `stable_partition`). Lista → `l.sort()`."
+    },
+    {
+     "type": "warn",
+     "md": "Komparator z `<=` lub `>=` (np. `greater_equal<>()`) w `sort` łamie ścisły porządek — to UB, które przy wielu równych elementach potrafi wyjść poza tablicę i dać RE."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "sort(first, last[, cmp])",
+     "desc": "sortuje rosnąco (lub wg cmp), niestabilnie; introsort",
+     "complexity": "O(n log n)",
+     "returns": "void",
+     "example": "sort(v.begin(), v.end(), greater<>());"
+    },
+    {
+     "sig": "stable_sort(first, last[, cmp])",
+     "desc": "sortuje stabilnie (równe zachowują kolejność wejściową)",
+     "complexity": "O(n log n) z pamięcią, O(n log² n) bez",
+     "returns": "void"
+    },
+    {
+     "sig": "partial_sort(first, middle, last[, cmp])",
+     "desc": "[first, middle) = posortowane k = middle − first najmniejszych; reszta w dowolnej kolejności",
+     "complexity": "O(n log k)",
+     "returns": "void",
+     "example": "partial_sort(v.begin(), v.begin() + 3, v.end());"
+    },
+    {
+     "sig": "partial_sort_copy(first, last, d_first, d_last[, cmp])",
+     "desc": "zapisuje do [d_first, d_last) posortowane min(n, k) najmniejszych; źródło bez zmian",
+     "complexity": "O(n log k)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "partial_sort_copy(v.begin(), v.end(), top.begin(), top.end());"
+    },
+    {
+     "sig": "nth_element(first, nth, last[, cmp])",
+     "desc": "*nth = element, który stałby tam po sortowaniu; przed nim ≤, za nim ≥",
+     "complexity": "O(n) średnio",
+     "returns": "void",
+     "example": "nth_element(v.begin(), v.begin() + k, v.end());"
+    },
+    {
+     "sig": "is_sorted(first, last[, cmp])",
+     "desc": "czy zakres jest niemalejący (wg cmp)",
+     "complexity": "O(n)",
+     "returns": "bool",
+     "example": "is_sorted(v.begin(), v.end())"
+    },
+    {
+     "sig": "is_sorted_until(first, last[, cmp])",
+     "desc": "pierwszy element łamiący porządek (koniec posortowanego prefiksu)",
+     "complexity": "O(n)",
+     "returns": "iterator (last, gdy całość posortowana)",
+     "example": "is_sorted_until(v.begin(), v.end()) - v.begin()"
+    },
+    {
+     "sig": "partition(first, last, pred)",
+     "desc": "elementy z pred == true przed tymi z false; kolejność w grupach dowolna",
+     "complexity": "O(n)",
+     "returns": "iterator na początek grupy false",
+     "example": "auto mid = partition(v.begin(), v.end(), [](int x) { return x % 2 == 0; });"
+    },
+    {
+     "sig": "stable_partition(first, last, pred)",
+     "desc": "jak partition, ale zachowuje względną kolejność w obu grupach",
+     "complexity": "O(n) z pamięcią, O(n log n) bez",
+     "returns": "iterator na początek grupy false",
+     "example": "stable_partition(v.begin(), v.end(), [](int x) { return x != 0; });"
+    },
+    {
+     "sig": "partition_copy(first, last, d_true, d_false, pred)",
+     "desc": "kopiuje elementy true do d_true, false do d_false",
+     "complexity": "O(n)",
+     "returns": "pair<OutTrue, OutFalse> — końce zapisu",
+     "example": "partition_copy(v.begin(), v.end(), back_inserter(t), back_inserter(f), pred);"
+    },
+    {
+     "sig": "partition_point(first, last, pred)",
+     "desc": "na PODZIELONYM zakresie: pierwszy element z pred == false (binarnie)",
+     "complexity": "O(log n) wywołań pred",
+     "returns": "iterator",
+     "example": "partition_point(v.begin(), v.end(), [](int x) { return x < 10; })"
+    },
+    {
+     "sig": "is_partitioned(first, last, pred)",
+     "desc": "czy wszystkie elementy z pred == true stoją przed wszystkimi z false",
+     "complexity": "O(n)",
+     "returns": "bool",
+     "example": "is_partitioned(v.begin(), v.end(), pred)"
+    },
+    {
+     "sig": "ranges::sort(r[, cmp, proj]) / ranges::partition(r, pred)",
+     "desc": "C++20: wersje na całym kontenerze z projekcją",
+     "complexity": "jak wyżej",
+     "returns": "ranges::partition zwraca subrange grupy false",
+     "example": "ranges::sort(v, {}, &P::x);"
+    }
+   ],
+   "pitfalls": [
+    "Komparator musi być ścisły (`<`, `>`), nie `<=`/`>=` — inaczej UB i często crash przy wielu równych elementach.",
+    "`sort`, `stable_sort`, `partial_sort`, `nth_element` wymagają iteratorów swobodnego dostępu — na `list` użyj `l.sort()`.",
+    "`partition` nie zachowuje kolejności w grupach; gdy kolejność się liczy — `stable_partition`.",
+    "`partition_point` wymaga zakresu JUŻ podzielonego (wszystkie `true` przed `false`) — inaczej wynik jest bez sensu, bez żadnego błędu.",
+    "`nth_element` nie sortuje reszty — gwarantuje tylko, że przed nth są elementy ≤, a za nim ≥.",
+    "`is_sorted` sprawdza porządek NIEMALEJĄCY (równe sąsiednie są OK); ściśle rosnący: `adjacent_find(v.begin(), v.end(), greater_equal<>()) == v.end()`.",
+    "`partial_sort_copy` wymaga celu z ustawionym rozmiarem (iteratory swobodnego dostępu) — `back_inserter` nie zadziała."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak sprawdzic czy tablica posortowana",
+      "czy vector jest posortowany",
+      "is_sorted c++",
+      "sprawdź czy posortowane malejąco",
+      "czy ciag jest niemalejacy",
+      "check if array is sorted c++",
+      "is sorted",
+      "czy ciąg jest ściśle rosnący"
+     ],
+     "a": "`is_sorted(first, last)` → `true`, gdy zakres jest **niemalejący** (O(n)). Malejąco: `is_sorted(v.begin(), v.end(), greater<>())`. Ściśle rosnąco (bez powtórzeń): `adjacent_find(v.begin(), v.end(), greater_equal<>()) == v.end()`.",
+     "code": "vector<int> v = {1, 2, 2, 5};\ncout << is_sorted(v.begin(), v.end()) << '\\n';                                       // 1\ncout << is_sorted(v.begin(), v.end(), greater<>()) << '\\n';                          // 0\ncout << (adjacent_find(v.begin(), v.end(), greater_equal<>()) == v.end()) << '\\n';   // 0 (para 2, 2)"
+    },
+    {
+     "q": [
+      "is_sorted_until",
+      "od którego miejsca tablica nie jest posortowana",
+      "gdzie się kończy posortowany prefiks",
+      "najdluzszy posortowany prefiks",
+      "first unsorted element c++",
+      "is sorted until"
+     ],
+     "a": "`is_sorted_until(first, last)` zwraca iterator na pierwszy element, który łamie porządek (czyli koniec najdłuższego posortowanego prefiksu); gdy cały zakres jest posortowany — `last`. O(n). Długość prefiksu: `it - v.begin()`.",
+     "code": "vector<int> v = {2, 3, 7, 5, 9};\nauto it = is_sorted_until(v.begin(), v.end());\ncout << it - v.begin() << ' ' << *it << '\\n';   // 3 5"
+    },
+    {
+     "q": [
+      "std::partition",
+      "parzyste na początek nieparzyste na koniec",
+      "przenies parzyste na poczatek",
+      "podziel tablicę według warunku",
+      "partition array by predicate c++",
+      "partycja tablicy",
+      "partition jak działa"
+     ],
+     "a": "`partition(first, last, pred)` przestawia elementy tak, że wszystkie z `pred == true` są przed tymi z `false`, i zwraca iterator na początek drugiej grupy. O(n), w miejscu, **kolejność w grupach nie jest zachowana** — gdy jest ważna, użyj `stable_partition`.",
+     "code": "vector<int> v = {1, 2, 3, 4, 5, 6, 7};\nauto mid = partition(v.begin(), v.end(), [](int x) { return x % 2 == 0; });\ncout << \"parzystych: \" << mid - v.begin() << '\\n';   // 3\nfor (int x : v) cout << x << ' ';                    // np. 6 2 4 3 5 1 7 — kolejność dowolna\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "stable_partition",
+      "przenieś zera na koniec zachowując kolejność",
+      "przenies zera na koniec tablicy",
+      "move zeros to end c++",
+      "podział z zachowaniem kolejności",
+      "stable partition c++"
+     ],
+     "a": "`stable_partition(first, last, pred)` działa jak `partition`, ale zachowuje względną kolejność w obu grupach. O(n) z dodatkową pamięcią (O(n log n), gdy pamięci brak). Klasyk: niezerowe na początek, zera na koniec.",
+     "code": "vector<int> v = {0, 3, 0, 1, 2, 0, 5};\nstable_partition(v.begin(), v.end(), [](int x) { return x != 0; });\nfor (int x : v) cout << x << ' ';   // 3 1 2 5 0 0 0\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "is_partitioned c++",
+      "partition_point jak działa",
+      "czy tablica jest podzielona według warunku",
+      "partition_point na podzielonym zakresie",
+      "is partitioned",
+      "sprawdz czy najpierw sa wszystkie true potem false"
+     ],
+     "a": "`is_partitioned(first, last, pred)` → `true`, gdy wszystkie elementy z `pred == true` stoją przed wszystkimi z `false` (O(n)). Na takim zakresie `partition_point(first, last, pred)` binarnie (O(log n) wywołań predykatu) znajduje pierwszy element z `false` — to uogólnienie `lower_bound`.",
+     "code": "vector<int> v = {2, 4, 6, 7, 9};\nauto parzysta = [](int x) { return x % 2 == 0; };\nif (is_partitioned(v.begin(), v.end(), parzysta)) {\n    auto it = partition_point(v.begin(), v.end(), parzysta);\n    cout << it - v.begin() << ' ' << *it << '\\n';   // 3 7\n}"
+    },
+    {
+     "q": [
+      "partition_copy",
+      "rozdziel vector na dwa według warunku",
+      "rozdziel liczby na dodatnie i ujemne",
+      "podziel na dwie tablice c++",
+      "split vector by condition c++",
+      "partition copy"
+     ],
+     "a": "`partition_copy(first, last, out_true, out_false, pred)` kopiuje elementy spełniające warunek do `out_true`, a pozostałe do `out_false` (kolejność zachowana, źródło nietknięte). Zwraca parę iteratorów końcowych. O(n).",
+     "code": "vector<int> v = {3, -1, 4, -5, 9};\nvector<int> dod, uj;\npartition_copy(v.begin(), v.end(), back_inserter(dod), back_inserter(uj), [](int x) { return x >= 0; });\ncout << dod.size() << ' ' << uj.size() << '\\n';   // 3 2"
+    },
+    {
+     "q": [
+      "partial_sort_copy",
+      "k najmniejszych do innej tablicy",
+      "skopiuj k najmniejszych posortowanych",
+      "top k bez zmiany oryginału",
+      "partial sort copy c++",
+      "k najmniejszych bez psucia tablicy"
+     ],
+     "a": "`partial_sort_copy(first, last, d_first, d_last)` zapisuje do `[d_first, d_last)` **posortowane** min(n, k) najmniejszych elementów źródła (k = rozmiar celu); źródło zostaje nietknięte. O(n log k). Cel musi mieć ustawiony rozmiar, np. `vector<int> top(k)`.",
+     "code": "vector<int> v = {9, 4, 7, 1, 8, 2};\nvector<int> top(3);\npartial_sort_copy(v.begin(), v.end(), top.begin(), top.end());\nfor (int x : top) cout << x << ' ';   // 1 2 4\ncout << '\\n';\npartial_sort_copy(v.begin(), v.end(), top.begin(), top.end(), greater<>());   // 9 8 7\ncout << top[0] << '\\n';   // 9"
+    },
+    {
+     "q": [
+      "sort czy partial_sort czy nth_element",
+      "który algorytm sortowania wybrać c++",
+      "kiedy stable_sort a kiedy sort",
+      "ktory sort wybrac",
+      "sort vs nth_element vs partial_sort",
+      "porownanie funkcji sortujacych"
+     ],
+     "a": "Pełny porządek → `sort` (O(n log n)). Równe elementy mają zachować kolejność → `stable_sort`. Tylko k najmniejszych w kolejności → `partial_sort` (O(n log k)). Tylko k-ty element / mediana → `nth_element` (O(n)). Tylko podział „spełnia / nie spełnia” → `partition` (O(n)).",
+     "code": "vector<int> v = {7, 3, 9, 1, 5};\nnth_element(v.begin(), v.begin() + 2, v.end());\ncout << \"mediana: \" << v[2] << '\\n';   // 5\npartial_sort(v.begin(), v.begin() + 2, v.end());\ncout << v[0] << ' ' << v[1] << '\\n';   // 1 3"
+    }
+   ],
+   "related": [
+    "stl-sort",
+    "stl-nth-element",
+    "stl-remove-erase",
+    "stl-binary-search",
+    "pit-comparator",
+    "stl-ref-heap",
+    "stl-ref-binary-search-minmax"
+   ]
+  },
+  {
+   "id": "stl-ref-heap",
+   "title": "Dokumentacja: <algorithm> — operacje na kopcu (make_heap, push_heap, pop_heap, sort_heap)",
+   "category": "STL algorytmy",
+   "tags": [
+    "algorithm",
+    "dokumentacja",
+    "referencja",
+    "kopiec",
+    "heap",
+    "make_heap",
+    "push_heap",
+    "pop_heap",
+    "sort_heap",
+    "is_heap",
+    "is_heap_until",
+    "heapsort",
+    "kopiec binarny"
+   ],
+   "aliases": [
+    "make_heap",
+    "push_heap",
+    "pop_heap",
+    "sort_heap",
+    "is_heap",
+    "is_heap_until",
+    "make_heap c++",
+    "kopiec na vectorze",
+    "heap algorithms c++",
+    "operacje na kopcu stl",
+    "heapsort c++",
+    "kopiec bez priority_queue",
+    "dokumentacja kopiec"
+   ],
+   "summary": "Funkcje z `<algorithm>`, które zamieniają zwykły `vector` (lub tablicę) w kopiec binarny: budowa w O(n), wstawianie i zdejmowanie maksimum w O(log n), heapsort i sprawdzanie własności kopca. To samo, co robi `priority_queue`, ale z pełnym dostępem do elementów.",
+   "complexity": "make_heap: O(n); push_heap, pop_heap: O(log n); sort_heap: O(n log n); is_heap, is_heap_until: O(n); maksimum v.front(): O(1)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Kopiec maksymalny w tablicy: `v[0]` to największy element, dzieci pozycji `i` to `2i + 1` i `2i + 2`. Funkcje kopca **nie zmieniają rozmiaru** kontenera — tylko przestawiają elementy:\n\n- `push_heap` zakłada, że nowy element **już jest** na końcu (`push_back`) i przesiewa go w górę;\n- `pop_heap` przenosi maksimum na koniec i naprawia resztę — sam element usuwasz `pop_back()`.\n\nKomparator jest opcjonalny i musi być **ten sam** we wszystkich wywołaniach. Domyślny `less` daje kopiec maksymalny, `greater<>()` — minimalny."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Co robi",
+      "Złożoność",
+      "Odpowiednik w priority_queue"
+     ],
+     "rows": [
+      [
+       "`make_heap(f, l[, cmp])`",
+       "buduje kopiec z dowolnego zakresu",
+       "O(n)",
+       "konstruktor `pq(v.begin(), v.end())`"
+      ],
+      [
+       "`push_heap(f, l[, cmp])`",
+       "włącza *(l−1) do kopca [f, l−1)",
+       "O(log n)",
+       "`pq.push(x)` (razem z push_back)"
+      ],
+      [
+       "`pop_heap(f, l[, cmp])`",
+       "przenosi maksimum na *(l−1), [f, l−1) zostaje kopcem",
+       "O(log n)",
+       "`pq.pop()` (razem z pop_back)"
+      ],
+      [
+       "`v.front()`",
+       "maksimum (minimum dla greater)",
+       "O(1)",
+       "`pq.top()`"
+      ],
+      [
+       "`sort_heap(f, l[, cmp])`",
+       "zamienia kopiec w zakres posortowany rosnąco",
+       "O(n log n)",
+       "zdejmowanie po kolei"
+      ],
+      [
+       "`is_heap(f, l[, cmp])`",
+       "czy zakres jest kopcem",
+       "O(n)",
+       "—"
+      ],
+      [
+       "`is_heap_until(f, l[, cmp])`",
+       "koniec najdłuższego prefiksu będącego kopcem",
+       "O(n)",
+       "—"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: kopiec maksymalny, heapsort i kopiec minimalny",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // 1) kopiec maksymalny: budowa, dodawanie, zdejmowanie\n    vector<int> h = {4, 1, 7, 3, 8, 5};\n    make_heap(h.begin(), h.end());                       // O(n)\n    cout << \"max: \" << h.front() << '\\n';                // 8\n\n    h.push_back(10);\n    push_heap(h.begin(), h.end());                       // O(log n)\n    cout << \"max po dodaniu 10: \" << h.front() << '\\n';  // 10\n\n    pop_heap(h.begin(), h.end());                        // 10 ląduje na końcu\n    int top = h.back();\n    h.pop_back();\n    cout << \"zdjęto \" << top << \", nowe max: \" << h.front() << '\\n';   // zdjęto 10, nowe max: 8\n    cout << \"is_heap: \" << is_heap(h.begin(), h.end()) << '\\n';        // 1\n\n    // 2) heapsort\n    sort_heap(h.begin(), h.end());                       // rosnąco\n    for (int x : h) cout << x << ' ';                    // 1 3 4 5 7 8\n    cout << '\\n';\n\n    // 3) kopiec minimalny: łączenie dwóch najmniejszych (koszt jak w kodowaniu Huffmana)\n    vector<long long> m = {5, 2, 4, 7};\n    auto cmp = greater<long long>();\n    make_heap(m.begin(), m.end(), cmp);\n    long long koszt = 0;\n    while (m.size() > 1) {\n        pop_heap(m.begin(), m.end(), cmp);\n        long long a = m.back(); m.pop_back();\n        pop_heap(m.begin(), m.end(), cmp);\n        long long b = m.back(); m.pop_back();\n        koszt += a + b;\n        m.push_back(a + b);\n        push_heap(m.begin(), m.end(), cmp);\n    }\n    cout << \"koszt: \" << koszt << '\\n';                  // 6 + 11 + 18 = 35\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Potrzeba",
+      "vector + funkcje kopca",
+      "priority_queue"
+     ],
+     "rows": [
+      [
+       "Zbudowanie z n gotowych elementów",
+       "`make_heap` — O(n)",
+       "konstruktor z zakresu — O(n)"
+      ],
+      [
+       "Dodanie / zdjęcie maksimum",
+       "`push_back` + `push_heap` / `pop_heap` + `pop_back`",
+       "`push` / `pop`"
+      ],
+      [
+       "Przejrzenie wszystkich elementów",
+       "tak — zwykła pętla po `v`",
+       "nie (tylko kopia i zdejmowanie)"
+      ],
+      [
+       "Posortowanie na koniec",
+       "`sort_heap` — O(n log n) w miejscu",
+       "zdejmowanie po kolei"
+      ],
+      [
+       "`reserve`, `clear`, dostęp do pamięci",
+       "tak",
+       "nie wprost"
+      ],
+      [
+       "Ryzyko pomyłki",
+       "większe (kolejność wywołań, ten sam komparator)",
+       "małe"
+      ]
+     ],
+     "title": "Kopiec na vectorze czy priority_queue?"
+    },
+    {
+     "type": "warn",
+     "md": "`pop_heap` **nie usuwa** elementu, a `push_heap` **nie dodaje** — to tylko przestawienia. Zapomniany `pop_back()` albo `push_back()` przed `push_heap` to najczęstszy błąd."
+    },
+    {
+     "type": "tip",
+     "md": "W 95% zadań (Dijkstra, zachłanne, k największych) wygodniejsza jest `priority_queue`. Funkcje kopca wybierz, gdy potrzebujesz dostępu do wszystkich elementów kopca, budowy w O(n) z gotowych danych albo heapsortu w miejscu."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "make_heap(first, last[, cmp])",
+     "desc": "przestawia zakres w kopiec (domyślnie maksymalny: v.front() = max)",
+     "complexity": "O(n) — co najwyżej 3n porównań",
+     "returns": "void",
+     "example": "make_heap(v.begin(), v.end());"
+    },
+    {
+     "sig": "push_heap(first, last[, cmp])",
+     "desc": "zakłada, że [first, last−1) jest kopcem i włącza do niego *(last−1)",
+     "complexity": "O(log n)",
+     "returns": "void",
+     "example": "v.push_back(x); push_heap(v.begin(), v.end());"
+    },
+    {
+     "sig": "pop_heap(first, last[, cmp])",
+     "desc": "zamienia maksimum z *(last−1) i naprawia kopiec [first, last−1)",
+     "complexity": "O(log n)",
+     "returns": "void",
+     "example": "pop_heap(v.begin(), v.end()); int mx = v.back(); v.pop_back();"
+    },
+    {
+     "sig": "sort_heap(first, last[, cmp])",
+     "desc": "z kopca robi zakres posortowany rosnąco (wg cmp); potem to już nie kopiec",
+     "complexity": "O(n log n)",
+     "returns": "void",
+     "example": "make_heap(v.begin(), v.end()); sort_heap(v.begin(), v.end());"
+    },
+    {
+     "sig": "is_heap(first, last[, cmp])",
+     "desc": "czy zakres spełnia własność kopca",
+     "complexity": "O(n)",
+     "returns": "bool",
+     "example": "is_heap(v.begin(), v.end())"
+    },
+    {
+     "sig": "is_heap_until(first, last[, cmp])",
+     "desc": "pierwszy element łamiący własność kopca",
+     "complexity": "O(n)",
+     "returns": "iterator (last, gdy cały zakres jest kopcem)",
+     "example": "is_heap_until(v.begin(), v.end()) - v.begin()"
+    },
+    {
+     "sig": "v.front()",
+     "desc": "szczyt kopca: maksimum (lub minimum przy greater)",
+     "complexity": "O(1)",
+     "returns": "referencja do elementu"
+    },
+    {
+     "sig": "ranges::make_heap(r[, cmp, proj]) / ranges::push_heap / ranges::pop_heap / ranges::sort_heap",
+     "desc": "C++20: te same operacje na całym kontenerze, z projekcją",
+     "complexity": "jak wyżej",
+     "returns": "iterator last",
+     "example": "ranges::make_heap(v, greater{});"
+    },
+    {
+     "sig": "priority_queue<T, vector<T>, Cmp>",
+     "desc": "gotowe opakowanie vector + make_heap/push_heap/pop_heap",
+     "complexity": "push/pop O(log n), top O(1)",
+     "returns": "—",
+     "example": "priority_queue<int, vector<int>, greater<int>> pq;"
+    }
+   ],
+   "pitfalls": [
+    "`pop_heap` NIE usuwa elementu — tylko przenosi maksimum na koniec. Odczytaj `v.back()`, potem `v.pop_back()`.",
+    "`push_heap` NIE dodaje elementu — najpierw `v.push_back(x)`, potem `push_heap(v.begin(), v.end())`.",
+    "Każde wywołanie musi używać tego samego komparatora co `make_heap` — mieszanie `less` i `greater` psuje kopiec (błędne wyniki bez komunikatu).",
+    "Domyślny kopiec jest MAKSYMALNY (`v.front()` = największy). Minimalny: `greater<>()` w każdym wywołaniu.",
+    "Po `sort_heap` zakres nie jest już kopcem (jest posortowany rosnąco) — przed dalszym użyciem trzeba znów `make_heap`.",
+    "Kopiec nie wspiera szybkiego wyszukiwania ani usuwania dowolnego elementu — do tego `set`/`multiset` albo leniwe usuwanie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "make_heap c++",
+      "jak użyć make_heap",
+      "jak zrobic kopiec z vectora",
+      "zbuduj kopiec z tablicy",
+      "make heap jak działa",
+      "build heap from vector c++",
+      "make_heap przykład"
+     ],
+     "a": "`make_heap(v.begin(), v.end())` przestawia elementy tak, by `v` był kopcem maksymalnym — `v.front()` to największy element. Budowa trwa **O(n)** (szybciej niż n razy push). Potem: dodawanie `push_back` + `push_heap`, zdejmowanie `pop_heap` + `pop_back` (oba O(log n)).",
+     "code": "vector<int> v = {3, 1, 4, 1, 5, 9, 2};\nmake_heap(v.begin(), v.end());\ncout << v.front() << '\\n';       // 9\nv.push_back(7);\npush_heap(v.begin(), v.end());\npop_heap(v.begin(), v.end());    // 9 przeniesione na koniec\ncout << v.back() << ' ';         // 9\nv.pop_back();\ncout << v.front() << '\\n';       // 7"
+    },
+    {
+     "q": [
+      "push_heap pop_heap kolejność",
+      "pop_heap nie usuwa elementu",
+      "pop_heap nie dziala",
+      "push_heap nie dodaje",
+      "jak zdjąć maksimum z kopca na vectorze",
+      "pop_heap then pop_back",
+      "push heap pop heap c++"
+     ],
+     "a": "Te funkcje tylko przestawiają elementy — nie zmieniają rozmiaru. **Dodanie:** `v.push_back(x); push_heap(v.begin(), v.end());`. **Zdjęcie maksimum:** `pop_heap(v.begin(), v.end());` (maksimum ląduje w `v.back()`), odczytaj `v.back()`, potem `v.pop_back();`.",
+     "code": "vector<int> h;\nfor (int x : {5, 2, 8}) {\n    h.push_back(x);\n    push_heap(h.begin(), h.end());\n}\nwhile (!h.empty()) {\n    pop_heap(h.begin(), h.end());\n    cout << h.back() << ' ';     // 8 5 2\n    h.pop_back();\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "make_heap min heap",
+      "kopiec minimalny na vectorze",
+      "make_heap greater",
+      "kopiec minimalny make_heap",
+      "min heap make_heap c++",
+      "make heap odwrotnie najmniejszy na górze"
+     ],
+     "a": "Przekaż `greater<>()` (lub własny komparator) do **każdego** wywołania: `make_heap`, `push_heap`, `pop_heap`, `is_heap`. Wtedy `v.front()` to najmniejszy element. Najbezpieczniej zapisać komparator w zmiennej.",
+     "code": "vector<int> v = {5, 3, 8, 1};\nauto cmp = greater<>();\nmake_heap(v.begin(), v.end(), cmp);\ncout << v.front() << '\\n';           // 1\nv.push_back(0);\npush_heap(v.begin(), v.end(), cmp);\ncout << v.front() << '\\n';           // 0"
+    },
+    {
+     "q": [
+      "make_heap czy priority_queue",
+      "kopiec na vectorze vs priority_queue",
+      "kiedy make_heap zamiast priority_queue",
+      "priority_queue vs heap algorithms",
+      "czym rozni sie make_heap od priority_queue",
+      "jak przejrzeć elementy kopca"
+     ],
+     "a": "`priority_queue` to po prostu `vector` + `make_heap/push_heap/pop_heap` w opakowaniu. Wybierz **priority_queue** w typowych zadaniach (Dijkstra, zachłanne). Wybierz **vector + funkcje kopca**, gdy potrzebujesz przejrzeć wszystkie elementy kopca, zbudować go z gotowych danych w O(n), posortować na koniec (`sort_heap`) albo zrobić `reserve`/`clear`.",
+     "code": "vector<int> h = {4, 9, 2, 7};\nmake_heap(h.begin(), h.end());\nfor (int x : h) cout << x << ' ';            // wszystkie elementy (w kolejności kopca)\ncout << '\\n';\npriority_queue<int> pq(h.begin(), h.end());  // to samo w opakowaniu — tylko top/push/pop\ncout << pq.top() << '\\n';                    // 9"
+    },
+    {
+     "q": [
+      "is_heap c++",
+      "czy tablica jest kopcem",
+      "sprawdź czy vector jest kopcem",
+      "is_heap_until",
+      "check if array is heap c++",
+      "is heap"
+     ],
+     "a": "`is_heap(first, last[, cmp])` → `true`, gdy zakres spełnia własność kopca (rodzic nie mniejszy od dzieci). `is_heap_until` zwraca iterator na pierwszy element, który ją łamie. Oba O(n) — przydatne w asercjach przy debugowaniu własnego kopca.",
+     "code": "vector<int> v = {9, 5, 8, 1, 6, 7};\ncout << is_heap(v.begin(), v.end()) << '\\n';                     // 0\ncout << is_heap_until(v.begin(), v.end()) - v.begin() << '\\n';   // 4 (6 > rodzic 5)\nmake_heap(v.begin(), v.end());\ncout << is_heap(v.begin(), v.end()) << '\\n';                     // 1"
+    },
+    {
+     "q": [
+      "sort_heap c++",
+      "heapsort c++",
+      "sortowanie przez kopcowanie",
+      "sortowanie kopcowe stl",
+      "heap sort make_heap sort_heap",
+      "sortowanie kopcem"
+     ],
+     "a": "Heapsort w dwóch linijkach: `make_heap` (O(n)) + `sort_heap` (O(n log n)). Wynik jest rosnący (dla domyślnego `less`). Na zawodach zwykły `sort` jest szybszy — heapsort przydaje się w zadaniach typu „zaimplementuj kopiec” albo gdy kopiec i tak już masz.",
+     "code": "vector<int> v = {5, 2, 9, 1, 7};\nmake_heap(v.begin(), v.end());\nsort_heap(v.begin(), v.end());\nfor (int x : v) cout << x << ' ';    // 1 2 5 7 9\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "make_heap własny komparator",
+      "kopiec par make_heap",
+      "make_heap struktura",
+      "kopiec po drugim elemencie pary",
+      "make_heap lambda",
+      "make heap custom comparator c++"
+     ],
+     "a": "Komparator `cmp(a, b)` ma zwracać `true`, gdy `a` jest **mniej ważny** niż `b` (tak jak `<` dla kopca maksymalnego) — na szczycie ląduje element „największy” według cmp. Lambdę zapisz w zmiennej i podawaj ją do każdego wywołania.",
+     "code": "vector<pair<int, int>> h = {{1, 50}, {2, 10}, {3, 30}};\nauto cmp = [](const pair<int, int>& a, const pair<int, int>& b) { return a.second > b.second; };   // min po second\nmake_heap(h.begin(), h.end(), cmp);\npop_heap(h.begin(), h.end(), cmp);\ncout << h.back().first << '\\n';   // 2 (najmniejsze second = 10)\nh.pop_back();"
+    }
+   ],
+   "related": [
+    "stl-priority-queue",
+    "ds-heap",
+    "tree-heap-array",
+    "stl-ref-sorting-partition",
+    "graph-dijkstra"
+   ]
+  },
+  {
+   "id": "stl-ref-numeric",
+   "title": "Dokumentacja: <numeric> — sumy, skany, iloczyn skalarny, gcd/lcm, midpoint",
+   "category": "STL algorytmy",
+   "tags": [
+    "numeric",
+    "dokumentacja",
+    "referencja",
+    "accumulate",
+    "reduce",
+    "inner_product",
+    "transform_reduce",
+    "inclusive_scan",
+    "exclusive_scan",
+    "partial_sum",
+    "adjacent_difference",
+    "iota",
+    "gcd",
+    "lcm",
+    "midpoint"
+   ],
+   "aliases": [
+    "dokumentacja numeric",
+    "nagłówek numeric",
+    "naglowek numeric",
+    "<numeric>",
+    "numeric c++",
+    "inner_product",
+    "iloczyn skalarny c++",
+    "transform_reduce",
+    "exclusive_scan",
+    "transform_inclusive_scan",
+    "transform_exclusive_scan",
+    "funkcje numeric c++",
+    "numeric header reference"
+   ],
+   "summary": "Kompletna ściąga nagłówka `<numeric>`: redukcje (accumulate, reduce, inner_product, transform_reduce), skany / sumy prefiksowe (partial_sum, inclusive_scan, exclusive_scan, transform_*_scan, adjacent_difference), wypełnianie (iota) oraz funkcje liczbowe gcd, lcm i midpoint.",
+   "complexity": "algorytmy zakresowe: O(n); gcd/lcm: O(log min(a, b)); midpoint: O(1)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Najważniejsza zasada `<numeric>`: **typ akumulatora to typ wartości początkowej `init`**. `accumulate(v.begin(), v.end(), 0)` liczy w `int` nawet dla `vector<long long>` — pisz `0LL` (albo `0.0`). Funkcje bez `init` (`reduce` bez trzeciego argumentu, `partial_sum`, `inclusive_scan` bez init) liczą w typie elementu wejścia. `reduce` i `transform_reduce` mogą łączyć elementy w dowolnej kolejności, więc operacja musi być łączna i przemienna (dodawanie, mnożenie, max, xor, gcd — tak; odejmowanie, sklejanie stringów — nie)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Wynik",
+      "Typ akumulatora / uwagi"
+     ],
+     "rows": [
+      [
+       "`accumulate(f, l, init[, op])`",
+       "init ⊕ a0 ⊕ a1 ⊕ … (od lewej)",
+       "typ init; dowolna operacja"
+      ],
+      [
+       "`reduce(f, l[, init[, op]])`",
+       "jak accumulate, kolejność dowolna (C++17)",
+       "typ init, bez init: typ elementu"
+      ],
+      [
+       "`inner_product(f1, l1, f2, init[, op1, op2])`",
+       "init + Σ a[i]·b[i]",
+       "typ init"
+      ],
+      [
+       "`transform_reduce(f1, l1, f2, init[, red, tr])`",
+       "jak inner_product (C++17)",
+       "typ init"
+      ],
+      [
+       "`transform_reduce(f, l, init, red, tr)`",
+       "init ⊕ tr(a0) ⊕ tr(a1) ⊕ …",
+       "typ init"
+      ],
+      [
+       "`partial_sum(f, l, out[, op])`",
+       "out[i] = a0 + … + ai",
+       "typ elementu wejścia"
+      ],
+      [
+       "`inclusive_scan(f, l, out[, op[, init]])`",
+       "jak partial_sum (C++17)",
+       "typ init, bez init: typ elementu"
+      ],
+      [
+       "`exclusive_scan(f, l, out, init[, op])`",
+       "out[i] = init + a0 + … + a(i−1)",
+       "typ init"
+      ],
+      [
+       "`transform_inclusive_scan(f, l, out, op, tr[, init])`",
+       "skan po tr(ai)",
+       "typ tr(a) / init"
+      ],
+      [
+       "`transform_exclusive_scan(f, l, out, init, op, tr)`",
+       "skan wyłączny po tr(ai)",
+       "typ init"
+      ],
+      [
+       "`adjacent_difference(f, l, out[, op])`",
+       "out[0] = a0, out[i] = ai − a(i−1)",
+       "typ elementu"
+      ],
+      [
+       "`iota(f, l, x)`",
+       "x, x+1, x+2, …",
+       "typ elementu"
+      ],
+      [
+       "`gcd(a, b)` / `lcm(a, b)`",
+       "NWD / NWW (C++17)",
+       "typ wspólny argumentów"
+      ],
+      [
+       "`midpoint(a, b)`",
+       "środek bez przepełnienia (C++20)",
+       "typ argumentów"
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wywołanie",
+      "Wynik dla a = {3, 1, 4, 1, 5}"
+     ],
+     "rows": [
+      [
+       "`accumulate(a.begin(), a.end(), 0)`",
+       "14"
+      ],
+      [
+       "`partial_sum(…)` / `inclusive_scan(…)`",
+       "3 4 8 9 14"
+      ],
+      [
+       "`exclusive_scan(…, 0)`",
+       "0 3 4 8 9"
+      ],
+      [
+       "`adjacent_difference(…)`",
+       "3 −2 3 −3 4"
+      ],
+      [
+       "`inclusive_scan(…, max)`",
+       "3 3 4 4 5 (maksima prefiksowe)"
+      ]
+     ],
+     "title": "Skany na jednym przykładzie"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: cały <numeric> w jednym programie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <class T>\nvoid wypisz(const string& nazwa, const vector<T>& v) {\n    cout << nazwa << ':';\n    for (auto x : v) cout << ' ' << x;\n    cout << '\\n';\n}\n\nint main() {\n    vector<int> a = {3, 1, 4, 1, 5};\n    vector<int> b = {2, 7, 1, 8, 2};\n    int n = a.size();\n\n    cout << \"accumulate: \" << accumulate(a.begin(), a.end(), 0LL) << '\\n';                        // 14\n    cout << \"reduce: \" << reduce(a.begin(), a.end(), 0LL) << '\\n';                                // 14\n    cout << \"inner_product: \" << inner_product(a.begin(), a.end(), b.begin(), 0LL) << '\\n';       // 35\n    cout << \"transform_reduce: \" << transform_reduce(a.begin(), a.end(), b.begin(), 0LL) << '\\n'; // 35\n    cout << \"suma kwadratów: \"\n         << transform_reduce(a.begin(), a.end(), 0LL, plus<>(), [](int x) { return 1LL * x * x; }) << '\\n';   // 52\n\n    vector<long long> p(n);\n    partial_sum(a.begin(), a.end(), p.begin());\n    wypisz(\"partial_sum\", p);                                        // 3 4 8 9 14\n    inclusive_scan(a.begin(), a.end(), p.begin(), plus<>(), 0LL);   // init 0LL → liczy w long long\n    wypisz(\"inclusive_scan\", p);                                     // 3 4 8 9 14\n    exclusive_scan(a.begin(), a.end(), p.begin(), 0LL);\n    wypisz(\"exclusive_scan\", p);                                     // 0 3 4 8 9\n\n    vector<int> d(n);\n    adjacent_difference(a.begin(), a.end(), d.begin());\n    wypisz(\"adjacent_difference\", d);                                // 3 -2 3 -3 4\n\n    vector<int> id(n);\n    iota(id.begin(), id.end(), 1);\n    wypisz(\"iota\", id);                                              // 1 2 3 4 5\n\n    cout << \"gcd(84, 36) = \" << gcd(84, 36) << \", lcm(4, 6) = \" << lcm(4, 6) << '\\n';   // 12, 12\n    cout << \"midpoint(10, 15) = \" << midpoint(10, 15) << '\\n';       // 12 (zaokrąglenie w stronę 10)\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Przepełnienie przez typ akumulatora to klasyczny WA: `accumulate(…, 0)`, `reduce(v.begin(), v.end())` na `int`, `partial_sum` z `vector<int>` do `vector<long long>` — wszystkie liczą w `int`. Dawaj `0LL` jako init (`inclusive_scan(…, plus<>(), 0LL)`) albo trzymaj dane od razu w `long long`."
+    },
+    {
+     "type": "tip",
+     "md": "NWD całej tablicy: `accumulate(v.begin(), v.end(), 0LL, [](long long a, long long b) { return gcd(a, b); })` — działa, bo gcd(0, x) = x. Dla NWW start od `1LL` i pilnuj przepełnienia (NWW rośnie bardzo szybko)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "accumulate(first, last, init[, op])",
+     "desc": "init ⊕ a0 ⊕ a1 ⊕ … liczone ściśle od lewej; op dowolna",
+     "complexity": "O(n)",
+     "returns": "wartość typu init",
+     "example": "accumulate(v.begin(), v.end(), 0LL)"
+    },
+    {
+     "sig": "reduce(first, last[, init[, op]])",
+     "desc": "C++17: jak accumulate, ale kolejność łączenia dowolna (op łączna i przemienna); bez init startuje od T{}",
+     "complexity": "O(n)",
+     "returns": "typ init (bez init: typ elementu)",
+     "example": "reduce(v.begin(), v.end(), 0LL)"
+    },
+    {
+     "sig": "inner_product(first1, last1, first2, init[, op1, op2])",
+     "desc": "iloczyn skalarny init + Σ a[i]·b[i]; z op1/op2 zamiast + i ·",
+     "complexity": "O(n)",
+     "returns": "wartość typu init",
+     "example": "inner_product(a.begin(), a.end(), b.begin(), 0LL)"
+    },
+    {
+     "sig": "transform_reduce(first1, last1, first2, init[, reduce_op, transform_op])",
+     "desc": "C++17: odpowiednik inner_product (domyślnie plus i multiplies), kolejność dowolna",
+     "complexity": "O(n)",
+     "returns": "wartość typu init",
+     "example": "transform_reduce(a.begin(), a.end(), b.begin(), 0LL)"
+    },
+    {
+     "sig": "transform_reduce(first, last, init, reduce_op, transform_op)",
+     "desc": "C++17: init ⊕ tr(a0) ⊕ tr(a1) ⊕ … (np. suma kwadratów)",
+     "complexity": "O(n)",
+     "returns": "wartość typu init",
+     "example": "transform_reduce(v.begin(), v.end(), 0LL, plus<>(), [](int x) { return 1LL * x * x; })"
+    },
+    {
+     "sig": "partial_sum(first, last, d_first[, op])",
+     "desc": "sumy prefiksowe: out[i] = a0 + … + ai (może pisać w miejscu)",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "partial_sum(v.begin(), v.end(), v.begin());"
+    },
+    {
+     "sig": "inclusive_scan(first, last, d_first[, op[, init]])",
+     "desc": "C++17: jak partial_sum; z init liczy w typie init",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "inclusive_scan(a.begin(), a.end(), p.begin(), plus<>(), 0LL);"
+    },
+    {
+     "sig": "exclusive_scan(first, last, d_first, init[, op])",
+     "desc": "C++17: out[i] = init ⊕ a0 ⊕ … ⊕ a(i−1) — bez ai",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "exclusive_scan(a.begin(), a.end(), p.begin(), 0LL);"
+    },
+    {
+     "sig": "transform_inclusive_scan(first, last, d_first, op, tr[, init])",
+     "desc": "C++17: skan włączny po wartościach tr(ai)",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym"
+    },
+    {
+     "sig": "transform_exclusive_scan(first, last, d_first, init, op, tr)",
+     "desc": "C++17: skan wyłączny po wartościach tr(ai)",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym"
+    },
+    {
+     "sig": "adjacent_difference(first, last, d_first[, op])",
+     "desc": "out[0] = a0, out[i] = ai − a(i−1) (odwrotność partial_sum)",
+     "complexity": "O(n)",
+     "returns": "iterator za ostatnim zapisanym",
+     "example": "adjacent_difference(a.begin(), a.end(), d.begin());"
+    },
+    {
+     "sig": "iota(first, last, value)",
+     "desc": "wypełnia kolejnymi wartościami value, value+1, …",
+     "complexity": "O(n)",
+     "returns": "void",
+     "example": "iota(idx.begin(), idx.end(), 0);"
+    },
+    {
+     "sig": "gcd(m, n)",
+     "desc": "C++17: największy wspólny dzielnik (wartości bezwzględne; gcd(0, 0) = 0)",
+     "complexity": "O(log min(m, n))",
+     "returns": "typ wspólny argumentów",
+     "example": "gcd(12, 18) // 6"
+    },
+    {
+     "sig": "lcm(m, n)",
+     "desc": "C++17: najmniejsza wspólna wielokrotność (lcm(x, 0) = 0); może przepełnić",
+     "complexity": "O(log min(m, n))",
+     "returns": "typ wspólny argumentów",
+     "example": "lcm(4LL, 6LL) // 12"
+    },
+    {
+     "sig": "midpoint(a, b)",
+     "desc": "C++20: środek a i b bez przepełnienia; dla całkowitych zaokrągla w stronę a",
+     "complexity": "O(1)",
+     "returns": "typ argumentów",
+     "example": "midpoint(2, 5) // 3, midpoint(5, 2) // 4"
+    }
+   ],
+   "pitfalls": [
+    "Typ akumulatora = typ `init`: `accumulate(v.begin(), v.end(), 0)` na dużych liczbach liczy w `int` i przepełnia. Pisz `0LL` (albo `0.0` dla double).",
+    "`reduce(v.begin(), v.end())` bez init sumuje w typie elementu — dla `vector<int>` to `int`. Podawaj `0LL`.",
+    "`reduce`/`transform_reduce` mogą łączyć w dowolnej kolejności — z operacją nieprzemienną (odejmowanie, sklejanie stringów) wynik jest nieokreślony. Wtedy `accumulate`.",
+    "`partial_sum` liczy w typie elementu WEJŚCIA — z `vector<int>` do `vector<long long>` sumy i tak przepełnią się w `int`. Użyj `inclusive_scan(…, plus<>(), 0LL)`.",
+    "`exclusive_scan` wymaga `init` jako 4. argumentu, a wynik[i] NIE zawiera a[i].",
+    "`adjacent_difference` kopiuje pierwszy element bez zmian: wynik[0] = a[0].",
+    "`lcm` może przepełnić typ — używaj `long long` i sprawdzaj zakres przy NWW wielu liczb.",
+    "`midpoint(a, b)` dla całkowitych zaokrągla w stronę PIERWSZEGO argumentu: `midpoint(5, 2) == 4`, a `midpoint(2, 5) == 3`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "inner_product c++",
+      "iloczyn skalarny c++",
+      "iloczyn skalarny dwóch wektorów",
+      "suma a[i]*b[i]",
+      "inner product jak dziala",
+      "dot product c++",
+      "inner_produkt"
+     ],
+     "a": "`inner_product(f1, l1, f2, init)` liczy `init + a[0]*b[0] + a[1]*b[1] + …` w typie `init` (więc `0LL`!). Wersja z dwiema operacjami `inner_product(f1, l1, f2, init, op1, op2)` zastępuje `+` przez op1 i `*` przez op2 — np. zliczanie pozycji, na których dwa ciągi się zgadzają.",
+     "code": "vector<int> a = {1, 2, 3}, b = {4, 5, 6};\nlong long dot = inner_product(a.begin(), a.end(), b.begin(), 0LL);\ncout << dot << '\\n';      // 32\nstring s = \"kotek\", t = \"kotki\";\nint zgodne = inner_product(s.begin(), s.end(), t.begin(), 0, plus<>(), equal_to<>());\ncout << zgodne << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "exclusive_scan c++",
+      "sumy prefiksowe z zerem na początku",
+      "exclusive scan",
+      "suma elementów przed i-tym",
+      "prefix sum exclusive c++",
+      "exclusive_scan vs inclusive_scan",
+      "exclusiv scan"
+     ],
+     "a": "`exclusive_scan(first, last, out, init)` zapisuje `out[i] = init + a[0] + … + a[i-1]` — **bez** a[i] (pierwszy wynik to `init`). `inclusive_scan` (jak `partial_sum`) wlicza a[i]. Typ akumulatora to typ `init`, więc `0LL` chroni przed przepełnieniem.",
+     "code": "vector<int> a = {3, 1, 4, 1, 5};\nvector<long long> ex(a.size()), in(a.size());\nexclusive_scan(a.begin(), a.end(), ex.begin(), 0LL);                // 0 3 4 8 9\ninclusive_scan(a.begin(), a.end(), in.begin(), plus<>(), 0LL);     // 3 4 8 9 14\ncout << ex[4] << ' ' << in[4] << '\\n';                              // 9 14"
+    },
+    {
+     "q": [
+      "transform_reduce c++",
+      "suma kwadratów elementów",
+      "suma kwadratow vectora",
+      "transform reduce jak działa",
+      "map reduce c++",
+      "sum of squares c++ stl"
+     ],
+     "a": "`transform_reduce(first, last, init, red, tr)` najpierw przekształca każdy element (`tr(x)`), potem redukuje operacją `red` — np. suma kwadratów. Wersja dla dwóch zakresów `transform_reduce(f1, l1, f2, init)` to iloczyn skalarny. Kolejność łączenia jest dowolna — `red` musi być łączna i przemienna.",
+     "code": "vector<int> v = {1, 2, 3, 4};\nlong long sq = transform_reduce(v.begin(), v.end(), 0LL, plus<>(), [](int x) { return 1LL * x * x; });\ncout << sq << '\\n';   // 30\nint mx = transform_reduce(v.begin(), v.end(), 0, [](int a, int b) { return max(a, b); },\n                          [](int x) { return x % 3; });\ncout << mx << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "reduce czy accumulate",
+      "różnica reduce accumulate",
+      "roznica miedzy reduce a accumulate",
+      "std::reduce c++17",
+      "reduce vs accumulate c++",
+      "reduce bez init"
+     ],
+     "a": "`accumulate` liczy ściśle od lewej (`((init + a0) + a1) + …`) — działa z każdą operacją. `reduce` (C++17) może łączyć w dowolnej kolejności (pod zrównoleglenie), więc operacja musi być łączna i przemienna. Bez `init` `reduce` startuje od `T{}` typu elementu. Na zawodach (jeden wątek) szybkość jest ta sama — `accumulate` z `0LL` jest najbezpieczniejsze.",
+     "code": "vector<int> v = {1000000000, 1000000000, 1000000000};\ncout << accumulate(v.begin(), v.end(), 0LL) << '\\n';   // 3000000000\ncout << reduce(v.begin(), v.end(), 0LL) << '\\n';       // 3000000000\n// reduce(v.begin(), v.end()) liczyłby w int — przepełnienie!"
+    },
+    {
+     "q": [
+      "midpoint c++",
+      "średnia dwóch liczb bez przepełnienia",
+      "srodek przedzialu bez overflow",
+      "(l + r) / 2 przepełnienie",
+      "midpoint c++20",
+      "average without overflow c++"
+     ],
+     "a": "`midpoint(a, b)` (C++20, `<numeric>`) zwraca środek bez przepełnienia nawet dla `INT_MAX`. Dla całkowitych zaokrągla **w stronę a**: `midpoint(2, 5) == 3`, `midpoint(5, 2) == 4`. W wyszukiwaniu binarnym zwykle wystarcza `l + (r - l) / 2`. Działa też dla `double` i wskaźników.",
+     "code": "int a = INT_MAX - 1, b = INT_MAX;\ncout << midpoint(a, b) << '\\n';                            // 2147483646 (bez przepełnienia)\ncout << midpoint(2, 5) << ' ' << midpoint(5, 2) << '\\n';   // 3 4\ncout << midpoint(1.0, 2.0) << '\\n';                        // 1.5"
+    },
+    {
+     "q": [
+      "nwd całej tablicy",
+      "gcd wielu liczb c++",
+      "nwd wszystkich elementów vectora",
+      "gcd of array c++",
+      "lcm wielu liczb",
+      "nww calej tablicy"
+     ],
+     "a": "`gcd`/`lcm` z `<numeric>` biorą dwa argumenty — dla całej tablicy złóż je `accumulate` z lambdą (gcd(0, x) = x, więc start od 0; dla lcm start od 1). NWW rośnie bardzo szybko — używaj `long long` i pilnuj zakresu.",
+     "code": "vector<long long> v = {12, 18, 30};\nlong long g = accumulate(v.begin(), v.end(), 0LL, [](long long a, long long b) { return gcd(a, b); });\nlong long l = accumulate(v.begin(), v.end(), 1LL, [](long long a, long long b) { return lcm(a, b); });\ncout << g << ' ' << l << '\\n';   // 6 180"
+    },
+    {
+     "q": [
+      "transform_inclusive_scan",
+      "prefiksowe maksimum inclusive_scan",
+      "inclusive_scan z max",
+      "prefix max c++ stl",
+      "sumy prefiksowe kwadratów",
+      "inclusive_scan własna operacja"
+     ],
+     "a": "`inclusive_scan(first, last, out, op)` działa z dowolną łączną operacją — `max` daje maksima prefiksowe. `transform_inclusive_scan(first, last, out, op, tr)` najpierw przekształca element (`tr`), potem skanuje — np. sumy prefiksowe kwadratów bez tablicy pomocniczej.",
+     "code": "vector<int> a = {2, 5, 1, 7, 3};\nvector<int> mx(a.size());\ninclusive_scan(a.begin(), a.end(), mx.begin(), [](int x, int y) { return max(x, y); });   // 2 5 5 7 7\nvector<long long> sq(a.size());\ntransform_inclusive_scan(a.begin(), a.end(), sq.begin(), plus<>(), [](int x) { return 1LL * x * x; });\ncout << mx[2] << ' ' << sq[4] << '\\n';   // 5 88"
+    }
+   ],
+   "related": [
+    "stl-accumulate",
+    "stl-partial-sum",
+    "stl-iota-fill",
+    "stl-gcd-lcm",
+    "ds-prefix-sums",
+    "ds-difference-array",
+    "num-overflow",
+    "stl-ref-functional-iterator"
+   ]
+  },
+  {
+   "id": "stl-ref-functional-iterator",
+   "title": "Dokumentacja: <functional> i <iterator> — funktory, hash, inserter-y, iteratory strumieni",
+   "category": "STL algorytmy",
+   "tags": [
+    "functional",
+    "iterator",
+    "dokumentacja",
+    "referencja",
+    "greater",
+    "less",
+    "plus",
+    "multiplies",
+    "equal_to",
+    "hash",
+    "not_fn",
+    "back_inserter",
+    "inserter",
+    "ostream_iterator",
+    "istream_iterator",
+    "reverse_iterator"
+   ],
+   "aliases": [
+    "dokumentacja functional",
+    "dokumentacja iterator",
+    "<functional>",
+    "<iterator>",
+    "back_inserter",
+    "inserter",
+    "front_inserter",
+    "ostream_iterator",
+    "istream_iterator",
+    "std::hash",
+    "hash c++",
+    "not_fn",
+    "obiekty funkcyjne c++",
+    "funktory stl",
+    "greater less plus multiplies"
+   ],
+   "summary": "Ściąga dwóch nagłówków pomocniczych STL. `<functional>`: gotowe funktory porównań i działań (less, greater, plus, multiplies, equal_to…), `hash`, `not_fn`, `function`, `identity`. `<iterator>`: iteratory wstawiające (back_inserter, front_inserter, inserter), iteratory strumieni (istream_iterator, ostream_iterator), next/prev/advance/distance i iteratory odwrotne.",
+   "complexity": "funktory i inserter-y: O(1) na wywołanie; next/prev/advance/distance: O(1) dla vectora, O(k) dla list/set/map",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Funktor** to obiekt, który można wywołać jak funkcję: `greater<int>()(5, 3) == true`. Gotowe funktory z `<functional>` podajesz algorytmom zamiast pisać lambdę: `sort(…, greater<>())`, `accumulate(…, 1LL, multiplies<>())`, `transform(…, plus<>())`. Wersja z pustymi nawiasami kątowymi (`greater<>`, C++14) sama dedukuje typy argumentów — działa dla `int`, `long long`, `pair` bez pilnowania typu."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funktor",
+      "Znaczenie",
+      "Typowe użycie"
+     ],
+     "rows": [
+      [
+       "`less<T>` / `greater<T>`",
+       "a < b / a > b",
+       "komparator `sort`, `set`, `priority_queue` (min-heap)"
+      ],
+      [
+       "`less_equal<T>` / `greater_equal<T>`",
+       "a <= b / a >= b",
+       "predykaty (NIE jako komparator sortowania)"
+      ],
+      [
+       "`equal_to<T>` / `not_equal_to<T>`",
+       "a == b / a != b",
+       "`inner_product`, `adjacent_find`, `unordered_map`"
+      ],
+      [
+       "`plus` / `minus` / `multiplies`",
+       "a + b / a − b / a · b",
+       "`accumulate`, `transform`, `partial_sum`"
+      ],
+      [
+       "`divides` / `modulus` / `negate`",
+       "a / b / a % b / −a",
+       "`transform`"
+      ],
+      [
+       "`logical_and` / `logical_or` / `logical_not`",
+       "&& / || / !",
+       "redukcje po wartościach bool"
+      ],
+      [
+       "`bit_and` / `bit_or` / `bit_xor` / `bit_not`",
+       "& / | / ^ / ~",
+       "`accumulate` z xor, `reduce`"
+      ],
+      [
+       "`hash<T>`",
+       "skrót `size_t` (int, string, double…)",
+       "`unordered_map`, własne hashe"
+      ],
+      [
+       "`not_fn(f)`",
+       "predykat odwrotny !f(x) (C++17)",
+       "`count_if`, `remove_if`"
+      ],
+      [
+       "`function<R(A…)>`",
+       "opakowanie dowolnej funkcji/lambdy",
+       "rekurencyjna lambda, tablica funkcji"
+      ],
+      [
+       "`identity`",
+       "zwraca argument bez zmian (C++20)",
+       "domyślna projekcja w `ranges::`"
+      ]
+     ],
+     "title": "<functional>"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja / typ",
+      "Co robi",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "`back_inserter(c)`",
+       "przypisanie → `c.push_back(x)`",
+       "`copy_if(…, back_inserter(w), p)`"
+      ],
+      [
+       "`front_inserter(c)`",
+       "przypisanie → `c.push_front(x)` (deque, list)",
+       "`copy(…, front_inserter(d))`"
+      ],
+      [
+       "`inserter(c, it)`",
+       "przypisanie → `c.insert(it, x)` (set, map, vector)",
+       "`set_union(…, inserter(s, s.end()))`"
+      ],
+      [
+       "`istream_iterator<T>(cin)`",
+       "czyta kolejne wartości T ze strumienia",
+       "`vector<int> v{istream_iterator<int>(cin), {}}`"
+      ],
+      [
+       "`ostream_iterator<T>(cout, sep)`",
+       "wypisuje każdą wartość + sep",
+       "`copy(…, ostream_iterator<int>(cout, \" \"))`"
+      ],
+      [
+       "`next(it, k)` / `prev(it, k)`",
+       "iterator przesunięty o k (kopia)",
+       "`*prev(s.end())` — ostatni w secie"
+      ],
+      [
+       "`advance(it, k)`",
+       "przesuwa `it` w miejscu",
+       "`advance(it, 3)`"
+      ],
+      [
+       "`distance(a, b)`",
+       "liczba kroków od a do b",
+       "`distance(v.begin(), it)`"
+      ],
+      [
+       "`make_reverse_iterator(it)` / `rit.base()`",
+       "zamiana iterator ↔ odwrotny",
+       "`(rit.base() - v.begin()) - 1`"
+      ],
+      [
+       "`size(c)` / `ssize(c)` / `empty(c)` / `data(c)`",
+       "wolne funkcje (C++17/20); ssize ze znakiem",
+       "`for (int i = 0; i < ssize(v); i++)`"
+      ]
+     ],
+     "title": "<iterator>"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: funktory, inserter-y i iteratory strumieni",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // <functional>: gotowe funktory\n    vector<int> v = {5, 2, 8, 1, 9};\n    sort(v.begin(), v.end(), greater<>());                                    // 9 8 5 2 1\n    long long iloczyn = accumulate(v.begin(), v.end(), 1LL, multiplies<>());\n    cout << \"iloczyn: \" << iloczyn << '\\n';                                   // 720\n    auto nieparzysta = [](int x) { return x % 2 != 0; };\n    cout << \"parzystych: \" << count_if(v.begin(), v.end(), not_fn(nieparzysta)) << '\\n';   // 2\n    cout << \"hash stabilny: \" << (hash<string>{}(\"abc\") == hash<string>{}(\"abc\")) << '\\n';  // 1\n\n    // <iterator>: inserter-y\n    vector<int> duze;\n    copy_if(v.begin(), v.end(), back_inserter(duze), [](int x) { return x > 4; });   // 9 8 5\n    set<int> s;\n    copy(v.begin(), v.end(), inserter(s, s.end()));                          // {1 2 5 8 9}\n    deque<int> d;\n    copy(duze.begin(), duze.end(), front_inserter(d));                       // 5 8 9 (odwrócone)\n\n    // iteratory strumieni\n    cout << \"duze: \";\n    copy(duze.begin(), duze.end(), ostream_iterator<int>(cout, \" \"));       // 9 8 5\n    cout << \"\\ndeque: \";\n    copy(d.begin(), d.end(), ostream_iterator<int>(cout, \" \"));             // 5 8 9\n    cout << '\\n';\n\n    // next / prev / advance / distance\n    auto it = s.begin();\n    advance(it, 2);                                                          // wskazuje na 5\n    cout << *it << ' ' << *next(it) << ' ' << *prev(it) << '\\n';             // 5 8 2\n    cout << \"distance: \" << distance(s.begin(), it) << '\\n';                 // 2\n\n    // iterator odwrotny i base()\n    auto rit = find(v.rbegin(), v.rend(), 5);\n    cout << \"indeks 5: \" << (rit.base() - v.begin()) - 1 << '\\n';           // 2\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`ostream_iterator<int>(cout, \" \")` wypisuje separator także **po ostatnim** elemencie. Większość sprawdzarek ignoruje końcowe spacje, ale gdy format jest ścisły — wypisz pętlą z warunkiem."
+    },
+    {
+     "type": "tip",
+     "md": "`hash<pair<int, int>>` nie istnieje, więc `unordered_map<pair<int, int>, int>` się nie skompiluje. Albo zakoduj parę w jednej liczbie (`1LL * a * M + b`), albo napisz własną strukturę hashującą."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "less<T>() / less<>()",
+     "desc": "funktor a < b; domyślny komparator sort, set, map, priority_queue",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "set<int, less<>> s;"
+    },
+    {
+     "sig": "greater<T>() / greater<>()",
+     "desc": "funktor a > b: sortowanie malejąco, set malejący, priority_queue jako min-heap",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "sort(v.begin(), v.end(), greater<>());"
+    },
+    {
+     "sig": "less_equal<T>() / greater_equal<T>()",
+     "desc": "a <= b / a >= b — do predykatów, NIE jako komparator sortowania",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "adjacent_find(v.begin(), v.end(), greater_equal<>())"
+    },
+    {
+     "sig": "equal_to<T>() / not_equal_to<T>()",
+     "desc": "a == b / a != b",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "inner_product(s.begin(), s.end(), t.begin(), 0, plus<>(), equal_to<>())"
+    },
+    {
+     "sig": "plus<T>() / minus<T>()",
+     "desc": "a + b / a − b",
+     "complexity": "O(1)",
+     "returns": "T",
+     "example": "transform(a.begin(), a.end(), b.begin(), c.begin(), plus<>());"
+    },
+    {
+     "sig": "multiplies<T>() / divides<T>() / modulus<T>()",
+     "desc": "a · b / a / b / a % b",
+     "complexity": "O(1)",
+     "returns": "T",
+     "example": "accumulate(v.begin(), v.end(), 1LL, multiplies<>())"
+    },
+    {
+     "sig": "negate<T>()",
+     "desc": "−a",
+     "complexity": "O(1)",
+     "returns": "T",
+     "example": "transform(v.begin(), v.end(), v.begin(), negate<>());"
+    },
+    {
+     "sig": "logical_and<T>() / logical_or<T>() / logical_not<T>()",
+     "desc": "a && b / a || b / !a",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "bit_and<T>() / bit_or<T>() / bit_xor<T>() / bit_not<T>()",
+     "desc": "a & b / a | b / a ^ b / ~a",
+     "complexity": "O(1)",
+     "returns": "T",
+     "example": "accumulate(v.begin(), v.end(), 0, bit_xor<>())"
+    },
+    {
+     "sig": "hash<T>{}(x)",
+     "desc": "skrót wartości (typy wbudowane, string, string_view…); nie ma dla pair/vector",
+     "complexity": "O(1), dla string O(długość)",
+     "returns": "size_t",
+     "example": "size_t h = hash<string>{}(s);"
+    },
+    {
+     "sig": "not_fn(f)",
+     "desc": "C++17: predykat zwracający !f(args…) (następca usuniętych not1/not2)",
+     "complexity": "O(1)",
+     "returns": "obiekt funkcyjny",
+     "example": "count_if(v.begin(), v.end(), not_fn(parzysta))"
+    },
+    {
+     "sig": "function<R(Args...)>",
+     "desc": "opakowanie dowolnej funkcji, lambdy lub funktora (wolniejsze od auto)",
+     "complexity": "O(1) na wywołanie",
+     "returns": "R",
+     "example": "function<int(int)> f = [](int x) { return x * 2; };"
+    },
+    {
+     "sig": "identity{}",
+     "desc": "C++20: zwraca argument bez zmian; domyślna projekcja algorytmów ranges::",
+     "complexity": "O(1)",
+     "returns": "argument"
+    },
+    {
+     "sig": "bind(f, args...) / placeholders::_1",
+     "desc": "częściowe zastosowanie funkcji (dziś zwykle zastępowane lambdą)",
+     "complexity": "O(1)",
+     "returns": "obiekt funkcyjny",
+     "example": "auto f = bind(less<>(), placeholders::_1, 10);"
+    },
+    {
+     "sig": "ref(x) / cref(x)",
+     "desc": "przekazanie referencji tam, gdzie kopiowany jest argument (bind, thread, funktory)",
+     "complexity": "O(1)",
+     "returns": "reference_wrapper<T>"
+    },
+    {
+     "sig": "back_inserter(c)",
+     "desc": "iterator wywołujący c.push_back(x) przy każdym przypisaniu (vector, string, deque)",
+     "complexity": "O(1) zamortyzowane",
+     "returns": "back_insert_iterator",
+     "example": "copy(a.begin(), a.end(), back_inserter(b));"
+    },
+    {
+     "sig": "front_inserter(c)",
+     "desc": "iterator wywołujący c.push_front(x) (deque, list) — odwraca kolejność",
+     "complexity": "O(1)",
+     "returns": "front_insert_iterator",
+     "example": "copy(a.begin(), a.end(), front_inserter(d));"
+    },
+    {
+     "sig": "inserter(c, it)",
+     "desc": "iterator wywołujący c.insert(it, x) — dla set, map i środka vectora",
+     "complexity": "jak c.insert",
+     "returns": "insert_iterator",
+     "example": "copy(v.begin(), v.end(), inserter(s, s.end()));"
+    },
+    {
+     "sig": "istream_iterator<T>(in) / istream_iterator<T>()",
+     "desc": "czyta kolejne T ze strumienia; domyślny = koniec strumienia (EOF)",
+     "complexity": "O(1) na element",
+     "returns": "istream_iterator<T>",
+     "example": "vector<int> v{istream_iterator<int>(cin), istream_iterator<int>()};"
+    },
+    {
+     "sig": "ostream_iterator<T>(out, sep)",
+     "desc": "każde przypisanie wypisuje wartość i separator (także po ostatnim)",
+     "complexity": "O(1) na element",
+     "returns": "ostream_iterator<T>",
+     "example": "copy(v.begin(), v.end(), ostream_iterator<int>(cout, \" \"));"
+    },
+    {
+     "sig": "next(it, n = 1)",
+     "desc": "kopia iteratora przesunięta o n do przodu",
+     "complexity": "O(1) swobodny dostęp, O(n) inne",
+     "returns": "iterator",
+     "example": "auto drugi = next(s.begin());"
+    },
+    {
+     "sig": "prev(it, n = 1)",
+     "desc": "kopia iteratora przesunięta o n do tyłu",
+     "complexity": "O(1) swobodny dostęp, O(n) inne",
+     "returns": "iterator",
+     "example": "int ostatni = *prev(s.end());"
+    },
+    {
+     "sig": "advance(it, n)",
+     "desc": "przesuwa it o n w miejscu (n < 0 dla dwukierunkowych)",
+     "complexity": "O(1) / O(|n|)",
+     "returns": "void",
+     "example": "advance(it, 3);"
+    },
+    {
+     "sig": "distance(first, last)",
+     "desc": "liczba kroków od first do last",
+     "complexity": "O(1) swobodny dostęp, O(n) set/map/list",
+     "returns": "ptrdiff_t",
+     "example": "distance(v.begin(), it)"
+    },
+    {
+     "sig": "make_reverse_iterator(it) / rit.base()",
+     "desc": "zamiana zwykły ↔ odwrotny; rit.base() wskazuje element ZA *rit",
+     "complexity": "O(1)",
+     "returns": "reverse_iterator / iterator",
+     "example": "auto it = prev(rit.base());"
+    },
+    {
+     "sig": "make_move_iterator(it)",
+     "desc": "iterator, którego dereferencja przenosi (std::move) zamiast kopiować",
+     "complexity": "O(1)",
+     "returns": "move_iterator",
+     "example": "vector<string> w(make_move_iterator(v.begin()), make_move_iterator(v.end()));"
+    },
+    {
+     "sig": "begin(c) / end(c) / rbegin(c) / rend(c)",
+     "desc": "wolne funkcje — działają też dla zwykłych tablic C",
+     "complexity": "O(1)",
+     "returns": "iterator",
+     "example": "sort(begin(a), end(a));"
+    },
+    {
+     "sig": "size(c) / ssize(c) / empty(c) / data(c)",
+     "desc": "wolne funkcje (C++17); ssize (C++20) zwraca typ ze znakiem",
+     "complexity": "O(1)",
+     "returns": "size_t / ptrdiff_t / bool / wskaźnik",
+     "example": "for (int i = 0; i < ssize(v); i++)"
+    }
+   ],
+   "pitfalls": [
+    "`greater<int>()` w wywołaniu (`sort`) to OBIEKT — z nawiasami; w parametrze szablonu (`priority_queue<int, vector<int>, greater<int>>`) to TYP — bez nawiasów.",
+    "`less_equal`/`greater_equal` jako komparator `sort`/`set` łamie ścisły porządek — UB.",
+    "`hash<pair<int,int>>` nie istnieje — `unordered_map<pair<int,int>, int>` nie skompiluje się bez własnego hasha.",
+    "`ostream_iterator<int>(cout, \" \")` wypisuje separator także PO ostatnim elemencie.",
+    "`istream_iterator` czyta aż do EOF lub błędu formatu — gdy po liczbach są jeszcze inne dane, wczytaj n i użyj pętli.",
+    "`vector<int> v(istream_iterator<int>(cin), istream_iterator<int>());` to deklaracja FUNKCJI (most vexing parse) — używaj klamer `{…}`.",
+    "`next`/`prev`/`distance` na `set`/`map`/`list` są liniowe — `distance(s.begin(), it)` w pętli daje O(n²).",
+    "`prev(v.begin())` i `next(v.end())` to UB — sprawdzaj granice."
+   ],
+   "qa": [
+    {
+     "q": [
+      "back_inserter c++",
+      "co to jest back_inserter",
+      "copy do pustego vectora back_inserter",
+      "back inserter jak działa",
+      "wstawianie na koniec przez iterator",
+      "back_inserter vs resize",
+      "backinserter"
+     ],
+     "a": "`back_inserter(v)` tworzy iterator, który przy każdym przypisaniu wywołuje `v.push_back(x)`. Dzięki temu algorytmy piszące do wyjścia (`copy`, `copy_if`, `transform`, `set_intersection`, `merge`, `unique_copy`…) mogą zapisywać do pustego `vector`/`string`/`deque` bez znajomości rozmiaru wyniku.",
+     "code": "vector<int> a = {1, 3, 5, 7}, b = {3, 4, 5}, wsp;\nset_intersection(a.begin(), a.end(), b.begin(), b.end(), back_inserter(wsp));\nfor (int x : wsp) cout << x << ' ';   // 3 5\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "ostream_iterator c++",
+      "wypisz vector jedną linijką",
+      "wypisz vector jedna linijka",
+      "wypisanie vectora bez pętli",
+      "copy do cout",
+      "print vector without loop c++",
+      "ostream iterator"
+     ],
+     "a": "`copy(v.begin(), v.end(), ostream_iterator<int>(cout, \" \"))` wypisuje wszystkie elementy z separatorem — **po każdym** elemencie, także ostatnim. Gdy format wymaga braku spacji na końcu, użyj zwykłej pętli z warunkiem.",
+     "code": "vector<int> v = {4, 8, 15, 16};\ncopy(v.begin(), v.end(), ostream_iterator<int>(cout, \" \"));   // 4 8 15 16 (spacja na końcu)\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "istream_iterator c++",
+      "wczytaj wszystkie liczby do vectora",
+      "wczytaj liczby do końca wejścia jedną linią",
+      "wczytaj do eof do vectora",
+      "read all ints into vector c++",
+      "istream iterator"
+     ],
+     "a": "`vector<int> v{istream_iterator<int>(cin), istream_iterator<int>()};` wczytuje liczby aż do końca wejścia (EOF) albo pierwszego błędu formatu. Domyślnie skonstruowany `istream_iterator<int>()` oznacza „koniec strumienia”. Używaj klamer — z nawiasami okrągłymi kompilator uzna to za deklarację funkcji. Gdy znasz n — prościej pętla z `cin >>`.",
+     "code": "vector<int> v{istream_iterator<int>(cin), istream_iterator<int>()};\ncout << v.size() << \" liczb, suma \" << accumulate(v.begin(), v.end(), 0LL) << '\\n';"
+    },
+    {
+     "q": [
+      "inserter c++",
+      "copy do seta",
+      "kopiowanie vectora do seta",
+      "set_union do seta inserter",
+      "inserter vs back_inserter",
+      "insert iterator set"
+     ],
+     "a": "`set`/`map` nie mają `push_back`, więc `back_inserter` nie zadziała. `inserter(s, s.end())` przy każdym przypisaniu wywołuje `s.insert(pozycja, x)`. Przydaje się z `copy`, `set_union`, `set_intersection` do zbioru. (Sam vector→set prościej: `set<int> s(v.begin(), v.end())`.)",
+     "code": "vector<int> v = {5, 1, 5, 3};\nset<int> s;\ncopy(v.begin(), v.end(), inserter(s, s.end()));\nfor (int x : s) cout << x << ' ';   // 1 3 5\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "plus multiplies c++",
+      "obiekty funkcyjne functional",
+      "funktory stl greater less",
+      "multiplies accumulate iloczyn",
+      "functional header c++",
+      "bit_xor accumulate",
+      "gotowe funktory c++"
+     ],
+     "a": "`<functional>` daje gotowe funktory zamiast pisania lambd: porównania `less`, `greater`, `less_equal`, `greater_equal`, `equal_to`, `not_equal_to`; działania `plus`, `minus`, `multiplies`, `divides`, `modulus`, `negate`; logiczne i bitowe `logical_and`, `bit_xor`… Wersja `greater<>` (bez typu) sama dedukuje typy argumentów.",
+     "code": "vector<long long> v = {2, 3, 4};\nlong long iloczyn = accumulate(v.begin(), v.end(), 1LL, multiplies<>());   // 24\nsort(v.begin(), v.end(), greater<>());                                      // 4 3 2\nlong long x = accumulate(v.begin(), v.end(), 0LL, bit_xor<>());            // 4 ^ 3 ^ 2 = 5\ncout << iloczyn << ' ' << v[0] << ' ' << x << '\\n';   // 24 4 5"
+    },
+    {
+     "q": [
+      "std::hash c++",
+      "hash stringa c++",
+      "jak policzyć hash w c++",
+      "hash<string>",
+      "hash function c++ stl",
+      "hash pary unordered_map"
+     ],
+     "a": "`hash<T>{}(x)` zwraca `size_t` dla typów wbudowanych, `string` i kilku innych — tego używa `unordered_map`. Dla `pair`, `vector`, struktur hash **nie istnieje** — trzeba napisać własny. Do porównywania podsłów nie używaj `hash<string>` (O(długość) na wywołanie) — tam stosuje się hashowanie wielomianowe z sumami prefiksowymi.",
+     "code": "size_t h1 = hash<string>{}(\"olimpiada\");\nsize_t h2 = hash<int>{}(42);\ncout << (h1 == hash<string>{}(\"olimpiada\")) << ' ' << h2 << '\\n';   // 1 42 (w libstdc++ hash(int) == wartość)"
+    },
+    {
+     "q": [
+      "not_fn c++",
+      "zaprzeczenie predykatu",
+      "odwróć warunek lambdy",
+      "not_fn vs not1",
+      "negate predicate c++",
+      "find_if_not czy not_fn"
+     ],
+     "a": "`not_fn(pred)` (C++17) tworzy predykat zwracający `!pred(x)`. Przydaje się, gdy masz gotową funkcję i chcesz warunek odwrotny, np. `remove_if(…, not_fn(cyfra))`. Stare `not1`/`not2` usunięto w C++20. Dla `find_if`/`all_of` są też gotowe wersje `find_if_not`, `none_of`.",
+     "code": "auto parzysta = [](int x) { return x % 2 == 0; };\nvector<int> v = {1, 2, 3, 4, 5};\ncout << count_if(v.begin(), v.end(), not_fn(parzysta)) << '\\n';   // 3\nauto cyfra = [](unsigned char c) { return isdigit(c) != 0; };\nstring s = \"a1b2c3\";\ns.erase(remove_if(s.begin(), s.end(), not_fn(cyfra)), s.end());\ncout << s << '\\n';   // 123"
+    },
+    {
+     "q": [
+      "greater<int>() czy greater<int>",
+      "błąd kompilacji greater priority_queue",
+      "kiedy greater z nawiasami",
+      "greater w priority_queue bez nawiasow",
+      "greater<int> template argument error",
+      "greater<>() vs greater<int>()"
+     ],
+     "a": "W **wywołaniu funkcji** przekazujesz obiekt: `sort(v.begin(), v.end(), greater<int>())` — z nawiasami. W **parametrze szablonu** podajesz typ: `priority_queue<int, vector<int>, greater<int>>`, `set<int, greater<int>>` — bez nawiasów. Pomylenie daje długi błąd kompilacji.",
+     "code": "vector<int> v = {3, 1, 2};\nsort(v.begin(), v.end(), greater<int>());             // obiekt → z ()\npriority_queue<int, vector<int>, greater<int>> pq;    // typ → bez ()\nset<int, greater<int>> s = {1, 5, 3};\npq.push(4);\npq.push(2);\ncout << v[0] << ' ' << pq.top() << ' ' << *s.begin() << '\\n';   // 3 2 5"
+    }
+   ],
+   "related": [
+    "stl-iterators",
+    "cpp-std-function",
+    "cpp-lambdas",
+    "ds-custom-hash",
+    "stl-sort",
+    "stl-ref-modifying",
+    "io-read-until-eof",
+    "stl-set-operations"
+   ]
+  },
+  {
+   "id": "stl-ref-ranges",
+   "title": "Dokumentacja: <ranges> (C++20) — algorytmy ranges::, widoki views:: i projekcje",
+   "category": "STL algorytmy",
+   "tags": [
+    "ranges",
+    "views",
+    "c++20",
+    "dokumentacja",
+    "referencja",
+    "projekcja",
+    "views::iota",
+    "views::filter",
+    "views::transform",
+    "views::reverse",
+    "views::take",
+    "views::drop",
+    "ranges::sort",
+    "widoki"
+   ],
+   "aliases": [
+    "std::ranges",
+    "c++20 ranges",
+    "views c++20",
+    "views::iota",
+    "views::filter",
+    "views::transform",
+    "views::take",
+    "views::drop",
+    "views::keys",
+    "projekcja ranges",
+    "ranges::sort projekcja",
+    "ranges dokumentacja",
+    "zakresy c++20",
+    "widoki c++20"
+   ],
+   "summary": "Co z C++20 `<ranges>` działa w g++ z `-std=c++20` i przydaje się na zawodach: algorytmy `ranges::` przyjmujące cały kontener (sort, find, count, max, lower_bound…), projekcje (sortowanie po polu bez lambdy) oraz leniwe widoki `views::` (iota, reverse, filter, transform, take, drop, keys/values). Plus lista rzeczy, które są dopiero w C++23 i się nie skompilują.",
+   "complexity": "algorytmy ranges:: — jak odpowiedniki z <algorithm>; widoki są leniwe: utworzenie O(1), koszt płacisz przy przejściu",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Algorytmy `ranges::`** to te same algorytmy co w `<algorithm>`, ale przyjmują cały kontener: `ranges::sort(v)` zamiast `sort(v.begin(), v.end())`. Złożoność i szybkość są takie same. Dodatkowo przyjmują **projekcję** — funkcję albo wskaźnik na pole, przez które przechodzi każdy element przed porównaniem: `ranges::sort(v, {}, &P::wiek)` (`{}` = domyślny komparator `ranges::less`).\n\n**Widoki `views::`** to leniwe „okulary” na dane: niczego nie kopiują, element liczą dopiero przy przejściu. Składa się je operatorem `|`: `v | views::filter(p) | views::transform(f)`. Widok nie posiada danych — kontener musi żyć dłużej niż widok."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zapis C++20",
+      "Klasyczny odpowiednik",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`ranges::sort(v)`",
+       "`sort(v.begin(), v.end())`",
+       "+ komparator i projekcja"
+      ],
+      [
+       "`ranges::sort(v, greater{}, &P::x)`",
+       "sort z lambdą porównującą `.x`",
+       "projekcja = pole struktury"
+      ],
+      [
+       "`ranges::find(v, x)` / `ranges::find_if(v, p)`",
+       "`find(…)` / `find_if(…)`",
+       "zwraca iterator"
+      ],
+      [
+       "`ranges::count(v, x)` / `ranges::count_if(v, p)`",
+       "`count(…)` / `count_if(…)`",
+       ""
+      ],
+      [
+       "`ranges::min(v)` / `ranges::max(v)`",
+       "`*min_element(…)` / `*max_element(…)`",
+       "zwraca WARTOŚĆ; pusty v → UB"
+      ],
+      [
+       "`ranges::min_element(v)` / `max_element`",
+       "`min_element(…)`",
+       "zwraca iterator"
+      ],
+      [
+       "`ranges::lower_bound(v, x)` / `upper_bound` / `binary_search`",
+       "`lower_bound(…)`",
+       "też z projekcją"
+      ],
+      [
+       "`ranges::reverse(v)` / `ranges::fill(v, x)`",
+       "`reverse(…)` / `fill(…)`",
+       ""
+      ],
+      [
+       "`ranges::unique(v)` / `ranges::remove(v, x)`",
+       "`unique(…)` / `remove(…)`",
+       "zwraca `subrange` do usunięcia"
+      ],
+      [
+       "`ranges::copy(v, out)`",
+       "`copy(…)`",
+       "zwraca `{in, out}`"
+      ],
+      [
+       "`ranges::all_of(v, p)` / `any_of` / `none_of`",
+       "`all_of(…)`",
+       ""
+      ],
+      [
+       "`ranges::next_permutation(v)`",
+       "`next_permutation(…)`",
+       "zwraca `{in, found}` — sprawdzaj `.found`"
+      ]
+     ],
+     "title": "Algorytmy ranges::"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Widok",
+      "Co daje",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "`views::iota(a, b)`",
+       "liczby a, a+1, …, b−1",
+       "`for (int i : views::iota(0, n))`"
+      ],
+      [
+       "`views::iota(a)`",
+       "nieskończony ciąg od a",
+       "`views::iota(1) | views::take(5)`"
+      ],
+      [
+       "`views::reverse`",
+       "od końca",
+       "`for (int x : v | views::reverse)`"
+      ],
+      [
+       "`views::filter(p)`",
+       "tylko elementy z p(x) == true",
+       "`v | views::filter(parzysta)`"
+      ],
+      [
+       "`views::transform(f)`",
+       "f(x) zamiast x",
+       "`v | views::transform(kwadrat)`"
+      ],
+      [
+       "`views::take(k)` / `views::drop(k)`",
+       "pierwsze k / bez pierwszych k",
+       "`v | views::drop(1)`"
+      ],
+      [
+       "`views::take_while(p)` / `views::drop_while(p)`",
+       "prefiks spełniający p / reszta po nim",
+       "`s | views::drop_while(::isspace)`"
+      ],
+      [
+       "`views::keys` / `views::values`",
+       "pierwsze / drugie pola par (map)",
+       "`for (auto& k : m | views::keys)`"
+      ],
+      [
+       "`views::elements<N>`",
+       "N-te pole krotek",
+       "`v | views::elements<2>`"
+      ],
+      [
+       "`views::split(d)`",
+       "podzakresy rozdzielone d",
+       "`s | views::split(' ')`"
+      ],
+      [
+       "`views::common`",
+       "zrównuje typ begin/end",
+       "przed konstruktorem `vector(r.begin(), r.end())`"
+      ]
+     ],
+     "title": "Widoki views::"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: algorytmy, projekcje i widoki",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Zawodnik {\n    string nick;\n    int punkty;\n};\n\nint main() {\n    vector<int> v = {5, 3, 8, 1, 9, 2};\n\n    ranges::sort(v);                                              // 1 2 3 5 8 9\n    cout << \"max: \" << ranges::max(v) << '\\n';                    // 9\n    cout << \"ile > 4: \" << ranges::count_if(v, [](int x) { return x > 4; }) << '\\n';   // 3\n    cout << \"lower_bound(4): \" << *ranges::lower_bound(v, 4) << '\\n';                  // 5\n    cout << \"binary_search(8): \" << ranges::binary_search(v, 8) << '\\n';               // 1\n\n    // projekcje: sortowanie i szukanie po polu bez pisania lambdy\n    vector<Zawodnik> z = {{\"ala\", 70}, {\"bob\", 95}, {\"cyd\", 80}};\n    ranges::sort(z, ranges::greater{}, &Zawodnik::punkty);       // po punktach malejąco\n    for (auto& [nick, p] : z) cout << nick << ' ' << p << '\\n';  // bob 95, cyd 80, ala 70\n    auto best = ranges::max_element(z, {}, &Zawodnik::punkty);\n    cout << \"najlepszy: \" << best->nick << '\\n';                  // bob\n    auto it = ranges::find(z, string(\"cyd\"), &Zawodnik::nick);\n    cout << \"cyd ma \" << it->punkty << '\\n';                      // 80\n\n    // widoki: leniwe, bez kopiowania\n    for (int i : views::iota(0, 3)) cout << i << ' ';             // 0 1 2\n    cout << '\\n';\n    auto parz_kw = v | views::filter([](int x) { return x % 2 == 0; })\n                     | views::transform([](int x) { return x * x; });\n    for (int x : parz_kw) cout << x << ' ';                       // 4 64\n    cout << '\\n';\n    for (int x : v | views::reverse | views::take(2)) cout << x << ' ';   // 9 8\n    cout << '\\n';\n    for (int x : v | views::drop(4)) cout << x << ' ';            // 8 9\n    cout << '\\n';\n\n    vector<int> w(parz_kw.begin(), parz_kw.end());               // materializacja widoku (C++20)\n    cout << \"w.size() = \" << w.size() << '\\n';                    // 2\n\n    // usuwanie duplikatów: ranges::unique zwraca subrange\n    vector<int> d = {3, 1, 3, 2, 1};\n    ranges::sort(d);\n    auto [b, e] = ranges::unique(d);\n    d.erase(b, e);\n    cout << \"unikalne: \" << d.size() << '\\n';                     // 3\n}"
+    },
+    {
+     "type": "warn",
+     "md": "**Tylko C++23** (nie skompiluje się z `-std=c++20`): `ranges::to`, `views::zip`, `views::enumerate`, `views::chunk`, `views::slide`, `views::stride`, `views::adjacent`, `views::cartesian_product`, `views::join_with`, `ranges::fold_left`, `ranges::contains`, `ranges::iota`. Sprawdź standard na sprawdzarce — jeśli jest tylko C++17, całe `<ranges>` odpada i zostają klasyczne `sort(v.begin(), v.end())`."
+    },
+    {
+     "type": "text",
+     "md": "### Różnice w wartościach zwracanych\n- `ranges::min/max` zwracają **wartość** (kopię), a `ranges::min_element` — iterator.\n- `ranges::unique`, `ranges::remove`, `ranges::remove_if` zwracają `subrange` „śmieci” do wyrzucenia: `auto [b, e] = ranges::unique(v); v.erase(b, e);`.\n- `ranges::copy`, `ranges::transform` zwracają strukturę `{in, out}` (np. `.out` to koniec zapisu).\n- Algorytm wywołany na **tymczasowym** kontenerze (np. `ranges::find(zrobVector(), x)`) zwraca `ranges::dangling` — nie da się go dereferencjonować (ochrona przed wiszącym iteratorem)."
+    },
+    {
+     "type": "tip",
+     "md": "`views::iota(0, v.size())` się nie skompiluje: `int` i `size_t` mają różną znakowość. Pisz `views::iota(0, (int)v.size())`. Nieskończone `views::iota(1) | views::take(k)` nie jest „common range” — przed konstruktorem `vector(r.begin(), r.end())` dodaj `| views::common`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "ranges::sort(r[, cmp[, proj]])",
+     "desc": "sortuje cały kontener; proj = pole/funkcja, po której porównujemy",
+     "complexity": "O(n log n)",
+     "returns": "iterator r.end()",
+     "example": "ranges::sort(v, {}, &Osoba::wiek);"
+    },
+    {
+     "sig": "ranges::stable_sort(r[, cmp[, proj]])",
+     "desc": "sortowanie stabilne z projekcją",
+     "complexity": "O(n log n)",
+     "returns": "iterator r.end()"
+    },
+    {
+     "sig": "ranges::find(r, x[, proj]) / ranges::find_if(r, pred[, proj])",
+     "desc": "pierwszy element równy x / spełniający pred",
+     "complexity": "O(n)",
+     "returns": "iterator (r.end(), gdy brak)",
+     "example": "auto it = ranges::find(v, 7);"
+    },
+    {
+     "sig": "ranges::count(r, x[, proj]) / ranges::count_if(r, pred[, proj])",
+     "desc": "liczba wystąpień / spełniających pred",
+     "complexity": "O(n)",
+     "returns": "liczba",
+     "example": "ranges::count_if(v, [](int x) { return x > 0; })"
+    },
+    {
+     "sig": "ranges::min(r[, cmp, proj]) / ranges::max(r[, cmp, proj])",
+     "desc": "najmniejsza / największa WARTOŚĆ zakresu (niepusty!)",
+     "complexity": "O(n)",
+     "returns": "wartość (kopia)",
+     "example": "int mx = ranges::max(v);"
+    },
+    {
+     "sig": "ranges::minmax(r[, cmp, proj])",
+     "desc": "para {min, max} wartości",
+     "complexity": "O(n)",
+     "returns": "struktura {min, max}",
+     "example": "auto [mn, mx] = ranges::minmax(v);"
+    },
+    {
+     "sig": "ranges::min_element(r[, cmp, proj]) / ranges::max_element(r[, cmp, proj])",
+     "desc": "iterator na ekstremum",
+     "complexity": "O(n)",
+     "returns": "iterator",
+     "example": "ranges::max_element(z, {}, &Z::punkty)"
+    },
+    {
+     "sig": "ranges::lower_bound(r, x[, cmp, proj]) / ranges::upper_bound(r, x[, cmp, proj])",
+     "desc": "wyszukiwanie binarne w posortowanym zakresie, także po polu",
+     "complexity": "O(log n)",
+     "returns": "iterator",
+     "example": "ranges::lower_bound(v, 4)"
+    },
+    {
+     "sig": "ranges::binary_search(r, x[, cmp, proj]) / ranges::equal_range(r, x)",
+     "desc": "czy jest / podzakres równych",
+     "complexity": "O(log n)",
+     "returns": "bool / subrange"
+    },
+    {
+     "sig": "ranges::reverse(r) / ranges::rotate(r, mid) / ranges::fill(r, x)",
+     "desc": "odpowiedniki reverse / rotate / fill",
+     "complexity": "O(n)",
+     "returns": "iterator / subrange"
+    },
+    {
+     "sig": "ranges::unique(r) / ranges::remove(r, x) / ranges::remove_if(r, pred)",
+     "desc": "przestawiają elementy; zwracają subrange do usunięcia",
+     "complexity": "O(n)",
+     "returns": "subrange",
+     "example": "auto [b, e] = ranges::unique(v); v.erase(b, e);"
+    },
+    {
+     "sig": "ranges::copy(r, out) / ranges::transform(r, out, f)",
+     "desc": "kopiowanie / przekształcanie całego zakresu",
+     "complexity": "O(n)",
+     "returns": "struktura {in, out}",
+     "example": "ranges::copy(v, back_inserter(w));"
+    },
+    {
+     "sig": "ranges::all_of(r, pred) / ranges::any_of(r, pred) / ranges::none_of(r, pred)",
+     "desc": "sprawdzenie warunku dla zakresu",
+     "complexity": "O(n)",
+     "returns": "bool",
+     "example": "ranges::all_of(v, [](int x) { return x >= 0; })"
+    },
+    {
+     "sig": "ranges::equal(r1, r2) / ranges::mismatch(r1, r2)",
+     "desc": "porównanie dwóch zakresów",
+     "complexity": "O(n)",
+     "returns": "bool / {in1, in2}"
+    },
+    {
+     "sig": "ranges::next_permutation(r)",
+     "desc": "następna permutacja",
+     "complexity": "O(n)",
+     "returns": "struktura {in, found}",
+     "example": "while (ranges::next_permutation(p).found) { … }"
+    },
+    {
+     "sig": "views::iota(a, b) / views::iota(a)",
+     "desc": "leniwy ciąg a, a+1, …, b−1 (lub nieskończony); a i b tej samej znakowości",
+     "complexity": "O(1) na element",
+     "returns": "iota_view",
+     "example": "for (int i : views::iota(0, n))"
+    },
+    {
+     "sig": "views::reverse",
+     "desc": "widok od końca (r | views::reverse)",
+     "complexity": "O(1) na element",
+     "returns": "reverse_view",
+     "example": "for (int x : v | views::reverse)"
+    },
+    {
+     "sig": "views::filter(pred)",
+     "desc": "tylko elementy spełniające pred (leniwie)",
+     "complexity": "O(1) zamortyzowane na element",
+     "returns": "filter_view",
+     "example": "v | views::filter([](int x) { return x > 0; })"
+    },
+    {
+     "sig": "views::transform(f)",
+     "desc": "f(x) zamiast x (leniwie, przy każdym odczycie)",
+     "complexity": "O(1) + koszt f",
+     "returns": "transform_view",
+     "example": "v | views::transform([](int x) { return x * x; })"
+    },
+    {
+     "sig": "views::take(k) / views::drop(k)",
+     "desc": "pierwsze k elementów / wszystko poza pierwszymi k",
+     "complexity": "O(1) na element",
+     "returns": "take_view / drop_view",
+     "example": "v | views::drop(1)"
+    },
+    {
+     "sig": "views::take_while(pred) / views::drop_while(pred)",
+     "desc": "najdłuższy prefiks spełniający pred / reszta po nim",
+     "complexity": "O(1) na element",
+     "returns": "widok"
+    },
+    {
+     "sig": "views::keys / views::values / views::elements<N>",
+     "desc": "pierwsze / drugie / N-te pola par i krotek",
+     "complexity": "O(1) na element",
+     "returns": "elements_view",
+     "example": "for (auto& k : m | views::keys)"
+    },
+    {
+     "sig": "views::split(delim)",
+     "desc": "podzakresy rozdzielone separatorem",
+     "complexity": "O(n) łącznie",
+     "returns": "split_view",
+     "example": "for (auto w : s | views::split(' ')) cout << string_view(w.begin(), w.end());"
+    },
+    {
+     "sig": "views::common",
+     "desc": "widok o tym samym typie begin i end (do konstruktorów kontenerów)",
+     "complexity": "O(1)",
+     "returns": "common_view",
+     "example": "auto r = views::iota(1) | views::take(5) | views::common;"
+    },
+    {
+     "sig": "ranges::subrange(first, last)",
+     "desc": "widok na fragment [first, last) zwykłych iteratorów",
+     "complexity": "O(1)",
+     "returns": "subrange",
+     "example": "for (int x : ranges::subrange(v.begin() + 1, v.end()))"
+    },
+    {
+     "sig": "ranges::size(r) / ranges::distance(r) / ranges::empty(r)",
+     "desc": "rozmiar / liczba elementów / czy pusty",
+     "complexity": "O(1) lub O(n)",
+     "returns": "liczba / bool"
+    }
+   ],
+   "pitfalls": [
+    "`ranges::to`, `views::zip`, `views::enumerate`, `views::chunk`, `views::slide`, `ranges::fold_left`, `ranges::contains` są dopiero w C++23 — z `-std=c++20` błąd kompilacji.",
+    "`views::iota(0, v.size())` się nie kompiluje (int vs size_t) — pisz `views::iota(0, (int)v.size())`.",
+    "`ranges::unique`/`ranges::remove` zwracają `subrange`, nie iterator — `v.erase(ranges::unique(v), v.end())` się nie skompiluje; użyj `auto [b, e] = ranges::unique(v); v.erase(b, e);`.",
+    "`ranges::max(v)` na pustym kontenerze to UB (tak jak `*max_element` na pustym).",
+    "Widok nie posiada danych: widok na kontener, który przestał istnieć (np. zwrócony z funkcji lokalny vector), to wiszące referencje.",
+    "`views::filter` zapamiętuje początek po pierwszym `begin()` — nie modyfikuj elementów tak, by zmieniły wynik predykatu, w trakcie przechodzenia.",
+    "`vector<int> w(r.begin(), r.end())` wymaga, by begin i end miały ten sam typ — dla `iota(a) | take(k)` dodaj `| views::common`.",
+    "Projekcja jest TRZECIM argumentem `ranges::sort` (po komparatorze): `ranges::sort(v, {}, &P::x)`, a nie `ranges::sort(v, &P::x)`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "views::iota",
+      "pętla for z views iota",
+      "for i in range c++",
+      "views iota jak użyć",
+      "range-based for po liczbach od 0 do n",
+      "python range w c++",
+      "iota view c++20"
+     ],
+     "a": "`for (int i : views::iota(0, n))` przechodzi po 0, 1, …, n−1 (koniec wyłączony, jak `range(n)` w Pythonie). `views::iota(a)` bez końca jest nieskończony — łącz z `views::take(k)` albo przerywaj `break`. Oba końce muszą mieć tę samą znakowość: `views::iota(0, v.size())` (int i size_t) się nie skompiluje — pisz `views::iota(0, (int)v.size())`.",
+     "code": "int n = 5;\nfor (int i : views::iota(0, n)) cout << i << ' ';                  // 0 1 2 3 4\ncout << '\\n';\nvector<int> v = {7, 8, 9};\nfor (int i : views::iota(0, (int)v.size())) cout << v[i] << ' ';   // 7 8 9\ncout << '\\n';\nfor (int x : views::iota(1) | views::take(3)) cout << x << ' ';    // 1 2 3\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "ranges::sort projekcja",
+      "sortowanie po polu struktury ranges",
+      "sortuj po drugim elemencie pary ranges",
+      "projekcja c++20",
+      "sort by member c++20",
+      "ranges sort by field",
+      "projection ranges"
+     ],
+     "a": "Algorytmy `ranges::` przyjmują po komparatorze **projekcję** — funkcję lub wskaźnik na pole, przez który przechodzi każdy element przed porównaniem. `ranges::sort(v, {}, &Osoba::wiek)` sortuje po wieku (`{}` = domyślne `less`). Projekcja działa też w `find`, `count`, `max`, `max_element`, `lower_bound`…",
+     "code": "struct Osoba { string imie; int wiek; };\nvector<Osoba> o = {{\"Ola\", 17}, {\"Jan\", 15}, {\"Ewa\", 16}};\nranges::sort(o, {}, &Osoba::wiek);              // Jan Ewa Ola\nranges::sort(o, greater{}, &Osoba::imie);       // Ola Jan Ewa\nauto it = ranges::find(o, string(\"Jan\"), &Osoba::imie);\ncout << it->wiek << '\\n';                       // 15\nauto najst = ranges::max(o, {}, &Osoba::wiek);\ncout << najst.imie << '\\n';                     // Ola\nvector<pair<int, int>> p = {{1, 9}, {2, 3}};\nranges::sort(p, {}, &pair<int, int>::second);   // po second: (2,3) (1,9)"
+    },
+    {
+     "q": [
+      "views::filter",
+      "views::transform",
+      "filtrowanie bez kopiowania c++20",
+      "filter map c++20",
+      "views filter jak działa",
+      "lazy filter c++",
+      "pipe | views c++"
+     ],
+     "a": "Widoki są leniwe — nic nie kopiują, element liczą dopiero przy przejściu. Składa się je operatorem `|`: `v | views::filter(p) | views::transform(f)`. Widok trzyma referencję do `v`, więc `v` musi żyć dłużej. Wynik zmaterializujesz (w C++20, bez `ranges::to`) konstruktorem z dwóch iteratorów.",
+     "code": "vector<int> v = {1, 2, 3, 4, 5, 6};\nauto kw = v | views::filter([](int x) { return x % 2 == 0; })\n            | views::transform([](int x) { return x * x; });\nfor (int x : kw) cout << x << ' ';     // 4 16 36\ncout << '\\n';\nvector<int> w(kw.begin(), kw.end());   // materializacja w C++20\ncout << w.size() << '\\n';              // 3"
+    },
+    {
+     "q": [
+      "views::reverse",
+      "pętla od końca c++20",
+      "petla od tylu ranges",
+      "iteracja w odwrotnej kolejności range for",
+      "reverse range based for loop c++",
+      "odwrócona pętla for each"
+     ],
+     "a": "`for (int x : v | views::reverse)` przechodzi od końca bez kopiowania i bez `rbegin/rend`. Z indeksami: `for (int i : views::iota(0, n) | views::reverse)` daje n−1, …, 0.",
+     "code": "vector<int> v = {1, 2, 3};\nfor (int x : v | views::reverse) cout << x << ' ';                    // 3 2 1\ncout << '\\n';\nfor (int i : views::iota(0, 4) | views::reverse) cout << i << ' ';    // 3 2 1 0\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "ranges::to nie działa",
+      "views::zip c++20",
+      "views::enumerate nie kompiluje się",
+      "ranges to vector c++20",
+      "fold_left nie działa",
+      "no member named zip in views",
+      "ranges contains c++20"
+     ],
+     "a": "Te elementy są dopiero w **C++23**: `ranges::to`, `views::zip`, `views::enumerate`, `views::chunk`, `views::slide`, `views::stride`, `views::cartesian_product`, `views::adjacent`, `ranges::fold_left`, `ranges::contains`, `ranges::iota`. Z `-std=c++20` (jak w OI Forge) się nie skompilują. Zamienniki: konstruktor `vector(r.begin(), r.end())`, pętla z indeksem, `accumulate`, `ranges::find(r, x) != r.end()`.",
+     "code": "vector<int> v = {4, 5, 6};\nauto r = v | views::transform([](int x) { return x + 1; });\nvector<int> w(r.begin(), r.end());                                          // zamiast r | ranges::to<vector>()\nfor (int i = 0; i < (int)v.size(); i++) cout << i << ':' << v[i] << ' ';   // zamiast views::enumerate\ncout << '\\n' << (ranges::find(v, 5) != v.end()) << '\\n';                    // zamiast ranges::contains\nlong long s = accumulate(w.begin(), w.end(), 0LL);                          // zamiast ranges::fold_left\ncout << s << '\\n';   // 18"
+    },
+    {
+     "q": [
+      "ranges::unique erase",
+      "ranges unique zwraca",
+      "ranges::remove_if erase",
+      "jak usunąć duplikaty ranges",
+      "ranges unique c++20 subrange",
+      "erase ranges::unique"
+     ],
+     "a": "W `ranges::` funkcje „usuwające” zwracają `subrange` (fragment do wyrzucenia), a nie iterator. Idiom: `auto [b, e] = ranges::unique(v); v.erase(b, e);`. Do samego usuwania wartości w C++20 najprościej `erase(v, x)` / `erase_if(v, pred)`.",
+     "code": "vector<int> v = {3, 1, 3, 2, 1};\nranges::sort(v);                               // 1 1 2 3 3\nauto [b, e] = ranges::unique(v);\nv.erase(b, e);                                 // 1 2 3\nerase_if(v, [](int x) { return x == 2; });     // 1 3\ncout << v.size() << '\\n';                      // 2"
+    },
+    {
+     "q": [
+      "views::take",
+      "views::drop",
+      "pierwsze k elementów views",
+      "pomin pierwszy element petla",
+      "pętla od drugiego elementu c++",
+      "skip first element range for c++",
+      "views take drop"
+     ],
+     "a": "`v | views::take(k)` — pierwsze k elementów (lub mniej, gdy v krótszy), `v | views::drop(k)` — wszystko poza pierwszymi k. Są też `take_while(p)` / `drop_while(p)` — prefiks spełniający warunek / reszta po nim. Bez kopiowania.",
+     "code": "vector<int> v = {5, 6, 7, 8, 9};\nfor (int x : v | views::drop(1)) cout << x << ' ';                    // 6 7 8 9\ncout << '\\n';\nfor (int x : v | views::take(2)) cout << x << ' ';                    // 5 6\ncout << '\\n';\nfor (int x : v | views::drop(1) | views::take(3)) cout << x << ' ';   // 6 7 8\ncout << '\\n';\nfor (int x : v | views::take_while([](int y) { return y < 7; })) cout << x << ' ';   // 5 6\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "views::keys",
+      "views::values",
+      "iteruj tylko po kluczach mapy",
+      "petla po kluczach map c++",
+      "map keys c++20",
+      "same wartości z mapy"
+     ],
+     "a": "`for (auto& k : m | views::keys)` przechodzi po kluczach mapy (lub vectora par), `views::values` — po wartościach, `views::elements<N>` — po N-tym polu krotek. To samo bez ranges: `for (auto& [k, v] : m)`.",
+     "code": "map<string, int> m = {{\"ala\", 3}, {\"ola\", 5}};\nfor (auto& k : m | views::keys) cout << k << ' ';   // ala ola\ncout << '\\n';\nint suma = 0;\nfor (int x : m | views::values) suma += x;\ncout << suma << '\\n';                               // 8"
+    },
+    {
+     "q": [
+      "czy używać ranges na olimpiadzie",
+      "ranges na zawodach",
+      "czy ranges są wolniejsze",
+      "ranges wydajność",
+      "czy ranges dziala na sio2",
+      "ranges performance competitive programming"
+     ],
+     "a": "Algorytmy `ranges::` mają tę samą złożoność i praktycznie tę samą szybkość co klasyczne; widoki z `-O2` są zwykle tak szybkie jak ręczna pętla. Ryzyko jest jedno: **standard na sprawdzarce**. OI Forge kompiluje z `-std=c++20`, ale sprawdź regulamin zawodów — przy C++17 całe `<ranges>` odpada i trzeba pisać `sort(v.begin(), v.end())`."
+    }
+   ],
+   "related": [
+    "cpp-modern-cpp",
+    "stl-sort",
+    "stl-ref-nonmodifying",
+    "stl-ref-modifying",
+    "stl-ref-sorting-partition",
+    "stl-ref-binary-search-minmax",
+    "stl-iterators",
+    "cpp-lambdas"
+   ]
+  },
+  {
+   "id": "stl-ref-binary-search-minmax",
+   "title": "Dokumentacja: <algorithm> — wyszukiwanie binarne, min/max i porównanie leksykograficzne",
+   "category": "STL algorytmy",
+   "tags": [
+    "algorithm",
+    "dokumentacja",
+    "referencja",
+    "wyszukiwanie binarne",
+    "equal_range",
+    "minmax",
+    "clamp",
+    "minmax_element",
+    "lexicographical_compare",
+    "lexicographical_compare_three_way",
+    "porównanie leksykograficzne"
+   ],
+   "aliases": [
+    "dokumentacja wyszukiwanie binarne",
+    "dokumentacja min max",
+    "lexicographical_compare",
+    "porównanie leksykograficzne vectorów",
+    "porownanie leksykograficzne",
+    "lexicographical_compare_three_way",
+    "binary search operations c++",
+    "minimum maximum operations c++",
+    "funkcje min max c++ lista",
+    "ściąga wyszukiwanie binarne stl"
+   ],
+   "summary": "Krótka ściąga: wyszukiwanie binarne na posortowanym zakresie (lower_bound, upper_bound, equal_range, binary_search), minimum i maksimum (min, max, minmax, clamp, min_element, max_element, minmax_element) oraz porównanie leksykograficzne (lexicographical_compare, lexicographical_compare_three_way). Szczegóły i więcej przykładów — w artykułach o wyszukiwaniu binarnym i o min/max.",
+   "complexity": "lower_bound/upper_bound/equal_range/binary_search: O(log n); min/max/clamp: O(1); min({…}): O(k); min_element/max_element/minmax_element: O(n); lexicographical_compare: O(min(n, m))",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Funkcje wyszukiwania binarnego działają tylko na zakresie **posortowanym** tym samym komparatorem, którego używasz w wywołaniu (domyślnie rosnąco). Zwracają iteratory — indeks to `it - v.begin()`, a `v.end()` oznacza „nie ma”. Na `set`/`map` używaj metod `s.lower_bound(x)` (O(log n)) zamiast `std::lower_bound` (O(n))."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Znaczenie",
+      "a = {1, 3, 3, 5}, x = 3",
+      "x = 4"
+     ],
+     "rows": [
+      [
+       "`lower_bound(f, l, x)`",
+       "pierwszy element ≥ x",
+       "indeks 1",
+       "indeks 3"
+      ],
+      [
+       "`upper_bound(f, l, x)`",
+       "pierwszy element > x",
+       "indeks 3",
+       "indeks 3"
+      ],
+      [
+       "`equal_range(f, l, x)`",
+       "para [lower_bound, upper_bound)",
+       "[1, 3) — dwie trójki",
+       "[3, 3) — pusto"
+      ],
+      [
+       "`binary_search(f, l, x)`",
+       "czy x występuje",
+       "true",
+       "false"
+      ]
+     ],
+     "title": "Wyszukiwanie binarne"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Zwraca",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "`min(a, b)` / `max(a, b)`",
+       "mniejszy / większy (referencja; ten sam typ!)",
+       "O(1)"
+      ],
+      [
+       "`min({a, b, c})` / `max({…})`",
+       "minimum / maksimum listy (wartość)",
+       "O(k)"
+      ],
+      [
+       "`minmax(a, b)` / `minmax({…})`",
+       "para (min, max) — dla 2 argumentów referencje!",
+       "O(1) / O(k)"
+      ],
+      [
+       "`clamp(x, lo, hi)`",
+       "x przycięty do [lo, hi]",
+       "O(1)"
+      ],
+      [
+       "`min_element(f, l)` / `max_element(f, l)`",
+       "iterator na PIERWSZE minimum / maksimum",
+       "O(n)"
+      ],
+      [
+       "`minmax_element(f, l)`",
+       "para: pierwsze minimum, OSTATNIE maksimum",
+       "O(n)"
+      ],
+      [
+       "`lexicographical_compare(f1, l1, f2, l2)`",
+       "czy pierwszy zakres < drugi (jak w słowniku)",
+       "O(min(n, m))"
+      ],
+      [
+       "`lexicographical_compare_three_way(…)`",
+       "C++20: strong_ordering (<0, ==0, >0)",
+       "O(min(n, m))"
+      ]
+     ],
+     "title": "Min, max i porównania"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: wyszukiwanie binarne, min/max, porównanie leksykograficzne",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> a = {1, 3, 3, 5, 8};\n\n    // wyszukiwanie binarne (zakres posortowany!)\n    auto lb = lower_bound(a.begin(), a.end(), 3);              // pierwszy >= 3\n    auto ub = upper_bound(a.begin(), a.end(), 3);              // pierwszy > 3\n    cout << lb - a.begin() << ' ' << ub - a.begin() << '\\n';   // 1 3\n    auto [l, r] = equal_range(a.begin(), a.end(), 3);\n    cout << \"trójek: \" << r - l << '\\n';                       // 2\n    cout << binary_search(a.begin(), a.end(), 4) << '\\n';      // 0\n    cout << \"elementów w [2, 6]: \"\n         << upper_bound(a.begin(), a.end(), 6) - lower_bound(a.begin(), a.end(), 2) << '\\n';   // 3\n\n    // min / max\n    cout << min(4, 7) << ' ' << max({4, 9, 2}) << '\\n';        // 4 9\n    auto [mn, mx] = minmax({5, 1, 9});\n    cout << mn << ' ' << mx << '\\n';                           // 1 9\n    cout << clamp(15, 0, 10) << ' ' << clamp(-3, 0, 10) << '\\n';   // 10 0\n\n    vector<int> v = {4, 1, 7, 1, 7};\n    cout << min_element(v.begin(), v.end()) - v.begin() << ' '      // 1 (pierwsze minimum)\n         << max_element(v.begin(), v.end()) - v.begin() << '\\n';    // 2 (pierwsze maksimum)\n    auto [itMin, itMax] = minmax_element(v.begin(), v.end());\n    cout << itMin - v.begin() << ' ' << itMax - v.begin() << '\\n';  // 1 4 (ostatnie maksimum!)\n\n    // porównanie leksykograficzne\n    vector<int> p = {1, 2, 3}, q = {1, 2, 5};\n    cout << lexicographical_compare(p.begin(), p.end(), q.begin(), q.end()) << '\\n';   // 1\n    cout << (p < q) << '\\n';                                   // 1 — to samo dla całych kontenerów\n}"
+    },
+    {
+     "type": "text",
+     "md": "### Porównanie leksykograficzne\nDecyduje pierwsza pozycja, na której ciągi się różnią; jeśli jeden jest prefiksem drugiego, krótszy jest mniejszy. Tak porównują operatory `<`, `>`, `==` dla `vector`, `string`, `array`, `pair`, `tuple` — więc całe kontenery porównujesz po prostu `a < b`. `lexicographical_compare` przydaje się dla **fragmentów**, tablic C i z własnym komparatorem (np. bez rozróżniania wielkości liter)."
+    },
+    {
+     "type": "warn",
+     "md": "`minmax(a, b)` dla dwóch argumentów zwraca parę **referencji**. `auto [lo, hi] = minmax(x + 1, y);` trzyma referencje do obiektów tymczasowych — UB. Bezpiecznie: `minmax({x + 1, y})` (zwraca wartości) albo kopia do `pair<int, int>` w tym samym wyrażeniu."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "lower_bound(first, last, x[, cmp])",
+     "desc": "pierwszy element ≥ x (nie mniejszy niż x)",
+     "complexity": "O(log n)",
+     "returns": "iterator (last, gdy brak)",
+     "example": "lower_bound(v.begin(), v.end(), x) - v.begin()"
+    },
+    {
+     "sig": "upper_bound(first, last, x[, cmp])",
+     "desc": "pierwszy element > x",
+     "complexity": "O(log n)",
+     "returns": "iterator (last, gdy brak)",
+     "example": "upper_bound(v.begin(), v.end(), x) - v.begin()"
+    },
+    {
+     "sig": "equal_range(first, last, x[, cmp])",
+     "desc": "para [lower_bound, upper_bound) — wszystkie elementy równe x",
+     "complexity": "O(log n)",
+     "returns": "pair<It, It>",
+     "example": "auto [l, r] = equal_range(v.begin(), v.end(), x);"
+    },
+    {
+     "sig": "binary_search(first, last, x[, cmp])",
+     "desc": "czy x występuje (bez pozycji)",
+     "complexity": "O(log n)",
+     "returns": "bool",
+     "example": "binary_search(v.begin(), v.end(), x)"
+    },
+    {
+     "sig": "s.lower_bound(x) / s.upper_bound(x)",
+     "desc": "metody set/map/multiset — jedyna szybka wersja dla drzew",
+     "complexity": "O(log n)",
+     "returns": "iterator",
+     "example": "auto it = s.lower_bound(x);"
+    },
+    {
+     "sig": "min(a, b[, cmp]) / max(a, b[, cmp])",
+     "desc": "mniejszy / większy z dwóch (oba argumenty tego samego typu)",
+     "complexity": "O(1)",
+     "returns": "const T&",
+     "example": "max(a, 0LL)  // gdy a jest long long"
+    },
+    {
+     "sig": "min({a, b, c, ...}) / max({...})",
+     "desc": "minimum / maksimum listy inicjalizacyjnej",
+     "complexity": "O(k)",
+     "returns": "T (wartość)",
+     "example": "max({a, b, c})"
+    },
+    {
+     "sig": "minmax(a, b) / minmax({...})",
+     "desc": "para (mniejszy, większy); wersja 2-argumentowa zwraca referencje",
+     "complexity": "O(1) / O(k)",
+     "returns": "pair<const T&, const T&> / pair<T, T>",
+     "example": "auto [lo, hi] = minmax({x, y, z});"
+    },
+    {
+     "sig": "clamp(x, lo, hi[, cmp])",
+     "desc": "C++17: lo, gdy x < lo; hi, gdy x > hi; inaczej x (wymaga lo ≤ hi)",
+     "complexity": "O(1)",
+     "returns": "const T&",
+     "example": "clamp(v, 0, 255)"
+    },
+    {
+     "sig": "min_element(first, last[, cmp])",
+     "desc": "iterator na PIERWSZE minimum",
+     "complexity": "O(n)",
+     "returns": "iterator (last dla pustego)",
+     "example": "*min_element(v.begin(), v.end())"
+    },
+    {
+     "sig": "max_element(first, last[, cmp])",
+     "desc": "iterator na PIERWSZE maksimum",
+     "complexity": "O(n)",
+     "returns": "iterator (last dla pustego)",
+     "example": "max_element(v.begin(), v.end()) - v.begin()"
+    },
+    {
+     "sig": "minmax_element(first, last[, cmp])",
+     "desc": "para: pierwsze minimum i OSTATNIE maksimum; ~1.5n porównań",
+     "complexity": "O(n)",
+     "returns": "pair<It, It>",
+     "example": "auto [mn, mx] = minmax_element(v.begin(), v.end());"
+    },
+    {
+     "sig": "lexicographical_compare(first1, last1, first2, last2[, cmp])",
+     "desc": "czy pierwszy zakres jest leksykograficznie mniejszy od drugiego",
+     "complexity": "O(min(n, m))",
+     "returns": "bool",
+     "example": "lexicographical_compare(a.begin(), a.end(), b.begin(), b.end())"
+    },
+    {
+     "sig": "lexicographical_compare_three_way(first1, last1, first2, last2[, comp])",
+     "desc": "C++20: porównanie trójwartościowe (jak operator <=>)",
+     "complexity": "O(min(n, m))",
+     "returns": "strong_ordering (dla int)",
+     "example": "auto r = lexicographical_compare_three_way(a.begin(), a.end(), b.begin(), b.end()); if (r < 0) …"
+    },
+    {
+     "sig": "ranges::lower_bound(r, x) / ranges::min(r) / ranges::max(r) / ranges::clamp(x, lo, hi)",
+     "desc": "C++20: wersje na całym kontenerze, z projekcją",
+     "complexity": "jak wyżej",
+     "returns": "jak wyżej",
+     "example": "ranges::max(v)"
+    }
+   ],
+   "pitfalls": [
+    "Wyszukiwanie binarne na nieposortowanym zakresie (albo posortowanym innym komparatorem) daje bezsensowne wyniki — bez żadnego błędu.",
+    "`std::lower_bound(s.begin(), s.end(), x)` na `set`/`map` działa w O(n) — używaj `s.lower_bound(x)`.",
+    "Zwrócony `end()` oznacza brak elementu — sprawdź `it != v.end()` przed `*it`.",
+    "`min(a, b)` wymaga tego samego typu: `min(x, 0LL)` dla `int x` to błąd kompilacji; pisz `min<long long>(x, 0)` albo rzutuj.",
+    "`minmax(a, b)` zwraca parę REFERENCJI — z tymczasowymi argumentami (`minmax(x + 1, y)`) i `auto` to wiszące referencje.",
+    "`*min_element`/`*max_element` na pustym zakresie to UB (zwracają `last`).",
+    "`max_element` zwraca PIERWSZE maksimum, a `minmax_element` — pierwsze minimum i OSTATNIE maksimum.",
+    "`clamp(x, lo, hi)` przy `lo > hi` to UB."
+   ],
+   "qa": [
+    {
+     "q": [
+      "lexicographical_compare c++",
+      "porównanie leksykograficzne dwóch vectorów",
+      "porownanie leksykograficzne tablic",
+      "który ciąg jest mniejszy leksykograficznie",
+      "lexicographic compare arrays c++",
+      "lexicographical compare jak działa",
+      "leksykograficzne porównanie fragmentów"
+     ],
+     "a": "`lexicographical_compare(f1, l1, f2, l2)` → `true`, gdy pierwszy zakres jest leksykograficznie **mniejszy** (jak słowa w słowniku: decyduje pierwsza różnica, a prefiks jest mniejszy od dłuższego ciągu). O(min(n, m)). Całe `vector`/`string` porównasz po prostu `a < b` — funkcja przydaje się dla fragmentów, tablic C i z własnym komparatorem (np. bez rozróżniania wielkości liter).",
+     "code": "vector<int> a = {1, 2, 3}, b = {1, 2, 4}, c = {1, 2};\ncout << lexicographical_compare(a.begin(), a.end(), b.begin(), b.end()) << '\\n';   // 1 (3 < 4)\ncout << lexicographical_compare(a.begin(), a.end(), c.begin(), c.end()) << '\\n';   // 0 (c jest prefiksem a)\ncout << (c < a) << '\\n';                                                           // 1\nstring s = \"Kot\", t = \"kos\";\nbool mniej = lexicographical_compare(s.begin(), s.end(), t.begin(), t.end(),\n    [](unsigned char x, unsigned char y) { return tolower(x) < tolower(y); });\ncout << mniej << '\\n';   // 0 (\"kot\" > \"kos\")"
+    },
+    {
+     "q": [
+      "lexicographical_compare_three_way",
+      "operator <=> c++20",
+      "porównanie trójwartościowe",
+      "spaceship operator c++",
+      "strong_ordering c++20",
+      "compare zwraca -1 0 1"
+     ],
+     "a": "C++20: `lexicographical_compare_three_way(f1, l1, f2, l2)` i operator `<=>` zwracają `strong_ordering`; wynik porównujesz z zerem (`< 0` mniejszy, `== 0` równy, `> 0` większy) — jedno przejście zamiast dwóch porównań `<`. Dla stringów to samo daje `s.compare(t)` (liczba ujemna / 0 / dodatnia).",
+     "code": "vector<int> a = {1, 5}, b = {1, 7};\nauto r = lexicographical_compare_three_way(a.begin(), a.end(), b.begin(), b.end());\ncout << (r < 0) << (r == 0) << (r > 0) << '\\n';   // 100\nauto r2 = (a <=> b);\ncout << (r2 < 0) << '\\n';                         // 1\nstring s = \"abc\";\ncout << (s.compare(\"abd\") < 0) << '\\n';           // 1"
+    },
+    {
+     "q": [
+      "minmax c++",
+      "auto [a, b] = minmax wiszące referencje",
+      "minmax zwraca referencje",
+      "minmax dangling reference",
+      "minmax jak uzywac",
+      "minmax initializer list"
+     ],
+     "a": "`minmax(a, b)` zwraca `pair<const T&, const T&>` — **referencje** do argumentów. `auto p = minmax(x + 1, y)` trzyma referencje do tymczasowych → UB. Bezpiecznie: `minmax({x + 1, y})` (lista — zwraca wartości) albo od razu kopia do `pair<int, int>`.",
+     "code": "int x = 7, y = 3;\nauto [lo, hi] = minmax({x + 1, y});         // wartości: 3 8 — bezpieczne\npair<int, int> p = minmax(x * 2, y * 2);    // kopia w tym samym wyrażeniu — bezpieczne\ncout << lo << ' ' << hi << ' ' << p.first << ' ' << p.second << '\\n';   // 3 8 6 14"
+    },
+    {
+     "q": [
+      "ściąga wyszukiwanie binarne stl",
+      "wszystkie funkcje wyszukiwania binarnego",
+      "sciaga binary search stl",
+      "lower_bound upper_bound equal_range binary_search tabela",
+      "binary search functions cheat sheet c++"
+     ],
+     "a": "Na posortowanym zakresie: `lower_bound` → pierwszy ≥ x, `upper_bound` → pierwszy > x, `equal_range` → oba naraz (różnica = liczba wystąpień x), `binary_search` → tylko `bool`. Wszystkie O(log n). Liczba elementów w [a, b]: `upper_bound(b) - lower_bound(a)`.",
+     "code": "vector<int> a = {1, 3, 3, 5};\ncout << lower_bound(a.begin(), a.end(), 3) - a.begin() << ' '   // 1 (pierwszy >= 3)\n     << upper_bound(a.begin(), a.end(), 3) - a.begin() << ' '   // 3 (pierwszy > 3)\n     << binary_search(a.begin(), a.end(), 4) << '\\n';           // 0\nauto [l, r] = equal_range(a.begin(), a.end(), 3);\ncout << r - l << '\\n';                                          // 2 (liczba trójek)"
+    },
+    {
+     "q": [
+      "max_element pierwsze czy ostatnie maksimum",
+      "indeks ostatniego maksimum",
+      "ostatnie wystąpienie maksimum",
+      "max_element remis",
+      "last max element c++",
+      "minmax_element ostatnie maksimum"
+     ],
+     "a": "`max_element` i `min_element` zwracają **pierwsze** wystąpienie ekstremum. `minmax_element` zwraca parę: pierwsze minimum i **ostatnie** maksimum. Ostatnie maksimum dostaniesz więc przez `minmax_element(…).second` albo szukając od końca: `max_element(v.rbegin(), v.rend())`.",
+     "code": "vector<int> v = {4, 9, 2, 9, 2};\ncout << max_element(v.begin(), v.end()) - v.begin() << '\\n';             // 1 (pierwsze 9)\ncout << minmax_element(v.begin(), v.end()).second - v.begin() << '\\n';   // 3 (ostatnie 9)\ncout << minmax_element(v.begin(), v.end()).first - v.begin() << '\\n';    // 2 (pierwsze 2)\nauto rit = max_element(v.rbegin(), v.rend());\ncout << (rit.base() - v.begin()) - 1 << '\\n';                            // 3"
+    },
+    {
+     "q": [
+      "binary_search zwraca indeks",
+      "binary_search pozycja elementu",
+      "jak dostać indeks z binary_search",
+      "binary search index c++",
+      "gdzie jest element binary_search"
+     ],
+     "a": "`binary_search` zwraca tylko `bool` (czy element jest). Pozycję daje `lower_bound`: `auto it = lower_bound(…); if (it != v.end() && *it == x) idx = it - v.begin();`.",
+     "code": "vector<int> v = {2, 4, 6, 8};\nint x = 6;\nauto it = lower_bound(v.begin(), v.end(), x);\nif (it != v.end() && *it == x) cout << \"indeks \" << it - v.begin() << '\\n';   // indeks 2\nelse cout << \"brak\\n\";"
+    },
+    {
+     "q": [
+      "lower_bound na zwykłej tablicy",
+      "lower_bound tablica c indeks",
+      "lower_bound a+1 a+n+1",
+      "lower_bound array c style",
+      "lower_bound od 1 do n"
+     ],
+     "a": "Dla tablicy `int a[N]` przekazujesz wskaźniki: `lower_bound(a, a + n, x) - a` to indeks. Dla tablicy indeksowanej od 1: `lower_bound(a + 1, a + n + 1, x) - a` (wynik też od 1; `n + 1` oznacza „brak”).",
+     "code": "int a[6] = {0, 1, 4, 4, 7, 9};   // a[1..5], a[0] nieużywane\nint n = 5;\nint i = lower_bound(a + 1, a + n + 1, 4) - a;\nint j = upper_bound(a + 1, a + n + 1, 8) - a;\ncout << i << ' ' << j << '\\n';   // 2 5"
+    }
+   ],
+   "related": [
+    "stl-binary-search",
+    "stl-min-max",
+    "tech-binary-search",
+    "stl-ref-sorting-partition",
+    "str-basic-lex-compare",
+    "stl-ref-ranges"
+   ]
+  }
+ ]
+}

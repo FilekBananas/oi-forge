@@ -1,0 +1,1028 @@
+{
+ "chunk": "strings-patterns",
+ "articles": [
+  {
+   "id": "str-kmp",
+   "title": "Funkcja prefiksowa i algorytm KMP (wyszukiwanie wzorca)",
+   "category": "Teksty",
+   "tags": [
+    "kmp",
+    "knuth-morris-pratt",
+    "funkcja prefiksowa",
+    "prefix function",
+    "wzorzec",
+    "pattern matching",
+    "pi",
+    "prefikso-sufiks"
+   ],
+   "aliases": [
+    "kmp",
+    "algorytm kmp",
+    "knuth morris pratt",
+    "funkcja prefiksowa",
+    "prefix function",
+    "tablica pi",
+    "wyszukiwanie wzorca",
+    "wzorzec w tekście",
+    "pattern matching",
+    "kmp c++",
+    "prefikso-sufiks",
+    "funkcja pi"
+   ],
+   "summary": "Funkcja prefiksowa pi[i] to długość najdłuższego właściwego prefiksu słowa s[0..i], który jest też jego sufiksem. Na niej opiera się KMP — wyszukiwanie wszystkich wystąpień wzorca w tekście w czasie O(n + m).",
+   "complexity": "funkcja prefiksowa O(m); wyszukiwanie O(n + m) czasu, O(m) pamięci (n — tekst, m — wzorzec)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Funkcja prefiksowa** `pi[i]` = długość najdłuższego **właściwego** (krótszego niż całość) prefiksu słowa\n`s[0..i]`, który jest jednocześnie jego sufiksem (tzw. *prefikso-sufiks*, ang. *border*).\nNp. dla `s = aabaaab`: `pi = 0 1 0 1 2 2 3`.\n\nLiczymy ją od lewej: jeśli `s[i] == s[pi[i-1]]`, to `pi[i] = pi[i-1] + 1`. Jeśli nie — próbujemy\nkrótszego prefikso-sufiksu: `k = pi[k-1]`, aż znak pasuje albo `k = 0`. Każdy krok `while` zmniejsza `k`,\na `k` rośnie najwyżej o 1 na znak, więc łącznie O(n) (analiza zamortyzowana).\n\n**KMP**: idziemy po tekście, trzymając `k` = ile znaków wzorca pasuje na końcu przeczytanego tekstu.\nPrzy niezgodności nie cofamy się w tekście, tylko przeskakujemy `k = pi[k-1]`. Gdy `k == m` — mamy\nwystąpienie, a potem `k = pi[m-1]` (dzięki temu łapiemy też wystąpienia nachodzące na siebie)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „ile razy wzorzec występuje w tekście”, „znajdź wszystkie pozycje”, „najkrótszy okres”,\n„najdłuższy prefiks będący sufiksem”, tekst do 10^6 znaków (naiwne O(n·m) za wolne), „słowo cykliczne”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: KMP — wszystkie wystąpienia wzorca",
+     "code": "// Wejście: wzorzec p i tekst t (bez spacji). Wyjście: liczba wystąpień i pozycje (od 1).\n#include <bits/stdc++.h>\nusing namespace std;\n\nvector<int> prefixFunction(const string& s) {\n    int n = s.size();\n    vector<int> pi(n, 0);\n    for (int i = 1; i < n; i++) {\n        int k = pi[i - 1];\n        while (k > 0 && s[i] != s[k]) k = pi[k - 1];\n        if (s[i] == s[k]) k++;\n        pi[i] = k;\n    }\n    return pi;\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    string p, t;\n    cin >> p >> t;\n    int m = p.size();\n    vector<int> pi = prefixFunction(p);\n    vector<int> pos;\n    for (int i = 0, k = 0; i < (int)t.size(); i++) {\n        while (k > 0 && t[i] != p[k]) k = pi[k - 1];   // niezgodność: krótszy prefikso-sufiks\n        if (t[i] == p[k]) k++;\n        if (k == m) {                                  // całe p pasuje, kończy się na pozycji i\n            pos.push_back(i - m + 2);                  // początek, numeracja od 1\n            k = pi[k - 1];                             // szukamy dalej (wystąpienia mogą nachodzić)\n        }\n    }\n    cout << pos.size() << \"\\n\";\n    for (int x : pos) cout << x << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Funkcja prefiksowa (do skopiowania)",
+     "code": "vector<int> prefixFunction(const string& s) {\n    int n = s.size();\n    vector<int> pi(n, 0);              // pi[i] = najdłuższy właściwy prefiks s[0..i] będący też jego sufiksem\n    for (int i = 1; i < n; i++) {\n        int k = pi[i - 1];\n        while (k > 0 && s[i] != s[k]) k = pi[k - 1];   // cofamy się po krótszych prefikso-sufiksach\n        if (s[i] == s[k]) k++;\n        pi[i] = k;\n    }\n    return pi;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zastosowanie",
+      "Jak",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "wystąpienia p w t",
+       "KMP po tekście albo pi dla p + '#' + t (wystąpienie, gdy pi = |p|)",
+       "O(n + m)"
+      ],
+      [
+       "najkrótszy okres słowa",
+       "n − pi[n−1]",
+       "O(n)"
+      ],
+      [
+       "czy b jest rotacją a",
+       "|a| = |b| i b występuje w a + a",
+       "O(n)"
+      ],
+      [
+       "najdłuższy prefiks-palindrom",
+       "pi ostatniego znaku dla s + '#' + odwrócone(s)",
+       "O(n)"
+      ],
+      [
+       "liczba wystąpień każdego prefiksu",
+       "zliczanie pi i propagacja w dół łańcucha pi",
+       "O(n)"
+      ],
+      [
+       "automat KMP",
+       "aut[stan][znak] — przejścia w O(1), DP po automacie",
+       "O(m·Σ)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`s.find(p)` / `strstr` w najgorszym przypadku działają w O(n·m) (np. tekst `aaaa…a`, wzorzec `aa…ab`).\nPrzy n, m rzędu 10^5–10^6 to TLE — użyj KMP, Z-funkcji albo hashowania."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "vector<int> prefixFunction(const string& s)",
+     "desc": "tablica pi: pi[i] = najdłuższy właściwy prefikso-sufiks s[0..i]",
+     "complexity": "O(n)",
+     "returns": "vector<int>"
+    },
+    {
+     "sig": "while (k > 0 && t[i] != p[k]) k = pi[k - 1];",
+     "desc": "krok KMP przy niezgodności — przeskok do krótszego prefikso-sufiksu",
+     "complexity": "zamortyzowane O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Po znalezieniu wystąpienia trzeba ustawić `k = pi[m-1]`, inaczej odwołasz się do `p[m]` (poza zakresem) i zgubisz nachodzące wystąpienia.",
+    "W wersji `p + '#' + t` separator musi być znakiem, który nie występuje w żadnym z napisów.",
+    "pi[i] dotyczy prefiksu s[0..i] — długość, a nie indeks; ostatni znak prefikso-sufiksu to s[pi[i] - 1].",
+    "`while` zamiast `if` przy cofaniu: jeden przeskok pi to za mało, trzeba cofać się aż do dopasowania lub k = 0.",
+    "Wczytywanie tekstu ze spacjami przez `cin >> t` ucina go na spacji — użyj `getline`.",
+    "Pozycje wypisuj tak, jak chce zadanie (od 0 czy od 1) — początek wystąpienia to `i - m + 1` (0-based)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "kmp jak dziala",
+      "algorytm kmp",
+      "knuth morris pratt",
+      "kmp c++",
+      "wyszukiwanie wzorca kmp",
+      "kmp wytlumaczenie"
+     ],
+     "a": "KMP przegląda tekst raz, trzymając `k` — ile znaków wzorca pasuje do końcówki przeczytanego tekstu. Gdy\nnastępny znak nie pasuje, nie cofa się w tekście, tylko skraca dopasowanie do najdłuższego prefikso-sufiksu:\n`k = pi[k−1]` (z funkcji prefiksowej wzorca). Gdy `k == |p|`, znaleźliśmy wystąpienie. Całość O(n + m),\nbo `k` rośnie co najwyżej o 1 na znak tekstu, a każde cofnięcie je zmniejsza.",
+     "code": "string p = \"aba\", t = \"abababa\";\nint m = p.size();\nvector<int> pi(m, 0);\nfor (int i = 1; i < m; i++) {\n    int k = pi[i - 1];\n    while (k > 0 && p[i] != p[k]) k = pi[k - 1];\n    if (p[i] == p[k]) k++;\n    pi[i] = k;\n}\nint cnt = 0;\nfor (int i = 0, k = 0; i < (int)t.size(); i++) {\n    while (k > 0 && t[i] != p[k]) k = pi[k - 1];\n    if (t[i] == p[k]) k++;\n    if (k == m) { cnt++; k = pi[k - 1]; }\n}\ncout << cnt << \"\\n\";   // 3"
+    },
+    {
+     "q": [
+      "funkcja prefiksowa",
+      "prefix function",
+      "tablica pi",
+      "pi function c++",
+      "prefikso sufiks",
+      "co to jest funkcja prefiksowa"
+     ],
+     "a": "`pi[i]` to długość najdłuższego właściwego prefiksu słowa `s[0..i]`, który jest też jego sufiksem.\nNp. `s = abcabcd` → `pi = 0 0 0 1 2 3 0`. Liczymy ją w O(n): zaczynamy od `k = pi[i−1]`, cofamy\n`k = pi[k−1]`, dopóki `s[i] != s[k]`, a przy zgodności zwiększamy `k`. Kod funkcji jest w treści artykułu.",
+     "code": "vector<int> prefixFunction(const string& s) {\n    int n = s.size();\n    vector<int> pi(n, 0);              // pi[i] = najdłuższy właściwy prefiks s[0..i] będący też jego sufiksem\n    for (int i = 1; i < n; i++) {\n        int k = pi[i - 1];\n        while (k > 0 && s[i] != s[k]) k = pi[k - 1];   // cofamy się po krótszych prefikso-sufiksach\n        if (s[i] == s[k]) k++;\n        pi[i] = k;\n    }\n    return pi;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liczba wystąpień wzorca w tekście",
+      "ile razy wzorzec wystepuje w tekscie",
+      "count occurrences pattern",
+      "ile razy slowo wystepuje w napisie",
+      "zliczanie wystapien podslowa"
+     ],
+     "a": "Uruchom KMP i zliczaj momenty, gdy `k == |p|` (wtedy `k = pi[|p|−1]`). Wystąpienia mogą na siebie nachodzić —\nnp. `aa` występuje w `aaaa` 3 razy. Alternatywa: funkcja prefiksowa dla `p + '#' + t` i liczba pozycji\nz `pi == |p|`. Czas O(n + m).",
+     "code": "string p = \"aa\", t = \"aaaa\";\nstring s = p + \"#\" + t;\nint n = s.size(), cnt = 0;\nvector<int> pi(n, 0);\nfor (int i = 1; i < n; i++) {\n    int k = pi[i - 1];\n    while (k > 0 && s[i] != s[k]) k = pi[k - 1];\n    if (s[i] == s[k]) k++;\n    pi[i] = k;\n    if (pi[i] == (int)p.size()) cnt++;\n}\ncout << cnt << \"\\n\";   // 3"
+    },
+    {
+     "q": [
+      "find w stringu wolny",
+      "s.find złożoność",
+      "dlaczego nie uzyc find",
+      "string find tle",
+      "strstr zlozonosc"
+     ],
+     "a": "`std::string::find` i `strstr` nie gwarantują czasu liniowego — w złośliwych testach (tekst `aaa…a`, wzorzec\n`aa…ab`) działają w O(n·m). Do jednorazowego sprawdzenia krótkiego wzorca są OK, ale przy szukaniu wszystkich\nwystąpień w tekście 10^6 znaków użyj KMP lub Z-funkcji (O(n + m))."
+    },
+    {
+     "q": [
+      "kmp separator #",
+      "p + '#' + t dlaczego",
+      "po co hash w kmp",
+      "kmp z separatorem"
+     ],
+     "a": "Licząc funkcję prefiksową dla `p + '#' + t`, dostajemy wystąpienia jako pozycje z `pi[i] == |p|`. Separator\n(znak spoza alfabetu) gwarantuje, że `pi` nigdy nie przekroczy `|p|` — prefikso-sufiks nie może „przejść” przez\n`#`. Koszt pamięci O(n + m); wersja z przechodzeniem po tekście potrzebuje tylko O(m)."
+    },
+    {
+     "q": [
+      "kmp nakładające się wystąpienia",
+      "overlapping occurrences",
+      "wystapienia nachodzace na siebie",
+      "kmp overlap"
+     ],
+     "a": "Po znalezieniu wystąpienia ustaw `k = pi[m−1]` zamiast `k = 0` — wtedy dopasowanie „zachowuje” najdłuższy\nprefikso-sufiks wzorca i kolejne wystąpienie może zacząć się wewnątrz poprzedniego (np. `aba` w `ababa` na\npozycjach 1 i 3). Jeśli zadanie chce wystąpień **rozłącznych**, ustaw wtedy `k = 0`."
+    },
+    {
+     "q": [
+      "automat kmp",
+      "kmp automaton",
+      "przejscia automatu kmp",
+      "dp na automacie kmp",
+      "liczba slow bez wzorca"
+     ],
+     "a": "`aut[st][c]` = nowy stan (długość dopasowania) po dopisaniu znaku `c` w stanie `st`. Liczymy:\njeśli `p[st] == c`, to `st + 1`, wpp. `aut[pi[st−1]][c]` (dla `st = 0` — 0). Budowa O(m·Σ). Automat pozwala\nliczyć DP typu „ile słów długości n nie zawiera wzorca”: `dp[i][st]`, przejścia po `aut`, czas O(n·m·Σ).",
+     "code": "string p = \"aba\";\nint m = p.size();\nvector<int> pi(m, 0);\nfor (int i = 1; i < m; i++) {\n    int k = pi[i - 1];\n    while (k > 0 && p[i] != p[k]) k = pi[k - 1];\n    if (p[i] == p[k]) k++;\n    pi[i] = k;\n}\nvector<array<int, 26>> aut(m + 1);\nfor (int st = 0; st <= m; st++)\n    for (int c = 0; c < 26; c++) {\n        if (st < m && p[st] - 'a' == c) aut[st][c] = st + 1;\n        else aut[st][c] = (st == 0 ? 0 : aut[pi[st - 1]][c]);\n    }\nstring t = \"abababa\";\nint st = 0, cnt = 0;\nfor (char ch : t) { st = aut[st][ch - 'a']; if (st == m) cnt++; }\ncout << cnt << \"\\n\";   // 3"
+    },
+    {
+     "q": [
+      "liczba wystąpień każdego prefiksu",
+      "ile razy kazdy prefiks wystepuje w slowie",
+      "count occurrences of each prefix",
+      "wystapienia prefiksow kmp"
+     ],
+     "a": "Zlicz `ans[pi[i]]++` dla każdego `i`, potem od najdłuższych propaguj w dół łańcucha: `ans[pi[L−1]] += ans[L]`\ndla `L = n−1..1`, a na końcu dodaj 1 (każdy prefiks występuje sam jako prefiks). `ans[L]` = liczba wystąpień\nprefiksu długości `L` w `s`. Czas O(n).",
+     "code": "string s = \"abab\";\nint n = s.size();\nvector<int> pi(n, 0);\nfor (int i = 1; i < n; i++) {\n    int k = pi[i - 1];\n    while (k > 0 && s[i] != s[k]) k = pi[k - 1];\n    if (s[i] == s[k]) k++;\n    pi[i] = k;\n}\nvector<int> ans(n + 1, 0);\nfor (int i = 0; i < n; i++) ans[pi[i]]++;\nfor (int L = n - 1; L > 0; L--) ans[pi[L - 1]] += ans[L];\nfor (int L = 0; L <= n; L++) ans[L]++;\nfor (int L = 1; L <= n; L++) cout << ans[L] << \" \";   // 2 2 1 1"
+    },
+    {
+     "q": [
+      "kmp złożoność dlaczego liniowa",
+      "kmp complexity",
+      "dlaczego kmp jest o(n)",
+      "while w kmp nie jest kwadratowy"
+     ],
+     "a": "Zmienna `k` rośnie co najwyżej o 1 przy każdym znaku, a każdy obrót pętli `while` zmniejsza ją co najmniej o 1\ni nigdy nie spada poniżej 0. Łączna liczba obrotów `while` ≤ łączny wzrost `k` ≤ n. Dlatego całość jest\nO(n + m), mimo zagnieżdżonej pętli (analiza zamortyzowana, „potencjał” = k)."
+    },
+    {
+     "q": [
+      "najkrótszy palindrom przez dopisanie z przodu",
+      "ile znakow dopisac na poczatku zeby byl palindrom",
+      "shortest palindrome kmp",
+      "najdłuższy prefiks palindromiczny kmp"
+     ],
+     "a": "Najdłuższy prefiks-palindrom słowa `s` to `pi` ostatniego znaku dla `s + '#' + odwrócone(s)` — prefiks `s`\nrówny sufiksowi odwrotności to dokładnie palindrom. Dopisz z przodu odwróconą resztę: wynik ma długość\n`2n − L`. Czas O(n).",
+     "code": "string s = \"aacecaaa\";\nstring r(s.rbegin(), s.rend());\nstring u = s + \"#\" + r;\nint n = u.size();\nvector<int> pi(n, 0);\nfor (int i = 1; i < n; i++) {\n    int k = pi[i - 1];\n    while (k > 0 && u[i] != u[k]) k = pi[k - 1];\n    if (u[i] == u[k]) k++;\n    pi[i] = k;\n}\nint L = pi[n - 1];                         // najdłuższy prefiks-palindrom s\nstring rest = s.substr(L);\ncout << string(rest.rbegin(), rest.rend()) + s << \"\\n\";   // aaacecaaa"
+    },
+    {
+     "q": [
+      "czy b jest rotacją a",
+      "czy napis jest przesunieciem cyklicznym",
+      "rotation check kmp",
+      "wzorzec w tekscie cyklicznym"
+     ],
+     "a": "`b` jest rotacją `a` ⇔ `|a| == |b|` i `b` występuje w `a + a`. Szukaj KMP-em lub Z-funkcją w O(n).\nTak samo szukamy wzorca w **tekście cyklicznym**: doklej do tekstu jego prefiks długości `|p| − 1`.",
+     "code": "auto isRotation = [](const string& a, const string& b) {\n    if (a.size() != b.size()) return false;\n    string s = b + \"#\" + a + a;\n    int n = s.size();\n    vector<int> pi(n, 0);\n    for (int i = 1; i < n; i++) {\n        int k = pi[i - 1];\n        while (k > 0 && s[i] != s[k]) k = pi[k - 1];\n        if (s[i] == s[k]) k++;\n        pi[i] = k;\n        if (k == (int)b.size()) return true;\n    }\n    return false;\n};\ncout << isRotation(\"abcde\", \"cdeab\") << isRotation(\"abcde\", \"abced\") << \"\\n\";   // 10"
+    },
+    {
+     "q": [
+      "kmp czy hashowanie",
+      "kmp vs hash",
+      "co wybrac do wyszukiwania wzorca",
+      "kmp czy z funkcja czy hash"
+     ],
+     "a": "KMP i Z-funkcja są deterministyczne (zero ryzyka kolizji) i liniowe — dobre do wyszukiwania wzorca, okresów,\nprefikso-sufiksów. Hashowanie jest bardziej elastyczne (porównanie dowolnych dwóch podsłów w O(1), wyszukiwanie\nbinarne po długości), ale probabilistyczne. Do pojedynczego wzorca wybierz KMP/Z; do wielu wzorców —\nAho-Corasick."
+    }
+   ],
+   "related": [
+    "str-z-function",
+    "str-period",
+    "str-hashing",
+    "str-aho-corasick",
+    "str-min-rotation",
+    "str-palindromes",
+    "stl-string",
+    "stl-ref-nonmodifying"
+   ]
+  },
+  {
+   "id": "str-z-function",
+   "title": "Z-funkcja (Z-algorithm)",
+   "category": "Teksty",
+   "tags": [
+    "z-funkcja",
+    "z function",
+    "z-algorithm",
+    "wzorzec",
+    "pattern matching",
+    "lcp",
+    "prefiks"
+   ],
+   "aliases": [
+    "z funkcja",
+    "z-funkcja",
+    "z function",
+    "z-algorithm",
+    "z algorytm",
+    "tablica z",
+    "z array",
+    "algorytm z",
+    "zfunkcja",
+    "z function c++"
+   ],
+   "summary": "z[i] = długość najdłuższego wspólnego prefiksu słowa s i jego sufiksu zaczynającego się na pozycji i. Liczona w O(n) dzięki oknu [l, r); służy do wyszukiwania wzorca, okresów i prefikso-sufiksów.",
+   "complexity": "O(n) czasu i pamięci; wyszukiwanie wzorca O(n + m)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "`z[i]` = długość najdłuższego wspólnego prefiksu `s` i `s[i..]` (ile znaków od pozycji `i` pokrywa się z początkiem\nsłowa). Umownie `z[0] = 0` (albo `n`). Przykład: `s = aaabaab` → `z = 0 2 1 0 2 1 0`.\n\nAlgorytm trzyma okno `[l, r)` — dopasowanie (`s[l..r) == s[0..r−l)`) o największym `r`. Dla `i < r` znamy już\nfragment: `z[i] ≥ min(r − i, z[i − l])` (pozycja `i` odpowiada pozycji `i − l` na początku słowa). Potem\ndoszukujemy naiwnie. Każde udane porównanie przesuwa `r` w prawo, więc łącznie O(n).\n\n**Wyszukiwanie wzorca:** policz Z dla `p + '#' + t`; wystąpienie zaczyna się tam, gdzie `z[i] == |p|`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: wyszukiwanie wzorca Z-funkcją",
+     "code": "// Wejście: wzorzec p i tekst t. Wyjście: liczba wystąpień i pozycje (od 1) — przez Z-funkcję.\n#include <bits/stdc++.h>\nusing namespace std;\n\nvector<int> zFunction(const string& s) {\n    int n = s.size();\n    vector<int> z(n, 0);\n    for (int i = 1, l = 0, r = 0; i < n; i++) {\n        if (i < r) z[i] = min(r - i, z[i - l]);\n        while (i + z[i] < n && s[z[i]] == s[i + z[i]]) z[i]++;\n        if (i + z[i] > r) { l = i; r = i + z[i]; }\n    }\n    return z;\n}\n\nint main() {\n    string p, t;\n    cin >> p >> t;\n    int m = p.size();\n    vector<int> z = zFunction(p + \"#\" + t);\n    vector<int> pos;\n    for (int i = m + 1; i < (int)z.size(); i++)\n        if (z[i] == m) pos.push_back(i - m);      // pozycja w t, numeracja od 1\n    cout << pos.size() << \"\\n\";\n    for (int x : pos) cout << x << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Z-funkcja (do skopiowania)",
+     "code": "vector<int> zFunction(const string& s) {\n    int n = s.size();\n    vector<int> z(n, 0);               // z[i] = LCP(s, s[i..]); z[0] = 0 umownie\n    for (int i = 1, l = 0, r = 0; i < n; i++) {     // [l, r) = najbardziej wysunięte okno-dopasowanie\n        if (i < r) z[i] = min(r - i, z[i - l]);\n        while (i + z[i] < n && s[z[i]] == s[i + z[i]]) z[i]++;\n        if (i + z[i] > r) { l = i; r = i + z[i]; }\n    }\n    return z;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zastosowanie",
+      "Warunek / wzór"
+     ],
+     "rows": [
+      [
+       "wystąpienia p w t",
+       "z[i] == |p| w Z(p + '#' + t)"
+      ],
+      [
+       "najkrótszy pełny okres (s = t^k)",
+       "najmniejsze p | n z p + z[p] == n (inaczej n)"
+      ],
+      [
+       "najdłuższy prefikso-sufiks",
+       "n − i dla najmniejszego i ≥ 1 z i + z[i] == n"
+      ],
+      [
+       "liczba różnych podsłów",
+       "dokładając znak c: nowe podsłowa = |cur| − max Z(odwrócone cur)"
+      ],
+      [
+       "porównanie sufiksu z prefiksem",
+       "z[i] mówi od razu, ile znaków się zgadza"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Z-funkcja i funkcja prefiksowa niosą tę samą informację (każdą da się przeliczyć na drugą w O(n)). Wybierz tę,\nktórą lepiej pamiętasz — Z jest często prostsza przy pytaniach „ile znaków od pozycji i zgadza się z początkiem”."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "vector<int> zFunction(const string& s)",
+     "desc": "z[i] = LCP(s, s[i..]), z[0] = 0",
+     "complexity": "O(n)",
+     "returns": "vector<int>"
+    }
+   ],
+   "pitfalls": [
+    "Okno [l, r) jest półotwarte — warunek `i < r` i `min(r - i, z[i - l])`; pomylenie z domkniętym daje błędy o 1.",
+    "z[0] nie jest liczone (0 albo n) — nie używaj go jako dopasowania całego słowa.",
+    "Separator w p + '#' + t musi nie występować w napisach, inaczej z[i] może przekroczyć |p|.",
+    "Naiwne liczenie z[i] bez okna to O(n²) — TLE dla 10^6.",
+    "Pozycja w tekście dla indeksu i w p + '#' + t to i − |p| − 1 (0-based)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "z funkcja",
+      "z function c++",
+      "z-algorithm",
+      "z algorytm",
+      "tablica z",
+      "z funkcja jak dziala"
+     ],
+     "a": "`z[i]` = ile znaków od pozycji `i` zgadza się z początkiem słowa. Liczymy od lewej z oknem `[l, r)` (najdalej\nsięgające znane dopasowanie): dla `i < r` startujemy od `min(r − i, z[i − l])`, potem dopasowujemy dalej\nznak po znaku i przesuwamy okno. Każde udane porównanie przesuwa `r`, więc O(n).",
+     "code": "vector<int> zFunction(const string& s) {\n    int n = s.size();\n    vector<int> z(n, 0);               // z[i] = LCP(s, s[i..]); z[0] = 0 umownie\n    for (int i = 1, l = 0, r = 0; i < n; i++) {     // [l, r) = najbardziej wysunięte okno-dopasowanie\n        if (i < r) z[i] = min(r - i, z[i - l]);\n        while (i + z[i] < n && s[z[i]] == s[i + z[i]]) z[i]++;\n        if (i + z[i] > r) { l = i; r = i + z[i]; }\n    }\n    return z;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "z funkcja wyszukiwanie wzorca",
+      "z function pattern matching",
+      "szukanie wzorca z funkcja",
+      "z algorithm find pattern"
+     ],
+     "a": "Policz Z-funkcję dla `p + '#' + t`. Wystąpienie `p` zaczyna się w tekście na pozycji `i − |p| − 1`\n(0-based), gdy `z[i] == |p|`. Separator gwarantuje, że `z` nie przekroczy `|p|`. Czas O(n + m).",
+     "code": "string p = \"ab\", t = \"xabyab\";\nstring s = p + \"#\" + t;\nint n = s.size(), m = p.size();\nvector<int> z(n, 0);\nfor (int i = 1, l = 0, r = 0; i < n; i++) {\n    if (i < r) z[i] = min(r - i, z[i - l]);\n    while (i + z[i] < n && s[z[i]] == s[i + z[i]]) z[i]++;\n    if (i + z[i] > r) { l = i; r = i + z[i]; }\n    if (z[i] == m) cout << i - m - 1 << \" \";   // 1 4 (0-based)\n}"
+    },
+    {
+     "q": [
+      "z funkcja vs kmp",
+      "co lepsze kmp czy z",
+      "z function or prefix function",
+      "roznica z funkcja funkcja prefiksowa"
+     ],
+     "a": "Obie działają w O(n) i rozwiązują te same problemy (wyszukiwanie, okresy, prefikso-sufiksy). `pi[i]` mówi\no sufiksie kończącym się w `i`, a `z[i]` o podsłowie zaczynającym się w `i`. KMP ma zaletę „strumieniową”\n(przetwarza tekst znak po znaku z pamięcią O(m)) i daje automat; Z bywa prostsza w zadaniach typu „porównaj\nsufiks z prefiksem”."
+    },
+    {
+     "q": [
+      "z funkcja okres słowa",
+      "z function period",
+      "okres z funkcji z",
+      "czy slowo jest powtorzeniem z funkcja"
+     ],
+     "a": "`p` jest okresem słowa ⇔ `p + z[p] == n` (sufiks od `p` jest prefiksem). Najkrótszy **pełny** okres (s = t^k):\nnajmniejsze `p` dzielące `n` z `p + z[p] == n`; jeśli takiego nie ma, odpowiedź to `n`.",
+     "code": "vector<int> zFunction(const string& s) {\n    int n = s.size();\n    vector<int> z(n, 0);               // z[i] = LCP(s, s[i..]); z[0] = 0 umownie\n    for (int i = 1, l = 0, r = 0; i < n; i++) {     // [l, r) = najbardziej wysunięte okno-dopasowanie\n        if (i < r) z[i] = min(r - i, z[i - l]);\n        while (i + z[i] < n && s[z[i]] == s[i + z[i]]) z[i]++;\n        if (i + z[i] > r) { l = i; r = i + z[i]; }\n    }\n    return z;\n}\n\n           int fullPeriod(const string& s) {\n               int n = s.size();\n               vector<int> z = zFunction(s);\n               for (int p = 1; p < n; p++)\n                   if (n % p == 0 && p + z[p] == n) return p;\n               return n;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najdłuższy prefiks będący też sufiksem z funkcja",
+      "border z function",
+      "prefikso sufiks z funkcja",
+      "najdluzszy border"
+     ],
+     "a": "Prefikso-sufiks długości `L` istnieje ⇔ `z[n − L] == L`, czyli `i + z[i] == n` dla `i = n − L`. Najdłuższy\nwłaściwy: najmniejsze `i ≥ 1` spełniające `i + z[i] == n`, długość `n − i` (albo 0). Czas O(n).",
+     "code": "vector<int> zFunction(const string& s) {\n    int n = s.size();\n    vector<int> z(n, 0);               // z[i] = LCP(s, s[i..]); z[0] = 0 umownie\n    for (int i = 1, l = 0, r = 0; i < n; i++) {     // [l, r) = najbardziej wysunięte okno-dopasowanie\n        if (i < r) z[i] = min(r - i, z[i - l]);\n        while (i + z[i] < n && s[z[i]] == s[i + z[i]]) z[i]++;\n        if (i + z[i] > r) { l = i; r = i + z[i]; }\n    }\n    return z;\n}\n\n           int longestBorder(const string& s) {\n               int n = s.size();\n               vector<int> z = zFunction(s);\n               for (int i = 1; i < n; i++) if (i + z[i] == n) return n - i;\n               return 0;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liczba różnych podsłów z funkcja",
+      "ile roznych podslow n^2",
+      "distinct substrings z function",
+      "liczba roznych podnapisow"
+     ],
+     "a": "Budujemy słowo znak po znaku. Po dopisaniu `c` nowe podsłowa to sufiksy `cur`, które nie wystąpiły wcześniej;\nnajdłuższy „stary” sufiks ma długość `max z` dla odwróconego `cur`. Przybywa `|cur| − max z`. Całość O(n²) —\ndobre dla n ≤ 5000; dla większych użyj tablicy sufiksowej (`n(n+1)/2 − Σ lcp`).",
+     "code": "vector<int> zFunction(const string& s) {\n    int n = s.size();\n    vector<int> z(n, 0);               // z[i] = LCP(s, s[i..]); z[0] = 0 umownie\n    for (int i = 1, l = 0, r = 0; i < n; i++) {     // [l, r) = najbardziej wysunięte okno-dopasowanie\n        if (i < r) z[i] = min(r - i, z[i - l]);\n        while (i + z[i] < n && s[z[i]] == s[i + z[i]]) z[i]++;\n        if (i + z[i] > r) { l = i; r = i + z[i]; }\n    }\n    return z;\n}\n\n           long long distinctSubstrings(const string& s) {\n               long long total = 0;\n               string cur;\n               for (char c : s) {\n                   cur += c;\n                   string t(cur.rbegin(), cur.rend());\n                   vector<int> z = zFunction(t);\n                   int zmax = 0;\n                   for (int x : z) zmax = max(zmax, x);\n                   total += (long long)cur.size() - zmax;\n               }\n               return total;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "z funkcja z[0]",
+      "dlaczego z[0] = 0",
+      "z[0] rowne n czy 0",
+      "z function first element"
+     ],
+     "a": "`z[0]` z definicji byłoby `n` (słowo jest swoim prefiksem), ale ta wartość nic nie wnosi i psułaby algorytm\nokna, dlatego zwykle ustawia się `z[0] = 0` i pętlę zaczyna od `i = 1`. Pamiętaj o tym, licząc np. maksimum\nz tablicy `z` — `z[0]` trzeba pominąć albo mieć jako 0."
+    }
+   ],
+   "related": [
+    "str-kmp",
+    "str-period",
+    "str-hashing",
+    "str-suffix-array"
+   ]
+  },
+  {
+   "id": "str-hashing",
+   "title": "Hashowanie tekstów (hash wielomianowy, mod 2^61−1, porównywanie podsłów w O(1))",
+   "category": "Teksty",
+   "tags": [
+    "hashowanie",
+    "hash",
+    "rolling hash",
+    "rabin-karp",
+    "hash wielomianowy",
+    "2^61-1",
+    "kolizje",
+    "podsłowa"
+   ],
+   "aliases": [
+    "hashowanie stringow",
+    "hash stringa",
+    "string hashing",
+    "haszowanie napisów",
+    "rolling hash",
+    "rabin karp",
+    "hashowanie tekstów",
+    "hash napisu c++",
+    "polynomial hash",
+    "hashe",
+    "haszowanie",
+    "hashing c++"
+   ],
+   "summary": "Hash wielomianowy h(s) = s[0]·B^(n−1) + … + s[n−1] (mod M) z tablicą hashy prefiksów pozwala porównać dowolne dwa podsłowa w O(1). Najbezpieczniej: M = 2^61 − 1 i losowa podstawa B.",
+   "complexity": "preprocessing O(n); hash podsłowa i porównanie O(1); wyszukiwanie binarne po długości O(log n) na porównanie leksykograficzne",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Napis traktujemy jak liczbę w systemie o podstawie `B`: `h(s) = s[0]·B^(n−1) + s[1]·B^(n−2) + … + s[n−1] (mod M)`.\nTrzymamy hashe prefiksów `H[i]` (pierwsze `i` znaków) i potęgi `P[i] = B^i`. Wtedy hash podsłowa `s[l..r)`:\n\n`hash(l, r) = H[r] − H[l]·B^(r−l) (mod M)`.\n\nRówne napisy mają równe hashe; różne — prawie na pewno różne (kolizja z prawdopodobieństwem ~n/M dla jednego\nporównania). Dlatego porównanie dwóch podsłów kosztuje O(1) zamiast O(długość).\n\n**Wybór parametrów:** `M = 2^61 − 1` (liczba pierwsza, mnożenie przez `__int128`), `B` losowe z zakresu\n[256, M) — losowość chroni przed testami „anty-hash”. Znaki mapuj na wartości ≥ 1 (np. kod ASCII), nie na 0."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „czy fragmenty [a, b] i [c, d] są równe” (wiele zapytań), „najdłuższe podsłowo występujące\ndwa razy”, „liczba różnych podsłów długości k”, porównywanie podsłów leksykograficznie, palindromy na\nprzedziałach, wzorce 2D. Zwykle łączone z wyszukiwaniem binarnym po długości."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: równość podsłów (mod 2^61−1)",
+     "code": "// Wejście: słowo s, liczba zapytań q, potem q czwórek a b c d (od 1, włącznie).\n// Dla każdego zapytania: TAK, jeśli s[a..b] == s[c..d], wpp. NIE.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef unsigned long long ull;\nconst ull MOD = (1ULL << 61) - 1;\n\null mulmod(ull a, ull b) {\n    __uint128_t c = (__uint128_t)a * b;\n    ull x = (ull)(c & MOD) + (ull)(c >> 61);\n    if (x >= MOD) x -= MOD;\n    return x;\n}\n\nstruct Hasher {\n    vector<ull> h, pw;\n    Hasher(const string& s, ull B) : h(s.size() + 1, 0), pw(s.size() + 1, 1) {\n        for (size_t i = 0; i < s.size(); i++) {\n            h[i + 1] = (mulmod(h[i], B) + (unsigned char)s[i]) % MOD;\n            pw[i + 1] = mulmod(pw[i], B);\n        }\n    }\n    ull get(int l, int r) const {          // s[l..r), 0-based\n        return (h[r] + MOD - mulmod(h[l], pw[r - l])) % MOD;\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());\n    ull B = rng() % (MOD - 1000) + 500;     // losowa podstawa — odporna na testy anty-hash\n    string s;\n    int q;\n    cin >> s >> q;\n    Hasher H(s, B);\n    while (q--) {\n        int a, b, c, d;\n        cin >> a >> b >> c >> d;\n        bool eq = (b - a == d - c) && H.get(a - 1, b) == H.get(c - 1, d);\n        cout << (eq ? \"TAK\" : \"NIE\") << \"\\n\";\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szablon: mulmod + Hasher (do skopiowania)",
+     "code": "typedef unsigned long long ull;\nconst ull MOD = (1ULL << 61) - 1;               // liczba pierwsza Mersenne'a 2^61 - 1\n\null mulmod(ull a, ull b) {                     // a * b mod 2^61-1 bez przepełnienia\n    __uint128_t c = (__uint128_t)a * b;\n    ull x = (ull)(c & MOD) + (ull)(c >> 61);\n    if (x >= MOD) x -= MOD;\n    return x;\n}\n\nstruct Hasher {\n    vector<ull> h, pw;                         // h[i] = hash prefiksu długości i, pw[i] = B^i\n    Hasher(const string& s, ull B) : h(s.size() + 1, 0), pw(s.size() + 1, 1) {\n        for (size_t i = 0; i < s.size(); i++) {\n            h[i + 1] = (mulmod(h[i], B) + (unsigned char)s[i]) % MOD;\n            pw[i + 1] = mulmod(pw[i], B);\n        }\n    }\n    ull get(int l, int r) const {              // hash s[l..r), 0-based, przedział półotwarty\n        return (h[r] + MOD - mulmod(h[l], pw[r - l])) % MOD;\n    }\n};",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Moduł",
+      "Zalety",
+      "Wady"
+     ],
+     "rows": [
+      [
+       "2^61 − 1 (+ losowe B)",
+       "kolizja ~10^−18 na porównanie, jeden hash wystarcza",
+       "mnożenie przez __int128"
+      ],
+      [
+       "dwa mody 10^9+7 i 998244353",
+       "tylko long long, łatwe",
+       "2× wolniej, kod dłuższy"
+      ],
+      [
+       "jeden mod ~10^9",
+       "najprostsze",
+       "paradoks urodzin: przy ~10^5 hashach w secie kolizja prawie pewna"
+      ],
+      [
+       "2^64 (przepełnienie ull)",
+       "najszybsze",
+       "łamane testem Thue–Morse'a dla każdej podstawy — NIE używaj"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Nie mapuj znaków na 0 (np. `s[i] − 'a'` dla `'a'`): wtedy `\"a\"`, `\"aa\"`, `\"aaa\"` mają ten sam hash 0.\nUżywaj kodu ASCII albo `s[i] − 'a' + 1`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "ull mulmod(ull a, ull b)",
+     "desc": "mnożenie modulo 2^61−1 przez __uint128_t",
+     "complexity": "O(1)",
+     "returns": "ull"
+    },
+    {
+     "sig": "Hasher(const string& s, ull B)",
+     "desc": "hashe prefiksów i potęgi podstawy",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "ull Hasher::get(int l, int r)",
+     "desc": "hash podsłowa s[l..r) (0-based, półotwarte)",
+     "complexity": "O(1)",
+     "returns": "ull"
+    }
+   ],
+   "pitfalls": [
+    "Hashowanie modulo 2^64 (naturalne przepełnienie unsigned long long) jest łamane przez napisy Thue–Morse'a (długość 1024 wystarcza dla każdej nieparzystej podstawy).",
+    "Jeden moduł ~10^9 i porównywanie wielu hashy naraz (set/sort) — paradoks urodzin daje kolizje; użyj 2^61−1 albo dwóch modułów.",
+    "Odejmowanie modulo bez `+ MOD` daje „ujemny” (dla unsigned — ogromny) wynik.",
+    "Znak o wartości 0 w hashu — napisy różnej długości z samych takich znaków kolidują.",
+    "Porównując podsłowa różnej długości, sprawdź najpierw długości (hash nie koduje długości jednoznacznie).",
+    "Stała podstawa (np. 31) ułatwia przygotowanie testu anty-hash — losuj B przy starcie programu."
+   ],
+   "qa": [
+    {
+     "q": [
+      "hashowanie stringow",
+      "hash stringa",
+      "string hashing c++",
+      "haszowanie napisów",
+      "rolling hash",
+      "jak zahashowac napis"
+     ],
+     "a": "Traktuj napis jak liczbę w systemie o podstawie `B` modulo duża liczba pierwsza: `H[i+1] = H[i]·B + s[i] (mod M)`.\nZ hashy prefiksów dostajesz hash dowolnego podsłowa w O(1): `H[r] − H[l]·B^(r−l)`. Najpewniej `M = 2^61 − 1`\ni losowe `B`. Preprocessing O(n), każde porównanie O(1). Gotowy szablon `Hasher` jest w treści.",
+     "code": "typedef unsigned long long ull;\nconst ull MOD = (1ULL << 61) - 1;               // liczba pierwsza Mersenne'a 2^61 - 1\n\null mulmod(ull a, ull b) {                     // a * b mod 2^61-1 bez przepełnienia\n    __uint128_t c = (__uint128_t)a * b;\n    ull x = (ull)(c & MOD) + (ull)(c >> 61);\n    if (x >= MOD) x -= MOD;\n    return x;\n}\n\nstruct Hasher {\n    vector<ull> h, pw;                         // h[i] = hash prefiksu długości i, pw[i] = B^i\n    Hasher(const string& s, ull B) : h(s.size() + 1, 0), pw(s.size() + 1, 1) {\n        for (size_t i = 0; i < s.size(); i++) {\n            h[i + 1] = (mulmod(h[i], B) + (unsigned char)s[i]) % MOD;\n            pw[i + 1] = mulmod(pw[i], B);\n        }\n    }\n    ull get(int l, int r) const {              // hash s[l..r), 0-based, przedział półotwarty\n        return (h[r] + MOD - mulmod(h[l], pw[r - l])) % MOD;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "porównanie podsłów w O(1)",
+      "czy dwa fragmenty napisu są równe",
+      "substring hash",
+      "porownanie fragmentow stringa szybko"
+     ],
+     "a": "Policz raz hashe prefiksów (O(n)), a potem dla zapytania porównaj `get(a, b)` z `get(c, d)` (najpierw sprawdź\nrówność długości). Każde zapytanie O(1) zamiast O(długość). Z modułem 2^61 − 1 i losową podstawą\nprawdopodobieństwo błędu na zapytanie to ok. n/2^61 — pomijalne."
+    },
+    {
+     "q": [
+      "mod 2^61-1",
+      "hash 61 bit",
+      "mersenne hash",
+      "jak mnożyć mod 2^61-1",
+      "mulmod 2^61"
+     ],
+     "a": "Iloczyn dwóch liczb < 2^61 mieści się w `__uint128_t`. Ponieważ 2^61 ≡ 1 (mod 2^61 − 1), redukcja to dodanie\nmłodszych 61 bitów do starszych: `x = (c & M) + (c >> 61)`, potem ewentualnie `x −= M`. To szybkie i nie\nwymaga dzielenia. Funkcja `mulmod` jest w szablonie.",
+     "code": "typedef unsigned long long ull;\nconst ull M = (1ULL << 61) - 1;\nauto mulmod = [&](ull a, ull b) {\n    __uint128_t c = (__uint128_t)a * b;\n    ull x = (ull)(c & M) + (ull)(c >> 61);\n    return x >= M ? x - M : x;\n};\null a = M - 1, b = M - 1;            // (−1)·(−1) = 1\ncout << mulmod(a, b) << \" \" << mulmod(123456789, 987654321) << \"\\n\";   // 1 121932631112635269"
+    },
+    {
+     "q": [
+      "kolizje hashy",
+      "hash collision",
+      "jaki mod do hashowania",
+      "paradoks urodzin hash",
+      "dlaczego hash daje wa"
+     ],
+     "a": "Dla jednego porównania dwóch różnych napisów szansa kolizji to ok. n/M. Ale gdy wrzucasz k hashy do `set`\n(np. „liczba różnych podsłów”), liczy się każda para: ok. k²/(2M). Przy M ≈ 10^9 i k = 10^5 to ≈ 5 — kolizja\nprawie pewna. Przy M = 2^61 − 1 to ok. 10^−9. Dlatego: 2^61 − 1 albo dwa moduły ~10^9."
+    },
+    {
+     "q": [
+      "unsigned long long overflow hash",
+      "hash mod 2^64 anty test",
+      "thue morse hash",
+      "czy mozna hashowac z przepelnieniem"
+     ],
+     "a": "Hash liczony „modulo 2^64” przez naturalne przepełnienie `unsigned long long` jest łamany niezależnie od podstawy:\nsłowo Thue–Morse'a długości 1024 i jego negacja (a↔b) mają ten sam hash dla każdej nieparzystej podstawy, a dla\nparzystej liczą się tylko ostatnie 64 znaki. Na OI/CF są testy pod to. Używaj modułu pierwszego (2^61 − 1)."
+    },
+    {
+     "q": [
+      "podwójne hashowanie",
+      "double hashing",
+      "dwa mody hash",
+      "hash z dwoma modulami"
+     ],
+     "a": "Licz dwa niezależne hashe (np. modulo 10^9+7 i 998244353, różne podstawy) i porównuj pary. Kolizja wymaga\nkolizji w obu, więc prawdopodobieństwo spada do ~1/(M1·M2). Mnożenia mieszczą się w `long long`. Wada: ~2× więcej\npracy niż jeden hash 2^61 − 1.",
+     "code": "const long long M1 = 1'000'000'007, M2 = 998'244'353, B1 = 131, B2 = 137;\nauto hashPair = [&](const string& s) {\n    long long h1 = 0, h2 = 0;\n    for (char ch : s) { h1 = (h1 * B1 + ch) % M1; h2 = (h2 * B2 + ch) % M2; }\n    return make_pair(h1, h2);\n};\ncout << (hashPair(\"kot\") == hashPair(\"kot\")) << (hashPair(\"kot\") == hashPair(\"tok\")) << \"\\n\";   // 10"
+    },
+    {
+     "q": [
+      "rabin karp",
+      "wyszukiwanie wzorca hashem",
+      "rabin-karp c++",
+      "szukanie wzorca rolling hash"
+     ],
+     "a": "Policz hash wzorca i hashe prefiksów tekstu, a potem dla każdej pozycji `i` porównaj `get(i, i+m)` z hashem\nwzorca — O(n + m). To algorytm Rabina–Karpa. Deterministyczną alternatywą jest KMP; hash przydaje się, gdy\ntrzeba porównywać też inne fragmenty (np. wzorce 2D).",
+     "code": "typedef unsigned long long ull;\nconst ull MOD = (1ULL << 61) - 1;               // liczba pierwsza Mersenne'a 2^61 - 1\n\null mulmod(ull a, ull b) {                     // a * b mod 2^61-1 bez przepełnienia\n    __uint128_t c = (__uint128_t)a * b;\n    ull x = (ull)(c & MOD) + (ull)(c >> 61);\n    if (x >= MOD) x -= MOD;\n    return x;\n}\n\nstruct Hasher {\n    vector<ull> h, pw;                         // h[i] = hash prefiksu długości i, pw[i] = B^i\n    Hasher(const string& s, ull B) : h(s.size() + 1, 0), pw(s.size() + 1, 1) {\n        for (size_t i = 0; i < s.size(); i++) {\n            h[i + 1] = (mulmod(h[i], B) + (unsigned char)s[i]) % MOD;\n            pw[i + 1] = mulmod(pw[i], B);\n        }\n    }\n    ull get(int l, int r) const {              // hash s[l..r), 0-based, przedział półotwarty\n        return (h[r] + MOD - mulmod(h[l], pw[r - l])) % MOD;\n    }\n};\n\n           int countOccurrences(const string& p, const string& t) {\n               if (p.size() > t.size()) return 0;\n               Hasher hp(p, 1000003), ht(t, 1000003);\n               ull target = hp.get(0, p.size());\n               int cnt = 0, m = p.size();\n               for (int i = 0; i + m <= (int)t.size(); i++) cnt += (ht.get(i, i + m) == target);\n               return cnt;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najdłuższe powtarzające się podsłowo hash",
+      "longest repeated substring binary search",
+      "najdluzszy fragment wystepujacy dwa razy",
+      "wyszukiwanie binarne po dlugosci hash"
+     ],
+     "a": "Jeśli jakieś podsłowo długości L występuje ≥ 2 razy, to jego prefiks długości L−1 też — własność monotoniczna.\nWyszukaj binarnie największe L; sprawdzenie: wrzuć hashe wszystkich podsłów długości L do `unordered_set`\ni szukaj duplikatu. Czas O(n log n) (oczekiwany). Alternatywa deterministyczna: `max lcp` z tablicy sufiksowej.",
+     "code": "typedef unsigned long long ull;\nconst ull MOD = (1ULL << 61) - 1;               // liczba pierwsza Mersenne'a 2^61 - 1\n\null mulmod(ull a, ull b) {                     // a * b mod 2^61-1 bez przepełnienia\n    __uint128_t c = (__uint128_t)a * b;\n    ull x = (ull)(c & MOD) + (ull)(c >> 61);\n    if (x >= MOD) x -= MOD;\n    return x;\n}\n\nstruct Hasher {\n    vector<ull> h, pw;                         // h[i] = hash prefiksu długości i, pw[i] = B^i\n    Hasher(const string& s, ull B) : h(s.size() + 1, 0), pw(s.size() + 1, 1) {\n        for (size_t i = 0; i < s.size(); i++) {\n            h[i + 1] = (mulmod(h[i], B) + (unsigned char)s[i]) % MOD;\n            pw[i + 1] = mulmod(pw[i], B);\n        }\n    }\n    ull get(int l, int r) const {              // hash s[l..r), 0-based, przedział półotwarty\n        return (h[r] + MOD - mulmod(h[l], pw[r - l])) % MOD;\n    }\n};\n\n           int longestRepeated(const string& s) {\n               Hasher H(s, 911382323);\n               int n = s.size(), lo = 0, hi = n - 1;\n               auto ok = [&](int L) {\n                   if (L == 0) return true;\n                   unordered_set<ull> seen;\n                   for (int i = 0; i + L <= n; i++)\n                       if (!seen.insert(H.get(i, i + L)).second) return true;\n                   return false;\n               };\n               while (lo < hi) {                       // największe L z ok(L)\n                   int mid = (lo + hi + 1) / 2;\n                   if (ok(mid)) lo = mid; else hi = mid - 1;\n               }\n               return lo;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "porównanie leksykograficzne podsłów hash",
+      "lcp hashami",
+      "compare substrings lexicographically",
+      "ktore podslowo mniejsze hash"
+     ],
+     "a": "Wyszukaj binarnie długość wspólnego prefiksu (LCP) dwóch podsłów, porównując hashe prefiksów — O(log n).\nPotem porównaj pierwszy różny znak (albo długości, jeśli jedno jest prefiksem drugiego). Tak można np.\nsortować sufiksy komparatorem w O(n log² n).",
+     "code": "typedef unsigned long long ull;\nconst ull MOD = (1ULL << 61) - 1;               // liczba pierwsza Mersenne'a 2^61 - 1\n\null mulmod(ull a, ull b) {                     // a * b mod 2^61-1 bez przepełnienia\n    __uint128_t c = (__uint128_t)a * b;\n    ull x = (ull)(c & MOD) + (ull)(c >> 61);\n    if (x >= MOD) x -= MOD;\n    return x;\n}\n\nstruct Hasher {\n    vector<ull> h, pw;                         // h[i] = hash prefiksu długości i, pw[i] = B^i\n    Hasher(const string& s, ull B) : h(s.size() + 1, 0), pw(s.size() + 1, 1) {\n        for (size_t i = 0; i < s.size(); i++) {\n            h[i + 1] = (mulmod(h[i], B) + (unsigned char)s[i]) % MOD;\n            pw[i + 1] = mulmod(pw[i], B);\n        }\n    }\n    ull get(int l, int r) const {              // hash s[l..r), 0-based, przedział półotwarty\n        return (h[r] + MOD - mulmod(h[l], pw[r - l])) % MOD;\n    }\n};\n\n           // -1, 0, 1: porównanie s[a..a+la) z s[b..b+lb)\n           int cmpSub(const string& s, const Hasher& H, int a, int la, int b, int lb) {\n               int lo = 0, hi = min(la, lb);\n               while (lo < hi) {                        // najdłuższy wspólny prefiks\n                   int mid = (lo + hi + 1) / 2;\n                   if (H.get(a, a + mid) == H.get(b, b + mid)) lo = mid; else hi = mid - 1;\n               }\n               if (lo == min(la, lb)) return la == lb ? 0 : (la < lb ? -1 : 1);\n               return s[a + lo] < s[b + lo] ? -1 : 1;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "hash palindrom",
+      "czy podsłowo jest palindromem hash",
+      "palindrom na przedziale hash",
+      "palindrome query hashing"
+     ],
+     "a": "Zbuduj hashe dla `s` i dla odwróconego `r`. Podsłowo `s[l..r)` jest palindromem ⇔ jego hash równa się hashowi\nodpowiadającego fragmentu `r`: `rev.get(n − r, n − l)`. Każde zapytanie O(1). Deterministycznie (bez hashy)\nto samo daje Manacher.",
+     "code": "typedef unsigned long long ull;\nconst ull MOD = (1ULL << 61) - 1;               // liczba pierwsza Mersenne'a 2^61 - 1\n\null mulmod(ull a, ull b) {                     // a * b mod 2^61-1 bez przepełnienia\n    __uint128_t c = (__uint128_t)a * b;\n    ull x = (ull)(c & MOD) + (ull)(c >> 61);\n    if (x >= MOD) x -= MOD;\n    return x;\n}\n\nstruct Hasher {\n    vector<ull> h, pw;                         // h[i] = hash prefiksu długości i, pw[i] = B^i\n    Hasher(const string& s, ull B) : h(s.size() + 1, 0), pw(s.size() + 1, 1) {\n        for (size_t i = 0; i < s.size(); i++) {\n            h[i + 1] = (mulmod(h[i], B) + (unsigned char)s[i]) % MOD;\n            pw[i + 1] = mulmod(pw[i], B);\n        }\n    }\n    ull get(int l, int r) const {              // hash s[l..r), 0-based, przedział półotwarty\n        return (h[r] + MOD - mulmod(h[l], pw[r - l])) % MOD;\n    }\n};\n\n           bool isPal(const Hasher& fw, const Hasher& bw, int n, int l, int r) {   // s[l..r)\n               return fw.get(l, r) == bw.get(n - r, n - l);\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "losowa podstawa hash",
+      "jaka podstawa hashowania",
+      "base hash 31 czy losowa",
+      "jak wylosowac podstawe hasha"
+     ],
+     "a": "Podstawa powinna być większa od rozmiaru alfabetu i **losowa**, wybrana w czasie działania programu —\nwtedy nikt nie przygotuje testu, który specjalnie wywoła kolizję. Np.\n`mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count()); ull B = rng() % (M − 1000) + 500;`.\nStałe podstawy (31, 131) działają, dopóki nikt nie celuje w Twój hash."
+    },
+    {
+     "q": [
+      "hash ujemny modulo",
+      "hash odejmowanie ujemne",
+      "hash podslowa wychodzi zly",
+      "minus w hashu"
+     ],
+     "a": "We wzorze `H[r] − H[l]·B^(r−l)` odjemnik może być większy, więc dodaj moduł przed `%`:\n`(H[r] + M − mulmod(H[l], P[r−l])) % M`. Dla `long long` z modułem ~10^9: `((H[r] − H[l]*P[len]) % M + M) % M`.\nBez tego dla typów ze znakiem wychodzą liczby ujemne, a dla `unsigned` — ogromne (zawinięte)."
+    }
+   ],
+   "related": [
+    "ds-string-hashing",
+    "str-kmp",
+    "str-suffix-array",
+    "str-palindromes",
+    "num-mod-arithmetic",
+    "tech-binary-search",
+    "math-fft",
+    "tree-isomorphism"
+   ]
+  },
+  {
+   "id": "str-period",
+   "title": "Okres słowa i prefikso-sufiksy (border)",
+   "category": "Teksty",
+   "tags": [
+    "okres",
+    "period",
+    "border",
+    "prefikso-sufiks",
+    "potęga słowa",
+    "funkcja prefiksowa",
+    "fine-wilf"
+   ],
+   "aliases": [
+    "okres słowa",
+    "okres napisu",
+    "najkrótszy okres",
+    "period of string",
+    "border",
+    "prefikso-sufiks",
+    "czy słowo jest potęgą",
+    "string period",
+    "okresy słów"
+   ],
+   "summary": "p jest okresem słowa s, gdy s[i] = s[i+p] dla wszystkich i. Najkrótszy okres to n − pi[n−1], a s jest potęgą t^k dokładnie wtedy, gdy ten okres dzieli n.",
+   "complexity": "O(n) przez funkcję prefiksową lub Z-funkcję; wszystkie okresy O(n) przez łańcuch pi",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Okres** słowa `s` długości `n`: liczba `p` (1 ≤ p ≤ n) taka, że `s[i] = s[i + p]` dla wszystkich\n`0 ≤ i < n − p`. Np. `abcabcab` ma okresy 3, 6, 8.\n\n**Okres ↔ prefikso-sufiks:** `p` jest okresem ⇔ `s` ma prefikso-sufiks (border) długości `n − p`. Zatem:\n* najkrótszy okres = `n − pi[n−1]`;\n* wszystkie okresy = `n − b` dla wszystkich borderów `b` (łańcuch `pi[n−1], pi[pi[n−1]−1], …, 0`).\n\n**Potęga słowa:** `s = t^k` (np. `abababab = (ab)^4`) ⇔ najkrótszy okres `p` dzieli `n`; wtedy `t = s[0..p)`,\n`k = n/p`. Jeśli `p` nie dzieli `n`, żaden okres mniejszy od `n` nie dzieli `n` (słowo jest *pierwotne*) —\nwynika to z twierdzenia Fine'a–Wilfa."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: okresy i potęga słowa",
+     "code": "// Wejście: słowo s. Wyjście: najkrótszy okres; najkrótsze t i k z s = t^k; wszystkie okresy rosnąco.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s;\n    cin >> s;\n    int n = s.size();\n    vector<int> pi(n, 0);\n    for (int i = 1; i < n; i++) {\n        int k = pi[i - 1];\n        while (k > 0 && s[i] != s[k]) k = pi[k - 1];\n        if (s[i] == s[k]) k++;\n        pi[i] = k;\n    }\n    int p = n - pi[n - 1];                       // najkrótszy okres\n    cout << p << \"\\n\";\n    if (n % p == 0) cout << s.substr(0, p) << \" \" << n / p << \"\\n\";\n    else cout << s << \" \" << 1 << \"\\n\";          // słowo pierwotne\n    vector<int> periods;\n    for (int b = pi[n - 1]; b > 0; b = pi[b - 1]) periods.push_back(n - b);   // wszystkie bordery\n    periods.push_back(n);\n    for (int x : periods) cout << x << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Pojęcie",
+      "Definicja",
+      "Jak policzyć"
+     ],
+     "rows": [
+      [
+       "border (prefikso-sufiks)",
+       "właściwy prefiks równy sufiksowi",
+       "pi[n−1], łańcuch pi"
+      ],
+      [
+       "okres p",
+       "s[i] = s[i+p]",
+       "n − border"
+      ],
+      [
+       "najkrótszy okres",
+       "min p",
+       "n − pi[n−1]"
+      ],
+      [
+       "pełny okres (s = t^k)",
+       "okres dzielący n",
+       "n − pi[n−1], jeśli dzieli n; inaczej n"
+      ],
+      [
+       "okres przez Z",
+       "p + z[p] == n",
+       "Z-funkcja"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "**Twierdzenie Fine'a–Wilfa:** jeśli `p` i `q` są okresami słowa długości `n ≥ p + q − gcd(p, q)`, to\n`gcd(p, q)` też jest okresem. Przydaje się w dowodach (np. dlaczego najkrótszy okres wyznacza wszystkie\nokresy dzielące `n`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int p = n - pi[n - 1];",
+     "desc": "najkrótszy okres słowa",
+     "complexity": "O(n) z funkcją prefiksową"
+    },
+    {
+     "sig": "for (int b = pi[n-1]; b > 0; b = pi[b-1])",
+     "desc": "przegląd wszystkich borderów (od najdłuższego)",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Najkrótszy okres nie musi dzielić n (abcab: okres 3) — wtedy słowo nie jest potęgą krótszego słowa.",
+    "Okres p = n zawsze istnieje — nie zapominaj go wypisać w liście wszystkich okresów.",
+    "Mylenie „okresu” z definicją z konkretnego zadania (np. w OI „Okresy słów” okres to prefiks q z s będącym prefiksem qq) — czytaj definicję.",
+    "Dla zapytań o okres podsłowa nie licz pi od nowa dla każdego zapytania (O(n) na zapytanie) — użyj hashy i dzielników długości."
+   ],
+   "qa": [
+    {
+     "q": [
+      "okres słowa",
+      "najkrótszy okres napisu",
+      "period of string",
+      "okres stringa kmp",
+      "jak znalezc okres slowa"
+     ],
+     "a": "Najkrótszy okres to `n − pi[n−1]`, gdzie `pi` to funkcja prefiksowa: okres `p` odpowiada prefikso-sufiksowi\ndługości `n − p`, a najdłuższy border daje najkrótszy okres. Czas O(n). Np. `abcabcab`: `pi[7] = 5`, okres 3.",
+     "code": "string s = \"abcabcab\";\nint n = s.size();\nvector<int> pi(n, 0);\nfor (int i = 1; i < n; i++) {\n    int k = pi[i - 1];\n    while (k > 0 && s[i] != s[k]) k = pi[k - 1];\n    if (s[i] == s[k]) k++;\n    pi[i] = k;\n}\ncout << n - pi[n - 1] << \"\\n\";   // 3"
+    },
+    {
+     "q": [
+      "czy słowo jest potęgą innego",
+      "s = t^k",
+      "string power",
+      "najkrótsze t takie że s to t powtórzone",
+      "czy napis sklada sie z powtorzen"
+     ],
+     "a": "Policz `p = n − pi[n−1]`. Jeśli `n % p == 0`, to `s = (s[0..p))^(n/p)` i to jest najkrótsze takie `t`.\nJeśli nie dzieli, słowo jest pierwotne (jedyne rozkładanie: `t = s`, `k = 1`). Np. `abababab` → `p = 2`,\n`t = ab`, `k = 4`; `abcab` → `p = 3` nie dzieli 5, więc brak."
+    },
+    {
+     "q": [
+      "wszystkie okresy słowa",
+      "all periods string",
+      "wszystkie prefikso sufiksy",
+      "all borders",
+      "lista okresow napisu"
+     ],
+     "a": "Bordery słowa to `pi[n−1]`, potem `pi[pi[n−1]−1]` itd. aż do 0 (każdy kolejny to najdłuższy border poprzedniego).\nOkresy to `n − b` dla każdego bordera `b` oraz `n`. Łańcuch ma długość O(n), więc całość O(n). Pełny program\nw treści wypisuje np. `3 6 8` dla `abcabcab`."
+    },
+    {
+     "q": [
+      "okres a prefikso sufiks zależność",
+      "border period zwiazek",
+      "dlaczego okres to n minus pi",
+      "okres a border"
+     ],
+     "a": "Jeśli `s[0..n−p) == s[p..n)` (border długości `n − p`), to każdy znak równa się znakowi o `p` dalej — czyli `p`\njest okresem. I odwrotnie. Najdłuższy border ⇒ najkrótszy okres, stąd `n − pi[n−1]`."
+    },
+    {
+     "q": [
+      "okres podsłowa zapytania",
+      "okres fragmentu napisu",
+      "najkrotszy okres podslowa query",
+      "period of substring queries"
+     ],
+     "a": "Pełny okres fragmentu `s[l..r)` długości `len` musi dzielić `len`; `d` jest okresem ⇔ `hash(l, r−d) == hash(l+d, r)`.\nZacznij od `d = len` i dla każdego czynnika pierwszego `q` liczby `len` (z sita najmniejszych dzielników) dziel\n`d /= q`, dopóki `d/q` nadal jest okresem. Wynik to najkrótszy pełny okres w O(log len) porównań hashy na zapytanie."
+    },
+    {
+     "q": [
+      "fine wilf",
+      "twierdzenie fine'a wilfa",
+      "fine and wilf theorem",
+      "dwa okresy nwd"
+     ],
+     "a": "Jeśli słowo długości `n` ma okresy `p` i `q` oraz `n ≥ p + q − gcd(p, q)`, to `gcd(p, q)` też jest okresem.\nWniosek: każdy okres `q ≤ n/2` jest wielokrotnością najkrótszego okresu, więc pełne okresy (dzielące `n`) to\nwielokrotności najkrótszego pełnego okresu."
+    },
+    {
+     "q": [
+      "okresy słów oi",
+      "maksymalny okres prefiksu",
+      "suma maksymalnych okresow prefiksow",
+      "najkrotszy niepusty border"
+     ],
+     "a": "W zadaniu „Okresy słów” (XIII OI) okresem jest właściwy prefiks `q` słowa `a`, dla którego `a` jest prefiksem `qq`;\nmaksymalny okres prefiksu długości `i` to `i − (najkrótszy niepusty border)` (0, gdy bordera brak). Najkrótszy\nborder liczymy z `pi` z zapamiętywaniem: `short[i] = short[pi[i]−1]`, jeśli niezerowe, wpp. `pi[i]`. Czas O(n),\nwynik w `long long`.",
+     "code": "string s = \"babababa\";\nint n = s.size();\nvector<int> pi(n, 0), sh(n, 0);\nfor (int i = 1; i < n; i++) {\n    int k = pi[i - 1];\n    while (k > 0 && s[i] != s[k]) k = pi[k - 1];\n    if (s[i] == s[k]) k++;\n    pi[i] = k;\n}\nlong long sum = 0;\nfor (int i = 0; i < n; i++) {\n    if (pi[i] == 0) sh[i] = 0;\n    else sh[i] = (sh[pi[i] - 1] > 0 ? sh[pi[i] - 1] : pi[i]);   // najkrótszy niepusty border\n    if (sh[i] > 0) sum += (i + 1) - sh[i];\n}\ncout << sum << \"\\n\";   // 24"
+    },
+    {
+     "q": [
+      "okres słowa z funkcja z",
+      "period z array",
+      "okres przez z funkcje"
+     ],
+     "a": "`p` jest okresem ⇔ `p == n` albo `p + z[p] == n`. Najkrótszy okres = najmniejsze takie `p`; najkrótszy pełny\nokres = najmniejsze takie `p` dzielące `n`. Wszystko w O(n) po policzeniu Z-funkcji."
+    }
+   ],
+   "related": [
+    "str-kmp",
+    "str-z-function",
+    "str-hashing",
+    "str-min-rotation",
+    "math-sieve"
+   ]
+  },
+  {
+   "id": "str-min-rotation",
+   "title": "Najmniejsza rotacja cykliczna (minimalne przesunięcie, rozkład Lyndona)",
+   "category": "Teksty",
+   "tags": [
+    "rotacja",
+    "przesunięcie cykliczne",
+    "minimal rotation",
+    "lyndon",
+    "duval",
+    "booth",
+    "naszyjnik",
+    "postać kanoniczna"
+   ],
+   "aliases": [
+    "najmniejsza rotacja cykliczna",
+    "minimalne przesunięcie cykliczne",
+    "minimal cyclic shift",
+    "min rotation",
+    "leksykograficznie najmniejsza rotacja",
+    "rozkład lyndona",
+    "duval",
+    "algorytm bootha",
+    "rotacja napisu"
+   ],
+   "summary": "Wśród wszystkich n przesunięć cyklicznych słowa szukamy najmniejszego leksykograficznie. Algorytm dwóch wskaźników („minimum expression”) albo Duval działa w O(n); daje postać kanoniczną słowa cyklicznego.",
+   "complexity": "O(n) czasu, O(1) dodatkowej pamięci (dwa wskaźniki); brute force O(n²)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Rotacja (przesunięcie cykliczne) o `k`: `s[k..n) + s[0..k)`. Szukamy najmniejszej leksykograficznie.\nZastosowanie: **postać kanoniczna słowa cyklicznego** — dwa „naszyjniki” są równe (z dokładnością do obrotu)\n⇔ mają tę samą najmniejszą rotację.\n\n**Algorytm dwóch wskaźników:** kandydaci `i < j` (lub `j < i`), `k` = długość zgodnego fragmentu rotacji\nod `i` i od `j`. Przy pierwszej różnicy `s[i+k] > s[j+k]` żadna z rotacji `i, i+1, …, i+k` nie jest minimalna\n(rotacja `i+t` przegrywa z `j+t`), więc `i += k + 1`; symetrycznie dla `j`. Gdy `k` dojdzie do `n`, słowo jest\nokresowe i obie rotacje są równe. Każdy krok przesuwa `i`, `j` lub `k`, więc O(n)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: najmniejsza rotacja w O(n)",
+     "code": "// Wejście: słowo s. Wyjście: najmniejszy indeks k (od 0) najmniejszej rotacji i sama rotacja.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint minRotation(const string& s) {\n    int n = s.size(), i = 0, j = 1, k = 0;\n    while (i < n && j < n && k < n) {\n        char a = s[(i + k) % n], b = s[(j + k) % n];\n        if (a == b) { k++; continue; }\n        if (a > b) i += k + 1;\n        else j += k + 1;\n        if (i == j) j++;\n        k = 0;\n    }\n    return min(i, j);\n}\n\nint main() {\n    string s;\n    cin >> s;\n    int k = minRotation(s);\n    cout << k << \"\\n\" << s.substr(k) + s.substr(0, k) << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Funkcja minRotation + test na brute force",
+     "code": "int minRotation(const string& s) {          // indeks początku leksykograficznie najmniejszej rotacji\n    int n = s.size(), i = 0, j = 1, k = 0;\n    while (i < n && j < n && k < n) {\n        char a = s[(i + k) % n], b = s[(j + k) % n];\n        if (a == b) { k++; continue; }\n        if (a > b) i += k + 1;               // rotacje i..i+k nie mogą być minimalne\n        else j += k + 1;                     // rotacje j..j+k nie mogą być minimalne\n        if (i == j) j++;\n        k = 0;\n    }\n    return min(i, j);\n}",
+     "scope": "global"
+    },
+    {
+     "type": "text",
+     "md": "**Rozkład Lyndona (algorytm Duvala).** Słowo Lyndona to słowo ściśle mniejsze od wszystkich swoich nietrywialnych\nrotacji (np. `aab`, `abb`). Każde słowo da się jednoznacznie zapisać jako `w1 w2 … wk` ze słowami Lyndona\n`w1 ≥ w2 ≥ … ≥ wk`. Duval wyznacza ten rozkład w O(n); uruchomiony na `s + s` daje też najmniejszą rotację."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: Duval (rozkład Lyndona) + najmniejsza rotacja",
+     "code": "// Rozkład Lyndona (Duval) i najmniejsza rotacja przez Duvala.\n#include <bits/stdc++.h>\nusing namespace std;\n\nvector<string> duval(const string& s) {\n    int n = s.size(), i = 0;\n    vector<string> f;\n    while (i < n) {\n        int j = i + 1, k = i;\n        while (j < n && s[k] <= s[j]) {\n            if (s[k] < s[j]) k = i; else k++;\n            j++;\n        }\n        while (i <= k) { f.push_back(s.substr(i, j - k)); i += j - k; }\n    }\n    return f;\n}\n\nstring minCyclic(string s) {\n    int n = s.size();\n    s += s;\n    int i = 0, ans = 0;\n    while (i < n) {\n        ans = i;\n        int j = i + 1, k = i;\n        while (j < 2 * n && s[k] <= s[j]) {\n            if (s[k] < s[j]) k = i; else k++;\n            j++;\n        }\n        while (i <= k) i += j - k;\n    }\n    return s.substr(ans, n);\n}\n\nint main() {\n    string s;\n    cin >> s;\n    for (auto& w : duval(s)) cout << w << \" \";\n    cout << \"\\n\" << minCyclic(s) << \"\\n\";\n}"
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int minRotation(const string& s)",
+     "desc": "najmniejszy indeks początku najmniejszej rotacji (dwa wskaźniki)",
+     "complexity": "O(n)",
+     "returns": "int"
+    },
+    {
+     "sig": "vector<string> duval(const string& s)",
+     "desc": "rozkład Lyndona w1 ≥ w2 ≥ … ≥ wk",
+     "complexity": "O(n)",
+     "returns": "vector<string>"
+    }
+   ],
+   "pitfalls": [
+    "Brute force (porównanie wszystkich n rotacji po O(n)) to O(n²) — za wolne dla n = 10^6.",
+    "Po przesunięciu wskaźnika trzeba wyzerować k i rozdzielić i, j (`if (i == j) j++`).",
+    "Indeksy modulo n — albo pracuj na `s + s` (2n znaków pamięci).",
+    "Do porównywania wielu słów cyklicznych porównuj ich minimalne rotacje (np. w `set<string>`/hashach), a nie wszystkie rotacje.",
+    "Algorytm działa dla dowolnych porównywalnych elementów — dla `vector<int>` zamień `char` na `int`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "najmniejsza rotacja cykliczna",
+      "minimal cyclic shift",
+      "minimalne przesunięcie cykliczne",
+      "min rotation string",
+      "leksykograficznie najmniejsza rotacja"
+     ],
+     "a": "Algorytm dwóch wskaźników: porównuj rotacje od `i` i od `j` znak po znaku (`k`). Przy różnicy przesuń ten wskaźnik,\nktórego rotacja ma większy znak, o `k + 1` (żadna z pominiętych rotacji nie może być minimalna). Wynik\n`min(i, j)`. Czas O(n), pamięć O(1).",
+     "code": "int minRotation(const string& s) {          // indeks początku leksykograficznie najmniejszej rotacji\n    int n = s.size(), i = 0, j = 1, k = 0;\n    while (i < n && j < n && k < n) {\n        char a = s[(i + k) % n], b = s[(j + k) % n];\n        if (a == b) { k++; continue; }\n        if (a > b) i += k + 1;               // rotacje i..i+k nie mogą być minimalne\n        else j += k + 1;                     // rotacje j..j+k nie mogą być minimalne\n        if (i == j) j++;\n        k = 0;\n    }\n    return min(i, j);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy dwa napisy są swoimi rotacjami",
+      "czy b jest rotacja a",
+      "cyclic equivalence",
+      "rownowaznosc cykliczna slow"
+     ],
+     "a": "Dwa sposoby w O(n): (1) porównaj ich najmniejsze rotacje; (2) sprawdź `|a| == |b|` i czy `b` występuje w `a + a`\n(KMP/Z-funkcja). Pierwszy sposób jest lepszy, gdy słów jest wiele — każde zamieniasz na postać kanoniczną."
+    },
+    {
+     "q": [
+      "grupowanie słów cyklicznie równych",
+      "naszyjniki rotacje",
+      "ile roznych naszyjnikow",
+      "postac kanoniczna slowa cyklicznego"
+     ],
+     "a": "Każde słowo zamień na jego najmniejszą rotację (O(długość)), a potem użyj `set<string>` / `map` / sortowania.\nSłowa równe z dokładnością do obrotu dostaną tę samą postać kanoniczną. Łączny czas O(Σ|s| log) z setem.",
+     "code": "int minRotation(const string& s) {          // indeks początku leksykograficznie najmniejszej rotacji\n    int n = s.size(), i = 0, j = 1, k = 0;\n    while (i < n && j < n && k < n) {\n        char a = s[(i + k) % n], b = s[(j + k) % n];\n        if (a == b) { k++; continue; }\n        if (a > b) i += k + 1;               // rotacje i..i+k nie mogą być minimalne\n        else j += k + 1;                     // rotacje j..j+k nie mogą być minimalne\n        if (i == j) j++;\n        k = 0;\n    }\n    return min(i, j);\n}\n\n           int countClasses(const vector<string>& words) {\n               set<string> canon;\n               for (auto& w : words) {\n                   int k = minRotation(w);\n                   canon.insert(w.substr(k) + w.substr(0, k));\n               }\n               return canon.size();\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "rozkład lyndona",
+      "duval",
+      "lyndon factorization",
+      "algorytm duvala",
+      "slowo lyndona"
+     ],
+     "a": "Słowo Lyndona jest ściśle mniejsze od wszystkich swoich nietrywialnych rotacji. Każde słowo ma jednoznaczny\nrozkład na nierosnący ciąg słów Lyndona (np. `banana = b · an · an · a`). Algorytm Duvala wyznacza go w O(n)\ni O(1) pamięci; pełny program jest w treści."
+    },
+    {
+     "q": [
+      "booth algorithm",
+      "algorytm bootha",
+      "booth minimal rotation"
+     ],
+     "a": "Algorytm Bootha liczy najmniejszą rotację w O(n) w stylu funkcji prefiksowej na słowie `s + s`. W praktyce\nolimpijskiej prościej napisać algorytm dwóch wskaźników (`minRotation` z artykułu) albo Duvala — mają tę samą\nzłożoność i krótszy, mniej podatny na błędy kod."
+    },
+    {
+     "q": [
+      "wszystkie rotacje napisu brute force",
+      "rotacje o(n^2)",
+      "najmniejsza rotacja prosto",
+      "rotate string c++"
+     ],
+     "a": "Dla małych n wystarczy sprawdzić wszystkie rotacje: `s.substr(k) + s.substr(0, k)` albo `std::rotate` na kopii,\ni wziąć minimum — O(n²). Służy też jako brute force do testowania szybkiej wersji.",
+     "code": "string s = \"bca\", best = s;\nfor (int k = 1; k < (int)s.size(); k++) best = min(best, s.substr(k) + s.substr(0, k));\ncout << best << \"\\n\";   // abc"
+    },
+    {
+     "q": [
+      "najmniejsza rotacja tablicy",
+      "minimal rotation vector int",
+      "minimalne przesuniecie cykliczne ciagu liczb"
+     ],
+     "a": "Ten sam algorytm działa dla dowolnego ciągu porównywalnych elementów — zamień `string` na `vector<int>`.\nPrzydaje się np. do kanonicznej postaci wielokąta zapisanego listą kątów/boków albo cyklu w grafie.",
+     "code": "vector<int> a = {3, 1, 2, 1, 1};\nint n = a.size(), i = 0, j = 1, k = 0;\nwhile (i < n && j < n && k < n) {\n    int x = a[(i + k) % n], y = a[(j + k) % n];\n    if (x == y) { k++; continue; }\n    if (x > y) i += k + 1; else j += k + 1;\n    if (i == j) j++;\n    k = 0;\n}\nint st = min(i, j);\nfor (int t = 0; t < n; t++) cout << a[(st + t) % n] << \" \";   // 1 1 3 1 2"
+    }
+   ],
+   "related": [
+    "str-kmp",
+    "str-period",
+    "str-hashing",
+    "str-suffix-array"
+   ]
+  }
+ ]
+}

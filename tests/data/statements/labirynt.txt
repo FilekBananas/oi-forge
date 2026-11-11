@@ -1,0 +1,28 @@
+Labirynt
+Plansza ma n wierszy i m kolumn. Każde pole jest wolne (oznaczone kropką „.”) albo zajęte przez ścianę (znak „#”).
+Robot stoi w lewym górnym rogu planszy i chce dotrzeć do prawego dolnego rogu. W jednym ruchu może przejść na pole
+sąsiadujące bokiem (w górę, w dół, w lewo lub w prawo), o ile jest ono wolne i leży na planszy. Oblicz najmniejszą
+liczbę ruchów potrzebną do dotarcia do celu.
+Wejście
+W pierwszym wierszu wejścia znajdują się dwie liczby całkowite n i m (1 ≤ n, m ≤ 1000). W każdym z kolejnych n wierszy
+znajduje się napis złożony z m znaków „.” lub „#” opisujący kolejny wiersz planszy. Lewy górny i prawy dolny róg są
+zawsze wolne.
+Wyjście
+Wypisz najmniejszą liczbę ruchów albo -1, jeśli dotarcie do celu jest niemożliwe.
+Przykład 1
+Wejście:
+4 5
+..#..
+#...#
+..#..
+#....
+Wyjście:
+7
+
+Przykład 2
+Wejście:
+2 2
+.#
+#.
+Wyjście:
+-1

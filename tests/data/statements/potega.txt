@@ -1,0 +1,17 @@
+Potęgowanie
+Oblicz resztę z dzielenia a^b przez m.
+Wejście
+W jedynym wierszu wejścia znajdują się trzy liczby całkowite a, b, m (1 ≤ a, b ≤ 10^18, 2 ≤ m ≤ 10^9).
+Wyjście
+Wypisz wartość a^b mod m.
+Przykład 1
+Wejście:
+2 10 1000
+Wyjście:
+24
+
+Przykład 2
+Wejście:
+3 200 13
+Wyjście:
+9

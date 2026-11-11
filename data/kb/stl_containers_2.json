@@ -1,0 +1,1816 @@
+{
+ "chunk": "stl-containers-2",
+ "articles": [
+  {
+   "id": "stl-set",
+   "title": "std::set — zbiór uporządkowany",
+   "category": "STL kontenery",
+   "tags": [
+    "set",
+    "zbiór",
+    "drzewo czerwono-czarne",
+    "unikalne",
+    "lower_bound",
+    "uporządkowany",
+    "BST"
+   ],
+   "aliases": [
+    "set",
+    "std::set",
+    "set cpp",
+    "zbiór c++",
+    "zbior c++",
+    "jak używać set",
+    "jak uzywac seta",
+    "sety",
+    "set c++",
+    "zbiór uporządkowany",
+    "set lower_bound"
+   ],
+   "summary": "Zbiór unikalnych elementów trzymanych w kolejności rosnącej (drzewo czerwono-czarne). Wstawianie, usuwanie, wyszukiwanie oraz znajdowanie następnika/poprzednika w O(log n).",
+   "complexity": "insert/erase/find/count/lower_bound/upper_bound: O(log n); begin/rbegin (min/max): O(1); iteracja całości: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`set<T>` przechowuje **każdą wartość co najwyżej raz** i zawsze w porządku rosnącym (wg `operator<`). Pod spodem jest zrównoważone drzewo BST, więc większość operacji kosztuje O(log n). Najważniejsza przewaga nad `unordered_set`: zapytania o porządek — najmniejszy/największy element, pierwszy element ≥ x, przejście po elementach w kolejności."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Podstawowe operacje",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    set<int> s;\n    for (int x : {5, 1, 9, 5, 3}) s.insert(x);   // duplikat 5 zostanie zignorowany\n    cout << s.size() << '\\n';                     // 4\n    for (int x : s) cout << x << ' ';             // 1 3 5 9 — zawsze posortowane\n    cout << '\\n';\n\n    cout << s.count(3) << ' ' << s.count(4) << '\\n';   // 1 0\n    cout << *s.begin() << ' ' << *s.rbegin() << '\\n';  // min = 1, max = 9\n\n    auto it = s.lower_bound(4);                   // pierwszy >= 4\n    if (it != s.end()) cout << *it << '\\n';       // 5\n    auto jt = s.upper_bound(5);                   // pierwszy > 5\n    if (jt != s.end()) cout << *jt << '\\n';       // 9\n\n    s.erase(5);                                   // usuń wartość\n    s.erase(s.begin());                           // usuń minimum\n    for (int x : s) cout << x << ' ';             // 3 9\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Zwraca"
+     ],
+     "rows": [
+      [
+       "`s.insert(x)`",
+       "O(log n)",
+       "`pair<iterator, bool>` — bool = czy wstawiono"
+      ],
+      [
+       "`s.erase(x)`",
+       "O(log n)",
+       "liczba usuniętych (0 lub 1)"
+      ],
+      [
+       "`s.erase(it)`",
+       "O(1) zamortyzowane",
+       "iterator na następny"
+      ],
+      [
+       "`s.find(x)`",
+       "O(log n)",
+       "iterator albo `s.end()`"
+      ],
+      [
+       "`s.count(x)`, `s.contains(x)`",
+       "O(log n)",
+       "0/1, bool (C++20)"
+      ],
+      [
+       "`s.lower_bound(x)`",
+       "O(log n)",
+       "pierwszy element ≥ x"
+      ],
+      [
+       "`s.upper_bound(x)`",
+       "O(log n)",
+       "pierwszy element > x"
+      ],
+      [
+       "`*s.begin()`, `*s.rbegin()`",
+       "O(1)",
+       "minimum, maksimum"
+      ],
+      [
+       "`std::lower_bound(s.begin(), s.end(), x)`",
+       "**O(n)**",
+       "nie używaj na secie!"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`std::lower_bound(s.begin(), s.end(), x)` (wolna funkcja z `<algorithm>`) na secie działa w **O(n)**, bo iteratory seta nie mają skoków o k pozycji. Zawsze pisz metodę `s.lower_bound(x)` — O(log n). To częsta przyczyna TLE."
+    },
+    {
+     "type": "text",
+     "md": "**Własny porządek.** Drugi parametr szablonu to komparator: `set<int, greater<int>>` trzyma elementy malejąco. Dla struktur napisz `operator<` albo strukturę-komparator. Pamiętaj: set uznaje dwa elementy za **równe**, gdy żaden nie jest mniejszy od drugiego — taki „duplikat” nie zostanie wstawiony."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Set struktur i set malejący",
+     "code": "struct Punkt {\n    int x, y;\n    bool operator<(const Punkt& o) const {\n        if (x != o.x) return x < o.x;\n        return y < o.y;          // bez tego punkty o tym samym x byłyby \"równe\"!\n    }\n};\nset<Punkt> punkty;\nset<int, greater<int>> malejaco;",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Gdy zbiór się nie zmienia (najpierw wszystko wstawiasz, potem tylko pytasz), posortowany `vector` + `lower_bound` jest kilka razy szybszy i zużywa mniej pamięci niż `set` (set: ok. 40 B na element)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "set<T> s; / set<T> s = {a, b}; / set<T> s(v.begin(), v.end());",
+     "desc": "pusty / z listy / z zakresu",
+     "complexity": "O(1) / O(n log n)"
+    },
+    {
+     "sig": "set<T, greater<T>> s;",
+     "desc": "zbiór w porządku malejącym",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "s.insert(x)",
+     "desc": "wstawia x, jeśli go nie ma",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, bool>",
+     "example": "auto [it, nowy] = s.insert(5);"
+    },
+    {
+     "sig": "s.emplace(args...)",
+     "desc": "konstruuje i wstawia element",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, bool>"
+    },
+    {
+     "sig": "s.insert(hint, x)",
+     "desc": "wstawienie z podpowiedzią pozycji (O(1) zamortyzowane, gdy trafna)",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "s.erase(x)",
+     "desc": "usuwa wartość x",
+     "complexity": "O(log n)",
+     "returns": "size_t (0 lub 1)"
+    },
+    {
+     "sig": "s.erase(it)",
+     "desc": "usuwa element wskazany iteratorem",
+     "complexity": "O(1) zamortyzowane",
+     "returns": "iterator na następny"
+    },
+    {
+     "sig": "s.erase(first, last)",
+     "desc": "usuwa zakres",
+     "complexity": "O(log n + k)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "s.find(x)",
+     "desc": "szuka x",
+     "complexity": "O(log n)",
+     "returns": "iterator albo s.end()"
+    },
+    {
+     "sig": "s.count(x)",
+     "desc": "czy x jest w zbiorze (0/1)",
+     "complexity": "O(log n)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "s.contains(x)",
+     "desc": "C++20: czy x jest w zbiorze",
+     "complexity": "O(log n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "s.lower_bound(x)",
+     "desc": "pierwszy element ≥ x",
+     "complexity": "O(log n)",
+     "returns": "iterator albo end()"
+    },
+    {
+     "sig": "s.upper_bound(x)",
+     "desc": "pierwszy element > x",
+     "complexity": "O(log n)",
+     "returns": "iterator albo end()"
+    },
+    {
+     "sig": "s.equal_range(x)",
+     "desc": "para {lower_bound, upper_bound}",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, iterator>"
+    },
+    {
+     "sig": "s.size() / s.empty() / s.clear()",
+     "desc": "rozmiar / czy pusty / czyszczenie",
+     "complexity": "O(1) / O(1) / O(n)"
+    },
+    {
+     "sig": "s.begin(), s.end(), s.rbegin(), s.rend()",
+     "desc": "iteratory dwukierunkowe (w kolejności rosnącej)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "s.extract(it) / s.extract(x)",
+     "desc": "C++17: wyjmuje węzeł bez realokacji",
+     "complexity": "O(log n)",
+     "returns": "node_handle"
+    },
+    {
+     "sig": "a.merge(b)",
+     "desc": "C++17: przenosi do a elementy b, których nie ma w a",
+     "complexity": "O(|b| log(|a| + |b|))"
+    },
+    {
+     "sig": "s1 == s2, s1 < s2",
+     "desc": "porównanie zawartości",
+     "complexity": "O(n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "swap(s1, s2)",
+     "desc": "zamiana zbiorów",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`std::lower_bound(s.begin(), s.end(), x)` na secie działa w O(n) — używaj `s.lower_bound(x)`.",
+    "`*s.begin()` / `*s.rbegin()` na pustym secie to UB — sprawdź `!s.empty()`.",
+    "`*s.lower_bound(x)` bez sprawdzenia `!= s.end()` to UB, gdy nie ma elementu ≥ x.",
+    "Set nie ma indeksowania: `s[k]` nie istnieje, a `next(s.begin(), k)` jest O(k). K-ty element w O(log n) daje ordered_set z pb_ds.",
+    "Komparator, który uznaje różne elementy za równe (np. porównuje tylko `x` punktu), powoduje, że set „gubi” elementy przy insert.",
+    "Elementów seta nie można modyfikować przez iterator (są const) — trzeba usunąć i wstawić nową wartość.",
+    "Set zajmuje dużo pamięci (~40 B na element dla int) — 10^7 elementów to MLE przy typowym limicie.",
+    "`s.erase(x)` dla multiset usuwa WSZYSTKIE kopie — patrz `stl-multiset`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "set cpp",
+      "jak używać seta",
+      "jak uzywac set c++",
+      "std::set przykład",
+      "set c++ tutorial",
+      "how to use set c++",
+      "struktura która trzyma posortowane liczby",
+      "posortowany zbiór z szybkim wstawianiem i usuwaniem",
+      "struktura posortowana z usuwaniem w log n",
+      "jak przechowywać pary liczb w secie",
+      "set par c++"
+     ],
+     "a": "`set<int> s;` — zbiór unikalnych wartości w porządku rosnącym. `s.insert(x)` dodaje, `s.erase(x)` usuwa, `s.count(x)` sprawdza obecność — wszystko O(log n). Iteracja `for (int x : s)` przechodzi elementy rosnąco. Używaj, gdy potrzebujesz unikalności i porządku (min/max, następnik).",
+     "code": "set<int> s = {4, 2, 4, 8};     // {2, 4, 8}\ns.insert(6);\ns.erase(2);\nfor (int x : s) cout << x << ' ';    // 4 6 8\ncout << '\\n' << s.size() << '\\n';    // 3"
+    },
+    {
+     "q": [
+      "czy element jest w secie",
+      "set sprawdź czy zawiera",
+      "set contains",
+      "set count czy find",
+      "set czy istnieje element"
+     ],
+     "a": "`s.count(x)` zwraca 1 albo 0, `s.contains(x)` (C++20) zwraca bool, a `s.find(x) != s.end()` daje dodatkowo iterator. Wszystkie trzy działają w O(log n). Jeśli i tak potrzebujesz elementu — użyj `find`, żeby nie szukać dwa razy.",
+     "code": "set<int> s = {1, 5, 7};\nint x = 5;\nif (s.count(x)) cout << \"jest\\n\";\nif (s.contains(x)) cout << \"jest\\n\";            // C++20\nauto it = s.find(x);\nif (it != s.end()) cout << *it << '\\n';"
+    },
+    {
+     "q": [
+      "set usuń element",
+      "jak usunąć element z seta",
+      "set erase",
+      "usuwanie z setu",
+      "set remove element"
+     ],
+     "a": "`s.erase(x)` usuwa wartość x (O(log n)) i zwraca liczbę usuniętych (0 lub 1) — brak elementu nie jest błędem. `s.erase(it)` usuwa element wskazany iteratorem; iterator musi być poprawny (nie `end()`!).",
+     "code": "set<int> s = {3, 6, 9};\ns.erase(6);                       // {3, 9}\ncout << s.erase(100) << '\\n';     // 0 — nic nie usunięto\nauto it = s.find(9);\nif (it != s.end()) s.erase(it);   // {3}"
+    },
+    {
+     "q": [
+      "najmniejszy element w secie",
+      "minimum seta",
+      "max seta",
+      "set min max",
+      "największy element set c++"
+     ],
+     "a": "Set jest posortowany: minimum to `*s.begin()`, maksimum `*s.rbegin()` (albo `*prev(s.end())`) — O(1). Usunięcie minimum: `s.erase(s.begin())`, maksimum: `s.erase(prev(s.end()))`. Na pustym secie to UB.",
+     "code": "set<int> s = {7, 2, 9};\nif (!s.empty()) {\n    cout << *s.begin() << ' ' << *s.rbegin() << '\\n';   // 2 9\n    s.erase(s.begin());\n}\ncout << *s.begin() << '\\n';   // 7"
+    },
+    {
+     "q": [
+      "set lower_bound",
+      "pierwszy element większy lub równy x w secie",
+      "set upper_bound",
+      "następnik w secie",
+      "lower bound set c++"
+     ],
+     "a": "`s.lower_bound(x)` zwraca iterator na pierwszy element **≥ x**, `s.upper_bound(x)` na pierwszy **> x** (O(log n)). Gdy takiego nie ma — `s.end()`, więc sprawdzaj przed dereferencją. Poprzednik (największy < x) to `prev(s.lower_bound(x))`, o ile iterator nie jest `begin()`.",
+     "code": "set<int> s = {10, 20, 30};\nauto a = s.lower_bound(20);    // 20\nauto b = s.upper_bound(20);    // 30\nauto c = s.lower_bound(31);    // end()\ncout << *a << ' ' << *b << ' ' << (c == s.end()) << '\\n';   // 20 30 1"
+    },
+    {
+     "q": [
+      "lower_bound na secie wolny",
+      "std::lower_bound set tle",
+      "dlaczego lower_bound na secie jest wolne",
+      "lower_bound(s.begin(), s.end()) set"
+     ],
+     "a": "Funkcja `std::lower_bound(first, last, x)` robi wyszukiwanie binarne, ale przesuwanie iteratora seta o k pozycji kosztuje O(k), więc całość działa w **O(n)**. Metoda `s.lower_bound(x)` schodzi po drzewie w O(log n). To samo dotyczy `map`, `multiset`, `multimap`.",
+     "code": "set<int> s = {1, 3, 5, 7};\nauto dobrze = s.lower_bound(4);                   // O(log n)\nauto zle = lower_bound(s.begin(), s.end(), 4);    // O(n) — ten sam wynik, ale wolno\ncout << *dobrze << ' ' << *zle << '\\n';           // 5 5"
+    },
+    {
+     "q": [
+      "set malejąco",
+      "set w odwrotnej kolejności",
+      "set greater",
+      "set descending order",
+      "set od największego"
+     ],
+     "a": "Podaj komparator `greater<int>`: `set<int, greater<int>> s;` — wtedy `*s.begin()` to maksimum, a `lower_bound(x)` zwraca pierwszy element **≤ x** (porządek jest odwrócony). Alternatywa: zwykły set i iteracja `rbegin()`…`rend()`.",
+     "code": "set<int, greater<int>> s = {3, 8, 1};\nfor (int x : s) cout << x << ' ';       // 8 3 1\ncout << '\\n' << *s.lower_bound(5) << '\\n';   // 3 — pierwszy <= 5"
+    },
+    {
+     "q": [
+      "set struktur",
+      "set własny komparator",
+      "set z własną strukturą",
+      "set<struct> operator<",
+      "set custom comparator"
+     ],
+     "a": "Set potrzebuje ścisłego porządku: zdefiniuj w strukturze `bool operator<(const T& o) const` albo podaj strukturę-komparator jako drugi parametr szablonu. Uwaga: elementy, dla których `!(a<b) && !(b<a)`, są traktowane jako równe i drugi nie zostanie wstawiony — komparator musi rozróżniać wszystko, co ma być różne.",
+     "code": "struct Zad { int trudnosc; string nazwa; };\nstruct Cmp {\n    bool operator()(const Zad& a, const Zad& b) const {\n        if (a.trudnosc != b.trudnosc) return a.trudnosc < b.trudnosc;\n        return a.nazwa < b.nazwa;\n    }\n};\nset<Zad, Cmp> zadania;\nvoid dodaj() { zadania.insert({3, \"Kolejka\"}); zadania.insert({3, \"Drzewo\"}); }   // oba zostaną",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "set insert zwraca",
+      "czy insert się udał",
+      "set insert pair bool",
+      "jak sprawdzić czy element był nowy"
+     ],
+     "a": "`s.insert(x)` zwraca `pair<iterator, bool>`: `second == true`, gdy element był nowy, `false`, gdy już istniał (wtedy iterator wskazuje istniejący). Pozwala to w jednym kroku (O(log n)) sprawdzić i dodać — np. przy wykrywaniu powtórzeń.",
+     "code": "set<int> widziane;\nvector<int> a = {3, 1, 3, 2, 1};\nfor (int x : a) {\n    auto [it, nowy] = widziane.insert(x);\n    if (!nowy) cout << \"powtorka: \" << x << '\\n';   // 3, potem 1\n}"
+    },
+    {
+     "q": [
+      "k-ty element seta",
+      "set indeks",
+      "set[i]",
+      "jak dostać i-ty element seta",
+      "set access by index"
+     ],
+     "a": "Set nie ma operatora `[]`. `*next(s.begin(), k)` działa, ale w O(k). Jeśli potrzebujesz k-tego elementu lub pozycji elementu w O(log n), użyj `tree` z pb_ds (ordered_set: `find_by_order`, `order_of_key`). Dla zbioru statycznego — posortowany vector.",
+     "code": "set<int> s = {5, 1, 8, 3};\nint k = 2;                                       // 0-indeksowo\nif (k < (int)s.size()) cout << *next(s.begin(), k) << '\\n';   // 5, ale O(k)"
+    },
+    {
+     "q": [
+      "set czy unordered_set",
+      "set vs unordered_set",
+      "który szybszy set czy unordered set",
+      "kiedy unordered_set"
+     ],
+     "a": "`set` — O(log n), elementy posortowane, działa `lower_bound`, min/max, stabilny czas. `unordered_set` — średnio O(1), brak porządku, gorszy pesymistyczny przypadek (O(n) przy kolizjach / testach anty-hash) i większa pamięć. Jeśli potrzebujesz tylko „czy jest?” — `unordered_set` (z `reserve`); jeśli porządku/następnika — `set`.",
+     "code": "set<int> s = {3, 1, 2};\nunordered_set<int> u = {3, 1, 2};\ncout << *s.begin() << '\\n';     // 1 — set zna minimum\ncout << u.count(2) << '\\n';     // 1 — u tylko odpowiada na \"czy jest\""
+    },
+    {
+     "q": [
+      "liczba różnych elementów",
+      "ile różnych liczb",
+      "count distinct c++",
+      "usuń duplikaty set"
+     ],
+     "a": "Wrzuć wszystko do seta i weź `size()` — O(n log n). Szybciej w praktyce: posortuj vector i użyj `unique` (`sort` + `unique` + `erase`), też O(n log n), ale z mniejszą stałą i pamięcią.",
+     "code": "vector<int> a = {4, 1, 4, 2, 1};\nset<int> s(a.begin(), a.end());\ncout << s.size() << '\\n';                         // 3\nsort(a.begin(), a.end());\na.erase(unique(a.begin(), a.end()), a.end());     // {1, 2, 4}\ncout << a.size() << '\\n';                         // 3"
+    },
+    {
+     "q": [
+      "najbliższy element w secie",
+      "najbliższa wartość do x set",
+      "closest element set",
+      "set najbliższy sąsiad"
+     ],
+     "a": "Znajdź `it = s.lower_bound(x)`: kandydatami są `*it` (najmniejszy ≥ x, jeśli `it != end`) i `*prev(it)` (największy < x, jeśli `it != begin`). Porównaj odległości. O(log n).",
+     "code": "set<int> s = {1, 6, 10};\nint x = 8;\nauto it = s.lower_bound(x);\nlong long best = LLONG_MAX;\nif (it != s.end()) best = min(best, (long long)abs(*it - x));\nif (it != s.begin()) best = min(best, (long long)abs(*prev(it) - x));\ncout << best << '\\n';   // 2 (do 10 albo do 6)"
+    },
+    {
+     "q": [
+      "modyfikacja elementu w secie",
+      "zmień wartość w secie",
+      "set iterator const",
+      "assignment of read-only location set"
+     ],
+     "a": "Elementy seta są stałe (od ich wartości zależy położenie w drzewie), więc `*it = 5` się nie skompiluje. Usuń stary element i wstaw nowy: dwie operacje O(log n). Jeśli zmieniasz „dane dodatkowe”, a nie klucz — użyj `map` (klucz → dane).",
+     "code": "set<int> s = {1, 5, 9};\nauto it = s.find(5);\nif (it != s.end()) {\n    s.erase(it);\n    s.insert(6);       // „zmiana” 5 -> 6\n}\nfor (int x : s) cout << x << ' ';   // 1 6 9"
+    },
+    {
+     "q": [
+      "złożoność operacji na secie",
+      "jaka złożoność ma set",
+      "set insert złożoność",
+      "set erase find ile kosztuje",
+      "complexity of set operations"
+     ],
+     "a": "`std::set` to drzewo czerwono-czarne: `insert`, `erase`, `find`, `count`, `lower_bound` — **O(log n)**; `begin()`/`rbegin()` (min/max) — O(1); przejście po całym zbiorze — O(n). Uwaga: `std::lower_bound(s.begin(), s.end(), x)` na secie jest **O(n)** — używaj `s.lower_bound(x)`.",
+     "code": "set<int> s = {5, 1, 9};\ns.insert(7);                      // O(log n)\ns.erase(1);                       // O(log n)\nauto it = s.lower_bound(6);       // O(log n) -> 7\ncout << *it << ' ' << *s.begin() << '\\n';"
+    }
+   ],
+   "related": [
+    "stl-multiset",
+    "stl-map",
+    "stl-unordered-set",
+    "stl-iterators",
+    "stl-binary-search",
+    "cpp-pbds-ordered-set",
+    "cpp-struct",
+    "oi-py-cpp-equivalents",
+    "stl-ref-set-all"
+   ]
+  },
+  {
+   "id": "stl-multiset",
+   "title": "std::multiset — zbiór z powtórzeniami",
+   "category": "STL kontenery",
+   "tags": [
+    "multiset",
+    "multizbiór",
+    "powtórzenia",
+    "mediana",
+    "okno przesuwne",
+    "erase find"
+   ],
+   "aliases": [
+    "multiset",
+    "std::multiset",
+    "multiset cpp",
+    "multizbiór",
+    "multizbior c++",
+    "multiset erase",
+    "set z powtórzeniami",
+    "zbiór z duplikatami"
+   ],
+   "summary": "Uporządkowany zbiór dopuszczający powtórzenia. Przydaje się, gdy trzeba dynamicznie dodawać/usuwać wartości i pytać o minimum, maksimum, medianę czy następnik (np. w oknie przesuwnym).",
+   "complexity": "insert/erase(it)/find/lower_bound: O(log n); count(x): O(log n + liczba kopii); erase(x): O(log n + liczba kopii)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`multiset<T>` działa jak `set`, ale **zachowuje duplikaty** (równe elementy leżą obok siebie). Najważniejsza różnica w użyciu: `ms.erase(x)` usuwa **wszystkie** kopie x, a usunięcie jednej to `ms.erase(ms.find(x))`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "erase(find(x)) vs erase(x)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    multiset<int> ms = {5, 1, 5, 3, 5};\n    cout << ms.size() << ' ' << ms.count(5) << '\\n';   // 5 3\n\n    ms.erase(ms.find(5));        // usuń JEDNĄ piątkę\n    cout << ms.count(5) << '\\n'; // 2\n    ms.erase(5);                 // usuń WSZYSTKIE piątki\n    cout << ms.count(5) << '\\n'; // 0\n\n    ms.insert(7);\n    ms.insert(1);\n    for (int x : ms) cout << x << ' ';     // 1 1 3 7\n    cout << '\\n' << *ms.begin() << ' ' << *ms.rbegin() << '\\n';   // 1 7\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`ms.insert(x)`",
+       "O(log n)",
+       "zawsze wstawia (zwraca iterator)"
+      ],
+      [
+       "`ms.erase(ms.find(x))`",
+       "O(log n)",
+       "usuwa jedną kopię — sprawdź, czy find ≠ end!"
+      ],
+      [
+       "`ms.erase(x)`",
+       "O(log n + k)",
+       "usuwa wszystkie k kopii"
+      ],
+      [
+       "`ms.count(x)`",
+       "O(log n + k)",
+       "liniowe względem liczby kopii!"
+      ],
+      [
+       "`ms.lower_bound(x)` / `upper_bound(x)`",
+       "O(log n)",
+       "jak w secie"
+      ],
+      [
+       "`ms.equal_range(x)`",
+       "O(log n)",
+       "zakres wszystkich kopii x"
+      ],
+      [
+       "`*ms.begin()`, `*ms.rbegin()`",
+       "O(1)",
+       "minimum, maksimum"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Okno przesuwne: min i max w O(log k) na krok",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// maksimum i minimum w każdym oknie długości k\nint main() {\n    vector<int> a = {4, 2, 12, 3, 8, 1};\n    int k = 3;\n    multiset<int> okno;\n    for (int i = 0; i < (int)a.size(); i++) {\n        okno.insert(a[i]);\n        if (i >= k) okno.erase(okno.find(a[i - k]));   // usuń dokładnie jedną kopię\n        if (i >= k - 1)\n            cout << *okno.begin() << '/' << *okno.rbegin() << ' ';\n    }\n    cout << '\\n';   // 2/12 2/12 3/12 1/8\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Dla samego min/max w oknie istnieje szybsze rozwiązanie O(n) — kolejka monotoniczna na `deque`. Multiset jest wygodniejszy, gdy potrzebujesz więcej (np. mediany, k-tego elementu przy małym k, usuwania dowolnych wartości)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "multiset<T> ms;",
+     "desc": "pusty multizbiór (rosnąco); `multiset<T, greater<T>>` — malejąco",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "ms.insert(x)",
+     "desc": "wstawia kopię x (zawsze)",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "ms.emplace(args...)",
+     "desc": "konstruuje i wstawia",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "ms.erase(x)",
+     "desc": "usuwa WSZYSTKIE kopie x",
+     "complexity": "O(log n + k)",
+     "returns": "size_t — liczba usuniętych"
+    },
+    {
+     "sig": "ms.erase(it)",
+     "desc": "usuwa jeden element wskazany iteratorem",
+     "complexity": "O(1) zamortyzowane",
+     "returns": "iterator na następny"
+    },
+    {
+     "sig": "ms.find(x)",
+     "desc": "iterator na którąś kopię x albo end()",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "ms.count(x)",
+     "desc": "liczba kopii x",
+     "complexity": "O(log n + k)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "ms.contains(x)",
+     "desc": "C++20: czy jest choć jedna kopia",
+     "complexity": "O(log n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "ms.lower_bound(x) / ms.upper_bound(x)",
+     "desc": "pierwszy ≥ x / pierwszy > x",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "ms.equal_range(x)",
+     "desc": "zakres [pierwsza kopia, za ostatnią)",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, iterator>"
+    },
+    {
+     "sig": "ms.size() / ms.empty() / ms.clear()",
+     "desc": "rozmiar (liczy kopie) / czy pusty / czyszczenie",
+     "complexity": "O(1) / O(1) / O(n)"
+    },
+    {
+     "sig": "ms.begin(), ms.rbegin()",
+     "desc": "iterator na minimum / maksimum",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`ms.erase(x)` usuwa WSZYSTKIE kopie x. Jedna kopia: `ms.erase(ms.find(x))`.",
+    "`ms.erase(ms.find(x))`, gdy x nie ma w multisecie, to `erase(end())` → UB (często crash). Sprawdź `find(x) != end()`, jeśli nie masz pewności.",
+    "`ms.count(x)` jest liniowe względem liczby kopii — przy wielu duplikatach używaj `find`/`contains`, gdy pytasz tylko o obecność.",
+    "Multiset nie ma indeksowania; k-ty element przez `next` to O(k).",
+    "Multiset jest wolniejszy (stała!) od kopca — jeśli potrzebujesz tylko maksimum i usuwania maksimum, użyj `priority_queue`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "multiset usuń jeden element",
+      "jak usunąć jedną kopię z multiseta",
+      "multiset erase tylko jeden",
+      "multiset erase usuwa wszystkie",
+      "usuwanie jednej kopii z multiseta",
+      "multiset remove one occurrence"
+     ],
+     "a": "`ms.erase(x)` usuwa wszystkie kopie x. Żeby usunąć jedną, podaj iterator: `ms.erase(ms.find(x))` — O(log n). Jeśli x może nie występować, najpierw sprawdź `find(x) != ms.end()`, bo `erase(end())` to UB.",
+     "code": "multiset<int> ms = {1, 2, 2, 3};\nauto it = ms.find(2);\nif (it != ms.end()) ms.erase(it);   // zostaje {1, 2, 3}\nms.erase(2);                        // usuwa wszystkie 2: {1, 3}\ncout << ms.size() << '\\n';          // 2"
+    },
+    {
+     "q": [
+      "multiset cpp",
+      "jak używać multiset",
+      "co to multiset",
+      "multiset c++ przykład",
+      "how to use multiset"
+     ],
+     "a": "`multiset<int> ms;` przechowuje wartości posortowane rosnąco, łącznie z powtórzeniami. `insert` zawsze dodaje kopię, `count(x)` mówi, ile jest kopii, `*ms.begin()` / `*ms.rbegin()` to min/max. Operacje: O(log n).",
+     "code": "multiset<int> ms;\nfor (int x : {3, 1, 3, 2}) ms.insert(x);\nfor (int x : ms) cout << x << ' ';           // 1 2 3 3\ncout << '\\n' << ms.count(3) << '\\n';         // 2"
+    },
+    {
+     "q": [
+      "mediana dynamiczna",
+      "mediana z multiset",
+      "running median c++",
+      "mediana w oknie",
+      "dwa multisety mediana"
+     ],
+     "a": "Trzymaj dwa multisety: `lo` (mniejsza połowa) i `hi` (większa), z `lo.size() == hi.size()` lub o 1 większym. Mediana to `*lo.rbegin()`. Każde wstawienie/usunięcie to O(log n) plus przerzucenie jednego elementu między zbiorami.",
+     "code": "multiset<int> lo, hi;   // lo: mniejsze, hi: większe\nauto balans = [&]() {\n    while (lo.size() > hi.size() + 1) { hi.insert(*lo.rbegin()); lo.erase(prev(lo.end())); }\n    while (hi.size() > lo.size()) { lo.insert(*hi.begin()); hi.erase(hi.begin()); }\n};\nauto dodaj = [&](int x) {\n    if (lo.empty() || x <= *lo.rbegin()) lo.insert(x); else hi.insert(x);\n    balans();\n};\nfor (int x : {5, 2, 8, 1, 9}) {\n    dodaj(x);\n    cout << *lo.rbegin() << ' ';   // 5 2 5 2 5\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "multiset count wolne",
+      "multiset count złożoność",
+      "count w multisecie tle"
+     ],
+     "a": "`ms.count(x)` kosztuje O(log n + k), gdzie k to liczba kopii x — przy milionie identycznych wartości jest liniowe. Do sprawdzenia obecności użyj `ms.find(x) != ms.end()` albo `ms.contains(x)` (O(log n)). Jeśli często potrzebujesz liczności, trzymaj `map<int,int> ile` zamiast multisetu.",
+     "code": "vector<int> v(100000, 7);\nmultiset<int> ms(v.begin(), v.end());\nbool jest = ms.find(7) != ms.end();   // O(log n)\nmap<int, int> ile;                    // alternatywa: wartość -> liczba kopii\nile[7] += 3;\ncout << jest << ' ' << ile[7] << '\\n';"
+    },
+    {
+     "q": [
+      "multiset equal_range",
+      "wszystkie kopie elementu multiset",
+      "zakres równych elementów multiset"
+     ],
+     "a": "`auto [a, b] = ms.equal_range(x);` zwraca zakres [a, b) zawierający wszystkie kopie x (O(log n)). Liczba kopii to `distance(a, b)` — O(k). Usunięcie całego zakresu: `ms.erase(a, b)`.",
+     "code": "multiset<int> ms = {1, 4, 4, 4, 6};\nauto [a, b] = ms.equal_range(4);\ncout << distance(a, b) << '\\n';     // 3\nms.erase(a, b);\ncout << ms.size() << '\\n';          // 2"
+    },
+    {
+     "q": [
+      "multiset czy priority_queue",
+      "kopiec czy multiset",
+      "multiset zamiast priority queue",
+      "priority queue usuwanie dowolnego elementu"
+     ],
+     "a": "`priority_queue` jest szybszy (mała stała, ciągła pamięć), ale daje dostęp tylko do maksimum i nie usuwa dowolnych elementów. `multiset` daje min **i** max, usuwanie dowolnej wartości, `lower_bound` — kosztem ok. 3–5× większej stałej. Wybierz kopiec, jeśli wystarczy top/pop.",
+     "code": "multiset<int> ms = {5, 1, 9};\nms.erase(ms.find(5));                              // usunięcie dowolnego elementu\ncout << *ms.begin() << ' ' << *ms.rbegin() << '\\n';   // 1 9"
+    },
+    {
+     "q": [
+      "multiset usuń największy",
+      "multiset usun maksimum",
+      "multiset pop max",
+      "usuń ostatni element multiset"
+     ],
+     "a": "Największy element wskazuje `prev(ms.end())` — `ms.erase(prev(ms.end()))` usuwa dokładnie jedną kopię maksimum w O(1) zamortyzowanym. **Nie** pisz `ms.erase(*ms.rbegin())` — to usuwa wartość, czyli wszystkie kopie maksimum. Na pustym multisecie to UB.",
+     "code": "multiset<int> ms = {3, 9, 9, 1};\nif (!ms.empty()) ms.erase(prev(ms.end()));   // usuwa jedną 9\ncout << ms.count(9) << ' ' << *ms.rbegin() << '\\n';   // 1 9\nms.erase(ms.begin());                        // usuwa minimum (1)\ncout << *ms.begin() << '\\n';                 // 3"
+    },
+    {
+     "q": [
+      "multiset lower_bound zachłanny",
+      "najmniejszy element większy lub równy x i usuń",
+      "przydział pudełek multiset",
+      "greedy multiset lower_bound erase"
+     ],
+     "a": "Typowy schemat zachłanny: dla każdego przedmiotu weź najmniejszy wolny zasób ≥ potrzeby i go usuń. `auto it = ms.lower_bound(x);` (O(log n)), sprawdź `it != ms.end()`, potem `ms.erase(it)` — usuwa tylko tę jedną kopię.",
+     "code": "multiset<int> pudla = {2, 5, 5, 8};\nvector<int> przedmioty = {4, 5, 9};\nint zmieszczone = 0;\nfor (int x : przedmioty) {\n    auto it = pudla.lower_bound(x);\n    if (it != pudla.end()) { pudla.erase(it); zmieszczone++; }\n}\ncout << zmieszczone << '\\n';   // 2 (4->5, 5->5, 9 się nie mieści)"
+    },
+    {
+     "q": [
+      "multiset malejąco",
+      "multiset greater",
+      "multiset od największego",
+      "multiset descending"
+     ],
+     "a": "`multiset<int, greater<int>> ms;` trzyma elementy malejąco — `*ms.begin()` to maksimum. Pamiętaj, że wtedy `lower_bound(x)` zwraca pierwszy element ≤ x.",
+     "code": "multiset<int, greater<int>> ms = {4, 9, 4, 1};\nfor (int x : ms) cout << x << ' ';      // 9 4 4 1\ncout << '\\n' << *ms.lower_bound(5) << '\\n';   // 4"
+    },
+    {
+     "q": [
+      "set czy multiset",
+      "różnica set multiset",
+      "kiedy multiset zamiast set",
+      "set vs multiset c++"
+     ],
+     "a": "`set` trzyma każdą wartość raz (drugi `insert` tej samej wartości nic nie zmienia), `multiset` przechowuje wszystkie kopie. Wybierz multiset, gdy liczy się liczność (np. zbiór długości odcinków, wartości w oknie przesuwnym). Pamiętaj o różnicy w `erase(x)` — w multisecie usuwa wszystkie kopie.",
+     "code": "set<int> s = {5, 5, 2};\nmultiset<int> ms = {5, 5, 2};\ncout << s.size() << ' ' << ms.size() << ' ' << ms.count(5) << '\\n';   // 2 3 2"
+    }
+   ],
+   "related": [
+    "stl-set",
+    "stl-priority-queue",
+    "stl-map",
+    "tech-sliding-window",
+    "cpp-pbds-ordered-set",
+    "ds-lazy-deletion-heap",
+    "stl-ref-set-all",
+    "tech-median-stream"
+   ]
+  },
+  {
+   "id": "stl-map",
+   "title": "std::map — słownik uporządkowany (klucz → wartość)",
+   "category": "STL kontenery",
+   "tags": [
+    "map",
+    "mapa",
+    "słownik",
+    "klucz",
+    "wartość",
+    "zliczanie",
+    "drzewo czerwono-czarne"
+   ],
+   "aliases": [
+    "map",
+    "std::map",
+    "map cpp",
+    "mapa c++",
+    "mapa",
+    "słownik c++",
+    "slownik c++",
+    "jak używać mapy",
+    "map c++",
+    "mapy",
+    "map klucz wartość"
+   ],
+   "summary": "Słownik przechowujący pary (klucz, wartość) posortowane po kluczu; każdy klucz występuje raz. Wyszukiwanie, wstawianie i usuwanie w O(log n). Typowe użycia: zliczanie wystąpień, mapowanie napisów na numery, kompresja współrzędnych.",
+   "complexity": "m[k], find, count, insert, erase, lower_bound: O(log n) porównań; iteracja: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`map<K, V>` to zrównoważone drzewo BST z parami `pair<const K, V>`. Iteracja przechodzi po kluczach **rosnąco**. Najczęściej używa się `m[k]` — zwraca referencję do wartości, a jeśli klucza nie ma, **tworzy go** z wartością domyślną (0 dla liczb, pusty napis dla string)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Zliczanie słów",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n = 0;\n    cin >> n;\n    map<string, int> ile;\n    for (int i = 0; i < n; i++) {\n        string s;\n        cin >> s;\n        ile[s]++;                       // nowy klucz startuje od 0\n    }\n    for (auto& [slowo, c] : ile)        // posortowane alfabetycznie\n        cout << slowo << ' ' << c << '\\n';\n\n    if (ile.count(\"kot\")) cout << \"kot wystapil \" << ile[\"kot\"] << \" razy\\n\";\n    auto it = ile.find(\"pies\");\n    if (it != ile.end()) cout << \"pies: \" << it->second << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`m[k]`",
+       "O(log n)",
+       "**tworzy** klucz, jeśli go nie ma"
+      ],
+      [
+       "`m.at(k)`",
+       "O(log n)",
+       "wyjątek `out_of_range`, gdy brak klucza"
+      ],
+      [
+       "`m.find(k)`",
+       "O(log n)",
+       "iterator albo `m.end()`; nie tworzy klucza"
+      ],
+      [
+       "`m.count(k)`, `m.contains(k)`",
+       "O(log n)",
+       "0/1, bool (C++20)"
+      ],
+      [
+       "`m.insert({k, v})`",
+       "O(log n)",
+       "NIE nadpisuje istniejącej wartości"
+      ],
+      [
+       "`m.erase(k)`, `m.erase(it)`",
+       "O(log n), O(1) zamort.",
+       ""
+      ],
+      [
+       "`m.lower_bound(k)`",
+       "O(log n)",
+       "pierwszy klucz ≥ k"
+      ],
+      [
+       "iteracja",
+       "O(n)",
+       "rosnąco po kluczu"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Samo **odczytanie** `m[k]` dla nieistniejącego klucza wstawia go do mapy. `if (m[k] == 0)` w pętli może rozdmuchać mapę do milionów elementów (MLE/TLE) i zmienia `m.size()`. Do sprawdzania używaj `count`/`find`/`contains`."
+    },
+    {
+     "type": "text",
+     "md": "**Koszt porównań.** O(log n) dotyczy liczby porównań kluczy. Dla kluczy `string` każde porównanie to O(długość), więc operacja kosztuje O(L · log n). Przy wielu długich kluczach rozważ haszowanie albo przenumerowanie."
+    },
+    {
+     "type": "tip",
+     "md": "Mapa ma ok. 48+ B narzutu na element. Gdy klucze to małe liczby (np. ≤ 10^6), zwykła tablica / vector zliczający jest wielokrotnie szybszy."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "map<K, V> m; / map<K, V> m = {{k1, v1}, {k2, v2}};",
+     "desc": "pusta / z listy par",
+     "complexity": "O(1) / O(n log n)"
+    },
+    {
+     "sig": "map<K, V, greater<K>> m;",
+     "desc": "klucze malejąco",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "m[k]",
+     "desc": "referencja do wartości; brak klucza → wstawia V{}",
+     "complexity": "O(log n)",
+     "returns": "V&"
+    },
+    {
+     "sig": "m.at(k)",
+     "desc": "referencja do wartości; brak klucza → wyjątek out_of_range",
+     "complexity": "O(log n)",
+     "returns": "V&"
+    },
+    {
+     "sig": "m.find(k)",
+     "desc": "iterator na parę albo m.end()",
+     "complexity": "O(log n)",
+     "returns": "iterator (it->first, it->second)"
+    },
+    {
+     "sig": "m.count(k) / m.contains(k)",
+     "desc": "czy klucz istnieje (contains — C++20)",
+     "complexity": "O(log n)",
+     "returns": "size_t / bool"
+    },
+    {
+     "sig": "m.insert({k, v})",
+     "desc": "wstawia, jeśli klucza nie ma (nie nadpisuje)",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, bool>"
+    },
+    {
+     "sig": "m.emplace(k, v)",
+     "desc": "jak insert, konstruuje parę na miejscu",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, bool>"
+    },
+    {
+     "sig": "m.try_emplace(k, args...)",
+     "desc": "C++17: wstawia tylko, gdy klucza nie ma",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, bool>"
+    },
+    {
+     "sig": "m.insert_or_assign(k, v)",
+     "desc": "C++17: wstawia albo nadpisuje",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, bool>"
+    },
+    {
+     "sig": "m.erase(k)",
+     "desc": "usuwa klucz",
+     "complexity": "O(log n)",
+     "returns": "size_t (0/1)"
+    },
+    {
+     "sig": "m.erase(it)",
+     "desc": "usuwa element wskazany iteratorem",
+     "complexity": "O(1) zamortyzowane",
+     "returns": "iterator na następny"
+    },
+    {
+     "sig": "m.lower_bound(k) / m.upper_bound(k)",
+     "desc": "pierwszy klucz ≥ k / > k",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "m.equal_range(k)",
+     "desc": "para lower_bound/upper_bound",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, iterator>"
+    },
+    {
+     "sig": "m.begin()->first / m.rbegin()->first",
+     "desc": "najmniejszy / największy klucz",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "m.size() / m.empty() / m.clear()",
+     "desc": "rozmiar / czy pusta / czyszczenie",
+     "complexity": "O(1) / O(1) / O(n)"
+    },
+    {
+     "sig": "for (auto& [k, v] : m)",
+     "desc": "iteracja po parach rosnąco po kluczu (C++17)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "m.extract(k) / a.merge(b)",
+     "desc": "C++17: wyjęcie węzła / przeniesienie elementów",
+     "complexity": "O(log n) / O(|b| log)"
+    }
+   ],
+   "pitfalls": [
+    "`m[k]` przy odczycie tworzy brakujący klucz — sprawdzaj istnienie przez `count`/`find`/`contains`.",
+    "`m.insert({k, v})` NIE nadpisuje istniejącej wartości — do nadpisania użyj `m[k] = v` albo `insert_or_assign`.",
+    "`m[k]` wymaga, żeby typ wartości miał konstruktor domyślny; `m.at(k)` dla nieistniejącego klucza rzuca wyjątek (RE).",
+    "Klucze w mapie są `const` — `it->first = ...` się nie skompiluje.",
+    "`std::lower_bound(m.begin(), m.end(), ...)` jest O(n) — używaj `m.lower_bound(k)`.",
+    "Dla kluczy string koszt to O(długość · log n) na operację.",
+    "Iterując `for (auto [k, v] : m)` (bez &) kopiujesz pary — zmiana `v` nie wpływa na mapę; użyj `auto&`.",
+    "Usuwanie podczas iteracji: `it = m.erase(it)`, a nie `m.erase(it); ++it;`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "mapa c++ jak sprawdzić czy klucz istnieje",
+      "map czy klucz istnieje",
+      "map contains",
+      "map count czy find",
+      "sprawdzenie klucza w mapie",
+      "check if key exists map c++"
+     ],
+     "a": "Użyj `m.count(k)` (0/1), `m.contains(k)` (C++20) albo `m.find(k) != m.end()` — wszystkie O(log n) i **nie tworzą** klucza. Nie pisz `if (m[k])` — operator `[]` wstawia brakujący klucz z wartością 0, co zmienia rozmiar mapy.",
+     "code": "map<string, int> m = {{\"ala\", 3}};\nif (m.count(\"ala\")) cout << \"jest\\n\";\nif (!m.contains(\"ola\")) cout << \"nie ma\\n\";\nauto it = m.find(\"ala\");\nif (it != m.end()) cout << it->second << '\\n';   // 3\ncout << m.size() << '\\n';                        // 1 — nic nie dodano"
+    },
+    {
+     "q": [
+      "map c++ jak używać",
+      "mapa cpp",
+      "map cpp przykład",
+      "jak działa map",
+      "how to use map c++",
+      "std map tutorial"
+     ],
+     "a": "`map<K, V> m;` przechowuje pary klucz→wartość posortowane po kluczu. `m[k] = v` wstawia lub nadpisuje, `m[k]` odczytuje (tworząc brakujący klucz), `m.erase(k)` usuwa. Operacje O(log n). Iteracja `for (auto& [k, v] : m)` idzie rosnąco po kluczach.",
+     "code": "map<string, int> wiek;\nwiek[\"Ala\"] = 17;\nwiek[\"Bob\"] = 16;\nwiek[\"Ala\"]++;                       // 18\nwiek.erase(\"Bob\");\nfor (auto& [imie, w] : wiek) cout << imie << ' ' << w << '\\n';   // Ala 18"
+    },
+    {
+     "q": [
+      "zliczanie wystąpień map",
+      "ile razy występuje każdy element",
+      "map zliczanie",
+      "count occurrences map c++",
+      "histogram c++",
+      "ile razy wystąpiła każda liczba",
+      "jak policzyć ile razy występuje każda liczba",
+      "zliczanie wystąpień słów w tekście",
+      "ile razy występuje każde słowo",
+      "częstość występowania liczb",
+      "jak zliczyć wystąpienia słów w tekście"
+     ],
+     "a": "`m[x]++` — nowy klucz startuje od 0, więc nie trzeba go inicjalizować. Całość O(n log n). Jeśli wartości są małymi liczbami (np. ≤ 10^6), tablica `cnt[x]++` jest szybsza (O(n)). Bez porządku kluczy — `unordered_map` (średnio O(1)).",
+     "code": "vector<int> a = {3, 1, 3, 3, 2};\nmap<int, int> cnt;\nfor (int x : a) cnt[x]++;\nfor (auto [x, c] : cnt) cout << x << \": \" << c << '\\n';   // 1: 1, 2: 1, 3: 3"
+    },
+    {
+     "q": [
+      "map operator[] tworzy klucz",
+      "map dodaje elementy przy odczycie",
+      "dlaczego mapa rośnie",
+      "m[k] bez wstawiania",
+      "map size zwiększa się sam"
+     ],
+     "a": "`m[k]` zwraca referencję do wartości, więc gdy klucza nie ma, musi go utworzyć (z wartością domyślną). Nawet `cout << m[k]` czy `if (m[k] > 0)` wstawia element. Do samego odczytu użyj `find` (albo `at`, które rzuca wyjątek przy braku).",
+     "code": "map<int, int> m;\nif (m[5] == 0) {}                 // wstawia klucz 5!\ncout << m.size() << '\\n';         // 1\nauto it = m.find(7);              // bez wstawiania\nint v = (it == m.end()) ? -1 : it->second;\ncout << v << ' ' << m.size() << '\\n';   // -1 1"
+    },
+    {
+     "q": [
+      "iteracja po mapie",
+      "jak przejść po mapie",
+      "for po map",
+      "wypisanie mapy",
+      "iterate over map c++",
+      "jak wypisać wszystkie elementy mapy",
+      "przejście po wszystkich parach w mapie"
+     ],
+     "a": "`for (auto& [k, v] : m)` (C++17) albo `for (auto& p : m)` z `p.first`, `p.second`. Kolejność: rosnąco po kluczu. Użyj `auto&` (bez kopiowania) i `const auto&`, gdy tylko czytasz. Od tyłu: `rbegin()`…`rend()`.",
+     "code": "map<int, string> m = {{2, \"b\"}, {1, \"a\"}, {3, \"c\"}};\nfor (const auto& [k, v] : m) cout << k << v << ' ';   // 1a 2b 3c\ncout << '\\n';\nfor (auto it = m.rbegin(); it != m.rend(); ++it) cout << it->first;   // 321\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "map usuń klucz",
+      "map erase",
+      "jak usunąć element z mapy",
+      "usuwanie z mapy w pętli"
+     ],
+     "a": "`m.erase(k)` usuwa klucz (O(log n), zwraca 0/1). `m.erase(it)` usuwa wskazany element i zwraca iterator na następny — w pętli pisz `it = m.erase(it)`. C++20: `erase_if(m, [](auto& p){ ... })` usuwa pary spełniające warunek.",
+     "code": "map<int, int> m = {{1, 0}, {2, 7}, {3, 0}, {4, 1}};\nm.erase(4);\nerase_if(m, [](const auto& p) { return p.second == 0; });   // C++20\ncout << m.size() << ' ' << m.begin()->first << '\\n';        // 1 2"
+    },
+    {
+     "q": [
+      "map insert nie nadpisuje",
+      "insert vs operator[] map",
+      "map insert_or_assign",
+      "dlaczego insert nie zmienia wartości"
+     ],
+     "a": "`m.insert({k, v})` i `m.emplace(k, v)` wstawiają tylko wtedy, gdy klucza nie ma — istniejąca wartość zostaje. Do nadpisania: `m[k] = v` albo `m.insert_or_assign(k, v)` (C++17). Zwracany `bool` mówi, czy wstawiono.",
+     "code": "map<string, int> m;\nm.insert({\"x\", 1});\nm.insert({\"x\", 2});                 // ignorowane — x już jest\ncout << m[\"x\"] << '\\n';             // 1\nm[\"x\"] = 2;\nm.insert_or_assign(\"x\", 3);\ncout << m[\"x\"] << '\\n';             // 3"
+    },
+    {
+     "q": [
+      "map lower_bound",
+      "pierwszy klucz większy od x",
+      "map największy klucz mniejszy od x",
+      "map upper_bound",
+      "lower_bound na mapie",
+      "lower_bound w mapie"
+     ],
+     "a": "`m.lower_bound(k)` — pierwsza para z kluczem ≥ k, `m.upper_bound(k)` — z kluczem > k (O(log n)). Największy klucz ≤ k: `prev(m.upper_bound(k))`, o ile wynik `upper_bound` nie jest `begin()`. Przydatne np. do przedziałów i rozkładów jazdy.",
+     "code": "map<int, string> od = {{0, \"noc\"}, {6, \"rano\"}, {12, \"poludnie\"}, {18, \"wieczor\"}};\nint godz = 14;\nauto it = od.upper_bound(godz);           // pierwszy klucz > 14 -> 18\nif (it != od.begin()) cout << prev(it)->second << '\\n';   // poludnie"
+    },
+    {
+     "q": [
+      "najmniejszy klucz w mapie",
+      "pierwszy element mapy",
+      "ostatni element mapy",
+      "map max key",
+      "map min key"
+     ],
+     "a": "Mapa jest posortowana po kluczu: `m.begin()->first` to najmniejszy klucz, `m.rbegin()->first` największy (O(1)). Usunięcie najmniejszego: `m.erase(m.begin())`. Na pustej mapie to UB — sprawdź `!m.empty()`.",
+     "code": "map<int, int> m = {{5, 50}, {1, 10}, {9, 90}};\nif (!m.empty()) {\n    cout << m.begin()->first << ' ' << m.begin()->second << '\\n';    // 1 10\n    cout << m.rbegin()->first << ' ' << m.rbegin()->second << '\\n';  // 9 90\n}"
+    },
+    {
+     "q": [
+      "map czy unordered_map",
+      "map vs unordered_map",
+      "który szybszy map czy unordered_map",
+      "kiedy unordered_map"
+     ],
+     "a": "`map`: O(log n), klucze posortowane, `lower_bound`, przewidywalny czas, każdy typ z `operator<`. `unordered_map`: średnio O(1), zwykle 2–5× szybsza przy dużej liczbie operacji, ale bez porządku, z ryzykiem O(n) przy złośliwych danych i wymaga hasha (brak dla `pair`). Gdy nie potrzebujesz porządku i operacji jest dużo — `unordered_map` z `reserve`.",
+     "code": "map<int, int> a;\nunordered_map<int, int> b;\nb.reserve(1 << 20);\nfor (int i = 0; i < 1000; i++) { a[i * 7 % 1000]++; b[i * 7 % 1000]++; }\ncout << a.begin()->first << ' ' << b.size() << '\\n';   // 0 1000"
+    },
+    {
+     "q": [
+      "map string na int",
+      "numerowanie napisów",
+      "przypisz numer każdemu słowu",
+      "mapowanie nazw na id",
+      "string to id map"
+     ],
+     "a": "Typowy trik: przy pierwszym wystąpieniu nadaj kolejny numer. `m.emplace(s, m.size())` wstawia tylko nowe klucze; zwrócony iterator wskazuje numer. Potem pracujesz na intach (szybciej niż na stringach), np. w grafie.",
+     "code": "map<string, int> id;\nvector<string> nazwy;\nauto numer = [&](const string& s) {\n    auto [it, nowy] = id.emplace(s, (int)nazwy.size());\n    if (nowy) nazwy.push_back(s);\n    return it->second;\n};\ncout << numer(\"Warszawa\") << numer(\"Kraków\") << numer(\"Warszawa\") << '\\n';   // 010"
+    },
+    {
+     "q": [
+      "map z kluczem pair",
+      "map<pair<int,int>,int>",
+      "mapa par",
+      "map pair key"
+     ],
+     "a": "Działa od razu, bo `pair` ma `operator<`. Klucz podajesz w klamrach: `m[{x, y}]`. O(log n). Dla `unordered_map` z kluczem `pair` trzeba własnego hasha.",
+     "code": "map<pair<int, int>, int> pole;\npole[{2, 3}] = 7;\npole[{0, 1}] += 1;\nfor (auto& [xy, v] : pole) cout << xy.first << ',' << xy.second << '=' << v << ' ';   // 0,1=1 2,3=7\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "map wartość domyślna",
+      "map default value",
+      "map inicjalizacja -1",
+      "jak zrobić mapę z domyślną wartością -1"
+     ],
+     "a": "`m[k]` tworzy wartość domyślną typu (0 dla int). Innej wartości domyślnej nie da się ustawić — sprawdź istnienie przez `find` i użyj własnej wartości, gdy brak. Ewentualnie przechowuj wartość przesuniętą (np. `v + 1`, gdzie 0 oznacza „brak”).",
+     "code": "map<int, int> m = {{1, 5}};\nauto get = [&](int k) {\n    auto it = m.find(k);\n    return it == m.end() ? -1 : it->second;\n};\ncout << get(1) << ' ' << get(2) << '\\n';   // 5 -1"
+    },
+    {
+     "q": [
+      "map at",
+      "map at out_of_range",
+      "terminate called after throwing out_of_range map",
+      "map at vs []"
+     ],
+     "a": "`m.at(k)` zwraca referencję do wartości, ale gdy klucza nie ma — rzuca `std::out_of_range` (program kończy się RE z komunikatem *terminate called after throwing...*). Zaletą jest to, że nie wstawia klucza i działa na `const map`.",
+     "code": "const map<int, int> m = {{1, 10}};\ncout << m.at(1) << '\\n';            // 10\n// m[1] nie skompiluje się na const map\ntry { cout << m.at(2); } catch (const out_of_range&) { cout << \"brak klucza\\n\"; }"
+    }
+   ],
+   "related": [
+    "stl-multimap",
+    "stl-unordered-map",
+    "stl-set",
+    "stl-pair",
+    "tech-coordinate-compression",
+    "cpp-modern-cpp",
+    "pit-map-bracket",
+    "oi-py-collections",
+    "oi-py-cpp-equivalents",
+    "stl-ref-map-all"
+   ]
+  },
+  {
+   "id": "stl-multimap",
+   "title": "std::multimap — słownik z powtarzającymi się kluczami",
+   "category": "STL kontenery",
+   "tags": [
+    "multimap",
+    "mapa z duplikatami",
+    "equal_range",
+    "wiele wartości dla klucza"
+   ],
+   "aliases": [
+    "multimap",
+    "std::multimap",
+    "multimap cpp",
+    "multimapa",
+    "mapa z powtórzeniami",
+    "kilka wartości pod jednym kluczem"
+   ],
+   "summary": "Uporządkowany słownik, w którym jeden klucz może wystąpić wiele razy. Nie ma operatora `[]`; wartości dla klucza pobiera się przez `equal_range`. Często prostsza alternatywa: `map<K, vector<V>>`.",
+   "complexity": "insert/find/lower_bound/equal_range: O(log n); count(k), erase(k): O(log n + liczba par z kluczem)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`multimap<K, V>` trzyma pary posortowane po kluczu, dopuszczając powtórzenia kluczy. Pary o tym samym kluczu zachowują kolejność wstawiania. Brak `operator[]` i `at`, bo nie wiadomo, którą wartość zwrócić."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wstawianie, equal_range, usuwanie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    multimap<string, int> oceny;\n    oceny.insert({\"Ala\", 5});\n    oceny.insert({\"Bob\", 3});\n    oceny.insert({\"Ala\", 4});\n    oceny.emplace(\"Ala\", 6);\n\n    cout << oceny.count(\"Ala\") << '\\n';               // 3\n    auto [od, do_] = oceny.equal_range(\"Ala\");\n    for (auto it = od; it != do_; ++it) cout << it->second << ' ';   // 5 4 6\n    cout << '\\n';\n\n    oceny.erase(oceny.find(\"Ala\"));                   // usuwa jedną parę z kluczem Ala\n    cout << oceny.count(\"Ala\") << '\\n';               // 2\n    oceny.erase(\"Ala\");                               // usuwa wszystkie pary Ala\n    cout << oceny.size() << '\\n';                     // 1\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Potrzeba",
+      "multimap",
+      "map<K, vector<V>>"
+     ],
+     "rows": [
+      [
+       "wszystkie wartości klucza",
+       "`equal_range(k)`",
+       "`m[k]` (vector)"
+      ],
+      [
+       "liczba wartości",
+       "`count(k)` — O(log n + k)",
+       "`m[k].size()` — O(log n)"
+      ],
+      [
+       "indeks w obrębie klucza",
+       "brak",
+       "`m[k][i]`"
+      ],
+      [
+       "usunięcie jednej wartości",
+       "`erase(it)`",
+       "operacje na vectorze"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "W większości zadań `map<K, vector<V>>` jest czytelniejsza i szybsza. `multimap` przydaje się, gdy chcesz jednego posortowanego ciągu par i usuwać pojedyncze pary iteratorem."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "multimap<K, V> mm;",
+     "desc": "pusta multimapa",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "mm.insert({k, v}) / mm.emplace(k, v)",
+     "desc": "wstawia parę (zawsze)",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "mm.find(k)",
+     "desc": "iterator na którąś parę z kluczem k albo end() (pierwszą daje lower_bound)",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "mm.count(k)",
+     "desc": "liczba par z kluczem k",
+     "complexity": "O(log n + k)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "mm.equal_range(k)",
+     "desc": "zakres wszystkich par z kluczem k",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, iterator>"
+    },
+    {
+     "sig": "mm.lower_bound(k) / mm.upper_bound(k)",
+     "desc": "pierwsza para z kluczem ≥ k / > k",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "mm.erase(k)",
+     "desc": "usuwa WSZYSTKIE pary z kluczem k",
+     "complexity": "O(log n + k)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "mm.erase(it)",
+     "desc": "usuwa jedną parę",
+     "complexity": "O(1) zamortyzowane",
+     "returns": "iterator"
+    },
+    {
+     "sig": "mm.contains(k)",
+     "desc": "C++20: czy jest para z kluczem k",
+     "complexity": "O(log n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "mm.size() / mm.empty() / mm.clear()",
+     "desc": "rozmiar / czy pusta / czyszczenie",
+     "complexity": "O(1) / O(1) / O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Multimap nie ma `operator[]` ani `at` — `mm[k]` się nie skompiluje.",
+    "`mm.erase(k)` usuwa wszystkie pary z kluczem k; jedną usuwa `mm.erase(it)`.",
+    "Pierwszą (najwcześniej wstawioną) parę dla klucza daje `lower_bound(k)`, nie gwarantuje tego `find(k)`.",
+    "`count(k)` jest liniowe względem liczby par z danym kluczem."
+   ],
+   "qa": [
+    {
+     "q": [
+      "multimap cpp",
+      "jak używać multimap",
+      "multimap c++ przykład",
+      "co to multimap"
+     ],
+     "a": "`multimap<K, V>` pozwala wstawić wiele par z tym samym kluczem (`insert`/`emplace`, O(log n)). Wszystkie wartości dla klucza odczytasz przez `equal_range(k)`. Nie ma `operator[]`.",
+     "code": "multimap<int, string> mm;\nmm.emplace(2, \"b\");\nmm.emplace(1, \"a\");\nmm.emplace(2, \"c\");\nfor (auto& [k, v] : mm) cout << k << v << ' ';   // 1a 2b 2c\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "multimap wszystkie wartości dla klucza",
+      "multimap equal_range",
+      "jak pobrać wartości z multimap",
+      "multimap get all values"
+     ],
+     "a": "`auto [a, b] = mm.equal_range(k);` — iteruj od `a` do `b` (bez `b`). O(log n + liczba wartości). Pusta para (a == b), gdy klucza nie ma.",
+     "code": "multimap<string, int> mm = {{\"x\", 1}, {\"y\", 2}, {\"x\", 3}};\nauto [a, b] = mm.equal_range(\"x\");\nfor (auto it = a; it != b; ++it) cout << it->second << ' ';   // 1 3\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "multimap operator[]",
+      "multimap [] nie działa",
+      "no match for operator[] multimap"
+     ],
+     "a": "Multimap celowo nie ma `operator[]`, bo jeden klucz może mieć wiele wartości. Wstawiaj przez `insert`/`emplace`, odczytuj przez `find`/`equal_range`. Jeśli chcesz pisać `m[k].push_back(v)`, użyj `map<K, vector<V>>`.",
+     "code": "map<string, vector<int>> m;\nm[\"ala\"].push_back(5);\nm[\"ala\"].push_back(4);\ncout << m[\"ala\"].size() << ' ' << m[\"ala\"][1] << '\\n';   // 2 4"
+    },
+    {
+     "q": [
+      "multimap usuń jeden element",
+      "multimap erase jedna para",
+      "multimap erase usuwa wszystkie"
+     ],
+     "a": "`mm.erase(k)` usuwa wszystkie pary z kluczem k. Jedną parę usuniesz iteratorem: `mm.erase(mm.find(k))` (sprawdź, czy `find` nie zwrócił `end()`), albo konkretną parę znalezioną w `equal_range`.",
+     "code": "multimap<int, int> mm = {{1, 10}, {1, 20}, {2, 30}};\nauto [a, b] = mm.equal_range(1);\nfor (auto it = a; it != b; ++it)\n    if (it->second == 20) { mm.erase(it); break; }\ncout << mm.size() << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "multimap czy map vector",
+      "map<int, vector<int>> czy multimap",
+      "co lepsze multimap czy mapa wektorów"
+     ],
+     "a": "`map<K, vector<V>>` zwykle wygrywa: szybszy dostęp do liczby wartości (`size()`), indeksowanie, mniej alokacji węzłów. `multimap` jest lepsza, gdy potrzebujesz jednego ciągu par posortowanych po kluczu lub usuwania dowolnej pary w O(log n).",
+     "code": "map<int, vector<int>> g;\ng[1].push_back(2);\ng[1].push_back(3);\nfor (int u : g[1]) cout << u << ' ';   // 2 3\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "multimap sortowanie po kluczu",
+      "pary posortowane po kluczu z powtórzeniami",
+      "multimap kolejność wartości"
+     ],
+     "a": "Multimap utrzymuje pary posortowane po kluczu; pary z równym kluczem pozostają w kolejności wstawiania (od C++11). Jeśli potrzebujesz sortowania także po wartości, użyj `multiset<pair<K, V>>` albo `set<pair<K, V>>`.",
+     "code": "multiset<pair<int, int>> s = {{2, 9}, {1, 5}, {2, 3}};\nfor (auto [k, v] : s) cout << k << ':' << v << ' ';   // 1:5 2:3 2:9\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "stl-map",
+    "stl-multiset",
+    "stl-pair",
+    "stl-ref-map-all"
+   ]
+  },
+  {
+   "id": "stl-unordered-map",
+   "title": "std::unordered_map — tablica haszująca, własny hash i anty-hash",
+   "category": "STL kontenery",
+   "tags": [
+    "unordered_map",
+    "hash",
+    "haszowanie",
+    "tablica haszująca",
+    "anty-hash",
+    "splitmix64",
+    "reserve",
+    "custom hash"
+   ],
+   "aliases": [
+    "unordered_map",
+    "std::unordered_map",
+    "unordered map",
+    "unordered_map cpp",
+    "hashmapa",
+    "hash map c++",
+    "hashmap",
+    "tablica haszujaca",
+    "custom hash",
+    "anty hash",
+    "unordered_map pair"
+   ],
+   "summary": "Słownik oparty na haszowaniu: średnio O(1) na operację, ale bez porządku kluczy i z pesymistycznym O(n). Opis użycia, `reserve`, haszowania par oraz ochrony przed testami anty-hash (splitmix64).",
+   "complexity": "operator[], find, count, insert, erase: średnio O(1), pesymistycznie O(n); iteracja: O(n + liczba kubełków)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`unordered_map<K, V>` rozkłada klucze do „kubełków” według `hash(k) % liczba_kubełków`. Gdy klucze rozkładają się równomiernie, operacje są średnio O(1) — zwykle kilka razy szybciej niż `map`. Interfejs jest prawie taki sam jak w `map` (`[]`, `find`, `count`, `erase`), ale **nie ma porządku** — nie ma `lower_bound`, a kolejność iteracji jest przypadkowa."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Najczęstsza wartość — średnio O(n)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n = 0;\n    cin >> n;\n    unordered_map<long long, int> ile;\n    ile.reserve(2 * n);                    // mniej rehashowania\n    long long najczestszy = 0;\n    int best = 0;\n    for (int i = 0; i < n; i++) {\n        long long x;\n        cin >> x;\n        int c = ++ile[x];\n        if (c > best) { best = c; najczestszy = x; }\n    }\n    cout << najczestszy << ' ' << best << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "",
+      "map",
+      "unordered_map"
+     ],
+     "rows": [
+      [
+       "złożoność",
+       "O(log n) zawsze",
+       "średnio O(1), pesymistycznie O(n)"
+      ],
+      [
+       "porządek kluczy",
+       "rosnąco",
+       "brak (losowy)"
+      ],
+      [
+       "`lower_bound`",
+       "tak",
+       "nie"
+      ],
+      [
+       "wymagania klucza",
+       "`operator<`",
+       "`hash` + `operator==`"
+      ],
+      [
+       "klucz `pair`/`array`",
+       "działa od razu",
+       "wymaga własnego hasha"
+      ],
+      [
+       "pamięć",
+       "~48 B/element",
+       "więcej (kubełki + węzły)"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Testy anty-hash.** W libstdc++ `hash<int>` / `hash<long long>` to po prostu identyczność, a liczba kubełków to liczba pierwsza z ustalonej listy. Jeśli dane zawierają wiele wielokrotności takiej liczby, wszystkie trafiają do jednego kubełka i każda operacja staje się O(n) → O(n²) łącznie. Na zawodach z gotowymi testami zdarza się to rzadko, ale na platformach z hackami (Codeforces) to standardowy atak. Obrona: własny hash z losowym ziarnem."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Hash odporny na anty-hash (splitmix64 + losowe ziarno)",
+     "code": "struct SplitMix {\n    static uint64_t splitmix64(uint64_t x) {\n        x += 0x9e3779b97f4a7c15ULL;\n        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;\n        x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;\n        return x ^ (x >> 31);\n    }\n    size_t operator()(uint64_t x) const {\n        static const uint64_t SEED = chrono::steady_clock::now().time_since_epoch().count();\n        return splitmix64(x + SEED);\n    }\n};\nunordered_map<long long, int, SplitMix> bezpieczna;",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Hash dla pary (klucz pair<int,int>)",
+     "code": "struct HashPara {\n    size_t operator()(const pair<int, int>& p) const {\n        uint64_t k = (uint64_t)(uint32_t)p.first << 32 | (uint32_t)p.second;\n        k += 0x9e3779b97f4a7c15ULL;\n        k = (k ^ (k >> 30)) * 0xbf58476d1ce4e5b9ULL;\n        k = (k ^ (k >> 27)) * 0x94d049bb133111ebULL;\n        return k ^ (k >> 31);\n    }\n};\nunordered_map<pair<int, int>, int, HashPara> siatka;",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "`m.reserve(n)` z góry przydziela kubełki na n elementów — usuwa koszt rehashowania (kopiowania wszystkiego przy wzroście) i potrafi przyspieszyć wstawianie 2×. Dodatkowo `m.max_load_factor(0.25)` zmniejsza kolizje kosztem pamięci."
+    },
+    {
+     "type": "warn",
+     "md": "Iteracja po `unordered_map` ma kolejność zależną od implementacji i historii wstawień — nie polegaj na niej przy wypisywaniu wyniku (posortuj klucze albo użyj `map`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "unordered_map<K, V> m; / unordered_map<K, V, Hash> m;",
+     "desc": "pusta mapa (opcjonalnie z własnym hashem)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "m[k]",
+     "desc": "referencja do wartości; brak klucza → wstawia V{}",
+     "complexity": "średnio O(1)",
+     "returns": "V&"
+    },
+    {
+     "sig": "m.at(k)",
+     "desc": "wartość albo wyjątek out_of_range",
+     "complexity": "średnio O(1)",
+     "returns": "V&"
+    },
+    {
+     "sig": "m.find(k)",
+     "desc": "iterator na parę albo end()",
+     "complexity": "średnio O(1)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "m.count(k) / m.contains(k)",
+     "desc": "czy klucz istnieje (contains — C++20)",
+     "complexity": "średnio O(1)",
+     "returns": "size_t / bool"
+    },
+    {
+     "sig": "m.insert({k, v}) / m.emplace(k, v) / m.try_emplace(k, v)",
+     "desc": "wstawia, jeśli brak klucza",
+     "complexity": "średnio O(1)",
+     "returns": "pair<iterator, bool>"
+    },
+    {
+     "sig": "m.insert_or_assign(k, v)",
+     "desc": "wstawia albo nadpisuje",
+     "complexity": "średnio O(1)",
+     "returns": "pair<iterator, bool>"
+    },
+    {
+     "sig": "m.erase(k) / m.erase(it)",
+     "desc": "usuwa klucz / element",
+     "complexity": "średnio O(1)",
+     "returns": "size_t / iterator"
+    },
+    {
+     "sig": "m.reserve(n)",
+     "desc": "przygotowuje kubełki na n elementów (bez rehashu do n)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "m.max_load_factor(f)",
+     "desc": "ustawia maks. średnią liczbę elementów na kubełek (domyślnie 1.0)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "m.rehash(b)",
+     "desc": "ustawia liczbę kubełków na ≥ b",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "m.bucket_count() / m.load_factor()",
+     "desc": "liczba kubełków / bieżące obciążenie",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "m.size() / m.empty() / m.clear()",
+     "desc": "rozmiar / czy pusta / czyszczenie",
+     "complexity": "O(1) / O(1) / O(n + kubełki)"
+    },
+    {
+     "sig": "for (auto& [k, v] : m)",
+     "desc": "iteracja w nieokreślonej kolejności",
+     "complexity": "O(n + kubełki)"
+    }
+   ],
+   "pitfalls": [
+    "Brak porządku: nie ma `lower_bound`, `begin()` nie jest minimum, a kolejność iteracji jest przypadkowa.",
+    "`unordered_map<pair<int,int>, V>` się nie skompiluje bez własnego hasha (`std::hash<pair>` nie istnieje).",
+    "Złośliwe dane (testy anty-hash) mogą zrobić z każdej operacji O(n) — używaj własnego hasha z losowym ziarnem.",
+    "`m[k]` przy odczycie wstawia klucz (jak w `map`) — do sprawdzania używaj `count`/`find`.",
+    "`m.clear()` kosztuje O(liczba kubełków) — wielokrotne czyszczenie dużej mapy w pętli po testach bywa wolne; czasem lepiej utworzyć nową.",
+    "Rehash (przy wzroście) unieważnia wszystkie iteratory (referencje do wartości pozostają ważne).",
+    "Stała jest spora (alokacja węzła na element) — dla kluczy z małego zakresu tablica jest dużo szybsza."
+   ],
+   "qa": [
+    {
+     "q": [
+      "unordered_map c++",
+      "jak używać unordered_map",
+      "unordered map cpp",
+      "hashmapa c++",
+      "how to use unordered_map"
+     ],
+     "a": "Interfejs jak w `map`: `m[k]++`, `m.count(k)`, `m.find(k)`, `m.erase(k)` — ale średnio O(1) zamiast O(log n) i bez porządku kluczy. Dodaj `m.reserve(n)`, jeśli znasz przybliżoną liczbę kluczy.",
+     "code": "unordered_map<string, int> m;\nm.reserve(100);\nm[\"ala\"] = 1;\nm[\"ola\"]++;\nif (m.count(\"ala\")) cout << m[\"ala\"] << '\\n';   // 1\ncout << m.size() << '\\n';                       // 2"
+    },
+    {
+     "q": [
+      "unordered_map pair",
+      "unordered_map z kluczem pair",
+      "hash dla pair",
+      "error: use of deleted function hash pair",
+      "unordered_map<pair<int,int>,int> nie kompiluje"
+     ],
+     "a": "Standard nie definiuje `std::hash<pair<A,B>>`, więc trzeba podać własny hash jako trzeci parametr szablonu. Najprościej (i szybko) zakodować parę intów w jednej liczbie 64-bitowej i ją wymieszać. Alternatywa: kluczem `long long` równe `1LL * x * M + y`.",
+     "code": "struct HashPara {\n    size_t operator()(const pair<int, int>& p) const {\n        uint64_t k = (uint64_t)(uint32_t)p.first << 32 | (uint32_t)p.second;\n        k ^= k >> 33; k *= 0xff51afd7ed558ccdULL; k ^= k >> 33;\n        return k;\n    }\n};\nunordered_map<pair<int, int>, int, HashPara> m;\nvoid test() { m[{1, 2}] = 5; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "anty hash",
+      "anti-hash test",
+      "unordered_map tle",
+      "unordered_map wolne",
+      "dlaczego unordered_map dostaje TLE",
+      "unordered_map hacked"
+     ],
+     "a": "W GCC `hash<long long>` to identyczność, a liczba kubełków to ustalona liczba pierwsza. Dane z wieloma wielokrotnościami tej liczby lądują w jednym kubełku → każda operacja O(n), razem O(n²). Obrona: własny hash (np. splitmix64) z ziarnem z zegara — atakujący nie zna funkcji. Dodatkowo `reserve` ogranicza koszt rehashowania.",
+     "code": "struct Hash {\n    size_t operator()(uint64_t x) const {\n        static const uint64_t S = chrono::steady_clock::now().time_since_epoch().count();\n        x += S + 0x9e3779b97f4a7c15ULL;\n        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;\n        x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;\n        return x ^ (x >> 31);\n    }\n};\nunordered_map<long long, int, Hash> m;",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "unordered_map reserve",
+      "co daje reserve w unordered_map",
+      "przyspieszenie unordered_map",
+      "max_load_factor"
+     ],
+     "a": "Gdy liczba elementów przekracza `bucket_count * max_load_factor`, mapa robi rehash — tworzy więcej kubełków i przenosi wszystkie elementy (O(n)). `m.reserve(n)` przydziela kubełki od razu, więc rehashy nie ma. `max_load_factor(0.25)` zmniejsza liczbę kolizji kosztem pamięci. Obie sztuczki wywołuj przed wstawianiem.",
+     "code": "int n = 200000;\nunordered_map<int, int> m;\nm.reserve(n);\nm.max_load_factor(0.25);\nfor (int i = 0; i < n; i++) m[i] = i;\ncout << m.size() << ' ' << (m.bucket_count() >= (size_t)n) << '\\n';   // 200000 1"
+    },
+    {
+     "q": [
+      "unordered_map kolejność",
+      "unordered_map nie jest posortowana",
+      "iteracja po unordered_map kolejność",
+      "dlaczego unordered_map wypisuje w dziwnej kolejności"
+     ],
+     "a": "Elementy są ułożone według kubełków, a nie wartości kluczy, więc kolejność iteracji jest przypadkowa i może się zmieniać po wstawieniu kolejnych elementów. Jeśli wynik ma być posortowany — skopiuj klucze do vectora i posortuj (O(n log n)) albo od początku użyj `map`.",
+     "code": "unordered_map<int, int> m = {{5, 1}, {1, 2}, {3, 3}};\nvector<pair<int, int>> v(m.begin(), m.end());\nsort(v.begin(), v.end());\nfor (auto [k, x] : v) cout << k << ' ';   // 1 3 5\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "unordered_map czy map",
+      "kiedy używać unordered_map",
+      "unordered_map vs map szybkość"
+     ],
+     "a": "`unordered_map`, gdy potrzebujesz tylko „klucz → wartość” bez porządku i masz dużo operacji (np. 10^6): średnio O(1). `map`, gdy potrzebujesz porządku (`lower_bound`, min/max, wypisywanie posortowane), kluczy złożonych bez hasha albo gwarantowanego czasu. Przy małych danych różnica jest pomijalna.",
+     "code": "unordered_map<int, int> u;   // tylko zliczanie\nmap<int, int> o;             // potrzebny porządek\nfor (int x : {5, 3, 5}) { u[x]++; o[x]++; }\ncout << u[5] << ' ' << o.begin()->first << '\\n';   // 2 3"
+    },
+    {
+     "q": [
+      "gp_hash_table",
+      "szybsza hashmapa c++",
+      "pb_ds hash table",
+      "cc_hash_table"
+     ],
+     "a": "W GCC jest `__gnu_pbds::gp_hash_table<K, V>` (nagłówek `<ext/pb_ds/assoc_container.hpp>`) — tablica z adresowaniem otwartym, zwykle szybsza od `unordered_map`. Interfejs podobny (`[]`, `find`, `erase`), ale też warto dać własny hash. To rozszerzenie GCC — nie zadziała w kompilatorze MSVC.",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\nint main() {\n    gp_hash_table<int, int> h;\n    h[5] = 7;\n    h[3]++;\n    cout << h[5] << ' ' << (h.find(4) == h.end()) << '\\n';   // 7 1\n}"
+    },
+    {
+     "q": [
+      "unordered_map clear wolne",
+      "czyszczenie unordered_map w pętli",
+      "unordered_map wiele testów tle"
+     ],
+     "a": "`clear()` przechodzi po wszystkich kubełkach — O(liczba kubełków), nawet jeśli mapa ma mało elementów (np. po `reserve(10^6)`). Przy tysiącach małych testów czyść tylko tyle, ile trzeba, albo twórz mapę lokalnie w funkcji testu z małym `reserve`.",
+     "code": "int t = 3;\nwhile (t--) {\n    unordered_map<int, int> m;   // nowa, mała mapa w każdym teście\n    m.reserve(16);\n    m[t] = 1;\n    cout << m.size() << ' ';\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "unordered_map string klucz",
+      "hash stringa unordered_map",
+      "unordered_map<string,int> szybkość"
+     ],
+     "a": "`std::hash<string>` istnieje, więc `unordered_map<string, int>` działa od razu. Haszowanie kosztuje O(długość), więc każda operacja to średnio O(L). Przy bardzo wielu długich napisach rozważ haszowanie wielomianowe i trzymanie samych hashy.",
+     "code": "unordered_map<string, int> slownik;\nslownik[\"informatyka\"] = 1;\ncout << slownik.count(\"informatyka\") << slownik.count(\"matematyka\") << '\\n';   // 10"
+    },
+    {
+     "q": [
+      "unordered_map zliczanie",
+      "zliczanie wystąpień unordered_map",
+      "unordered_map m[x]++",
+      "count frequency hashmap c++"
+     ],
+     "a": "`m[x]++` działa tak samo jak w `map` — brakujący klucz startuje od 0. Średnio O(1) na operację, więc zliczenie n elementów to średnio O(n). Jeśli wynik ma być wypisany w kolejności kluczy, posortuj pary albo użyj `map`.",
+     "code": "vector<int> a = {7, 3, 7, 7, 3, 1};\nunordered_map<int, int> cnt;\ncnt.reserve(a.size());\nfor (int x : a) cnt[x]++;\ncout << cnt[7] << ' ' << cnt[3] << ' ' << cnt.count(5) << '\\n';   // 3 2 0"
+    },
+    {
+     "q": [
+      "para jako long long klucz",
+      "zakoduj parę w jednej liczbie",
+      "unordered_map klucz x*m+y",
+      "encode pair as long long"
+     ],
+     "a": "Zamiast pisać hash dla `pair<int,int>`, zakoduj parę w jednej liczbie: `1LL * x * M + y`, gdzie M jest większe od maksymalnego y (dla nieujemnych y). Klucz `long long` ma wbudowany hash. Dekodowanie: `x = k / M`, `y = k % M`.",
+     "code": "const long long M = 1000000001;              // > max y\nunordered_map<long long, int> pole;\nauto klucz = [&](int x, int y) { return 1LL * x * M + y; };\npole[klucz(3, 7)] = 5;\nlong long k = klucz(3, 7);\ncout << pole[k] << ' ' << k / M << ' ' << k % M << '\\n';   // 5 3 7"
+    }
+   ],
+   "related": [
+    "stl-unordered-set",
+    "stl-map",
+    "stl-set",
+    "str-hashing",
+    "cpp-pbds-ordered-set",
+    "ds-custom-hash",
+    "oi-py-collections",
+    "oi-py-cpp-equivalents",
+    "stl-ref-unordered-all"
+   ]
+  },
+  {
+   "id": "stl-unordered-set",
+   "title": "std::unordered_set — zbiór haszujący",
+   "category": "STL kontenery",
+   "tags": [
+    "unordered_set",
+    "hash",
+    "zbiór",
+    "haszowanie",
+    "duplikaty"
+   ],
+   "aliases": [
+    "unordered_set",
+    "std::unordered_set",
+    "unordered set",
+    "unordered_set cpp",
+    "hashset",
+    "hash set c++",
+    "zbiór haszujący"
+   ],
+   "summary": "Zbiór unikalnych elementów oparty na haszowaniu: średnio O(1) na wstawienie, usunięcie i sprawdzenie obecności, bez porządku elementów.",
+   "complexity": "insert, erase, count, find: średnio O(1), pesymistycznie O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`unordered_set<T>` odpowiada na pytanie „czy x jest w zbiorze?” średnio w O(1). Nie przechowuje porządku, więc nie ma `lower_bound`, a `begin()` nie jest minimum. Uwagi o hashowaniu, `reserve` i testach anty-hash są takie same jak dla `unordered_map`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wykrywanie powtórzeń i 2-SUM",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> a = {3, 8, 1, 8, 3, 9};\n    unordered_set<int> widziane;\n    widziane.reserve(a.size());\n    for (int x : a) {\n        if (widziane.count(x)) cout << \"powtorka \" << x << '\\n';   // 8, potem 3\n        widziane.insert(x);\n    }\n    cout << \"roznych: \" << widziane.size() << '\\n';                // 4\n\n    // para o sumie s w O(n)\n    int s = 11;\n    unordered_set<int> byly;\n    for (int x : a) {\n        if (byly.count(s - x)) { cout << s - x << \" + \" << x << '\\n'; break; }   // 3 + 8\n        byly.insert(x);\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność średnia",
+      "Pesymistyczna"
+     ],
+     "rows": [
+      [
+       "`us.insert(x)`",
+       "O(1)",
+       "O(n)"
+      ],
+      [
+       "`us.count(x)` / `us.contains(x)` / `us.find(x)`",
+       "O(1)",
+       "O(n)"
+      ],
+      [
+       "`us.erase(x)`",
+       "O(1)",
+       "O(n)"
+      ],
+      [
+       "iteracja",
+       "O(n + kubełki)",
+       ""
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Jeśli wartości są z małego zakresu (np. 0..10^6), zamiast `unordered_set` użyj `vector<char> jest(MAX)` albo `bitset` — to prawdziwe O(1) bez haszowania, kilkadziesiąt razy szybciej."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "unordered_set<T> us; / unordered_set<T, Hash> us;",
+     "desc": "pusty zbiór (opcjonalnie własny hash)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "us.insert(x)",
+     "desc": "wstawia, jeśli nie ma",
+     "complexity": "średnio O(1)",
+     "returns": "pair<iterator, bool>"
+    },
+    {
+     "sig": "us.emplace(args...)",
+     "desc": "konstruuje i wstawia",
+     "complexity": "średnio O(1)",
+     "returns": "pair<iterator, bool>"
+    },
+    {
+     "sig": "us.count(x) / us.contains(x)",
+     "desc": "czy x jest w zbiorze (contains — C++20)",
+     "complexity": "średnio O(1)",
+     "returns": "size_t / bool"
+    },
+    {
+     "sig": "us.find(x)",
+     "desc": "iterator albo end()",
+     "complexity": "średnio O(1)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "us.erase(x) / us.erase(it)",
+     "desc": "usuwa wartość / element",
+     "complexity": "średnio O(1)",
+     "returns": "size_t / iterator"
+    },
+    {
+     "sig": "us.reserve(n) / us.max_load_factor(f)",
+     "desc": "rezerwacja kubełków / próg obciążenia",
+     "complexity": "O(n) / O(1)"
+    },
+    {
+     "sig": "us.size() / us.empty() / us.clear()",
+     "desc": "rozmiar / czy pusty / czyszczenie",
+     "complexity": "O(1) / O(1) / O(n + kubełki)"
+    }
+   ],
+   "pitfalls": [
+    "Brak porządku: nie ma `lower_bound`, a `*us.begin()` to dowolny element, nie minimum.",
+    "Brak hasha dla `pair`/`array`/`vector` — trzeba napisać własny.",
+    "Złośliwe dane mogą zdegradować operacje do O(n) — przy ryzyku użyj własnego hasha z losowym ziarnem.",
+    "Dla małego zakresu wartości tablica/bitset jest znacznie szybsza."
+   ],
+   "qa": [
+    {
+     "q": [
+      "unordered_set c++",
+      "jak używać unordered_set",
+      "unordered set cpp",
+      "hash set c++",
+      "how to use unordered_set"
+     ],
+     "a": "`unordered_set<int> us;` — `insert`, `count`/`contains`, `erase` średnio w O(1). Używaj, gdy pytasz tylko o obecność elementów i nie potrzebujesz porządku. Dodaj `reserve(n)` przy dużej liczbie elementów.",
+     "code": "unordered_set<int> us = {4, 2};\nus.insert(7);\nus.erase(2);\ncout << us.count(7) << us.count(2) << ' ' << us.size() << '\\n';   // 10 2"
+    },
+    {
+     "q": [
+      "unordered_set vs set",
+      "set czy unordered_set szybszy",
+      "kiedy unordered_set a kiedy set"
+     ],
+     "a": "`unordered_set` jest średnio O(1) i zwykle szybszy przy samym sprawdzaniu obecności. `set` (O(log n)) jest potrzebny, gdy chcesz porządku: min/max, `lower_bound`, iteracji rosnąco. Przy złośliwych danych `unordered_set` może zwolnić do O(n).",
+     "code": "set<int> s = {5, 1, 3};\nunordered_set<int> u = {5, 1, 3};\ncout << *s.begin() << ' ' << u.count(3) << '\\n';   // 1 1"
+    },
+    {
+     "q": [
+      "unordered_set pair",
+      "unordered_set z parą",
+      "zbiór par hash",
+      "unordered_set<pair<int,int>>"
+     ],
+     "a": "Podaj własny hash jako drugi parametr szablonu. Para dwóch intów mieści się w 64 bitach — zakoduj ją i wymieszaj bity. Alternatywa bez hasha: `set<pair<int,int>>` (O(log n)).",
+     "code": "struct H {\n    size_t operator()(const pair<int, int>& p) const {\n        uint64_t k = (uint64_t)(uint32_t)p.first << 32 | (uint32_t)p.second;\n        k ^= k >> 33; k *= 0xff51afd7ed558ccdULL; k ^= k >> 33;\n        return k;\n    }\n};\nunordered_set<pair<int, int>, H> odwiedzone;\nvoid dodaj(int x, int y) { odwiedzone.insert({x, y}); }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sprawdź duplikaty w tablicy",
+      "czy w tablicy są powtórzenia",
+      "detect duplicates c++",
+      "czy wszystkie elementy różne"
+     ],
+     "a": "Wstawiaj elementy do `unordered_set`; jeśli `insert` zwróci `second == false`, element się powtórzył — średnio O(n). Alternatywa O(n log n) bez haszowania: posortuj i sprawdź sąsiadów (`adjacent_find`).",
+     "code": "vector<int> a = {4, 7, 1, 7};\nunordered_set<int> us;\nbool dup = false;\nfor (int x : a) if (!us.insert(x).second) dup = true;\nsort(a.begin(), a.end());\nbool dup2 = adjacent_find(a.begin(), a.end()) != a.end();\ncout << dup << dup2 << '\\n';   // 11"
+    },
+    {
+     "q": [
+      "unordered_set min",
+      "najmniejszy element unordered_set",
+      "unordered_set begin nie jest najmniejszy"
+     ],
+     "a": "`unordered_set` nie przechowuje porządku — `*us.begin()` to dowolny element. Minimum znajdziesz tylko przeglądając wszystko (`min_element`, O(n)). Jeśli potrzebujesz minimum często, użyj `set` (O(1) przez `begin()`) albo kopca.",
+     "code": "unordered_set<int> us = {9, 4, 6};\nint mn = *min_element(us.begin(), us.end());   // O(n)\ncout << mn << '\\n';                            // 4"
+    },
+    {
+     "q": [
+      "unordered_set wolny",
+      "unordered_set tle",
+      "przyspieszyć unordered_set"
+     ],
+     "a": "Najczęstsze przyczyny: rehashowanie (brak `reserve`), duży koszt alokacji węzłów i kolizje (dane anty-hash). Rozwiązania: `us.reserve(n)`, własny hash z losowym ziarnem, a jeśli wartości są z małego zakresu — tablica `vector<char>`/`bitset` zamiast hashowania. Posortowany vector + `binary_search` też bywa szybszy dla statycznych danych.",
+     "code": "int MAXV = 1000000;\nvector<char> jest(MAXV + 1, 0);       // prawdziwe O(1), bez hasha\nfor (int x : {5, 999999}) jest[x] = 1;\ncout << (int)jest[5] << (int)jest[6] << '\\n';   // 10"
+    }
+   ],
+   "related": [
+    "stl-unordered-map",
+    "stl-set",
+    "stl-bitset",
+    "str-hashing",
+    "ds-custom-hash",
+    "stl-ref-unordered-all"
+   ]
+  }
+ ]
+}

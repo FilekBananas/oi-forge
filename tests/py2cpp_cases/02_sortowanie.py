@@ -1,0 +1,7 @@
+n = int(input())
+a = list(map(int, input().split()))
+a.sort()
+print(*a)
+b = sorted(a, reverse=True)
+print(*b)
+print(" ".join(map(str, sorted(set(a)))))

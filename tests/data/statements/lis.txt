@@ -1,0 +1,14 @@
+Rosnący podciąg
+Dany jest ciąg liczb całkowitych. Wyznacz długość jego najdłuższego podciągu ściśle rosnącego (elementy podciągu nie
+muszą stać obok siebie, ale muszą zachować kolejność z ciągu).
+Wejście
+W pierwszym wierszu znajduje się liczba n (1 ≤ n ≤ 200 000). W drugim wierszu znajduje się n liczb całkowitych
+a_1, ..., a_n (0 ≤ a_i ≤ 10^9).
+Wyjście
+Wypisz długość najdłuższego podciągu ściśle rosnącego.
+Przykład
+Wejście:
+8
+10 9 2 5 3 7 101 18
+Wyjście:
+4

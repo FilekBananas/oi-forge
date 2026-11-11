@@ -1,0 +1,23 @@
+/* Doradca algorytmów. Tylko zmienne motywu. */
+.tk-row-on td { background: var(--accent-bg) !important; color: var(--text); font-weight: 600; }
+.tk-row-on td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.tk-algos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.tk-algo { transition: border-color .15s, transform .15s; }
+.tk-algo:hover { border-color: var(--border-2); }
+.tk-algo.top { border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: radial-gradient(140% 120% at 100% 0%, var(--accent-bg), transparent 60%), var(--panel); }
+.tk-rank { flex: none; width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; font-size: 12.5px; font-weight: 700;
+  background: var(--panel-3); color: var(--text-2); }
+.tk-algo.top .tk-rank { background: var(--accent-bg); color: var(--accent-2); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.tk-algo-name { font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-reasons { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
+.tk-origin { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--accent-2);
+  background: var(--accent-bg); padding: 0 5px; border-radius: 5px; }
+.tk-match { color: var(--muted); font-size: 11.5px; }
+.tk-topic { width: 230px; flex: none; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tk-sim { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-s); border: 1px solid var(--border);
+  background: var(--panel-2); }
+.tk-sim.same { border-color: color-mix(in srgb, var(--success) 45%, var(--border)); background: var(--success-bg); }
+.tk-sim-pct { flex: none; width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-weight: 700; font-size: 14px;
+  background: var(--accent-bg); color: var(--accent-2); font-variant-numeric: tabular-nums; }

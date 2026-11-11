@@ -1,0 +1,14 @@
+Wspólny podciąg
+Dla dwóch słów wyznacz długość ich najdłuższego wspólnego podciągu. Podciąg słowa powstaje przez usunięcie z niego
+dowolnych liter (niekoniecznie sąsiednich) bez zmiany kolejności pozostałych.
+Wejście
+W pierwszym wierszu wejścia znajduje się słowo a, w drugim słowo b. Oba słowa składają się z małych liter alfabetu
+angielskiego i mają długość od 1 do 5000.
+Wyjście
+Wypisz długość najdłuższego wspólnego podciągu słów a i b.
+Przykład
+Wejście:
+abcbdab
+bdcaba
+Wyjście:
+4

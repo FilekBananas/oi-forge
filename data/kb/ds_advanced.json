@@ -1,0 +1,1276 @@
+{
+ "chunk": "ds-advanced",
+ "articles": [
+  {
+   "id": "ds-trie",
+   "title": "Trie (drzewo prefiksowe) i trie binarne do XOR",
+   "category": "Struktury danych",
+   "tags": [
+    "trie",
+    "drzewo prefiksowe",
+    "prefiksy",
+    "słownik",
+    "xor",
+    "maksymalny xor",
+    "binary trie"
+   ],
+   "aliases": [
+    "trie",
+    "drzewo trie",
+    "drzewo prefiksowe",
+    "prefix tree",
+    "trie c++",
+    "trie kod",
+    "xor trie",
+    "binary trie",
+    "maksymalny xor dwóch liczb",
+    "max xor pair",
+    "trie na bitach",
+    "drzewo słów"
+   ],
+   "summary": "Drzewo, w którym każda krawędź to znak, a ścieżka od korzenia to prefiks. Wstawianie i wyszukiwanie słowa w O(długość), liczenie słów z danym prefiksem w O(długość). Wersja na bitach liczb rozwiązuje „maksymalny XOR” w O(log C).",
+   "complexity": "wstawienie / wyszukanie O(|s|) (lub O(log C) dla liczb), pamięć O(suma długości · alfabet)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Słowa o wspólnym prefiksie dzielą początek ścieżki. Węzeł = prefiks; w węźle możemy trzymać, ile słów ma ten prefiks (`passCount`) i ile się w nim kończy (`endCount`). Dzięki temu „ile słów zaczyna się od *p*” to zejście po `|p|` krawędziach.\n\n**Trie binarne.** Liczby zapisujemy bitami od najstarszego. Żeby zmaksymalizować `x ^ y`, na każdym bicie (od najstarszego) chcemy wejść w gałąź z bitem przeciwnym do bitu `x` — zachłanność jest poprawna, bo starszy bit jest wart więcej niż wszystkie młodsze razem."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „ile słów ze słownika zaczyna się od…”, autouzupełnianie, „czy słowo jest prefiksem innego”, „najdłuższy wspólny prefiks”; dla liczb: „maksymalny XOR pary”, „maksymalny XOR spójnego fragmentu” (trie na prefiksach XOR), „ile par ma XOR < k”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: słowa z danym prefiksem",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Drzewo trie na małych literach: wstawianie, liczba słów z prefiksem, liczba wystąpień słowa.\nstruct Trie {\n    vector<array<int, 26>> next;   // next[v][c] = syn węzła v po literze c (0 = brak)\n    vector<int> passCount;         // ile słów przechodzi przez węzeł (= ma ten prefiks)\n    vector<int> endCount;          // ile słów kończy się w węźle\n\n    Trie() { newNode(); }          // węzeł 0 = korzeń\n    int newNode() {\n        next.push_back({});        // same zera\n        passCount.push_back(0);\n        endCount.push_back(0);\n        return (int)next.size() - 1;\n    }\n    void insert(const string& s) {\n        int v = 0;\n        passCount[v]++;\n        for (char ch : s) {\n            int c = ch - 'a';\n            if (next[v][c] == 0) { int u = newNode(); next[v][c] = u; }\n            v = next[v][c];\n            passCount[v]++;\n        }\n        endCount[v]++;\n    }\n    int findNode(const string& s) const {   // węzeł odpowiadający s albo -1\n        int v = 0;\n        for (char ch : s) {\n            v = next[v][ch - 'a'];\n            if (v == 0) return -1;\n        }\n        return v;\n    }\n    int countPrefix(const string& p) const { int v = findNode(p); return v == -1 ? 0 : passCount[v]; }\n    int countWord(const string& w) const { int v = findNode(w); return v == -1 ? 0 : endCount[v]; }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    Trie trie;\n    for (int i = 0; i < n; i++) {\n        string w;\n        cin >> w;\n        trie.insert(w);\n    }\n    while (q--) {\n        string p;\n        cin >> p;\n        cout << trie.countPrefix(p) << ' ' << trie.countWord(p) << '\\n';   // ile z prefiksem p, ile równych p\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: maksymalny XOR pary liczb",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Trie binarne na liczbach do 2^30: maksymalny XOR z liczbą x.\nstruct XorTrie {\n    static const int BITS = 30;\n    vector<array<int, 2>> next;\n    vector<int> cnt;               // ile liczb w poddrzewie (pozwala usuwać)\n\n    XorTrie() { next.push_back({0, 0}); cnt.push_back(0); }\n    void insert(int x, int delta = 1) {   // delta = -1 usuwa (liczba musi być w trie)\n        int v = 0;\n        cnt[v] += delta;\n        for (int b = BITS - 1; b >= 0; b--) {\n            int bit = (x >> b) & 1;\n            if (next[v][bit] == 0) {\n                next.push_back({0, 0});\n                cnt.push_back(0);\n                next[v][bit] = (int)next.size() - 1;\n            }\n            v = next[v][bit];\n            cnt[v] += delta;\n        }\n    }\n    int maxXor(int x) const {      // max (x ^ y) po y w trie; trie niepuste\n        int v = 0, res = 0;\n        for (int b = BITS - 1; b >= 0; b--) {\n            int want = ((x >> b) & 1) ^ 1;          // chcemy przeciwny bit\n            int u = next[v][want];\n            if (u != 0 && cnt[u] > 0) { res |= 1 << b; v = u; }\n            else v = next[v][want ^ 1];\n        }\n        return res;\n    }\n};\n\nint main() {\n    int n;\n    cin >> n;\n    vector<int> a(n);\n    for (auto& x : a) cin >> x;\n    XorTrie trie;\n    trie.insert(a[0]);\n    int best = 0;\n    for (int i = 1; i < n; i++) {        // max po parach i < j\n        best = max(best, trie.maxXor(a[i]));\n        trie.insert(a[i]);\n    }\n    cout << best << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Pamięć trie na tablicach: liczba węzłów ≤ suma długości słów + 1, każdy węzeł to 26 intów (104 B). Dla 10^6 znaków to ~100 MB — za dużo. Wtedy: `map<char,int>` w węzłach (wolniej), mniejszy alfabet albo struktura sufiksowa / hashowanie."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "trie.insert(s)",
+     "desc": "wstawienie słowa",
+     "complexity": "O(|s|)"
+    },
+    {
+     "sig": "trie.countPrefix(p)",
+     "desc": "ile wstawionych słów ma prefiks p",
+     "complexity": "O(|p|)",
+     "returns": "int"
+    },
+    {
+     "sig": "trie.countWord(w)",
+     "desc": "ile razy wstawiono dokładnie w",
+     "complexity": "O(|w|)",
+     "returns": "int"
+    },
+    {
+     "sig": "xorTrie.insert(x, delta)",
+     "desc": "wstawienie (delta = 1) / usunięcie (delta = -1) liczby",
+     "complexity": "O(BITS)"
+    },
+    {
+     "sig": "xorTrie.maxXor(x)",
+     "desc": "max x ^ y po liczbach y w trie",
+     "complexity": "O(BITS)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "`next[v][c] = newNode()` z wektorem — przy C++ < 17 kolejność obliczeń i realokacja mogą zepsuć zapis; zapisuj wynik `newNode()` do zmiennej.",
+    "Znaki spoza `'a'..'z'` (wielkie litery, cyfry) — indeks `ch - 'a'` wychodzi poza tablicę 26.",
+    "Za mało bitów w trie XOR (np. 30 dla liczb do 10^9 wystarcza, ale dla `long long` potrzeba 60+).",
+    "Zapytanie `maxXor` na pustym trie — wynik bez sensu; najpierw wstaw co najmniej jedną liczbę.",
+    "Pamięć: `array<int, 26>` na węzeł przy milionach węzłów przekracza limit."
+   ],
+   "qa": [
+    {
+     "q": [
+      "trie c++",
+      "drzewo trie kod",
+      "jak zrobić trie",
+      "trie implementacja",
+      "drzewo prefiksowe c++"
+     ],
+     "a": "Trzymaj węzły w `vector<array<int, 26>>`, gdzie `next[v][c]` to syn po literze `c` (0 = brak), oraz liczniki: ile słów przechodzi przez węzeł i ile się w nim kończy. Wstawienie i wyszukiwanie schodzą po literach — O(|s|). Korzeń to węzeł 0.",
+     "code": "// Drzewo trie na małych literach: wstawianie, liczba słów z prefiksem, liczba wystąpień słowa.\nstruct Trie {\n    vector<array<int, 26>> next;   // next[v][c] = syn węzła v po literze c (0 = brak)\n    vector<int> passCount;         // ile słów przechodzi przez węzeł (= ma ten prefiks)\n    vector<int> endCount;          // ile słów kończy się w węźle\n\n    Trie() { newNode(); }          // węzeł 0 = korzeń\n    int newNode() {\n        next.push_back({});        // same zera\n        passCount.push_back(0);\n        endCount.push_back(0);\n        return (int)next.size() - 1;\n    }\n    void insert(const string& s) {\n        int v = 0;\n        passCount[v]++;\n        for (char ch : s) {\n            int c = ch - 'a';\n            if (next[v][c] == 0) { int u = newNode(); next[v][c] = u; }\n            v = next[v][c];\n            passCount[v]++;\n        }\n        endCount[v]++;\n    }\n    int findNode(const string& s) const {   // węzeł odpowiadający s albo -1\n        int v = 0;\n        for (char ch : s) {\n            v = next[v][ch - 'a'];\n            if (v == 0) return -1;\n        }\n        return v;\n    }\n    int countPrefix(const string& p) const { int v = findNode(p); return v == -1 ? 0 : passCount[v]; }\n    int countWord(const string& w) const { int v = findNode(w); return v == -1 ? 0 : endCount[v]; }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile słów zaczyna się od prefiksu",
+      "liczba słów z danym prefiksem",
+      "count words with prefix",
+      "autouzupelnianie trie"
+     ],
+     "a": "Przy wstawianiu zwiększaj licznik `passCount` w każdym odwiedzonym węźle. Zapytanie o prefiks `p` to zejście po jego literach i odczyt licznika w węźle końcowym (0, jeśli ścieżka się urywa). Złożoność O(|p|) niezależnie od liczby słów. Alternatywa bez trie: posortuj słowa i zrób dwa `lower_bound` (O(|p| log n)).",
+     "code": "vector<string> words = {\"kot\", \"kotek\", \"koza\", \"mysz\"};\nsort(words.begin(), words.end());\nstring p = \"ko\";\nstring pEnd = p;\npEnd.back()++;                                         // \"kp\" — pierwszy napis za wszystkimi z prefiksem \"ko\"\nauto lo = lower_bound(words.begin(), words.end(), p);\nauto hi = lower_bound(words.begin(), words.end(), pEnd);\ncout << hi - lo << '\\n';                               // 3"
+    },
+    {
+     "q": [
+      "maksymalny xor dwóch liczb",
+      "max xor pair",
+      "maksymalny xor pary w tablicy",
+      "xor trie",
+      "trie na bitach"
+     ],
+     "a": "Wstawiaj liczby do trie binarnego (bity od najstarszego). Dla każdej nowej liczby `x` schodź, wybierając zawsze gałąź z bitem przeciwnym do bitu `x`, jeśli istnieje — starszy bit wygrywa ze wszystkimi młodszymi, więc zachłanność jest optymalna. Każda operacja O(log C), całość O(n log C) zamiast O(n²).",
+     "code": "// Trie binarne na liczbach do 2^30: maksymalny XOR z liczbą x.\nstruct XorTrie {\n    static const int BITS = 30;\n    vector<array<int, 2>> next;\n    vector<int> cnt;               // ile liczb w poddrzewie (pozwala usuwać)\n\n    XorTrie() { next.push_back({0, 0}); cnt.push_back(0); }\n    void insert(int x, int delta = 1) {   // delta = -1 usuwa (liczba musi być w trie)\n        int v = 0;\n        cnt[v] += delta;\n        for (int b = BITS - 1; b >= 0; b--) {\n            int bit = (x >> b) & 1;\n            if (next[v][bit] == 0) {\n                next.push_back({0, 0});\n                cnt.push_back(0);\n                next[v][bit] = (int)next.size() - 1;\n            }\n            v = next[v][bit];\n            cnt[v] += delta;\n        }\n    }\n    int maxXor(int x) const {      // max (x ^ y) po y w trie; trie niepuste\n        int v = 0, res = 0;\n        for (int b = BITS - 1; b >= 0; b--) {\n            int want = ((x >> b) & 1) ^ 1;          // chcemy przeciwny bit\n            int u = next[v][want];\n            if (u != 0 && cnt[u] > 0) { res |= 1 << b; v = u; }\n            else v = next[v][want ^ 1];\n        }\n        return res;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "maksymalny xor podtablicy",
+      "max subarray xor",
+      "spójny fragment o największym xor",
+      "maksymalny xor przedziału"
+     ],
+     "a": "XOR fragmentu `(j, i]` to `pref[i] ^ pref[j]`, gdzie `pref` to prefiksowe XOR-y (z `pref[0] = 0`). Problem sprowadza się więc do maksymalnego XOR pary prefiksów: wstaw `0` do trie, potem dla każdego `pref[i]` zapytaj `maxXor` i wstaw go. O(n log C).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Trie binarne na liczbach do 2^30: maksymalny XOR z liczbą x.\nstruct XorTrie {\n    static const int BITS = 30;\n    vector<array<int, 2>> next;\n    vector<int> cnt;               // ile liczb w poddrzewie (pozwala usuwać)\n\n    XorTrie() { next.push_back({0, 0}); cnt.push_back(0); }\n    void insert(int x, int delta = 1) {   // delta = -1 usuwa (liczba musi być w trie)\n        int v = 0;\n        cnt[v] += delta;\n        for (int b = BITS - 1; b >= 0; b--) {\n            int bit = (x >> b) & 1;\n            if (next[v][bit] == 0) {\n                next.push_back({0, 0});\n                cnt.push_back(0);\n                next[v][bit] = (int)next.size() - 1;\n            }\n            v = next[v][bit];\n            cnt[v] += delta;\n        }\n    }\n    int maxXor(int x) const {      // max (x ^ y) po y w trie; trie niepuste\n        int v = 0, res = 0;\n        for (int b = BITS - 1; b >= 0; b--) {\n            int want = ((x >> b) & 1) ^ 1;          // chcemy przeciwny bit\n            int u = next[v][want];\n            if (u != 0 && cnt[u] > 0) { res |= 1 << b; v = u; }\n            else v = next[v][want ^ 1];\n        }\n        return res;\n    }\n};\n\nint main() {\n    int n;\n    cin >> n;\n    XorTrie trie;\n    trie.insert(0);                 // pusty prefiks\n    int pref = 0, best = 0;\n    for (int i = 0; i < n; i++) {\n        int x;\n        cin >> x;\n        pref ^= x;\n        best = max(best, trie.maxXor(pref));\n        trie.insert(pref);\n    }\n    cout << best << '\\n';\n}"
+    },
+    {
+     "q": [
+      "usuwanie z trie",
+      "trie erase",
+      "jak usunąć słowo z trie",
+      "trie z usuwaniem"
+     ],
+     "a": "Nie usuwaj węzłów — wystarczy zmniejszyć liczniki na ścieżce (`passCount`, `endCount` albo `cnt` w trie binarnym). W zapytaniach traktuj węzeł z licznikiem 0 jak nieistniejący. Kosztuje to O(|s|) i nie psuje struktury dla innych słów."
+    },
+    {
+     "q": [
+      "trie map czy tablica",
+      "trie z map",
+      "trie duzy alfabet",
+      "trie unicode"
+     ],
+     "a": "Tablica `array<int, 26>` jest najszybsza, ale zajmuje 104 bajty na węzeł. Przy dużym alfabecie (np. dowolne znaki ASCII) lub ciasnej pamięci użyj `map<char, int>` albo `unordered_map` w węźle (O(log Σ) na krok) lub posortowanej listy dzieci. Przy liczbach zawsze wystarcza trie binarne z dwoma dziećmi."
+    },
+    {
+     "q": [
+      "trie ile pamięci",
+      "trie memory limit",
+      "ile węzłów ma trie"
+     ],
+     "a": "Węzłów jest co najwyżej `1 + suma długości słów`. Przy `array<int, 26>` to 104 B na węzeł: 10^5 znaków → ~10 MB, 10^6 → ~100 MB (za dużo przy 256 MB z resztą danych). W trie binarnym na n liczbach po 30 bitów: ≤ 30n + 1 węzłów po 8 B (+ licznik)."
+    },
+    {
+     "q": [
+      "ile par ma xor mniejszy od k",
+      "count pairs xor less than k",
+      "trie xor mniejsze od k"
+     ],
+     "a": "Dla każdej liczby `x` schodzisz po trie, porównując bity `x ^ y` z bitami `k` od najstarszego: gdy bit `k` to 1, wszystkie `y` w gałęzi dającej bit 0 wyniku pasują (dodajesz licznik poddrzewa) i idziesz gałęzią dającą 1; gdy bit `k` to 0, musisz iść gałęzią dającą 0. O(log C) na liczbę.",
+     "code": "// liczba y w trie z (x ^ y) < k, gdzie 0 <= k < 2^bits; korzysta z next/cnt jak w XorTrie\nint countLessXor(const vector<array<int, 2>>& next, const vector<int>& cnt, int x, int k, int bits = 30) {\n    int v = 0, res = 0;\n    for (int b = bits - 1; b >= 0 && v != -1; b--) {\n        int xb = (x >> b) & 1, kb = (k >> b) & 1;\n        if (kb == 1) {\n            int same = next[v][xb];               // y z tym samym bitem -> bit wyniku 0 < 1\n            if (same) res += cnt[same];\n            v = next[v][xb ^ 1] ? next[v][xb ^ 1] : -1;\n        } else {\n            v = next[v][xb] ? next[v][xb] : -1;   // bit wyniku musi być 0\n        }\n    }\n    return res;\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "tech-prefix-xor",
+    "tech-bit-tricks",
+    "str-aho-corasick",
+    "ds-string-hashing",
+    "str-trie",
+    "math-xor-basis"
+   ]
+  },
+  {
+   "id": "ds-dsu-rollback",
+   "title": "DSU z cofaniem (rollback)",
+   "category": "Struktury danych",
+   "tags": [
+    "dsu",
+    "find union",
+    "rollback",
+    "cofanie",
+    "dynamiczna spójność offline",
+    "union by size"
+   ],
+   "aliases": [
+    "dsu z rollbackiem",
+    "dsu rollback",
+    "find union z cofaniem",
+    "dsu with rollback",
+    "cofanie dsu",
+    "persistent dsu",
+    "dynamic connectivity offline",
+    "usuwanie krawędzi dsu",
+    "dsu undo",
+    "union find rollback"
+   ],
+   "summary": "Zwykłe DSU (find & union) z łączeniem według rozmiaru, ale bez kompresji ścieżek — dzięki temu każdą operację `unite` da się cofnąć w O(1), trzymając stos zmian. Podstawa dynamicznej spójności offline i dziel-i-zwyciężaj po czasie.",
+   "complexity": "find O(log n), unite O(log n), cofnięcie jednej operacji O(1), pamięć O(n + liczba operacji)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Kompresja ścieżek zmienia wiele wskaźników naraz, więc trudno ją cofnąć. Jeśli z niej zrezygnujemy, `unite` zmienia dokładnie dwie rzeczy: `parent` jednego korzenia i `size` drugiego. Zapisujemy je na stosie, a `rollback` przywraca je w odwrotnej kolejności. Łączenie według rozmiaru (mniejsze pod większe) gwarantuje wysokość drzew O(log n), więc `find` nadal jest szybkie.\n\nCofać można tylko w kolejności **stosowej** (ostatnia operacja pierwsza) — to nie jest dowolne usuwanie krawędzi."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** krawędzie są dodawane i **usuwane**, a pytania o spójność / liczbę składowych / dwudzielność — offline (wszystkie operacje znane z góry). Rozwiązanie: każda krawędź „żyje” w przedziale czasu `[od, do]`; wstawiamy ją do drzewa przedziałowego po czasie i przechodzimy DFS-em po drzewie, robiąc `unite` przy wejściu do węzła i `rollback` przy wyjściu — O(q log q log n)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: łączenie, zapytania, zapis i cofanie stanu",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// DSU z cofaniem: łączenie według rozmiaru, BEZ kompresji ścieżek, stos zmian.\nstruct RollbackDSU {\n    vector<int> parent, size_;\n    vector<pair<int, int>> history;   // (dołączony korzeń, korzeń, do którego dołączono); (-1, -1) = brak zmiany\n    int components;\n\n    RollbackDSU(int n) : parent(n), size_(n, 1), components(n) { iota(parent.begin(), parent.end(), 0); }\n\n    int find(int x) const {            // O(log n) dzięki łączeniu według rozmiaru\n        while (parent[x] != x) x = parent[x];\n        return x;\n    }\n    bool unite(int a, int b) {\n        a = find(a), b = find(b);\n        if (a == b) { history.push_back({-1, -1}); return false; }\n        if (size_[a] > size_[b]) swap(a, b);\n        parent[a] = b;\n        size_[b] += size_[a];\n        components--;\n        history.push_back({a, b});\n        return true;\n    }\n    int snapshot() const { return history.size(); }\n    void rollback(int snap) {          // cofnij do stanu z snapshot()\n        while ((int)history.size() > snap) {\n            auto [a, b] = history.back();\n            history.pop_back();\n            if (a == -1) continue;\n            parent[a] = a;\n            size_[b] -= size_[a];\n            components++;\n        }\n    }\n};\n\nint main() {\n    int n, q;\n    cin >> n >> q;\n    RollbackDSU dsu(n + 1);\n    vector<int> saved;                     // stos punktów zapisu\n    while (q--) {\n        char type;\n        cin >> type;\n        if (type == 'u') {                 // u a b: połącz\n            int a, b;\n            cin >> a >> b;\n            dsu.unite(a, b);\n        } else if (type == 'q') {          // q a b: czy w jednej składowej\n            int a, b;\n            cin >> a >> b;\n            cout << (dsu.find(a) == dsu.find(b) ? \"TAK\" : \"NIE\") << '\\n';\n        } else if (type == 's') {          // s: zapamiętaj stan\n            saved.push_back(dsu.snapshot());\n        } else {                           // r: cofnij do ostatniego zapisu\n            dsu.rollback(saved.back());\n            saved.pop_back();\n        }\n    }\n    cout << dsu.components - 1 << '\\n';    // składowe wśród 1..n (wierzchołek 0 nieużywany)\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Nie dodawaj kompresji ścieżek (`parent[x] = find(parent[x])`) do wersji z cofaniem — zmiany wprowadzone przez `find` nie trafiają na stos i rollback zostawi strukturę w niespójnym stanie."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "RollbackDSU dsu(n)",
+     "desc": "n osobnych zbiorów 0..n-1",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "dsu.find(x)",
+     "desc": "reprezentant zbioru x (bez kompresji)",
+     "complexity": "O(log n)",
+     "returns": "int"
+    },
+    {
+     "sig": "dsu.unite(a, b)",
+     "desc": "połączenie zbiorów; zapisuje zmianę na stosie",
+     "complexity": "O(log n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "dsu.snapshot()",
+     "desc": "bieżący rozmiar historii (punkt zapisu)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "dsu.rollback(s)",
+     "desc": "cofnięcie wszystkich operacji po zapisie s",
+     "complexity": "O(liczba cofanych)"
+    }
+   ],
+   "pitfalls": [
+    "Kompresja ścieżek w `find` — psuje cofanie.",
+    "Brak wpisu do historii, gdy `unite` nic nie łączy — wtedy liczba cofanych operacji nie zgadza się z liczbą wywołań (w kodzie wstawiamy `(-1, -1)`).",
+    "Cofanie w innej kolejności niż stosowa — DSU nie umie usunąć dowolnej krawędzi.",
+    "Łączenie bez rozmiaru/rangi — bez kompresji ścieżek drzewa mogą mieć wysokość O(n)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dsu z rollbackiem",
+      "dsu rollback c++",
+      "find union z cofaniem",
+      "jak cofnąć union w dsu",
+      "dsu undo"
+     ],
+     "a": "Zrezygnuj z kompresji ścieżek, łącz według rozmiaru i przy każdym `unite` zapisz na stosie, który korzeń podpiąłeś pod który. Cofnięcie przywraca `parent[a] = a` i odejmuje rozmiar — O(1). `find` bez kompresji to O(log n) dzięki łączeniu według rozmiaru.",
+     "code": "// DSU z cofaniem: łączenie według rozmiaru, BEZ kompresji ścieżek, stos zmian.\nstruct RollbackDSU {\n    vector<int> parent, size_;\n    vector<pair<int, int>> history;   // (dołączony korzeń, korzeń, do którego dołączono); (-1, -1) = brak zmiany\n    int components;\n\n    RollbackDSU(int n) : parent(n), size_(n, 1), components(n) { iota(parent.begin(), parent.end(), 0); }\n\n    int find(int x) const {            // O(log n) dzięki łączeniu według rozmiaru\n        while (parent[x] != x) x = parent[x];\n        return x;\n    }\n    bool unite(int a, int b) {\n        a = find(a), b = find(b);\n        if (a == b) { history.push_back({-1, -1}); return false; }\n        if (size_[a] > size_[b]) swap(a, b);\n        parent[a] = b;\n        size_[b] += size_[a];\n        components--;\n        history.push_back({a, b});\n        return true;\n    }\n    int snapshot() const { return history.size(); }\n    void rollback(int snap) {          // cofnij do stanu z snapshot()\n        while ((int)history.size() > snap) {\n            auto [a, b] = history.back();\n            history.pop_back();\n            if (a == -1) continue;\n            parent[a] = a;\n            size_[b] -= size_[a];\n            components++;\n        }\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dlaczego bez kompresji ścieżek",
+      "rollback a path compression",
+      "kompresja sciezek a cofanie"
+     ],
+     "a": "Kompresja ścieżek przepina wiele wierzchołków przy zwykłym `find`, więc musiałbyś zapisywać i cofać także te zmiany, a jest ich amortyzowanie dużo. Bez niej `unite` zmienia dokładnie dwie wartości, a łączenie według rozmiaru i tak trzyma wysokość drzew ≤ log₂ n, więc `find` jest O(log n)."
+    },
+    {
+     "q": [
+      "usuwanie krawędzi dsu",
+      "dynamiczna spójność offline",
+      "dynamic connectivity offline",
+      "krawędzie dodawane i usuwane spójność",
+      "segment tree po czasie"
+     ],
+     "a": "Offline: każda krawędź istnieje w przedziale czasu `[t_dodania, t_usunięcia)`. Wstaw ją do O(log q) węzłów drzewa przedziałowego nad osią czasu. Przejdź DFS-em po drzewie: wchodząc do węzła, `unite` wszystkie jego krawędzie; w liściu (chwili zapytania) odpowiedz; wychodząc, `rollback` do stanu sprzed wejścia. Złożoność O(q log q log n).",
+     "code": "// Szkic: drzewo przedziałowe po czasie, w węzłach listy krawędzi.\nstruct TimeSegTree {\n    int T;\n    vector<vector<pair<int, int>>> edges;\n    TimeSegTree(int T) : T(T), edges(4 * T) {}\n    void addEdge(int v, int tl, int tr, int l, int r, pair<int, int> e) {   // krawędź żyje w [l, r]\n        if (r < tl || tr < l) return;\n        if (l <= tl && tr <= r) { edges[v].push_back(e); return; }\n        int tm = (tl + tr) / 2;\n        addEdge(2 * v, tl, tm, l, r, e);\n        addEdge(2 * v + 1, tm + 1, tr, l, r, e);\n    }\n};\n// DFS: void solve(v, tl, tr) { snap = dsu.snapshot(); for (e : edges[v]) dsu.unite(e);\n//         if (tl == tr) odpowiedz(tl); else { solve(2v,...); solve(2v+1,...); } dsu.rollback(snap); }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dsu cofanie liczba składowych",
+      "rollback components count",
+      "ile składowych po cofnięciu"
+     ],
+     "a": "Trzymaj licznik `components`: `unite`, które faktycznie połączyło zbiory, zmniejsza go o 1, a cofnięcie takiej operacji zwiększa z powrotem. Operacje, które nic nie połączyły, też zapisuj (jako pusty wpis), żeby liczba cofnięć zgadzała się z liczbą wywołań."
+    },
+    {
+     "q": [
+      "dsu z rollbackiem dwudzielność",
+      "bipartite dsu rollback",
+      "dsu z parzystością cofanie"
+     ],
+     "a": "Do sprawdzania dwudzielności trzymaj w DSU parzystość odległości od rodzica (`parity[x]`). Bez kompresji ścieżek parzystość do korzenia liczysz, sumując XOR po drodze w `find`. `unite` zapisuje na stosie także zmienioną parzystość podpinanego korzenia; konflikt (krawędź łącząca wierzchołki o tej samej parzystości w jednym zbiorze) oznacza nieparzysty cykl."
+    },
+    {
+     "q": [
+      "dsu dziel i zwyciężaj",
+      "divide and conquer dsu rollback",
+      "offline dsu d&c"
+     ],
+     "a": "W technikach dziel-i-zwyciężaj (np. po czasie albo po zbiorze krawędzi do pominięcia) schodzisz rekurencyjnie, dodajesz do DSU elementy wspólne dla całej gałęzi i cofasz je przy powrocie. Każda krawędź jest dodawana O(log q) razy, więc łącznie O(q log q log n). To zastępuje drogie „DSU od nowa” w każdym kroku."
+    }
+   ],
+   "related": [
+    "graph-dsu",
+    "ds-segment-tree",
+    "tech-offline-queries",
+    "tech-divide-and-conquer",
+    "graph-weighted-dsu"
+   ]
+  },
+  {
+   "id": "ds-treap",
+   "title": "Treap (drzewo-kopiec) i treap niejawny",
+   "category": "Struktury danych",
+   "tags": [
+    "treap",
+    "drzewo zbalansowane",
+    "split merge",
+    "kopiec",
+    "treap niejawny",
+    "implicit treap",
+    "odwracanie przedziału"
+   ],
+   "aliases": [
+    "treap",
+    "treap c++",
+    "drzewo kopiec",
+    "drzewiec",
+    "cartesian tree",
+    "implicit treap",
+    "treap niejawny",
+    "split merge treap",
+    "odwracanie fragmentu tablicy",
+    "reverse on segment",
+    "treap kod",
+    "zrównoważone bst"
+   ],
+   "summary": "Treap to BST po kluczach i jednocześnie kopiec po losowych priorytetach — dzięki losowości ma oczekiwaną wysokość O(log n). Dwie operacje split i merge wystarczą do wstawiania, usuwania, k-tego elementu, a w wersji niejawnej — do wycinania, sklejania i odwracania fragmentów tablicy.",
+   "complexity": "split / merge / insert / erase / kth: O(log n) oczekiwanie, pamięć O(n)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Każdy węzeł ma klucz i losowy priorytet. Drzewo jest BST po kluczach, a rodzic ma większy priorytet niż dzieci. Taki kształt jest jednoznaczny i odpowiada wstawianiu kluczy w losowej kolejności, więc oczekiwana wysokość to O(log n).\n\n- `split(v, key)` dzieli drzewo na klucze `< key` i `≥ key`,\n- `merge(l, r)` skleja dwa drzewa (wszystkie klucze `l` ≤ klucze `r`), wybierając na korzeń węzeł o większym priorytecie.\n\nWszystko inne to kombinacje: wstawienie = split + 2 × merge, usunięcie = 2 × split + merge.\n\n**Treap niejawny.** Zamiast klucza używamy pozycji w tablicy (wyliczanej z rozmiarów poddrzew). `split(v, k)` odcina pierwsze `k` elementów. Z leniwymi znacznikami (odwrócenie, dodawanie) daje „tablicę z operacjami na fragmentach”: wytnij, wklej, odwróć, przesuń cyklicznie — każda w O(log n)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „odwróć fragment tablicy / przenieś fragment na początek” z zapytaniami; zbiór z operacjami k-ty element i ranga, gdy nie można użyć pb_ds; łączenie i dzielenie ciągów. Do samego k-tego elementu w zbiorze zwykle wystarcza `ordered_set` z pb_ds albo Fenwick po wartościach."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: multizbiór z k-tym elementem i rangą",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Treap (drzewo + kopiec) z kluczami, dopuszcza duplikaty. Węzeł 0 = pusty.\nmt19937 treapRng(712367);\n\nstruct Treap {\n    struct Node {\n        int key;\n        unsigned prio;\n        int size, left, right;\n    };\n    vector<Node> t;\n    int root = 0;\n\n    Treap() { t.push_back({0, 0, 0, 0, 0}); }\n    int sz(int v) const { return t[v].size; }\n    void pull(int v) { t[v].size = 1 + sz(t[v].left) + sz(t[v].right); }\n\n    // dzieli drzewo v na: l = klucze < key, r = klucze >= key\n    void split(int v, int key, int& l, int& r) {\n        if (v == 0) { l = r = 0; return; }\n        if (t[v].key < key) { split(t[v].right, key, t[v].right, r); l = v; }\n        else { split(t[v].left, key, l, t[v].left); r = v; }\n        pull(v);\n    }\n    // łączy drzewa l i r, gdzie wszystkie klucze l <= klucze r\n    int merge(int l, int r) {\n        if (l == 0 || r == 0) return l ? l : r;\n        if (t[l].prio > t[r].prio) { t[l].right = merge(t[l].right, r); pull(l); return l; }\n        t[r].left = merge(l, t[r].left);\n        pull(r);\n        return r;\n    }\n    void insert(int key) {\n        t.push_back({key, (unsigned)treapRng(), 1, 0, 0});\n        int node = (int)t.size() - 1, a, b;\n        split(root, key, a, b);\n        root = merge(merge(a, node), b);\n    }\n    void eraseOne(int key) {                       // usuwa jedną kopię key (jeśli jest)\n        int a, b, c;\n        split(root, key, a, b);                    // a < key <= b\n        split(b, key + 1, b, c);                   // b == key, c > key\n        if (b) b = merge(t[b].left, t[b].right);   // wyrzucamy korzeń b\n        root = merge(merge(a, b), c);\n    }\n    int countLess(int key) const {                 // ile kluczy < key\n        int v = root, res = 0;\n        while (v) {\n            if (t[v].key < key) { res += sz(t[v].left) + 1; v = t[v].right; }\n            else v = t[v].left;\n        }\n        return res;\n    }\n    int kth(int k) const {                         // k-ty najmniejszy (k od 1); -1 gdy k > size\n        int v = root;\n        while (v) {\n            int leftSize = sz(t[v].left);\n            if (k <= leftSize) v = t[v].left;\n            else if (k == leftSize + 1) return t[v].key;\n            else { k -= leftSize + 1; v = t[v].right; }\n        }\n        return -1;\n    }\n    int size() const { return sz(root); }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> q;\n    Treap tr;\n    while (q--) {\n        int type, x;\n        cin >> type >> x;\n        if (type == 1) tr.insert(x);                     // wstaw x\n        else if (type == 2) tr.eraseOne(x);              // usuń jedną kopię x\n        else if (type == 3) cout << tr.kth(x) << '\\n';   // x-ty najmniejszy (albo -1)\n        else cout << tr.countLess(x) << '\\n';            // ile < x\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: treap niejawny — odwracanie fragmentów",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Treap niejawny (klucz = pozycja): odwracanie fragmentu tablicy w O(log n).\nmt19937 implicitRng(91823);\n\nstruct ImplicitTreap {\n    vector<int> value, left, right, size;\n    vector<unsigned> prio;\n    vector<char> rev;                // leniwe odwrócenie poddrzewa\n    int root = 0;\n\n    ImplicitTreap() { newNode(0); size[0] = 0; }   // węzeł 0 = pusty\n    int newNode(int x) {\n        value.push_back(x); left.push_back(0); right.push_back(0); size.push_back(1);\n        prio.push_back(implicitRng()); rev.push_back(0);\n        return (int)value.size() - 1;\n    }\n    void pull(int v) { size[v] = 1 + size[left[v]] + size[right[v]]; }\n    void push(int v) {\n        if (v && rev[v]) {\n            swap(left[v], right[v]);\n            if (left[v]) rev[left[v]] ^= 1;\n            if (right[v]) rev[right[v]] ^= 1;\n            rev[v] = 0;\n        }\n    }\n    void split(int v, int k, int& l, int& r) {      // l = pierwsze k elementów\n        if (!v) { l = r = 0; return; }\n        push(v);\n        if (size[left[v]] < k) { split(right[v], k - size[left[v]] - 1, right[v], r); l = v; }\n        else { split(left[v], k, l, left[v]); r = v; }\n        pull(v);\n    }\n    int merge(int l, int r) {\n        if (!l || !r) return l ? l : r;\n        if (prio[l] > prio[r]) { push(l); right[l] = merge(right[l], r); pull(l); return l; }\n        push(r);\n        left[r] = merge(l, left[r]);\n        pull(r);\n        return r;\n    }\n    void pushBack(int x) { int v = newNode(x); root = merge(root, v); }\n    void reverse(int l, int r) {                    // odwróć pozycje [l, r], 0-indeksowane\n        int a, b, c;\n        split(root, l, a, b);\n        split(b, r - l + 1, b, c);\n        if (b) rev[b] ^= 1;\n        root = merge(merge(a, b), c);\n    }\n    void collect(int v, vector<int>& out) {\n        if (!v) return;\n        push(v);\n        collect(left[v], out);\n        out.push_back(value[v]);\n        collect(right[v], out);\n    }\n};\n\nint main() {\n    int n, q;\n    cin >> n >> q;\n    ImplicitTreap tr;\n    for (int i = 0; i < n; i++) {\n        int x;\n        cin >> x;\n        tr.pushBack(x);\n    }\n    while (q--) {\n        int l, r;                    // odwróć a[l..r], 1-indeksowane\n        cin >> l >> r;\n        tr.reverse(l - 1, r - 1);\n    }\n    vector<int> out;\n    tr.collect(tr.root, out);\n    for (size_t i = 0; i < out.size(); i++) cout << out[i] << \" \\n\"[i + 1 == out.size()];\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Głębokość rekurencji `split`/`merge` to wysokość drzewa — w oczekiwaniu O(log n), ale tylko wtedy, gdy priorytety są naprawdę losowe. Używaj `mt19937`, nie `rand()` (na Windowsie `RAND_MAX = 32767`, więc wiele węzłów dostaje równe priorytety i drzewo może się wydłużyć)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "split(v, key, l, r)",
+     "desc": "l = klucze < key, r = klucze ≥ key",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "merge(l, r)",
+     "desc": "sklejenie drzew (klucze l ≤ klucze r)",
+     "complexity": "O(log n)",
+     "returns": "int"
+    },
+    {
+     "sig": "insert(key) / eraseOne(key)",
+     "desc": "wstawienie / usunięcie jednej kopii",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "kth(k)",
+     "desc": "k-ty najmniejszy klucz (k od 1)",
+     "complexity": "O(log n)",
+     "returns": "int"
+    },
+    {
+     "sig": "countLess(key)",
+     "desc": "liczba kluczy < key (ranga)",
+     "complexity": "O(log n)",
+     "returns": "int"
+    },
+    {
+     "sig": "reverse(l, r)",
+     "desc": "treap niejawny: odwrócenie pozycji [l, r]",
+     "complexity": "O(log n)"
+    }
+   ],
+   "pitfalls": [
+    "Zapomniane `pull` (aktualizacja rozmiaru) po zmianie dzieci — `kth` i treap niejawny przestają działać.",
+    "W treapie niejawnym brak `push` przed odczytem dzieci w `split`/`merge`/przejściu — odwrócenia nie są stosowane.",
+    "Priorytety z `rand()` — mało losowe, mogą powstać długie ścieżki.",
+    "`eraseOne` z `split(b, key + 1)` przepełnia się dla `key = INT_MAX` — użyj `long long` lub innego podziału.",
+    "Wektory węzłów rosną przez `push_back` — nie trzymaj referencji do węzła przez wstawienie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "treap c++",
+      "treap kod",
+      "treap jak działa",
+      "drzewo kopiec implementacja",
+      "treap split merge"
+     ],
+     "a": "Treap to BST po kluczach i kopiec po losowych priorytetach, co daje oczekiwaną wysokość O(log n). Cała logika to `split` (podział na klucze `< key` i `≥ key`) oraz `merge` (sklejenie, korzeniem zostaje węzeł o większym priorytecie). Wstawienie: `split`, potem `merge(merge(a, nowy), b)`; usunięcie: dwa `split` i `merge` bez środka.",
+     "code": "// Treap (drzewo + kopiec) z kluczami, dopuszcza duplikaty. Węzeł 0 = pusty.\nmt19937 treapRng(712367);\n\nstruct Treap {\n    struct Node {\n        int key;\n        unsigned prio;\n        int size, left, right;\n    };\n    vector<Node> t;\n    int root = 0;\n\n    Treap() { t.push_back({0, 0, 0, 0, 0}); }\n    int sz(int v) const { return t[v].size; }\n    void pull(int v) { t[v].size = 1 + sz(t[v].left) + sz(t[v].right); }\n\n    // dzieli drzewo v na: l = klucze < key, r = klucze >= key\n    void split(int v, int key, int& l, int& r) {\n        if (v == 0) { l = r = 0; return; }\n        if (t[v].key < key) { split(t[v].right, key, t[v].right, r); l = v; }\n        else { split(t[v].left, key, l, t[v].left); r = v; }\n        pull(v);\n    }\n    // łączy drzewa l i r, gdzie wszystkie klucze l <= klucze r\n    int merge(int l, int r) {\n        if (l == 0 || r == 0) return l ? l : r;\n        if (t[l].prio > t[r].prio) { t[l].right = merge(t[l].right, r); pull(l); return l; }\n        t[r].left = merge(l, t[r].left);\n        pull(r);\n        return r;\n    }\n    void insert(int key) {\n        t.push_back({key, (unsigned)treapRng(), 1, 0, 0});\n        int node = (int)t.size() - 1, a, b;\n        split(root, key, a, b);\n        root = merge(merge(a, node), b);\n    }\n    void eraseOne(int key) {                       // usuwa jedną kopię key (jeśli jest)\n        int a, b, c;\n        split(root, key, a, b);                    // a < key <= b\n        split(b, key + 1, b, c);                   // b == key, c > key\n        if (b) b = merge(t[b].left, t[b].right);   // wyrzucamy korzeń b\n        root = merge(merge(a, b), c);\n    }\n    int countLess(int key) const {                 // ile kluczy < key\n        int v = root, res = 0;\n        while (v) {\n            if (t[v].key < key) { res += sz(t[v].left) + 1; v = t[v].right; }\n            else v = t[v].left;\n        }\n        return res;\n    }\n    int kth(int k) const {                         // k-ty najmniejszy (k od 1); -1 gdy k > size\n        int v = root;\n        while (v) {\n            int leftSize = sz(t[v].left);\n            if (k <= leftSize) v = t[v].left;\n            else if (k == leftSize + 1) return t[v].key;\n            else { k -= leftSize + 1; v = t[v].right; }\n        }\n        return -1;\n    }\n    int size() const { return sz(root); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "odwracanie fragmentu tablicy",
+      "reverse na przedziale",
+      "implicit treap",
+      "treap niejawny",
+      "odwróć podtablicę wiele razy"
+     ],
+     "a": "Treap niejawny trzyma tablicę jako drzewo, w którym pozycja wynika z rozmiarów poddrzew. Odwrócenie `[l, r]`: dwa `split` wycinają fragment, przełączasz na nim leniwą flagę `rev`, a `merge` skleja z powrotem — O(log n). Flagę spychasz (`push`) przed każdym zejściem do dzieci: zamieniasz lewe z prawym i przekazujesz flagę dalej.",
+     "code": "// Treap niejawny (klucz = pozycja): odwracanie fragmentu tablicy w O(log n).\nmt19937 implicitRng(91823);\n\nstruct ImplicitTreap {\n    vector<int> value, left, right, size;\n    vector<unsigned> prio;\n    vector<char> rev;                // leniwe odwrócenie poddrzewa\n    int root = 0;\n\n    ImplicitTreap() { newNode(0); size[0] = 0; }   // węzeł 0 = pusty\n    int newNode(int x) {\n        value.push_back(x); left.push_back(0); right.push_back(0); size.push_back(1);\n        prio.push_back(implicitRng()); rev.push_back(0);\n        return (int)value.size() - 1;\n    }\n    void pull(int v) { size[v] = 1 + size[left[v]] + size[right[v]]; }\n    void push(int v) {\n        if (v && rev[v]) {\n            swap(left[v], right[v]);\n            if (left[v]) rev[left[v]] ^= 1;\n            if (right[v]) rev[right[v]] ^= 1;\n            rev[v] = 0;\n        }\n    }\n    void split(int v, int k, int& l, int& r) {      // l = pierwsze k elementów\n        if (!v) { l = r = 0; return; }\n        push(v);\n        if (size[left[v]] < k) { split(right[v], k - size[left[v]] - 1, right[v], r); l = v; }\n        else { split(left[v], k, l, left[v]); r = v; }\n        pull(v);\n    }\n    int merge(int l, int r) {\n        if (!l || !r) return l ? l : r;\n        if (prio[l] > prio[r]) { push(l); right[l] = merge(right[l], r); pull(l); return l; }\n        push(r);\n        left[r] = merge(l, left[r]);\n        pull(r);\n        return r;\n    }\n    void pushBack(int x) { int v = newNode(x); root = merge(root, v); }\n    void reverse(int l, int r) {                    // odwróć pozycje [l, r], 0-indeksowane\n        int a, b, c;\n        split(root, l, a, b);\n        split(b, r - l + 1, b, c);\n        if (b) rev[b] ^= 1;\n        root = merge(merge(a, b), c);\n    }\n    void collect(int v, vector<int>& out) {\n        if (!v) return;\n        push(v);\n        collect(left[v], out);\n        out.push_back(value[v]);\n        collect(right[v], out);\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "k-ty element w zbiorze z usuwaniem",
+      "kth element dynamic set",
+      "ranga elementu w zbiorze",
+      "order statistics tree"
+     ],
+     "a": "W C++ z GCC najprościej `ordered_set` z pb_ds (`find_by_order`, `order_of_key`). Bez pb_ds: treap z rozmiarami poddrzew (`kth` schodzi, porównując k z rozmiarem lewego poddrzewa) albo Fenwick po skompresowanych wartościach, jeśli znasz wszystkie wartości z góry. Wszystkie warianty O(log n)."
+    },
+    {
+     "q": [
+      "wycinanie i wklejanie fragmentu tablicy",
+      "przenieś fragment na początek",
+      "cut paste treap",
+      "rotacja fragmentu tablicy"
+     ],
+     "a": "Treap niejawny: `split(root, l)` i `split(b, len)` wycinają fragment jako osobne drzewo, a potem sklejasz kawałki w nowej kolejności, np. `merge(merge(b, a), c)` przenosi fragment na początek. Każda taka operacja to stała liczba split/merge, czyli O(log n).",
+     "code": "// fragment przenoszony na początek, na drzewie ImplicitTreap tr (pozycje [l, r] 0-indeksowane):\n// int a, b, c;\n// tr.split(tr.root, l, a, b);\n// tr.split(b, r - l + 1, b, c);\n// tr.root = tr.merge(tr.merge(b, a), c);"
+    },
+    {
+     "q": [
+      "treap czy set",
+      "po co treap skoro jest set",
+      "treap vs std::set"
+     ],
+     "a": "`std::set` nie umie k-tego elementu ani rangi w O(log n) i nie da się w nim dzielić ani sklejać zbiorów. Treap umie wszystko to plus operacje na fragmentach ciągu (wersja niejawna). Jeśli wystarczają ci zwykłe wstawianie, usuwanie i `lower_bound`, `set` jest prostszy i bezpieczniejszy."
+    },
+    {
+     "q": [
+      "treap suma na przedziale",
+      "implicit treap sum query",
+      "treap z agregatami"
+     ],
+     "a": "Dodaj do węzła pole agregatu (np. `sum`) i licz je w `pull`: `sum[v] = sum[left] + value[v] + sum[right]`. Zapytanie o fragment: wytnij go dwoma `split`, odczytaj `sum` korzenia wyciętego drzewa, sklej z powrotem. Leniwe dodawanie działa jak w lazy segment tree — znacznik w węźle i `push` przed zejściem."
+    },
+    {
+     "q": [
+      "treap priorytety rand",
+      "jak losować priorytety treap",
+      "mt19937 treap"
+     ],
+     "a": "Używaj `mt19937` (32 bity losowości), a nie `rand()`, które na niektórych platformach zwraca tylko 15 bitów — wtedy wiele węzłów ma równe priorytety i drzewo może się wydłużyć. Stałe ziarno jest w porządku na OI (testy są ustalone), losowe ziarno z zegara chroni przed złośliwymi testami."
+    }
+   ],
+   "related": [
+    "ds-ordered-set",
+    "ds-heap",
+    "ds-lazy-propagation",
+    "stl-set",
+    "ds-cartesian-tree",
+    "ds-fenwick-kth"
+   ]
+  },
+  {
+   "id": "ds-ordered-set",
+   "title": "Ordered set z pb_ds (k-ty element, ranga)",
+   "category": "Struktury danych",
+   "tags": [
+    "ordered set",
+    "pb_ds",
+    "policy based data structures",
+    "find_by_order",
+    "order_of_key",
+    "k-ty element",
+    "gnu"
+   ],
+   "aliases": [
+    "ordered set",
+    "ordered_set",
+    "pb_ds",
+    "policy based data structures",
+    "find_by_order",
+    "order_of_key",
+    "tree gnu pbds",
+    "k-ty element set",
+    "indexed set",
+    "ordered multiset",
+    "ordered set c++",
+    "set z indeksami"
+   ],
+   "summary": "Rozszerzenie GCC (`__gnu_pbds::tree`) — zbiór jak `std::set`, ale dodatkowo `find_by_order(k)` (k-ty element) i `order_of_key(x)` (ile elementów < x), oba w O(log n). Działa tylko z libstdc++ (g++).",
+   "complexity": "insert / erase / find_by_order / order_of_key: O(log n), pamięć O(n) z dużą stałą",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** To drzewo czerwono-czarne, w którym każdy węzeł zna rozmiar poddrzewa (`tree_order_statistics_node_update`). Dzięki temu oprócz zwykłych operacji `set` mamy:\n- `s.find_by_order(k)` — iterator na k-ty element (od **zera**), `end()` gdy k ≥ size,\n- `s.order_of_key(x)` — liczba elementów **ściśle mniejszych** od x."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „podaj k-ty najmniejszy element zbioru” przy wstawianiu i usuwaniu online; „który jest w rankingu zawodnik z wynikiem x”; liczenie inwersji / „ile wcześniejszych elementów jest mniejszych” bez kompresji; mediana dynamicznego zbioru."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: zbiór z k-tym elementem i rangą",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\n\ntemplate <class T>\nusing ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> q;\n    ordered_set<long long> s;\n    while (q--) {\n        int type;\n        long long x;\n        cin >> type >> x;\n        if (type == 1) s.insert(x);                       // wstaw (duplikaty ignorowane)\n        else if (type == 2) s.erase(x);                   // usuń\n        else if (type == 3) {                             // x-ty element, od 0\n            auto it = s.find_by_order(x);\n            cout << (it == s.end() ? -1 : *it) << '\\n';\n        } else {\n            cout << s.order_of_key(x) << '\\n';            // ile elementów < x\n        }\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Multizbiór przez pary (wartość, id)",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\n\n// Multizbiór: pary (wartość, unikalny numer) — duplikaty nie kolidują.\nusing ordered_multiset = tree<pair<long long, int>, null_type, less<pair<long long, int>>, rb_tree_tag,\n                              tree_order_statistics_node_update>;\n\nint main() {\n    ordered_multiset ms;\n    int uid = 0;\n    for (long long x : {5, 1, 5, 3, 5}) ms.insert({x, uid++});\n    cout << ms.order_of_key({5, INT_MIN}) << '\\n';         // ile < 5: 2\n    cout << ms.find_by_order(3)->first << '\\n';            // 4. najmniejszy (od 0: 3): 5\n    ms.erase(ms.lower_bound({5, INT_MIN}));                // usuń jedną piątkę\n    cout << ms.size() << '\\n';                             // 4\n}"
+    },
+    {
+     "type": "warn",
+     "md": "pb_ds to rozszerzenie **libstdc++ (GCC)**. Nie skompiluje się z clangiem używającym libc++ (domyślnie na macOS). Na OI (g++) działa. Nie używaj `less_equal<T>` do multizbioru — `erase(x)` i `find` przestają działać poprawnie; użyj par z unikalnym numerem."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "s.insert(x) / s.erase(x)",
+     "desc": "jak w std::set",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "s.find_by_order(k)",
+     "desc": "iterator na k-ty najmniejszy (od 0) lub end()",
+     "complexity": "O(log n)",
+     "returns": "iterator",
+     "example": "auto it = s.find_by_order(0); // minimum"
+    },
+    {
+     "sig": "s.order_of_key(x)",
+     "desc": "ile elementów jest < x",
+     "complexity": "O(log n)",
+     "returns": "size_t",
+     "example": "size_t r = s.order_of_key(10);"
+    },
+    {
+     "sig": "s.lower_bound(x) / s.upper_bound(x)",
+     "desc": "jak w std::set",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    }
+   ],
+   "pitfalls": [
+    "`find_by_order` liczy od 0, a treści zwykle mówią o k-tym od 1 — odejmij jedynkę.",
+    "`less_equal` jako „multiset” psuje `erase`, `find`, `lower_bound`.",
+    "Nie działa na clangu z libc++ (np. domyślny kompilator macOS) — kompiluj g++.",
+    "Duża stała (kilka razy wolniej niż Fenwick) — przy n = 10^6 może nie zmieścić się w limicie.",
+    "Dereferencja `find_by_order(k)` dla k ≥ size to UB — sprawdzaj `!= end()`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "ordered set c++",
+      "pb_ds ordered set",
+      "jak zrobić ordered set",
+      "tree gnu pbds",
+      "ordered_set include"
+     ],
+     "a": "Dołącz `<ext/pb_ds/assoc_container.hpp>` i `<ext/pb_ds/tree_policy.hpp>`, a potem zdefiniuj alias `tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>`. Dostajesz `set` z dodatkowymi `find_by_order(k)` (k-ty od 0) i `order_of_key(x)` (ile `< x`), wszystko w O(log n). Działa tylko z g++.",
+     "code": "#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace __gnu_pbds;\n\ntemplate <class T>\nusing ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "find_by_order",
+      "k-ty element w secie",
+      "k-ty najmniejszy w zbiorze dynamicznym",
+      "kth element set c++"
+     ],
+     "a": "`*s.find_by_order(k)` zwraca k-ty najmniejszy element, licząc od 0 (więc k-ty „od 1” to `find_by_order(k - 1)`). Dla `k ≥ s.size()` dostajesz `s.end()` — sprawdź przed dereferencją. Zwykły `std::set` wymagałby przejścia iteratorem w O(k).",
+     "code": "#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace __gnu_pbds;\n\ntemplate <class T>\nusing ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;\n\nvoid demo() {\n    ordered_set<int> s;\n    for (int x : {40, 10, 30, 20}) s.insert(x);\n    cout << *s.find_by_order(0) << ' ' << *s.find_by_order(2) << '\\n';   // 10 30\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "order_of_key",
+      "ile elementów mniejszych w secie",
+      "ranga elementu set",
+      "pozycja elementu w zbiorze"
+     ],
+     "a": "`s.order_of_key(x)` to liczba elementów **ściśle mniejszych** od `x`, czyli pozycja (od 0), na której `x` byłby po wstawieniu. Liczba elementów `≤ x` to `order_of_key(x + 1)` dla liczb całkowitych. Złożoność O(log n)."
+    },
+    {
+     "q": [
+      "ordered multiset",
+      "pb_ds z duplikatami",
+      "ordered set duplikaty",
+      "less_equal pb_ds"
+     ],
+     "a": "Wstawiaj pary `(wartość, unikalny_numer)` — wtedy duplikaty wartości są różnymi elementami. `order_of_key({x, INT_MIN})` to liczba wartości `< x`, a jedną kopię usuwasz przez `erase(lower_bound({x, INT_MIN}))`. Sztuczka z `less_equal` jest popularna, ale psuje `erase` i `find`."
+    },
+    {
+     "q": [
+      "inwersje ordered set",
+      "liczenie inwersji pb_ds",
+      "ile wcześniejszych większych ordered set"
+     ],
+     "a": "Idąc od lewej, dla `a[i]` liczba wcześniejszych większych elementów to `i - order_of_key(a[i] + 1)` (przy unikalnych wartościach — dla duplikatów użyj par). Potem wstaw `a[i]`. Całość O(n log n) bez kompresji współrzędnych, ale z większą stałą niż Fenwick.",
+     "code": "#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace __gnu_pbds;\n\ntemplate <class T>\nusing ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;\n\nlong long inversions(const vector<int>& a) {\n    tree<pair<int, int>, null_type, less<pair<int, int>>, rb_tree_tag, tree_order_statistics_node_update> s;\n    long long inv = 0;\n    for (int i = 0; i < (int)a.size(); i++) {\n        inv += i - (long long)s.order_of_key({a[i], INT_MAX});   // wcześniejsze <= a[i] odejmujemy\n        s.insert({a[i], i});\n    }\n    return inv;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "pb_ds nie kompiluje się",
+      "ext/pb_ds not found",
+      "pb_ds clang mac",
+      "pb_ds error"
+     ],
+     "a": "Biblioteka pb_ds jest częścią libstdc++ (GCC). Apple clang na macOS używa libc++, która jej nie ma — kompiluj `g++-16` (Homebrew GCC). Na sprawdzarce OI (g++) działa. Jeśli musisz mieć przenośny kod, użyj treapa albo Fenwicka po skompresowanych wartościach."
+    },
+    {
+     "q": [
+      "mediana dynamicznego zbioru",
+      "mediana z wstawianiem i usuwaniem",
+      "running median erase"
+     ],
+     "a": "Z ordered setem (lub multisetem przez pary) mediana to `*find_by_order((size - 1) / 2)` (dolna) — O(log n) na zapytanie, także przy usuwaniu dowolnych elementów. Dwa kopce działają tylko przy wstawianiu (lub z leniwym usuwaniem)."
+    }
+   ],
+   "related": [
+    "stl-set",
+    "ds-treap",
+    "ds-fenwick",
+    "ds-heap",
+    "ds-fenwick-kth"
+   ]
+  },
+  {
+   "id": "ds-string-hashing",
+   "title": "Hashowanie napisów (hash wielomianowy, dwa moduły)",
+   "category": "Struktury danych",
+   "tags": [
+    "hashowanie",
+    "hash",
+    "string hashing",
+    "rabin-karp",
+    "porównywanie podsłów",
+    "rolling hash",
+    "dwa moduły"
+   ],
+   "aliases": [
+    "hashowanie",
+    "hashowanie napisów",
+    "string hashing",
+    "hash stringa",
+    "hash wielomianowy",
+    "rolling hash",
+    "rabin karp",
+    "porównanie podsłów",
+    "hasze",
+    "haszowanie",
+    "polynomial hash",
+    "hash podslowa",
+    "hashe c++"
+   ],
+   "summary": "Napis zamieniamy na liczbę `h = s[0]·B^(n-1) + … + s[n-1]` modulo duża liczba pierwsza. Po przetworzeniu prefiksów w O(n) hash dowolnego podsłowa liczy się w O(1), więc porównanie dwóch podsłów to porównanie dwóch liczb (z małym prawdopodobieństwem kolizji).",
+   "complexity": "przetwarzanie O(n), hash podsłowa O(1), porównanie podsłów O(1), LCP przez binsearch O(log n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Traktujemy napis jak liczbę zapisaną w systemie o podstawie `B` (cyfry = kody znaków) i liczymy ją modulo `M`. Hash prefiksu: `h[i+1] = h[i]·B + s[i]`. Hash podsłowa `s[l..r)` to `h[r] - h[l]·B^(r-l)` — „odcinamy” prefiks przesunięty o długość podsłowa.\n\nRówne napisy mają zawsze równe hashe. Różne mogą mieć równe (kolizja) — dla losowej podstawy i jednego modułu ~10^9 prawdopodobieństwo kolizji pojedynczego porównania to ok. n/M. Przy milionach porównań to już realne ryzyko, dlatego używa się **dwóch modułów** (≈ 10^18 możliwych par) albo jednego modułu 2^61 − 1."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „czy podsłowa *[a, b]* i *[c, d]* są równe” (wiele zapytań), „najdłuższy wspólny prefiks dwóch sufiksów”, „ile różnych podsłów długości *k*”, „najdłuższe podsłowo występujące dwa razy” (binsearch po długości + hash), wyszukiwanie wzorca (Rabin–Karp), palindromy (hash napisu i odwróconego)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: porównywanie podsłów",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Hashowanie wielomianowe modulo dwóch liczb pierwszych; porównanie podsłów w O(1).\nstruct StringHash {\n    static constexpr long long MOD1 = 1000000007, MOD2 = 998244353;\n    vector<long long> h1, h2, p1, p2;   // h[i] = hash prefiksu s[0..i-1]\n\n    StringHash(const string& s, long long base) {\n        int n = s.size();\n        h1.assign(n + 1, 0); h2.assign(n + 1, 0);\n        p1.assign(n + 1, 1); p2.assign(n + 1, 1);\n        for (int i = 0; i < n; i++) {\n            long long c = (unsigned char)s[i] + 1;   // znak nigdy nie ma wartości 0\n            h1[i + 1] = (h1[i] * base + c) % MOD1;\n            h2[i + 1] = (h2[i] * base + c) % MOD2;\n            p1[i + 1] = p1[i] * base % MOD1;\n            p2[i + 1] = p2[i] * base % MOD2;\n        }\n    }\n    pair<long long, long long> get(int l, int r) const {   // hash s[l..r), półotwarty\n        long long x1 = (h1[r] - h1[l] * p1[r - l]) % MOD1;\n        long long x2 = (h2[r] - h2[l] * p2[r - l]) % MOD2;\n        if (x1 < 0) x1 += MOD1;\n        if (x2 < 0) x2 += MOD2;\n        return {x1, x2};\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    string s;\n    int q;\n    cin >> s >> q;\n    mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());\n    long long base = uniform_int_distribution<long long>(300, 1000000000)(rng);   // losowa podstawa > alfabet\n    StringHash hs(s, base);\n    while (q--) {\n        int a, b, c, d;                  // czy s[a..b] == s[c..d], 1-indeksowane\n        cin >> a >> b >> c >> d;\n        bool equal = (b - a == d - c) && hs.get(a - 1, b) == hs.get(c - 1, d);\n        cout << (equal ? \"TAK\" : \"NIE\") << '\\n';\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Zalety",
+      "Wady"
+     ],
+     "rows": [
+      [
+       "jeden moduł ~10^9",
+       "najprostszy, szybki",
+       "kolizje przy >10^5 porównań (paradoks urodzin)"
+      ],
+      [
+       "dwa moduły (1e9+7, 998244353)",
+       "praktycznie bez kolizji",
+       "2× wolniej i więcej pamięci"
+      ],
+      [
+       "moduł 2^61 − 1",
+       "jeden hash, bardzo mało kolizji",
+       "mnożenie przez `__int128` lub sztuczki bitowe"
+      ],
+      [
+       "unsigned long long (mod 2^64)",
+       "najszybszy",
+       "łamany przez ciąg Thuego–Morse’a — nie używaj"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Nie używaj naturalnego przepełnienia `unsigned long long` (mod 2^64) jako hasha — istnieje znana konstrukcja (słowa Thuego–Morse’a), dla której dowolna podstawa daje kolizje. Moduł musi być liczbą pierwszą, a podstawa losowa i większa od rozmiaru alfabetu."
+    },
+    {
+     "type": "tip",
+     "md": "Mapuj znaki na wartości od 1 (np. `s[i] - 'a' + 1` lub kod znaku + 1). Gdyby `'a'` miało wartość 0, napisy `\"a\"`, `\"aa\"`, `\"aaa\"` miałyby ten sam hash 0."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "StringHash hs(s, base)",
+     "desc": "hashe prefiksów i potęgi podstawy",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "hs.get(l, r)",
+     "desc": "hash podsłowa s[l..r) jako para (mod1, mod2)",
+     "complexity": "O(1)",
+     "returns": "pair<long long, long long>"
+    },
+    {
+     "sig": "hs.get(a, a + len) == hs.get(b, b + len)",
+     "desc": "porównanie podsłów długości len",
+     "complexity": "O(1)",
+     "returns": "bool"
+    }
+   ],
+   "pitfalls": [
+    "Znak o wartości 0 — napisy różniące się liczbą „zer” na początku mają ten sam hash.",
+    "Ujemny wynik `%` w C++ przy odejmowaniu — dodaj moduł.",
+    "Przepełnienie przy mnożeniu: `h * base` musi zmieścić się w `long long` — przy module ~10^9 i podstawie < 10^9 to < 10^18, OK.",
+    "Stała, znana podstawa i jeden moduł przy dużej liczbie porównań — kolizje (paradoks urodzin).",
+    "Porównanie hashy podsłów różnej długości — najpierw porównaj długości.",
+    "Hash modulo 2^64 przez przepełnienie `unsigned long long` — łamany testami Thuego–Morse’a."
+   ],
+   "qa": [
+    {
+     "q": [
+      "hashowanie napisów",
+      "string hashing c++",
+      "hash stringa jak zrobić",
+      "hash wielomianowy kod",
+      "hashowanie stringow"
+     ],
+     "a": "Licz hashe prefiksów `h[i+1] = (h[i]·B + s[i]) mod M` i potęgi `p[i] = B^i mod M`. Hash podsłowa `[l, r)` to `(h[r] - h[l]·p[r-l]) mod M` (pamiętaj o ujemnym `%`). Przetwarzanie O(n), każde podsłowo O(1); dla bezpieczeństwa dwa moduły i losowa podstawa.",
+     "code": "// Hashowanie wielomianowe modulo dwóch liczb pierwszych; porównanie podsłów w O(1).\nstruct StringHash {\n    static constexpr long long MOD1 = 1000000007, MOD2 = 998244353;\n    vector<long long> h1, h2, p1, p2;   // h[i] = hash prefiksu s[0..i-1]\n\n    StringHash(const string& s, long long base) {\n        int n = s.size();\n        h1.assign(n + 1, 0); h2.assign(n + 1, 0);\n        p1.assign(n + 1, 1); p2.assign(n + 1, 1);\n        for (int i = 0; i < n; i++) {\n            long long c = (unsigned char)s[i] + 1;   // znak nigdy nie ma wartości 0\n            h1[i + 1] = (h1[i] * base + c) % MOD1;\n            h2[i + 1] = (h2[i] * base + c) % MOD2;\n            p1[i + 1] = p1[i] * base % MOD1;\n            p2[i + 1] = p2[i] * base % MOD2;\n        }\n    }\n    pair<long long, long long> get(int l, int r) const {   // hash s[l..r), półotwarty\n        long long x1 = (h1[r] - h1[l] * p1[r - l]) % MOD1;\n        long long x2 = (h2[r] - h2[l] * p2[r - l]) % MOD2;\n        if (x1 < 0) x1 += MOD1;\n        if (x2 < 0) x2 += MOD2;\n        return {x1, x2};\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "porównywanie podsłów",
+      "czy dwa podsłowa są równe",
+      "compare substrings fast",
+      "rowne podslowa szybko",
+      "substring equality queries"
+     ],
+     "a": "Najpierw porównaj długości, potem hashe obu podsłów — O(1) na zapytanie po O(n) przygotowania. Bez hashy porównanie kosztuje O(długość), czyli przy wielu zapytaniach O(n·q). Wynik „równe” jest prawdziwy z bardzo dużym prawdopodobieństwem (przy dwóch modułach praktycznie zawsze)."
+    },
+    {
+     "q": [
+      "dlaczego dwa moduły",
+      "kolizje hashy",
+      "hash collision",
+      "jeden modul czy dwa",
+      "paradoks urodzin hash"
+     ],
+     "a": "Przy module M ≈ 10^9 dwa różne napisy kolidują z prawdopodobieństwem ~1/M na porównanie, ale gdy porównujesz/zbierasz ~10^5–10^6 hashy (np. w `set`), paradoks urodzin daje kolizję z dużym prawdopodobieństwem (~k²/2M). Para modułów daje ~10^18 możliwych wartości, co wystarcza w praktyce. Alternatywą jest jeden moduł 2^61 − 1."
+    },
+    {
+     "q": [
+      "hash mod 2^61-1",
+      "mersenne prime hash",
+      "hash 2^61 - 1 c++",
+      "jeden duzy modul hash"
+     ],
+     "a": "Moduł `M = 2^61 − 1` jest pierwszy, a mnożenie dwóch liczb < M robi się przez `__int128` i redukcję bitową. Daje jedną liczbę zamiast pary i znikome prawdopodobieństwo kolizji, przy podobnej szybkości jak dwa małe moduły.",
+     "code": "const unsigned long long MOD61 = (1ULL << 61) - 1;\nunsigned long long mulMod61(unsigned long long a, unsigned long long b) {\n    __uint128_t c = (__uint128_t)a * b;\n    unsigned long long res = (unsigned long long)(c & MOD61) + (unsigned long long)(c >> 61);\n    if (res >= MOD61) res -= MOD61;\n    return res;\n}\nunsigned long long addMod61(unsigned long long a, unsigned long long b) {\n    unsigned long long res = a + b;\n    if (res >= MOD61) res -= MOD61;\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "najdłuższy wspólny prefiks hash",
+      "lcp hashowanie binsearch",
+      "lcp dwóch sufiksów",
+      "longest common prefix hash"
+     ],
+     "a": "Binsearch po długości: dla `len` sprawdzasz, czy `get(i, i+len) == get(j, j+len)`. Własność jest monotoniczna (jeśli prefiksy długości `len` są równe, to krótsze też), więc LCP znajdziesz w O(log n). Tak porównuje się też dwa podsłowa leksykograficznie: po LCP porównujesz pierwszy różny znak.",
+     "code": "// LCP sufiksów zaczynających się w i i j; hs — StringHash dla s, n = |s|\nint lcp(const vector<long long>& h, const vector<long long>& p, long long mod, int n, int i, int j) {\n    auto get = [&](int l, int r) { long long x = (h[r] - h[l] * p[r - l]) % mod; return x < 0 ? x + mod : x; };\n    int lo = 0, hi = n - max(i, j);          // odpowiedź w [lo, hi]\n    while (lo < hi) {\n        int mid = lo + (hi - lo + 1) / 2;\n        if (get(i, i + mid) == get(j, j + mid)) lo = mid;\n        else hi = mid - 1;\n    }\n    return lo;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "rabin karp",
+      "wyszukiwanie wzorca hash",
+      "ile razy wzorzec występuje w tekście hash",
+      "pattern matching hashing"
+     ],
+     "a": "Policz hash wzorca i hashe wszystkich okien długości `|p|` w tekście (z hashy prefiksów) — każde okno O(1), razem O(|t| + |p|). Gdy hashe się zgadzają, uznajesz wystąpienie (z dwoma modułami bez weryfikacji). Deterministyczną alternatywą jest KMP lub funkcja Z.",
+     "code": "vector<int> occurrences(const string& text, const string& pat) {\n    const long long M = 1000000007, B = 131;\n    int n = text.size(), m = pat.size();\n    vector<int> res;\n    if (m > n) return res;\n    long long hp = 0, ht = 0, pw = 1;\n    for (int i = 0; i < m; i++) {\n        hp = (hp * B + pat[i]) % M;\n        ht = (ht * B + text[i]) % M;\n        if (i > 0) pw = pw * B % M;          // B^(m-1)\n    }\n    for (int i = 0; ; i++) {\n        if (ht == hp && text.compare(i, m, pat) == 0) res.push_back(i);   // weryfikacja = zero kolizji\n        if (i + m >= n) break;\n        ht = (ht - text[i] * pw % M + M) % M;     // usuń znak z lewej\n        ht = (ht * B + text[i + m]) % M;          // dodaj znak z prawej\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sprawdzanie palindromu hash",
+      "czy podsłowo jest palindromem",
+      "palindrom hashowanie",
+      "palindrome substring queries"
+     ],
+     "a": "Zbuduj hashe dla `s` i dla odwróconego `rev`. Podsłowo `s[l..r)` jest palindromem, gdy jego hash równa się hashowi odpowiadającego mu fragmentu `rev[n-r..n-l)`. Każde zapytanie O(1); najdłuższe palindromy znajdziesz binsearchem po promieniu (osobno dla parzystych i nieparzystych) albo algorytmem Manachera w O(n)."
+    },
+    {
+     "q": [
+      "ile różnych podsłów długości k",
+      "liczba różnych podciągów spójnych długości k",
+      "distinct substrings of length k hash"
+     ],
+     "a": "Policz hash każdego okna długości `k` (O(1) każde), wrzuć do wektora, posortuj i policz unikalne — O(n log n). Przy jednym module ~10^9 i n = 10^6 kolizje są prawdopodobne, więc użyj pary modułów (para `long long` sortuje się zwykłym `sort`) albo 2^61 − 1."
+    },
+    {
+     "q": [
+      "najdłuższe podsłowo występujące dwa razy",
+      "longest repeated substring",
+      "binsearch po długości hash"
+     ],
+     "a": "Jeśli podsłowo długości `L` występuje dwa razy, to każde krótsze też — własność monotoniczna. Binsearch po `L`, a dla danego `L` sprawdzasz, czy któreś dwa okna mają ten sam hash (sortowanie lub `unordered_set`). Złożoność O(n log² n) z sortowaniem lub O(n log n) z haszowaniem."
+    },
+    {
+     "q": [
+      "hash unsigned long long przepełnienie",
+      "hash bez modulo",
+      "czy mogę liczyć hash z przepełnieniem ull",
+      "thue morse hash"
+     ],
+     "a": "Nie rób tego: hash mod 2^64 (naturalne przepełnienie `unsigned long long`) jest łamany przez słowa Thuego–Morse’a — dla **każdej** podstawy dwa różne napisy długości ~2000 dają ten sam hash. Moduł musi być liczbą pierwszą (np. 10^9+7, 998244353 albo 2^61 − 1)."
+    }
+   ],
+   "related": [
+    "str-kmp",
+    "str-z-function",
+    "str-manacher",
+    "ds-custom-hash",
+    "tech-binary-search",
+    "ds-trie",
+    "str-hashing"
+   ]
+  },
+  {
+   "id": "ds-custom-hash",
+   "title": "Własny hash do unordered_map (splitmix64, anty-testy)",
+   "category": "Struktury danych",
+   "tags": [
+    "unordered_map",
+    "hash",
+    "splitmix64",
+    "anty-test",
+    "custom hash",
+    "gp_hash_table",
+    "tablica haszująca"
+   ],
+   "aliases": [
+    "custom hash",
+    "custom_hash",
+    "splitmix64",
+    "unordered_map wolne",
+    "unordered_map tle",
+    "anty hash test",
+    "anti hash test",
+    "hash do unordered_map",
+    "hash dla pary",
+    "gp_hash_table",
+    "unordered_map pair",
+    "własny hash c++"
+   ],
+   "summary": "Domyślny `std::hash<int>` to identyczność, więc spreparowane dane mogą wrzucić wszystkie klucze do jednego kubełka i zamienić O(1) w O(n). Własny hash z mieszaniem bitów (splitmix64) i losowym przesunięciem temu zapobiega; ten sam mechanizm pozwala hashować pary.",
+   "complexity": "średnio O(1) na operację (z dobrym hashem), pesymistycznie O(n); hash O(1)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Dlaczego.** `unordered_map` rozkłada klucze do kubełków według `hash(x) % liczba_kubełków`. Dla liczb całkowitych `std::hash` (w libstdc++) zwraca samą liczbę, a liczby kubełków to znane liczby pierwsze — można więc dobrać klucze tak, by wszystkie trafiały do jednego kubełka, co daje O(n) na operację i O(n²) łącznie. Na zawodach z hakowaniem (Codeforces) to częsty atak; na OI testy są ustalone z góry, ale złośliwy test z wieloma wielokrotnościami jednej liczby też może się trafić.\n\n**Rozwiązanie.** Funkcja `splitmix64` dobrze miesza bity, a dodanie losowej stałej (z zegara) sprawia, że nie da się z góry przygotować złych danych."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: zliczanie wystąpień + hash dla par",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Hash odporny na anty-testy dla unordered_map / unordered_set (splitmix64 + losowe przesunięcie).\nstruct custom_hash {\n    static uint64_t splitmix64(uint64_t x) {\n        x += 0x9e3779b97f4a7c15ULL;\n        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;\n        x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;\n        return x ^ (x >> 31);\n    }\n    size_t operator()(uint64_t x) const {\n        static const uint64_t FIXED_RANDOM = chrono::steady_clock::now().time_since_epoch().count();\n        return splitmix64(x + FIXED_RANDOM);\n    }\n};\n\n// Hash dla pary liczb (np. współrzędnych) — łączy dwie wartości przed mieszaniem.\nstruct pair_hash {\n    size_t operator()(const pair<int, int>& p) const {\n        static custom_hash h;\n        return h(((uint64_t)(uint32_t)p.first << 32) | (uint32_t)p.second);\n    }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    unordered_map<long long, int, custom_hash> freq;\n    freq.reserve(2 * n);                       // mniej przehashowań\n    long long best = 0, bestCount = 0;\n    for (int i = 0; i < n; i++) {\n        long long x;\n        cin >> x;\n        int c = ++freq[x];\n        if (c > bestCount || (c == bestCount && x < best)) { best = x; bestCount = c; }\n    }\n    cout << best << ' ' << bestCount << '\\n';  // najczęstsza wartość (najmniejsza przy remisie) i liczba wystąpień\n\n    unordered_set<pair<int, int>, pair_hash> visited;\n    visited.insert({1, -2});\n    cout << visited.count({1, -2}) << visited.count({-2, 1}) << '\\n';   // 10\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Jeszcze szybsza bywa `gp_hash_table` z pb_ds (`#include <ext/pb_ds/assoc_container.hpp>`), też z `custom_hash`. Gdy klucze są małe (np. ≤ 10^7), zwykła tablica jest szybsza niż jakakolwiek mapa; gdy klucze są znane z góry — kompresja i tablica."
+    },
+    {
+     "type": "warn",
+     "md": "`unordered_map<pair<int,int>, int>` bez własnego hasha **nie skompiluje się** — standard nie definiuje `std::hash` dla par. Musisz podać trzeci parametr szablonu (np. `pair_hash` wyżej) albo zakodować parę w jednej liczbie `long long`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "unordered_map<K, V, custom_hash> mp",
+     "desc": "mapa z odpornym hashem",
+     "complexity": "O(1) średnio"
+    },
+    {
+     "sig": "mp.reserve(n)",
+     "desc": "z góry przydziela kubełki — mniej przehashowań",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "splitmix64(x)",
+     "desc": "mieszanie bitów 64-bitowej liczby",
+     "complexity": "O(1)",
+     "returns": "uint64_t"
+    }
+   ],
+   "pitfalls": [
+    "Brak hasha dla `pair`/`tuple` — błąd kompilacji „use of deleted function std::hash<pair<…>>”.",
+    "Iterowanie po `unordered_map` w nieokreślonej kolejności — wynik zależy od hasha; jeśli kolejność ma znaczenie, sortuj albo użyj `map`.",
+    "`mp[x]` przy samym sprawdzaniu istnienia wstawia element — używaj `find` lub `count`.",
+    "Duża stała: przy 10^6 operacji `unordered_map` bywa wolniejsze od posortowanego wektora + binsearch."
+   ],
+   "qa": [
+    {
+     "q": [
+      "custom hash unordered_map",
+      "splitmix64",
+      "hash przeciw anty testom",
+      "unordered_map anti hash",
+      "własny hash c++"
+     ],
+     "a": "Zdefiniuj strukturę z `operator()`, która miesza bity klucza funkcją `splitmix64` i dodaje losową stałą z zegara, a potem podaj ją jako trzeci parametr: `unordered_map<long long, int, custom_hash>`. Dzięki temu nikt nie przygotuje danych trafiających do jednego kubełka, a operacje zostają średnio O(1).",
+     "code": "// Hash odporny na anty-testy dla unordered_map / unordered_set (splitmix64 + losowe przesunięcie).\nstruct custom_hash {\n    static uint64_t splitmix64(uint64_t x) {\n        x += 0x9e3779b97f4a7c15ULL;\n        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;\n        x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;\n        return x ^ (x >> 31);\n    }\n    size_t operator()(uint64_t x) const {\n        static const uint64_t FIXED_RANDOM = chrono::steady_clock::now().time_since_epoch().count();\n        return splitmix64(x + FIXED_RANDOM);\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "unordered_map wolne",
+      "unordered_map tle",
+      "dlaczego unordered_map jest wolna",
+      "unordered_map n^2"
+     ],
+     "a": "Możliwe przyczyny: (1) złośliwe klucze kolidujące w jednym kubełku (rozwiązanie: `custom_hash`), (2) wiele przehashowań przy rośnięciu (rozwiązanie: `reserve`), (3) duża stała w porównaniu z tablicą — jeśli klucze są małe lub znane z góry, użyj tablicy po kompresji. Przy 10^6 operacji `map` (O(log n)) bywa porównywalna z `unordered_map`."
+    },
+    {
+     "q": [
+      "unordered_map pair",
+      "hash dla pary",
+      "unordered_map z kluczem pair",
+      "unordered_set pair c++",
+      "hash pair<int,int>"
+     ],
+     "a": "Standard nie ma `std::hash` dla `pair`, więc podaj własny: połącz dwie liczby w jedną 64-bitową (`(uint64_t)(uint32_t)a << 32 | (uint32_t)b`) i przepuść przez `splitmix64`. Alternatywa: trzymaj `long long` klucz `a * BIG + b` w zwykłej `unordered_map` z `custom_hash`.",
+     "code": "// Hash odporny na anty-testy dla unordered_map / unordered_set (splitmix64 + losowe przesunięcie).\nstruct custom_hash {\n    static uint64_t splitmix64(uint64_t x) {\n        x += 0x9e3779b97f4a7c15ULL;\n        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;\n        x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;\n        return x ^ (x >> 31);\n    }\n    size_t operator()(uint64_t x) const {\n        static const uint64_t FIXED_RANDOM = chrono::steady_clock::now().time_since_epoch().count();\n        return splitmix64(x + FIXED_RANDOM);\n    }\n};\n\nstruct pair_hash {\n    size_t operator()(const pair<int, int>& p) const {\n        static custom_hash h;\n        return h(((uint64_t)(uint32_t)p.first << 32) | (uint32_t)p.second);\n    }\n};\nunordered_map<pair<int, int>, int, pair_hash> cellValue;",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "gp_hash_table",
+      "pb_ds hash table",
+      "szybsza mapa niż unordered_map",
+      "gp hash table custom hash"
+     ],
+     "a": "`gp_hash_table<K, V, custom_hash>` z `<ext/pb_ds/assoc_container.hpp>` to tablica z adresowaniem otwartym — zwykle 2–3× szybsza od `unordered_map`. Interfejs jak mapa (`mp[k]`, `find`, `erase`). Też potrzebuje dobrego hasha — z domyślnym jest jeszcze bardziej podatna na złe dane. Działa tylko z g++.",
+     "code": "#include <ext/pb_ds/assoc_container.hpp>\nstruct chash {\n    size_t operator()(uint64_t x) const {\n        static const uint64_t R = chrono::steady_clock::now().time_since_epoch().count();\n        x += R + 0x9e3779b97f4a7c15ULL;\n        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;\n        x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;\n        return x ^ (x >> 31);\n    }\n};\n__gnu_pbds::gp_hash_table<long long, int, chash> table;",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "unordered_map reserve",
+      "max_load_factor",
+      "przyspieszenie unordered_map"
+     ],
+     "a": "`mp.reserve(n)` przydziela od razu tyle kubełków, by zmieścić n elementów bez przehashowania — oszczędza kilka pełnych przebudów tablicy. Można też zmniejszyć `max_load_factor(0.25)`, żeby kubełki były krótsze kosztem pamięci. Obie sztuczki dają zwykle 20–50% przyspieszenia."
+    },
+    {
+     "q": [
+      "map czy unordered_map",
+      "kiedy unordered_map a kiedy map",
+      "unordered_map vs map oi"
+     ],
+     "a": "`map`: O(log n), uporządkowana (iteracja w kolejności kluczy, `lower_bound`), przewidywalny czas. `unordered_map`: O(1) średnio, bez porządku, wrażliwa na złe dane i ma większy narzut pamięci. Gdy potrzebujesz porządku lub zakresów — `map`; gdy tylko „czy jest / ile razy” przy dużej liczbie operacji — `unordered_map` z `custom_hash` i `reserve`."
+    }
+   ],
+   "related": [
+    "stl-unordered-map",
+    "stl-map",
+    "ds-string-hashing",
+    "tech-two-sum-hashmap",
+    "tech-coordinate-compression",
+    "stl-unordered-set",
+    "stl-ref-functional-iterator",
+    "stl-ref-unordered-all",
+    "tree-isomorphism"
+   ]
+  },
+  {
+   "id": "ds-bitset",
+   "title": "bitset — przyspieszanie o czynnik 64",
+   "category": "Struktury danych",
+   "tags": [
+    "bitset",
+    "bity",
+    "przyspieszenie",
+    "subset sum",
+    "plecak bitset",
+    "operacje bitowe",
+    "n/64"
+   ],
+   "aliases": [
+    "bitset",
+    "std::bitset",
+    "bitset c++",
+    "bitset przyspieszenie",
+    "subset sum bitset",
+    "plecak na bitsecie",
+    "bitset count",
+    "bitset shift",
+    "_Find_first",
+    "dynamiczny bitset",
+    "bitset n^3/64",
+    "bitset jak uzywac"
+   ],
+   "summary": "`bitset<N>` przechowuje N bitów w słowach 64-bitowych; operacje `&`, `|`, `^`, `<<`, `>>`, `count()` działają na 64 bitach naraz. Pozwala przyspieszyć dynamiki i algorytmy zbiorowe (subset sum, domknięcie przechodnie, wspólni sąsiedzi) mniej więcej 64 razy.",
+   "complexity": "operacje logiczne i przesunięcia O(N/64), count O(N/64), dostęp do bitu O(1), pamięć N/8 bajtów",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Zamiast tablicy `bool` (1 bajt na element) trzymamy bity w słowach 64-bitowych. Operacja `a |= b` dla bitsetu rozmiaru N to N/64 operacji procesora zamiast N. Algorytm O(n·S) z wewnętrzną pętlą „po wszystkich bitach” staje się O(n·S/64).\n\nKlasyczny przykład: **subset sum**. `reach[s] = 1`, jeśli sumę `s` da się uzyskać. Dodanie przedmiotu o wadze `w`: `reach |= reach << w` — wszystkie dotychczas osiągalne sumy przesunięte o `w`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** dynamika na wartościach logicznych (osiągalność, „czy da się uzyskać sumę”), n ≈ 10^4–10^5 i złożoność O(n²) lub O(n³) „trochę za duża”, zbiory podzbiorów małego uniwersum, domknięcie przechodnie grafu (n ≤ 2000), liczenie trójkątów / wspólnych sąsiadów, eliminacja Gaussa nad GF(2)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: subset sum na bitsecie (O(n·S/64))",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXS = 100001;          // rozmiar musi być stałą czasu kompilacji\n\nint main() {\n    int n, S;\n    cin >> n >> S;\n    bitset<MAXS> reach;           // reach[s] = da się uzyskać sumę s\n    reach[0] = 1;\n    for (int i = 0; i < n; i++) {\n        int w;\n        cin >> w;\n        reach |= reach << w;      // każdą osiągalną sumę można powiększyć o w\n    }\n    cout << reach.count() << '\\n';                 // ile różnych sum (łącznie z 0)\n    cout << (reach[S] ? \"TAK\" : \"NIE\") << '\\n';   // czy suma S jest osiągalna\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Znaczenie",
+      "Koszt"
+     ],
+     "rows": [
+      [
+       "b[i], b.set(i), b.reset(i), b.flip(i)",
+       "odczyt / ustawienie / wyzerowanie / odwrócenie bitu",
+       "O(1)"
+      ],
+      [
+       "a & b, a | b, a ^ b, ~a",
+       "przecięcie, suma, różnica symetryczna, dopełnienie",
+       "O(N/64)"
+      ],
+      [
+       "a << k, a >> k",
+       "przesunięcie (bit i przechodzi na i+k / i−k)",
+       "O(N/64)"
+      ],
+      [
+       "b.count()",
+       "liczba zapalonych bitów",
+       "O(N/64)"
+      ],
+      [
+       "b.any(), b.none(), b.all()",
+       "czy jakiś / żaden / wszystkie",
+       "O(N/64)"
+      ],
+      [
+       "b._Find_first(), b._Find_next(i)",
+       "pierwszy zapalony bit / następny po i (GCC)",
+       "O(N/64)"
+      ],
+      [
+       "b.to_string(), b.to_ullong()",
+       "konwersje",
+       "O(N)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Rozmiar bitsetu to **stała czasu kompilacji** (`bitset<N>`, N musi być znane podczas kompilacji). Nie da się napisać `bitset<n>` dla `n` wczytanego z wejścia — weź maksymalny rozmiar z treści. Duże bitsety deklaruj globalnie lub `static` (np. tablica `bitset<2000> adj[2000]` to 500 KB, OK; ale 10^5 bitsetów po 10^5 bitów to 1,25 GB)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bitset<N> b",
+     "desc": "N wyzerowanych bitów (N stałe)",
+     "complexity": "O(N/64)"
+    },
+    {
+     "sig": "b |= b << w",
+     "desc": "przesunięcie i suma — krok plecaka/subset sum",
+     "complexity": "O(N/64)"
+    },
+    {
+     "sig": "b.count()",
+     "desc": "liczba jedynek",
+     "complexity": "O(N/64)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "(a & b).count()",
+     "desc": "rozmiar przecięcia zbiorów (np. wspólni sąsiedzi)",
+     "complexity": "O(N/64)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "b._Find_first() / b._Find_next(i)",
+     "desc": "iteracja po zapalonych bitach (rozszerzenie GCC)",
+     "complexity": "O(N/64 + liczba jedynek)",
+     "returns": "size_t"
+    }
+   ],
+   "pitfalls": [
+    "Rozmiar z wejścia (`bitset<n>`) — błąd kompilacji; użyj maksymalnego N.",
+    "Przesunięcie poza rozmiar gubi bity — `b << w` dla sumy > N-1 obcina wynik; dobierz N z zapasem.",
+    "Bitset lokalny w funkcji przy dużym N i rekurencji — stos; deklaruj globalnie.",
+    "`b.count()` w pętli po wszystkich i — każde wywołanie to O(N/64), nie O(1).",
+    "`to_ullong()` rzuca wyjątek, gdy zapalone są bity powyżej 63."
+   ],
+   "qa": [
+    {
+     "q": [
+      "bitset c++",
+      "jak używać bitset",
+      "std::bitset przyklad",
+      "bitset operacje",
+      "bitset podstawy"
+     ],
+     "a": "`bitset<N> b;` to N bitów (N stałe w czasie kompilacji). Masz dostęp `b[i]`, `set/reset/flip`, operatory `& | ^ ~ << >>` działające na 64 bitach naraz oraz `count()`, `any()`, `none()`. Operacje na całym bitsecie kosztują O(N/64), dostęp do bitu O(1).",
+     "code": "bitset<16> a(\"1010\"), b;\nb.set(1);\nb.set(5);\ncout << (a | b) << '\\n';          // 0000000000101010\ncout << (a & b).count() << '\\n';  // 1 (wspólny bit 1)\ncout << (a << 2) << '\\n';         // 0000000000101000"
+    },
+    {
+     "q": [
+      "subset sum bitset",
+      "plecak bitset",
+      "czy da się uzyskać sumę bitset",
+      "suma podzbioru bitset",
+      "knapsack bitset"
+     ],
+     "a": "`reach[0] = 1`, a dla każdego przedmiotu o wadze `w`: `reach |= reach << w`. Bit `s` mówi, czy suma `s` jest osiągalna. Zamiast O(n·S) operacji na `bool` masz O(n·S/64) — dla n = 1000, S = 10^6 to ok. 1,6·10^7 zamiast 10^9."
+    },
+    {
+     "q": [
+      "wspólni sąsiedzi bitset",
+      "liczenie trójkątów bitset",
+      "count triangles bitset",
+      "przecięcie list sąsiedztwa"
+     ],
+     "a": "Trzymaj macierz sąsiedztwa jako `bitset<N> adj[N]`. Liczba wspólnych sąsiadów `u` i `v` to `(adj[u] & adj[v]).count()` w O(N/64). Liczba trójkątów: suma po krawędziach `(u, v)` takich wartości, podzielona przez 3 — O(m·n/64).",
+     "code": "const int N = 2000;\nbitset<N> adjacency[N];\nlong long countTriangles(int n, const vector<pair<int, int>>& edges) {\n    for (auto [u, v] : edges) { adjacency[u][v] = 1; adjacency[v][u] = 1; }\n    long long total = 0;\n    for (auto [u, v] : edges) total += (adjacency[u] & adjacency[v]).count();\n    return total / 3;   // każdy trójkąt policzony przy każdej z 3 krawędzi\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "domknięcie przechodnie bitset",
+      "transitive closure bitset",
+      "osiągalność wszystkie pary bitset",
+      "floyd warshall bitset"
+     ],
+     "a": "Floyd–Warshall dla osiągalności: dla każdego `k` i każdego `i`, jeśli `reach[i][k]`, to `reach[i] |= reach[k]`. Wewnętrzna pętla po `j` znika w operacji na bitsecie, więc O(n³/64) — dla n = 2000 to ok. 1,25·10^8 operacji słowowych.",
+     "code": "const int MAXN = 2000;\nbitset<MAXN> reach[MAXN];   // reach[i][j] = j osiągalny z i (na start: krawędzie i reach[i][i] = 1)\nvoid closure(int n) {\n    for (int k = 0; k < n; k++)\n        for (int i = 0; i < n; i++)\n            if (reach[i][k]) reach[i] |= reach[k];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "bitset dynamiczny rozmiar",
+      "bitset rozmiar z wejścia",
+      "bitset<n> nie działa",
+      "dynamic bitset c++"
+     ],
+     "a": "`bitset<N>` wymaga N znanego podczas kompilacji — weź maksimum z treści (np. `bitset<100001>`). Jeśli naprawdę potrzebujesz rozmiaru z wejścia, użyj `vector<uint64_t>` i własnych operacji (słowo po słowie) albo szablonu wybierającego najbliższy rozmiar z kilku stałych. `vector<bool>` jest upakowany, ale nie ma szybkich operacji na całości."
+    },
+    {
+     "q": [
+      "_Find_first",
+      "iterowanie po bitach bitset",
+      "_Find_next",
+      "jak przejść po jedynkach bitset"
+     ],
+     "a": "`b._Find_first()` zwraca indeks pierwszej jedynki (albo `N`, gdy brak), a `b._Find_next(i)` — pierwszą jedynkę po pozycji `i`. Pętla po wszystkich jedynkach kosztuje O(N/64 + liczba jedynek). To rozszerzenia GCC (podkreślnik w nazwie).",
+     "code": "bitset<64> b;\nb.set(3); b.set(10); b.set(40);\nfor (size_t i = b._Find_first(); i < b.size(); i = b._Find_next(i)) cout << i << ' ';   // 3 10 40\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "bitset vs vector bool",
+      "bitset czy tablica bool",
+      "ile pamięci zajmuje bitset"
+     ],
+     "a": "Oba zajmują 1 bit na element (`bool[]` — 1 bajt). `bitset` ma szybkie operacje na całości (`|`, `&`, `<<`, `count`) w O(N/64), ale stały rozmiar; `vector<bool>` ma rozmiar dynamiczny, za to brak szybkich operacji zbiorowych. Do sita Eratostenesa wystarczy dowolny; do przyspieszania dynamik — `bitset`."
+    },
+    {
+     "q": [
+      "sito na bitsecie",
+      "sito eratostenesa bitset",
+      "sieve bitset 10^8"
+     ],
+     "a": "Sito do 10^8 w tablicy `bool` zajmuje 100 MB, w `bitset<100000001>` — 12,5 MB. Zadeklaruj go globalnie (na stosie się nie zmieści) i oznaczaj złożone bity tak jak zwykle. Dostęp do pojedynczego bitu jest trochę wolniejszy niż do bajtu, ale lepsze wykorzystanie cache zwykle to nadrabia.",
+     "code": "const int LIMIT = 1000000;\nbitset<LIMIT + 1> composite;\nvoid sieve() {\n    composite[0] = composite[1] = 1;\n    for (long long i = 2; i * i <= LIMIT; i++)\n        if (!composite[i])\n            for (long long j = i * i; j <= LIMIT; j += i) composite[j] = 1;\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "tech-bit-tricks",
+    "dp-knapsack-01",
+    "math-sieve",
+    "ds-sqrt-decomposition",
+    "stl-bitset",
+    "stl-ref-bitset-all"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1011 @@
+{
+ "chunk": "numbers-arith",
+ "articles": [
+  {
+   "id": "num-rounding",
+   "title": "Zaokrąglanie w C++: round, floor, ceil, trunc, llround i zaokrąglanie do k miejsc",
+   "category": "Liczby i typy",
+   "tags": [
+    "zaokrąglanie",
+    "round",
+    "floor",
+    "ceil",
+    "trunc",
+    "llround",
+    "lround",
+    "miejsca po przecinku",
+    "w górę",
+    "w dół",
+    "podłoga",
+    "sufit",
+    "banker's rounding"
+   ],
+   "aliases": [
+    "jak zaokraglic liczbe",
+    "zaokraglenie w gore c++",
+    "zaokraglenie w dol c++",
+    "zaokraglanie c++",
+    "round c++",
+    "jak zaokraglic do 2 miejsc",
+    "round to 2 decimal places",
+    "ceil c++",
+    "floor c++",
+    "zaokraglenie do calkowitej",
+    "zaokraglic do najblizszej",
+    "rounding c++",
+    "jak zaokraglic double do int"
+   ],
+   "summary": "Funkcje z `<cmath>`: `round(x)` — do najbliższej (połówki od zera), `floor(x)` — w dół, `ceil(x)` — w górę, `trunc(x)` — obcięcie w stronę zera. Zwracają `double`; liczbę całkowitą dają `llround(x)` lub `(long long)floor(x)`. Do wypisania z k miejscami: `cout << fixed << setprecision(k) << x`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "x",
+      "round",
+      "floor",
+      "ceil",
+      "trunc / (int)x"
+     ],
+     "rows": [
+      [
+       "2.3",
+       "2",
+       "2",
+       "3",
+       "2"
+      ],
+      [
+       "2.5",
+       "3",
+       "2",
+       "3",
+       "2"
+      ],
+      [
+       "2.7",
+       "3",
+       "2",
+       "3",
+       "2"
+      ],
+      [
+       "-2.3",
+       "-2",
+       "-3",
+       "-2",
+       "-2"
+      ],
+      [
+       "-2.5",
+       "-3",
+       "-3",
+       "-2",
+       "-2"
+      ],
+      [
+       "-2.7",
+       "-3",
+       "-3",
+       "-2",
+       "-2"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Podstawy",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    double x = 2.675;\n    // 1) Do WYPISANIA z 2 miejscami — najczęstsza potrzeba:\n    cout << fixed << setprecision(2) << 3.14159 << '\\n';    // 3.14\n    // 2) Do całkowitej:\n    long long a = llround(2.5);     // 3   (połówki od zera)\n    long long b = (long long)floor(-2.5);   // -3\n    long long c = (long long)ceil(2.1);     // 3\n    // 3) Wartość zaokrąglona do 2 miejsc (np. do dalszych obliczeń):\n    double r = round(x * 100) / 100;        // 2.68 (ale patrz pułapki!)\n    cout << a << ' ' << b << ' ' << c << ' ' << r << '\\n';\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Wypisanie a wartość.** Jeśli zadanie każe *wypisać* wynik zaokrąglony do k miejsc, wystarczy\n`fixed << setprecision(k)` (albo `printf(\"%.kf\")`) — nie zmieniaj wartości. `round(x * 100) / 100` jest potrzebne\ntylko, gdy zaokrąglona wartość ma brać udział w dalszych obliczeniach — i nawet wtedy wynik jest `double`, więc np.\n`0.1` nadal nie jest dokładne."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Kierunek",
+      "Zwraca",
+      "Połówki (x.5)"
+     ],
+     "rows": [
+      [
+       "`round(x)`",
+       "najbliższa",
+       "double",
+       "od zera: 2.5→3, −2.5→−3"
+      ],
+      [
+       "`lround(x)` / `llround(x)`",
+       "najbliższa",
+       "long / long long",
+       "od zera"
+      ],
+      [
+       "`floor(x)`",
+       "w dół (−∞)",
+       "double",
+       "—"
+      ],
+      [
+       "`ceil(x)`",
+       "w górę (+∞)",
+       "double",
+       "—"
+      ],
+      [
+       "`trunc(x)`, `(int)x`",
+       "w stronę zera",
+       "double / int",
+       "—"
+      ],
+      [
+       "`nearbyint(x)`, `rint(x)`",
+       "najbliższa",
+       "double",
+       "do parzystej: 2.5→2, 3.5→4"
+      ],
+      [
+       "`printf(\"%.0f\", x)`",
+       "najbliższa",
+       "tekst",
+       "do parzystej (glibc, macOS)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Liczby takie jak 2.675 czy 1.005 nie są dokładnie reprezentowalne. `1.005 * 100` = 100.49999999999999, więc\n`round(1.005 * 100) / 100` daje **1.00**, a nie 1.01. Gdy dane mają stałą liczbę miejsc po przecinku (kwoty), licz na\nliczbach całkowitych (grosze) albo dodaj mały epsilon przed zaokrągleniem."
+    },
+    {
+     "type": "tip",
+     "md": "Zaokrąglanie **dzielenia liczb całkowitych** rób bez `double`: w górę `(a + b - 1) / b`, do najbliższej `(a + b / 2) / b`\n(dla a ≥ 0, b > 0). Szczegóły w artykule o dzieleniu z zaokrągleniem w górę."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "round(x)",
+     "desc": "do najbliższej całkowitej, połówki od zera",
+     "returns": "double",
+     "example": "round(2.5) == 3"
+    },
+    {
+     "sig": "llround(x)",
+     "desc": "jak round, ale zwraca long long",
+     "returns": "long long",
+     "example": "llround(-2.5) == -3"
+    },
+    {
+     "sig": "floor(x)",
+     "desc": "największa całkowita ≤ x",
+     "returns": "double",
+     "example": "floor(-2.3) == -3"
+    },
+    {
+     "sig": "ceil(x)",
+     "desc": "najmniejsza całkowita ≥ x",
+     "returns": "double",
+     "example": "ceil(2.1) == 3"
+    },
+    {
+     "sig": "trunc(x)",
+     "desc": "obcięcie w stronę zera",
+     "returns": "double",
+     "example": "trunc(-2.7) == -2"
+    },
+    {
+     "sig": "nearbyint(x)",
+     "desc": "do najbliższej wg trybu zaokrąglania (domyślnie połówki do parzystej)",
+     "returns": "double",
+     "example": "nearbyint(2.5) == 2"
+    }
+   ],
+   "pitfalls": [
+    "`setprecision(2)` bez `fixed` — 2 cyfry znaczące, nie miejsca po przecinku.",
+    "`ceil(a / b)` dla intów — dzielenie całkowite już obcięło wynik.",
+    "`(int)(x + 0.5)` dla liczb ujemnych.",
+    "`round` zwraca `double` — duże wartości wypisują się jako `1e+07`.",
+    "`floor(0.29 * 100) == 28` — dodaj epsilon.",
+    "`printf(\"%.0f\", 2.5)` daje `2` (do parzystej), a `round(2.5)` daje 3."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak zaokraglic do 2 miejsc po przecinku",
+      "zaokraglenie do dwoch miejsc po przecinku c++",
+      "round to 2 decimal places c++",
+      "jak zaokraglic do 2 miejsc",
+      "zaokraglij wynik do setnych",
+      "2 miejsca po przecinku"
+     ],
+     "a": "Jeśli chcesz **wypisać** wynik z 2 miejscami: `cout << fixed << setprecision(2) << x;` (albo `printf(\"%.2f\", x)`).\nTo zaokrągla do najbliższej wartości przy wypisywaniu i dopisuje zera (`2` → `2.00`). Pamiętaj o `fixed` — bez niego\n`setprecision(2)` oznacza 2 cyfry znaczące. Jeśli potrzebujesz zaokrąglonej **wartości** do dalszych obliczeń:\n`round(x * 100) / 100`.",
+     "code": "double x = 3.14159;\ncout << fixed << setprecision(2) << x << '\\n';   // 3.14\ndouble y = round(x * 100) / 100;                 // 3.14 jako wartość"
+    },
+    {
+     "q": [
+      "zaokraglenie w gore c++",
+      "jak zaokraglic w gore",
+      "ceil c++",
+      "round up c++",
+      "sufit z liczby"
+     ],
+     "a": "`ceil(x)` zaokrągla w górę (w stronę +∞): `ceil(2.1) = 3`, `ceil(-2.1) = -2`. Zwraca `double`, więc do liczby\ncałkowitej rzutuj: `(long long)ceil(x)`. Dla dzielenia **liczb całkowitych** nie używaj `ceil(a / b)` (to dzielenie\ncałkowite już obcięło wynik) — pisz `(a + b - 1) / b`.",
+     "code": "double x = 2.1;\nlong long g = (long long)ceil(x);   // 3\nint a = 7, b = 2;\nint wGore = (a + b - 1) / b;        // 4\ncout << g << ' ' << wGore << '\\n';"
+    },
+    {
+     "q": [
+      "zaokraglenie w dol c++",
+      "jak zaokraglic w dol",
+      "floor c++",
+      "round down c++",
+      "podloga z liczby",
+      "czesc calkowita"
+     ],
+     "a": "`floor(x)` zaokrągla w dół (w stronę −∞): `floor(2.7) = 2`, `floor(-2.3) = -3`. Uwaga: `(int)x` to **co innego**\ndla liczb ujemnych — obcina w stronę zera (`(int)-2.3 == -2`).",
+     "code": "double x = -2.3;\ncout << floor(x) << ' ' << (int)x << '\\n';   // -3 -2"
+    },
+    {
+     "q": [
+      "round c++",
+      "jak dziala round",
+      "zaokraglenie do najblizszej calkowitej",
+      "round 2.5",
+      "zaokraglic do calkowitej"
+     ],
+     "a": "`round(x)` zaokrągla do najbliższej liczby całkowitej, a połówki **od zera**: `round(2.5) = 3`, `round(-2.5) = -3`,\n`round(2.4) = 2`. Zwraca `double`; żeby dostać liczbę całkowitą, użyj `llround(x)` (zwraca `long long`).",
+     "code": "cout << round(2.5) << ' ' << round(-2.5) << ' ' << round(2.4) << ' ' << llround(7.5) << '\\n';   // 3 -3 2 8"
+    },
+    {
+     "q": [
+      "llround",
+      "lround",
+      "round zwraca double",
+      "round do long long",
+      "llround vs round"
+     ],
+     "a": "`round` zwraca `double` (np. `3.0`), co przy wypisaniu dużych wartości daje `1e+07`. `lround` zwraca `long`\n(na Windows 32-bitowy!), `llround` — `long long`. Do liczb całkowitych używaj `llround`.",
+     "code": "double x = 12345678.6;\ncout << round(x) << ' ' << llround(x) << '\\n';   // 1.23457e+07 12345679"
+    },
+    {
+     "q": [
+      "trunc c++",
+      "obciecie czesci ulamkowej",
+      "(int)x a floor",
+      "roznica floor i int",
+      "rzutowanie na int zaokragla"
+     ],
+     "a": "`trunc(x)` i `(int)x` obcinają część ułamkową w stronę zera. Dla dodatnich to samo co `floor`, dla ujemnych nie:\n`trunc(-2.7) = -2`, `floor(-2.7) = -3`.",
+     "code": "double x = -2.7;\ncout << trunc(x) << ' ' << (int)x << ' ' << floor(x) << '\\n';   // -2 -2 -3"
+    },
+    {
+     "q": [
+      "(int)(x + 0.5)",
+      "zaokraglanie przez dodanie 0.5",
+      "x + 0.5 dla ujemnych",
+      "int(x+0.5) zle"
+     ],
+     "a": "`(int)(x + 0.5)` działa tylko dla `x ≥ 0`. Dla ujemnych daje zły wynik: `(int)(-2.7 + 0.5) = (int)(-2.2) = -2`,\na powinno być `-3`. Używaj `llround(x)` albo `floor(x + 0.5)` (to drugie zaokrągla połówki w górę: −2.5 → −2).",
+     "code": "double x = -2.7;\ncout << (int)(x + 0.5) << ' ' << llround(x) << ' ' << floor(x + 0.5) << '\\n';   // -2 -3 -3"
+    },
+    {
+     "q": [
+      "zaokraglanie dzielenia w gore",
+      "a/b w gore",
+      "ceil dzielenia calkowitego",
+      "ceil(a/b) zle",
+      "(a+b-1)/b"
+     ],
+     "a": "Dla `a ≥ 0`, `b > 0`: `(a + b - 1) / b`. Nie pisz `ceil(a / b)` dla intów — `a / b` to już dzielenie całkowite\nobcięte w dół, więc `ceil` nic nie zmienia. `ceil((double)a / b)` działa dla małych liczb, ale dla dużych (> 2^53)\ntraci precyzję. Dla ujemnych — patrz artykuł o dzieleniu z zaokrągleniem.",
+     "code": "long long a = 17, b = 5;\ncout << (a + b - 1) / b << '\\n';   // 4"
+    },
+    {
+     "q": [
+      "zaokraglenie dzielenia do najblizszej",
+      "a/b zaokraglone do najblizszej calkowitej",
+      "dzielenie z zaokragleniem calkowite"
+     ],
+     "a": "Dla `a ≥ 0`, `b > 0`: `(a + b / 2) / b` (połówki w górę dla parzystego `b`) albo `(2 * a + b) / (2 * b)`.\nBez `double`, więc dokładne.",
+     "code": "long long a = 7, b = 2;\ncout << (a + b / 2) / b << ' ' << (2 * a + b) / (2 * b) << '\\n';   // 4 4"
+    },
+    {
+     "q": [
+      "dlaczego 2.675 zaokragla sie do 2.67",
+      "round 2.675",
+      "zle zaokragla 1.005",
+      "round(x*100)/100 zle",
+      "zaokraglanie zle dziala c++"
+     ],
+     "a": "2.675 w pamięci to 2.67499999999999982…, więc `printf(\"%.2f\")` poprawnie daje 2.67. `round(2.675 * 100) / 100` akurat\ndaje 2.68 (mnożenie zaokrągla do 267.5), ale `round(1.005 * 100) / 100` daje 1.00, bo `1.005 * 100 = 100.49999999999999`.\nTo nieuniknione w `double`. Gdy wejście ma np. 2 miejsca po przecinku, wczytaj je jako liczbę całkowitą (grosze) albo\ndodaj epsilon: `round(x * 100 + 1e-9) / 100`.",
+     "code": "double x = 1.005;\ncout << fixed << setprecision(2) << round(x * 100) / 100 << ' ' << round(x * 100 + 1e-9) / 100 << '\\n';   // 1.00 1.01"
+    },
+    {
+     "q": [
+      "banker's rounding",
+      "round half to even",
+      "printf %.0f 2.5 daje 2",
+      "zaokraglenie do parzystej",
+      "dlaczego printf zaokragla 0.5 do 0"
+     ],
+     "a": "`printf` i `cout` przy dokładnej połówce (wartość reprezentowalna dokładnie, np. 0.5, 2.5, 0.125) zaokrąglają do\n**parzystej** cyfry („bankierskie”): `printf(\"%.0f\", 2.5)` → `2`, `3.5` → `4`, `0.125` z `%.2f` → `0.12`. Tak samo\ndziałają `nearbyint`/`rint`. Natomiast `round` zaokrągla połówki od zera (`round(2.5) = 3`).",
+     "code": "printf(\"%.0f %.0f %.0f %.2f\\n\", 0.5, 1.5, 2.5, 0.125);   // 0 2 2 0.12\ncout << round(2.5) << ' ' << nearbyint(2.5) << '\\n';      // 3 2"
+    },
+    {
+     "q": [
+      "wypisuje -0.00",
+      "minus zero po zaokragleniu",
+      "round daje -0",
+      "-0 w wyniku"
+     ],
+     "a": "Gdy mała liczba ujemna (np. −0.001) zaokrągla się do zera, znak zostaje: wypisze się `-0.00` (a `round(-0.4)` daje `-0`).\nPopraw przed wypisaniem: jeśli `fabs(x) < 0.005` (dla 2 miejsc), ustaw `x = 0`. Dodanie `0.0` naprawia tylko dokładne `-0.0`.",
+     "code": "double x = -0.001;\nif (fabs(x) < 0.005) x = 0.0;\ncout << fixed << setprecision(2) << x << '\\n';   // 0.00"
+    },
+    {
+     "q": [
+      "floor daje o jeden mniej",
+      "floor(0.29*100) = 28",
+      "zle floor przez blad double",
+      "epsilon przy floor"
+     ],
+     "a": "Wynik obliczeń może być minimalnie mniejszy od liczby całkowitej: `0.29 * 100 = 28.999999999999996`, więc `floor`\ndaje 28. Gdy spodziewasz się wyniku „prawie całkowitego”, dodaj epsilon: `floor(x + 1e-9)`; analogicznie\n`ceil(x - 1e-9)` przy zaokrąglaniu w górę.",
+     "code": "double x = 0.29 * 100;\ncout << floor(x) << ' ' << floor(x + 1e-9) << '\\n';   // 28 29"
+    },
+    {
+     "q": [
+      "ceil daje o jeden wiecej",
+      "ceil(x) zle o 1",
+      "ceil z bledem zaokraglenia"
+     ],
+     "a": "Odwrotny problem: wynik jest minimalnie większy od całkowitej (np. 3.0000000000000004), więc `ceil` daje 4.\nPisz `ceil(x - 1e-9)`. Najlepiej jednak liczyć na liczbach całkowitych.",
+     "code": "double x = (0.1 + 0.2) * 10;   // 3.0000000000000004\ncout << ceil(x) << ' ' << ceil(x - 1e-9) << '\\n';   // 4 3"
+    },
+    {
+     "q": [
+      "zaokraglij do pelnych setek",
+      "zaokraglenie do wielokrotnosci",
+      "round to multiple of k",
+      "zaokraglij do 10"
+     ],
+     "a": "Dla `x ≥ 0`, `k > 0`: w dół `x / k * k`, w górę `(x + k - 1) / k * k`, do najbliższej `(x + k / 2) / k * k`\n(na liczbach całkowitych).",
+     "code": "long long x = 1250, k = 100;\ncout << x / k * k << ' ' << (x + k - 1) / k * k << ' ' << (x + k / 2) / k * k << '\\n';   // 1200 1300 1300"
+    },
+    {
+     "q": [
+      "zaokraglanie do k cyfr znaczacych",
+      "cyfry znaczace c++",
+      "significant digits c++"
+     ],
+     "a": "Przy wypisywaniu: `setprecision(k)` **bez** `fixed` daje k cyfr znaczących (`setprecision(3) << 3.14159` → `3.14`,\n`<< 0.00012345` → `0.000123`).",
+     "code": "cout << setprecision(3) << 3.14159 << ' ' << 0.00012345 << '\\n';   // 3.14 0.000123"
+    },
+    {
+     "q": [
+      "zaokraglanie w pythonie",
+      "round w pythonie 2.5",
+      "python round banker",
+      "python zaokraglanie do 2 miejsc"
+     ],
+     "a": "W Pythonie `round(2.5) == 2` i `round(0.5) == 0` — Python stosuje zaokrąglanie do parzystej. Do wypisania z 2 miejscami:\n`f\"{x:.2f}\"`. Do zaokrąglenia „połówek w górę” użyj `math.floor(x + 0.5)` albo modułu `decimal`.",
+     "code": "import math\nx = 2.5\nprint(round(x), math.floor(x + 0.5), f\"{3.14159:.2f}\")   # 2 3 3.14",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "zaokraglenie kwot pieniedzy",
+      "grosze zaokraglanie",
+      "pieniadze w double",
+      "kwota do 2 miejsc"
+     ],
+     "a": "Nie trzymaj pieniędzy w `double`. Wczytaj kwotę jako liczbę groszy (`long long`) — np. wczytaj złote i grosze osobno\n(`12.34` → `12`, `.`, `34`) — i licz dokładnie. Wypisz `zl = g / 100`, `gr = g % 100` z zerem wiodącym.",
+     "code": "long long grosze = 123405;\nprintf(\"%lld.%02lld\\n\", grosze / 100, grosze % 100);   // 1234.05"
+    },
+    {
+     "q": [
+      "round dla duzych liczb",
+      "llround 1e18",
+      "zaokraglanie long long double"
+     ],
+     "a": "Dla liczb > 2^53 (≈ 9·10^15) `double` nie ma już części ułamkowej i traci najmłodsze cyfry — zaokrąglanie nie ma sensu,\na wynik może się różnić od dokładnego. Takie obliczenia prowadź na `long long`."
+    },
+    {
+     "q": [
+      "roznica round floor ceil trunc",
+      "round vs floor vs ceil",
+      "ktora funkcja zaokraglania"
+     ],
+     "a": "`floor` — zawsze w dół, `ceil` — zawsze w górę, `trunc`/`(int)` — w stronę zera, `round` — do najbliższej (połówki od zera).\nRóżnią się głównie dla liczb ujemnych i połówek — tabela w treści artykułu pokazuje wszystkie przypadki.",
+     "code": "for (double x : {2.5, -2.5, 2.7, -2.7})\n    cout << x << \": \" << round(x) << ' ' << floor(x) << ' ' << ceil(x) << ' ' << trunc(x) << '\\n';"
+    },
+    {
+     "q": [
+      "zaokraglenie sredniej",
+      "srednia arytmetyczna zaokraglona",
+      "srednia do 2 miejsc"
+     ],
+     "a": "Licz sumę w `long long`, podziel w `double` (`suma * 1.0 / n` — samo `suma / n` to dzielenie całkowite!) i wypisz\nz `fixed << setprecision(2)`.",
+     "code": "vector<int> a = {1, 2, 2};\nlong long s = accumulate(a.begin(), a.end(), 0LL);\ncout << fixed << setprecision(2) << (double)s / a.size() << '\\n';   // 1.67"
+    },
+    {
+     "q": [
+      "zaokraglanie bez cmath",
+      "round bez funkcji",
+      "wlasne zaokraglanie"
+     ],
+     "a": "Bez `<cmath>` dla `x ≥ 0`: `(long long)(x + 0.5)`; dla dowolnego znaku: `x >= 0 ? (long long)(x + 0.5) : -(long long)(-x + 0.5)`\n— to zaokrąglanie połówek od zera, jak `round`.",
+     "code": "double x = -2.5;\nlong long r = x >= 0 ? (long long)(x + 0.5) : -(long long)(-x + 0.5);\ncout << r << '\\n';   // -3"
+    }
+   ],
+   "related": [
+    "io-precision",
+    "num-ceil-div",
+    "num-floating",
+    "pit-integer-division",
+    "cpp-casting",
+    "cpp-ref-cmath",
+    "oi-py-numbers"
+   ]
+  },
+  {
+   "id": "num-ceil-div",
+   "title": "Dzielenie całkowite z zaokrągleniem w górę, w dół i do najbliższej (także dla ujemnych)",
+   "category": "Liczby i typy",
+   "tags": [
+    "dzielenie",
+    "ceil",
+    "floor",
+    "w górę",
+    "(a+b-1)/b",
+    "dzielenie całkowite",
+    "ujemne"
+   ],
+   "aliases": [
+    "dzielenie w gore",
+    "(a+b-1)/b",
+    "ceil division c++",
+    "zaokraglenie dzielenia w gore",
+    "ile pudelek potrzeba",
+    "sufit z dzielenia",
+    "floor division c++",
+    "dzielenie ujemnych w dol"
+   ],
+   "summary": "Dla a ≥ 0, b > 0: w górę `(a + b - 1) / b`, do najbliższej `(a + b / 2) / b`, w dół zwykłe `a / b`. Dla liczb ujemnych `/` w C++ obcina w stronę zera, więc potrzebne są poprawki.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersje uniwersalne",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Działają dla dowolnych znaków a i b (b != 0)\nlong long floorDiv(long long a, long long b) {\n    return a / b - ((a % b != 0) && ((a < 0) != (b < 0)));\n}\nlong long ceilDiv(long long a, long long b) {\n    return a / b + ((a % b != 0) && ((a < 0) == (b < 0)));\n}\n\nint main() {\n    cout << (17 + 5 - 1) / 5 << '\\n';                   // 4 (a >= 0, b > 0)\n    cout << floorDiv(-7, 2) << ' ' << ceilDiv(-7, 2) << '\\n';   // -4 -3\n    cout << floorDiv(7, 2) << ' ' << ceilDiv(7, 2) << '\\n';     // 3 4\n    cout << -7 / 2 << '\\n';                                     // -3 (obcięcie do zera)\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`(a + b - 1) / b` może się przepełnić, gdy `a` jest blisko maksimum typu. Bezpieczna wersja dla a ≥ 0:\n`a / b + (a % b != 0)`."
+    }
+   ],
+   "pitfalls": [
+    "`ceil(a / b)` z intami.",
+    "`(a + b - 1) / b` dla ujemnych `a` lub `b`.",
+    "Przepełnienie `a + b - 1` dla dużych `a`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dzielenie w gore c++",
+      "(a+b-1)/b",
+      "jak podzielic z zaokragleniem w gore",
+      "ceil division c++",
+      "sufit dzielenia",
+      "podzielić dwie liczby i zaokrąglić w górę bez double",
+      "zaokrąglenie w górę bez ceil"
+     ],
+     "a": "Dla `a ≥ 0` i `b > 0`: `(a + b - 1) / b`. Dodanie `b - 1` sprawia, że każda niezerowa reszta „przeskakuje” do\nnastępnej liczby całkowitej. Równoważnie i bez ryzyka przepełnienia: `a / b + (a % b != 0)`.",
+     "code": "long long a = 17, b = 5;\ncout << (a + b - 1) / b << ' ' << a / b + (a % b != 0) << '\\n';   // 4 4"
+    },
+    {
+     "q": [
+      "ile pudelek potrzeba",
+      "ile autobusow potrzeba",
+      "ile stron potrzeba",
+      "minimalna liczba grup po k"
+     ],
+     "a": "Klasyczne „ile pojemników po `k` sztuk na `n` rzeczy” to sufit z `n / k`: `(n + k - 1) / k`.",
+     "code": "int n = 23, k = 5;\ncout << (n + k - 1) / k << '\\n';   // 5"
+    },
+    {
+     "q": [
+      "ceil(a/b) nie dziala",
+      "ceil z dzielenia intow",
+      "ceil(7/2) daje 3",
+      "dlaczego ceil nie zaokragla"
+     ],
+     "a": "Gdy `a` i `b` są całkowite, `a / b` jest dzieleniem całkowitym (np. `7 / 2 = 3`), więc `ceil(3)` to nadal 3.\nRzutowanie `ceil((double)a / b)` zadziała dla małych liczb, ale formuła całkowita `(a + b - 1) / b` jest dokładna zawsze.",
+     "code": "int a = 7, b = 2;\ncout << ceil(a / b) << ' ' << ceil((double)a / b) << ' ' << (a + b - 1) / b << '\\n';   // 3 4 4"
+    },
+    {
+     "q": [
+      "dzielenie ujemnych liczb w dol",
+      "floor division c++",
+      "podloga z dzielenia ujemnej",
+      "-7/2 w dol"
+     ],
+     "a": "W C++ `/` obcina w stronę zera: `-7 / 2 == -3`. Matematyczna podłoga to `-4`. Popraw: odejmij 1, gdy reszta jest\nniezerowa i znaki `a`, `b` są różne (funkcja `floorDiv` w treści). Dla `b > 0` krócej:\n`a >= 0 ? a / b : -((-a + b - 1) / b)`.",
+     "code": "long long a = -7, b = 2;\nlong long fl = a / b - ((a % b != 0) && ((a < 0) != (b < 0)));\ncout << fl << '\\n';   // -4"
+    },
+    {
+     "q": [
+      "dzielenie w gore dla ujemnych",
+      "ceil div negative",
+      "(a+b-1)/b dla ujemnych nie dziala"
+     ],
+     "a": "`(a + b - 1) / b` zakłada `a ≥ 0`, `b > 0`. Dla ujemnego `a` psuje się: `a = -6, b = 3` daje `(-6 + 2) / 3 = -4 / 3 = -1`,\na poprawny wynik to `-6 / 3 = -2`. Ciekawostka: dla `a < 0`, `b > 0` samo `a / b` (obcięcie w stronę zera) **jest** sufitem.\nNajbezpieczniej używać uniwersalnej funkcji `ceilDiv` z treści artykułu, działającej dla dowolnych znaków.",
+     "code": "long long a = -7, b = 3;\nlong long c = a / b + ((a % b != 0) && ((a < 0) == (b < 0)));\ncout << c << '\\n';   // -2"
+    },
+    {
+     "q": [
+      "dzielenie do najblizszej calkowitej",
+      "zaokraglenie ilorazu",
+      "a/b round integer"
+     ],
+     "a": "Dla `a ≥ 0`, `b > 0`: `(a + b / 2) / b`. Połówka (gdy `b` parzyste i reszta = b/2) idzie w górę.",
+     "code": "long long a = 10, b = 4;\ncout << (a + b / 2) / b << '\\n';   // 3 (2.5 -> 3)"
+    },
+    {
+     "q": [
+      "przepelnienie (a+b-1)/b",
+      "a+b-1 overflow",
+      "bezpieczne dzielenie w gore"
+     ],
+     "a": "Gdy `a` jest bliskie `LLONG_MAX`, `a + b - 1` się przepełni. Wersja bez przepełnienia: `a / b + (a % b != 0)`.",
+     "code": "long long a = LLONG_MAX - 1, b = 10;\ncout << a / b + (a % b != 0) << '\\n';"
+    },
+    {
+     "q": [
+      "ile liczb podzielnych przez k w przedziale",
+      "liczby podzielne przez k od a do b",
+      "count multiples in range"
+     ],
+     "a": "Liczba wielokrotności `k` w `[1, n]` to `n / k`. W przedziale `[a, b]` (a ≥ 1): `b / k - (a - 1) / k`. Dla ujemnych\ngranic użyj `floorDiv`.",
+     "code": "long long a = 10, b = 100, k = 7;\ncout << b / k - (a - 1) / k << '\\n';   // 13"
+    },
+    {
+     "q": [
+      "polowa w gore",
+      "n/2 zaokraglone w gore",
+      "(n+1)/2"
+     ],
+     "a": "Połowa zaokrąglona w górę dla `n ≥ 0`: `(n + 1) / 2`; w dół: `n / 2` (albo `n >> 1`).",
+     "code": "int n = 7;\ncout << (n + 1) / 2 << ' ' << n / 2 << '\\n';   // 4 3"
+    },
+    {
+     "q": [
+      "przesuniecie bitowe a dzielenie ujemnych",
+      ">>1 dla ujemnych",
+      "x >> 1 vs x / 2"
+     ],
+     "a": "Dla liczb ujemnych `x >> 1` (przesunięcie arytmetyczne, w praktyce i od C++20 gwarantowane) zaokrągla w dół\n(`-7 >> 1 == -4`), a `x / 2` w stronę zera (`-3`). Przydatne, gdy potrzebujesz podłogi z dzielenia przez potęgę dwójki.",
+     "code": "int x = -7;\ncout << (x >> 1) << ' ' << x / 2 << '\\n';   // -4 -3"
+    }
+   ],
+   "related": [
+    "num-rounding",
+    "num-negative-mod",
+    "pit-integer-division"
+   ]
+  },
+  {
+   "id": "num-negative-mod",
+   "title": "Dzielenie i modulo liczb ujemnych w C++ (i poprawne modulo)",
+   "category": "Liczby i typy",
+   "tags": [
+    "modulo",
+    "reszta",
+    "ujemne",
+    "%",
+    "dzielenie ujemnych",
+    "((a%m)+m)%m",
+    "parzystość"
+   ],
+   "aliases": [
+    "modulo ujemne",
+    "modulo z liczby ujemnej c++",
+    "-7 % 3",
+    "reszta z dzielenia ujemnej",
+    "negative modulo c++",
+    "dlaczego modulo jest ujemne",
+    "poprawne modulo",
+    "((a%m)+m)%m"
+   ],
+   "summary": "W C++ `a / b` obcina w stronę zera, a `a % b` ma znak dzielnej: `-7 / 2 == -3`, `-7 % 2 == -1`. Żeby dostać resztę z zakresu [0, m), pisz `((a % m) + m) % m`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Wyrażenie",
+      "C++",
+      "Python",
+      "Matematycznie (reszta ≥ 0)"
+     ],
+     "rows": [
+      [
+       "`7 / 2`",
+       "3",
+       "`7 // 2` = 3",
+       "3"
+      ],
+      [
+       "`-7 / 2`",
+       "-3",
+       "`-7 // 2` = -4",
+       "-4"
+      ],
+      [
+       "`-7 % 2`",
+       "-1",
+       "1",
+       "1"
+      ],
+      [
+       "`7 % -2`",
+       "1",
+       "-1",
+       "—"
+      ],
+      [
+       "`-7 % -2`",
+       "-1",
+       "-1",
+       "—"
+      ],
+      [
+       "`-6 % 3`",
+       "0",
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "Zawsze zachodzi `(a / b) * b + a % b == a`. Ponieważ iloraz jest obcinany w stronę zera, reszta ma znak `a`\n(lub jest zerem), a `|a % b| < |b|`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Poprawne modulo i parzystość",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nlong long mod(long long a, long long m) {   // wynik w [0, m), m > 0\n    return ((a % m) + m) % m;\n}\n\nint main() {\n    cout << -7 % 3 << ' ' << mod(-7, 3) << '\\n';     // -1 2\n    int n = 5, i = 0;\n    cout << (i - 1 + n) % n << '\\n';                  // 4 — poprzedni indeks w cyklu\n    int x = -3;\n    cout << (x % 2 == 1) << ' ' << (x % 2 != 0) << ' ' << (x & 1) << '\\n';   // 0 1 1\n}"
+    }
+   ],
+   "pitfalls": [
+    "`x % 2 == 1` nie wykrywa ujemnych nieparzystych.",
+    "`(a - b) % MOD` może być ujemne.",
+    "`(i - 1) % n` dla `i = 0` daje `-1`.",
+    "Przepisywanie `%` i `//` z Pythona bez zmian."
+   ],
+   "qa": [
+    {
+     "q": [
+      "modulo ujemne",
+      "dlaczego modulo jest ujemne",
+      "-7 % 3 c++",
+      "reszta z dzielenia ujemnej liczby",
+      "negative modulo c++",
+      "dlaczego -7 % 3 daje -1",
+      "reszta z dzielenia wychodzi ujemna",
+      "ujemna reszta z dzielenia"
+     ],
+     "a": "W C++ wynik `%` ma znak dzielnej: `-7 % 3 == -1` (bo `-7 / 3 == -2`, a `-2 * 3 + (-1) == -7`). To zgodne ze\nstandardem (od C++11). Jeśli potrzebujesz reszty z przedziału `[0, m)`, użyj `((a % m) + m) % m` — dla `-7` i `3` da `2`.",
+     "code": "long long a = -7, m = 3;\ncout << a % m << ' ' << ((a % m) + m) % m << '\\n';   // -1 2"
+    },
+    {
+     "q": [
+      "poprawne modulo c++",
+      "((a%m)+m)%m",
+      "jak zrobic modulo zawsze dodatnie",
+      "mod zawsze nieujemny",
+      "positive modulo"
+     ],
+     "a": "`((a % m) + m) % m` — najpierw `a % m` ∈ (−m, m), po dodaniu `m` ∈ (0, 2m), drugie `% m` sprowadza do `[0, m)`.\nGdy wiesz, że `a ≥ -m`, wystarczy `(a + m) % m`. Wygodnie mieć funkcję `mod(a, m)`.",
+     "code": "auto md = [](long long a, long long m) { return ((a % m) + m) % m; };\ncout << md(-1, 5) << ' ' << md(-10, 5) << ' ' << md(12, 5) << '\\n';   // 4 0 2"
+    },
+    {
+     "q": [
+      "dzielenie ujemnych c++",
+      "-7/2 ile wynosi",
+      "dzielenie calkowite liczb ujemnych",
+      "c++ division negative rounding"
+     ],
+     "a": "C++ obcina iloraz w stronę zera: `-7 / 2 == -3` (nie `-4`). Jeśli potrzebujesz matematycznej podłogi, odejmij 1, gdy\nreszta jest niezerowa i znaki są różne — patrz artykuł o dzieleniu z zaokrągleniem.",
+     "code": "cout << -7 / 2 << ' ' << 7 / -2 << ' ' << -7 / -2 << '\\n';   // -3 -3 3"
+    },
+    {
+     "q": [
+      "sprawdzenie nieparzystosci ujemnej",
+      "x % 2 == 1 dla ujemnych",
+      "czy liczba jest nieparzysta c++",
+      "parzystosc ujemnej liczby"
+     ],
+     "a": "Dla ujemnych nieparzystych `x % 2 == -1`, więc warunek `x % 2 == 1` jest fałszywy. Pisz `x % 2 != 0` albo `x & 1`\n(dla `int` w kodzie uzupełnień do dwóch działa także dla ujemnych).",
+     "code": "int x = -3;\nif (x % 2 != 0) cout << \"nieparzysta\\n\";"
+    },
+    {
+     "q": [
+      "indeks cykliczny",
+      "poprzedni element w kole",
+      "(i-1+n)%n",
+      "zawijanie indeksu tablicy",
+      "cyclic index c++"
+     ],
+     "a": "Przesunięcie w lewo o 1 w tablicy cyklicznej: `(i - 1 + n) % n` (bez `+ n` dla `i = 0` wyszłoby `-1`). Przy przesunięciu\no dowolne `k` (także ujemne, |k| dowolnie duże) użyj `((i + k) % n + n) % n`.",
+     "code": "int n = 5, i = 0, k = -7;\ncout << (i - 1 + n) % n << ' ' << ((i + k) % n + n) % n << '\\n';   // 4 3"
+    },
+    {
+     "q": [
+      "odejmowanie modulo",
+      "(a-b)%mod ujemne",
+      "roznica modulo 1e9+7",
+      "odejmowanie mod daje minus"
+     ],
+     "a": "Gdy `a, b ∈ [0, MOD)`, `a - b` może być ujemne, więc `(a - b) % MOD` też. Pisz `(a - b + MOD) % MOD`.",
+     "code": "const long long MOD = 1000000007;\nlong long a = 5, b = 10;\ncout << (a - b + MOD) % MOD << '\\n';   // 1000000002"
+    },
+    {
+     "q": [
+      "dzien tygodnia wstecz",
+      "ile dni temu modulo 7",
+      "cofanie w kalendarzu modulo"
+     ],
+     "a": "Dzień tygodnia `d ∈ [0, 7)` cofnięty o `k` dni: `((d - k) % 7 + 7) % 7`.",
+     "code": "int d = 2, k = 10;\ncout << ((d - k) % 7 + 7) % 7 << '\\n';   // 6"
+    },
+    {
+     "q": [
+      "modulo w pythonie a c++",
+      "python % ujemne inne",
+      "przepisuje z pythona modulo",
+      "python // a c++ /"
+     ],
+     "a": "Python zaokrągla iloraz w dół (`-7 // 2 == -4`), a reszta ma znak dzielnika (`-7 % 2 == 1`). C++ obcina do zera\n(`-7 / 2 == -3`, `-7 % 2 == -1`). Przepisując kod z Pythona na C++, popraw każde `%` na liczbach mogących być ujemnymi.",
+     "code": "long long a = -7, b = 2;\nlong long pyDiv = a / b - ((a % b != 0) && ((a < 0) != (b < 0)));   // jak a // b w Pythonie\nlong long pyMod = a - pyDiv * b;                                     // jak a % b w Pythonie\ncout << pyDiv << ' ' << pyMod << '\\n';   // -4 1"
+    },
+    {
+     "q": [
+      "modulo przez zero",
+      "dzielenie przez zero int",
+      "floating point exception",
+      "SIGFPE"
+     ],
+     "a": "`a / 0` i `a % 0` dla liczb całkowitych to niezdefiniowane zachowanie — zwykle program pada z „Floating point exception”\n(SIGFPE). To samo dla `INT_MIN / -1` (przepełnienie). Sprawdzaj dzielnik przed dzieleniem.",
+     "code": "int a = 10, b = 0;\nif (b != 0) cout << a / b << '\\n';\nelse cout << \"dzielenie przez zero\\n\";"
+    },
+    {
+     "q": [
+      "modulo dla double",
+      "fmod",
+      "% dla liczb rzeczywistych",
+      "reszta z dzielenia double"
+     ],
+     "a": "Operator `%` nie działa dla `double` (błąd kompilacji). Użyj `fmod(a, b)` — wynik ma znak `a`, jak w `%`.",
+     "code": "double r = fmod(7.5, 2.0);       // 1.5\ndouble s = fmod(-7.5, 2.0);      // -1.5\ncout << r << ' ' << s << '\\n';"
+    }
+   ],
+   "related": [
+    "num-mod-arithmetic",
+    "num-ceil-div",
+    "pit-integer-division",
+    "cpp-operators",
+    "cpp-ref-cmath",
+    "oi-py-cpp-equivalents",
+    "oi-py-numbers",
+    "tech-dates-time"
+   ]
+  },
+  {
+   "id": "num-mod-arithmetic",
+   "title": "Arytmetyka modulo 10^9+7: dodawanie, odejmowanie, mnożenie, potęgowanie i dzielenie",
+   "category": "Liczby i typy",
+   "tags": [
+    "modulo",
+    "1e9+7",
+    "1000000007",
+    "998244353",
+    "odwrotność modularna",
+    "szybkie potęgowanie",
+    "małe twierdzenie Fermata",
+    "dwumian Newtona",
+    "silnia"
+   ],
+   "aliases": [
+    "modulo 1e9+7",
+    "wynik modulo 10^9+7",
+    "jak liczyc modulo",
+    "dzielenie modulo",
+    "odwrotnosc modulo",
+    "potegowanie modulo",
+    "mod 1000000007",
+    "modular arithmetic c++",
+    "fast pow mod",
+    "dwumian modulo"
+   ],
+   "summary": "Gdy zadanie każe podać wynik „modulo 10^9+7”, redukuj modulo po **każdej** operacji: `(a + b) % MOD`, `(a - b + MOD) % MOD`, `1LL * a * b % MOD`. Dzielenie to mnożenie przez odwrotność: `b^(MOD-2) mod MOD` (MOD pierwsze).",
+   "complexity": "dodawanie/mnożenie: O(1); potęgowanie i odwrotność: O(log MOD); silnie: O(n) preprocessing",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Komplet operacji",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst long long MOD = 1000000007;\n\nlong long add(long long a, long long b) { return (a + b) % MOD; }\nlong long sub(long long a, long long b) { return ((a - b) % MOD + MOD) % MOD; }\nlong long mul(long long a, long long b) { return a % MOD * (b % MOD) % MOD; }\n\nlong long power(long long a, long long e) {   // a^e mod MOD, O(log e)\n    long long r = 1;\n    a %= MOD;\n    if (a < 0) a += MOD;\n    while (e > 0) {\n        if (e & 1) r = r * a % MOD;\n        a = a * a % MOD;\n        e >>= 1;\n    }\n    return r;\n}\n\nlong long inv(long long a) { return power(a, MOD - 2); }   // a nie podzielne przez MOD\nlong long divide(long long a, long long b) { return mul(a, inv(b)); }\n\nint main() {\n    cout << add(MOD - 1, 5) << ' ' << sub(3, 5) << ' ' << mul(1e9, 1e9) << '\\n';\n    cout << power(2, 1000000) << ' ' << divide(10, 4) << '\\n';   // 10/4 = 5/2 mod p\n    cout << mul(divide(10, 4), 4) << '\\n';                       // 10\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Silnie i dwumian Newtona modulo",
+     "code": "const int MAXN = 1000001;\nlong long fact[MAXN], invFact[MAXN];\n\nlong long pw(long long a, long long e, long long m) {\n    long long r = 1; a %= m;\n    while (e) { if (e & 1) r = r * a % m; a = a * a % m; e >>= 1; }\n    return r;\n}\n\nvoid initFact(int n, long long m) {\n    fact[0] = 1;\n    for (int i = 1; i <= n; i++) fact[i] = fact[i - 1] * i % m;\n    invFact[n] = pw(fact[n], m - 2, m);\n    for (int i = n; i > 0; i--) invFact[i - 1] = invFact[i] * i % m;\n}\n\nlong long C(int n, int k, long long m) {   // dwumian Newtona mod m\n    if (k < 0 || k > n) return 0;\n    return fact[n] * invFact[k] % m * invFact[n - k] % m;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "text",
+     "md": "**Dlaczego 10^9+7?** To liczba pierwsza (więc istnieją odwrotności i działa małe twierdzenie Fermata), suma dwóch\nreszt mieści się w `int` (< 2,15·10^9), a iloczyn dwóch reszt w `long long` (< 9,2·10^18). Druga popularna to\n998244353 (też pierwsza, przyjazna dla NTT)."
+    },
+    {
+     "type": "warn",
+     "md": "Po redukcji modulo **nie można** porównywać wartości (`max`, `<`) ani dzielić zwykłym `/`. Jeśli zadanie wymaga\nnp. minimum, licz je na prawdziwych wartościach, a modulo tylko na końcu."
+    }
+   ],
+   "pitfalls": [
+    "`a * b % MOD` dla `int` — przepełnienie; pisz `1LL * a * b % MOD`.",
+    "`(a - b) % MOD` ujemne.",
+    "Dzielenie zwykłym `/` po redukcji modulo.",
+    "Fermat (`b^(MOD-2)`) tylko dla pierwszego MOD i `b` niepodzielnego przez MOD.",
+    "`pow(a, b) % MOD` — `pow` zwraca double."
+   ],
+   "qa": [
+    {
+     "q": [
+      "modulo 1e9+7",
+      "jak liczyc wynik modulo 10^9+7",
+      "wynik modulo 1000000007",
+      "mod 1e9+7 c++",
+      "modulo w kazdym kroku"
+     ],
+     "a": "Redukuj po każdej operacji, żeby liczby nie urosły: dodawanie `(a + b) % MOD`, mnożenie `1LL * a * b % MOD`,\nodejmowanie `(a - b + MOD) % MOD`. Wynik końcowy jest wtedy poprawny, bo modulo „przechodzi” przez dodawanie i mnożenie.\nTrzymaj wartości w `long long`, żeby iloczyn dwóch reszt się mieścił.",
+     "code": "const long long MOD = 1000000007;\nlong long wynik = 1;\nfor (int i = 1; i <= 100000; i++) wynik = wynik * i % MOD;   // 100000! mod p\ncout << wynik << '\\n';"
+    },
+    {
+     "q": [
+      "dzielenie modulo",
+      "jak podzielic modulo 1e9+7",
+      "odwrotnosc modulo",
+      "modular inverse c++",
+      "a/b mod p"
+     ],
+     "a": "Nie dzieli się zwykłym `/`. Dzielenie przez `b` to mnożenie przez odwrotność `b^{-1}`. Gdy `MOD` jest pierwsze\ni `b % MOD != 0`, z małego twierdzenia Fermata `b^{-1} = b^(MOD-2) mod MOD` — liczysz szybkim potęgowaniem w O(log MOD).",
+     "code": "long long pw(long long a, long long e, long long m) {\n    long long r = 1; a %= m;\n    while (e) { if (e & 1) r = r * a % m; a = a * a % m; e >>= 1; }\n    return r;\n}\nlong long divmod(long long a, long long b, long long m) { return a % m * pw(b, m - 2, m) % m; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "szybkie potegowanie modulo",
+      "potegowanie modulo c++",
+      "fast pow mod",
+      "a^b mod m",
+      "binary exponentiation"
+     ],
+     "a": "Szybkie potęgowanie: idź po bitach wykładnika; gdy bit jest zapalony, pomnóż wynik przez `a`; zawsze podnoś `a` do kwadratu.\nZłożoność O(log b) — `b` może mieć nawet 10^18.",
+     "code": "long long powmod(long long a, long long b, long long m) {\n    long long r = 1;\n    a %= m;\n    if (a < 0) a += m;\n    while (b > 0) {\n        if (b & 1) r = r * a % m;\n        a = a * a % m;\n        b >>= 1;\n    }\n    return r;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "odejmowanie modulo ujemne",
+      "wynik modulo wyszedl ujemny",
+      "(a-b)%mod",
+      "ujemny wynik po modulo"
+     ],
+     "a": "Gdy `a < b`, `(a - b) % MOD` jest ujemne (C++ zachowuje znak dzielnej). Dodaj `MOD`: `(a - b + MOD) % MOD`\n(zakładając `a, b ∈ [0, MOD)`), albo ogólnie `((a - b) % MOD + MOD) % MOD`.",
+     "code": "const long long MOD = 1000000007;\nlong long a = 3, b = 7;\ncout << (a - b + MOD) % MOD << '\\n';"
+    },
+    {
+     "q": [
+      "mnozenie modulo przepelnienie",
+      "a*b%mod overflow",
+      "1LL*a*b%MOD",
+      "mnozenie dwoch liczb modulo"
+     ],
+     "a": "Dwie reszty `< 10^9+7` dają iloczyn do ~10^18 — mieści się w `long long`, ale nie w `int`. Pisz `1LL * a * b % MOD`.\nJeśli moduł jest rzędu 10^18, potrzebny jest `__int128`.",
+     "code": "const int MOD = 1000000007;\nint a = 123456789, b = 987654321;\nint c = 1LL * a * b % MOD;\ncout << c << '\\n';"
+    },
+    {
+     "q": [
+      "dwumian newtona modulo",
+      "n po k modulo",
+      "binomial coefficient mod c++",
+      "kombinacje modulo 1e9+7",
+      "nCk mod p"
+     ],
+     "a": "Przygotuj silnie i odwrotności silni do maksymalnego `n` w O(n), potem `C(n, k) = n! * (k!)^{-1} * ((n-k)!)^{-1}`\nw O(1). Odwrotność największej silni liczysz potęgowaniem, a pozostałe wstecz: `invFact[i-1] = invFact[i] * i`.\nKod w treści artykułu."
+    },
+    {
+     "q": [
+      "dlaczego 1e9+7",
+      "czemu modulo 1000000007",
+      "po co modulo w zadaniach",
+      "why 10^9+7"
+     ],
+     "a": "Wynik bywa astronomicznie duży (np. liczba ścieżek), więc zadanie prosi o resztę. 10^9+7 jest liczbą pierwszą (istnieją\nodwrotności), suma dwóch reszt mieści się w `int`, a iloczyn w `long long`. Inna popularna liczba: 998244353."
+    },
+    {
+     "q": [
+      "const int MOD = 1e9+7",
+      "1e9+7 jako int",
+      "czy 1e9+7 to double"
+     ],
+     "a": "`1e9 + 7` to wyrażenie typu `double`, ale wartość 1000000007 jest dokładna, więc `const int MOD = 1e9 + 7;` działa\npoprawnie. Czytelniej i bez konwersji: `const long long MOD = 1000000007;` albo `const int MOD = 1'000'000'007;`.",
+     "code": "const int MOD = 1'000'000'007;\ncout << MOD << '\\n';"
+    },
+    {
+     "q": [
+      "suma 1..n modulo",
+      "n*(n+1)/2 modulo",
+      "dzielenie przez 2 modulo"
+     ],
+     "a": "Nie dziel przez 2 po redukcji modulo. Albo podziel przed redukcją (jeden z czynników `n`, `n+1` jest parzysty), albo\npomnóż przez odwrotność 2, czyli `(MOD + 1) / 2`.",
+     "code": "const long long MOD = 1000000007;\nlong long n = 1000000000000LL;\nlong long a = n, b = n + 1;\nif (a % 2 == 0) a /= 2; else b /= 2;\ncout << (a % MOD) * (b % MOD) % MOD << '\\n';"
+    },
+    {
+     "q": [
+      "porownanie wartosci modulo",
+      "max po modulo",
+      "czy mozna porownac liczby po mod"
+     ],
+     "a": "Nie. Po redukcji `10^9+8` staje się `1`, więc porównania (`<`, `max`, `min`) tracą sens. Jeśli zadanie łączy optymalizację\nz modulo, porównuj na prawdziwych wartościach (może `double`/`log` albo innym kryterium), a modulo stosuj tylko do wyniku."
+    },
+    {
+     "q": [
+      "odwrotnosc gdy modulo nie jest pierwsze",
+      "rozszerzony euklides odwrotnosc",
+      "extended gcd inverse"
+     ],
+     "a": "Gdy moduł nie jest pierwszy, Fermat nie działa. Odwrotność `a` istnieje tylko, gdy `gcd(a, m) = 1`; liczy się ją\nrozszerzonym algorytmem Euklidesa.",
+     "code": "long long extgcd(long long a, long long b, long long& x, long long& y) {\n    if (b == 0) { x = 1; y = 0; return a; }\n    long long x1, y1;\n    long long g = extgcd(b, a % b, x1, y1);\n    x = y1;\n    y = x1 - (a / b) * y1;\n    return g;\n}\nlong long invGeneral(long long a, long long m) {   // -1 gdy nie istnieje\n    long long x, y;\n    if (extgcd(a, m, x, y) != 1) return -1;\n    return ((x % m) + m) % m;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dodawanie modulo bez %",
+      "szybkie dodawanie modulo",
+      "if a >= mod a -= mod"
+     ],
+     "a": "Gdy `a, b ∈ [0, MOD)`, suma jest `< 2·MOD`, więc zamiast `%` wystarczy jedno odejmowanie — trochę szybciej w gorących pętlach\n(np. w DP).",
+     "code": "const int MOD = 1000000007;\nint a = 999999999, b = 999999999;\nint s = a + b;            // < 2^31, mieści się w int\nif (s >= MOD) s -= MOD;\ncout << s << '\\n';"
+    },
+    {
+     "q": [
+      "struktura mint",
+      "modint c++",
+      "klasa liczby modulo"
+     ],
+     "a": "Dla wygody można opakować liczbę modulo w strukturę z przeciążonymi operatorami — wtedy kod DP wygląda jak zwykła\narytmetyka i nie zapomnisz o `% MOD`.",
+     "code": "const long long MOD = 1000000007;\nstruct Mint {\n    long long v;\n    Mint(long long x = 0) : v(((x % MOD) + MOD) % MOD) {}\n    Mint operator+(Mint o) const { return Mint(v + o.v); }\n    Mint operator-(Mint o) const { return Mint(v - o.v); }\n    Mint operator*(Mint o) const { return Mint(v * o.v); }\n    Mint pow(long long e) const {\n        Mint r(1), a(*this);\n        while (e) { if (e & 1) r = r * a; a = a * a; e >>= 1; }\n        return r;\n    }\n    Mint operator/(Mint o) const { return *this * o.pow(MOD - 2); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "modulo na koncu czy w trakcie",
+      "czy wystarczy modulo na koncu",
+      "kiedy robic modulo"
+     ],
+     "a": "W trakcie — po każdym dodawaniu/mnożeniu. Modulo na końcu działa tylko wtedy, gdy pośrednie wartości na pewno mieszczą\nsię w typie (rzadko). Brak redukcji w środku to przepełnienie i zła odpowiedź."
+    }
+   ],
+   "related": [
+    "num-negative-mod",
+    "num-overflow",
+    "num-sqrt-pow",
+    "num-int128"
+   ]
+  }
+ ]
+}

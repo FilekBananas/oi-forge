@@ -1,0 +1,59 @@
+/* Edytor grafów */
+.ge-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 380px; grid-template-rows: minmax(0, 1fr); gap: 16px; }
+@media (max-width: 1100px) { .ge-layout { grid-template-columns: 1fr; grid-template-rows: minmax(420px, 1fr) auto; } .ge-side { max-height: none; overflow: visible; } }
+.ge-main { display: flex; flex-direction: column; min-height: 0; gap: 8px; }
+.ge-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ge-bar .select { width: auto; }
+.ge-sep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+.ge-redo svg { transform: scaleX(-1); }
+.ge-count { display: inline-flex; gap: 4px; }
+
+.ge-canvas-wrap { position: relative; flex: 1; min-height: 380px; border: 1px solid var(--border); border-radius: var(--radius-l);
+  background-color: var(--code-bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--border-2) 75%, transparent) 1px, transparent 1.2px);
+  background-size: 24px 24px; overflow: hidden; box-shadow: var(--shadow); }
+svg.ge-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; user-select: none; cursor: crosshair; }
+
+.ge-node { cursor: grab; }
+.ge-node circle { fill: var(--panel-2); stroke: var(--accent-2); stroke-width: 2; transition: fill .12s, stroke .12s; }
+.ge-node text { fill: var(--text); font: 600 12.5px var(--font); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.ge-node:hover circle { fill: var(--panel-3); }
+.ge-node.sel circle { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 3; }
+.ge-node.hover circle { stroke: var(--success); stroke-width: 3; fill: var(--success-bg); }
+.ge-node .ge-root-ring { fill: none !important; stroke: var(--warn) !important; stroke-width: 1.6 !important; stroke-dasharray: 4 3; }
+
+.ge-edge { stroke: color-mix(in srgb, var(--muted) 85%, var(--text)); stroke-width: 2; fill: none; pointer-events: none; }
+.ge-edge.sel { stroke: var(--accent-2); stroke-width: 3; }
+.ge-edge-hit { stroke: transparent; stroke-width: 14; fill: none; cursor: pointer; }
+.ge-edge-g:hover .ge-edge { stroke: var(--text-2); }
+.ge-arrow-head { fill: color-mix(in srgb, var(--muted) 85%, var(--text)); }
+.ge-arrow-head.sel { fill: var(--accent-2); }
+.ge-wlabel { pointer-events: none; }
+.ge-wlabel rect { fill: var(--panel); stroke: var(--border-2); stroke-width: 1; }
+.ge-wlabel text { fill: var(--tok-num); font: 600 11.5px var(--mono); text-anchor: middle; dominant-baseline: central; }
+.ge-edge-g.sel .ge-wlabel rect { stroke: var(--accent-2); }
+.ge-rubber { stroke: var(--accent-2); stroke-width: 2; stroke-dasharray: 6 5; pointer-events: none; }
+
+.ge-weight-input { position: absolute; width: 76px !important; height: 30px; text-align: center; z-index: 4; box-shadow: var(--shadow-l); }
+.ge-weight-input[hidden] { display: none; }
+.ge-hint { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: var(--muted); padding: 4px 9px; border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--border); pointer-events: none; }
+.ge-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center;
+  color: var(--text-2); pointer-events: none; padding: 20px; }
+.ge-empty svg { color: var(--faint); margin-bottom: 4px; }
+.ge-empty .small { max-width: 380px; }
+.ge-empty[hidden] { display: none; }
+
+.ge-side { display: flex; flex-direction: column; gap: 14px; min-height: 0; overflow-y: auto; padding-right: 2px; }
+.ge-side .card-body { padding: 12px 14px; }
+.ge-side .select { width: auto; }
+.ge-out { min-height: 160px; font-size: 12.8px; background: var(--code-bg); }
+.ge-out.err { border-color: color-mix(in srgb, var(--warn) 45%, var(--border-2)); }
+.ge-props { display: flex; flex-wrap: wrap; gap: 6px; }
+.ge-props .chip { cursor: default; font-size: 11.5px; padding: 3px 9px; }
+.ge-props .chip.ok { color: var(--success); border-color: color-mix(in srgb, var(--success) 35%, transparent); background: var(--success-bg); }
+.ge-props .chip.no { color: var(--muted); }
+.ge-gen-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.ge-lbl { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.ge-lbl .input { width: 64px; }
+.ge-help { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--text-2); }
+.ge-help kbd { font-size: 10.5px; }

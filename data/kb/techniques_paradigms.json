@@ -1,0 +1,1758 @@
+{
+ "chunk": "techniques-paradigms",
+ "articles": [
+  {
+   "id": "tech-greedy",
+   "title": "Algorytmy zachłanne i dowód przez wymianę",
+   "category": "Techniki",
+   "tags": [
+    "zachłanny",
+    "greedy",
+    "dowód wymiany",
+    "exchange argument",
+    "przedziały",
+    "monety",
+    "deadline",
+    "sortowanie"
+   ],
+   "aliases": [
+    "algorytm zachłanny",
+    "zachłanne",
+    "zachlanny",
+    "greedy",
+    "greedy algorithm",
+    "dowód przez wymianę",
+    "exchange argument",
+    "wybór przedziałów",
+    "activity selection",
+    "wydawanie reszty",
+    "problem monet zachłanny",
+    "zadania z deadline",
+    "zachłan",
+    "zachlanne algorytmy"
+   ],
+   "summary": "Algorytm zachłanny w każdym kroku wybiera lokalnie najlepszą opcję (najwcześniej kończący się przedział, największy zysk…) i nigdy się nie cofa. Działa tylko wtedy, gdy da się udowodnić, że jakieś optymalne rozwiązanie zawiera ten wybór — zwykle argumentem wymiany.",
+   "complexity": "zwykle O(n log n) — sortowanie + przejście (często z kopcem lub DSU)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Sortujemy obiekty według sprytnie dobranego klucza i bierzemy je po kolei, jeśli pasują. Trudność nie leży w kodzie, tylko w wyborze klucza i w **dowodzie**.\n\n**Dowód przez wymianę:** weź dowolne optymalne rozwiązanie OPT, które różni się od zachłannego. Pokaż, że zamieniając w OPT jeden element na wybór zachłanny, nie pogorszysz wyniku. Powtarzając zamiany, przekształcisz OPT w rozwiązanie zachłanne bez straty — więc zachłanne jest optymalne.\n\nPrzykład (wybór przedziałów): niech `g` będzie przedziałem kończącym się najwcześniej, a `o` pierwszym przedziałem w OPT. `g` kończy się nie później niż `o`, więc zamiana `o → g` nie powoduje kolizji z resztą OPT. Liczba przedziałów się nie zmienia."
+    },
+    {
+     "type": "text",
+     "md": "**Klasyki i ich klucze:**\n- maksymalna liczba rozłącznych przedziałów — sortuj po **końcu**, bierz, jeśli nie koliduje,\n- minimalna liczba punktów przebijających wszystkie przedziały — sortuj po końcu, stawiaj punkt na końcu nieprzebitego,\n- zadania jednostkowe z terminami i zyskami — sortuj po terminie, trzymaj min-kopiec zysków, wyrzucaj najmniejszy, gdy zadań jest więcej niż termin,\n- minimalizacja maksymalnego spóźnienia — sortuj po terminie (EDF),\n- wydawanie reszty — największy nominał, ale **tylko** dla „kanonicznych” systemów (1, 2, 5, 10, …),\n- plecak ułamkowy — po stosunku wartość/waga (plecak 0/1 — już nie!),\n- łączenie z minimalnym kosztem (Huffman) — zawsze dwa najmniejsze (kopiec)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: wybór maksymalnej liczby rozłącznych przedziałów",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Maksymalna liczba parami rozłącznych przedziałów [s, e) — sortowanie po końcu.\nint main() {\n    int n;\n    cin >> n;\n    vector<pair<long long, long long>> seg(n);       // (koniec, początek) — żeby sort był po końcu\n    for (auto& [e, s] : seg) cin >> s >> e;\n    sort(seg.begin(), seg.end());\n    int chosen = 0;\n    long long lastEnd = LLONG_MIN;\n    for (auto [e, s] : seg) {\n        if (s >= lastEnd) {          // nie koliduje z ostatnio wybranym (przedziały półotwarte)\n            chosen++;\n            lastEnd = e;\n        }\n    }\n    cout << chosen << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: zadania z terminami (deadline) i zyskami",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Zadania jednostkowe: zadanie i musi być wykonane do chwili d[i] (sloty 1..d[i]), daje zysk p[i].\n// Maksymalny łączny zysk: po terminach rosnąco, min-kopiec wybranych zysków.\nint main() {\n    int n;\n    cin >> n;\n    vector<pair<int, long long>> jobs(n);        // (termin, zysk)\n    for (auto& [d, p] : jobs) cin >> d >> p;\n    sort(jobs.begin(), jobs.end());\n    priority_queue<long long, vector<long long>, greater<long long>> taken;\n    for (auto [d, p] : jobs) {\n        taken.push(p);\n        if ((int)taken.size() > d) taken.pop();  // za dużo zadań do chwili d — wyrzuć najmniej zyskowne\n    }\n    long long total = 0;\n    while (!taken.empty()) { total += taken.top(); taken.pop(); }\n    cout << total << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Zachłanność bez dowodu to hazard. Zanim wyślesz, sprawdź pomysł z brutem na tysiącach małych losowych testów. Typowe kontrprzykłady: monety {1, 3, 4} i kwota 6 (zachłannie 4+1+1, optymalnie 3+3), plecak 0/1 po stosunku wartość/waga."
+    },
+    {
+     "type": "tip",
+     "md": "Jeśli nie widzisz właściwego klucza sortowania, porównaj dwa sąsiednie elementy: kiedy opłaca się, by `a` było przed `b`? Wypisz koszt obu kolejności i wyprowadź warunek (np. `a.t · b.w < b.t · a.w`). To jest komparator — o ile jest przechodni."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "sort(…, klucz)",
+     "desc": "uporządkowanie kandydatów według zachłannego kryterium",
+     "complexity": "O(n log n)"
+    },
+    {
+     "sig": "priority_queue (min-heap)",
+     "desc": "wymiana najgorszego wybranego elementu na lepszy",
+     "complexity": "O(log n) na operację"
+    }
+   ],
+   "pitfalls": [
+    "Brak dowodu — zachłanność działa „na przykładach”, ale nie na testach.",
+    "Sortowanie po złym kluczu (np. po początku lub długości zamiast po końcu przy wyborze przedziałów).",
+    "Niezdefiniowane remisy w komparatorze albo komparator nieprzechodni (UB w `sort`).",
+    "Zachłanne wydawanie reszty dla dowolnych nominałów — trzeba dynamiki.",
+    "Mylenie przedziałów domkniętych i półotwartych przy sprawdzaniu kolizji (`>=` vs `>`)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "algorytm zachłanny",
+      "greedy c++",
+      "co to algorytm zachłanny",
+      "zachłanne jak dziala",
+      "kiedy greedy działa"
+     ],
+     "a": "Algorytm zachłanny w każdym kroku bierze lokalnie najlepszy wybór i nigdy go nie cofa — zwykle po posortowaniu według dobrze dobranego klucza, w O(n log n). Działa tylko wtedy, gdy da się wykazać, że istnieje optymalne rozwiązanie zgodne z tym wyborem (dowód przez wymianę). Bez dowodu sprawdź pomysł brutem na małych testach."
+    },
+    {
+     "q": [
+      "dowód przez wymianę",
+      "exchange argument",
+      "jak udowodnić zachłanny",
+      "dowod poprawnosci greedy"
+     ],
+     "a": "Bierzesz dowolne optymalne rozwiązanie i pokazujesz, że możesz zamienić w nim jeden element na ten wybrany zachłannie, nie psując poprawności ani wyniku. Indukcyjnie przekształcasz optimum w rozwiązanie zachłanne, więc zachłanne też jest optymalne. Przy sortowaniu wystarczy często pokazać, że zamiana dwóch sąsiednich elementów „w złej kolejności” nie poprawia wyniku."
+    },
+    {
+     "q": [
+      "maksymalna liczba rozłącznych przedziałów",
+      "activity selection",
+      "wybór przedziałów zachłanny",
+      "ile spotkań można odbyć",
+      "max non overlapping intervals"
+     ],
+     "a": "Sortuj po **końcu** i bierz przedział, jeśli zaczyna się nie wcześniej niż koniec ostatnio wybranego. Najwcześniej kończący się przedział zostawia najwięcej miejsca na resztę — z wymiany wynika, że jakieś optimum go zawiera. O(n log n). Sortowanie po początku albo po długości daje złe wyniki."
+    },
+    {
+     "q": [
+      "minimalna liczba punktów przebijających przedziały",
+      "przebicie przedziałów punktami",
+      "minimum points to cover intervals",
+      "ile strzał na balony"
+     ],
+     "a": "Sortuj po końcu; idąc po kolei, gdy przedział nie jest jeszcze przebity, postaw punkt na jego **końcu** — przebija on też wszystkie przedziały zaczynające się wcześniej. Liczba postawionych punktów jest minimalna (równa maksymalnej liczbie rozłącznych przedziałów). O(n log n).",
+     "code": "int minPoints(vector<pair<long long, long long>> seg) {   // (l, r) domknięte\n    sort(seg.begin(), seg.end(), [](auto& a, auto& b) { return a.second < b.second; });\n    int points = 0;\n    long long last = LLONG_MIN;\n    for (auto [l, r] : seg)\n        if (l > last) { points++; last = r; }   // nieprzebity — punkt na końcu\n    return points;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "problem wydawania reszty",
+      "monety zachłannie",
+      "minimalna liczba monet greedy",
+      "coin change greedy",
+      "kiedy zachłanne monety działa"
+     ],
+     "a": "Zachłanne „bierz największy nominał” jest optymalne dla systemów kanonicznych, np. polskich monet (1, 2, 5, 10, 20, 50 …). Dla dowolnych nominałów może zawieść: {1, 3, 4} i kwota 6 → zachłannie 4+1+1 (3 monety), optymalnie 3+3 (2 monety). W ogólnym przypadku użyj dynamiki `dp[x] = min(dp[x − c] + 1)` w O(kwota · liczba nominałów).",
+     "code": "int minCoins(const vector<int>& coins, int amount) {   // dynamika — działa dla dowolnych nominałów\n    vector<int> dp(amount + 1, INT_MAX);\n    dp[0] = 0;\n    for (int x = 1; x <= amount; x++)\n        for (int c : coins)\n            if (c <= x && dp[x - c] != INT_MAX) dp[x] = min(dp[x], dp[x - c] + 1);\n    return dp[amount] == INT_MAX ? -1 : dp[amount];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "zadania z deadline",
+      "job sequencing with deadlines",
+      "zadania z terminami i zyskiem",
+      "szeregowanie zadań deadline zysk"
+     ],
+     "a": "Sortuj zadania po terminie i wstawiaj zyski do min-kopca; gdy w kopcu jest więcej zadań niż wynosi bieżący termin, wyrzuć najmniejszy zysk. Na końcu kopiec zawiera optymalny zbiór (każdy prefiks terminów ma ≤ d zadań). O(n log n). Wariant „sortuj po zysku malejąco i wstaw w najpóźniejszy wolny slot” też działa (z DSU do szukania slotu)."
+    },
+    {
+     "q": [
+      "minimalizacja maksymalnego opóźnienia",
+      "earliest deadline first",
+      "szeregowanie minimalne spóźnienie",
+      "scheduling minimize lateness"
+     ],
+     "a": "Wykonuj zadania w kolejności rosnących terminów (EDF). Jeśli w optimum dwa sąsiednie zadania są w odwrotnej kolejności, ich zamiana nie zwiększa maksymalnego spóźnienia — dowód wymiany. O(n log n)."
+    },
+    {
+     "q": [
+      "sortowanie z komparatorem zachłanne",
+      "jak dobrać kolejność zadań",
+      "komparator a*b < b*a",
+      "kolejność minimalizująca sumę czasów"
+     ],
+     "a": "Porównaj dwie sąsiednie pozycje: koszt kolejności „a, b” i „b, a” różni się tylko członem zależnym od tej pary. Np. dla sumy ważonych czasów zakończenia `Σ w_i·C_i` opłaca się `a` przed `b`, gdy `a.t · b.w < b.t · a.w` (reguła Smitha). Taki warunek jest komparatorem; licz w `long long`, żeby uniknąć ułamków i przepełnień.",
+     "code": "struct Task { long long t, w; };   // czas trwania, waga\nbool before(const Task& a, const Task& b) { return a.t * b.w < b.t * a.w; }   // reguła Smitha\nlong long weightedCompletion(vector<Task> v) {\n    sort(v.begin(), v.end(), before);\n    long long time = 0, total = 0;\n    for (auto& x : v) { time += x.t; total += x.w * time; }\n    return total;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "plecak ułamkowy",
+      "fractional knapsack",
+      "plecak zachłanny",
+      "czy plecak można zachłannie"
+     ],
+     "a": "Gdy przedmioty można dzielić, sortuj po stosunku `wartość/waga` malejąco i bierz, ile się zmieści (ostatni częściowo) — to optymalne. Dla plecaka 0/1 (przedmioty niepodzielne) zachłanność zawodzi; potrzebna jest dynamika O(n·W) albo meet in the middle przy n ≤ 40."
+    },
+    {
+     "q": [
+      "zachłanne czy dynamika",
+      "greedy vs dp",
+      "skąd wiem że zachłanne nie zadziała"
+     ],
+     "a": "Szukaj kontrprzykładu na małych danych: napisz brut (wszystkie podzbiory/permutacje) i porównaj z zachłannym na tysiącach losowych testów. Jeśli znajdziesz różnicę — potrzebna dynamika. Wskazówka: gdy lokalny wybór „zamyka drogę” do lepszych kombinacji później (jak w plecaku 0/1), zachłanność zwykle nie działa."
+    }
+   ],
+   "related": [
+    "ds-heap",
+    "stl-sort",
+    "tech-sweep-line",
+    "dp-knapsack-01",
+    "dp-intro",
+    "tech-binary-search-answer",
+    "dp-coin-change",
+    "tech-huffman",
+    "tech-intervals"
+   ]
+  },
+  {
+   "id": "tech-divide-and-conquer",
+   "title": "Dziel i zwyciężaj: sortowanie przez scalanie i inwersje",
+   "category": "Techniki",
+   "tags": [
+    "dziel i zwyciężaj",
+    "divide and conquer",
+    "merge sort",
+    "sortowanie przez scalanie",
+    "inwersje",
+    "rekurencja",
+    "twierdzenie o rekurencji uniwersalnej"
+   ],
+   "aliases": [
+    "dziel i zwyciezaj",
+    "dziel i zwyciężaj",
+    "divide and conquer",
+    "merge sort",
+    "sortowanie przez scalanie",
+    "mergesort c++",
+    "liczenie inwersji merge sort",
+    "count inversions",
+    "d&c",
+    "dziel i rządź",
+    "scalanie"
+   ],
+   "summary": "Dzielimy problem na mniejsze części (zwykle dwie połowy), rozwiązujemy je rekurencyjnie i łączymy wyniki. Sortowanie przez scalanie działa w O(n log n), a przy scalaniu można policzyć np. liczbę inwersji.",
+   "complexity": "T(n) = 2T(n/2) + O(n) ⇒ O(n log n); ogólnie wg twierdzenia o rekurencji uniwersalnej",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Zamiast rozwiązywać cały problem naraz, dzielimy tablicę na dwie połowy, każdą rozwiązujemy rekurencyjnie, a potem **łączymy**. Cała trudność to szybkie łączenie: przy merge sorcie scalamy dwie posortowane listy w O(n). Rekurencja ma log n poziomów, na każdym praca O(n) — razem O(n log n).\n\n**Inwersje przy scalaniu.** Gdy przy scalaniu bierzemy element z prawej połowy, a w lewej zostało jeszcze `k` elementów, to wszystkie te `k` elementów jest od niego większych i stało wcześniej — dodajemy `k` inwersji."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** liczba par `i < j` spełniających warunek zależny od kolejności (inwersje, „ile par z a[i] > 2·a[j]”), najbliższa para punktów, problemy, w których odpowiedź dla całości da się skleić z odpowiedzi dla połówek + „przechodzących przez środek”. Zaawansowane: CDQ (dziel i zwyciężaj po czasie), optymalizacja dynamiki D&C."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: merge sort z liczeniem inwersji",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvector<long long> a, tmp;\n\n// Sortuje a[lo..hi) i zwraca liczbę inwersji w tym fragmencie.\nlong long mergeSort(int lo, int hi) {\n    if (hi - lo <= 1) return 0;\n    int mid = (lo + hi) / 2;\n    long long inv = mergeSort(lo, mid) + mergeSort(mid, hi);\n    int i = lo, j = mid, k = lo;\n    while (i < mid && j < hi) {\n        if (a[i] <= a[j]) tmp[k++] = a[i++];   // <= : równe elementy nie są inwersją\n        else {\n            inv += mid - i;                    // a[i..mid) są większe od a[j]\n            tmp[k++] = a[j++];\n        }\n    }\n    while (i < mid) tmp[k++] = a[i++];\n    while (j < hi) tmp[k++] = a[j++];\n    for (int p = lo; p < hi; p++) a[p] = tmp[p];\n    return inv;\n}\n\nint main() {\n    int n;\n    cin >> n;\n    a.resize(n);\n    tmp.resize(n);\n    for (auto& x : a) cin >> x;\n    cout << mergeSort(0, n) << '\\n';\n    for (int i = 0; i < n; i++) cout << a[i] << \" \\n\"[i == n - 1];\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Rekurencja",
+      "Złożoność",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "T(n) = 2T(n/2) + O(n)",
+       "O(n log n)",
+       "merge sort, inwersje"
+      ],
+      [
+       "T(n) = 2T(n/2) + O(1)",
+       "O(n)",
+       "budowa drzewa przedziałowego"
+      ],
+      [
+       "T(n) = T(n/2) + O(1)",
+       "O(log n)",
+       "wyszukiwanie binarne, szybkie potęgowanie"
+      ],
+      [
+       "T(n) = 2T(n/2) + O(n log n)",
+       "O(n log² n)",
+       "najbliższa para z sortowaniem w każdym kroku"
+      ],
+      [
+       "T(n) = T(n/2) + O(n)",
+       "O(n)",
+       "quickselect (oczekiwanie), nth_element"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Bufor `tmp` alokuj raz (globalnie), a nie w każdym wywołaniu — tworzenie wektorów w rekurencji to O(n log n) alokacji i duża stała."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "mergeSort(lo, hi)",
+     "desc": "sortuje a[lo..hi) i zwraca liczbę inwersji",
+     "complexity": "O(n log n)",
+     "returns": "long long"
+    },
+    {
+     "sig": "merge(a.begin(), a.end(), b.begin(), b.end(), out)",
+     "desc": "scalenie dwóch posortowanych zakresów (STL)",
+     "complexity": "O(n + m)"
+    },
+    {
+     "sig": "inplace_merge(first, middle, last)",
+     "desc": "scalenie dwóch sąsiednich posortowanych części w miejscu",
+     "complexity": "O(n) (z buforem)"
+    },
+    {
+     "sig": "nth_element(first, nth, last)",
+     "desc": "k-ty element na swoim miejscu, mniejsze przed, większe za",
+     "complexity": "O(n) średnio"
+    }
+   ],
+   "pitfalls": [
+    "Liczba inwersji w `int` — dla n = 2·10^5 może sięgać 2·10^10.",
+    "`<` zamiast `<=` przy scalaniu — równe elementy liczone jako inwersje.",
+    "Alokowanie nowych wektorów w każdym wywołaniu — wolno.",
+    "Rekurencja bez przypadku bazowego dla przedziału długości 1 (lub 0) — nieskończona rekurencja.",
+    "Mieszanie przedziałów domkniętych i półotwartych przy podziale `mid`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "merge sort c++",
+      "sortowanie przez scalanie",
+      "mergesort kod",
+      "jak napisac merge sort",
+      "sortowanie przez scalanie c++"
+     ],
+     "a": "Dziel tablicę na połowy, sortuj każdą rekurencyjnie i scalaj dwiema „głowicami” do bufora, biorąc mniejszy z dwóch pierwszych elementów. log n poziomów po O(n) pracy daje O(n log n) zawsze (także w najgorszym przypadku), za cenę O(n) dodatkowej pamięci. W praktyce na zawodach używasz `sort` lub `stable_sort`, ale schemat merge sorta przydaje się do liczenia par."
+    },
+    {
+     "q": [
+      "liczba inwersji merge sort",
+      "count inversions",
+      "inwersje dziel i zwyciężaj",
+      "ile inwersji n log n"
+     ],
+     "a": "Podczas scalania, gdy bierzesz element z prawej połowy, wszystkie pozostałe elementy lewej połowy (`mid − i`) są od niego większe i stały wcześniej — dodaj je do wyniku. Inwersje wewnątrz połówek policzą wywołania rekurencyjne. O(n log n), wynik w `long long`. Alternatywa: Fenwick po skompresowanych wartościach."
+    },
+    {
+     "q": [
+      "co to dziel i zwyciężaj",
+      "divide and conquer jak dziala",
+      "dziel i zwyciezaj przyklad",
+      "technika dziel i zwyciężaj"
+     ],
+     "a": "Trzy kroki: podziel problem na mniejsze podproblemy, rozwiąż je rekurencyjnie, połącz wyniki. Złożoność wynika z rekurencji typu `T(n) = a·T(n/b) + f(n)` (twierdzenie o rekurencji uniwersalnej). Przykłady: merge sort, szybkie potęgowanie, wyszukiwanie binarne, najbliższa para punktów, budowa drzewa przedziałowego."
+    },
+    {
+     "q": [
+      "ile par i<j z a[i] > 2*a[j]",
+      "reverse pairs",
+      "pary z warunkiem merge sort",
+      "liczenie par dziel i zwyciężaj"
+     ],
+     "a": "Ten sam schemat co inwersje: po posortowaniu obu połówek, przed scaleniem policz dwoma wskaźnikami, ile elementów lewej połowy jest > 2·(element prawej). Ponieważ obie połowy są posortowane, wskaźnik w lewej połowie tylko rośnie — O(n) na poziom, O(n log n) łącznie. Uważaj na przepełnienie `2 * a[j]` (`long long`)."
+    },
+    {
+     "q": [
+      "najbliższa para punktów",
+      "closest pair of points",
+      "dwa najbliższe punkty dziel i zwyciężaj",
+      "minimalna odległość punktów n log n"
+     ],
+     "a": "Posortuj punkty po x, podziel na połowy, rekurencyjnie znajdź minimum `d` w każdej, a potem sprawdź pas szerokości `2d` wokół linii podziału: po posortowaniu pasa po y każdy punkt trzeba porównać tylko z kilkoma (≤ 7) następnymi. O(n log n) (z sortowaniem przez scalanie po y) lub O(n log² n) z sortowaniem w każdym kroku."
+    },
+    {
+     "q": [
+      "nth_element",
+      "k-ty najmniejszy element w o(n)",
+      "quickselect",
+      "mediana w czasie liniowym"
+     ],
+     "a": "`nth_element(a.begin(), a.begin() + k, a.end())` ustawia na pozycji `k` element, który byłby tam po sortowaniu, z mniejszymi przed i większymi za (bez sortowania reszty). Działa średnio w O(n) — to quickselect, odmiana dziel i zwyciężaj, w której rekurencja idzie tylko do jednej części.",
+     "code": "vector<int> a = {9, 1, 8, 2, 7, 3};\nint k = 2;\nnth_element(a.begin(), a.begin() + k, a.end());\ncout << a[k] << '\\n';   // 3 — trzeci najmniejszy"
+    },
+    {
+     "q": [
+      "twierdzenie o rekurencji uniwersalnej",
+      "master theorem",
+      "złożoność rekurencji T(n)=2T(n/2)+n"
+     ],
+     "a": "Dla `T(n) = a·T(n/b) + f(n)` porównaj `f(n)` z `n^(log_b a)`: jeśli `f` rośnie wolniej — wynik `Θ(n^(log_b a))`; jeśli tak samo — `Θ(n^(log_b a) · log n)`; jeśli szybciej (i warunek regularności) — `Θ(f(n))`. Np. merge sort: `a = b = 2`, `f = n = n^1` → `Θ(n log n)`; binsearch: `a = 1, b = 2, f = 1` → `Θ(log n)`."
+    }
+   ],
+   "related": [
+    "ds-merge-sort-tree",
+    "ds-fenwick",
+    "stl-sort",
+    "tech-binary-search",
+    "math-fast-pow",
+    "dp-divide-conquer",
+    "ds-cartesian-tree",
+    "tech-elementary-sorts"
+   ]
+  },
+  {
+   "id": "tech-offline-queries",
+   "title": "Zapytania offline (sortowanie zapytań, odwracanie operacji)",
+   "category": "Techniki",
+   "tags": [
+    "offline",
+    "zapytania offline",
+    "sortowanie zapytań",
+    "odwracanie czasu",
+    "dsu",
+    "fenwick",
+    "przetwarzanie wsadowe"
+   ],
+   "aliases": [
+    "zapytania offline",
+    "offline queries",
+    "przetwarzanie offline",
+    "sortowanie zapytań",
+    "sort queries",
+    "odwracanie operacji",
+    "usuwanie krawędzi od końca",
+    "offline dsu",
+    "reverse processing",
+    "offline vs online"
+   ],
+   "summary": "Gdy wszystkie zapytania są znane z góry, możemy odpowiadać na nie w wygodnej kolejności (posortowane po parametrze, od końca), a odpowiedzi wypisać w kolejności oryginalnej. Zamienia to trudne problemy online (usuwanie krawędzi, progi wag) na proste z DSU lub Fenwickiem.",
+   "complexity": "zwykle O((n + q) log n) — sortowanie + struktura",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Online musisz odpowiedzieć na zapytanie, zanim zobaczysz następne. Offline możesz wczytać wszystko, posortować zapytania i obsługiwać je w kolejności, w której struktura danych tylko **rośnie** (dodajemy elementy/krawędzie, nigdy nie usuwamy). Każde zapytanie zapamiętuje swój oryginalny indeks, żeby na końcu wypisać odpowiedzi we właściwej kolejności.\n\nTypowe triki:\n- **sortowanie po progu** — zapytania „krawędzie o wadze ≤ w” sortujesz po `w` i dodajesz krawędzie do DSU w kolejności wag,\n- **sortowanie po prawym końcu** — zapytania o przedziały `[l, r]` przetwarzasz rosnąco po `r` z Fenwickiem (np. liczba różnych elementów),\n- **odwrócenie czasu** — usuwanie krawędzi jest trudne, ale czytane od końca staje się dodawaniem (DSU)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: spójność po krawędziach o wadze ≤ w (offline + DSU)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct DSU {\n    vector<int> parent, size_;\n    DSU(int n) : parent(n), size_(n, 1) { iota(parent.begin(), parent.end(), 0); }\n    int find(int x) { return parent[x] == x ? x : parent[x] = find(parent[x]); }\n    void unite(int a, int b) {\n        a = find(a), b = find(b);\n        if (a == b) return;\n        if (size_[a] < size_[b]) swap(a, b);\n        parent[b] = a;\n        size_[a] += size_[b];\n    }\n};\n\n// Zapytanie (u, v, w): czy u i v są połączone, używając tylko krawędzi o wadze <= w?\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m, q;\n    cin >> n >> m >> q;\n    vector<array<int, 3>> edges(m);                 // {waga, a, b}\n    for (auto& [w, a, b] : edges) cin >> a >> b >> w;\n    vector<array<int, 4>> queries(q);               // {w, u, v, indeks}\n    for (int i = 0; i < q; i++) {\n        auto& [w, u, v, idx] = queries[i];\n        cin >> u >> v >> w;\n        idx = i;\n    }\n    sort(edges.begin(), edges.end());\n    sort(queries.begin(), queries.end());\n    DSU dsu(n + 1);\n    vector<bool> answer(q);\n    int e = 0;\n    for (auto [w, u, v, idx] : queries) {\n        while (e < m && edges[e][0] <= w) {         // dodaj wszystkie krawędzie <= w\n            dsu.unite(edges[e][1], edges[e][2]);\n            e++;\n        }\n        answer[idx] = dsu.find(u) == dsu.find(v);\n    }\n    for (bool ok : answer) cout << (ok ? \"TAK\" : \"NIE\") << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Zawsze zapisuj w zapytaniu jego oryginalny numer (`idx`) i wypełniaj tablicę odpowiedzi pod tym numerem. Po sortowaniu zapytań kolejność wyjścia musi zostać taka jak w wejściu."
+    },
+    {
+     "type": "warn",
+     "md": "Niektóre zadania **wymuszają online** — np. „parametry kolejnego zapytania to `x xor ostatnia_odpowiedź`”. Wtedy offline nie zadziała i potrzebne są struktury trwałe lub inne podejście."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "sort(queries) z zapamiętanym idx",
+     "desc": "przetwarzanie zapytań w wygodnej kolejności",
+     "complexity": "O(q log q)"
+    },
+    {
+     "sig": "answer[idx] = …",
+     "desc": "odpowiedź zapisana pod oryginalnym numerem",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Utrata oryginalnej kolejności zapytań (brak `idx`).",
+    "Zła kolejność przy remisach (np. krawędź o wadze równej `w` ma być dodana przed odpowiedzią).",
+    "Próba offline przy zapytaniach zależnych od poprzednich odpowiedzi.",
+    "Przy odwracaniu czasu zapomniane krawędzie, które nigdy nie są usuwane — trzeba je dodać na starcie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "zapytania offline",
+      "offline queries c++",
+      "co to przetwarzanie offline",
+      "offline czy online",
+      "zapytania offline jak"
+     ],
+     "a": "Offline wczytujesz wszystkie zapytania, sortujesz je według parametru (próg, prawy koniec, czas) i odpowiadasz w kolejności, w której struktura tylko się rozbudowuje, a wyniki zapisujesz pod oryginalnymi indeksami. Pozwala to zastąpić trudne struktury (trwałe, z usuwaniem) prostymi: DSU, Fenwick, sumy prefiksowe. Typowa złożoność O((n + q) log n)."
+    },
+    {
+     "q": [
+      "usuwanie krawędzi dsu od końca",
+      "reverse processing dsu",
+      "odwracanie operacji usuwania",
+      "krawędzie usuwane spójność"
+     ],
+     "a": "DSU nie umie usuwać krawędzi, ale umie je dodawać. Jeśli operacje to tylko usunięcia (i zapytania), przejdź je **od końca**: zacznij od grafu bez krawędzi, które kiedykolwiek zostaną usunięte, a usunięcie czytane wstecz staje się dodaniem. Odpowiedzi zbierasz od końca i odwracasz. O((n + q) α(n)).",
+     "code": "// operacje: {typ, a, b}; typ 0 = usuń krawędź (a, b), typ 1 = zapytanie czy a i b połączone.\n// initialEdges = krawędzie grafu na początku. Zwraca odpowiedzi w kolejności zapytań.\nvector<bool> reverseProcess(int n, const vector<pair<int, int>>& initialEdges, const vector<array<int, 3>>& ops) {\n    vector<int> parent(n);\n    iota(parent.begin(), parent.end(), 0);\n    function<int(int)> find = [&](int x) { return parent[x] == x ? x : parent[x] = find(parent[x]); };\n    auto unite = [&](int a, int b) { parent[find(a)] = find(b); };\n    set<pair<int, int>> removed;\n    for (auto& [t, a, b] : ops) if (t == 0) removed.insert({min(a, b), max(a, b)});\n    for (auto [a, b] : initialEdges) if (!removed.count({min(a, b), max(a, b)})) unite(a, b);\n    vector<bool> ans;\n    for (int i = (int)ops.size() - 1; i >= 0; i--) {\n        auto [t, a, b] = ops[i];\n        if (t == 0) unite(a, b);                       // usunięcie wstecz = dodanie\n        else ans.push_back(find(a) == find(b));\n    }\n    reverse(ans.begin(), ans.end());\n    return ans;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sortowanie zapytań po prawym końcu",
+      "zapytania o przedziały offline fenwick",
+      "offline range queries sort by r"
+     ],
+     "a": "Posortuj zapytania `[l, r]` rosnąco po `r` i przesuwaj wskaźnik po tablicy, dodając elementy do Fenwicka. Dla zapytania o `r` struktura zawiera dokładnie prefiks `a[1..r]`, więc wystarczy zapytanie o `l`. Klasyka: liczba różnych wartości w przedziale (jedynka tylko na ostatnim wystąpieniu wartości) w O((n + q) log n)."
+    },
+    {
+     "q": [
+      "zapytania z progiem wagi",
+      "krawędzie o wadze mniejszej niż w zapytanie",
+      "spójność przy ograniczeniu wagi",
+      "offline dsu sort edges"
+     ],
+     "a": "Posortuj krawędzie po wadze, a zapytania po progu. Przechodząc po zapytaniach rosnąco, dodawaj do DSU wszystkie krawędzie z wagą ≤ progu i odpowiadaj `find(u) == find(v)` (albo rozmiarem składowej). Każda krawędź jest dodana raz — O((m + q) log(m + q))."
+    },
+    {
+     "q": [
+      "wymuszone online",
+      "forced online xor last answer",
+      "zapytania zależą od poprzedniej odpowiedzi"
+     ],
+     "a": "Gdy treść koduje zapytania przez poprzednią odpowiedź (np. `l = (l' xor last) mod n + 1`), nie poznasz zapytań przed odpowiedzią na poprzednie — offline odpada. Potrzebne są struktury działające online: trwałe drzewo przedziałowe, merge sort tree, drzewa na wartościach z wersjami, sqrt dekompozycja."
+    },
+    {
+     "q": [
+      "offline a mo",
+      "kiedy mo kiedy sortowanie po r",
+      "zapytania offline przedziały metody"
+     ],
+     "a": "Najpierw spróbuj sortowania po prawym końcu z Fenwickiem — O((n + q) log n), jeśli odpowiedź da się wyrazić przez „ostatnie wystąpienia” lub sumy. Gdy odpowiedź wymaga pełnej zawartości przedziału (np. liczba wartości występujących dokładnie dwa razy), użyj algorytmu Mo — O((n + q)√n) z prostymi `add`/`remove`."
+    }
+   ],
+   "related": [
+    "ds-mo",
+    "ds-fenwick",
+    "graph-dsu",
+    "ds-dsu-rollback",
+    "tech-sweep-line",
+    "ds-persistent-segment-tree",
+    "ds-wavelet-tree"
+   ]
+  },
+  {
+   "id": "tech-backtracking",
+   "title": "Rekurencja i backtracking (permutacje, podzbiory, N hetmanów)",
+   "category": "Techniki",
+   "tags": [
+    "rekurencja",
+    "backtracking",
+    "nawroty",
+    "permutacje",
+    "podzbiory",
+    "n hetmanów",
+    "przeszukiwanie z nawrotami",
+    "brute force"
+   ],
+   "aliases": [
+    "backtracking",
+    "rekurencja",
+    "nawroty",
+    "przeszukiwanie z nawrotami",
+    "generowanie permutacji",
+    "wszystkie permutacje",
+    "generowanie podzbiorów rekurencyjnie",
+    "n hetmanów",
+    "n queens",
+    "8 hetmanów",
+    "next_permutation",
+    "kombinacje k z n",
+    "rekurencja c++"
+   ],
+   "summary": "Backtracking buduje rozwiązanie krok po kroku (rekurencyjnie), a gdy częściowe rozwiązanie nie może już być poprawne, cofa ostatni wybór i próbuje następnego. Generuje permutacje (n!), podzbiory (2^n), kombinacje; z przycinaniem rozwiązuje łamigłówki jak N hetmanów czy sudoku.",
+   "complexity": "permutacje O(n!·n), podzbiory O(2^n·n), N hetmanów ≪ n^n dzięki przycinaniu",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Schemat.** Funkcja `solve(krok)`:\n1. jeśli rozwiązanie jest kompletne — przetwórz je (wypisz, policz),\n2. dla każdego możliwego wyboru w tym kroku: jeśli jest dozwolony — **zrób** go (zaznacz), wywołaj `solve(krok + 1)`, **cofnij** go (odznacz).\n\nCofanie po powrocie z rekurencji jest kluczowe — stan musi być taki sam jak przed wyborem. **Przycinanie** (pruning): sprawdzaj ograniczenia jak najwcześniej, żeby nie schodzić w gałęzie bez rozwiązań."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** bardzo małe n (≤ 8–10 dla permutacji, ≤ 20 dla podzbiorów), „wypisz wszystkie…”, „ile jest sposobów ustawienia…”, łamigłówki z ograniczeniami (hetmany, sudoku, kolorowanie), oraz **brut do testowania** szybszego rozwiązania."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: wszystkie permutacje (backtracking)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint n;\nvector<int> perm;\nvector<bool> used;\n\nvoid generate() {                            // wszystkie permutacje 1..n w porządku leksykograficznym\n    if ((int)perm.size() == n) {\n        for (int i = 0; i < n; i++) cout << perm[i] << \" \\n\"[i == n - 1];\n        return;\n    }\n    for (int x = 1; x <= n; x++) {\n        if (used[x]) continue;\n        used[x] = true;                      // wybór\n        perm.push_back(x);\n        generate();\n        perm.pop_back();                     // cofnięcie\n        used[x] = false;\n    }\n}\n\nint main() {\n    cin >> n;\n    used.assign(n + 1, false);\n    generate();\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba rozstawień N hetmanów",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint n;\nlong long solutions = 0;\nvector<bool> colUsed, diag1, diag2;          // kolumny i przekątne zajęte\n\nvoid place(int row) {\n    if (row == n) { solutions++; return; }\n    for (int c = 0; c < n; c++) {\n        if (colUsed[c] || diag1[row + c] || diag2[row - c + n - 1]) continue;   // przycinanie\n        colUsed[c] = diag1[row + c] = diag2[row - c + n - 1] = true;\n        place(row + 1);\n        colUsed[c] = diag1[row + c] = diag2[row - c + n - 1] = false;\n    }\n}\n\nint main() {\n    cin >> n;\n    colUsed.assign(n, false);\n    diag1.assign(2 * n - 1, false);\n    diag2.assign(2 * n - 1, false);\n    place(0);\n    cout << solutions << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Co generujesz",
+      "Liczba obiektów",
+      "Praktyczny limit n"
+     ],
+     "rows": [
+      [
+       "permutacje",
+       "n!",
+       "≈ 10 (3,6·10^6)"
+      ],
+      [
+       "podzbiory",
+       "2^n",
+       "≈ 20–25"
+      ],
+      [
+       "kombinacje k z n",
+       "C(n, k)",
+       "zależnie od k"
+      ],
+      [
+       "ciągi długości n nad alfabetem k",
+       "k^n",
+       "k^n ≤ ~10^7"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Do permutacji wystarczy `next_permutation` na posortowanym wektorze — generuje kolejne permutacje leksykograficznie i działa też z powtórzeniami (pomija duplikaty)."
+    },
+    {
+     "type": "warn",
+     "md": "Głęboka rekurencja (np. DFS po ścieżce 10^5 wierzchołków) może przepełnić stos. W backtrackingu głębokość to zwykle n ≤ 20–30, więc to nie problem, ale w innych rekurencjach rozważ wersję iteracyjną."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "next_permutation(v.begin(), v.end())",
+     "desc": "następna permutacja leksykograficznie; false po ostatniej",
+     "complexity": "O(n)",
+     "returns": "bool",
+     "example": "sort(v.begin(), v.end()); do { ... } while (next_permutation(v.begin(), v.end()));"
+    },
+    {
+     "sig": "solve(krok): wybierz → solve(krok+1) → cofnij",
+     "desc": "schemat backtrackingu",
+     "complexity": "zależnie od przycinania"
+    }
+   ],
+   "pitfalls": [
+    "Brak cofnięcia wyboru po powrocie z rekurencji — stan „przecieka” do kolejnych gałęzi.",
+    "`next_permutation` na nieposortowanym wektorze — pominiesz część permutacji.",
+    "Wypisywanie z `endl` przy milionach linii — bardzo wolno; użyj `'\\n'`.",
+    "Przekazywanie dużych struktur przez wartość w każdym wywołaniu — kopiowanie; używaj referencji/globalnych.",
+    "Zbyt późne przycinanie (sprawdzanie warunków dopiero w liściu)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "generowanie permutacji",
+      "wszystkie permutacje c++",
+      "jak wygenerować permutacje",
+      "permutacje rekurencja",
+      "permutacje n elementow"
+     ],
+     "a": "Najprościej `next_permutation`: posortuj wektor i w pętli `do { … } while (next_permutation(v.begin(), v.end()));` — dostaniesz wszystkie n! permutacji w porządku leksykograficznym. Rekurencyjnie: w każdym kroku wybierasz nieużyty element, zaznaczasz go, schodzisz głębiej i odznaczasz. Oba sposoby O(n!·n).",
+     "code": "vector<int> v = {3, 1, 2};\nsort(v.begin(), v.end());\ndo {\n    for (int x : v) cout << x << ' ';\n    cout << '\\n';\n} while (next_permutation(v.begin(), v.end()));   // 6 permutacji"
+    },
+    {
+     "q": [
+      "generowanie podzbiorów rekurencyjnie",
+      "wszystkie podzbiory rekurencja",
+      "subsets recursion",
+      "bierz albo nie bierz"
+     ],
+     "a": "Dla każdego elementu dwie gałęzie: bierzesz go albo nie. Rekurencja `go(i)` dochodzi do `i == n` w 2^n liściach, a w każdym masz jeden podzbiór. Iteracyjnie to samo dają maski bitowe `0..2^n − 1`. Złożoność O(2^n · n) z wypisywaniem.",
+     "code": "vector<int> items = {1, 2, 3};\nvector<int> chosen;\nfunction<void(int)> go = [&](int i) {\n    if (i == (int)items.size()) {\n        cout << \"{ \";\n        for (int x : chosen) cout << x << ' ';\n        cout << \"}\\n\";\n        return;\n    }\n    go(i + 1);                    // bez items[i]\n    chosen.push_back(items[i]);\n    go(i + 1);                    // z items[i]\n    chosen.pop_back();\n};\ngo(0);                            // 8 podzbiorów"
+    },
+    {
+     "q": [
+      "n hetmanów",
+      "n queens c++",
+      "problem 8 hetmanów",
+      "hetmany backtracking",
+      "ile ustawien hetmanow"
+     ],
+     "a": "Stawiasz hetmany wiersz po wierszu; w każdym wierszu próbujesz kolumny, które nie są zajęte i nie leżą na zajętej przekątnej (`row + col` i `row − col` są stałe na przekątnych). Po powrocie z rekurencji zwalniasz kolumnę i przekątne. Dla n = 8 jest 92 rozwiązania; przycinanie sprawia, że przeszukanie jest ułamkiem n^n."
+    },
+    {
+     "q": [
+      "kombinacje k z n",
+      "wszystkie k elementowe podzbiory",
+      "combinations c++",
+      "generowanie kombinacji"
+     ],
+     "a": "Rekurencja z „następnym dozwolonym indeksem”: `go(start, left)` wybiera kolejny element z indeksów `≥ start` i schodzi z `left − 1`. Przycinanie: przerwij, gdy zostało za mało elementów (`n − i < left`). Generujesz C(n, k) kombinacji w porządku leksykograficznym.",
+     "code": "void combinations(int n, int k) {\n    vector<int> cur;\n    function<void(int)> go = [&](int start) {\n        if ((int)cur.size() == k) {\n            for (int x : cur) cout << x << ' ';\n            cout << '\\n';\n            return;\n        }\n        for (int i = start; i <= n - (k - (int)cur.size()) + 1; i++) {   // zostaw miejsce na resztę\n            cur.push_back(i);\n            go(i + 1);\n            cur.pop_back();\n        }\n    };\n    go(1);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "co to backtracking",
+      "przeszukiwanie z nawrotami",
+      "backtracking jak działa",
+      "nawroty algorytm"
+     ],
+     "a": "Backtracking to przeszukiwanie drzewa możliwych wyborów w głąb: robisz wybór, idziesz dalej, a gdy dojdziesz do końca albo wiesz, że dalej nie ma rozwiązania, wracasz i cofasz wybór. Siła tkwi w przycinaniu — im wcześniej odrzucisz złą gałąź, tym mniej stanów odwiedzisz. Złożoność pesymistycznie wykładnicza."
+    },
+    {
+     "q": [
+      "przycinanie backtracking",
+      "pruning",
+      "jak przyspieszyć backtracking",
+      "backtracking za wolny"
+     ],
+     "a": "Sprawdzaj ograniczenia od razu po każdym wyborze (nie dopiero w liściu), wybieraj najpierw zmienne z najmniejszą liczbą możliwości, trzymaj zajętość w tablicach/bitmaskach (O(1) sprawdzenie), a przy optymalizacji przerywaj gałąź, gdy nawet optymistyczne oszacowanie nie pobije najlepszego wyniku (branch and bound). Często też pomaga memoizacja — wtedy to już dynamika."
+    },
+    {
+     "q": [
+      "rekurencja c++ podstawy",
+      "jak działa rekurencja",
+      "funkcja rekurencyjna przyklad",
+      "warunek stopu rekurencji"
+     ],
+     "a": "Funkcja rekurencyjna wywołuje samą siebie dla mniejszego problemu i ma **warunek stopu** (przypadek bazowy), który kończy schodzenie. Każde wywołanie ma własne zmienne lokalne na stosie, więc głębokość rekurencji ogranicza rozmiar stosu (zwykle kilka MB). Przykład: silnia, Fibonacci (z memoizacją), DFS.",
+     "code": "long long factorial(int n) {\n    if (n <= 1) return 1;          // warunek stopu\n    return n * factorial(n - 1);   // mniejszy problem\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sudoku backtracking",
+      "rozwiązywanie sudoku",
+      "sudoku solver c++"
+     ],
+     "a": "Znajdź puste pole (najlepiej to z najmniejszą liczbą dozwolonych cyfr), wstaw każdą dozwoloną cyfrę i rekurencyjnie rozwiązuj dalej; przy porażce cofnij. Zajętość cyfr w wierszach, kolumnach i kwadratach trzymaj w bitmaskach (`rowMask[r] | colMask[c] | boxMask[b]`), wtedy sprawdzenie i wybór są O(1)."
+    }
+   ],
+   "related": [
+    "tech-bitmask-brute-force",
+    "tech-meet-in-the-middle",
+    "tech-bit-tricks",
+    "dp-intro",
+    "stl-permutations",
+    "cpp-recursion-basics",
+    "cpp-ref-chrono-ctime",
+    "tech-hanoi"
+   ]
+  },
+  {
+   "id": "tech-bitmask-brute-force",
+   "title": "Brute force i generowanie podzbiorów maskami bitowymi",
+   "category": "Techniki",
+   "tags": [
+    "brute force",
+    "brut",
+    "maski bitowe",
+    "podzbiory",
+    "bitmask",
+    "2^n",
+    "wzorcówka",
+    "przegląd zupełny"
+   ],
+   "aliases": [
+    "brute force",
+    "brut",
+    "brutalne",
+    "przegląd zupełny",
+    "podzbiory maskami",
+    "maski bitowe podzbiory",
+    "bitmask subsets",
+    "wszystkie podzbiory c++",
+    "for mask 1<<n",
+    "brut do testowania",
+    "wzorcówka",
+    "rozwiązanie wzorcowe brut"
+   ],
+   "summary": "Każdy podzbiór n elementów to liczba od 0 do 2^n − 1, której bit i mówi, czy element i jest wybrany. Pętla po maskach przegląda wszystkie podzbiory w O(2^n · n) — wystarcza dla n ≤ ~20 i jest najprostszym brutem do testowania szybszych rozwiązań.",
+   "complexity": "O(2^n · n) (n ≤ 20: ok. 2·10^7), z podmaskami O(3^n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Maska `mask` reprezentuje podzbiór: element `i` należy do niego, gdy `(mask >> i) & 1`. Przechodząc `mask = 0, 1, …, 2^n − 1`, odwiedzamy każdy podzbiór dokładnie raz. Dla każdego sprawdzamy warunki w O(n).\n\n**Brut jako narzędzie.** Nawet jeśli zadanie ma n do 10^5, warto napisać brut dla n ≤ 10 i porównywać go z rozwiązaniem na losowych testach — to najskuteczniejszy sposób szukania błędów na zawodach."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** n ≤ 20 (czasem podzadanie „n ≤ 15” w treści OI), „wybierz podzbiór…”, „ile jest podzbiorów takich, że…”, przypisanie każdego elementu do jednej z dwóch grup. Dla n ≤ 40 — meet in the middle; dla podzbiorów z zależnościami — dynamika po maskach."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: przegląd wszystkich podzbiorów (plecak, n ≤ 20)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Plecak dla n <= 20 z ogromnymi wagami: sprawdzamy wszystkie podzbiory.\nint main() {\n    int n;\n    long long W;\n    cin >> n >> W;\n    vector<long long> weight(n), value(n);\n    for (int i = 0; i < n; i++) cin >> weight[i] >> value[i];\n    long long best = 0;\n    for (int mask = 0; mask < (1 << n); mask++) {\n        long long w = 0, v = 0;\n        for (int i = 0; i < n; i++)\n            if ((mask >> i) & 1) {          // element i w podzbiorze\n                w += weight[i];\n                v += value[i];\n            }\n        if (w <= W) best = max(best, v);\n    }\n    cout << best << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja na masce",
+      "Kod"
+     ],
+     "rows": [
+      [
+       "czy element i jest w zbiorze",
+       "(mask >> i) & 1"
+      ],
+      [
+       "dodaj element i",
+       "mask | (1 << i)"
+      ],
+      [
+       "usuń element i",
+       "mask & ~(1 << i)"
+      ],
+      [
+       "rozmiar podzbioru",
+       "__builtin_popcount(mask)"
+      ],
+      [
+       "pełny zbiór n elementów",
+       "(1 << n) - 1"
+      ],
+      [
+       "wszystkie podmaski mask",
+       "for (s = mask; s; s = (s - 1) & mask)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`1 << n` dla n ≥ 31 przepełnia `int` — dla większych przesunięć pisz `1LL << n`. Przy n = 20 pętla wykonuje ~10^6 masek × 20 bitów = 2·10^7 operacji — szybko; n = 25 to już 8·10^8, na granicy."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (int mask = 0; mask < (1 << n); mask++)",
+     "desc": "wszystkie podzbiory",
+     "complexity": "O(2^n)"
+    },
+    {
+     "sig": "(mask >> i) & 1",
+     "desc": "czy element i wybrany",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "__builtin_popcount(mask)",
+     "desc": "liczba wybranych elementów",
+     "complexity": "O(1)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "`1 << n` przy n ≥ 31 — przepełnienie, użyj `1LL << n`.",
+    "Pierwszeństwo operatorów: `mask & 1 << i == 0` znaczy coś innego niż myślisz — zawsze nawiasy.",
+    "Brut przy n = 30 — 10^9 masek × n, nie zmieści się w czasie.",
+    "Przy porównywaniu z brutem testy muszą być małe, ale zróżnicowane (zera, ujemne, duplikaty)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "wszystkie podzbiory c++",
+      "generowanie podzbiorów maskami",
+      "pętla po maskach",
+      "subsets bitmask c++",
+      "jak przejść po wszystkich podzbiorach"
+     ],
+     "a": "Przejdź `mask` od 0 do `(1 << n) − 1`; element `i` jest w podzbiorze, gdy `(mask >> i) & 1`. Każdy z 2^n podzbiorów pojawia się dokładnie raz, a sprawdzenie elementów kosztuje O(n) — razem O(2^n · n). Dla n ≤ 20 to kilkadziesiąt milionów operacji.",
+     "code": "vector<int> a = {3, 5, 8};\nint n = a.size();\nfor (int mask = 0; mask < (1 << n); mask++) {\n    int sum = 0;\n    for (int i = 0; i < n; i++)\n        if ((mask >> i) & 1) sum += a[i];\n    cout << sum << ' ';   // 0 3 5 8 8 11 13 16\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "brute force",
+      "co to brut",
+      "brut do testowania",
+      "jak napisać brut",
+      "wzorcówka brut testowanie"
+     ],
+     "a": "Brut to najprostsze rozwiązanie sprawdzające wszystkie możliwości — wolne, ale łatwe do napisania poprawnie. Używasz go do (1) zdobycia punktów za małe podzadania, (2) porównania z szybkim rozwiązaniem na tysiącach losowych małych testów (generator + skrypt porównujący). Gdy wyniki się różnią, masz mały test wykazujący błąd."
+    },
+    {
+     "q": [
+      "podzbiory rozmiaru k maskami",
+      "maski z k zapalonymi bitami",
+      "gosper hack",
+      "next combination bitmask"
+     ],
+     "a": "Najprościej: przejdź wszystkie maski i bierz te z `__builtin_popcount(mask) == k`. Szybciej — „Gosper’s hack”, który z maski z k jedynkami liczy następną większą maskę z k jedynkami w O(1). Liczba takich masek to C(n, k).",
+     "code": "void masksWithKBits(int n, int k) {\n    if (k == 0) { cout << 0 << '\\n'; return; }\n    for (int mask = (1 << k) - 1; mask < (1 << n);) {\n        cout << mask << ' ';\n        int lowest = mask & -mask;\n        int ripple = mask + lowest;\n        mask = (((ripple ^ mask) >> 2) / lowest) | ripple;   // następna maska z k jedynkami\n    }\n    cout << '\\n';\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "podział na dwie grupy maski",
+      "przypisanie elementów do dwóch zbiorów",
+      "minimalna różnica sum dwóch grup",
+      "partition problem brute"
+     ],
+     "a": "Bit `i` maski mówi, do której grupy trafia element `i` — każda maska to jeden podział. Dla każdej liczysz sumy obu grup i minimalizujesz różnicę: O(2^n · n). Wystarczy połowa masek (symetria), a przy n ≤ 40 — meet in the middle; przy małych sumach — plecak (bitset)."
+    },
+    {
+     "q": [
+      "kiedy brute force wystarczy",
+      "jakie n dla 2^n",
+      "limit dla przeglądu zupełnego",
+      "ile operacji na sekundę"
+     ],
+     "a": "Przyjmuje się ok. 10^8–5·10^8 prostych operacji na sekundę. 2^n · n mieści się dla n ≤ 20–22, n! dla n ≤ 10–11, 3^n (podmaski) dla n ≤ 15–16. Jeśli podzadanie ma takie ograniczenia, brut daje pewne punkty."
+    },
+    {
+     "q": [
+      "maska bitowa dp",
+      "dynamika po maskach",
+      "bitmask dp",
+      "dp na podzbiorach"
+     ],
+     "a": "Gdy wybór podzbioru ma strukturę (np. kolejność, sąsiedztwo), zamiast przeglądać 2^n podzbiorów i dla każdego n! kolejności, liczysz `dp[mask]` lub `dp[mask][ostatni]` — np. komiwojażer w O(2^n · n²) zamiast O(n!). Maska działa wtedy jak indeks tablicy stanów."
+    }
+   ],
+   "related": [
+    "tech-bit-tricks",
+    "tech-backtracking",
+    "tech-meet-in-the-middle",
+    "dp-bitmask",
+    "graph-hamiltonian"
+   ]
+  },
+  {
+   "id": "tech-simulation",
+   "title": "Symulacja (krok po kroku, wykrywanie cyklu)",
+   "category": "Techniki",
+   "tags": [
+    "symulacja",
+    "simulation",
+    "implementacja",
+    "wykrywanie cyklu",
+    "plansza",
+    "kierunki",
+    "stan"
+   ],
+   "aliases": [
+    "symulacja",
+    "simulation",
+    "zadanie symulacyjne",
+    "zrob co kaze tresc",
+    "implementacja krok po kroku",
+    "wykrywanie cyklu",
+    "cycle detection",
+    "10^18 kroków",
+    "robot na planszy",
+    "obracanie macierzy",
+    "symulacja za wolna"
+   ],
+   "summary": "Robimy dokładnie to, co opisuje treść, krok po kroku — liczy się staranna implementacja i dobra reprezentacja stanu. Gdy kroków jest bardzo dużo (np. 10^18), szukamy cyklu stanów i przeskakujemy całe okresy.",
+   "complexity": "O(liczba kroków · koszt kroku); z wykrywaniem cyklu O(liczba różnych stanów)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Zadania symulacyjne nie wymagają sprytnego algorytmu, tylko bezbłędnego przełożenia treści na kod. Pomaga:\n- dobra reprezentacja stanu (struktura, tablice kierunków `dx`, `dy`),\n- rozbicie kroku na małe funkcje (`move()`, `rotate()`, `isInside()`),\n- wypisywanie stanu po każdym kroku na małym przykładzie i porównanie z przykładem z treści.\n\n**Wykrywanie cyklu.** Jeśli stan jest deterministyczny i stanów jest mało (≤ 10^6), po co najwyżej tylu krokach stan się powtórzy. Zapamiętujemy, w którym kroku widzieliśmy każdy stan; gdy się powtórzy, znamy początek cyklu `μ` i długość `λ`, a stan po `K` krokach to stan po `μ + (K − μ) mod λ` krokach."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: stan po K = 10^18 krokach (wykrywanie cyklu)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// x_{i+1} = (a * x_i + b) mod m. Podaj x_K dla K do 10^18 (m <= 10^6).\nint main() {\n    long long m, a, b, x0, K;\n    cin >> m >> a >> b >> x0 >> K;\n    vector<long long> firstSeen(m, -1);      // krok, w którym pierwszy raz był stan\n    vector<long long> history;               // history[i] = x_i\n    long long x = x0;\n    for (long long step = 0;; step++) {\n        if (step == K) { cout << x << '\\n'; return 0; }    // doszliśmy przed cyklem\n        if (firstSeen[x] != -1) {                          // cykl: początek mu, długość lambda\n            long long mu = firstSeen[x], lambda = step - mu;\n            cout << history[mu + (K - mu) % lambda] << '\\n';\n            return 0;\n        }\n        firstSeen[x] = step;\n        history.push_back(x);\n        x = (a * x + b) % m;\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Reprezentacja stanu: robot na planszy",
+     "code": "// Ruch po planszy: kierunki w kolejności zgodnej z ruchem wskazówek zegara (góra, prawo, dół, lewo).\nconst int dx[4] = {-1, 0, 1, 0};\nconst int dy[4] = {0, 1, 0, -1};\n\nstruct Robot {\n    int x, y, dir;                                   // dir: 0 = góra, 1 = prawo, 2 = dół, 3 = lewo\n    void turnRight() { dir = (dir + 1) % 4; }\n    void turnLeft() { dir = (dir + 3) % 4; }         // +3 zamiast -1, żeby nie było ujemnej reszty\n    bool step(const vector<string>& grid) {          // idź naprzód, jeśli pole wolne\n        int nx = x + dx[dir], ny = y + dy[dir];\n        if (nx < 0 || ny < 0 || nx >= (int)grid.size() || ny >= (int)grid[0].size() || grid[nx][ny] == '#') return false;\n        x = nx, y = ny;\n        return true;\n    }\n};",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Zanim zaczniesz pisać, wypisz z treści wszystkie przypadki brzegowe (krawędź planszy, remisy, kolejność zdarzeń w tym samym momencie). W symulacjach większość błędów to źle zrozumiana kolejność operacji, a nie algorytm."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dx[4], dy[4]",
+     "desc": "przesunięcia dla 4 kierunków",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "(dir + 1) % 4 / (dir + 3) % 4",
+     "desc": "obrót w prawo / w lewo",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "firstSeen[stan]",
+     "desc": "wykrywanie powtórzenia stanu",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Ujemna reszta przy obrocie w lewo `(dir - 1) % 4` → −1; pisz `(dir + 3) % 4`.",
+    "Pomylone osie: `x` jako wiersz vs kolumna.",
+    "Modyfikowanie planszy w trakcie kroku, który ma używać stanu sprzed kroku — potrzebna kopia.",
+    "Symulacja 10^18 kroków bez wykrywania cyklu lub wzoru.",
+    "Wykrywanie cyklu przy zbyt dużej przestrzeni stanów (pamięć) — użyj algorytmu Floyda (żółw i zając) w O(1) pamięci."
+   ],
+   "qa": [
+    {
+     "q": [
+      "zadanie symulacyjne",
+      "symulacja c++",
+      "jak pisać symulację",
+      "symulacja krok po kroku",
+      "zadanie implementacyjne"
+     ],
+     "a": "Ustal dokładnie stan (pozycje, kierunki, liczniki) i jedną funkcję wykonującą krok zgodnie z treścią. Testuj na przykładzie z treści, wypisując stan po każdym kroku. Złożoność to liczba kroków razy koszt kroku — sprawdź, czy mieści się w limicie; jeśli kroków jest 10^9+, szukaj cyklu albo wzoru."
+    },
+    {
+     "q": [
+      "wykrywanie cyklu",
+      "cycle detection",
+      "po 10^18 krokach",
+      "stan się powtarza symulacja",
+      "okres ciągu"
+     ],
+     "a": "Zapamiętuj, w którym kroku pojawił się każdy stan (tablica lub `map`). Gdy stan się powtórzy w kroku `t`, a pierwszy raz był w kroku `μ`, cykl ma długość `λ = t − μ`. Stan po `K` krokach to stan po `μ + (K − μ) mod λ` krokach (dla `K ≥ μ`). Złożoność O(liczba różnych stanów)."
+    },
+    {
+     "q": [
+      "algorytm floyda żółw i zając",
+      "tortoise and hare",
+      "cykl bez pamięci",
+      "floyd cycle detection"
+     ],
+     "a": "Dwa wskaźniki: żółw robi jeden krok, zając dwa; gdy się spotkają, są w cyklu. Potem jeden wraca na start i oba idą po jednym kroku — spotkają się na początku cyklu (μ). Długość cyklu λ liczysz, obchodząc go raz. O(μ + λ) czasu i O(1) pamięci — przydatne, gdy stanów jest za dużo na tablicę.",
+     "code": "pair<long long, long long> floydCycle(long long x0, const function<long long(long long)>& f) {   // {mu, lambda}\n    long long slow = f(x0), fast = f(f(x0));\n    while (slow != fast) { slow = f(slow); fast = f(f(fast)); }\n    long long mu = 0;\n    slow = x0;\n    while (slow != fast) { slow = f(slow); fast = f(fast); mu++; }\n    long long lambda = 1;\n    fast = f(slow);\n    while (slow != fast) { fast = f(fast); lambda++; }\n    return {mu, lambda};\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kierunki na planszy",
+      "dx dy tablice",
+      "ruch w czterech kierunkach",
+      "obrót w prawo kierunek"
+     ],
+     "a": "Trzymaj kierunki w tablicach `dx[4]`, `dy[4]` w kolejności zgodnej z ruchem wskazówek zegara; obrót w prawo to `dir = (dir + 1) % 4`, w lewo `(dir + 3) % 4`, zawrót `(dir + 2) % 4`. Dla 8 kierunków (ruch króla) dodaj przekątne. Sprawdzanie wyjścia poza planszę zamknij w funkcji `inside(x, y)`."
+    },
+    {
+     "q": [
+      "obracanie macierzy o 90 stopni",
+      "rotate matrix 90",
+      "obrót planszy",
+      "transpozycja macierzy"
+     ],
+     "a": "Obrót o 90° zgodnie z ruchem wskazówek zegara: nowa macierz `b[j][n − 1 − i] = a[i][j]` (dla macierzy n×m wynik ma wymiary m×n). Obrót o 180° to `b[n−1−i][m−1−j] = a[i][j]`. Transpozycja: `b[j][i] = a[i][j]`. Każda operacja O(n·m).",
+     "code": "vector<string> rotateClockwise(const vector<string>& a) {\n    int n = a.size(), m = a[0].size();\n    vector<string> b(m, string(n, '?'));\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++) b[j][n - 1 - i] = a[i][j];\n    return b;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "symulacja za wolna",
+      "symulacja tle",
+      "jak przyspieszyć symulację",
+      "za dużo kroków"
+     ],
+     "a": "Sprawdź: (1) czy stan się powtarza (cykl — przeskocz okresy), (2) czy wiele kroków da się wykonać naraz (np. ruch prosto do ściany w jednym kroku, skoki binarne / binary lifting po funkcji przejścia), (3) czy zdarzenia można obsługiwać w kolejności czasu z kopcem zamiast symulować każdą jednostkę czasu, (4) czy jest wzór matematyczny."
+    },
+    {
+     "q": [
+      "spirala po macierzy",
+      "spiral order matrix",
+      "wypisanie macierzy spiralnie"
+     ],
+     "a": "Trzymaj cztery granice: `top`, `bottom`, `left`, `right`. Wypisuj górny wiersz od lewej do prawej, prawą kolumnę w dół, dolny wiersz od prawej (jeśli `top ≤ bottom`), lewą kolumnę w górę (jeśli `left ≤ right`), za każdym razem przesuwając granicę. O(n·m)."
+    }
+   ],
+   "related": [
+    "ds-heap",
+    "tree-lca",
+    "graph-bfs-grid",
+    "tech-bit-tricks",
+    "graph-functional",
+    "ds-linked-list-array",
+    "tech-dates-time",
+    "tech-josephus"
+   ]
+  },
+  {
+   "id": "tech-euler-tour",
+   "title": "Trasa Eulera w drzewie (tin/tout) i zapytania o poddrzewa",
+   "category": "Techniki",
+   "tags": [
+    "euler tour",
+    "trasa eulera",
+    "tin tout",
+    "spłaszczenie drzewa",
+    "poddrzewo",
+    "fenwick na drzewie",
+    "przodek"
+   ],
+   "aliases": [
+    "euler tour",
+    "trasa eulera",
+    "tin tout",
+    "czasy wejścia wyjścia",
+    "spłaszczanie drzewa",
+    "flatten tree",
+    "zapytania o poddrzewo",
+    "suma w poddrzewie",
+    "subtree query",
+    "czy jest przodkiem",
+    "dfs order",
+    "preorder drzewa"
+   ],
+   "summary": "DFS numeruje wierzchołki w kolejności wejścia (`tin`); poddrzewo wierzchołka v to ciągły przedział `[tin[v], tout[v]]`. Dzięki temu zapytania o poddrzewa zamieniają się w zapytania o przedziały tablicy (Fenwick, drzewo przedziałowe), a sprawdzenie „czy u jest przodkiem v” to porównanie czasów.",
+   "complexity": "DFS O(n), potem każde zapytanie o poddrzewo O(log n) z Fenwickiem/drzewem przedziałowym",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** W DFS wchodzimy do wierzchołka, odwiedzamy całe jego poddrzewo i dopiero potem wychodzimy. Jeśli przy wejściu nadamy wierzchołkowi kolejny numer `tin[v]`, a przy wyjściu zapiszemy `tout[v]` = największy numer nadany w jego poddrzewie, to poddrzewo `v` to **dokładnie** wierzchołki z numerami `tin[v] … tout[v]`.\n\nWartość wierzchołka `v` zapisujemy w tablicy na pozycji `tin[v]`. Wtedy:\n- suma/min w poddrzewie `v` = zapytanie o przedział `[tin[v], tout[v]]`,\n- zmiana wartości `v` = zmiana punktu `tin[v]`,\n- `u` jest przodkiem `v` ⇔ `tin[u] ≤ tin[v] ≤ tout[u]`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** drzewo + „zmień wartość wierzchołka” + „podaj sumę/maksimum w poddrzewie”, „dodaj x do całego poddrzewa” (lazy lub Fenwick przedział-punkt), „czy u leży na ścieżce od korzenia do v”, LCA przez RMQ (pełna trasa Eulera długości 2n−1), algorytm Mo na drzewie."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: zmiana wartości wierzchołka i suma w poddrzewie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Fenwick {\n    int n;\n    vector<long long> t;\n    Fenwick(int n) : n(n), t(n + 1, 0) {}\n    void add(int i, long long v) { for (; i <= n; i += i & -i) t[i] += v; }\n    long long sum(int i) const { long long s = 0; for (; i > 0; i -= i & -i) s += t[i]; return s; }\n    long long sum(int l, int r) const { return sum(r) - sum(l - 1); }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> value(n + 1);\n    for (int v = 1; v <= n; v++) cin >> value[v];\n    vector<vector<int>> adj(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        adj[a].push_back(b);\n        adj[b].push_back(a);\n    }\n    // Iteracyjny DFS od korzenia 1: tin = numer przy wejściu, tout = ostatni numer w poddrzewie.\n    vector<int> tin(n + 1), tout(n + 1), parent(n + 1, 0), nextChild(n + 1, 0);\n    int timer = 0;\n    vector<int> st = {1};\n    tin[1] = ++timer;\n    while (!st.empty()) {\n        int v = st.back();\n        if (nextChild[v] < (int)adj[v].size()) {\n            int u = adj[v][nextChild[v]++];\n            if (u == parent[v]) continue;\n            parent[u] = v;\n            tin[u] = ++timer;\n            st.push_back(u);\n        } else {\n            tout[v] = timer;\n            st.pop_back();\n        }\n    }\n    Fenwick fw(n);\n    for (int v = 1; v <= n; v++) fw.add(tin[v], value[v]);\n    while (q--) {\n        int type, v;\n        cin >> type >> v;\n        if (type == 1) {                    // 1 v x: wartość v := x\n            long long x;\n            cin >> x;\n            fw.add(tin[v], x - value[v]);\n            value[v] = x;\n        } else {                            // 2 v: suma w poddrzewie v\n            cout << fw.sum(tin[v], tout[v]) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zapytanie na drzewie",
+      "Odpowiednik na tablicy po tin"
+     ],
+     "rows": [
+      [
+       "suma/min/max w poddrzewie v",
+       "zapytanie o przedział [tin[v], tout[v]]"
+      ],
+      [
+       "zmiana wartości v",
+       "zmiana w punkcie tin[v]"
+      ],
+      [
+       "dodaj x do całego poddrzewa v",
+       "dodawanie na przedziale [tin[v], tout[v]]"
+      ],
+      [
+       "rozmiar poddrzewa v",
+       "tout[v] − tin[v] + 1"
+      ],
+      [
+       "czy u jest przodkiem v",
+       "tin[u] ≤ tin[v] ≤ tout[u]"
+      ],
+      [
+       "suma na ścieżce korzeń → v",
+       "dodaj x w tin[v] i −x w tout[v] + 1, czytaj prefiks tin[v]"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Rekurencyjny DFS na ścieżce długości 2·10^5 może przepełnić domyślny stos (zwykle 8 MB na Linuksie, 1 MB na Windowsie). Wersja iteracyjna (jak wyżej) jest bezpieczna; ewentualnie zwiększ stos w ustawieniach kompilacji."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "tin[v] = ++timer (przy wejściu)",
+     "desc": "numer wierzchołka w kolejności DFS",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "tout[v] = timer (przy wyjściu)",
+     "desc": "ostatni numer w poddrzewie v",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "isAncestor(u, v) = tin[u] <= tin[v] && tin[v] <= tout[u]",
+     "desc": "czy u jest przodkiem v (lub u == v)",
+     "complexity": "O(1)",
+     "returns": "bool"
+    }
+   ],
+   "pitfalls": [
+    "Zapisanie wartości wierzchołka pod indeksem `v` zamiast `tin[v]` w strukturze przedziałowej.",
+    "`tout` liczone jako licznik przy wyjściu (inna konwencja: tout = ++timer) — wtedy przedział poddrzewa to inne wzory; trzymaj jedną konwencję.",
+    "Rekurencyjny DFS i przepełnienie stosu przy długich ścieżkach.",
+    "Graf podany jako krawędzie nieskierowane — bez pamiętania rodzica DFS wróci do niego."
+   ],
+   "qa": [
+    {
+     "q": [
+      "euler tour",
+      "trasa eulera drzewo",
+      "tin tout",
+      "czasy wejścia i wyjścia dfs",
+      "spłaszczanie drzewa"
+     ],
+     "a": "W DFS nadajesz wierzchołkowi numer `tin[v]` przy wejściu i zapisujesz `tout[v]` (ostatni numer w poddrzewie) przy wyjściu. Poddrzewo `v` to wtedy ciągły przedział `[tin[v], tout[v]]`, więc zapytania o poddrzewa obsłużysz Fenwickiem lub drzewem przedziałowym w O(log n). DFS kosztuje O(n).",
+     "code": "vector<vector<int>> children;\nvector<int> tin, tout;\nint timer = 0;\nvoid dfs(int v) {                      // rekurencyjnie — uwaga na stos przy bardzo głębokich drzewach\n    tin[v] = ++timer;\n    for (int u : children[v]) dfs(u);\n    tout[v] = timer;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "suma w poddrzewie",
+      "zapytania o poddrzewo",
+      "subtree sum query",
+      "zmiana wartości wierzchołka i suma poddrzewa"
+     ],
+     "a": "Spłaszcz drzewo trasą Eulera i umieść wartość `v` na pozycji `tin[v]` w Fenwicku. Suma poddrzewa to `sum(tin[v], tout[v])`, zmiana wartości to `add(tin[v], różnica)`. Obie operacje O(log n) po O(n) DFS."
+    },
+    {
+     "q": [
+      "czy u jest przodkiem v",
+      "sprawdzenie przodka w drzewie",
+      "is ancestor tin tout",
+      "czy wierzcholek lezy na sciezce do korzenia"
+     ],
+     "a": "`u` jest przodkiem `v` (lub `u == v`) dokładnie wtedy, gdy `tin[u] ≤ tin[v] ≤ tout[u]` — `v` musi być w poddrzewie `u`, czyli w jego przedziale numerów. Sprawdzenie w O(1) po O(n) DFS; używane m.in. w LCA metodą binary lifting.",
+     "code": "bool isAncestor(const vector<int>& tin, const vector<int>& tout, int u, int v) {\n    return tin[u] <= tin[v] && tin[v] <= tout[u];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dodaj do całego poddrzewa",
+      "update poddrzewa",
+      "range update subtree",
+      "dodawanie w poddrzewie zapytanie o wierzchołek"
+     ],
+     "a": "Dodanie `x` do wszystkich wierzchołków poddrzewa `v` to dodanie na przedziale `[tin[v], tout[v]]`. Jeśli pytasz o pojedyncze wierzchołki — Fenwick przedział-punkt (`add(tin, x)`, `add(tout + 1, −x)`), jeśli o sumy poddrzew — dwa Fenwicki lub lazy segment tree. O(log n) na operację."
+    },
+    {
+     "q": [
+      "suma na ścieżce od korzenia",
+      "path query root to v",
+      "suma na sciezce do korzenia euler tour"
+     ],
+     "a": "Dla każdego wierzchołka `u` dodaj jego wartość na całym przedziale poddrzewa `[tin[u], tout[u]]` (Fenwick przedział-punkt). Wtedy wartość w punkcie `tin[v]` to suma wartości wszystkich przodków `v` (łącznie z nim) — bo `v` leży w poddrzewie każdego z nich. Zmiana wartości `u` to dodanie różnicy na jego przedziale. Suma na ścieżce `a–b`: `f(a) + f(b) − 2·f(lca) + value(lca)`."
+    },
+    {
+     "q": [
+      "dfs iteracyjny drzewo",
+      "dfs bez rekurencji",
+      "stack overflow dfs",
+      "przepełnienie stosu rekurencja drzewo"
+     ],
+     "a": "Trzymaj własny stos wierzchołków i dla każdego indeks następnego sąsiada do odwiedzenia. Na szczycie: jeśli są jeszcze nieodwiedzeni sąsiedzi (różni od rodzica) — wejdź do kolejnego (nadaj `tin`), w przeciwnym razie wyjdź (ustaw `tout`, zdejmij). Działa w O(n) bez ryzyka przepełnienia stosu wywołań przy drzewie-ścieżce."
+    },
+    {
+     "q": [
+      "lca przez euler tour",
+      "lca rmq trasa eulera",
+      "lca o(1) zapytanie"
+     ],
+     "a": "Pełna trasa Eulera zapisuje wierzchołek przy każdym wejściu i powrocie (2n − 1 wpisów). LCA `u` i `v` to wierzchołek o najmniejszej głębokości między pierwszymi wystąpieniami `u` i `v` w tej trasie — zapytanie RMQ, które sparse table obsługuje w O(1) po O(n log n) budowy."
+    }
+   ],
+   "related": [
+    "ds-fenwick",
+    "ds-segment-tree",
+    "ds-sparse-table",
+    "tree-lca",
+    "graph-dfs",
+    "ds-mo",
+    "tree-dfs-order",
+    "tree-lca-euler"
+   ]
+  },
+  {
+   "id": "tech-bit-tricks",
+   "title": "Sztuczki bitowe (maski, podmaski, lowbit, popcount)",
+   "category": "Techniki",
+   "tags": [
+    "operacje bitowe",
+    "bit tricks",
+    "maski",
+    "podmaski",
+    "lowbit",
+    "popcount",
+    "builtin",
+    "xor",
+    "przesunięcia"
+   ],
+   "aliases": [
+    "sztuczki bitowe",
+    "operacje bitowe",
+    "bit tricks",
+    "bit manipulation",
+    "maski bitowe",
+    "podmaski",
+    "iterowanie po podmaskach",
+    "lowbit",
+    "x & -x",
+    "__builtin_popcount",
+    "popcount",
+    "__builtin_ctz",
+    "czy potęga dwójki",
+    "bity c++",
+    "sos dp",
+    "sum over subsets"
+   ],
+   "summary": "Operacje `&`, `|`, `^`, `~`, `<<`, `>>` i wbudowane funkcje GCC (`__builtin_popcount`, `__builtin_ctz`, `__lg`) pozwalają w O(1) sprawdzać i zmieniać bity, znajdować najmłodszy bit, iterować po podmaskach (łącznie O(3^n)) i liczyć sumy po podzbiorach (SOS DP, O(n·2^n)).",
+   "complexity": "pojedyncza operacja O(1); wszystkie podmaski wszystkich masek O(3^n); SOS DP O(n·2^n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Najważniejsze tożsamości:**\n- `x & (x − 1)` — usuwa najmłodszy zapalony bit (x jest potęgą dwójki ⇔ `x > 0 && (x & (x − 1)) == 0`),\n- `x & −x` — zostawia tylko najmłodszy zapalony bit (lowbit, serce Fenwicka),\n- `(x >> i) & 1` — bit i; `x | (1 << i)` — zapal; `x & ~(1 << i)` — zgaś; `x ^ (1 << i)` — przełącz,\n- `for (s = m; s > 0; s = (s − 1) & m)` — wszystkie niepuste podmaski `m` w kolejności malejącej,\n- `a ^ b ^ b == a` — XOR jest odwracalny (sumy prefiksowe XOR, znajdowanie elementu bez pary)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: sumy po podmaskach (podmaski O(3^n) i SOS DP)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// g[mask] = suma f[s] po wszystkich podmaskach s maski mask — dwa sposoby.\nint main() {\n    int n;\n    cin >> n;\n    int full = 1 << n;\n    vector<long long> f(full);\n    for (auto& x : f) cin >> x;\n\n    // 1) iterowanie po podmaskach: łącznie O(3^n)\n    vector<long long> g1(full, 0);\n    for (int mask = 0; mask < full; mask++) {\n        for (int s = mask; s > 0; s = (s - 1) & mask) g1[mask] += f[s];\n        g1[mask] += f[0];                        // pusta podmaska\n    }\n\n    // 2) SOS DP (sum over subsets): O(n * 2^n)\n    vector<long long> g2(f);\n    for (int bit = 0; bit < n; bit++)\n        for (int mask = 0; mask < full; mask++)\n            if (mask & (1 << bit)) g2[mask] += g2[mask ^ (1 << bit)];\n\n    for (int i = 0; i < full; i++) cout << g1[i] << \" \\n\"[i == full - 1];\n    for (int i = 0; i < full; i++) cout << g2[i] << \" \\n\"[i == full - 1];\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja (GCC)",
+      "Wynik",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "__builtin_popcount(x)",
+       "liczba zapalonych bitów",
+       "dla long long: __builtin_popcountll"
+      ],
+      [
+       "__builtin_ctz(x)",
+       "liczba zer na końcu (indeks najmłodszej jedynki)",
+       "x = 0 → niezdefiniowane"
+      ],
+      [
+       "__builtin_clz(x)",
+       "liczba zer na początku (32-bit)",
+       "x = 0 → niezdefiniowane"
+      ],
+      [
+       "__lg(x)",
+       "indeks najstarszej jedynki = ⌊log2 x⌋",
+       "x = 0 → niezdefiniowane"
+      ],
+      [
+       "__builtin_parity(x)",
+       "parzystość liczby jedynek (0/1)",
+       "—"
+      ],
+      [
+       "popcount / countr_zero / bit_width (C++20 <bit>)",
+       "przenośne odpowiedniki",
+       "dla typów bez znaku"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`1 << 40` to przepełnienie `int` (UB) — pisz `1LL << 40`. Operatory bitowe mają **niższy priorytet niż porównania**: `x & 1 == 0` to `x & (1 == 0)`, czyli zawsze 0. Zawsze stawiaj nawiasy: `(x & 1) == 0`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "x & (x - 1)",
+     "desc": "usunięcie najmłodszej jedynki",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "x & -x",
+     "desc": "najmłodsza jedynka (lowbit)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "__builtin_popcount(x) / __builtin_popcountll(x)",
+     "desc": "liczba jedynek",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "__builtin_ctz(x) / __builtin_ctzll(x)",
+     "desc": "indeks najmłodszej jedynki (x ≠ 0)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "for (s = m; s; s = (s - 1) & m)",
+     "desc": "niepuste podmaski m",
+     "complexity": "O(2^popcount(m))"
+    }
+   ],
+   "pitfalls": [
+    "`1 << i` dla i ≥ 31 w `int` — użyj `1LL << i`.",
+    "Brak nawiasów przy `&`, `|`, `^` w porównaniach.",
+    "`__builtin_popcount` na `long long` — liczy tylko dolne 32 bity; użyj `__builtin_popcountll`.",
+    "`__builtin_ctz(0)`, `__builtin_clz(0)`, `__lg(0)` — niezdefiniowane.",
+    "Przesunięcie w prawo liczby ujemnej (`>>`) — arytmetyczne (powiela bit znaku); przy maskach używaj typów bez znaku.",
+    "Pętla po podmaskach pomija pustą podmaskę — obsłuż `s = 0` osobno, jeśli trzeba."
+   ],
+   "qa": [
+    {
+     "q": [
+      "iterowanie po podmaskach",
+      "wszystkie podmaski maski",
+      "submask enumeration",
+      "petla po podmaskach",
+      "for s = (s-1) & m"
+     ],
+     "a": "`for (int s = m; s > 0; s = (s − 1) & m)` przechodzi wszystkie niepuste podmaski `m` malejąco: odjęcie 1 gasi najmłodszą jedynkę i zapala bity poniżej, a `& m` zostawia tylko bity z `m`. Pustą podmaskę obsłuż osobno. Dla jednej maski to 2^popcount(m) kroków, a dla wszystkich masek razem O(3^n).",
+     "code": "int m = 0b1011;\nfor (int s = m; s > 0; s = (s - 1) & m) cout << s << ' ';   // 11 10 9 8 3 2 1\ncout << 0 << '\\n';                                           // pusta podmaska"
+    },
+    {
+     "q": [
+      "co to lowbit",
+      "x & -x",
+      "najmłodszy bit",
+      "lowest set bit"
+     ],
+     "a": "`x & −x` zwraca wartość najmłodszego zapalonego bitu (np. 12 = 1100₂ → 4 = 100₂), bo `−x = ~x + 1` w kodzie U2 odwraca wszystkie bity powyżej najmłodszej jedynki. Indeks tego bitu daje `__builtin_ctz(x)`. Używane w drzewie Fenwicka i do iterowania po jedynkach maski.",
+     "code": "int x = 0b101100;\nwhile (x > 0) {\n    int low = x & -x;\n    cout << __builtin_ctz(low) << ' ';   // 2 3 5 — indeksy zapalonych bitów\n    x ^= low;\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "popcount",
+      "__builtin_popcount",
+      "liczba jedynek w liczbie",
+      "ile bitów zapalonych",
+      "count set bits c++"
+     ],
+     "a": "`__builtin_popcount(x)` zwraca liczbę zapalonych bitów `unsigned int` w O(1) (instrukcja procesora), a `__builtin_popcountll(x)` — dla `long long`. W C++20 przenośnie: `std::popcount` z `<bit>` (dla typów bez znaku). Użycie wersji 32-bitowej dla `long long` liczy tylko dolne 32 bity."
+    },
+    {
+     "q": [
+      "czy liczba jest potęgą dwójki",
+      "power of two check",
+      "sprawdz czy potega 2",
+      "x & (x-1)"
+     ],
+     "a": "`x > 0 && (x & (x − 1)) == 0` — potęga dwójki ma dokładnie jedną jedynkę, a `x & (x − 1)` ją usuwa. Najbliższa potęga dwójki ≥ x (dla x ≥ 1): `1 << (__lg(x − 1) + 1)` dla x > 1, albo C++20 `std::bit_ceil`.",
+     "code": "auto isPowerOfTwo = [](long long x) { return x > 0 && (x & (x - 1)) == 0; };\ncout << isPowerOfTwo(64) << isPowerOfTwo(96) << '\\n';   // 10"
+    },
+    {
+     "q": [
+      "operacje na bitach c++",
+      "jak sprawdzić bit",
+      "zapal zgas bit",
+      "set clear toggle bit",
+      "bity c++ podstawy"
+     ],
+     "a": "Sprawdzenie bitu `i`: `(x >> i) & 1`; zapalenie: `x |= 1 << i`; zgaszenie: `x &= ~(1 << i)`; przełączenie: `x ^= 1 << i`. Dla `long long` i `i ≥ 31` pisz `1LL << i`. Wszystko O(1); zawsze nawiasy przy porównaniach, bo `&` ma niski priorytet.",
+     "code": "long long x = 0;\nx |= 1LL << 40;                 // zapal bit 40\nx |= 1 << 3;                    // zapal bit 3\nbool has3 = (x >> 3) & 1;       // 1\nx &= ~(1LL << 3);               // zgaś bit 3\nx ^= 1;                         // przełącz bit 0\ncout << has3 << ' ' << x << '\\n';   // 1 1099511627777"
+    },
+    {
+     "q": [
+      "sos dp",
+      "sum over subsets",
+      "suma po podzbiorach",
+      "zeta transform",
+      "dla każdej maski suma po podmaskach"
+     ],
+     "a": "SOS DP liczy `g[mask] = Σ f[s]` po wszystkich podmaskach `s` w O(n·2^n) zamiast O(3^n): dla każdego bitu po kolei dodajesz `g[mask ^ bit]` do `g[mask]` dla masek z zapalonym bitem. Odwrotna operacja (odejmowanie) daje transformatę Möbiusa. Wersja „po nadmaskach” iteruje maski bez danego bitu."
+    },
+    {
+     "q": [
+      "xor swap",
+      "zamiana bez zmiennej pomocniczej",
+      "właściwości xor",
+      "xor c++"
+     ],
+     "a": "XOR jest przemienny, łączny, `x ^ x = 0` i `x ^ 0 = x`. Stąd: XOR wszystkich elementów, w których każda wartość występuje dwa razy oprócz jednej, daje tę jedną; `a ^= b; b ^= a; a ^= b;` zamienia wartości (ale `swap` jest czytelniejszy i równie szybki). XOR prefiksowy daje XOR przedziału w O(1)."
+    },
+    {
+     "q": [
+      "kod graya",
+      "gray code",
+      "kolejne maski różniące się jednym bitem"
+     ],
+     "a": "`gray(i) = i ^ (i >> 1)` daje ciąg masek, w którym sąsiednie różnią się dokładnie jednym bitem. Przydaje się, gdy przejście między podzbiorami ma kosztować O(1) (dodajesz/usuwasz jeden element zamiast przeliczać cały podzbiór). Zmieniający się bit między `gray(i−1)` a `gray(i)` to `__builtin_ctz(i)`.",
+     "code": "for (int i = 0; i < 8; i++) {\n    int g = i ^ (i >> 1);\n    cout << bitset<3>(g) << ' ';   // 000 001 011 010 110 111 101 100\n}\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "tech-bitmask-brute-force",
+    "ds-fenwick",
+    "ds-bitset",
+    "tech-prefix-xor",
+    "dp-bitmask",
+    "stl-builtin-bits",
+    "dp-sos",
+    "cpp-operators",
+    "cpp-ref-bit",
+    "math-xor-basis",
+    "oi-py-numbers",
+    "stl-ref-bitset-all"
+   ]
+  },
+  {
+   "id": "tech-prefix-xor",
+   "title": "Prefiksowe XOR-y (XOR na przedziale)",
+   "category": "Techniki",
+   "tags": [
+    "xor",
+    "prefiksy xor",
+    "prefix xor",
+    "xor przedziału",
+    "podtablice o xor k",
+    "xor 1..n"
+   ],
+   "aliases": [
+    "prefiksy xor",
+    "prefix xor",
+    "xor na przedziale",
+    "xor przedzialu",
+    "xor sum range",
+    "ile podtablic ma xor k",
+    "subarray xor equals k",
+    "xor od 1 do n",
+    "xor prefiksowy",
+    "xor l r"
+   ],
+   "summary": "Jak sumy prefiksowe, tylko z XOR: `px[i] = a[1] ^ … ^ a[i]`, a XOR przedziału `[l, r]` to `px[r] ^ px[l−1]` (XOR jest własną odwrotnością). Z mapą liczników daje liczbę podtablic o XOR równym k w O(n log n).",
+   "complexity": "budowa O(n), XOR przedziału O(1); zliczanie podtablic o XOR k O(n log n) z map / O(n) z tablicą",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** XOR ma te same własności co dodawanie, których potrzebują sumy prefiksowe: jest łączny, ma element neutralny 0 i każdy element jest swoją odwrotnością (`x ^ x = 0`). Dlatego `px[r] ^ px[l−1]` „kasuje” wspólny prefiks `a[1..l−1]` i zostawia XOR przedziału.\n\nPodtablica `(j, i]` ma XOR równy `k` ⇔ `px[i] ^ px[j] = k` ⇔ `px[j] = px[i] ^ k` — zliczamy wcześniejsze prefiksy o tej wartości (jak przy sumie równej k)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: podtablice o XOR = k i zapytania o XOR przedziału",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    long long k;\n    cin >> n >> k >> q;\n    vector<long long> px(n + 1, 0);                 // px[i] = a[1] ^ ... ^ a[i]\n    for (int i = 1; i <= n; i++) {\n        long long x;\n        cin >> x;\n        px[i] = px[i - 1] ^ x;\n    }\n    // liczba podtablic z XOR == k\n    map<long long, long long> cnt;\n    long long subarrays = 0;\n    for (int i = 0; i <= n; i++) {\n        auto it = cnt.find(px[i] ^ k);\n        if (it != cnt.end()) subarrays += it->second;\n        cnt[px[i]]++;\n    }\n    cout << subarrays << '\\n';\n    while (q--) {                                   // XOR na przedziale [l, r]\n        int l, r;\n        cin >> l >> r;\n        cout << (px[r] ^ px[l - 1]) << '\\n';\n    }\n}"
+    },
+    {
+     "type": "tip",
+     "md": "XOR liczb od 1 do n ma wzór zależny od `n mod 4`: 0 → n, 1 → 1, 2 → n + 1, 3 → 0. Stąd XOR przedziału kolejnych liczb `[a, b]` to `f(b) ^ f(a − 1)` w O(1)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "px[i] = px[i-1] ^ a[i]",
+     "desc": "budowa prefiksowych XOR-ów",
+     "complexity": "O(n) łącznie"
+    },
+    {
+     "sig": "px[r] ^ px[l-1]",
+     "desc": "XOR przedziału a[l..r]",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "xorUpTo(n)",
+     "desc": "1 ^ 2 ^ … ^ n ze wzoru mod 4",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Brak `px[0] = 0` i pominięcie pustego prefiksu przy zliczaniu podtablic (cnt[0] = 1 na start lub pętla od i = 0).",
+    "Nawiasy przy wypisywaniu: `cout << px[r] ^ px[l-1]` parsuje się jako `(cout << px[r]) ^ px[l-1]` — błąd kompilacji; pisz `(px[r] ^ px[l-1])`.",
+    "Licznik podtablic w `int` — może sięgać n²/2.",
+    "Mylenie XOR z potęgowaniem — w C++ `^` to XOR, nie potęga."
+   ],
+   "qa": [
+    {
+     "q": [
+      "xor na przedziale",
+      "prefix xor c++",
+      "xor przedziału l r",
+      "xor sum query",
+      "prefiksy xor jak"
+     ],
+     "a": "Zbuduj `px[0] = 0`, `px[i] = px[i−1] ^ a[i]`; XOR przedziału `[l, r]` to `px[r] ^ px[l−1]`, bo wspólny prefiks XOR-uje się do zera. Budowa O(n), zapytanie O(1). Przy zmianach elementów użyj Fenwicka z `^=` zamiast `+=`.",
+     "code": "vector<int> a = {5, 1, 7, 3};\nvector<int> px(a.size() + 1, 0);\nfor (size_t i = 0; i < a.size(); i++) px[i + 1] = px[i] ^ a[i];\nint l = 2, r = 4;                          // 1-indeksowane: 1 ^ 7 ^ 3\ncout << (px[r] ^ px[l - 1]) << '\\n';       // 5"
+    },
+    {
+     "q": [
+      "ile podtablic ma xor k",
+      "subarray xor equals k",
+      "liczba przedziałów o xor k",
+      "count subarrays with given xor"
+     ],
+     "a": "Podtablica `(j, i]` ma XOR `k` ⇔ `px[j] = px[i] ^ k`. Idź po `i` od 0, dodawaj do wyniku liczbę wcześniejszych prefiksów równych `px[i] ^ k` (z mapy) i wstawiaj `px[i]`. O(n log n) z `map`, O(n) z tablicą, gdy wartości są małe (np. < 2^20).",
+     "code": "long long countXorK(const vector<int>& a, int k) {\n    unordered_map<int, long long> cnt;\n    cnt[0] = 1;                                 // pusty prefiks\n    int px = 0;\n    long long res = 0;\n    for (int x : a) {\n        px ^= x;\n        auto it = cnt.find(px ^ k);\n        if (it != cnt.end()) res += it->second;\n        cnt[px]++;\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "xor od 1 do n",
+      "xor of 1 to n formula",
+      "xor liczb od a do b",
+      "wzór na xor ciągu"
+     ],
+     "a": "`f(n) = 1 ^ 2 ^ … ^ n` zależy od `n mod 4`: 0 → `n`, 1 → `1`, 2 → `n + 1`, 3 → `0` (wzór powtarza się co 4, bo pary `2t ^ (2t+1) = 1`). XOR liczb z przedziału `[a, b]` to `f(b) ^ f(a − 1)`, w O(1).",
+     "code": "long long xorUpTo(long long n) {   // 1 ^ 2 ^ ... ^ n, f(0) = 0\n    switch (n % 4) {\n        case 0: return n;\n        case 1: return 1;\n        case 2: return n + 1;\n        default: return 0;\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "maksymalny xor podtablicy",
+      "max xor subarray",
+      "największy xor fragmentu"
+     ],
+     "a": "XOR fragmentu to `px[i] ^ px[j]`, więc szukasz pary prefiksów o maksymalnym XOR — trie binarne: wstaw `px[0] = 0`, potem dla każdego `px[i]` zapytaj o maksymalny XOR z trie i wstaw `px[i]`. O(n log C)."
+    },
+    {
+     "q": [
+      "xor na ścieżce w drzewie",
+      "xor path tree",
+      "xor między dwoma wierzchołkami drzewa"
+     ],
+     "a": "Policz `d[v]` = XOR wag krawędzi od korzenia do `v` (DFS/BFS). XOR ścieżki `u–v` to `d[u] ^ d[v]` — wspólna część ścieżek do korzenia (nad LCA) się kasuje, więc nawet LCA nie jest potrzebne. Maksymalny XOR ścieżki w drzewie to maksymalny XOR pary wartości `d` (trie)."
+    },
+    {
+     "q": [
+      "element bez pary xor",
+      "znajdź liczbę występującą raz",
+      "single number xor",
+      "każda liczba dwa razy oprócz jednej"
+     ],
+     "a": "XOR wszystkich elementów: pary się kasują (`x ^ x = 0`), zostaje element bez pary. O(n) czasu i O(1) pamięci. Gdy bez pary są dwa elementy `x, y`: XOR wszystkiego daje `x ^ y`; dowolny zapalony bit tej wartości dzieli liczby na dwie grupy, a XOR każdej grupy daje `x` i `y`.",
+     "code": "vector<int> a = {4, 1, 2, 1, 2};\nint x = 0;\nfor (int v : a) x ^= v;\ncout << x << '\\n';   // 4"
+    }
+   ],
+   "related": [
+    "ds-prefix-sums",
+    "ds-trie",
+    "tech-bit-tricks",
+    "ds-fenwick",
+    "tech-two-sum-hashmap",
+    "math-xor-basis"
+   ]
+  },
+  {
+   "id": "tech-two-sum-hashmap",
+   "title": "Two-sum i zliczanie przez hashmapę",
+   "category": "Techniki",
+   "tags": [
+    "two sum",
+    "hashmapa",
+    "unordered_map",
+    "zliczanie par",
+    "pary o sumie k",
+    "częstości",
+    "dopełnienie"
+   ],
+   "aliases": [
+    "two sum",
+    "two-sum",
+    "dwie liczby o sumie k",
+    "para o sumie k",
+    "ile par ma sumę k",
+    "count pairs with sum",
+    "hashmapa",
+    "zliczanie częstości",
+    "unordered_map zliczanie",
+    "ile par o różnicy k",
+    "pary sumujące się do k"
+   ],
+   "summary": "Dla każdego elementu sprawdzamy w hashmapie, czy wcześniej wystąpiło jego „dopełnienie” (`k − x`), a potem dopisujemy element. Pozwala w O(n) średnio (O(n log n) z `map`) znaleźć lub policzyć pary o danej sumie, różnicy, XOR, bez sortowania i bez O(n²).",
+   "complexity": "O(n) średnio z unordered_map (O(n log n) z map), pamięć O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Para `i < j` z `a[i] + a[j] = k` — dla ustalonego `j` szukamy, ile razy wcześniej wystąpiła wartość `k − a[j]`. Jeśli trzymamy licznik dotychczasowych wartości, odpowiedź dla `j` to jeden odczyt z mapy. Przechodząc od lewej i dopisując `a[j]` **po** sprawdzeniu, każdą parę liczymy raz i nigdy nie łączymy elementu z samym sobą.\n\nTen sam schemat: pary o różnicy `k` (szukasz `a[j] − k` i `a[j] + k`), o XOR `k` (`a[j] ^ k`), podtablice o sumie `k` (na sumach prefiksowych), pierwsze powtórzenie, grupowanie anagramów (klucz = posortowane litery)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba par o sumie k i pierwsza taka para",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    long long k;\n    cin >> n >> k;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    unordered_map<long long, long long> count;   // ile razy wystąpiła wartość wśród a[0..j-1]\n    unordered_map<long long, int> firstIndex;    // pierwszy indeks wartości\n    count.reserve(2 * n);\n    long long pairs = 0;\n    int bestI = -1, bestJ = -1;\n    for (int j = 0; j < n; j++) {\n        long long need = k - a[j];\n        auto it = count.find(need);\n        if (it != count.end()) {\n            pairs += it->second;\n            if (bestJ == -1) { bestI = firstIndex[need]; bestJ = j; }   // pierwsza para (najmniejsze j)\n        }\n        count[a[j]]++;\n        firstIndex.emplace(a[j], j);             // emplace nie nadpisuje istniejącego\n    }\n    cout << pairs << '\\n';\n    if (bestJ == -1) cout << \"BRAK\\n\";\n    else cout << bestI + 1 << ' ' << bestJ + 1 << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Na OI testy są ustalone, ale przy wartościach będących np. wielokrotnościami dużej potęgi dwójki domyślny hash może kolidować — `custom_hash` (splitmix64) kosztuje jedną linijkę i usuwa ryzyko. Gdy wartości są małe (≤ 10^7), zwykła tablica liczników jest najszybsza."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "count.find(k - x)",
+     "desc": "czy (ile razy) dopełnienie wystąpiło wcześniej",
+     "complexity": "O(1) średnio",
+     "returns": "iterator"
+    },
+    {
+     "sig": "count[x]++",
+     "desc": "dopisanie bieżącej wartości po sprawdzeniu",
+     "complexity": "O(1) średnio"
+    },
+    {
+     "sig": "count.reserve(n)",
+     "desc": "uniknięcie przehashowań",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Dopisanie `a[j]` przed sprawdzeniem — element łączy się sam ze sobą, gdy `2·a[j] = k`.",
+    "`count[k - x]` zamiast `find` — tworzy zerowe wpisy i spowalnia mapę.",
+    "Licznik par w `int` — przy wielu równych wartościach liczba par to ~n²/2.",
+    "Przepełnienie `k - x` dla wartości bliskich granicom `int` — licz w `long long`.",
+    "Iterowanie po `unordered_map` i oczekiwanie posortowanej kolejności."
+   ],
+   "qa": [
+    {
+     "q": [
+      "two sum",
+      "dwie liczby o sumie k",
+      "para o sumie k c++",
+      "two sum unordered_map",
+      "znajdź dwie liczby sumujące się do k"
+     ],
+     "a": "Idź po tablicy i dla każdego `x` sprawdź w hashmapie, czy wcześniej wystąpiło `k − x`; jeśli tak — masz parę (indeks z mapy i bieżący). Potem dopisz `x`. Jedno przejście, O(n) średnio. Alternatywa: posortuj i użyj dwóch wskaźników w O(n log n) (ale tracisz oryginalne indeksy, chyba że sortujesz pary).",
+     "code": "pair<int, int> twoSum(const vector<int>& a, int k) {\n    unordered_map<long long, int> seen;            // wartość -> indeks\n    for (int j = 0; j < (int)a.size(); j++) {\n        auto it = seen.find((long long)k - a[j]);\n        if (it != seen.end()) return {it->second, j};\n        seen.emplace(a[j], j);\n    }\n    return {-1, -1};\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile par ma sumę k",
+      "count pairs with sum k",
+      "liczba par i<j o sumie k",
+      "zliczanie par sumie"
+     ],
+     "a": "Trzymaj licznik wartości z lewej strony: dla każdego `a[j]` dodaj `count[k − a[j]]` (przez `find`), potem zwiększ `count[a[j]]`. Każda para `i < j` liczona jest dokładnie raz, w O(n) średnio. Wynik w `long long`."
+    },
+    {
+     "q": [
+      "ile par o różnicy k",
+      "count pairs with difference k",
+      "pary różniące się o k",
+      "a[j] - a[i] = k"
+     ],
+     "a": "Dla każdego `x` dodaj liczby wcześniejszych wystąpień `x − k` i `x + k` (dla `k = 0` tylko jednej z nich, żeby nie liczyć podwójnie). Alternatywa po sortowaniu: dwa wskaźniki lub `equal_range(x + k)`. O(n) średnio z hashmapą.",
+     "code": "long long pairsWithDifference(const vector<long long>& a, long long k) {   // |a[i] - a[j]| == k, i < j\n    unordered_map<long long, long long> cnt;\n    long long res = 0;\n    for (long long x : a) {\n        auto it1 = cnt.find(x - k);\n        if (it1 != cnt.end()) res += it1->second;\n        if (k != 0) {\n            auto it2 = cnt.find(x + k);\n            if (it2 != cnt.end()) res += it2->second;\n        }\n        cnt[x]++;\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "zliczanie częstości",
+      "ile razy występuje każda liczba",
+      "frequency count c++",
+      "najczęstszy element",
+      "licznik wystąpień map"
+     ],
+     "a": "`map<T, int> cnt; for (x : a) cnt[x]++;` — po przejściu masz częstości wszystkich wartości (w `map` posortowane po kluczu). Najczęstszy element znajdziesz jednym przejściem po mapie. O(n log n) z `map`, O(n) średnio z `unordered_map`, O(n + C) z tablicą dla małych wartości.",
+     "code": "vector<int> a = {3, 1, 3, 2, 3, 1};\nmap<int, int> cnt;\nfor (int x : a) cnt[x]++;\nauto best = max_element(cnt.begin(), cnt.end(), [](auto& p, auto& q) { return p.second < q.second; });\ncout << best->first << ' ' << best->second << '\\n';   // 3 3"
+    },
+    {
+     "q": [
+      "pierwszy powtarzający się element",
+      "first duplicate",
+      "czy są duplikaty",
+      "contains duplicate"
+     ],
+     "a": "Przechodź tablicę z `unordered_set` widzianych wartości: pierwszy element, który już jest w zbiorze, to pierwsze powtórzenie (wg pozycji drugiego wystąpienia). O(n) średnio. Do samego „czy są duplikaty” wystarczy też `sort` + porównanie sąsiadów, O(n log n) bez dodatkowej pamięci."
+    },
+    {
+     "q": [
+      "grupowanie anagramów",
+      "group anagrams",
+      "klucz mapy posortowany napis"
+     ],
+     "a": "Słowa są anagramami, gdy po posortowaniu liter są równe — użyj posortowanego słowa jako klucza `map<string, vector<string>>`. Złożoność O(Σ L log L). Szybszy klucz: tablica 26 liczników zamieniona na napis lub `array<int, 26>` jako klucz `map`."
+    },
+    {
+     "q": [
+      "hashmapa czy sortowanie",
+      "unordered_map czy sort dwa wskaźniki",
+      "co szybsze two sum"
+     ],
+     "a": "Hashmapa: jedno przejście, O(n) średnio, zachowuje indeksy, ale ma dużą stałą i jest wrażliwa na złośliwe dane (użyj `custom_hash`). Sortowanie + dwa wskaźniki: O(n log n), małe zużycie pamięci, deterministyczne. Przy n ≤ 10^6 oba są OK; przy bardzo dużym n i ciasnym czasie sortowanie bywa szybsze w praktyce."
+    }
+   ],
+   "related": [
+    "ds-custom-hash",
+    "tech-two-pointers",
+    "ds-prefix-sums",
+    "tech-prefix-xor",
+    "stl-unordered-map"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1920 @@
+{
+ "chunk": "cpp-language-1",
+ "articles": [
+  {
+   "id": "cpp-references",
+   "title": "Referencje i przekazywanie argumentów do funkcji (wartość, &, const &)",
+   "category": "C++ język",
+   "tags": [
+    "referencja",
+    "przekazywanie przez referencję",
+    "const &",
+    "kopiowanie",
+    "wydajność",
+    "funkcje",
+    "move"
+   ],
+   "aliases": [
+    "referencja c++",
+    "referencje",
+    "przekazywanie przez referencję",
+    "przekazywanie przez wartosc",
+    "const &",
+    "const reference",
+    "vector w funkcji",
+    "int& c++",
+    "pass by reference c++",
+    "kopiowanie vectora"
+   ],
+   "summary": "Jak przekazywać argumenty do funkcji: przez wartość (kopia), przez referencję `&` (praca na oryginale) i przez `const &` (bez kopii, tylko odczyt). Dlaczego przekazanie vectora przez wartość w rekurencji daje TLE/MLE.",
+   "complexity": "przekazanie przez wartość: O(rozmiar obiektu); przez referencję: O(1)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Referencja** to inna nazwa (alias) istniejącej zmiennej: `int& r = x;` — każda zmiana `r` zmienia `x`. Referencję trzeba zainicjalizować przy deklaracji i nie da się jej potem „przepiąć” na inną zmienną. W parametrach funkcji decyduje o tym, czy funkcja dostaje **kopię** argumentu, czy pracuje na **oryginale**."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Parametr",
+      "Kopia?",
+      "Czy funkcja może zmienić argument?",
+      "Kiedy używać"
+     ],
+     "rows": [
+      [
+       "`void f(int x)`",
+       "tak (tania)",
+       "nie",
+       "liczby, znaki, małe typy"
+      ],
+      [
+       "`void f(vector<int> v)`",
+       "**tak — O(n)**",
+       "nie (zmienia kopię)",
+       "prawie nigdy (chyba że potrzebna kopia)"
+      ],
+      [
+       "`void f(vector<int>& v)`",
+       "nie",
+       "tak",
+       "gdy funkcja modyfikuje dane"
+      ],
+      [
+       "`void f(const vector<int>& v)`",
+       "nie",
+       "nie",
+       "duże obiekty tylko do odczytu (string, vector, map)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wartość, referencja i const referencja",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvoid zwieksz_kopie(int x) { x++; }           // zmienia tylko kopię\nvoid zwieksz(int& x) { x++; }                // zmienia oryginał\nlong long suma(const vector<int>& v) {       // bez kopiowania, tylko odczyt\n    long long s = 0;\n    for (int x : v) s += x;\n    return s;\n}\nvoid dopisz(vector<int>& v, int x) { v.push_back(x); }\n\nint main() {\n    int a = 5;\n    zwieksz_kopie(a);\n    cout << a << '\\n';        // 5\n    zwieksz(a);\n    cout << a << '\\n';        // 6\n\n    vector<int> v = {1, 2, 3};\n    dopisz(v, 10);\n    cout << suma(v) << '\\n';  // 16\n\n    int& r = v[0];            // referencja do elementu\n    r = 100;\n    cout << v[0] << '\\n';     // 100\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Graf w DFS — tylko przez referencję",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvector<vector<int>> adj;\nvector<int> odw;\n\n// ŹLE: void dfs(int v, vector<vector<int>> g) — kopia całego grafu w KAŻDYM wywołaniu: O(n·(n+m))\nvoid dfs(int v, const vector<vector<int>>& g) {   // dobrze: O(n + m) łącznie\n    odw[v] = 1;\n    for (int u : g[v]) if (!odw[u]) dfs(u, g);\n}\n\nint main() {\n    int n = 4;\n    adj = {{1}, {2}, {3}, {}};\n    odw.assign(n, 0);\n    dfs(0, adj);\n    cout << count(odw.begin(), odw.end(), 1) << '\\n';   // 4\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Nigdy nie zwracaj referencji do zmiennej lokalnej (`int& f() { int x = 5; return x; }`) — po wyjściu z funkcji zmienna przestaje istnieć i referencja „wisi” (UB). Zwracaj przez wartość — dla vectora to tanie dzięki przenoszeniu."
+    },
+    {
+     "type": "tip",
+     "md": "Zwracanie dużego obiektu z funkcji (`vector<int> f() { vector<int> w; ...; return w; }`) NIE kopiuje go — kompilator stosuje RVO/przeniesienie. Kosztowne jest tylko przekazywanie przez wartość do funkcji."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "T& r = x;",
+     "desc": "referencja (alias) do x — musi być zainicjalizowana",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "const T& r = x;",
+     "desc": "referencja tylko do odczytu; może wiązać się też z wartością tymczasową",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "void f(T x)",
+     "desc": "przekazanie przez wartość (kopia)",
+     "complexity": "O(rozmiar T)"
+    },
+    {
+     "sig": "void f(T& x)",
+     "desc": "przekazanie przez referencję (modyfikacja oryginału)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "void f(const T& x)",
+     "desc": "przekazanie przez stałą referencję (bez kopii, bez modyfikacji)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "for (auto& x : v)",
+     "desc": "pętla po referencjach — modyfikuje elementy",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "w = move(v)",
+     "desc": "przeniesienie zawartości (v zostaje puste/nieokreślone) zamiast kopii",
+     "complexity": "O(1) dla vectora"
+    },
+    {
+     "sig": "T&& x (referencja do r-wartości)",
+     "desc": "parametr przyjmujący wartości tymczasowe (semantyka przenoszenia)",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Przekazanie `vector`, `string`, `map` przez wartość kopiuje cały obiekt — w rekurencji to typowe TLE/MLE.",
+    "Referencja do elementu vectora (`int& r = v[0];`) staje się nieważna po `push_back` z realokacją.",
+    "Zwracanie referencji do zmiennej lokalnej = wisząca referencja (UB).",
+    "`for (auto x : v) x = 0;` nie zmienia vectora (x to kopia) — potrzebne `auto&`.",
+    "Tablica C przekazana do funkcji (`void f(int a[])`) to wskaźnik — zmiany są widoczne na zewnątrz, a `sizeof a` daje 8.",
+    "`std::array` i struktury przekazane przez wartość są kopiowane (O(rozmiar)).",
+    "Referencji nie da się „przepiąć”: `r = y;` przypisuje wartość y do zmiennej, na którą wskazuje r."
+   ],
+   "qa": [
+    {
+     "q": [
+      "przekazywanie vectora do funkcji",
+      "vector jako parametr funkcji",
+      "jak przekazać vector do funkcji",
+      "pass vector to function c++",
+      "vector w funkcji przez referencję"
+     ],
+     "a": "Przekazuj przez referencję: `void f(vector<int>& v)` (gdy funkcja zmienia vector) albo `void f(const vector<int>& v)` (tylko odczyt). Zapis `void f(vector<int> v)` tworzy kopię O(n) przy każdym wywołaniu i zmiany nie wracają do wywołującego.",
+     "code": "void wyzeruj(vector<int>& v) { for (int& x : v) x = 0; }\nint maks(const vector<int>& v) { return *max_element(v.begin(), v.end()); }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dlaczego rekurencja dostaje tle",
+      "dfs tle vector kopiowanie",
+      "funkcja rekurencyjna wolna vector",
+      "rekurencja z vectorem w argumencie wolna"
+     ],
+     "a": "Jeśli rekurencyjna funkcja przyjmuje vector/string/graf przez wartość, każde wywołanie kopiuje cały obiekt. Przy n wywołaniach i rozmiarze n daje to O(n²) czasu i pamięci. Dodaj `&` (lub `const &`) albo trzymaj dane w zmiennych globalnych.",
+     "code": "vector<vector<int>> g;\nvector<int> odw;\nvoid dfs(int v) {                      // graf globalny — nic nie kopiujemy\n    odw[v] = 1;\n    for (int u : g[v]) if (!odw[u]) dfs(u);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "co to jest referencja",
+      "referencja c++",
+      "int& co oznacza",
+      "ampersand w c++",
+      "what is reference c++"
+     ],
+     "a": "`int& r = x;` deklaruje referencję — drugą nazwę tej samej zmiennej. Zmiana `r` zmienia `x` (i odwrotnie). Referencja musi być od razu zainicjalizowana i zawsze wskazuje ten sam obiekt. Znak `&` przed nazwą zmiennej w wyrażeniu (`&x`) to coś innego — adres (wskaźnik).",
+     "code": "int x = 10;\nint& r = x;\nr += 5;\ncout << x << '\\n';     // 15\nint* p = &x;           // & w wyrażeniu = adres\ncout << *p << '\\n';    // 15"
+    },
+    {
+     "q": [
+      "const referencja",
+      "const & c++",
+      "po co const reference",
+      "const vector<int>&",
+      "const ref parametr"
+     ],
+     "a": "`const T&` daje dostęp do oryginału bez kopiowania (O(1)) i jednocześnie zabrania modyfikacji — kompilator zgłosi błąd przy próbie zmiany. To domyślny wybór dla dużych parametrów tylko do odczytu (`string`, `vector`, `map`). Dla `int`/`char` wystarczy przekazanie przez wartość.",
+     "code": "int ile_a(const string& s) {\n    int c = 0;\n    for (char ch : s) if (ch == 'a') c++;\n    // s[0] = 'x';   // błąd kompilacji — s jest const\n    return c;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "funkcja zmienia zmienną",
+      "jak zmienić zmienną w funkcji",
+      "swap w funkcji nie działa",
+      "funkcja nie zmienia wartości argumentu"
+     ],
+     "a": "Parametr przekazany przez wartość jest kopią — zmiany wewnątrz funkcji nie wpływają na oryginał. Dodaj `&` w parametrze: `void f(int& x)`. Przykład: własna funkcja zamiany musi brać referencje.",
+     "code": "void zamien(int& a, int& b) {\n    int t = a;\n    a = b;\n    b = t;\n}\nint main() {\n    int x = 1, y = 2;\n    zamien(x, y);\n    cout << x << y << '\\n';   // 21\n}"
+    },
+    {
+     "q": [
+      "for auto& czy auto",
+      "pętla zakresowa referencja",
+      "for (auto x : v) nie zmienia",
+      "range for modify elements"
+     ],
+     "a": "`for (auto x : v)` kopiuje każdy element do x — zmiany x nie trafiają do vectora (i kopiowanie stringów/vectorów jest kosztowne). `for (auto& x : v)` daje referencje (można modyfikować), `for (const auto& x : v)` — referencje tylko do odczytu.",
+     "code": "vector<int> v = {1, 2, 3};\nfor (auto x : v) x *= 10;        // bez efektu\nfor (auto& x : v) x *= 10;       // v = {10, 20, 30}\ncout << v[0] << '\\n';            // 10"
+    },
+    {
+     "q": [
+      "zwracanie referencji do zmiennej lokalnej",
+      "dangling reference",
+      "wisząca referencja",
+      "return reference local variable"
+     ],
+     "a": "Zmienna lokalna znika po wyjściu z funkcji, więc zwrócona referencja wskazuje nieistniejący obiekt — UB (śmieci, crash). Zwracaj przez wartość; dla vectora i stringa nie kosztuje to kopii (RVO/przeniesienie).",
+     "code": "vector<int> kwadraty(int n) {            // zwrot przez wartość — tanie\n    vector<int> w(n);\n    for (int i = 0; i < n; i++) w[i] = i * i;\n    return w;\n}\n// int& zle() { int x = 5; return x; }  // UB — referencja do zniszczonej zmiennej",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "move c++",
+      "std::move vector",
+      "przeniesienie zamiast kopii",
+      "jak uniknąć kopiowania vectora"
+     ],
+     "a": "`w = move(v);` przenosi zawartość v do w w O(1) (przejmuje bufor), a v zostaje w stanie poprawnym, ale nieokreślonym (w praktyce puste). Przydaje się przy wkładaniu dużych obiektów do kontenerów (`vv.push_back(move(tmp))`). Po `move` nie używaj v, dopóki nie przypiszesz mu nowej wartości.",
+     "code": "vector<int> tmp(1000000, 7);\nvector<vector<int>> wszystkie;\nwszystkie.push_back(move(tmp));     // bez kopiowania miliona elementów\ncout << wszystkie[0].size() << '\\n'; // 1000000"
+    },
+    {
+     "q": [
+      "tablica w funkcji",
+      "przekazywanie tablicy do funkcji",
+      "int a[] parametr",
+      "pass array to function c++"
+     ],
+     "a": "Tablica C przekazana do funkcji zamienia się we wskaźnik na pierwszy element — funkcja widzi i zmienia oryginał, ale nie zna rozmiaru (`sizeof a` = 8). Przekaż rozmiar osobno albo użyj `vector`/`array` przez referencję.",
+     "code": "void wypelnij(int a[], int n, int x) {   // a to wskaźnik\n    for (int i = 0; i < n; i++) a[i] = x;\n}\nint main() {\n    int t[5];\n    wypelnij(t, 5, 3);\n    cout << t[4] << '\\n';                // 3 — zmiana widoczna w main\n}"
+    },
+    {
+     "q": [
+      "referencja do elementu vectora",
+      "int& r = v[i] push_back",
+      "referencja przestała działać",
+      "reference invalidated vector"
+     ],
+     "a": "Referencja do elementu vectora wskazuje konkretne miejsce w pamięci. Gdy vector się powiększy (realokacja przy `push_back`), elementy przenoszą się w inne miejsce, a referencja wskazuje zwolnioną pamięć — UB. Trzymaj indeks albo pobierz referencję ponownie po zmianach.",
+     "code": "vector<int> v = {1};\nint idx = 0;\nfor (int i = 0; i < 1000; i++) v.push_back(i);\nint& r = v[idx];        // pobrane PO wszystkich push_back — bezpieczne\nr = 42;\ncout << v[0] << '\\n';   // 42"
+    }
+   ],
+   "related": [
+    "cpp-auto-range-for",
+    "stl-vector",
+    "cpp-pointers-vs-indices",
+    "cpp-global-vs-local",
+    "cpp-lambdas",
+    "cpp-functions",
+    "cpp-ref-utility-optional",
+    "cpp-scope"
+   ]
+  },
+  {
+   "id": "cpp-lambdas",
+   "title": "Lambdy: składnia, przechwytywanie i lambdy rekurencyjne",
+   "category": "C++ język",
+   "tags": [
+    "lambda",
+    "funkcja anonimowa",
+    "capture",
+    "przechwytywanie",
+    "rekurencyjna lambda",
+    "auto self",
+    "komparator"
+   ],
+   "aliases": [
+    "lambda",
+    "lambdy",
+    "lambda c++",
+    "lambda capture",
+    "rekurencyjna lambda",
+    "lambda rekurencja",
+    "[&]",
+    "auto self",
+    "funkcja anonimowa c++",
+    "lambda w sort"
+   ],
+   "summary": "Lambda to funkcja zdefiniowana w miejscu użycia: `[przechwytywanie](parametry) { ciało }`. Używana jako komparator, predykat i do pisania pomocniczych funkcji (np. DFS) wewnątrz `main` z dostępem do lokalnych zmiennych.",
+   "complexity": "wywołanie lambdy: jak zwykłej funkcji (zwykle inline'owane); std::function: dodatkowy narzut wywołania pośredniego",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Składnia: `[capture](parametry) -> typ_zwracany { ciało }` (typ zwracany zwykle pomija się — kompilator go wydedukuje). Lista przechwytywania mówi, do których zmiennych z otoczenia lambda ma dostęp: `[&]` — wszystkie przez referencję, `[=]` — wszystkie przez kopię, `[x, &y]` — wybrane. Zmienne globalne są dostępne zawsze, bez przechwytywania."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Podstawy lambd",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    auto kwadrat = [](int x) { return x * x; };\n    cout << kwadrat(7) << '\\n';                        // 49\n\n    int prog = 10;\n    vector<int> v = {4, 15, 8, 23};\n    int ile = count_if(v.begin(), v.end(), [prog](int x) { return x > prog; });   // kopia prog\n    cout << ile << '\\n';                               // 2\n\n    long long suma = 0;\n    for_each(v.begin(), v.end(), [&](int x) { suma += x; });   // [&] — modyfikuje suma\n    cout << suma << '\\n';                              // 50\n\n    sort(v.begin(), v.end(), [](int a, int b) { return a > b; });   // komparator\n    auto wypisz = [&]() { for (int x : v) cout << x << ' '; cout << '\\n'; };\n    wypisz();                                          // 23 15 8 4\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Przechwytywanie",
+      "Znaczenie"
+     ],
+     "rows": [
+      [
+       "`[]`",
+       "nic (dostęp tylko do parametrów i zmiennych globalnych)"
+      ],
+      [
+       "`[&]`",
+       "wszystkie użyte zmienne lokalne przez referencję (najczęstsze w CP)"
+      ],
+      [
+       "`[=]`",
+       "wszystkie użyte zmienne przez kopię (kopiowane w chwili utworzenia lambdy)"
+      ],
+      [
+       "`[x, &y]`",
+       "x przez kopię, y przez referencję"
+      ],
+      [
+       "`[&, x]`",
+       "wszystko przez referencję oprócz x (kopia)"
+      ],
+      [
+       "`[x]() mutable { x++; }`",
+       "pozwala modyfikować własną kopię x"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Lambdy rekurencyjne.** Lambda nie widzi własnej nazwy w swoim ciele (zmienna `auto dfs` nie jest jeszcze zadeklarowana). Dwa sposoby: (1) przekazanie samej siebie jako parametru `auto&& self` — szybkie, bo kompilator zna typ i może optymalizować; (2) `std::function<void(int)> dfs = [&](int v){ ... dfs(u); };` — wygodniejsze, ale każde wywołanie jest pośrednie (wolniejsze)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Rekurencyjna lambda: auto self i std::function",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n = 5;\n    vector<vector<int>> adj = {{1, 2}, {3}, {4}, {}, {}};\n    vector<int> glebokosc(n, -1);\n\n    // sposób 1: auto self (szybki)\n    auto dfs = [&](auto&& self, int v, int d) -> void {\n        glebokosc[v] = d;\n        for (int u : adj[v]) self(self, u, d + 1);\n    };\n    dfs(dfs, 0, 0);\n\n    // sposób 2: std::function (wygodny, wolniejszy)\n    function<long long(int)> silnia = [&](int k) -> long long {\n        return k <= 1 ? 1 : k * silnia(k - 1);\n    };\n\n    for (int d : glebokosc) cout << d << ' ';   // 0 1 1 2 2\n    cout << '\\n' << silnia(10) << '\\n';          // 3628800\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Przy rekurencyjnej lambdzie podawaj typ zwracany jawnie (`-> void`, `-> long long`) — inaczej kompilator może nie wydedukować typu przed pierwszym wywołaniem rekurencyjnym i zgłosi błąd."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "[capture](params) { body }",
+     "desc": "definicja lambdy (typ zwracany dedukowany)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "[capture](params) -> T { body }",
+     "desc": "lambda z jawnym typem zwracanym",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "[](auto a, auto b) { ... }",
+     "desc": "lambda generyczna (parametry dowolnego typu)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "auto f = [&](auto&& self, int x) -> R { ... self(self, y); }; f(f, x0);",
+     "desc": "rekurencja przez przekazanie siebie",
+     "complexity": "jak zwykła funkcja"
+    },
+    {
+     "sig": "function<R(Args...)> f = [&](Args...) { ... f(...); };",
+     "desc": "rekurencja przez std::function",
+     "complexity": "wywołanie pośrednie (wolniejsze)"
+    },
+    {
+     "sig": "[x]() mutable { ... }",
+     "desc": "lambda może zmieniać swoją kopię przechwyconej zmiennej",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "[&] { ... }()",
+     "desc": "natychmiastowe wywołanie (IIFE), np. do inicjalizacji stałej",
+     "complexity": "O(ciało)"
+    },
+    {
+     "sig": "decltype(lambda)",
+     "desc": "typ lambdy — np. do priority_queue/set z komparatorem",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "Lambda nie widzi swojej nazwy — `auto f = [&](int x){ f(x - 1); };` się nie skompiluje. Użyj `auto&& self` albo `std::function`.",
+    "`[=]` kopiuje przechwycone obiekty (np. cały vector) w chwili tworzenia lambdy, a zmiany oryginału później nie są widoczne w lambdzie.",
+    "Lambda z `[&]` zwrócona z funkcji lub zapisana na później może odwoływać się do nieistniejących już zmiennych lokalnych (wisząca referencja).",
+    "Rekurencyjna lambda bez jawnego typu zwracanego (`-> void`) często nie kompiluje się (typ nie jest jeszcze znany).",
+    "`std::function` jest wolniejsze od lambdy z `auto self` — w gorących pętlach i głębokim DFS może to mieć znaczenie.",
+    "W `priority_queue`/`set` z lambdą-komparatorem trzeba podać `decltype(cmp)` w szablonie i przekazać `cmp` do konstruktora."
+   ],
+   "qa": [
+    {
+     "q": [
+      "lambda c++",
+      "co to jest lambda",
+      "jak napisać lambdę",
+      "lambda składnia",
+      "lambda expression c++"
+     ],
+     "a": "Lambda to funkcja bez nazwy definiowana w miejscu użycia: `auto f = [](int x) { return x * 2; };`, wywołanie `f(5)`. W nawiasach kwadratowych podajesz, które zmienne z otoczenia lambda „widzi” (`[&]` — wszystkie przez referencję). Najczęściej używa się jej jako komparatora w `sort` i predykatu w `count_if`/`find_if`.",
+     "code": "auto dodaj = [](int a, int b) { return a + b; };\nint k = 3;\nauto razy_k = [&](int x) { return x * k; };\ncout << dodaj(2, 5) << ' ' << razy_k(4) << '\\n';   // 7 12"
+    },
+    {
+     "q": [
+      "rekurencyjna lambda",
+      "lambda rekurencja",
+      "jak zrobić rekurencję w lambdzie",
+      "dfs jako lambda",
+      "recursive lambda c++"
+     ],
+     "a": "Lambda nie zna własnej nazwy, więc przekaż ją samą sobie: `auto dfs = [&](auto&& self, int v) -> void { ... self(self, u); }; dfs(dfs, start);`. To działa w C++14/17/20 i jest szybkie. Alternatywa: `function<void(int)> dfs = [&](int v) { ... dfs(u); };` — prostszy zapis, wolniejsze wywołania.",
+     "code": "vector<vector<int>> g = {{1, 2}, {}, {3}, {}};\nvector<int> kolejnosc;\nauto dfs = [&](auto&& self, int v) -> void {\n    kolejnosc.push_back(v);\n    for (int u : g[v]) self(self, u);\n};\ndfs(dfs, 0);\nfor (int v : kolejnosc) cout << v << ' ';   // 0 1 2 3\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "lambda capture",
+      "przechwytywanie w lambdzie",
+      "[&] czy [=]",
+      "lambda [&] co znaczy",
+      "lambda capture by reference"
+     ],
+     "a": "`[&]` — lambda używa oryginałów zmiennych (zmiany widoczne na zewnątrz, brak kopiowania). `[=]` — kopiuje zmienne w momencie tworzenia lambdy (zmiany oryginału później nie są widoczne, a dużego vectora nie warto kopiować). W zadaniach najczęściej `[&]`.",
+     "code": "int licznik = 0;\nauto inc = [&]() { licznik++; };\ninc(); inc();\nint x = 5;\nauto pokaz = [=]() { return x; };   // kopia x = 5\nx = 100;\ncout << licznik << ' ' << pokaz() << '\\n';   // 2 5"
+    },
+    {
+     "q": [
+      "lambda w sort",
+      "komparator lambda",
+      "sort z lambdą",
+      "lambda comparator c++"
+     ],
+     "a": "Trzeci argument `sort` może być lambdą `(const T& a, const T& b) -> bool` zwracającą `true`, gdy a ma być przed b. Z `[&]` lambda może korzystać np. z tablicy wartości przy sortowaniu indeksów.",
+     "code": "vector<int> waga = {30, 10, 20};\nvector<int> idx = {0, 1, 2};\nsort(idx.begin(), idx.end(), [&](int i, int j) { return waga[i] < waga[j]; });\ncout << idx[0] << idx[1] << idx[2] << '\\n';   // 120"
+    },
+    {
+     "q": [
+      "std::function vs lambda",
+      "function czy auto self",
+      "std::function wolne",
+      "czy std::function jest wolniejsze"
+     ],
+     "a": "`std::function` to „pudełko” na dowolną funkcję: wywołanie idzie pośrednio (przez wskaźnik), więc kompilator zwykle nie może go wkleić (inline). Przy milionach wywołań (głęboki DFS, DP z memoizacją) różnica bywa zauważalna. Lambda z `auto&& self` jest tak szybka jak zwykła funkcja.",
+     "code": "function<int(int)> fib1 = [&](int n) -> int { return n < 2 ? n : fib1(n - 1) + fib1(n - 2); };\nauto fib2 = [](auto&& self, int n) -> int { return n < 2 ? n : self(self, n - 1) + self(self, n - 2); };\ncout << fib1(20) << ' ' << fib2(fib2, 20) << '\\n';   // 6765 6765"
+    },
+    {
+     "q": [
+      "lambda zwracany typ",
+      "lambda -> int",
+      "inconsistent deduction for auto return type lambda",
+      "lambda return type"
+     ],
+     "a": "Gdy lambda ma kilka `return` z różnymi typami (np. `return 0;` i `return x * 1LL;`) albo jest rekurencyjna, podaj typ jawnie: `[&](int x) -> long long { ... }`. Inaczej kompilator zgłosi błąd dedukcji typu.",
+     "code": "auto f = [](int x) -> long long {\n    if (x < 0) return 0;          // int skonwertowany do long long\n    return 1LL * x * x;\n};\ncout << f(100000) << '\\n';        // 10000000000"
+    },
+    {
+     "q": [
+      "lambda w priority_queue",
+      "decltype lambda",
+      "priority_queue z lambdą",
+      "set z komparatorem lambda"
+     ],
+     "a": "Typ lambdy znasz tylko przez `decltype`: `priority_queue<T, vector<T>, decltype(cmp)> pq(cmp);`, `set<T, decltype(cmp)> s(cmp);`. W C++20 bezstanowa lambda (bez przechwytywania) ma konstruktor domyślny, ale przekazanie `cmp` działa zawsze.",
+     "code": "auto cmp = [](int a, int b) { return a > b; };\nset<int, decltype(cmp)> s(cmp);\ns.insert(3); s.insert(9); s.insert(1);\ncout << *s.begin() << '\\n';   // 9 — malejąco"
+    },
+    {
+     "q": [
+      "lambda mutable",
+      "modyfikacja kopii w lambdzie",
+      "error: assignment of read-only variable lambda"
+     ],
+     "a": "Zmienne przechwycone przez kopię (`[=]`, `[x]`) są w ciele lambdy stałe. Jeśli chcesz zmieniać własną kopię (np. licznik w generatorze), dodaj `mutable`. Zmiany nie wpływają na oryginał.",
+     "code": "int start = 0;\nauto kolejny = [start]() mutable { return ++start; };\ncout << kolejny() << kolejny() << kolejny() << ' ' << start << '\\n';   // 123 0"
+    },
+    {
+     "q": [
+      "lambda generyczna",
+      "lambda z auto parametrami",
+      "generic lambda c++",
+      "lambda auto argument"
+     ],
+     "a": "Parametry `auto` sprawiają, że lambda działa dla różnych typów (jak szablon): `[](auto a, auto b) { return a < b; }`. Przydatne np. do komparatorów par/krotek i funkcji pomocniczych typu `wypisz`.",
+     "code": "auto wypisz = [](const auto& kontener) {\n    for (const auto& x : kontener) cout << x << ' ';\n    cout << '\\n';\n};\nwypisz(vector<int>{1, 2});\nwypisz(string(\"ab\"));"
+    },
+    {
+     "q": [
+      "lambda w main zamiast funkcji",
+      "funkcja wewnątrz main",
+      "czy można zdefiniować funkcję w main",
+      "nested function c++"
+     ],
+     "a": "C++ nie pozwala definiować zwykłych funkcji wewnątrz innych funkcji, ale lambdę — tak. Lambda z `[&]` w `main` ma dostęp do lokalnych zmiennych (n, tablic) bez przekazywania ich w argumentach i bez zmiennych globalnych.",
+     "code": "int n = 4, m = 3;\nvector<string> g(n, string(m, '.'));\nauto wewnatrz = [&](int r, int c) { return r >= 0 && r < n && c >= 0 && c < m; };\ncout << wewnatrz(3, 2) << wewnatrz(4, 0) << '\\n';   // 10"
+    }
+   ],
+   "related": [
+    "cpp-std-function",
+    "stl-sort",
+    "stl-priority-queue",
+    "cpp-templates",
+    "graph-dfs",
+    "cpp-functions",
+    "cpp-recursion-basics",
+    "cpp-ref-utility-optional",
+    "stl-ref-functional-iterator",
+    "stl-ref-ranges"
+   ]
+  },
+  {
+   "id": "cpp-struct",
+   "title": "struct — własne typy: pola, konstruktory, operator<",
+   "category": "C++ język",
+   "tags": [
+    "struct",
+    "struktura",
+    "konstruktor",
+    "operator<",
+    "klasa",
+    "pola",
+    "inicjalizacja",
+    "spaceship"
+   ],
+   "aliases": [
+    "struct",
+    "struktura c++",
+    "struktury",
+    "struct c++",
+    "konstruktor c++",
+    "operator< struct",
+    "własny typ c++",
+    "class vs struct",
+    "struct w set",
+    "jak zrobić strukturę"
+   ],
+   "summary": "Struktura grupuje kilka pól w jeden typ (np. krawędź, punkt, zapytanie). Opis inicjalizacji, konstruktorów, metod, `operator<` do sortowania i używania w `set`/`map`/`priority_queue`, oraz C++20 `operator<=> = default`.",
+   "complexity": "dostęp do pola: O(1); kopiowanie struktury: O(rozmiar)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`struct` (w C++ to to samo co `class`, tylko pola są domyślnie publiczne) pozwala nazwać dane: `e.waga` zamiast `get<2>(e)`. Strukturę bez własnych konstruktorów (agregat) inicjalizuje się klamrami w kolejności pól: `Krawedz e = {1, 2, 5};`, a w C++20 także z nazwami: `{.a = 1, .b = 2, .w = 5}`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Struktura z operator< i metodą",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Krawedz {\n    int a, b;\n    long long w;\n    bool operator<(const Krawedz& o) const { return w < o.w; }   // const — wymagane przez set/map/pq\n};\n\nstruct Punkt {\n    long long x = 0, y = 0;                      // domyślne wartości pól\n    long long dl2() const { return x * x + y * y; }   // metoda\n};\n\nint main() {\n    vector<Krawedz> e = {{1, 2, 7}, {2, 3, 1}, {1, 3, 4}};\n    sort(e.begin(), e.end());                    // używa operator<\n    for (auto [a, b, w] : e) cout << a << '-' << b << ':' << w << ' ';   // 2-3:1 1-3:4 1-2:7\n    cout << '\\n';\n\n    Punkt p{3, 4};\n    Punkt q;                                     // (0, 0) dzięki domyślnym wartościom\n    Punkt r{.x = 1, .y = 2};                     // C++20: inicjalizacja z nazwami pól\n    cout << p.dl2() << ' ' << q.x << ' ' << r.y << '\\n';   // 25 0 2\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Konstruktory i C++20 operator<=>",
+     "code": "struct Odcinek {\n    int l, r;\n    Odcinek() : l(0), r(0) {}                         // konstruktor domyślny\n    Odcinek(int l_, int r_) : l(l_), r(r_) {}         // lista inicjalizacyjna\n    int dlugosc() const { return r - l + 1; }\n};\n\nstruct Stan {\n    int v;\n    long long d;\n    auto operator<=>(const Stan&) const = default;    // C++20: wszystkie porównania po polach (v, potem d)\n};",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zapis",
+      "Efekt"
+     ],
+     "rows": [
+      [
+       "`struct S { int a, b; };` + `S s = {1, 2};`",
+       "agregat — inicjalizacja klamrami"
+      ],
+      [
+       "`int a = 0;` w definicji pola",
+       "wartość domyślna pola"
+      ],
+      [
+       "`S(int a_) : a(a_) {}`",
+       "konstruktor z listą inicjalizacyjną"
+      ],
+      [
+       "`bool operator<(const S& o) const`",
+       "porównanie dla sort/set/map/priority_queue"
+      ],
+      [
+       "`auto operator<=>(const S&) const = default;`",
+       "C++20: <, >, <=, >=, == i != po polach w kolejności deklaracji"
+      ],
+      [
+       "`bool operator==(const S&) const = default;`",
+       "C++20: == i != po polach"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Jeśli napiszesz własny konstruktor z parametrami, struktura traci konstruktor domyślny: `S s;` oraz `vector<S> v(n);` przestaną się kompilować. Dodaj `S() = default;` (z domyślnymi wartościami pól) albo `S() {}`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "struct S { T1 a; T2 b; };",
+     "desc": "definicja struktury (pola publiczne)",
+     "complexity": "—"
+    },
+    {
+     "sig": "S s = {x, y}; / S s{x, y};",
+     "desc": "inicjalizacja agregatu w kolejności pól",
+     "complexity": "O(rozmiar)"
+    },
+    {
+     "sig": "S s{.a = x, .b = y};",
+     "desc": "C++20: inicjalizacja wyznaczona (designated), pola w kolejności deklaracji",
+     "complexity": "O(rozmiar)"
+    },
+    {
+     "sig": "S(args) : pole(arg) {}",
+     "desc": "konstruktor z listą inicjalizacyjną",
+     "complexity": "O(rozmiar)"
+    },
+    {
+     "sig": "S() = default;",
+     "desc": "przywrócenie konstruktora domyślnego",
+     "complexity": "—"
+    },
+    {
+     "sig": "bool operator<(const S& o) const",
+     "desc": "porządek dla sort, set, map, priority_queue",
+     "complexity": "zależy od ciała"
+    },
+    {
+     "sig": "auto operator<=>(const S&) const = default;",
+     "desc": "C++20: komplet porównań leksykograficznie po polach",
+     "complexity": "O(liczba pól)"
+    },
+    {
+     "sig": "bool operator==(const S&) const = default;",
+     "desc": "C++20: porównanie równości po polach",
+     "complexity": "O(liczba pól)"
+    },
+    {
+     "sig": "T metoda() const { ... }",
+     "desc": "metoda niemodyfikująca obiektu (można wołać na const S&)",
+     "complexity": "—"
+    },
+    {
+     "sig": "static T pole;",
+     "desc": "pole wspólne dla wszystkich obiektów (jedno na typ)",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "`operator<` bez `const` na końcu się nie skompiluje w `set`, `map` i `priority_queue` (porównują obiekty const).",
+    "Własny konstruktor z parametrami usuwa konstruktor domyślny — `vector<S> v(n)` przestaje działać. Dodaj `S() = default;`.",
+    "Komparator porównujący tylko część pól sprawia, że `set` uznaje różne obiekty za równe i je gubi.",
+    "Średnik po zamykającej klamrze `};` jest obowiązkowy — jego brak daje mylące błędy w kolejnej linii.",
+    "Pola typów prostych bez wartości domyślnej w lokalnej strukturze mają śmieciowe wartości (`S s;`) — inicjalizuj `S s{};` lub podaj domyślne wartości pól.",
+    "Duże struktury przekazuj do funkcji przez `const S&`, nie przez wartość.",
+    "Kolejność w designated initializers (C++20) musi być zgodna z kolejnością deklaracji pól."
+   ],
+   "qa": [
+    {
+     "q": [
+      "struct c++",
+      "jak zrobić strukturę",
+      "struktura w c++",
+      "struct przykład",
+      "how to create struct c++"
+     ],
+     "a": "Zdefiniuj typ: `struct Punkt { int x, y; };` (średnik na końcu!). Obiekt tworzysz `Punkt p = {3, 4};`, pola odczytujesz `p.x`. Struktury można trzymać w vectorach, sortować (po zdefiniowaniu `operator<`) i przekazywać do funkcji.",
+     "code": "struct Punkt { int x, y; };\nint main() {\n    Punkt p = {3, 4};\n    vector<Punkt> v = {{1, 2}, {5, 6}};\n    v.push_back(p);\n    cout << v.size() << ' ' << v[2].x + v[2].y << '\\n';   // 3 7\n}"
+    },
+    {
+     "q": [
+      "operator< w strukturze",
+      "sortowanie struktur operator<",
+      "jak posortować strukturę",
+      "struct operator less",
+      "struktura w set operator<"
+     ],
+     "a": "Dodaj w strukturze `bool operator<(const T& o) const { ... }` zwracające `true`, gdy `*this` ma być przed `o`. Wtedy działa `sort(v.begin(), v.end())`, `set<T>`, `map<T, ...>` i `priority_queue<T>` (w kopcu na górze jest „największy”). `const` na końcu jest wymagane.",
+     "code": "struct Zad {\n    int termin, kara;\n    bool operator<(const Zad& o) const {\n        if (termin != o.termin) return termin < o.termin;\n        return kara > o.kara;\n    }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "konstruktor struct",
+      "konstruktor c++",
+      "jak napisać konstruktor",
+      "struct constructor c++",
+      "lista inicjalizacyjna konstruktora"
+     ],
+     "a": "Konstruktor to metoda o nazwie struktury, bez typu zwracanego: `Krawedz(int a_, int b_) : a(a_), b(b_) {}` (lista inicjalizacyjna po dwukropku). Pamiętaj, że po dodaniu konstruktora z parametrami trzeba dopisać `Krawedz() = default;`, jeśli chcesz tworzyć obiekty bez argumentów (np. `vector<Krawedz>(n)`).",
+     "code": "struct Krawedz {\n    int a = 0, b = 0;\n    Krawedz() = default;\n    Krawedz(int a_, int b_) : a(a_), b(b_) {}\n};\nint main() {\n    vector<Krawedz> v(3);            // działa dzięki = default\n    v[0] = Krawedz(1, 2);\n    v.emplace_back(4, 5);            // konstruktor z dwoma argumentami\n    cout << v[0].b << ' ' << v.back().a << '\\n';   // 2 4\n}"
+    },
+    {
+     "q": [
+      "struct w set nie kompiluje",
+      "set struktury błąd",
+      "no match for operator< set struct",
+      "operator< const error"
+     ],
+     "a": "`set`/`map` porównują elementy przez `std::less<T>`, który wymaga `operator<` wywoływalnego na obiektach `const`. Częste przyczyny błędu: brak `operator<` albo brak `const` po nawiasach: `bool operator<(const T& o) const`. Alternatywnie podaj własny komparator jako parametr szablonu.",
+     "code": "struct P {\n    int x, y;\n    bool operator<(const P& o) const { return tie(x, y) < tie(o.x, o.y); }   // const!\n};\nint main() {\n    set<P> s = {{1, 2}, {0, 5}, {1, 2}};\n    cout << s.size() << ' ' << s.begin()->y << '\\n';   // 2 5\n}"
+    },
+    {
+     "q": [
+      "operator<=> default",
+      "spaceship operator",
+      "c++20 porównanie struktur",
+      "operator== default",
+      "auto operator<=>"
+     ],
+     "a": "W C++20 wystarczy `auto operator<=>(const T&) const = default;`, żeby struktura miała wszystkie porównania (`<`, `<=`, `>`, `>=`, `==`, `!=`) leksykograficznie po polach w kolejności deklaracji — jak para/krotka. Do samej równości: `bool operator==(const T&) const = default;`.",
+     "code": "struct Data {\n    int rok, miesiac, dzien;\n    auto operator<=>(const Data&) const = default;\n};\nint main() {\n    Data a{2024, 5, 1}, b{2024, 4, 30};\n    cout << (b < a) << ' ' << (a == a) << '\\n';   // 1 1\n    vector<Data> v = {a, b};\n    sort(v.begin(), v.end());\n    cout << v[0].miesiac << '\\n';                  // 4\n}"
+    },
+    {
+     "q": [
+      "struct czy class",
+      "różnica struct class",
+      "class vs struct c++",
+      "kiedy używać class"
+     ],
+     "a": "W C++ jedyna różnica: w `struct` składowe i dziedziczenie są domyślnie publiczne, w `class` — prywatne. W programowaniu zawodniczym praktycznie zawsze używa się `struct` (nie trzeba pisać `public:`).",
+     "code": "struct A { int x = 1; };          // x publiczne\nclass B { int x = 2; public: int get() const { return x; } };   // x prywatne\nint main() {\n    A a; B b;\n    cout << a.x << ' ' << b.get() << '\\n';   // 1 2\n}"
+    },
+    {
+     "q": [
+      "inicjalizacja struktury zerami",
+      "struct śmieci w polach",
+      "pola struktury niezainicjalizowane",
+      "struct default values"
+     ],
+     "a": "Lokalna zmienna `S s;` (agregat bez wartości domyślnych) ma nieokreślone pola. Użyj `S s{};` (wyzerowanie) albo podaj domyślne wartości przy polach: `int cnt = 0;`. Struktury globalne i w `vector<S>(n)` są zerowane / inicjalizowane wartością.",
+     "code": "struct Licznik { int ile; long long suma; };\nstruct Bezp { int ile = 0; long long suma = 0; };\nint main() {\n    Licznik a{};          // ile = 0, suma = 0\n    Bezp b;               // też zera dzięki wartościom domyślnym\n    cout << a.ile + b.ile << '\\n';   // 0\n}"
+    },
+    {
+     "q": [
+      "metoda w strukturze",
+      "funkcja w struct",
+      "struct z funkcjami",
+      "member function c++"
+     ],
+     "a": "W strukturze możesz definiować funkcje (metody), które mają dostęp do pól. Metody niezmieniające obiektu oznaczaj `const` — wtedy można je wywołać na `const S&`. Tak pisze się np. DSU czy drzewo przedziałowe jako `struct`.",
+     "code": "struct DSU {\n    vector<int> p;\n    DSU(int n) : p(n) { iota(p.begin(), p.end(), 0); }\n    int find(int x) { return p[x] == x ? x : p[x] = find(p[x]); }\n    bool unite(int a, int b) {\n        a = find(a); b = find(b);\n        if (a == b) return false;\n        p[a] = b;\n        return true;\n    }\n};\nint main() {\n    DSU d(5);\n    d.unite(0, 1); d.unite(3, 4);\n    cout << (d.find(0) == d.find(1)) << (d.find(1) == d.find(3)) << '\\n';   // 10\n}"
+    },
+    {
+     "q": [
+      "struct w priority_queue",
+      "kolejka priorytetowa struktur operator",
+      "priority_queue struct min"
+     ],
+     "a": "`priority_queue<S>` stawia na górze element „największy” wg `operator<`. Dla min-kopca po koszcie odwróć porównanie w operatorze (`return koszt > o.koszt;`) albo użyj `greater<S>` z `operator>`.",
+     "code": "struct S {\n    long long koszt; int v;\n    bool operator>(const S& o) const { return koszt > o.koszt; }\n};\nint main() {\n    priority_queue<S, vector<S>, greater<S>> pq;\n    pq.push({5, 1}); pq.push({2, 2});\n    cout << pq.top().v << '\\n';   // 2\n}"
+    },
+    {
+     "q": [
+      "designated initializers",
+      "inicjalizacja pól po nazwie",
+      "struct .x = 1 c++20",
+      "inicjalizacja wyznaczona"
+     ],
+     "a": "C++20 pozwala inicjalizować agregat z nazwami pól: `Punkt p{.x = 1, .y = 2};`. Pola muszą wystąpić w kolejności deklaracji (można pominąć niektóre — dostaną wartość domyślną). Zwiększa czytelność przy wielu polach.",
+     "code": "struct Opcje { int n = 10; bool debug = false; double eps = 1e-9; };\nint main() {\n    Opcje o{.n = 5, .eps = 1e-6};      // debug zostaje false\n    cout << o.n << ' ' << o.debug << ' ' << o.eps << '\\n';   // 5 0 1e-06\n}"
+    }
+   ],
+   "related": [
+    "cpp-operator-overloading",
+    "stl-sort",
+    "stl-set",
+    "stl-priority-queue",
+    "stl-tuple",
+    "cpp-functions"
+   ]
+  },
+  {
+   "id": "cpp-operator-overloading",
+   "title": "Przeciążanie operatorów: <, ==, +, <<, (), += i modular int",
+   "category": "C++ język",
+   "tags": [
+    "operator",
+    "przeciążanie operatorów",
+    "operator<<",
+    "operator+",
+    "funktor",
+    "modular int",
+    "Mint"
+   ],
+   "aliases": [
+    "przeciążanie operatorów",
+    "operator overloading c++",
+    "operator<< cout",
+    "operator+ struct",
+    "operator() c++",
+    "funktor",
+    "przeciazanie operatorow",
+    "modint c++",
+    "własny operator"
+   ],
+   "summary": "Jak definiować operatory dla własnych typów: porównania (do sortowania i kontenerów), arytmetykę (punkty/wektory, liczby modulo), wypisywanie przez `<<`, wczytywanie przez `>>` i operator wywołania `()` (komparatory, hasze).",
+   "complexity": "koszt jak zwykłej funkcji (zwykle inline'owany)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Operator to funkcja o specjalnej nazwie, np. `operator+`. Można go zdefiniować jako **metodę** (lewy argument to `*this`) albo jako **funkcję wolną** (oba argumenty jawne — konieczne np. dla `operator<<` ze strumieniem). Zachowaj intuicyjne znaczenie: `+` dodaje, `<` porządkuje."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Punkt/wektor 2D z operatorami",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P& o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P& o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    long long operator^(const P& o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    bool operator==(const P& o) const { return x == o.x && y == o.y; }\n    bool operator<(const P& o) const { return x != o.x ? x < o.x : y < o.y; }\n    P& operator+=(const P& o) { x += o.x; y += o.y; return *this; }\n};\nostream& operator<<(ostream& os, const P& p) { return os << '(' << p.x << \", \" << p.y << ')'; }\nistream& operator>>(istream& is, P& p) { return is >> p.x >> p.y; }\n\nint main() {\n    P a{1, 2}, b{3, -1};\n    cout << a + b << ' ' << b - a << ' ' << a * 3 << '\\n';   // (4, 1) (2, -3) (3, 6)\n    cout << (a ^ b) << ' ' << (a == b) << ' ' << (a < b) << '\\n';   // -7 0 1\n    a += b;\n    cout << a << '\\n';                                       // (4, 1)\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Liczba modulo (Mint) — arytmetyka bez pamiętania o % MOD",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst long long MOD = 1000000007;\nstruct Mint {\n    long long v;\n    Mint(long long x = 0) : v(((x % MOD) + MOD) % MOD) {}\n    Mint operator+(const Mint& o) const { return Mint(v + o.v); }\n    Mint operator-(const Mint& o) const { return Mint(v - o.v); }\n    Mint operator*(const Mint& o) const { return Mint(v * o.v); }\n    Mint& operator+=(const Mint& o) { return *this = *this + o; }\n    Mint& operator*=(const Mint& o) { return *this = *this * o; }\n};\nostream& operator<<(ostream& os, const Mint& m) { return os << m.v; }\n\nint main() {\n    Mint a = 1000000006, b = 5;\n    cout << a + b << ' ' << a * b << ' ' << Mint(-3) << '\\n';   // 4 1000000002 1000000004\n    Mint silnia = 1;\n    for (int i = 1; i <= 20; i++) silnia *= i;\n    cout << silnia << '\\n';                                     // 146326063\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operator",
+      "Typowa sygnatura",
+      "Zastosowanie"
+     ],
+     "rows": [
+      [
+       "`<`",
+       "`bool operator<(const T& o) const`",
+       "sort, set, map, priority_queue"
+      ],
+      [
+       "`==`",
+       "`bool operator==(const T& o) const`",
+       "find, count, unordered_map (z hashem)"
+      ],
+      [
+       "`+`, `-`, `*`",
+       "`T operator+(const T& o) const`",
+       "punkty, macierze, liczby modulo"
+      ],
+      [
+       "`+=`",
+       "`T& operator+=(const T& o)` (zwraca `*this`)",
+       "aktualizacja w miejscu"
+      ],
+      [
+       "`<<`",
+       "`ostream& operator<<(ostream& os, const T& x)` (funkcja wolna)",
+       "`cout << x`"
+      ],
+      [
+       "`>>`",
+       "`istream& operator>>(istream& is, T& x)` (funkcja wolna)",
+       "`cin >> x`"
+      ],
+      [
+       "`()`",
+       "`R operator()(Args...) const`",
+       "komparatory, hashe, funktory"
+      ],
+      [
+       "`[]`",
+       "`T& operator[](int i)`",
+       "własne kontenery"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "T operator+(const T& o) const",
+     "desc": "dodawanie jako metoda (lewy argument = *this)",
+     "complexity": "—"
+    },
+    {
+     "sig": "T operator+(const T& a, const T& b)",
+     "desc": "dodawanie jako funkcja wolna",
+     "complexity": "—"
+    },
+    {
+     "sig": "T& operator+=(const T& o) { ...; return *this; }",
+     "desc": "operator złożony, zwraca referencję do siebie",
+     "complexity": "—"
+    },
+    {
+     "sig": "bool operator<(const T& o) const",
+     "desc": "porządek (wymagany `const`)",
+     "complexity": "—"
+    },
+    {
+     "sig": "ostream& operator<<(ostream& os, const T& x)",
+     "desc": "wypisywanie przez cout (funkcja wolna, zwraca os)",
+     "complexity": "—"
+    },
+    {
+     "sig": "istream& operator>>(istream& is, T& x)",
+     "desc": "wczytywanie przez cin (parametr bez const)",
+     "complexity": "—"
+    },
+    {
+     "sig": "R operator()(Args...) const",
+     "desc": "obiekt wywoływalny jak funkcja (funktor)",
+     "complexity": "—"
+    },
+    {
+     "sig": "auto operator<=>(const T&) const = default;",
+     "desc": "C++20: komplet porównań po polach",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "`operator<<` musi być funkcją wolną (lewy argument to `ostream`) i zwracać `os`, żeby działało łączenie `cout << a << b`.",
+    "`operator>>` przyjmuje obiekt przez referencję BEZ const (musi go zmienić).",
+    "Brak `const` przy operatorach porównania psuje użycie w `set`/`map`.",
+    "Operator `^` ma niższy priorytet niż `==`, `<` itp. — `a ^ b == 0` znaczy `a ^ (b == 0)`; pisz nawiasy `(a ^ b) == 0`.",
+    "W `Mint` mnożenie `v * o.v` musi mieścić się w `long long` (MOD ≈ 10^9 — OK; MOD ≈ 10^18 — wymaga `__int128`).",
+    "Nie zmieniaj intuicyjnego znaczenia operatorów — `operator+` modyfikujący argument to przepis na trudne błędy."
+   ],
+   "qa": [
+    {
+     "q": [
+      "operator<< cout struct",
+      "jak wypisać strukturę coutem",
+      "przeciążenie operatora wypisywania",
+      "cout własny typ",
+      "ostream operator c++"
+     ],
+     "a": "Zdefiniuj funkcję wolną `ostream& operator<<(ostream& os, const T& x) { return os << ...; }`. Zwracanie `os` pozwala łączyć wypisywanie (`cout << a << ' ' << b`). Analogicznie `istream& operator>>(istream& is, T& x)` dla `cin`.",
+     "code": "struct Para { int a, b; };\nostream& operator<<(ostream& os, const Para& p) { return os << p.a << '/' << p.b; }\nistream& operator>>(istream& is, Para& p) { return is >> p.a >> p.b; }\nint main() {\n    Para p{3, 4};\n    cout << p << '\\n';   // 3/4\n}"
+    },
+    {
+     "q": [
+      "przeciążanie operatorów",
+      "operator overloading c++",
+      "jak przeciążyć operator",
+      "własny operator+ c++"
+     ],
+     "a": "Operator definiuje się jak funkcję o nazwie `operatorX`. Jako metoda: `T operator+(const T& o) const { ... }` (lewy argument to `*this`). Jako funkcja wolna: `T operator+(const T& a, const T& b)`. Typowe w zadaniach: `<` (sortowanie), `+`/`-`/`*` (geometria, modulo), `<<` (wypisywanie).",
+     "code": "struct V {\n    int x, y;\n    V operator+(const V& o) const { return {x + o.x, y + o.y}; }\n};\nint main() {\n    V a{1, 1}, b{2, 3};\n    V c = a + b;\n    cout << c.x << ' ' << c.y << '\\n';   // 3 4\n}"
+    },
+    {
+     "q": [
+      "modint c++",
+      "liczby modulo struktura",
+      "mint struct",
+      "arytmetyka modulo bez % wszędzie"
+     ],
+     "a": "Struktura `Mint` z polem `v` w [0, MOD) i operatorami `+`, `-`, `*` (każdy bierze resztę) pozwala pisać `a * b + c` bez ręcznego `% MOD`. Konstruktor normalizuje też liczby ujemne: `((x % MOD) + MOD) % MOD`. Dzielenie wymaga odwrotności modularnej (potęga MOD−2).",
+     "code": "const long long M = 998244353;\nstruct Mi {\n    long long v;\n    Mi(long long x = 0) : v((x % M + M) % M) {}\n    Mi operator*(Mi o) const { return Mi(v * o.v); }\n    Mi operator+(Mi o) const { return Mi(v + o.v); }\n};\nMi potega(Mi a, long long e) {\n    Mi r = 1;\n    for (; e; e >>= 1, a = a * a) if (e & 1) r = r * a;\n    return r;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "operator()",
+      "funktor c++",
+      "operator wywołania",
+      "struktura jako komparator",
+      "functor c++"
+     ],
+     "a": "Struktura z `operator()` zachowuje się jak funkcja — tak pisze się komparatory dla `set`/`priority_queue` i hashe dla `unordered_map`. Funktor może też przechowywać stan (pola).",
+     "code": "struct PoDlugosci {\n    bool operator()(const string& a, const string& b) const {\n        return a.size() != b.size() ? a.size() < b.size() : a < b;\n    }\n};\nint main() {\n    set<string, PoDlugosci> s = {\"kot\", \"a\", \"slon\"};\n    for (auto& w : s) cout << w << ' ';   // a kot slon\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "operator+=",
+      "jak napisać operator +=",
+      "operator złożony zwraca referencję",
+      "compound assignment operator"
+     ],
+     "a": "`operator+=` modyfikuje obiekt w miejscu i zwraca `*this` przez referencję: `T& operator+=(const T& o) { ...; return *this; }`. Często `operator+` implementuje się przez `+=`: `T operator+(T a, const T& b) { return a += b; }`.",
+     "code": "struct Licz {\n    long long v = 0;\n    Licz& operator+=(const Licz& o) { v += o.v; return *this; }\n};\nLicz operator+(Licz a, const Licz& b) { return a += b; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "operator== struct",
+      "porównanie struktur ==",
+      "find struktury w vectorze",
+      "no match for operator== struct"
+     ],
+     "a": "Algorytmy `find`, `count`, `==` na vectorach struktur wymagają `operator==`. Napisz go ręcznie albo w C++20: `bool operator==(const T&) const = default;` (porównuje wszystkie pola).",
+     "code": "struct P {\n    int x, y;\n    bool operator==(const P&) const = default;   // C++20\n};\nint main() {\n    vector<P> v = {{1, 2}, {3, 4}};\n    cout << (find(v.begin(), v.end(), P{3, 4}) != v.end()) << '\\n';   // 1\n}"
+    },
+    {
+     "q": [
+      "operator ^ priorytet",
+      "iloczyn wektorowy operator",
+      "cross product operator c++",
+      "a ^ b == 0 błąd"
+     ],
+     "a": "Przeciążone operatory zachowują priorytety wbudowanych. `^` ma bardzo niski priorytet (niższy niż `==` i `<`), więc `a ^ b == 0` oznacza `a ^ (b == 0)`. Gdy używasz `^` jako iloczynu wektorowego, zawsze otaczaj go nawiasami albo nazwij funkcję `cross(a, b)`.",
+     "code": "struct W { long long x, y; };\nlong long cross(const W& a, const W& b) { return a.x * b.y - a.y * b.x; }\nint main() {\n    W a{1, 0}, b{0, 1};\n    cout << cross(a, b) << ' ' << (cross(a, b) > 0) << '\\n';   // 1 1 — b jest na lewo od a\n}"
+    },
+    {
+     "q": [
+      "operator[] własny",
+      "przeciążenie []",
+      "operator indeksowania c++",
+      "macierz operator[]"
+     ],
+     "a": "`T& operator[](int i)` zwraca referencję, żeby dało się i czytać, i zapisywać (`m[i] = x`). Do macierzy wygodnie zwrócić wskaźnik na wiersz albo napisać `operator()(int i, int j)`.",
+     "code": "struct Macierz {\n    int n, m;\n    vector<long long> d;\n    Macierz(int n_, int m_) : n(n_), m(m_), d(n_ * m_, 0) {}\n    long long& operator()(int i, int j) { return d[i * m + j]; }\n};\nint main() {\n    Macierz a(2, 3);\n    a(1, 2) = 7;\n    cout << a(1, 2) << '\\n';   // 7\n}"
+    }
+   ],
+   "related": [
+    "cpp-struct",
+    "stl-sort",
+    "num-mod-arithmetic",
+    "geo-point-vector",
+    "stl-unordered-map"
+   ]
+  },
+  {
+   "id": "cpp-auto-range-for",
+   "title": "auto i pętla zakresowa for (auto& x : v)",
+   "category": "C++ język",
+   "tags": [
+    "auto",
+    "range-for",
+    "pętla zakresowa",
+    "for each",
+    "dedukcja typu",
+    "decltype"
+   ],
+   "aliases": [
+    "auto",
+    "auto c++",
+    "for auto",
+    "for (auto& x : v)",
+    "pętla zakresowa",
+    "range based for",
+    "for each c++",
+    "petla po vectorze",
+    "auto& czy auto",
+    "decltype"
+   ],
+   "summary": "`auto` pozwala kompilatorowi wydedukować typ zmiennej z wyrażenia, a pętla zakresowa `for (x : kontener)` przechodzi po wszystkich elementach. Opis wariantów `auto`, `auto&`, `const auto&` i pułapek dedukcji (`auto x = 1e9` to double).",
+   "complexity": "bez kosztu w czasie wykonania (dedukcja w czasie kompilacji); pętla: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`auto x = wyrażenie;` nadaje x typ wyrażenia (bez referencji i bez `const` z najwyższego poziomu). Pętla `for (deklaracja : zakres)` działa dla vectorów, stringów, setów, map, tablic C i list inicjalizacyjnych `{1, 2, 3}`."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zapis",
+      "Typ / zachowanie"
+     ],
+     "rows": [
+      [
+       "`auto a = 5;`",
+       "`int`"
+      ],
+      [
+       "`auto b = 5LL;`",
+       "`long long`"
+      ],
+      [
+       "`auto c = 1e9;`",
+       "**`double`** (nie int!)"
+      ],
+      [
+       "`auto d = v.size();`",
+       "`size_t` (bez znaku)"
+      ],
+      [
+       "`auto s = \"abc\";`",
+       "**`const char*`** (nie string!)"
+      ],
+      [
+       "`auto s = \"abc\"s;`",
+       "`string`"
+      ],
+      [
+       "`auto x = v[0];`",
+       "kopia elementu"
+      ],
+      [
+       "`auto& x = v[0];`",
+       "referencja do elementu"
+      ],
+      [
+       "`for (auto x : v)`",
+       "kopia każdego elementu"
+      ],
+      [
+       "`for (auto& x : v)`",
+       "referencje — można modyfikować"
+      ],
+      [
+       "`for (const auto& x : v)`",
+       "referencje tylko do odczytu, bez kopii"
+      ],
+      [
+       "`for (auto& [k, val] : m)`",
+       "pary mapy (C++17)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Warianty pętli zakresowej",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> v = {1, 2, 3};\n    for (auto& x : v) x *= 2;                     // modyfikacja: 2 4 6\n    for (const auto& x : v) cout << x << ' ';     // odczyt bez kopii\n    cout << '\\n';\n\n    map<string, int> m = {{\"a\", 1}, {\"b\", 2}};\n    for (auto& [klucz, wart] : m) wart += 10;\n    for (const auto& [klucz, wart] : m) cout << klucz << '=' << wart << ' ';   // a=11 b=12\n    cout << '\\n';\n\n    int t[] = {5, 6, 7};\n    for (int x : t) cout << x;                    // tablica C też działa\n    for (int x : {8, 9}) cout << x;               // lista inicjalizacyjna\n    cout << '\\n';\n\n    for (int i = 0; auto x : v) cout << i++ << ':' << x << ' ';   // C++20: pętla z inicjalizacją (indeks)\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Nie dodawaj ani nie usuwaj elementów kontenera w trakcie pętli zakresowej po nim (np. `v.push_back` w `for (auto x : v)`). Realokacja unieważnia iteratory używane przez pętlę — to UB. Użyj zwykłej pętli po indeksach."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "auto x = expr;",
+     "desc": "typ wydedukowany z expr (bez referencji i const najwyższego poziomu)",
+     "complexity": "—"
+    },
+    {
+     "sig": "auto& x = expr;",
+     "desc": "referencja do wyniku expr (musi być l-wartością)",
+     "complexity": "—"
+    },
+    {
+     "sig": "const auto& x = expr;",
+     "desc": "stała referencja (wiąże się też z wartościami tymczasowymi)",
+     "complexity": "—"
+    },
+    {
+     "sig": "decltype(expr) y;",
+     "desc": "typ dokładnie taki jak expr",
+     "complexity": "—"
+    },
+    {
+     "sig": "for (auto x : c)",
+     "desc": "pętla po kopiach elementów",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "for (auto& x : c)",
+     "desc": "pętla po referencjach (modyfikacja)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "for (const auto& x : c)",
+     "desc": "pętla po stałych referencjach (odczyt dużych elementów)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "for (auto& [a, b] : c)",
+     "desc": "pętla z rozpakowaniem par/krotek/struktur (C++17)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "for (init; auto x : c)",
+     "desc": "C++20: pętla zakresowa z instrukcją inicjalizującą",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "`auto x = 1e9;` to `double`, a `auto y = 1e18;` też double — do stałych całkowitych pisz `int x = 1e9;` / `long long y = 1e18;`.",
+    "`auto s = \"abc\";` daje `const char*`, nie `string` — `s.size()` się nie skompiluje.",
+    "`auto n = v.size();` jest bez znaku — `n - 1` dla pustego vectora to ogromna liczba.",
+    "`auto x = v[i];` to kopia — zmiana x nie zmienia v; potrzebne `auto&`.",
+    "`for (auto x : vector<vector<int>>)` kopiuje każdy wiersz — przy dużych danych bardzo wolne; użyj `const auto&`.",
+    "Modyfikowanie rozmiaru kontenera w trakcie pętli zakresowej (push_back/erase) to UB.",
+    "`for (auto& x : vector<bool>)` się nie skompiluje (specjalizacja vector<bool>) — użyj `auto x` albo `auto&&`.",
+    "`auto a = 0;` potem `a += duża_liczba_long_long` — a ma typ int i się przepełni; zadeklaruj `long long a = 0;` lub `auto a = 0LL;`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "for auto",
+      "for (auto& x : v)",
+      "pętla zakresowa c++",
+      "range based for loop",
+      "for each c++",
+      "petla po vectorze"
+     ],
+     "a": "`for (auto& x : v)` przechodzi po wszystkich elementach v; x jest referencją, więc można elementy modyfikować. `for (auto x : v)` — kopie (zmiany nie trafiają do v), `for (const auto& x : v)` — szybki odczyt bez kopii. Czas O(n).",
+     "code": "vector<int> v = {1, 2, 3};\nfor (auto& x : v) x += 1;                 // 2 3 4\nfor (const auto& x : v) cout << x << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "auto c++",
+      "co to auto",
+      "auto zmienna",
+      "auto type deduction",
+      "kiedy używać auto"
+     ],
+     "a": "`auto` każe kompilatorowi samemu ustalić typ zmiennej na podstawie przypisanej wartości — to tylko skrót zapisu, bez kosztu w czasie działania. Najwygodniejsze przy długich typach (iteratory, pary z map). Uważaj przy literałach: `auto x = 1e9` to `double`.",
+     "code": "map<string, vector<int>> m;\nauto it = m.find(\"x\");                    // map<string, vector<int>>::iterator\nauto suma = 0LL;                          // long long\nauto p = make_pair(1, 2.5);               // pair<int, double>\ncout << (it == m.end()) << ' ' << suma << ' ' << p.second << '\\n';   // 1 0 2.5"
+    },
+    {
+     "q": [
+      "auto 1e9 double",
+      "auto x = 1e9 typ",
+      "dlaczego auto daje double",
+      "1e9 to double"
+     ],
+     "a": "Literał `1e9` jest typu `double`, więc `auto x = 1e9;` tworzy zmienną zmiennoprzecinkową — operacje typu `x % 7` się nie skompilują, a porównania mogą mieć błędy zaokrągleń. Dla stałych całkowitych pisz typ jawnie: `int INF = 1e9;` / `long long INF = 1e18;` (konwersja z double jest dokładna dla tych wartości).",
+     "code": "auto a = 1e9;          // double\nint b = 1e9;           // int 1000000000\nlong long c = 1e18;    // long long\ncout << (sizeof(a) == sizeof(double)) << ' ' << b % 7 << ' ' << c / 1000 << '\\n';   // 1 6 1000000000000000"
+    },
+    {
+     "q": [
+      "pętla po mapie auto",
+      "for auto map",
+      "structured bindings w pętli",
+      "for (auto [k, v] : m)"
+     ],
+     "a": "`for (auto& [klucz, wartosc] : m)` (C++17) rozpakowuje pary mapy. Z `&` możesz modyfikować wartości; klucz jest zawsze `const`. Bez `&` każda para jest kopiowana.",
+     "code": "map<string, int> wynik = {{\"Ala\", 3}, {\"Ola\", 5}};\nfor (auto& [imie, pkt] : wynik) pkt *= 2;\nfor (const auto& [imie, pkt] : wynik) cout << imie << ' ' << pkt << '\\n';   // Ala 6 / Ola 10"
+    },
+    {
+     "q": [
+      "pętla zakresowa z indeksem",
+      "range for index",
+      "jak mieć indeks w for auto",
+      "for each z numerem"
+     ],
+     "a": "Pętla zakresowa nie daje indeksu. Opcje: zwykła pętla `for (int i = 0; i < (int)v.size(); i++)`, licznik obok pętli albo w C++20 pętla z inicjalizacją: `for (int i = 0; auto& x : v) { ...; i++; }`.",
+     "code": "vector<string> s = {\"a\", \"b\", \"c\"};\nfor (int i = 0; const auto& w : s) {\n    cout << i << '=' << w << ' ';\n    i++;\n}\ncout << '\\n';   // 0=a 1=b 2=c"
+    },
+    {
+     "q": [
+      "push_back w pętli for auto",
+      "modyfikacja vectora w pętli zakresowej",
+      "range for push_back crash",
+      "dodawanie elementów podczas iteracji"
+     ],
+     "a": "Pętla zakresowa trzyma iteratory `begin()`/`end()` z początku. `push_back` może przenieść vector w inne miejsce pamięci (realokacja) i iteratory stają się nieważne — UB, często crash lub nieskończona pętla. Gdy dodajesz w trakcie, iteruj po indeksach z aktualnym `v.size()`.",
+     "code": "vector<int> v = {1, 2};\nfor (size_t i = 0; i < v.size() && v.size() < 5; i++)   // bezpieczne: indeks + bieżący size\n    v.push_back(v[i] * 10);\nfor (int x : v) cout << x << ' ';   // 1 2 10 20 100\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "auto string literal",
+      "auto s = \"abc\"",
+      "auto daje const char",
+      "auto string c++"
+     ],
+     "a": "Literał w cudzysłowie to tablica `const char`, więc `auto s = \"abc\";` daje `const char*` (brak `.size()`, `+` nie skleja). Napisz typ jawnie `string s = \"abc\";` albo użyj sufiksu `\"abc\"s` (`auto s = \"abc\"s;` → `std::string`).",
+     "code": "auto a = \"abc\";       // const char*\nauto b = \"abc\"s;      // std::string\nstring c = \"abc\";\ncout << b.size() << ' ' << c + \"d\" << ' ' << a[0] << '\\n';   // 3 abcd a"
+    },
+    {
+     "q": [
+      "const auto&",
+      "kiedy const auto&",
+      "for const auto& x",
+      "po co const auto& w pętli"
+     ],
+     "a": "`const auto&` w pętli daje dostęp do elementu bez kopiowania i bez możliwości zmiany. Ma znaczenie dla dużych elementów: stringów, vectorów (np. wiersze `vector<vector<int>>`), struktur. Dla `int` różnicy w szybkości praktycznie nie ma.",
+     "code": "vector<string> slowa = {\"informatyka\", \"olimpiada\"};\nsize_t dl = 0;\nfor (const auto& w : slowa) dl += w.size();   // bez kopiowania napisów\ncout << dl << '\\n';                           // 20"
+    },
+    {
+     "q": [
+      "decltype c++",
+      "decltype co robi",
+      "typ zmiennej z wyrażenia",
+      "decltype auto"
+     ],
+     "a": "`decltype(wyrażenie)` daje dokładny typ wyrażenia (także z referencją). W CP używa się go głównie do typu lambdy w `priority_queue`/`set` (`decltype(cmp)`) i do deklarowania zmiennych tego samego typu co inne.",
+     "code": "vector<long long> v = {1, 2};\ndecltype(v) w = v;             // vector<long long>\ndecltype(v[0] + 1) x = 5;      // long long\ncout << w.size() << ' ' << x << '\\n';"
+    },
+    {
+     "q": [
+      "auto suma przepełnienie",
+      "auto s = 0 long long",
+      "auto int overflow",
+      "auto sum = 0"
+     ],
+     "a": "`auto s = 0;` deklaruje `int`, nawet jeśli potem dodajesz duże wartości `long long` — suma się przepełni. Pisz `long long s = 0;` albo `auto s = 0LL;`.",
+     "code": "vector<long long> v = {4000000000LL, 4000000000LL};\nauto s = 0LL;\nfor (auto x : v) s += x;\ncout << s << '\\n';   // 8000000000"
+    }
+   ],
+   "related": [
+    "cpp-references",
+    "stl-iterators",
+    "cpp-modern-cpp",
+    "stl-map",
+    "cpp-loops"
+   ]
+  },
+  {
+   "id": "cpp-templates",
+   "title": "Szablony (template) — podstawy dla zawodnika",
+   "category": "C++ język",
+   "tags": [
+    "template",
+    "szablon",
+    "generyczny",
+    "typename",
+    "class T",
+    "szablon funkcji",
+    "szablon struktury"
+   ],
+   "aliases": [
+    "template",
+    "szablony",
+    "szablon c++",
+    "template c++",
+    "typename",
+    "template<class T>",
+    "funkcja generyczna c++",
+    "szablon funkcji"
+   ],
+   "summary": "Szablony pozwalają napisać funkcję lub strukturę raz dla wielu typów (`int`, `long long`, `double`…). W CP: generyczne funkcje pomocnicze (debug, potęgowanie), struktury danych sparametryzowane typem (Fenwick<T>) i stałą (`template<int N>`).",
+   "complexity": "brak kosztu w czasie działania (kod generowany w czasie kompilacji osobno dla każdego typu)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "`template<class T>` (równoważnie `template<typename T>`) przed funkcją lub strukturą oznacza, że `T` jest parametrem typu. Kompilator sam dedukuje T z argumentów funkcji albo przyjmuje go jawnie (`f<long long>(x)`). Szablon trzeba zdefiniować **poza funkcjami** (globalnie) — nie da się zadeklarować szablonu wewnątrz `main`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szablon funkcji i struktury",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate<class T>\nT potega(T a, long long e, T mod) {            // szybkie potęgowanie dla dowolnego typu całkowitego\n    T r = 1;\n    a %= mod;\n    while (e > 0) {\n        if (e & 1) r = r * a % mod;\n        a = a * a % mod;\n        e >>= 1;\n    }\n    return r;\n}\n\ntemplate<class T>\nstruct Fenwick {                               // drzewo Fenwicka z typem wartości T\n    int n;\n    vector<T> t;\n    Fenwick(int n_) : n(n_), t(n_ + 1, 0) {}\n    void add(int i, T v) { for (; i <= n; i += i & -i) t[i] += v; }\n    T sum(int i) const { T s = 0; for (; i > 0; i -= i & -i) s += t[i]; return s; }\n};\n\ntemplate<class T>\nvoid wypisz(const vector<T>& v) {\n    for (const auto& x : v) cout << x << ' ';\n    cout << '\\n';\n}\n\nint main() {\n    cout << potega<long long>(2, 30, 1000000007) << '\\n';   // 73741817\n    Fenwick<long long> f(10);\n    f.add(3, 5); f.add(7, 10);\n    cout << f.sum(5) << ' ' << f.sum(10) << '\\n';           // 5 15\n    wypisz(vector<int>{1, 2, 3});\n    wypisz(vector<string>{\"a\", \"b\"});\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Parametr szablonu będący stałą (template<int N>)",
+     "code": "template<int N>\nstruct Macierz {                         // parametr szablonu będący liczbą\n    long long a[N][N] = {};\n    Macierz operator*(const Macierz& o) const {\n        Macierz r;\n        for (int i = 0; i < N; i++)\n            for (int k = 0; k < N; k++)\n                for (int j = 0; j < N; j++) r.a[i][j] += a[i][k] * o.a[k][j];\n        return r;\n    }\n};\nMacierz<2> fib_krok() { Macierz<2> m; m.a[0][0] = m.a[0][1] = m.a[1][0] = 1; return m; }",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "W C++20 można pisać skrócone szablony funkcji: `void wypisz(const auto& kontener) { ... }` — każdy parametr `auto` to niejawny parametr szablonu."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "template<class T> R f(T x)",
+     "desc": "szablon funkcji (T dedukowane z argumentów)",
+     "complexity": "—"
+    },
+    {
+     "sig": "f<long long>(x)",
+     "desc": "jawne podanie typu szablonu",
+     "complexity": "—"
+    },
+    {
+     "sig": "template<class T> struct S { T pole; };",
+     "desc": "szablon struktury; użycie `S<int>`",
+     "complexity": "—"
+    },
+    {
+     "sig": "template<int N> struct S",
+     "desc": "parametr szablonu będący stałą całkowitą",
+     "complexity": "—"
+    },
+    {
+     "sig": "template<class T, class U>",
+     "desc": "wiele parametrów szablonu",
+     "complexity": "—"
+    },
+    {
+     "sig": "void f(const auto& x)",
+     "desc": "C++20: skrócony szablon funkcji",
+     "complexity": "—"
+    },
+    {
+     "sig": "template<class... Args> void f(Args... a)",
+     "desc": "szablon wariadyczny (dowolna liczba argumentów), np. funkcja debug",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "Szablonów nie można definiować wewnątrz funkcji (np. w `main`) — tylko globalnie lub w przestrzeni nazw.",
+    "Dedukcja wymaga zgodności typów: `potega(2, 30, 1000000007LL)` — T nie da się ustalić (int vs long long); podaj `potega<long long>(...)`.",
+    "Błędy kompilacji w szablonach są bardzo długie — czytaj pierwszy komunikat `error:` i linię w TWOIM kodzie (`required from here`).",
+    "Parametr `template<int N>` musi być stałą czasu kompilacji — nie przekażesz tam n wczytanego z wejścia.",
+    "Każdy użyty typ generuje osobną kopię kodu — dużo instancji wydłuża kompilację (bez wpływu na czas działania)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "template c++",
+      "szablon funkcji",
+      "jak napisać szablon",
+      "template<class T>",
+      "how to write template function c++"
+     ],
+     "a": "Poprzedź funkcję `template<class T>` i używaj `T` jako typu: `template<class T> T maks3(T a, T b, T c) { return max({a, b, c}); }`. Kompilator wygeneruje wersję dla każdego użytego typu. Definicja musi być globalna (nie w `main`).",
+     "code": "template<class T>\nT maks3(T a, T b, T c) { return max({a, b, c}); }\nint main() {\n    cout << maks3(1, 5, 3) << ' ' << maks3(2.5, 1.0, 0.5) << ' ' << maks3<long long>(1, 2, 3) << '\\n';   // 5 2.5 3\n}"
+    },
+    {
+     "q": [
+      "typename czy class",
+      "template typename class różnica",
+      "typename vs class c++"
+     ],
+     "a": "W deklaracji parametru szablonu `template<class T>` i `template<typename T>` znaczą dokładnie to samo. `typename` ma dodatkowe znaczenie wewnątrz szablonów (np. `typename T::value_type`), ale w typowym kodzie zawodniczym to rzadkość.",
+     "code": "template<typename T> T kw(T x) { return x * x; }\ntemplate<class T> T sz(T x) { return x * x * x; }\nint main() { cout << kw(3) << ' ' << sz(2LL) << '\\n'; }   // 9 8"
+    },
+    {
+     "q": [
+      "template struct",
+      "szablon struktury",
+      "generyczna struktura danych",
+      "struct z template",
+      "template class c++"
+     ],
+     "a": "`template<class T> struct Stos { vector<T> d; void push(T x) { d.push_back(x); } };` — przy użyciu podajesz typ: `Stos<int>`, `Stos<pair<int,int>>`. Tak pisze się uniwersalne drzewa przedziałowe/Fenwicka dla `int` i `long long`.",
+     "code": "template<class T>\nstruct MinStos {\n    vector<pair<T, T>> d;                        // (wartość, minimum do tej pory)\n    void push(T x) { d.push_back({x, d.empty() ? x : min(x, d.back().second)}); }\n    void pop() { d.pop_back(); }\n    T mini() const { return d.back().second; }\n};\nint main() {\n    MinStos<int> s;\n    s.push(5); s.push(2); s.push(7);\n    cout << s.mini() << '\\n';   // 2\n}"
+    },
+    {
+     "q": [
+      "template deduced conflicting types",
+      "błąd dedukcji szablonu",
+      "no matching function template",
+      "template argument deduction failed"
+     ],
+     "a": "Gdy kilka parametrów ma ten sam typ T, a argumenty mają różne typy (`int` i `long long`), kompilator nie wie, jakie T wybrać. Podaj typ jawnie (`f<long long>(a, b)`) albo zrzutuj argumenty. Ten sam problem dotyczy `max(int, long long)`.",
+     "code": "template<class T> T suma(T a, T b) { return a + b; }\nint main() {\n    int a = 1;\n    long long b = 2;\n    cout << suma<long long>(a, b) << '\\n';   // 3 — suma(a, b) by się nie skompilowało\n}"
+    },
+    {
+     "q": [
+      "funkcja debug template",
+      "debug wypisywanie dowolnego kontenera",
+      "template debug c++",
+      "uniwersalne wypisywanie"
+     ],
+     "a": "Szablon (albo funkcja z `auto` w C++20) może wypisać dowolny kontener elementów obsługujących `<<`. Wariadyczny szablon pozwala wypisać dowolną liczbę zmiennych jedną funkcją.",
+     "code": "template<class C>\nvoid dbg_kontener(const C& c) {\n    cerr << \"[ \";\n    for (const auto& x : c) cerr << x << ' ';\n    cerr << \"]\\n\";\n}\ntemplate<class... Args>\nvoid dbg(const Args&... a) { ((cerr << a << ' '), ...); cerr << '\\n'; }   // fold expression (C++17)",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "template<int N>",
+      "szablon z liczbą",
+      "non-type template parameter",
+      "rozmiar jako parametr szablonu"
+     ],
+     "a": "Parametrem szablonu może być stała całkowita: `template<int N> struct Mat { long long a[N][N]; };`, użycie `Mat<3>`. N musi być znane w czasie kompilacji (tak jak rozmiar `array`/`bitset`), za to kompilator może lepiej zoptymalizować pętle.",
+     "code": "template<int N>\nlong long suma_tab(const array<long long, N>& t) {\n    long long s = 0;\n    for (int i = 0; i < N; i++) s += t[i];\n    return s;\n}\nint main() {\n    array<long long, 3> t = {1, 2, 3};\n    cout << suma_tab<3>(t) << '\\n';   // 6\n}"
+    },
+    {
+     "q": [
+      "auto parametr funkcji c++20",
+      "abbreviated function template",
+      "void f(auto x)",
+      "funkcja z auto w parametrze"
+     ],
+     "a": "W C++20 parametr `auto` w zwykłej funkcji tworzy szablon: `void pokaz(const auto& x) { cout << x; }` działa dla każdego typu z `<<`. To krótszy zapis `template<class T> void pokaz(const T& x)`.",
+     "code": "void pokaz(const auto& x) { cout << x << '\\n'; }\nint main() {\n    pokaz(42);\n    pokaz(string(\"tekst\"));\n    pokaz(3.5);\n}"
+    }
+   ],
+   "related": [
+    "cpp-lambdas",
+    "cpp-macros-typedef",
+    "ds-fenwick",
+    "cpp-struct",
+    "cpp-ref-utility-optional"
+   ]
+  },
+  {
+   "id": "cpp-macros-typedef",
+   "title": "Makra (#define), typedef i using w programowaniu zawodniczym",
+   "category": "C++ język",
+   "tags": [
+    "define",
+    "makro",
+    "typedef",
+    "using",
+    "ll",
+    "#define int long long",
+    "preprocesor",
+    "skróty"
+   ],
+   "aliases": [
+    "#define",
+    "define c++",
+    "makra c++",
+    "typedef",
+    "using ll = long long",
+    "typedef long long ll",
+    "#define int long long",
+    "makro pułapki",
+    "skróty w cp",
+    "signed main"
+   ],
+   "summary": "Popularne skróty w kodzie zawodniczym: aliasy typów (`using ll = long long;`), makra (`#define all(x)`), trik `#define int long long`. Kiedy makra są niebezpieczne i dlaczego zamiast `#define` dla stałych lepszy jest `const`/`constexpr`.",
+   "complexity": "brak kosztu w czasie działania (makra rozwijane tekstowo przed kompilacją)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`#define NAZWA tekst` to **podmiana tekstu** wykonywana przez preprocesor przed kompilacją — makro nie zna typów ani zasięgów. `typedef` i `using` tworzą prawdziwe aliasy typów (zalecane). `using ll = long long;` i `typedef long long ll;` są równoważne; `using` jest czytelniejszy przy złożonych typach."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Aliasy typów i makra-skróty",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nusing ll = long long;                    // alias typu (zalecane)\nusing pii = pair<int, int>;\nusing vi = vector<int>;\ntypedef vector<vector<ll>> macierz;      // to samo przez typedef\n\n#define all(x) (x).begin(), (x).end()    // makra-skróty\n#define sz(x) (int)(x).size()\n\nconstexpr ll MOD = 1'000'000'007;        // stała: lepiej constexpr niż #define\nconstexpr int MAXN = 200'005;\n\nint main() {\n    vi v = {3, 1, 2};\n    sort(all(v));\n    pii p = {sz(v), v[0]};\n    macierz m(2, vector<ll>(2, MOD));\n    cout << p.first << ' ' << p.second << ' ' << m[1][1] << ' ' << MAXN << '\\n';   // 3 1 1000000007 200005\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Trik #define int long long + signed main",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n#define int long long     // każde \"int\" w kodzie staje się \"long long\"\n\nsigned main() {           // main musi zwracać int — \"signed\" to inna nazwa typu int\n    int a = 3000000000;   // naprawdę long long\n    int b = a * 3;\n    cout << b << '\\n';    // 9000000000\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Makro (źle)",
+      "Problem",
+      "Lepiej"
+     ],
+     "rows": [
+      [
+       "`#define SQ(x) x * x`",
+       "`SQ(a + 1)` → `a + 1 * a + 1`",
+       "`#define SQ(x) ((x) * (x))` albo funkcja inline"
+      ],
+      [
+       "`#define MAX(a, b) a > b ? a : b`",
+       "priorytety, podwójne wartościowanie `MAX(i++, j)`",
+       "`max(a, b)`"
+      ],
+      [
+       "`#define N 100000`",
+       "brak typu, brak zasięgu",
+       "`constexpr int N = 100000;`"
+      ],
+      [
+       "`#define ll long long` ",
+       "działa, ale `ll(x)` itp. to podmiana tekstu",
+       "`using ll = long long;`"
+      ],
+      [
+       "`#define endl '\\n'`",
+       "ukrywa intencję, psuje inne użycia słowa endl",
+       "pisz `'\\n'` jawnie"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`#define int long long` podwaja pamięć wszystkich tablic intów (może dać MLE), spowalnia niektóre operacje i psuje `scanf(\"%d\", &x)` (trzeba `%lld`). `main` musi wtedy być `signed main()`. Lepiej świadomie używać `long long` tam, gdzie trzeba."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "using nazwa = typ;",
+     "desc": "alias typu (C++11), zalecany",
+     "complexity": "—",
+     "example": "using ll = long long;"
+    },
+    {
+     "sig": "typedef typ nazwa;",
+     "desc": "alias typu (styl C)",
+     "complexity": "—",
+     "example": "typedef pair<int,int> pii;"
+    },
+    {
+     "sig": "#define NAZWA tekst",
+     "desc": "podmiana tekstu przez preprocesor",
+     "complexity": "—"
+    },
+    {
+     "sig": "#define F(x) (...)",
+     "desc": "makro z parametrem — każde użycie argumentu otaczaj nawiasami",
+     "complexity": "—"
+    },
+    {
+     "sig": "constexpr T nazwa = wartość;",
+     "desc": "stała czasu kompilacji z typem i zasięgiem",
+     "complexity": "—"
+    },
+    {
+     "sig": "#ifdef LOCAL ... #endif",
+     "desc": "kod kompilowany tylko z flagą -DLOCAL (np. debug)",
+     "complexity": "—"
+    },
+    {
+     "sig": "#undef NAZWA",
+     "desc": "usunięcie definicji makra",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "Makro to podmiana tekstu: `#define SQ(x) x*x` daje `SQ(a+1) = a+1*a+1`. Otaczaj nawiasami każdy parametr i całe wyrażenie.",
+    "Argument makra może zostać obliczony kilka razy (`MAX(i++, j)` zwiększa i dwukrotnie).",
+    "`#define int long long` wymaga `signed main()`, podwaja pamięć tablic i psuje `%d` w scanf/printf.",
+    "Makra nie mają zasięgu — `#define n 100` zepsuje każdą zmienną o nazwie `n` w dalszym kodzie.",
+    "Stałe przez `#define` nie mają typu: `#define INF 1e18` to double. Używaj `constexpr long long INF = 1e18;`.",
+    "Średnik na końcu makra (`#define N 100;`) trafia do każdego miejsca użycia i daje dziwne błędy."
+   ],
+   "qa": [
+    {
+     "q": [
+      "typedef long long ll",
+      "using ll = long long",
+      "co to ll w c++",
+      "ll c++",
+      "typedef czy using"
+     ],
+     "a": "`ll` to popularny alias `long long`. Zalecany zapis: `using ll = long long;` (C++11), równoważny staremu `typedef long long ll;`. Alias jest prawdziwym typem (ma zasięg, działa z szablonami), w odróżnieniu od makra `#define ll long long`.",
+     "code": "using ll = long long;\nusing vll = vector<ll>;\nint main() {\n    ll x = 1LL << 40;\n    vll v = {x, x};\n    cout << v[0] + v[1] << '\\n';   // 2199023255552\n}"
+    },
+    {
+     "q": [
+      "#define int long long",
+      "define int long long signed main",
+      "dlaczego signed main",
+      "int long long trik"
+     ],
+     "a": "`#define int long long` zamienia każde słowo `int` w kodzie na `long long`, co chroni przed przepełnieniem bez myślenia o typach. Ponieważ `main` musi zwracać prawdziwy `int`, pisze się `signed main()` (`signed` to synonim `int`). Wady: dwa razy więcej pamięci na tablice, `scanf(\"%d\")` przestaje działać, nieco wolniejsze dzielenie.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n#define int long long\nsigned main() {\n    int n = 100000;\n    cout << n * n << '\\n';   // 10000000000\n}"
+    },
+    {
+     "q": [
+      "makro pułapki",
+      "#define kwadrat błąd",
+      "define x*x zły wynik",
+      "makra c++ problemy"
+     ],
+     "a": "Makro jest wklejane jako tekst bez uwzględniania priorytetów: `#define SQ(x) x*x` → `SQ(2+3)` = `2+3*2+3` = 11. Otaczaj nawiasami parametry i całość (`((x)*(x))`), a najlepiej używaj funkcji (`inline`/lambdy/szablonu) — mają typy i liczą argument raz.",
+     "code": "#define SQ_ZLE(x) x * x\n#define SQ(x) ((x) * (x))\nint main() {\n    cout << SQ_ZLE(2 + 3) << ' ' << SQ(2 + 3) << '\\n';   // 11 25\n}"
+    },
+    {
+     "q": [
+      "#define all(x)",
+      "makro all",
+      "all(v) sort",
+      "skróty makra cp"
+     ],
+     "a": "`#define all(x) (x).begin(), (x).end()` skraca wywołania algorytmów: `sort(all(v))`, `reverse(all(s))`. Nawiasy wokół x pozwalają użyć wyrażenia (np. `all(g[v])`). W C++20 podobny efekt bez makr daje `ranges::sort(v)`.",
+     "code": "#define all(x) (x).begin(), (x).end()\nint main() {\n    vector<int> v = {3, 1, 2};\n    sort(all(v));\n    cout << v[0] << ' ' << *max_element(all(v)) << '\\n';   // 1 3\n}"
+    },
+    {
+     "q": [
+      "const czy define",
+      "stała define czy const",
+      "#define N vs const int",
+      "constexpr zamiast define"
+     ],
+     "a": "`constexpr int N = 200005;` ma typ, zasięg i jest widoczny w debugerze; `#define N 200005` to tylko podmiana tekstu (może kolidować z nazwami i nie ma typu, np. `#define INF 1e18` jest double). Obie formy działają jako rozmiar tablicy. Zalecane: `constexpr`/`const`.",
+     "code": "constexpr int MAXN = 100005;\nconstexpr long long INF = 1e18;\nint tab[MAXN];\nint main() { cout << (INF > 0) << ' ' << sizeof(tab) / sizeof(int) << '\\n'; }   // 1 100005"
+    },
+    {
+     "q": [
+      "ifdef local",
+      "debug tylko lokalnie",
+      "#ifdef LOCAL",
+      "jak wyłączyć debug na sprawdzarce"
+     ],
+     "a": "Otocz kod diagnostyczny `#ifdef LOCAL ... #endif` i kompiluj u siebie z flagą `-DLOCAL`. Na sprawdzarce (bez tej flagi) kod debug zniknie, więc nie zepsuje wyjścia ani czasu. Wypisuj debug na `cerr`, nie na `cout`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n#ifdef LOCAL\n#define dbg(x) cerr << #x << \" = \" << (x) << '\\n'\n#else\n#define dbg(x)\n#endif\nint main() {\n    int n = 5;\n    dbg(n * 2);          // wypisze \"n * 2 = 10\" tylko z -DLOCAL\n    cout << n << '\\n';\n}"
+    },
+    {
+     "q": [
+      "pair skrót pii",
+      "using pii",
+      "typedef pair<int,int>",
+      "skrócone nazwy typów"
+     ],
+     "a": "Aliasy dla często używanych typów: `using pii = pair<int, int>;`, `using vi = vector<int>;`, `using vvi = vector<vi>;`. Skracają kod bez wad makr. Nie przesadzaj — zbyt wiele skrótów utrudnia czytanie (także Tobie podczas debugowania).",
+     "code": "using pii = pair<int, int>;\nusing vpii = vector<pii>;\nint main() {\n    vpii e = {{1, 2}, {2, 3}};\n    cout << e.size() << ' ' << e[1].second << '\\n';   // 2 3\n}"
+    },
+    {
+     "q": [
+      "define endl",
+      "#define endl '\\n'",
+      "czy definiować endl",
+      "endl wolny"
+     ],
+     "a": "`endl` wypisuje znak nowej linii i opróżnia bufor — przy dużym wyjściu to wyraźnie wolniejsze. Zamiast makra `#define endl '\\n'` (które podmienia każde wystąpienie słowa) po prostu pisz `'\\n'`. Opróżnianie bufora jest potrzebne tylko w zadaniach interaktywnych.",
+     "code": "for (int i = 0; i < 3; i++) cout << i << '\\n';   // szybko\ncout << flush;                                   // jawne opróżnienie, gdy potrzebne"
+    },
+    {
+     "q": [
+      "makro z pętlą for",
+      "#define FOR",
+      "define rep",
+      "rep(i, n) makro"
+     ],
+     "a": "Popularne: `#define rep(i, a, b) for (int i = (a); i < (b); i++)`. Działa, ale ukrywa granice pętli i łatwo pomylić `<` z `<=`. Jeśli używasz takich makr, ustal jedną konwencję (np. zawsze przedział półotwarty) i trzymaj się jej.",
+     "code": "#define rep(i, a, b) for (int i = (a); i < (b); i++)\nint main() {\n    int s = 0;\n    rep(i, 0, 5) s += i;\n    cout << s << '\\n';   // 10\n}"
+    }
+   ],
+   "related": [
+    "cpp-const-constexpr",
+    "cpp-bits-stdcpp",
+    "pit-int-overflow",
+    "io-fast-io",
+    "oi-template"
+   ]
+  },
+  {
+   "id": "cpp-pointers-vs-indices",
+   "title": "Wskaźniki vs indeksy — jak budować drzewa, listy i trie",
+   "category": "C++ język",
+   "tags": [
+    "wskaźnik",
+    "pointer",
+    "indeks",
+    "new",
+    "nullptr",
+    "pula węzłów",
+    "trie",
+    "drzewo",
+    "->"
+   ],
+   "aliases": [
+    "wskaźniki",
+    "wskaźnik c++",
+    "pointer c++",
+    "wskazniki",
+    "new delete c++",
+    "nullptr",
+    "drzewo na wskaźnikach",
+    "pula węzłów",
+    "indeksy zamiast wskaźników",
+    "strzałka -> c++"
+   ],
+   "summary": "Podstawy wskaźników (`&`, `*`, `->`, `nullptr`) i dlaczego w zadaniach olimpijskich struktury dynamiczne (drzewa, trie, listy) zwykle buduje się na tablicach i indeksach zamiast `new` i wskaźników: szybciej, prościej, bez wycieków.",
+   "complexity": "dostęp przez wskaźnik / indeks: O(1); new: kosztowna alokacja sterty (rzędu dziesiątek–setek ns)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Wskaźnik przechowuje **adres** obiektu: `int* p = &x;` (`&` = adres), `*p` = obiekt pod adresem, `p->pole` = `(*p).pole`. `nullptr` oznacza „nigdzie” — dereferencja `nullptr` kończy program (segfault). Nazwa tablicy w wyrażeniu zamienia się we wskaźnik na pierwszy element, a `p + i` wskazuje i-ty element."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wskaźniki — podstawy",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int x = 5;\n    int* p = &x;\n    *p = 7;\n    cout << x << '\\n';                 // 7\n\n    int t[4] = {10, 20, 30, 40};\n    int* q = t;                        // = &t[0]\n    cout << *(q + 2) << ' ' << q[3] << '\\n';   // 30 40\n\n    struct Wezel { int val; Wezel* nast; };\n    Wezel c{3, nullptr}, b{2, &c}, a{1, &b};\n    for (Wezel* w = &a; w != nullptr; w = w->nast) cout << w->val << ' ';   // 1 2 3\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Trie na indeksach (pula węzłów)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Trie na tablicach: węzeł = indeks, 0 = brak dziecka, korzeń = 1\nconst int MAXW = 1000005;          // maks. liczba węzłów (suma długości słów + 1)\nint nxt[MAXW][26], koniec[MAXW], cnt = 1;\n\nvoid dodaj(const string& s) {\n    int v = 1;\n    for (char ch : s) {\n        int c = ch - 'a';\n        if (!nxt[v][c]) nxt[v][c] = ++cnt;   // nowy węzeł z puli\n        v = nxt[v][c];\n    }\n    koniec[v]++;\n}\nbool jest(const string& s) {\n    int v = 1;\n    for (char ch : s) {\n        v = nxt[v][ch - 'a'];\n        if (!v) return false;\n    }\n    return koniec[v] > 0;\n}\n\nint main() {\n    dodaj(\"kot\"); dodaj(\"koza\");\n    cout << jest(\"kot\") << jest(\"ko\") << jest(\"koza\") << ' ' << cnt << '\\n';   // 101 6\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "",
+      "Wskaźniki + new",
+      "Indeksy + tablice (pula)"
+     ],
+     "rows": [
+      [
+       "alokacja węzła",
+       "`new` — wolna (sterta)",
+       "`++cnt` — O(1), bez systemu"
+      ],
+      [
+       "pamięć",
+       "8 B wskaźnik + narzut alokatora",
+       "4 B indeks, pamięć znana z góry"
+      ],
+      [
+       "zerowanie/reset",
+       "`delete` każdego węzła",
+       "`cnt = 1` + wyzerowanie użytej części"
+      ],
+      [
+       "błędy",
+       "nullptr, wiszące wskaźniki, wycieki",
+       "indeks 0 jako „brak”, łatwy debug"
+      ],
+      [
+       "kopiowanie / trwałość",
+       "trudne",
+       "proste (np. trwałe drzewa przedziałowe)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Rozmiar puli oszacuj z ograniczeń: trie — suma długości słów + 1; drzewo przedziałowe dynamiczne/trwałe — liczba operacji × O(log zakresu). Tablice globalne o stałym rozmiarze nie obciążają stosu i są zerowane automatycznie."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "T* p = &x;",
+     "desc": "wskaźnik na x",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "*p",
+     "desc": "obiekt wskazywany przez p (dereferencja)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "p->pole",
+     "desc": "pole obiektu wskazywanego (= (*p).pole)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "nullptr",
+     "desc": "pusty wskaźnik (dereferencja = crash)",
+     "complexity": "—"
+    },
+    {
+     "sig": "p + i, p[i]",
+     "desc": "arytmetyka wskaźników: i-ty element od p",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "new T(args) / delete p",
+     "desc": "alokacja / zwolnienie pojedynczego obiektu na stercie",
+     "complexity": "kosztowna alokacja"
+    },
+    {
+     "sig": "new T[n] / delete[] p",
+     "desc": "alokacja / zwolnienie tablicy (prawie zawsze lepszy vector)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "T pula[MAXN]; int cnt;",
+     "desc": "pula węzłów: nowy węzeł = pula[cnt++]",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Dereferencja `nullptr` lub niezainicjalizowanego wskaźnika kończy program (segfault/RE).",
+    "Wskaźnik/iterator/referencja do elementu vectora przestaje być ważny po realokacji — w puli na vectorze trzymaj indeksy, nie wskaźniki.",
+    "Milion wywołań `new` to zauważalny koszt czasu i pamięci — pula na tablicy jest kilka razy szybsza.",
+    "`new` bez `delete` przy wielu testach w jednym pliku może zjeść całą pamięć (MLE); pulę resetuje się licznikiem.",
+    "`int* p, q;` deklaruje wskaźnik p i ZWYKŁY int q — gwiazdka dotyczy tylko najbliższej nazwy.",
+    "Arytmetyka wskaźników poza granicami tablicy (poza „jeden za końcem”) to UB."
+   ],
+   "qa": [
+    {
+     "q": [
+      "wskaźniki c++",
+      "co to wskaźnik",
+      "pointer c++",
+      "jak działają wskaźniki",
+      "gwiazdka i ampersand c++"
+     ],
+     "a": "Wskaźnik to zmienna przechowująca adres innej zmiennej. `&x` daje adres x, `*p` daje obiekt pod adresem p, `p->pole` to pole obiektu wskazywanego. W zadaniach rzadko są potrzebne — referencje, iteratory i indeksy zwykle wystarczają.",
+     "code": "int x = 10;\nint* p = &x;\n*p += 5;\ncout << x << ' ' << (p == &x) << '\\n';   // 15 1"
+    },
+    {
+     "q": [
+      "indeksy zamiast wskaźników",
+      "drzewo na tablicy",
+      "pula węzłów",
+      "node pool c++",
+      "zamiast new"
+     ],
+     "a": "Zamiast `new Node` trzymaj węzły w globalnej tablicy `Node t[MAXN]` i nadawaj im kolejne numery (`int nowy() { return ++cnt; }`). Dzieci to indeksy (0 = brak). Alokacja w O(1), łatwy reset między testami (`cnt = 0`), mniejsze zużycie pamięci.",
+     "code": "struct Node { int l = 0, r = 0; long long sum = 0; };\nconst int MAXN = 4000005;\nNode t[MAXN];\nint cnt = 0;\nint nowy() { return ++cnt; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "nullptr",
+      "null pointer c++",
+      "segfault nullptr",
+      "nullptr vs NULL"
+     ],
+     "a": "`nullptr` to pusty wskaźnik (w nowoczesnym C++ zamiast `NULL`/`0`). Zawsze sprawdzaj `if (p != nullptr)` (albo `if (p)`) przed `*p` lub `p->...` — dereferencja pustego wskaźnika to natychmiastowy segfault.",
+     "code": "struct W { int v; W* dziecko = nullptr; };\nW lisc{5};\nW korzen{1, &lisc};\nint glebokosc = 0;\nfor (W* p = &korzen; p; p = p->dziecko) glebokosc++;\ncout << glebokosc << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "new delete c++",
+      "dynamiczna alokacja",
+      "czy używać new",
+      "new int[n] czy vector"
+     ],
+     "a": "W kodzie zawodniczym praktycznie nie potrzebujesz `new`/`delete`: tablice dynamiczne to `vector`, a węzły struktur — pula na tablicy. `new int[n]` wymaga ręcznego `delete[]`, nie zna swojego rozmiaru i łatwo o wyciek; `vector<int>(n)` robi to samo bezpiecznie.",
+     "code": "int n = 5;\nvector<int> a(n, 0);          // zamiast int* a = new int[n];\na[4] = 7;\ncout << a.size() << ' ' << a[4] << '\\n';   // 5 7"
+    },
+    {
+     "q": [
+      "strzałka c++",
+      "operator -> c++",
+      "kropka czy strzałka",
+      "p->x co znaczy"
+     ],
+     "a": "`.` używasz na obiekcie (`s.x`), `->` na wskaźniku do obiektu (`p->x` = `(*p).x`). Iteratory map/setów też obsługują `->`: `it->first`.",
+     "code": "struct P { int x, y; };\nP s{1, 2};\nP* p = &s;\np->x = 10;\nmap<int, int> m = {{3, 4}};\nauto it = m.begin();\ncout << s.x << ' ' << it->second << '\\n';   // 10 4"
+    },
+    {
+     "q": [
+      "trie c++",
+      "drzewo trie implementacja",
+      "trie na tablicy",
+      "prefix tree c++"
+     ],
+     "a": "Najprostszy trie: `int nxt[MAXW][26]` (0 = brak dziecka), korzeń = 1, licznik węzłów `cnt`. Dodanie słowa i wyszukiwanie: O(długość). Pamięć: MAXW × 26 × 4 B — dla 10^6 węzłów to ok. 104 MB, więc dobierz MAXW do sumy długości słów.",
+     "code": "const int MAXW = 100005;\nint nxt[MAXW][26], cnt = 1, ile_prefiks[MAXW];\nvoid dodaj(const string& s) {\n    int v = 1;\n    for (char ch : s) {\n        int c = ch - 'a';\n        if (!nxt[v][c]) nxt[v][c] = ++cnt;\n        v = nxt[v][c];\n        ile_prefiks[v]++;\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "int* p, q",
+      "deklaracja wielu wskaźników",
+      "gwiazdka przy typie czy nazwie",
+      "pointer declaration pitfall"
+     ],
+     "a": "W deklaracji `int* p, q;` tylko `p` jest wskaźnikiem — `q` to zwykły `int`, bo `*` wiąże się z nazwą, a nie z typem. Dla dwóch wskaźników pisz `int *p, *q;` albo deklaruj w osobnych liniach.",
+     "code": "int a = 1, b = 2;\nint *p = &a, *q = &b;   // oba wskaźniki\ncout << *p + *q << '\\n'; // 3"
+    }
+   ],
+   "related": [
+    "cpp-references",
+    "cpp-global-vs-local",
+    "str-trie",
+    "ds-segment-tree",
+    "stl-iterators",
+    "ds-linked-list-array"
+   ]
+  }
+ ]
+}

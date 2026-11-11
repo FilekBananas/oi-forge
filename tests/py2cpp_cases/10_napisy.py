@@ -1,0 +1,13 @@
+s = input().strip()
+t = input()
+print(s.upper(), s.lower())
+print(s[::-1])
+print(s.count('a'), s.find('b'), s.find('zz'))
+print(s.replace('a', '*'))
+print(s.startswith('ab'), s.endswith('z'))
+words = t.split()
+print(len(words), '-'.join(words))
+print(''.join(sorted(s)))
+digits = [c for c in s if c.isdigit()]
+print(len(digits), s[1:4], s[-2:])
+print(s.isdigit(), t.isalpha())

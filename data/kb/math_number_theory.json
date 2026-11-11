@@ -1,0 +1,1705 @@
+{
+ "chunk": "math-number-theory",
+ "articles": [
+  {
+   "id": "math-gcd-lcm",
+   "title": "NWD i NWW — algorytm Euklidesa, std::gcd, std::lcm",
+   "category": "Matematyka",
+   "tags": [
+    "nwd",
+    "nww",
+    "gcd",
+    "lcm",
+    "euklides",
+    "algorytm euklidesa",
+    "względnie pierwsze",
+    "ułamki"
+   ],
+   "aliases": [
+    "nwd",
+    "nww",
+    "gcd",
+    "lcm",
+    "największy wspólny dzielnik",
+    "najmniejsza wspólna wielokrotność",
+    "algorytm euklidesa",
+    "euklides",
+    "nwd c++",
+    "gcd c++",
+    "std::gcd",
+    "__gcd"
+   ],
+   "summary": "NWD liczymy algorytmem Euklidesa: gcd(a, b) = gcd(b, a mod b), gcd(a, 0) = a — w czasie O(log min(a, b)). NWW = a / gcd(a, b) * b (najpierw dzielenie, żeby nie przepełnić typu).",
+   "complexity": "gcd: O(log min(a, b)); lcm: O(log min(a, b)); NWD n liczb: O(n + log max)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**NWD** (największy wspólny dzielnik, ang. *gcd*) dwóch liczb to największa liczba dzieląca obie.\n**Algorytm Euklidesa** opiera się na obserwacji: każdy wspólny dzielnik `a` i `b` dzieli też `a − k·b`,\nwięc `gcd(a, b) = gcd(b, a mod b)`, a `gcd(a, 0) = a`. Reszta maleje co najmniej dwukrotnie co dwa kroki,\nstąd O(log min(a, b)) kroków (najgorszy przypadek: kolejne liczby Fibonacciego).\n\n**NWW** (najmniejsza wspólna wielokrotność, *lcm*) spełnia `gcd(a, b) · lcm(a, b) = a · b` (dla dodatnich),\nwięc `lcm(a, b) = a / gcd(a, b) * b`. Kolejność ma znaczenie: `a * b / gcd` może przepełnić typ, choć wynik się mieści.\n\n**Sygnały w treści:** „skróć ułamek”, „względnie pierwsze”, „podziel na równe części bez reszty”,\n„po ilu dniach zdarzenia zbiegną się” (NWW), „największy kwadrat/odcinek, którym da się pokryć” (NWD),\n„ile punktów kratowych na odcinku” (`gcd(|dx|, |dy|) + 1`)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: NWD i NWW wielu liczb",
+     "code": "// NWD i NWW n liczb. Wejście: n, potem n liczb dodatnich. Zakładamy, że NWW mieści się w long long.\n#include <bits/stdc++.h>\nusing namespace std;\n\nlong long nwd(long long a, long long b) {        // algorytm Euklidesa (iteracyjnie)\n    while (b != 0) {\n        long long r = a % b;\n        a = b;\n        b = r;\n    }\n    return a;\n}\n\nlong long nww(long long a, long long b) {\n    return a / nwd(a, b) * b;                      // najpierw dzielimy — mniejsze ryzyko przepełnienia\n}\n\nint main() {\n    int n;\n    cin >> n;\n    long long g = 0, l = 1;                        // gcd(0, x) = x, lcm(1, x) = x\n    for (int i = 0; i < n; i++) {\n        long long x;\n        cin >> x;\n        g = nwd(g, x);\n        l = nww(l, x);\n    }\n    cout << g << \" \" << l << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersja z biblioteki standardowej",
+     "code": "// W C++17 i nowszych: std::gcd i std::lcm z <numeric> (bits/stdc++.h je zawiera).\nlong long a = 84, b = 36;\ncout << gcd(a, b) << \" \" << lcm(a, b) << \"\\n\";      // 12 252\ncout << gcd(-84LL, 36LL) << \"\\n\";                  // 12 — std::gcd zwraca wartość nieujemną"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Własność",
+      "Wzór",
+      "Zastosowanie"
+     ],
+     "rows": [
+      [
+       "redukcja",
+       "gcd(a, b) = gcd(b, a mod b) = gcd(a − b, b)",
+       "algorytm Euklidesa, NWD różnic"
+      ],
+      [
+       "iloczyn",
+       "gcd(a, b) · lcm(a, b) = a · b",
+       "liczenie NWW"
+      ],
+      [
+       "łączność",
+       "gcd(a, b, c) = gcd(gcd(a, b), c)",
+       "NWD tablicy, drzewo przedziałowe, sparse table"
+      ],
+      [
+       "z rozkładu",
+       "gcd: min wykładników, lcm: max wykładników",
+       "rozumowania o dzielnikach"
+      ],
+      [
+       "skalowanie",
+       "gcd(k·a, k·b) = k · gcd(a, b)",
+       "upraszczanie zadań"
+      ],
+      [
+       "punkty kratowe",
+       "na odcinku (x1,y1)-(x2,y2) jest gcd(|dx|, |dy|) + 1 punktów",
+       "geometria, tw. Picka"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "NWD jest **idempotentny** (`gcd(x, x) = x`), więc zapytania o NWD na przedziale obsłuży sparse table w O(1)\npo O(n log n) preprocessingu — tak samo jak minimum."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "gcd(a, b)",
+     "desc": "NWD (C++17, <numeric>); dla liczb ujemnych zwraca NWD wartości bezwzględnych",
+     "complexity": "O(log min(a, b))",
+     "returns": "ten sam typ",
+     "example": "gcd(12, 18) == 6"
+    },
+    {
+     "sig": "lcm(a, b)",
+     "desc": "NWW (C++17, <numeric>); może przepełnić typ — wtedy UB",
+     "complexity": "O(log min(a, b))",
+     "returns": "ten sam typ",
+     "example": "lcm(4, 6) == 12"
+    },
+    {
+     "sig": "__gcd(a, b)",
+     "desc": "starsza wbudowana funkcja GCC; dla ujemnych argumentów może zwrócić wynik ujemny",
+     "complexity": "O(log min(a, b))"
+    }
+   ],
+   "pitfalls": [
+    "`a * b / gcd(a, b)` przepełnia się, choć wynik się mieści — pisz `a / gcd(a, b) * b`.",
+    "NWW wielu liczb rośnie bardzo szybko (lcm(1..50) ≈ 3,1·10^21 > long long) — kontroluj przepełnienie (__int128, ucinanie do limitu).",
+    "Własny Euklides z `%` dla liczb ujemnych może zwrócić wynik ujemny — bierz `abs` lub używaj `std::gcd`.",
+    "`gcd(0, 0) = 0` — przy dzieleniu przez NWD sprawdź, czy nie dzielisz przez zero.",
+    "Mieszanie typów: `gcd(int, long long)` — wymuś wspólny typ, np. `gcd(1LL * a, b)`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "nwd c++",
+      "gcd c++",
+      "jak policzyć nwd",
+      "największy wspólny dzielnik",
+      "nwd kod",
+      "najwiekszy wspolny dzielnik c++"
+     ],
+     "a": "Najprościej `std::gcd(a, b)` z `<numeric>` (C++17). Własna wersja to algorytm Euklidesa: dopóki `b ≠ 0`,\nzamieniaj `(a, b)` na `(b, a % b)`; wynikiem jest `a`. Działa w O(log min(a, b)), więc nawet dla liczb rzędu 10^18\nto kilkadziesiąt kroków.",
+     "code": "long long nwd(long long a, long long b) {\n    return b == 0 ? a : nwd(b, a % b);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "nww c++",
+      "lcm c++",
+      "najmniejsza wspólna wielokrotność",
+      "nww jak policzyc",
+      "nww przepełnienie"
+     ],
+     "a": "`lcm(a, b) = a / gcd(a, b) * b`. Dzielenie robimy **przed** mnożeniem, bo `a * b` może się nie zmieścić w typie,\nnawet gdy samo NWW się mieści. W C++17 jest `std::lcm`, ale przy przepełnieniu to UB — przy dużych liczbach\nlicz w `__int128` i porównuj z limitem.",
+     "code": "long long a = 4000000000LL, b = 6000000000LL;\n// a * b = 2.4e19 > LLONG_MAX, ale NWW = 12e9 mieści się bez problemu:\ncout << a / gcd(a, b) * b << \"\\n\";   // 12000000000"
+    },
+    {
+     "q": [
+      "algorytm euklidesa",
+      "euklides rekurencyjnie",
+      "euklides iteracyjnie",
+      "euclidean algorithm",
+      "jak dziala algorytm euklidesa"
+     ],
+     "a": "Wspólny dzielnik `a` i `b` dzieli też resztę `a mod b`, więc `gcd(a, b) = gcd(b, a mod b)`; kończymy, gdy druga\nliczba to 0. Przykład: gcd(48, 18) → gcd(18, 12) → gcd(12, 6) → gcd(6, 0) = 6. Wersja rekurencyjna jest\njednolinijkowa, iteracyjna nie używa stosu — obie O(log min(a, b)).",
+     "code": "long long a = 48, b = 18;\nwhile (b) { long long r = a % b; a = b; b = r; }\ncout << a << \"\\n\";   // 6"
+    },
+    {
+     "q": [
+      "złożoność euklidesa",
+      "gcd complexity",
+      "ile krokow ma algorytm euklidesa",
+      "euklides zlozonosc log"
+     ],
+     "a": "O(log min(a, b)): co dwa kroki mniejsza liczba spada co najmniej o połowę (jeśli `b ≤ a/2`, to `a mod b < b ≤ a/2`,\na jeśli `b > a/2`, to `a mod b = a − b < a/2`). Najgorszy przypadek to dwie kolejne liczby Fibonacciego —\ndla liczb do 10^18 to niecałe 90 kroków."
+    },
+    {
+     "q": [
+      "std::gcd czy __gcd",
+      "__gcd c++",
+      "gcd numeric header",
+      "jaka funkcja gcd w c++",
+      "gcd nie dziala kompilacja"
+     ],
+     "a": "`std::gcd` i `std::lcm` są w `<numeric>` od C++17 (z `bits/stdc++.h` działają od razu, kompiluj z\n`-std=c++17` lub nowszym). `__gcd` to starsza funkcja GCC, działa też w C++11, ale dla ujemnych argumentów może\nzwrócić wynik ujemny. Argumenty `std::gcd` powinny mieć ten sam typ — `gcd(1LL * a, b)` przy mieszaniu int i long long."
+    },
+    {
+     "q": [
+      "nwd wielu liczb",
+      "gcd of array",
+      "nwd tablicy",
+      "nwd n liczb",
+      "nwd calej tablicy"
+     ],
+     "a": "NWD jest łączny: `gcd(a, b, c) = gcd(gcd(a, b), c)`. Startuj od `g = 0` (bo `gcd(0, x) = x`) i dla każdego\nelementu rób `g = gcd(g, x)`. Łączny koszt to O(n + log max), bo wynik tylko maleje. Gdy `g == 1`, można przerwać.",
+     "code": "vector<long long> a = {24, 36, 60, 84};\nlong long g = 0;\nfor (long long x : a) g = gcd(g, x);\ncout << g << \"\\n\";   // 12"
+    },
+    {
+     "q": [
+      "nwd liczb ujemnych",
+      "gcd negative",
+      "nwd z ujemnej liczby",
+      "euklides ujemne liczby"
+     ],
+     "a": "Matematycznie NWD jest nieujemny. `std::gcd` zwraca NWD wartości bezwzględnych. Własny Euklides z `%` w C++\nmoże dać wynik ujemny (reszta ma znak dzielnej), np. dla (4, −6) zwróci −2. Rozwiązanie: licz `gcd(llabs(a), llabs(b))`.",
+     "code": "cout << gcd(-12LL, 18LL) << \" \" << gcd(llabs(-12LL), llabs(-18LL)) << \"\\n\";   // 6 6"
+    },
+    {
+     "q": [
+      "nww wielu liczb przepełnienie",
+      "lcm of array overflow",
+      "nww tablicy",
+      "nww 1..n"
+     ],
+     "a": "NWW rośnie bardzo szybko (lcm(1, …, 40) ≈ 5,3·10^15, lcm(1, …, 50) ≈ 3,1·10^21 nie mieści się w long long).\nLicz w `__int128` i jeśli przekroczy limit z treści (np. „wypisz −1, jeśli wynik > 10^18”) — przerwij.",
+     "code": "const long long LIM = 1000000000000000000LL;   // 1e18\nvector<long long> a = {2, 3, 4, 5, 6, 7, 8, 9, 10};\n__int128 l = 1;\nbool over = false;\nfor (long long x : a) {\n    l = l / gcd((long long)l, x) * x;\n    if (l > LIM) { over = true; break; }\n}\ncout << (over ? -1 : (long long)l) << \"\\n\";   // 2520"
+    },
+    {
+     "q": [
+      "skracanie ułamków",
+      "ułamek nieskracalny",
+      "reduce fraction",
+      "skroc ulamek c++",
+      "ulamek w najprostszej postaci"
+     ],
+     "a": "Podziel licznik i mianownik przez ich NWD. Ustal też znak (minus trzymaj w liczniku, mianownik dodatni).\nUłamki w postaci nieskracalnej łatwo porównywać i używać jako kluczy w `map`/`set` (np. kierunki/nachylenia prostych).",
+     "code": "long long p = -42, q = 56;\nlong long g = gcd(p, q);          // 14 (nieujemny)\np /= g; q /= g;\nif (q < 0) { p = -p; q = -q; }\ncout << p << \"/\" << q << \"\\n\";    // -3/4"
+    },
+    {
+     "q": [
+      "nwd na przedziale",
+      "gcd range query",
+      "nwd przedzialu zapytania",
+      "gcd sparse table"
+     ],
+     "a": "NWD jest łączny i idempotentny, więc pasuje do **sparse table** (zapytanie O(log) na policzenie NWD dwóch\nnakładających się bloków, preprocessing O(n log n)) albo do drzewa przedziałowego (O(log n · log max) na zapytanie,\nobsługuje też zmiany). Klasyka: „najdłuższy podciąg spójny o NWD > 1” — dwa wskaźniki + sparse table."
+    },
+    {
+     "q": [
+      "gcd(a+x, b+x)",
+      "nwd różnic",
+      "nwd a_i + x dla wielu x",
+      "gcd of differences"
+     ],
+     "a": "Z `gcd(a, b) = gcd(a, b − a)` mamy `gcd(a_1 + x, a_2 + x, …, a_n + x) = gcd(a_1 + x, G)`, gdzie\n`G = gcd(|a_2 − a_1|, …, |a_n − a_1|)` nie zależy od `x`. Liczysz `G` raz w O(n), a każde zapytanie o `x` w O(log).",
+     "code": "vector<long long> a = {1, 25, 121, 169};\nlong long G = 0;\nfor (long long v : a) G = gcd(G, llabs(v - a[0]));\nfor (long long x : {1LL, 2LL, 7LL, 23LL}) cout << gcd(a[0] + x, G) << \" \";\ncout << \"\\n\";   // 2 3 8 24"
+    },
+    {
+     "q": [
+      "liczby względnie pierwsze",
+      "coprime",
+      "nwd rowne 1 co znaczy",
+      "wzglednie pierwsze c++"
+     ],
+     "a": "Liczby są **względnie pierwsze**, gdy `gcd(a, b) = 1` — nie mają wspólnego dzielnika pierwszego. Wtedy\nistnieje odwrotność `a` modulo `b`, działa chińskie twierdzenie o resztach, a ułamek `a/b` jest nieskracalny.\nLiczbę liczb z 1..n względnie pierwszych z n daje funkcja Eulera φ(n)."
+    }
+   ],
+   "related": [
+    "math-extended-euclid",
+    "math-factorization",
+    "math-euler-phi",
+    "math-mod-inverse",
+    "geo-pick",
+    "ds-sparse-table",
+    "math-mobius",
+    "oi-py-numbers"
+   ]
+  },
+  {
+   "id": "math-extended-euclid",
+   "title": "Rozszerzony algorytm Euklidesa i równania diofantyczne ax + by = c",
+   "category": "Matematyka",
+   "tags": [
+    "rozszerzony euklides",
+    "extgcd",
+    "bezout",
+    "równanie diofantyczne",
+    "kongruencja liniowa",
+    "odwrotność modularna"
+   ],
+   "aliases": [
+    "rozszerzony euklides",
+    "rozszerzony algorytm euklidesa",
+    "extended euclid",
+    "extgcd",
+    "egcd",
+    "równanie diofantyczne",
+    "ax+by=c",
+    "tożsamość bezout",
+    "diophantine equation",
+    "kongruencja liniowa"
+   ],
+   "summary": "Rozszerzony Euklides oprócz g = gcd(a, b) znajduje liczby całkowite x, y z a·x + b·y = g. Dzięki temu rozwiązujemy równania ax + by = c (rozwiązanie istnieje ⇔ g | c), kongruencje liniowe i liczymy odwrotność modularną.",
+   "complexity": "O(log min(a, b)); współczynniki spełniają |x| ≤ b/g, |y| ≤ a/g (dla a, b > 0)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Tożsamość Bézout:** dla liczb całkowitych `a, b` istnieją `x, y` takie, że `a·x + b·y = gcd(a, b)`.\nRozszerzony Euklides znajduje je „przy okazji” zwykłego Euklidesa. Jeśli dla pary `(b, a mod b)` mamy\n`b·x1 + (a mod b)·y1 = g`, to podstawiając `a mod b = a − ⌊a/b⌋·b` dostajemy\n`a·y1 + b·(x1 − ⌊a/b⌋·y1) = g`, czyli `x = y1`, `y = x1 − ⌊a/b⌋·y1`. Baza: `b = 0` ⇒ `x = 1, y = 0`."
+    },
+    {
+     "type": "text",
+     "md": "**Równanie diofantyczne `a·x + b·y = c`** (szukamy całkowitych `x, y`), `g = gcd(a, b)`:\n* rozwiązanie istnieje ⇔ `g | c`;\n* jedno rozwiązanie: `x0 = x·(c/g)`, `y0 = y·(c/g)`;\n* **wszystkie** rozwiązania: `x = x0 + k·(b/g)`, `y = y0 − k·(a/g)`, `k ∈ ℤ`;\n* najmniejsze nieujemne `x`: `((x0 mod (b/g)) + b/g) mod (b/g)`.\n\n**Sygnały w treści:** „znajdź liczby całkowite x, y”, „ile sztuk po a i po b, by wydać dokładnie c”,\n„rozwiąż a·x ≡ b (mod m)”, „po ilu krokach skoczek długości a na okręgu długości m trafi na pole”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: równanie diofantyczne",
+     "code": "// Rozwiązanie a*x + b*y = c (a, b > 0, |c| <= 1e18) z najmniejszym nieujemnym x, albo NIE.\n#include <bits/stdc++.h>\nusing namespace std;\n\nlong long extgcd(long long a, long long b, long long &x, long long &y) {\n    if (b == 0) { x = 1; y = 0; return a; }\n    long long x1, y1;\n    long long g = extgcd(b, a % b, x1, y1);\n    x = y1;\n    y = x1 - (a / b) * y1;\n    return g;\n}\n\nint main() {\n    long long a, b, c;\n    cin >> a >> b >> c;\n    long long x, y;\n    long long g = extgcd(a, b, x, y);              // a*x + b*y = g\n    if (c % g != 0) { cout << \"NIE\\n\"; return 0; }\n    long long step = b / g;                        // x zmienia się o wielokrotności b/g\n    __int128 X = (__int128)x * (c / g) % step;     // __int128: x * (c/g) może przekroczyć long long\n    if (X < 0) X += step;\n    __int128 Y = ((__int128)c - (__int128)a * X) / b;   // dzieli się dokładnie\n    cout << (long long)X << \" \" << (long long)Y << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Rozszerzony Euklides iteracyjnie",
+     "code": "// Wersja iteracyjna (bez rekurencji). Zwraca g, ustawia x, y: a*x + b*y = g.\nlong long extgcdIter(long long a, long long b, long long &x, long long &y) {\n    long long x0 = 1, y0 = 0, x1 = 0, y1 = 1;\n    while (b != 0) {\n        long long q = a / b;\n        tie(a, b) = make_pair(b, a - q * b);\n        tie(x0, x1) = make_pair(x1, x0 - q * x1);\n        tie(y0, y1) = make_pair(y1, y0 - q * y1);\n    }\n    x = x0; y = y0;\n    return a;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Problem",
+      "Sprowadzenie",
+      "Warunek istnienia"
+     ],
+     "rows": [
+      [
+       "a·x + b·y = c",
+       "extgcd(a, b), przemnóż przez c/g",
+       "g | c"
+      ],
+      [
+       "a·x ≡ b (mod m)",
+       "a·x + m·y = b",
+       "gcd(a, m) | b; wtedy gcd(a, m) rozwiązań modulo m"
+      ],
+      [
+       "odwrotność a mod m",
+       "a·x + m·y = 1",
+       "gcd(a, m) = 1"
+      ],
+      [
+       "CRT dla dwóch modułów",
+       "m1·t ≡ a2 − a1 (mod m2)",
+       "gcd(m1, m2) | a2 − a1"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`x·(c/g)` może przekroczyć `long long` (|x| ≤ b/g, c do 10^18). Albo licz w `__int128`, albo najpierw zredukuj\noba czynniki modulo `b/g`. Współczynniki z samego extgcd są małe (|x| ≤ b/g, |y| ≤ a/g), więc tam przepełnienia nie ma."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "long long extgcd(long long a, long long b, long long &x, long long &y)",
+     "desc": "zwraca g = gcd(a, b) i ustawia x, y: a·x + b·y = g",
+     "complexity": "O(log min(a, b))",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Zapominanie o sprawdzeniu `c % g == 0` — bez tego wypiszesz „rozwiązanie”, które nim nie jest.",
+    "Krok zmiany x to `b/g`, a nie `b` — inaczej pominiesz rozwiązania (przy g > 1).",
+    "Modulo z liczby ujemnej w C++ jest ujemne: `((x % m) + m) % m`.",
+    "Przepełnienie przy `x * (c / g)` — __int128 lub redukcja modulo b/g przed mnożeniem.",
+    "Ujemne a lub b: rozwiąż dla |a|, |b|, potem zmień znak x lub y."
+   ],
+   "qa": [
+    {
+     "q": [
+      "rozszerzony euklides",
+      "extended euclidean algorithm",
+      "extgcd c++",
+      "rozszerzony algorytm euklidesa kod",
+      "egcd"
+     ],
+     "a": "Rekurencyjnie: dla `b = 0` zwróć `g = a, x = 1, y = 0`; w przeciwnym razie policz `(g, x1, y1)` dla `(b, a % b)`\ni ustaw `x = y1`, `y = x1 − (a / b) · y1`. Dostajesz `a·x + b·y = gcd(a, b)` w czasie O(log min(a, b)).",
+     "code": "long long extgcd(long long a, long long b, long long &x, long long &y) {\n    if (b == 0) { x = 1; y = 0; return a; }\n    long long x1, y1, g = extgcd(b, a % b, x1, y1);\n    x = y1; y = x1 - (a / b) * y1;\n    return g;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "równanie diofantyczne",
+      "ax+by=c",
+      "diophantine equation",
+      "rozwiazania calkowite ax+by=c",
+      "rownanie diofantyczne c++"
+     ],
+     "a": "Policz `g = extgcd(a, b, x, y)`. Jeśli `c` nie dzieli się przez `g` — brak rozwiązań. W przeciwnym razie\n`x0 = x·(c/g)`, `y0 = y·(c/g)` jest rozwiązaniem, a wszystkie to `x0 + k·(b/g)`, `y0 − k·(a/g)`.\nZłożoność O(log). Pełny program z najmniejszym nieujemnym `x` jest w treści."
+    },
+    {
+     "q": [
+      "wszystkie rozwiązania ax+by=c",
+      "ogólne rozwiązanie diofantyczne",
+      "general solution diophantine",
+      "rodzina rozwiazan ax+by"
+     ],
+     "a": "Jeśli `(x0, y0)` jest rozwiązaniem, to `(x0 + k·b/g, y0 − k·a/g)` też: zmiana lewej strony to\n`a·k·b/g − b·k·a/g = 0`. I to są wszystkie rozwiązania (różnica dwóch rozwiązań musi spełniać\n`a/g · dx = −b/g · dy`, a `a/g` i `b/g` są względnie pierwsze)."
+    },
+    {
+     "q": [
+      "najmniejsze nieujemne x",
+      "smallest positive x diophantine",
+      "najmniejsze dodatnie rozwiazanie ax+by=c",
+      "minimalne x rownanie"
+     ],
+     "a": "Rozwiązania `x` tworzą ciąg arytmetyczny o kroku `s = b/g`, więc najmniejsze nieujemne to\n`((x0 % s) + s) % s`. Odpowiadające `y = (c − a·x) / b`. Uważaj na przepełnienie `x0 = x·(c/g)` — licz w\n`__int128` albo redukuj modulo `s` przed mnożeniem.",
+     "code": "// 3x + 5y = 7: extgcd daje 3*2 + 5*(-1) = 1, więc x0 = 2*7 = 14; krok s = 5/1 = 5\nlong long x0 = 14, s = 5;\nlong long x = ((x0 % s) + s) % s;\ncout << x << \" \" << (7 - 3 * x) / 5 << \"\\n\";   // 4 -1"
+    },
+    {
+     "q": [
+      "tożsamość bezout",
+      "bezout",
+      "kiedy ax+by=c ma rozwiązanie",
+      "czy rownanie ma rozwiazanie calkowite"
+     ],
+     "a": "Zbiór wartości `a·x + b·y` (x, y całkowite) to dokładnie wielokrotności `gcd(a, b)` — to tożsamość Bézout.\nZatem `a·x + b·y = c` ma rozwiązanie ⇔ `gcd(a, b) | c`. Np. `6x + 9y = 4` nie ma rozwiązań, bo 3 ∤ 4."
+    },
+    {
+     "q": [
+      "kongruencja liniowa",
+      "ax ≡ b mod m",
+      "rozwiąż a*x = b modulo m",
+      "linear congruence",
+      "a*x mod m = b"
+     ],
+     "a": "`a·x ≡ b (mod m)` ⇔ `a·x + m·y = b`. Niech `g = gcd(a, m)`. Jeśli `g ∤ b` — brak rozwiązań. Inaczej podziel\nwszystko przez `g`: `x ≡ (b/g) · inv(a/g) (mod m/g)`; modulo `m` jest `g` rozwiązań: `x0 + k·m/g`, `k = 0..g−1`.",
+     "code": "long long extgcd(long long a, long long b, long long &x, long long &y) {\n    if (b == 0) { x = 1; y = 0; return a; }\n    long long x1, y1, g = extgcd(b, a % b, x1, y1);\n    x = y1; y = x1 - (a / b) * y1;\n    return g;\n}\n// najmniejsze x >= 0 z a*x ≡ b (mod m) albo -1\nlong long solveCongruence(long long a, long long b, long long m) {\n    long long x, y, g = extgcd(a, m, x, y);\n    if (b % g != 0) return -1;\n    long long mm = m / g;\n    __int128 r = (__int128)(x % mm) * ((b / g) % mm) % mm;\n    if (r < 0) r += mm;\n    return (long long)r;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "extgcd przepełnienie",
+      "czy x y w extgcd mogą być duże",
+      "rozszerzony euklides overflow",
+      "jak duze sa wspolczynniki bezout"
+     ],
+     "a": "Współczynniki zwracane przez rozszerzonego Euklidesa są małe: dla `a, b > 0` zachodzi `|x| ≤ b/g` i `|y| ≤ a/g`,\nwięc mieszczą się w typie wejścia. Przepełnienie grozi dopiero przy mnożeniu przez `c/g` przy równaniu\n`ax + by = c` — tam używaj `__int128`."
+    },
+    {
+     "q": [
+      "extgcd iteracyjnie",
+      "rozszerzony euklides bez rekurencji",
+      "iterative extended gcd"
+     ],
+     "a": "Trzymaj dwie trójki `(r, x, y)` spełniające `a·x + b·y = r` i wykonuj na nich te same kroki co Euklides:\n`q = r0 / r1`, `(r0, r1) = (r1, r0 − q·r1)` i analogicznie dla `x`, `y`. Kod jest w treści artykułu. Ta sama\nzłożoność O(log), bez rekurencji."
+    },
+    {
+     "q": [
+      "ile rozwiązań nieujemnych ax+by=c",
+      "liczba rozwiązań x,y>=0",
+      "count nonnegative solutions diophantine",
+      "na ile sposobow zaplacic monetami a i b kwote c"
+     ],
+     "a": "Weź najmniejsze nieujemne `x_min`; wtedy `y_max = (c − a·x_min)/b`. Jeśli `y_max < 0`, rozwiązań nie ma.\nKażde następne rozwiązanie zwiększa `x` o `b/g` i zmniejsza `y` o `a/g`, więc liczba rozwiązań to\n`⌊y_max / (a/g)⌋ + 1`. Złożoność O(log).",
+     "code": "// 2x + 3y = 12, g = 1: x_min = 0, y_max = 4, krok y = 2\nlong long a = 2, b = 3, c = 12, g = 1, xmin = 0;\nlong long ymax = (c - a * xmin) / b;\ncout << (ymax < 0 ? 0 : ymax / (a / g) + 1) << \"\\n\";   // 3: (0,4), (3,2), (6,0)"
+    }
+   ],
+   "related": [
+    "math-gcd-lcm",
+    "math-mod-inverse",
+    "math-crt",
+    "num-mod-arithmetic"
+   ]
+  },
+  {
+   "id": "math-sieve",
+   "title": "Sito Eratostenesa — zwykłe, najmniejszych dzielników (SPF), liniowe i segmentowe",
+   "category": "Matematyka",
+   "tags": [
+    "sito",
+    "sito eratostenesa",
+    "liczby pierwsze",
+    "spf",
+    "najmniejszy dzielnik pierwszy",
+    "sito liniowe",
+    "sito segmentowe"
+   ],
+   "aliases": [
+    "sito eratostenesa",
+    "sito",
+    "sieve of eratosthenes",
+    "sieve",
+    "sito c++",
+    "liczby pierwsze do n",
+    "sito najmniejszych dzielników",
+    "spf",
+    "smallest prime factor",
+    "sito liniowe",
+    "sito segmentowe",
+    "sito erastotenesa"
+   ],
+   "summary": "Sito wyznacza wszystkie liczby pierwsze ≤ N w O(N log log N): dla każdej pierwszej p skreślamy wielokrotności od p². Wersja z najmniejszym dzielnikiem pierwszym (SPF) pozwala potem rozkładać liczby na czynniki w O(log n).",
+   "complexity": "zwykłe: O(N log log N) czasu, N bitów/bajtów pamięci; liniowe: O(N); segmentowe [L, R]: O((R − L) log log R + √R)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Idea:** wypisz liczby 2..N. Najmniejsza nieskreślona to liczba pierwsza `p` — skreśl wszystkie jej wielokrotności.\nSkreślanie zaczynamy od `p·p`, bo mniejsze wielokrotności `k·p` (k < p) zostały już skreślone przez mniejszy dzielnik\npierwszy `k`. Z tego samego powodu zewnętrzna pętla może skończyć się na `p·p ≤ N`. Łączny koszt to\n`Σ N/p = O(N log log N)` — praktycznie liniowy (N = 10^7 to ułamek sekundy).\n\n**Sygnały w treści:** „liczby pierwsze do 10^6/10^7”, wiele zapytań „czy x jest pierwsza” dla małych x,\nrozkład wielu liczb na czynniki (sito SPF), „ile liczb pierwszych w przedziale [a, b]” (sito + sumy prefiksowe),\n„liczby pierwsze w przedziale [L, R], R ≤ 10^12, R − L ≤ 10^6” (sito segmentowe)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: zwykłe sito",
+     "code": "// Sito Eratostenesa: liczba liczb pierwszych <= N oraz największa z nich (-1, gdy brak).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int N;\n    cin >> N;\n    vector<bool> isPrime(N + 1, true);           // vector<bool> = 1 bit na liczbę\n    isPrime[0] = false;\n    if (N >= 1) isPrime[1] = false;              // 0 i 1 NIE są pierwsze\n    for (long long p = 2; p * p <= N; p++)\n        if (isPrime[p])\n            for (long long q = p * p; q <= N; q += p)   // od p*p, krok p\n                isPrime[q] = false;\n\n    int cnt = 0, last = -1;\n    for (int i = 2; i <= N; i++)\n        if (isPrime[i]) { cnt++; last = i; }\n    cout << cnt << \" \" << last << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Sito SPF + szybki rozkład",
+     "code": "// Sito najmniejszych dzielników pierwszych: spf[x] = najmniejsza liczba pierwsza dzieląca x.\n// Rozkład x na czynniki: dziel przez spf[x], aż zostanie 1 — O(log x).\nconst int MAXN = 1000000;\nint spf[MAXN + 1];\n\nvoid buildSpf() {\n    for (int i = 2; i <= MAXN; i++)\n        if (spf[i] == 0)                               // i jest pierwsza\n            for (long long j = i; j <= MAXN; j += i)\n                if (spf[j] == 0) spf[j] = i;\n}\n\nvector<int> factorize(int x) {                         // czynniki pierwsze z powtórzeniami\n    vector<int> f;\n    while (x > 1) { f.push_back(spf[x]); x /= spf[x]; }\n    return f;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Sito liniowe",
+     "code": "// Sito liniowe O(N): każda liczba złożona skreślana dokładnie raz — przez swój najmniejszy dzielnik pierwszy.\nvector<int> primes;\nvector<int> lp;                                        // lp[x] = najmniejszy dzielnik pierwszy x\n\nvoid linearSieve(int N) {\n    lp.assign(N + 1, 0);\n    for (int i = 2; i <= N; i++) {\n        if (lp[i] == 0) { lp[i] = i; primes.push_back(i); }\n        for (int p : primes) {\n            if (p > lp[i] || 1LL * i * p > N) break;\n            lp[i * p] = p;\n        }\n    }\n}",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: sito segmentowe",
+     "code": "// Sito segmentowe: liczba liczb pierwszych w [L, R], R <= 1e12, R - L <= ~1e7.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    long long L, R;\n    cin >> L >> R;\n    long long lim = sqrtl((long double)R) + 1;\n    vector<bool> small(lim + 1, true);                 // zwykłe sito do sqrt(R)\n    vector<long long> primes;\n    for (long long i = 2; i <= lim; i++)\n        if (small[i]) {\n            primes.push_back(i);\n            for (long long j = i * i; j <= lim; j += i) small[j] = false;\n        }\n    vector<bool> seg(R - L + 1, true);                 // seg[i] <=> L + i jest pierwsza\n    for (long long p : primes) {\n        long long start = max(p * p, (L + p - 1) / p * p);   // pierwsza wielokrotność p >= L (i >= p*p)\n        for (long long j = start; j <= R; j += p) seg[j - L] = false;\n    }\n    if (L <= 1) for (long long x = L; x <= min(R, 1LL); x++) seg[x - L] = false;   // 0 i 1\n    cout << count(seg.begin(), seg.end(), true) << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "N",
+      "π(N) — liczba pierwszych ≤ N",
+      "największa pierwsza ≤ N"
+     ],
+     "rows": [
+      [
+       "10^3",
+       "168",
+       "997"
+      ],
+      [
+       "10^4",
+       "1229",
+       "9973"
+      ],
+      [
+       "10^5",
+       "9592",
+       "99991"
+      ],
+      [
+       "10^6",
+       "78498",
+       "999983"
+      ],
+      [
+       "10^7",
+       "664579",
+       "9999991"
+      ],
+      [
+       "10^8",
+       "5761455",
+       "99999989"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Wiele zapytań „ile liczb pierwszych w [a, b]” (b ≤ 10^7): po sicie zbuduj sumy prefiksowe `pref[i]` = liczba\npierwszych ≤ i, wtedy odpowiedź to `pref[b] − pref[a−1]` w O(1)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "vector<bool> isPrime(N + 1, true)",
+     "desc": "tablica sita — 1 bit na liczbę (N = 10^8 to ok. 12,5 MB)",
+     "complexity": "O(N) pamięci"
+    },
+    {
+     "sig": "for (p = 2; p * p <= N; p++) if (isPrime[p]) for (q = p * p; q <= N; q += p) isPrime[q] = false;",
+     "desc": "rdzeń sita Eratostenesa",
+     "complexity": "O(N log log N)"
+    },
+    {
+     "sig": "spf[x]",
+     "desc": "najmniejszy dzielnik pierwszy x (sito SPF); rozkład przez kolejne dzielenia",
+     "complexity": "O(log x) na rozkład"
+    }
+   ],
+   "pitfalls": [
+    "Niezaznaczenie, że 0 i 1 nie są pierwsze.",
+    "`p * p` w typie int przepełnia się dla p > 46340 — licz w long long albo warunek `p <= N / p`.",
+    "`int spf[10^7]` to 40 MB — sprawdź limit pamięci; tablica bool/bitów jest 4–32 razy mniejsza.",
+    "Duże tablice lokalne w main lądują na stosie — deklaruj globalnie albo jako vector.",
+    "W sicie segmentowym start skreślania to max(p·p, pierwsza wielokrotność ≥ L) — inaczej skreślisz samą liczbę p, gdy p ∈ [L, R].",
+    "Sito do 10^9 jest za duże — do testowania pojedynczych dużych liczb użyj Millera–Rabina."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sito eratostenesa",
+      "sito eratostenesa kod",
+      "sieve of eratosthenes c++",
+      "sito c++",
+      "liczby pierwsze do n",
+      "sito erastotenesa",
+      "liczby pierwsze do 10^7",
+      "wszystkie liczby pierwsze do n"
+     ],
+     "a": "Tablica `isPrime[0..N] = true`, potem `isPrime[0] = isPrime[1] = false`. Dla `p = 2, 3, …` dopóki `p·p ≤ N`:\njeśli `p` jest pierwsza, skreśl `p·p, p·p + p, …`. Na końcu `isPrime[i]` mówi, czy `i` jest pierwsza.\nZłożoność O(N log log N), dla N = 10^7 działa w ułamku sekundy.",
+     "code": "int N = 30;\nvector<bool> isPrime(N + 1, true);\nisPrime[0] = isPrime[1] = false;\nfor (int p = 2; p * p <= N; p++)\n    if (isPrime[p])\n        for (int q = p * p; q <= N; q += p) isPrime[q] = false;\nfor (int i = 2; i <= N; i++) if (isPrime[i]) cout << i << \" \";\ncout << \"\\n\";   // 2 3 5 7 11 13 17 19 23 29"
+    },
+    {
+     "q": [
+      "dlaczego sito od i*i",
+      "sito od p*p",
+      "sito do pierwiastka",
+      "czemu w sicie petla do sqrt"
+     ],
+     "a": "Każda liczba złożona `x ≤ N` ma dzielnik pierwszy `p ≤ √x ≤ √N`, więc pierwsze większe od √N niczego nowego\nnie skreślą — zewnętrzna pętla kończy się na `p·p ≤ N`. Wielokrotności `k·p` z `k < p` mają mniejszy dzielnik\npierwszy (dzielnik `k`), więc zostały skreślone wcześniej — wewnętrzna pętla zaczyna się od `p·p`."
+    },
+    {
+     "q": [
+      "złożoność sita",
+      "sieve complexity n log log n",
+      "jak szybkie jest sito eratostenesa",
+      "sito zlozonosc"
+     ],
+     "a": "Dla każdej liczby pierwszej `p` robimy ok. `N/p` kroków, a `Σ_{p ≤ N} 1/p ≈ ln ln N`, więc razem\nO(N log log N). Dla N = 10^7 to kilkadziesiąt milionów prostych operacji. Sito liniowe ma O(N), ale w praktyce\nbywa podobnie szybkie."
+    },
+    {
+     "q": [
+      "sito najmniejszych dzielników",
+      "spf sieve",
+      "smallest prime factor",
+      "sito spf",
+      "sito najmniejszego dzielnika pierwszego"
+     ],
+     "a": "Zamiast `bool` trzymaj `spf[x]` — najmniejszą liczbę pierwszą dzielącą `x`. Ustawiasz je w sicie (pierwsza\nliczba pierwsza, która „dotknie” `x`). Potem rozkład `x` na czynniki to dzielenie przez `spf[x]` do skutku —\nO(log x), bo każdy czynnik ≥ 2. Idealne, gdy trzeba rozłożyć 10^5–10^6 liczb ≤ 10^7.",
+     "code": "const int N = 100;\nvector<int> spf(N + 1, 0);\nfor (int i = 2; i <= N; i++)\n    if (spf[i] == 0)\n        for (int j = i; j <= N; j += i)\n            if (spf[j] == 0) spf[j] = i;\nint x = 90;\nwhile (x > 1) { cout << spf[x] << \" \"; x /= spf[x]; }\ncout << \"\\n\";   // 2 3 3 5"
+    },
+    {
+     "q": [
+      "sito liniowe",
+      "linear sieve",
+      "sito eulera o(n)",
+      "sito w czasie liniowym"
+     ],
+     "a": "Każdą liczbę złożoną skreślamy dokładnie raz — jako `i·p`, gdzie `p` to jej najmniejszy dzielnik pierwszy.\nDla każdego `i` przechodzimy po liczbach pierwszych `p ≤ lp[i]` i ustawiamy `lp[i·p] = p`. Daje O(N) i od razu\ntablicę najmniejszych dzielników oraz listę liczb pierwszych. Kod jest w treści artykułu."
+    },
+    {
+     "q": [
+      "sito segmentowe",
+      "liczby pierwsze w przedziale L R",
+      "segmented sieve",
+      "primes between 10^12",
+      "pierwsze w przedziale duze liczby"
+     ],
+     "a": "Gdy `R` jest duże (np. 10^12), ale przedział krótki (`R − L ≤ 10^6`), zrób zwykłe sito do `√R` (10^6),\na potem każdą znalezioną pierwszą `p` skreśl jej wielokrotności w tablicy dla `[L, R]`, zaczynając od\n`max(p², ⌈L/p⌉·p)`. Czas O((R − L) log log R + √R). Pełny program jest w treści."
+    },
+    {
+     "q": [
+      "sito pamięć",
+      "sito 10^8 memory",
+      "vector<bool> czy bitset sito",
+      "sito za duzo pamieci",
+      "sito 1e8"
+     ],
+     "a": "`vector<bool>` i `bitset` zajmują 1 bit na liczbę: sito do 10^8 to ok. 12,5 MB. `vector<char>` (1 bajt) bywa\nszybsze, ale zajmuje 100 MB, a `int spf[10^8]` aż 400 MB. Można też sitować tylko liczby nieparzyste\n(połowa pamięci). Do 10^9 i więcej użyj sita segmentowego albo testu Millera–Rabina."
+    },
+    {
+     "q": [
+      "ile liczb pierwszych do miliona",
+      "pi(n) ile pierwszych",
+      "ile jest liczb pierwszych mniejszych od n",
+      "prime counting"
+     ],
+     "a": "π(10^6) = 78 498, π(10^7) = 664 579, π(10^8) = 5 761 455. Ogólnie π(N) ≈ N / ln N (twierdzenie o liczbach\npierwszych), co przydaje się przy szacowaniu rozmiaru tablic z listą liczb pierwszych."
+    },
+    {
+     "q": [
+      "zapytania czy liczba jest pierwsza",
+      "wiele zapytan pierwszosc",
+      "duzo zapytan czy pierwsza",
+      "is prime many queries"
+     ],
+     "a": "Gdy liczby są ≤ ~10^7: jedno sito na starcie (O(N log log N)), potem każde zapytanie O(1) — `isPrime[x]`.\nGdy liczby są do 10^18: test Millera–Rabina dla każdego zapytania (O(12 · log x) mnożeń)."
+    },
+    {
+     "q": [
+      "liczba pierwszych w przedziale zapytania",
+      "prefix sum primes",
+      "ile pierwszych miedzy a i b",
+      "pierwsze w przedziale wiele zapytan"
+     ],
+     "a": "Po sicie zbuduj `pref[i] = pref[i−1] + isPrime[i]`. Liczba pierwszych w `[a, b]` to `pref[b] − pref[a−1]`.\nPreprocessing O(N log log N), zapytanie O(1).",
+     "code": "const int N = 100;\nvector<bool> isPrime(N + 1, true);\nisPrime[0] = isPrime[1] = false;\nfor (int p = 2; p * p <= N; p++)\n    if (isPrime[p]) for (int q = p * p; q <= N; q += p) isPrime[q] = false;\nvector<int> pref(N + 1, 0);\nfor (int i = 1; i <= N; i++) pref[i] = pref[i - 1] + isPrime[i];\nint a = 10, b = 50;\ncout << pref[b] - pref[a - 1] << \"\\n\";   // 11"
+    },
+    {
+     "q": [
+      "sito dzielników",
+      "sito liczba dzielników",
+      "dzielniki dla wszystkich liczb sito",
+      "divisor sieve"
+     ],
+     "a": "Dla każdego `d = 1..N` przejdź po wielokrotnościach `d, 2d, 3d, …` i zwiększ licznik (albo dodaj `d` do sumy\ndzielników, albo dopisz `d` do listy). Łącznie `Σ N/d = O(N log N)` (szereg harmoniczny). Szczegóły w artykule\no dzielnikach."
+    },
+    {
+     "q": [
+      "sito 1 jest pierwsza",
+      "sito zwraca ze 1 jest pierwsza",
+      "blad sito 0 i 1",
+      "czy 1 jest liczba pierwsza sito"
+     ],
+     "a": "1 **nie jest** liczbą pierwszą (ma tylko jeden dzielnik), 0 też nie. Sito ich nie skreśla, bo zaczyna od 2 —\nmusisz ręcznie ustawić `isPrime[0] = isPrime[1] = false` (uważając, by przy N = 0 nie wyjść poza tablicę)."
+    }
+   ],
+   "related": [
+    "math-factorization",
+    "math-primality",
+    "math-divisors",
+    "math-euler-phi",
+    "ds-prefix-sums",
+    "math-mobius"
+   ]
+  },
+  {
+   "id": "math-factorization",
+   "title": "Rozkład liczby na czynniki pierwsze (√n, sito SPF, wzór Legendre'a)",
+   "category": "Matematyka",
+   "tags": [
+    "rozkład na czynniki",
+    "faktoryzacja",
+    "czynniki pierwsze",
+    "trial division",
+    "pollard rho",
+    "legendre",
+    "silnia"
+   ],
+   "aliases": [
+    "rozkład na czynniki pierwsze",
+    "faktoryzacja",
+    "prime factorization",
+    "factorization c++",
+    "rozkład liczby",
+    "czynniki pierwsze",
+    "rozklad na czynniki",
+    "factorize",
+    "dzielenie próbne"
+   ],
+   "summary": "Rozkład pojedynczej liczby n ≤ 10^12 robimy dzieleniem przez kolejne d z d·d ≤ n (O(√n)); to, co zostanie > 1, jest liczbą pierwszą. Wiele liczb ≤ 10^7 — sitem najmniejszych dzielników w O(log n) na liczbę.",
+   "complexity": "dzielenie próbne: O(√n); przez sito SPF: O(log n) po O(N log log N) preprocessingu; Pollard rho: ~O(n^{1/4}) oczekiwanie",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Każda liczba `n ≥ 2` ma jednoznaczny rozkład `n = p1^a1 · p2^a2 · … · pk^ak`. **Dzielenie próbne:** dla\n`d = 2, 3, 4, …` dopóki `d·d ≤ n`: dopóki `d | n`, dziel `n` przez `d` i zwiększaj wykładnik. Dzielniki złożone\nnigdy nie podzielą `n`, bo ich czynniki pierwsze zostały już „wyciągnięte”. Jeśli po pętli `n > 1`, to zostało\ndokładnie jedna liczba pierwsza > √(pierwotne n). Koszt O(√n): n = 10^12 → 10^6 kroków.\n\n**Sygnały:** „liczba dzielników”, „suma dzielników”, „czy iloczyn jest kwadratem”, „NWD/NWW z rozkładu”,\n„wykładnik p w n!”, „ile zer na końcu n!”, funkcja Eulera, dwumian modulo liczba złożona."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: dzielenie próbne O(√n)",
+     "code": "// Rozkład n <= 1e12 na czynniki: wypisuje pary \"p a\" (p^a) w kolejności rosnącej.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    long long n;\n    cin >> n;\n    vector<pair<long long, int>> f;\n    for (long long d = 2; d * d <= n; d++) {\n        if (n % d != 0) continue;\n        int a = 0;\n        while (n % d == 0) { n /= d; a++; }\n        f.push_back({d, a});\n    }\n    if (n > 1) f.push_back({n, 1});          // pozostała liczba pierwsza > sqrt\n    for (auto [p, a] : f) cout << p << \" \" << a << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szybsze dzielenie próbne tylko przez liczby pierwsze",
+     "code": "// Wiele liczb <= 1e9: dzielimy tylko przez liczby pierwsze <= sqrt(1e9) ~ 31623 (jest ich 3401).\nvector<int> smallPrimes;\nvoid initPrimes(int lim = 31623) {\n    vector<bool> s(lim + 1, true);\n    for (int i = 2; i <= lim; i++)\n        if (s[i]) {\n            smallPrimes.push_back(i);\n            for (long long j = 1LL * i * i; j <= lim; j += i) s[j] = false;\n        }\n}\nvector<pair<int,int>> factorizeFast(int n) {\n    vector<pair<int,int>> f;\n    for (int p : smallPrimes) {\n        if (1LL * p * p > n) break;\n        if (n % p) continue;\n        int a = 0;\n        while (n % p == 0) { n /= p; a++; }\n        f.push_back({p, a});\n    }\n    if (n > 1) f.push_back({n, 1});\n    return f;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sytuacja",
+      "Metoda",
+      "Koszt"
+     ],
+     "rows": [
+      [
+       "jedna liczba ≤ 10^12",
+       "dzielenie próbne do √n",
+       "O(√n) ≈ 10^6"
+      ],
+      [
+       "wiele liczb ≤ 10^7",
+       "sito SPF, potem dzielenie przez spf[x]",
+       "O(log x) na liczbę"
+      ],
+      [
+       "wiele liczb ≤ 10^9",
+       "dzielenie przez 3401 liczb pierwszych ≤ 31623",
+       "≤ 3401 dzieleń na liczbę"
+      ],
+      [
+       "liczba do 10^18",
+       "Pollard rho + Miller–Rabin",
+       "~O(n^{1/4}) oczekiwanie"
+      ],
+      [
+       "rozkład n!",
+       "wzór Legendre'a dla każdej pierwszej p ≤ n",
+       "O(n log log n)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Wzór Legendre'a: wykładnik liczby pierwszej `p` w `n!` to `⌊n/p⌋ + ⌊n/p²⌋ + ⌊n/p³⌋ + …`. Liczba zer na końcu\n`n!` = wykładnik 5 (piątek jest mniej niż dwójek)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (d = 2; d * d <= n; d++) while (n % d == 0) { n /= d; ... }",
+     "desc": "dzielenie próbne; po pętli n > 1 ⇒ n jest pierwsza",
+     "complexity": "O(√n)"
+    },
+    {
+     "sig": "long long legendre(long long n, long long p)",
+     "desc": "wykładnik p w n! = Σ ⌊n/p^k⌋",
+     "complexity": "O(log_p n)"
+    }
+   ],
+   "pitfalls": [
+    "Pominięcie ostatniego czynnika: jeśli po pętli `n > 1`, to jest to liczba pierwsza i trzeba ją dopisać.",
+    "`d * d <= n` przy `int d` przepełnia się dla n blisko 2^31 — używaj long long.",
+    "Dzielenie próbne dla n ≈ 10^18 to 10^9 kroków — za wolno; potrzebny Pollard rho.",
+    "Warunek pętli `d * d <= n` sprawdzany z bieżącym (zmniejszonym) n — to poprawne i przyspiesza, nie „naprawiaj” tego.",
+    "Liczba 1 ma pusty rozkład — obsłuż ją osobno, jeśli trzeba coś wypisać."
+   ],
+   "qa": [
+    {
+     "q": [
+      "rozkład na czynniki pierwsze",
+      "faktoryzacja c++",
+      "prime factorization",
+      "rozklad liczby na czynniki",
+      "jak rozlozyc liczbe na czynniki pierwsze"
+     ],
+     "a": "Dziel `n` przez kolejne `d = 2, 3, …`, dopóki `d·d ≤ n`; każde `d`, które dzieli, „wyciągaj” do skutku i licz\nwykładnik. Jeśli na końcu `n > 1`, to jest to ostatni czynnik pierwszy. Złożoność O(√n) — dla n ≤ 10^12 to\nmilion kroków.",
+     "code": "long long n = 360;\nfor (long long d = 2; d * d <= n; d++)\n    while (n % d == 0) { cout << d << \" \"; n /= d; }\nif (n > 1) cout << n;\ncout << \"\\n\";   // 2 2 2 3 3 5"
+    },
+    {
+     "q": [
+      "rozkład w sqrt",
+      "dlaczego do pierwiastka",
+      "trial division",
+      "czemu dzielimy tylko do sqrt n"
+     ],
+     "a": "Jeśli `n = a·b` z `a ≤ b`, to `a ≤ √n`. Zatem liczba złożona zawsze ma dzielnik ≤ √n, a po wyciągnięciu\nwszystkich czynników ≤ √n to, co zostaje (> 1), nie ma już małego dzielnika — musi być liczbą pierwszą.\nDzięki temu wystarczy O(√n) prób."
+    },
+    {
+     "q": [
+      "rozkład przez sito spf",
+      "szybka faktoryzacja wielu liczb",
+      "factorize many numbers",
+      "rozklad wielu liczb na czynniki"
+     ],
+     "a": "Zbuduj sito najmniejszych dzielników `spf[]` do max wartości (np. 10^7) w O(N log log N). Potem rozkład `x` to\npętla `while (x > 1) { p = spf[x]; x /= p; }` — O(log x), bo każdy czynnik ≥ 2. Przy 10^6 liczb to kilkadziesiąt\nmilionów operacji. Kod sita SPF jest w artykule o sicie."
+    },
+    {
+     "q": [
+      "rozkład dużej liczby 10^18",
+      "pollard rho",
+      "faktoryzacja 1e18",
+      "rozklad liczby do 10^18"
+     ],
+     "a": "Dzielenie próbne do √(10^18) = 10^9 jest za wolne. Standard: **Pollard rho** (znajduje dzielnik w oczekiwanym\nczasie ~n^{1/4} ≈ 3·10^4 kroków) rekurencyjnie, a **Miller–Rabin** sprawdza, czy kawałek jest już pierwszy.\nNa OI rzadko potrzebne — zwykle wystarczy n ≤ 10^12 i √n. Alternatywa: wyciągnij czynniki ≤ 10^6, a resztę\n(≤ 10^18, bez małych dzielników) zbadaj Millerem–Rabinem: jest pierwsza, kwadratem pierwszej albo iloczynem dwóch pierwszych."
+    },
+    {
+     "q": [
+      "wykładnik liczby pierwszej w silni",
+      "legendre formula",
+      "ile zer na końcu silni",
+      "trailing zeros factorial",
+      "ile razy 2 dzieli n!"
+     ],
+     "a": "Wzór Legendre'a: wykładnik `p` w `n!` to `Σ ⌊n / p^k⌋` (każda wielokrotność p daje 1, każda wielokrotność p²\n— dodatkowe 1 itd.). Zera na końcu `n!` = wykładnik 5. Czas O(log_p n).",
+     "code": "auto legendre = [](long long n, long long p) {\n    long long e = 0;\n    while (n) { n /= p; e += n; }\n    return e;\n};\ncout << legendre(100, 5) << \" \" << legendre(10, 2) << \"\\n\";   // 24 8"
+    },
+    {
+     "q": [
+      "liczba różnych dzielników pierwszych",
+      "ile roznych czynnikow pierwszych",
+      "omega(n)",
+      "distinct prime factors"
+     ],
+     "a": "Zrób rozkład i policz pary `(p, a)`. Liczba różnych czynników pierwszych jest mała: dla n ≤ 10^18 co najwyżej\n15 (2·3·5·…·47 ≈ 6,1·10^17), dla n ≤ 10^9 co najwyżej 9. Dlatego pętle po podzbiorach czynników\n(włączenia-wyłączenia) są tanie."
+    },
+    {
+     "q": [
+      "nwd i nww z rozkładu",
+      "gcd from factorization",
+      "nwd z czynnikow pierwszych"
+     ],
+     "a": "Jeśli `a = Π p^αp`, `b = Π p^βp`, to `gcd = Π p^min(αp, βp)`, a `lcm = Π p^max(αp, βp)`. W praktyce NWD liczymy\nEuklidesem, ale ta postać pomaga w dowodach i zadaniach typu „NWW wielu liczb modulo p” (max wykładników\nkażdej pierwszej, potem potęgowanie modulo)."
+    },
+    {
+     "q": [
+      "czy liczba jest kwadratem z rozkładu",
+      "iloczyn jest kwadratem",
+      "pary o iloczynie bedacym kwadratem",
+      "square free part"
+     ],
+     "a": "Liczba jest kwadratem ⇔ wszystkie wykładniki w rozkładzie są parzyste. Trik: zamień każdą liczbę na jej\n**część bezkwadratową** (iloczyn pierwszych o nieparzystym wykładniku). Iloczyn `a·b` jest kwadratem ⇔ części\nbezkwadratowe `a` i `b` są równe — wystarczy policzyć powtórzenia w mapie.",
+     "code": "auto core = [](long long n) {\n    long long r = 1;\n    for (long long d = 2; d * d <= n; d++) {\n        int a = 0;\n        while (n % d == 0) { n /= d; a++; }\n        if (a % 2) r *= d;\n    }\n    return r * n;   // pozostały czynnik ma wykładnik 1\n};\ncout << core(12) << \" \" << core(27) << \" \" << core(36) << \"\\n\";   // 3 3 1  (12*27 = 324 = 18^2)"
+    }
+   ],
+   "related": [
+    "math-sieve",
+    "math-divisors",
+    "math-primality",
+    "math-euler-phi",
+    "math-gcd-lcm",
+    "math-mobius"
+   ]
+  },
+  {
+   "id": "math-divisors",
+   "title": "Dzielniki liczby — wypisywanie w O(√n), liczba i suma dzielników, sito dzielników",
+   "category": "Matematyka",
+   "tags": [
+    "dzielniki",
+    "liczba dzielników",
+    "suma dzielników",
+    "sigma",
+    "tau",
+    "sito dzielników",
+    "harmoniczny"
+   ],
+   "aliases": [
+    "dzielniki",
+    "liczba dzielników",
+    "suma dzielników",
+    "number of divisors",
+    "sum of divisors",
+    "wszystkie dzielniki liczby",
+    "divisors c++",
+    "dzielniki liczby c++",
+    "ile dzielnikow"
+   ],
+   "summary": "Dzielniki n wypisujemy w O(√n), bo dzielą się w pary (d, n/d). Z rozkładu n = Π p^a: liczba dzielników = Π (a+1), suma = Π (p^(a+1) − 1)/(p − 1). Dla wszystkich liczb do N — sito harmoniczne O(N log N).",
+   "complexity": "wypisanie dzielników: O(√n); d(n) i σ(n) z rozkładu: O(√n); sito dzielników do N: O(N log N)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Jeśli `d | n`, to `n/d | n`, a jedno z nich jest ≤ √n. Dlatego wystarczy sprawdzić `i = 1..⌊√n⌋` i dla każdego\ndzielnika dodać `i` oraz `n/i` (uważając na `i = n/i`, gdy `n` jest kwadratem).\n\nZ rozkładu `n = p1^a1 · … · pk^ak`:\n* **liczba dzielników** `d(n) = (a1 + 1)(a2 + 1)…(ak + 1)` — każdy dzielnik wybiera wykładnik `0..ai` dla każdego `pi`;\n* **suma dzielników** `σ(n) = Π (1 + pi + pi² + … + pi^ai) = Π (pi^(ai+1) − 1)/(pi − 1)`.\n\nLiczb dzielników jest mało: maksimum dla n ≤ 10^5 to 128 (83160), dla n ≤ 10^6 to 240 (720720), dla\nn ≤ 10^9 to 1344 (735134400), dla n ≤ 10^18 to 103680. Przydaje się przy szacowaniu „pętli po dzielnikach”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: dzielniki w O(√n)",
+     "code": "// Dzielniki n <= 1e12: liczba, suma i posortowana lista.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    long long n;\n    cin >> n;\n    vector<long long> small, big;\n    for (long long i = 1; i * i <= n; i++)\n        if (n % i == 0) {\n            small.push_back(i);\n            if (i != n / i) big.push_back(n / i);     // para (i, n/i); kwadrat liczymy raz\n        }\n    vector<long long> divs = small;\n    divs.insert(divs.end(), big.rbegin(), big.rend());   // big jest malejące\n    long long sum = 0;\n    for (long long d : divs) sum += d;\n    cout << divs.size() << \" \" << sum << \"\\n\";\n    for (long long d : divs) cout << d << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Sito dzielników (szereg harmoniczny)",
+     "code": "// Sito dzielników: cnt[x] = liczba dzielników, sum[x] = suma dzielników, dla x <= N. O(N log N).\nconst int N = 100000;\nint cntDiv[N + 1];\nlong long sumDiv[N + 1];\nvoid divisorSieve() {\n    for (int d = 1; d <= N; d++)\n        for (int m = d; m <= N; m += d) {     // d dzieli m\n            cntDiv[m]++;\n            sumDiv[m] += d;\n        }\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "n ≤",
+      "maks. liczba dzielników",
+      "przykład"
+     ],
+     "rows": [
+      [
+       "10^3",
+       "32",
+       "840"
+      ],
+      [
+       "10^5",
+       "128",
+       "83160"
+      ],
+      [
+       "10^6",
+       "240",
+       "720720"
+      ],
+      [
+       "10^9",
+       "1344",
+       "735134400"
+      ],
+      [
+       "10^18",
+       "103680",
+       "897612484786617600"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "`Σ_{i=1}^{n} d(i) = Σ_{i=1}^{n} ⌊n/i⌋`, a `⌊n/i⌋` przyjmuje tylko O(√n) różnych wartości — sumę liczymy blokami\nw O(√n), nawet dla n = 10^12."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (i = 1; i * i <= n; i++) if (n % i == 0) { i, n / i }",
+     "desc": "wypisanie dzielników parami",
+     "complexity": "O(√n)"
+    },
+    {
+     "sig": "d(n) = Π (a_i + 1)",
+     "desc": "liczba dzielników z rozkładu",
+     "complexity": "O(liczba czynników)"
+    },
+    {
+     "sig": "σ(n) = Π (p_i^(a_i+1) − 1) / (p_i − 1)",
+     "desc": "suma dzielników z rozkładu",
+     "complexity": "O(Σ a_i)"
+    }
+   ],
+   "pitfalls": [
+    "Dla kwadratu (np. 36) dzielnik √n dopisany dwa razy — sprawdzaj `i != n / i`.",
+    "`i * i <= n` w int przepełnia się dla n blisko 2^31 — licz w long long.",
+    "Suma dzielników dla n ≤ 10^12 przekracza 10^12 — trzymaj w long long (dla n ≤ 10^12 zachodzi σ(n) < 6n; maksimum ≈ 5,74n dla n = 963761198400).",
+    "Wzór (p^(a+1) − 1)/(p − 1) modulo p — dzielenie wymaga odwrotności modularnej (lub licz sumę 1 + p + … + p^a iteracyjnie).",
+    "Sito dzielników z `vector<vector<int>>` list dzielników dla N = 10^6 zajmuje ~14·10^6 intów — uważaj na pamięć."
+   ],
+   "qa": [
+    {
+     "q": [
+      "liczba dzielników",
+      "ile dzielników ma liczba",
+      "number of divisors",
+      "dzielniki liczby c++",
+      "ile dzielnikow ma n"
+     ],
+     "a": "Dla pojedynczego n: przejdź `i = 1..√n` i licz 2 dzielniki dla każdej pary `(i, n/i)`, 1 gdy `i·i = n`.\nAlbo z rozkładu: `d(n) = Π (a_i + 1)`, np. 360 = 2³·3²·5 ma 4·3·2 = 24 dzielniki. Oba sposoby O(√n).",
+     "code": "long long n = 360, cnt = 0;\nfor (long long i = 1; i * i <= n; i++)\n    if (n % i == 0) cnt += (i * i == n ? 1 : 2);\ncout << cnt << \"\\n\";   // 24"
+    },
+    {
+     "q": [
+      "wypisz dzielniki",
+      "wszystkie dzielniki w sqrt",
+      "divisors in sqrt n",
+      "jak znalezc wszystkie dzielniki liczby",
+      "dzielniki posortowane"
+     ],
+     "a": "Pętla `i = 1..√n`: gdy `n % i == 0`, dodaj `i` do listy małych i `n/i` do listy dużych (jeśli różne). Małe są\nrosnące, duże malejące — sklej małe z odwróconymi dużymi i masz posortowaną listę bez `sort`. O(√n).\nPełny program jest w treści."
+    },
+    {
+     "q": [
+      "suma dzielników",
+      "sigma n",
+      "sum of divisors formula",
+      "suma dzielnikow wzor"
+     ],
+     "a": "`σ(n) = Π (1 + p + … + p^a) = Π (p^(a+1) − 1)/(p − 1)` po rozkładzie `n = Π p^a`. Np. 12 = 2²·3:\n(1+2+4)(1+3) = 28. Albo bezpośrednio sumując dzielniki w O(√n).",
+     "code": "long long n = 360, m = n, sigma = 1;\nfor (long long p = 2; p * p <= m; p++) {\n    if (m % p) continue;\n    long long term = 1, pw = 1;\n    while (m % p == 0) { m /= p; pw *= p; term += pw; }   // 1 + p + ... + p^a\n    sigma *= term;\n}\nif (m > 1) sigma *= (1 + m);\ncout << sigma << \"\\n\";   // 1170"
+    },
+    {
+     "q": [
+      "wzór na liczbę dzielników z rozkładu",
+      "d(n) = (a+1)(b+1)",
+      "liczba dzielnikow z czynnikow pierwszych",
+      "tau function"
+     ],
+     "a": "Każdy dzielnik `n = Π p_i^{a_i}` to `Π p_i^{b_i}` z `0 ≤ b_i ≤ a_i` — dla każdej pierwszej wybieramy jeden\nz `a_i + 1` wykładników niezależnie, więc `d(n) = Π (a_i + 1)`. Np. 2^10 ma 11 dzielników, 720720 =\n2⁴·3²·5·7·11·13 ma 5·3·2·2·2·2 = 240."
+    },
+    {
+     "q": [
+      "maksymalna liczba dzielników",
+      "ile maksymalnie dzielników do 10^9",
+      "max divisors 1e18",
+      "najwiecej dzielnikow"
+     ],
+     "a": "Dla n ≤ 10^6 maksimum to 240 (720720), dla n ≤ 10^9 — 1344 (735134400), dla n ≤ 10^18 — 103680.\nWniosek: pętla po wszystkich dzielnikach jednej liczby jest tania, a „suma liczby dzielników po wszystkich\nliczbach do N” to tylko O(N log N)."
+    },
+    {
+     "q": [
+      "sito dzielników",
+      "liczba dzielników dla wszystkich liczb do n",
+      "divisor sieve harmonic",
+      "dzielniki wszystkich liczb do 10^6"
+     ],
+     "a": "Dla `d = 1..N` przejdź po wielokrotnościach `m = d, 2d, …` i zwiększ `cnt[m]` (lub dodaj `d` do `sum[m]`).\nKoszt `N/1 + N/2 + … + N/N ≈ N ln N` — dla N = 10^6 to ok. 1,4·10^7 operacji. Kod jest w treści artykułu."
+    },
+    {
+     "q": [
+      "suma d(i) od 1 do n",
+      "suma floor(n/i)",
+      "bloki dzielenia",
+      "n/i rozne wartosci sqrt",
+      "divisor summatory function"
+     ],
+     "a": "`Σ_{i=1}^{n} d(i) = Σ_{i=1}^{n} ⌊n/i⌋` (każde `d` jest dzielnikiem `⌊n/d⌋` liczb ≤ n). Wartość `q = n/i` jest stała\ndla `i ∈ [l, n/q]`, więc idziemy blokami: `r = n / (n / l)`, dodajemy `(r − l + 1)·(n / l)`. Bloków jest O(√n).",
+     "code": "long long n = 1000, total = 0;\nfor (long long l = 1, r; l <= n; l = r + 1) {\n    long long q = n / l;\n    r = n / q;                       // ostatnie i z tą samą wartością n / i\n    total += (r - l + 1) * q;\n}\ncout << total << \"\\n\";   // 7069"
+    },
+    {
+     "q": [
+      "dzielniki z rozkładu",
+      "generate divisors from factorization",
+      "generowanie dzielnikow z czynnikow pierwszych"
+     ],
+     "a": "Zacznij od listy `{1}`; dla każdej pary `(p, a)` z rozkładu pomnóż każdy dotychczasowy dzielnik przez\n`p, p², …, p^a` i dopisz wyniki. Koszt O(d(n)) po rozkładzie — szybsze niż √n, gdy rozkład znasz z sita SPF.",
+     "code": "vector<pair<long long,int>> f = {{2, 2}, {3, 1}};   // 12 = 2^2 * 3\nvector<long long> divs = {1};\nfor (auto [p, a] : f) {\n    int sz = divs.size();\n    long long pw = 1;\n    for (int e = 1; e <= a; e++) {\n        pw *= p;\n        for (int i = 0; i < sz; i++) divs.push_back(divs[i] * pw);\n    }\n}\nsort(divs.begin(), divs.end());\nfor (long long d : divs) cout << d << \" \";\ncout << \"\\n\";   // 1 2 3 4 6 12"
+    },
+    {
+     "q": [
+      "liczba doskonała",
+      "perfect number",
+      "czy liczba jest doskonala"
+     ],
+     "a": "Liczba doskonała to taka, której suma dzielników właściwych (bez niej samej) równa się jej: `σ(n) = 2n`, np. 6, 28,\n496, 8128. Sprawdzenie: policz sumę dzielników w O(√n) i porównaj z `2n`.",
+     "code": "for (long long n : {6LL, 28LL, 12LL, 8128LL}) {\n    long long s = 0;\n    for (long long i = 1; i * i <= n; i++)\n        if (n % i == 0) { s += i; if (i != n / i) s += n / i; }\n    cout << (s == 2 * n) << \" \";\n}\ncout << \"\\n\";   // 1 1 0 1"
+    },
+    {
+     "q": [
+      "wspólne dzielniki dwóch liczb",
+      "common divisors",
+      "ile wspolnych dzielnikow maja a i b"
+     ],
+     "a": "Wspólne dzielniki `a` i `b` to dokładnie dzielniki `gcd(a, b)`. Policz `g = gcd(a, b)` i wypisz/zlicz dzielniki\n`g` w O(√g).",
+     "code": "long long a = 360, b = 84, g = gcd(a, b), cnt = 0;   // g = 12\nfor (long long i = 1; i * i <= g; i++)\n    if (g % i == 0) cnt += (i * i == g ? 1 : 2);\ncout << cnt << \"\\n\";   // 6"
+    }
+   ],
+   "related": [
+    "math-factorization",
+    "math-sieve",
+    "math-gcd-lcm",
+    "math-euler-phi"
+   ]
+  },
+  {
+   "id": "math-primality",
+   "title": "Test pierwszości — dzielenie do √n i deterministyczny Miller–Rabin (64 bity)",
+   "category": "Matematyka",
+   "tags": [
+    "test pierwszości",
+    "liczba pierwsza",
+    "miller rabin",
+    "mulmod",
+    "__int128",
+    "fermat",
+    "carmichael"
+   ],
+   "aliases": [
+    "test pierwszości",
+    "czy liczba jest pierwsza",
+    "is prime",
+    "miller rabin",
+    "miller-rabin",
+    "primality test",
+    "sprawdzenie pierwszości",
+    "liczba pierwsza c++",
+    "isprime c++",
+    "test millera rabina"
+   ],
+   "summary": "Dla n ≤ 10^12 wystarczy sprawdzić dzielniki do √n. Dla n do 2^64 używamy deterministycznego testu Millera–Rabina z bazami 2, 3, 5, …, 37 i mnożeniem modulo przez __int128 — O(12 · log n) mnożeń.",
+   "complexity": "dzielenie próbne: O(√n); Miller–Rabin: O(k · log n) mnożeń modularnych (k = 12 baz)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Dzielenie próbne:** `n` jest pierwsza ⇔ `n ≥ 2` i żadne `d` z `2 ≤ d ≤ √n` jej nie dzieli. Wystarczy sprawdzić\n2 i liczby nieparzyste (albo postaci 6k ± 1). Dla n ≤ 10^12 to ≤ 10^6 dzieleń.\n\n**Miller–Rabin:** zapisz `n − 1 = d · 2^s` z nieparzystym `d`. Dla bazy `a` liczba pierwsza musi spełniać:\n`a^d ≡ 1` albo `a^(d·2^r) ≡ −1 (mod n)` dla pewnego `0 ≤ r < s` (bo jedynymi pierwiastkami z 1 modulo\nliczba pierwsza są ±1). Jeśli któraś baza łamie ten warunek, `n` jest złożona. Udowodniono, że dla\n`n < 2^64` wystarczą bazy **2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37** — test jest wtedy deterministyczny.\n\n**Sygnały:** „czy liczba jest pierwsza”, n do 10^18, „najbliższa liczba pierwsza”, „liczba pierwsza w przedziale”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: Miller–Rabin 64-bit",
+     "code": "// Deterministyczny Miller-Rabin dla n < 2^64. Wejście: q, potem q liczb; wypisuje TAK/NIE.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef unsigned long long u64;\ntypedef __uint128_t u128;\n\nu64 mulmod(u64 a, u64 b, u64 m) { return (u128)a * b % m; }   // __int128: brak przepełnienia\n\nu64 powmod(u64 a, u64 e, u64 m) {\n    u64 r = 1;\n    a %= m;\n    while (e) {\n        if (e & 1) r = mulmod(r, a, m);\n        a = mulmod(a, a, m);\n        e >>= 1;\n    }\n    return r;\n}\n\nbool isPrime(u64 n) {\n    if (n < 2) return false;\n    for (u64 p : {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37})\n        if (n % p == 0) return n == p;          // małe liczby i dzielniki\n    u64 d = n - 1;\n    int s = 0;\n    while ((d & 1) == 0) { d >>= 1; s++; }      // n - 1 = d * 2^s\n    for (u64 a : {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37}) {\n        u64 x = powmod(a, d, n);\n        if (x == 1 || x == n - 1) continue;\n        bool composite = true;\n        for (int r = 1; r < s; r++) {\n            x = mulmod(x, x, n);\n            if (x == n - 1) { composite = false; break; }\n        }\n        if (composite) return false;            // a jest świadkiem złożoności\n    }\n    return true;\n}\n\nint main() {\n    int q;\n    cin >> q;\n    while (q--) {\n        u64 n;\n        cin >> n;\n        cout << (isPrime(n) ? \"TAK\" : \"NIE\") << \"\\n\";\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Test przez dzielenie do √n (6k ± 1)",
+     "code": "// Prosty test O(sqrt n) — wystarczy dla n <= ~1e12.\nbool isPrimeSqrt(long long n) {\n    if (n < 2) return false;\n    if (n < 4) return true;                   // 2 i 3\n    if (n % 2 == 0 || n % 3 == 0) return false;\n    for (long long i = 5; i * i <= n; i += 6)  // liczby postaci 6k-1 i 6k+1\n        if (n % i == 0 || n % (i + 2) == 0) return false;\n    return true;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Metoda",
+      "Zakres",
+      "Koszt jednego testu"
+     ],
+     "rows": [
+      [
+       "dzielenie do √n",
+       "n ≤ ~10^12",
+       "O(√n)"
+      ],
+      [
+       "sito + tablica",
+       "n ≤ ~10^8, wiele zapytań",
+       "O(1) po O(N log log N)"
+      ],
+      [
+       "Miller–Rabin (12 baz)",
+       "n < 2^64",
+       "~12 · 64 mnożeń __int128"
+      ],
+      [
+       "Fermat a^(n−1) ≡ 1",
+       "NIE używać samodzielnie",
+       "myli się na liczbach Carmichaela (561, 1105, …)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Mnożenie `a * b % n` dla `n` ~ 10^18 przepełnia 64 bity (iloczyn ~10^36). Używaj `(__int128)a * b % n`\n(GCC/Clang). Bez `__int128` — mnożenie „po bitach” (jak szybkie potęgowanie, ale z dodawaniem) w O(log n)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bool isPrime(u64 n)",
+     "desc": "deterministyczny Miller–Rabin dla n < 2^64",
+     "complexity": "O(12 · log n) mnożeń",
+     "returns": "bool"
+    },
+    {
+     "sig": "u64 mulmod(u64 a, u64 b, u64 m)",
+     "desc": "(a · b) mod m bez przepełnienia przez __uint128_t",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "bool isPrimeSqrt(long long n)",
+     "desc": "dzielenie próbne po liczbach 6k ± 1",
+     "complexity": "O(√n)"
+    }
+   ],
+   "pitfalls": [
+    "1 nie jest liczbą pierwszą, 2 jest (jedyna parzysta). Testy brzegowe: 0, 1, 2, 3, 4.",
+    "`a * b % m` dla m > ~3·10^9 przepełnia long long — użyj __int128 lub mulmod.",
+    "Test Fermata (a^(n−1) ≡ 1) przepuszcza liczby Carmichaela, np. 561 = 3·11·17 — używaj Millera–Rabina.",
+    "Losowe bazy w Millerze–Rabinie są OK, ale dla n < 2^64 zestaw 12 pierwszych liczb pierwszych daje pewność.",
+    "W pętli `i * i <= n` dla int przepełnienie przy n blisko 2^31 — long long.",
+    "Sprawdzanie podzielności przez bazę przed testem: jeśli n równe bazie, to pierwsza (inaczej a ≡ 0 mod n psuje test)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "czy liczba jest pierwsza",
+      "test pierwszości",
+      "is prime c++",
+      "sprawdzenie pierwszosci",
+      "liczba pierwsza c++",
+      "isprime"
+     ],
+     "a": "Dla n ≤ ~10^12: sprawdź dzielniki do √n (2, 3 i liczby 6k ± 1) — O(√n). Dla n do 10^18: deterministyczny\nMiller–Rabin z bazami 2..37 i mnożeniem przez `__int128`. Pamiętaj: liczby < 2 nie są pierwsze.",
+     "code": "auto isPrime = [](long long n) {\n    if (n < 2) return false;\n    for (long long d = 2; d * d <= n; d++)\n        if (n % d == 0) return false;\n    return true;\n};\ncout << isPrime(1) << isPrime(2) << isPrime(91) << isPrime(97) << \"\\n\";   // 0101"
+    },
+    {
+     "q": [
+      "miller rabin",
+      "miller-rabin c++",
+      "test millera rabina deterministyczny",
+      "miller rabin 64 bit",
+      "miler rabin"
+     ],
+     "a": "Rozpisz `n − 1 = d·2^s` (d nieparzyste). Dla każdej bazy `a ∈ {2, 3, 5, …, 37}`: policz `x = a^d mod n`; jeśli\n`x = 1` lub `x = n−1` — baza przechodzi; inaczej podnoś `x` do kwadratu do `s−1` razy, szukając `n−1`. Jeśli nie\nznajdziesz — `n` złożona. Ten zestaw 12 baz jest deterministyczny dla `n < 2^64`. Pełny kod jest w treści."
+    },
+    {
+     "q": [
+      "pierwszość 10^18",
+      "czy duza liczba jest pierwsza",
+      "prime check 1e18",
+      "test pierwszosci duze liczby"
+     ],
+     "a": "√(10^18) = 10^9 dzieleń to za dużo. Użyj Millera–Rabina: 12 baz × ok. 60 kwadratów/mnożeń modulo = kilkaset\noperacji na `__int128` — mikrosekundy na liczbę. Przykład: 999999999999999989 jest pierwsza\n(największa pierwsza < 10^18)."
+    },
+    {
+     "q": [
+      "czy 1 to liczba pierwsza",
+      "1 jest pierwsza",
+      "czy 0 i 1 sa pierwsze",
+      "czy 2 jest liczba pierwsza"
+     ],
+     "a": "Nie — liczba pierwsza ma **dokładnie dwa** dzielniki (1 i siebie), a 1 ma jeden. 0 też nie jest pierwsza.\n2 jest pierwsza (i to jedyna parzysta). Każda funkcja testująca powinna zaczynać się od `if (n < 2) return false;`."
+    },
+    {
+     "q": [
+      "mnożenie modulo przepełnienie miller rabin",
+      "mulmod __int128",
+      "a*b%m overflow 1e18",
+      "mnozenie modulo duze liczby"
+     ],
+     "a": "Dla `m` rzędu 10^18 iloczyn `a·b` ma do 10^36 i nie mieści się w 64 bitach. W GCC/Clang rzutuj na `__int128`:\n`(__int128)a * b % m` (lub `__uint128_t` dla typów bez znaku). To kosztuje kilka razy więcej niż zwykłe mnożenie,\nale wciąż O(1).",
+     "code": "unsigned long long a = 999999999999999989ULL, b = 123456789123456789ULL, m = 1000000000000000003ULL;\nunsigned long long r = (__uint128_t)a * b % m;\ncout << r << \"\\n\";"
+    },
+    {
+     "q": [
+      "mulmod bez int128",
+      "mnożenie modulo bez __int128",
+      "binary multiplication mod",
+      "mulmod msvc"
+     ],
+     "a": "Gdy `__int128` nie jest dostępne (np. MSVC), mnóż „po bitach”: rozkładaj `b` na bity i dodawaj podwajane `a`\nmodulo `m` — jak szybkie potęgowanie, ale z dodawaniem. O(log b) zamiast O(1). Działa dla `m < 2^63`\n(sumy dwóch liczb < m mieszczą się w u64).",
+     "code": "unsigned long long mulmodSlow(unsigned long long a, unsigned long long b, unsigned long long m) {\n    unsigned long long r = 0;\n    a %= m;\n    while (b) {\n        if (b & 1) { r += a; if (r >= m) r -= m; }\n        a += a; if (a >= m) a -= m;\n        b >>= 1;\n    }\n    return r;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "test fermata",
+      "fermat primality carmichael",
+      "liczby carmichaela",
+      "dlaczego nie test fermata"
+     ],
+     "a": "Test Fermata sprawdza `a^(n−1) ≡ 1 (mod n)`. Liczby Carmichaela (561, 1105, 1729, …) spełniają to dla\n**wszystkich** `a` względnie pierwszych z `n`, mimo że są złożone — test się myli. Miller–Rabin dodatkowo sprawdza\npierwiastki z 1 i nie ma takich „uniwersalnych oszustów”."
+    },
+    {
+     "q": [
+      "6k+1 test pierwszosci",
+      "szybszy test sqrt",
+      "sprawdzanie tylko nieparzystych dzielnikow",
+      "optymalizacja testu pierwszosci"
+     ],
+     "a": "Każda liczba pierwsza > 3 ma postać `6k ± 1`, więc po sprawdzeniu 2 i 3 wystarczy testować `i` i `i + 2` dla\n`i = 5, 11, 17, …` (krok 6). To 3 razy mniej dzieleń niż sprawdzanie wszystkich `d`, ale nadal O(√n).\nKod jest w treści artykułu."
+    },
+    {
+     "q": [
+      "wiele zapytan czy pierwsza",
+      "10^6 zapytan pierwszosc",
+      "duzo liczb test pierwszosci"
+     ],
+     "a": "Liczby ≤ ~10^7–10^8: jedno sito i odpowiedzi O(1). Liczby większe: Miller–Rabin na każde zapytanie\n(10^5 zapytań × ~800 mnożeń `__int128` to ok. 10^8 — mieści się w czasie)."
+    },
+    {
+     "q": [
+      "następna liczba pierwsza",
+      "next prime",
+      "najmniejsza pierwsza większa od n",
+      "najblizsza liczba pierwsza"
+     ],
+     "a": "Sprawdzaj kolejno `n+1, n+2, …` testem pierwszości. Luki między liczbami pierwszymi są małe (średnio ok. ln n,\nczyli ~41 dla 10^18, a maksymalne luki poniżej 2^64 to rzędu kilkuset–półtora tysiąca), więc z Millerem–Rabinem\nto szybkie.",
+     "code": "auto isPrime = [](long long n) {\n    if (n < 2) return false;\n    for (long long d = 2; d * d <= n; d++) if (n % d == 0) return false;\n    return true;\n};\nlong long n = 1000000;\nlong long p = n + 1;\nwhile (!isPrime(p)) p++;\ncout << p << \"\\n\";   // 1000003"
+    },
+    {
+     "q": [
+      "złożoność testu pierwszości",
+      "miller rabin complexity",
+      "jak szybki jest miller rabin"
+     ],
+     "a": "Dzielenie próbne: O(√n). Miller–Rabin: dla każdej z k baz jedno szybkie potęgowanie O(log n) i co najwyżej\n`s ≤ log n` kwadratów, czyli O(k · log n) mnożeń modularnych; przy k = 12 i n < 2^64 to ok. 1500 mnożeń."
+    },
+    {
+     "q": [
+      "losowy miller rabin czy deterministyczny",
+      "jakie bazy miller rabin",
+      "miller rabin bases 64 bit"
+     ],
+     "a": "Dla `n < 2^64` zestaw baz {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37} daje wynik **pewny** (sprawdzone\nobliczeniowo). Dla `n < 3 215 031 751` wystarczą bazy {2, 3, 5, 7}, dla `n < 2^32` — {2, 7, 61}. Losowe bazy dają\nbłąd ≤ 4^(−k), ale na OI lepiej użyć wersji deterministycznej."
+    }
+   ],
+   "related": [
+    "math-sieve",
+    "math-factorization",
+    "math-fast-pow",
+    "num-int128"
+   ]
+  },
+  {
+   "id": "math-euler-phi",
+   "title": "Funkcja Eulera φ(n) i twierdzenie Eulera",
+   "category": "Matematyka",
+   "tags": [
+    "funkcja eulera",
+    "phi",
+    "tocjent",
+    "totient",
+    "twierdzenie eulera",
+    "względnie pierwsze",
+    "redukcja wykładnika"
+   ],
+   "aliases": [
+    "funkcja eulera",
+    "phi eulera",
+    "euler totient",
+    "tocjent",
+    "funkcja phi",
+    "phi(n)",
+    "twierdzenie eulera",
+    "totient function",
+    "fi eulera"
+   ],
+   "summary": "φ(n) to liczba liczb z 1..n względnie pierwszych z n: φ(n) = n · Π (1 − 1/p) po dzielnikach pierwszych p. Twierdzenie Eulera: a^φ(m) ≡ 1 (mod m) dla gcd(a, m) = 1 — pozwala redukować ogromne wykładniki.",
+   "complexity": "φ(n) z rozkładu: O(√n); sito φ dla wszystkich liczb ≤ N: O(N log log N)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**φ(n)** = liczba `k ∈ [1, n]` z `gcd(k, n) = 1`. Własności: `φ(p) = p − 1`, `φ(p^k) = p^k − p^(k−1)`,\nφ jest multiplikatywna (`φ(ab) = φ(a)φ(b)` dla względnie pierwszych `a, b`). Stąd\n`φ(n) = n · Π_{p | n} (1 − 1/p)` — w kodzie `res = res / p * (p − 1)` dla każdego różnego dzielnika pierwszego.\n\n**Twierdzenie Eulera:** jeśli `gcd(a, m) = 1`, to `a^φ(m) ≡ 1 (mod m)` (dla pierwszego `m = p` to małe twierdzenie\nFermata). Wniosek: `a^b ≡ a^(b mod φ(m)) (mod m)` dla względnie pierwszych `a, m`. Uogólnienie dla dowolnego `a`:\njeśli `b ≥ φ(m)`, to `a^b ≡ a^((b mod φ(m)) + φ(m)) (mod m)`.\n\n**Sygnały:** „ile liczb ≤ n jest względnie pierwszych z n”, „ile ułamków nieskracalnych”, „a^(b^c) mod m”,\n„wieża potęg”, ogromny wykładnik podany jako napis."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: φ(n) w O(√n)",
+     "code": "// φ(n) dla n <= 1e12 przez rozkład w O(sqrt n).\n#include <bits/stdc++.h>\nusing namespace std;\n\nlong long phi(long long n) {\n    long long res = n;\n    for (long long p = 2; p * p <= n; p++)\n        if (n % p == 0) {\n            while (n % p == 0) n /= p;\n            res = res / p * (p - 1);        // mnożymy przez (1 - 1/p) bez ułamków\n        }\n    if (n > 1) res = res / n * (n - 1);     // ostatni czynnik pierwszy\n    return res;\n}\n\nint main() {\n    long long n;\n    cin >> n;\n    cout << phi(n) << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Sito funkcji Eulera",
+     "code": "// Sito φ: phi[i] dla wszystkich i <= N, O(N log log N).\nvector<int> phiSieve(int N) {\n    vector<int> ph(N + 1);\n    iota(ph.begin(), ph.end(), 0);           // ph[i] = i\n    for (int p = 2; p <= N; p++)\n        if (ph[p] == p)                      // p nietknięte => pierwsze\n            for (int m = p; m <= N; m += p)\n                ph[m] -= ph[m] / p;          // ph[m] *= (1 - 1/p)\n    return ph;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Fakt",
+      "Wzór"
+     ],
+     "rows": [
+      [
+       "liczba pierwsza",
+       "φ(p) = p − 1"
+      ],
+      [
+       "potęga pierwszej",
+       "φ(p^k) = p^k − p^(k−1)"
+      ],
+      [
+       "multiplikatywność",
+       "φ(ab) = φ(a)·φ(b) dla gcd(a, b) = 1"
+      ],
+      [
+       "suma po dzielnikach",
+       "Σ_{d | n} φ(d) = n"
+      ],
+      [
+       "tw. Eulera",
+       "a^φ(m) ≡ 1 (mod m), gdy gcd(a, m) = 1"
+      ],
+      [
+       "odwrotność",
+       "a^(−1) ≡ a^(φ(m) − 1) (mod m)"
+      ],
+      [
+       "pary względnie pierwsze",
+       "#{(x, y) ∈ [1, n]² : gcd = 1} = 2·Σ_{k=1}^{n} φ(k) − 1"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "long long phi(long long n)",
+     "desc": "funkcja Eulera przez rozkład",
+     "complexity": "O(√n)",
+     "returns": "long long"
+    },
+    {
+     "sig": "vector<int> phiSieve(int N)",
+     "desc": "φ(i) dla i ≤ N metodą sita",
+     "complexity": "O(N log log N)"
+    }
+   ],
+   "pitfalls": [
+    "`res = res * (p − 1) / p` może się przepełnić — dziel najpierw: `res / p * (p − 1)` (res jest podzielne przez p).",
+    "Zapominanie o ostatnim czynniku pierwszym > √n po pętli.",
+    "Redukcja `b mod φ(m)` jest poprawna tylko dla gcd(a, m) = 1; w ogólności użyj `b mod φ(m) + φ(m)` (gdy b ≥ φ(m)).",
+    "φ(1) = 1 (liczba 1 jest względnie pierwsza z 1).",
+    "Dla pierwszego p wykładnik redukujemy modulo p − 1, a nie modulo p."
+   ],
+   "qa": [
+    {
+     "q": [
+      "funkcja eulera",
+      "phi eulera",
+      "euler totient",
+      "tocjent",
+      "funkcja phi c++",
+      "fi eulera"
+     ],
+     "a": "`φ(n)` liczy liczby z `[1, n]` względnie pierwsze z `n`. Licz z rozkładu: `res = n`, dla każdego różnego\ndzielnika pierwszego `p`: `res = res / p * (p − 1)`. Złożoność O(√n). Np. φ(36) = 36 · 1/2 · 2/3 = 12.",
+     "code": "long long n = 36, m = n, res = n;\nfor (long long p = 2; p * p <= m; p++)\n    if (m % p == 0) { while (m % p == 0) m /= p; res = res / p * (p - 1); }\nif (m > 1) res = res / m * (m - 1);\ncout << res << \"\\n\";   // 12"
+    },
+    {
+     "q": [
+      "sito phi",
+      "phi dla wszystkich liczb do n",
+      "totient sieve",
+      "sito funkcji eulera"
+     ],
+     "a": "`ph[i] = i`; dla każdej pierwszej `p` (rozpoznanej po `ph[p] == p`) przejdź po wielokrotnościach i zrób\n`ph[m] -= ph[m] / p`. Czas O(N log log N), dla N = 10^7 działa szybko. Kod jest w treści artykułu."
+    },
+    {
+     "q": [
+      "twierdzenie eulera",
+      "a^phi(m) = 1 mod m",
+      "euler theorem",
+      "twierdzenie eulera modulo"
+     ],
+     "a": "Jeśli `gcd(a, m) = 1`, to `a^φ(m) ≡ 1 (mod m)`. Dla `m` pierwszego to małe twierdzenie Fermata\n(`a^(p−1) ≡ 1`). Zastosowania: redukcja wykładnika (`a^b ≡ a^(b mod φ(m))`) i odwrotność `a^(φ(m)−1)` dla\nzłożonego `m`."
+    },
+    {
+     "q": [
+      "potęga modulo wykładnik ogromny",
+      "a^b mod m b bardzo duże",
+      "redukcja wykładnika modulo phi",
+      "wykladnik jako string modulo"
+     ],
+     "a": "Gdy `gcd(a, m) = 1`, zamień wykładnik na `b mod φ(m)` (dla pierwszego `p`: `b mod (p − 1)`). Wykładnik podany\njako długi napis redukuj cyfra po cyfrze: `e = (e·10 + cyfra) mod φ(m)`. Gdy `a` i `m` nie są względnie pierwsze,\na `b ≥ φ(m)`: `a^b ≡ a^((b mod φ(m)) + φ(m))`.",
+     "code": "const long long P = 1000000007;\nstring b = \"123456789012345678901234567890\";   // ogromny wykładnik\nlong long a = 2, e = 0;\nfor (char c : b) e = (e * 10 + (c - '0')) % (P - 1);   // Fermat: modulo P-1\nlong long r = 1, base = a % P;\nfor (long long k = e; k; k >>= 1) { if (k & 1) r = r * base % P; base = base * base % P; }\ncout << r << \"\\n\";"
+    },
+    {
+     "q": [
+      "wieża potęg modulo",
+      "a^a^a mod m",
+      "power tower",
+      "a^(b^c) mod m"
+     ],
+     "a": "Licz rekurencyjnie: `tower(i, m)` = wartość od piętra `i` modulo `m`. Wykładnik potrzebujemy modulo `φ(m)`, więc\nwywołujemy `tower(i+1, φ(m))`. Ciąg `m, φ(m), φ(φ(m)), …` spada do 1 w O(log m) krokach. Przy dowolnych\npodstawach używaj wersji „`b mod φ + φ`” (pamiętając, czy prawdziwy wykładnik jest ≥ φ)."
+    },
+    {
+     "q": [
+      "ile ułamków nieskracalnych",
+      "ile par względnie pierwszych do n",
+      "count coprime pairs",
+      "liczba par z nwd 1"
+     ],
+     "a": "Ułamków nieskracalnych `a/b` z `1 ≤ a < b ≤ n` jest `Σ_{b=2}^{n} φ(b)`. Par uporządkowanych `(x, y) ∈ [1, n]²`\nz `gcd(x, y) = 1` jest `2·Σ_{k=1}^{n} φ(k) − 1` (para (1, 1) liczona raz). Sito φ + suma: O(n log log n).",
+     "code": "int n = 5;\nvector<int> ph(n + 1);\niota(ph.begin(), ph.end(), 0);\nfor (int p = 2; p <= n; p++)\n    if (ph[p] == p) for (int m = p; m <= n; m += p) ph[m] -= ph[m] / p;\nlong long s = 0;\nfor (int k = 1; k <= n; k++) s += ph[k];\ncout << 2 * s - 1 << \"\\n\";   // 19"
+    },
+    {
+     "q": [
+      "ile liczb względnie pierwszych z n w przedziale",
+      "coprime count up to x",
+      "ile liczb <= x wzglednie pierwszych z n"
+     ],
+     "a": "Dla `x = n` odpowiedź to `φ(n)`. Dla dowolnego `x`: rozłóż `n` na różne pierwsze `p_1..p_k` (k ≤ 15) i użyj\nwłączeń-wyłączeń: `Σ_{S} (−1)^|S| · ⌊x / Π_{p∈S} p⌋` po wszystkich podzbiorach. O(2^k).",
+     "code": "vector<long long> pr = {2, 3, 5};   // różne dzielniki pierwsze n = 30\nlong long x = 100, res = 0;\nint k = pr.size();\nfor (int mask = 0; mask < (1 << k); mask++) {\n    long long prod = 1;\n    for (int i = 0; i < k; i++) if (mask >> i & 1) prod *= pr[i];\n    res += (__builtin_popcount(mask) % 2 ? -1 : 1) * (x / prod);\n}\ncout << res << \"\\n\";   // 26"
+    },
+    {
+     "q": [
+      "phi własności",
+      "phi multiplicative",
+      "suma phi po dzielnikach",
+      "wlasnosci funkcji eulera"
+     ],
+     "a": "φ jest multiplikatywna, `φ(p^k) = p^(k−1)(p − 1)`, `Σ_{d|n} φ(d) = n`, a dla `n > 2` wartość `φ(n)` jest parzysta.\nZ `Σ_{d|n} φ(d) = n` wynika np., że `Σ_{i=1}^{n} gcd(i, n) = Σ_{d|n} d · φ(n/d)`."
+    }
+   ],
+   "related": [
+    "math-factorization",
+    "math-sieve",
+    "math-fast-pow",
+    "math-mod-inverse",
+    "math-inclusion-exclusion",
+    "math-mobius"
+   ]
+  },
+  {
+   "id": "math-crt",
+   "title": "Chińskie twierdzenie o resztach (CRT) — także dla modułów niewzględnie pierwszych",
+   "category": "Matematyka",
+   "tags": [
+    "crt",
+    "chińskie twierdzenie o resztach",
+    "kongruencje",
+    "układ kongruencji",
+    "rozszerzony euklides",
+    "__int128"
+   ],
+   "aliases": [
+    "chińskie twierdzenie o resztach",
+    "crt",
+    "chinese remainder theorem",
+    "układ kongruencji",
+    "chinskie twierdzenie o resztach",
+    "twierdzenie chińskie",
+    "kongruencje układ",
+    "garner"
+   ],
+   "summary": "Układ x ≡ a_i (mod m_i) ma dla parami względnie pierwszych modułów dokładnie jedno rozwiązanie modulo iloczyn. W ogólności łączymy równania parami rozszerzonym Euklidesem; rozwiązanie istnieje ⇔ a1 ≡ a2 (mod gcd(m1, m2)).",
+   "complexity": "O(k · log M) dla k równań (M — największy moduł); iloczyny w __int128",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Twierdzenie:** jeśli `m1, …, mk` są parami względnie pierwsze, to układ `x ≡ a_i (mod m_i)` ma dokładnie jedno\nrozwiązanie modulo `M = m1·…·mk`.\n\n**Łączenie dwóch równań (dowolne moduły):** `x = a1 + m1·t`. Wstawiamy do drugiego: `m1·t ≡ a2 − a1 (mod m2)`.\nNiech `g = gcd(m1, m2)`. Rozwiązanie istnieje ⇔ `g | (a2 − a1)`. Wtedy\n`t ≡ ((a2 − a1)/g) · inv(m1/g) (mod m2/g)` i `x ≡ a1 + m1·t (mod lcm(m1, m2))`. Powtarzamy dla kolejnych równań.\n\n**Sygnały:** „liczba daje resztę a przy dzieleniu przez m…”, kilka cykli o różnych okresach („kiedy wszystkie\nświatła zapalą się jednocześnie”), wynik modulo liczba złożona (policz modulo czynniki i sklej), Lucas dla\nmodułu bezkwadratowego."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: CRT dla dowolnych modułów",
+     "code": "// CRT ogólne: k równań x ≡ a_i (mod m_i). Wypisuje najmniejsze x >= 0 i lcm modułów, albo -1.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\ntypedef __int128 lll;\n\nll extgcd(ll a, ll b, ll &x, ll &y) {\n    if (b == 0) { x = 1; y = 0; return a; }\n    ll x1, y1, g = extgcd(b, a % b, x1, y1);\n    x = y1; y = x1 - (a / b) * y1;\n    return g;\n}\n\n// łączy x ≡ a1 (mod m1) z x ≡ a2 (mod m2); false, gdy sprzeczne\nbool merge(ll &a1, ll &m1, ll a2, ll m2) {\n    ll p, q;\n    ll g = extgcd(m1, m2, p, q);                    // m1*p + m2*q = g\n    if ((a2 - a1) % g != 0) return false;\n    ll mg = m2 / g;\n    lll t = (lll)((a2 - a1) / g % mg) * (p % mg) % mg;   // t ≡ (a2-a1)/g * inv(m1/g) (mod m2/g)\n    if (t < 0) t += mg;\n    lll L = (lll)m1 / g * m2;                       // lcm(m1, m2), zakładamy że mieści się w ll\n    lll x = ((lll)a1 + (lll)m1 * t) % L;\n    if (x < 0) x += L;\n    a1 = (ll)x; m1 = (ll)L;\n    return true;\n}\n\nint main() {\n    int k;\n    cin >> k;\n    ll a = 0, m = 1;                                // x ≡ 0 (mod 1) — neutralne\n    bool ok = true;\n    for (int i = 0; i < k; i++) {\n        ll ai, mi;\n        cin >> ai >> mi;\n        ai %= mi; if (ai < 0) ai += mi;\n        if (ok) ok = merge(a, m, ai, mi);\n    }\n    if (!ok) cout << -1 << \"\\n\";\n    else cout << a << \" \" << m << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sytuacja",
+      "Co robić"
+     ],
+     "rows": [
+      [
+       "moduły parami względnie pierwsze",
+       "klasyczne CRT; wynik jednoznaczny modulo iloczyn"
+      ],
+      [
+       "moduły dowolne",
+       "łączenie parami; sprzeczność ⇔ a1 ≢ a2 (mod gcd)"
+      ],
+      [
+       "iloczyn modułów > 10^18",
+       "__int128 albo algorytm Garnera (reprezentacja mieszana)"
+      ],
+      [
+       "wynik modulo m = p1^e1 · … · pk^ek",
+       "policz osobno modulo każde p^e, sklej CRT"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Iloczyn `m1 · t` oraz `lcm` łatwo przekraczają 10^18 — licz w `__int128`. Jeśli lcm wszystkich modułów nie mieści się\nw `long long`, nie da się wypisać wyniku w tym typie — zadanie zwykle gwarantuje, że się mieści."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bool merge(ll &a1, ll &m1, ll a2, ll m2)",
+     "desc": "łączy dwie kongruencje w jedną modulo lcm(m1, m2); false przy sprzeczności",
+     "complexity": "O(log min(m1, m2))",
+     "returns": "bool"
+    }
+   ],
+   "pitfalls": [
+    "Reszty ujemne lub ≥ m: znormalizuj `a = ((a % m) + m) % m` przed łączeniem.",
+    "Przepełnienie przy `m1 * t` i `m1 / g * m2` — __int128.",
+    "Zakładanie względnej pierwszości modułów, gdy treść jej nie gwarantuje — zawsze sprawdzaj podzielność przez gcd.",
+    "Wynik to klasa reszt modulo lcm — najmniejsze nieujemne rozwiązanie to `x mod lcm`, a jeśli zadanie chce dodatniego, a wyszło 0, weź lcm."
+   ],
+   "qa": [
+    {
+     "q": [
+      "chińskie twierdzenie o resztach",
+      "crt",
+      "chinese remainder theorem c++",
+      "chinskie twierdzenie o resztach kod",
+      "crt c++"
+     ],
+     "a": "Łącz równania parami: z `x = a1 + m1·t` dostajesz `m1·t ≡ a2 − a1 (mod m2)`, które rozwiązujesz rozszerzonym\nEuklidesem. Nowe równanie to `x ≡ a1 + m1·t (mod lcm(m1, m2))`. Po k równaniach masz wynik. Czas O(k log M),\niloczyny w `__int128`. Pełny program jest w treści."
+    },
+    {
+     "q": [
+      "crt moduły niewzględnie pierwsze",
+      "crt general",
+      "crt gcd nie 1",
+      "crt dowolne moduly"
+     ],
+     "a": "Dla `g = gcd(m1, m2) > 1` rozwiązanie istnieje tylko gdy `a1 ≡ a2 (mod g)`. Wtedy dzielisz kongruencję\n`m1·t ≡ a2 − a1 (mod m2)` przez `g` i odwracasz `m1/g` modulo `m2/g`; wynik jest jednoznaczny modulo\n`lcm(m1, m2)`, a nie iloczynu. Przykład: x ≡ 1 (mod 4), x ≡ 3 (mod 6) ⇒ x ≡ 9 (mod 12)."
+    },
+    {
+     "q": [
+      "crt przepełnienie",
+      "crt int128",
+      "crt overflow",
+      "crt duze moduly"
+     ],
+     "a": "Moduły rzędu 10^9 dają lcm ~10^18, a pośrednie iloczyny `m1·t` — ~10^27. Wszystkie mnożenia rób w `__int128`,\na wynik rzutuj na `long long` dopiero na końcu (o ile lcm się mieści)."
+    },
+    {
+     "q": [
+      "kiedy układ kongruencji ma rozwiązanie",
+      "czy uklad kongruencji jest sprzeczny",
+      "crt brak rozwiazania"
+     ],
+     "a": "Układ ma rozwiązanie ⇔ każda para równań jest zgodna: `a_i ≡ a_j (mod gcd(m_i, m_j))`. W praktyce wystarczy\nłączyć równania po kolei i sprawdzać podzielność `(a2 − a1) % g == 0` w każdym kroku."
+    },
+    {
+     "q": [
+      "crt dwa równania wzór",
+      "crt dla dwoch modulow wzglednie pierwszych",
+      "crt formula"
+     ],
+     "a": "Dla względnie pierwszych `m1, m2`: `x = a1·m2·inv(m2, m1) + a2·m1·inv(m1, m2) (mod m1·m2)` — pierwszy składnik\ndaje resztę `a1` modulo `m1` i 0 modulo `m2`, drugi odwrotnie. Ogólnie dla k modułów:\n`x = Σ a_i · M_i · inv(M_i, m_i)`, gdzie `M_i = M / m_i`.",
+     "code": "auto inv = [](long long a, long long m) {          // m pierwsze w tym przykładzie\n    long long r = 1, e = m - 2; a %= m;\n    while (e) { if (e & 1) r = r * a % m; a = a * a % m; e >>= 1; }\n    return r;\n};\nlong long a1 = 2, m1 = 3, a2 = 3, m2 = 5, M = m1 * m2;\nlong long x = (a1 * m2 % M * inv(m2, m1) + a2 * m1 % M * inv(m1, m2)) % M;\ncout << x << \"\\n\";   // 8: 8 mod 3 = 2, 8 mod 5 = 3"
+    },
+    {
+     "q": [
+      "liczba dająca reszty 2 3 2 z dzielenia przez 3 5 7",
+      "zagadka sunzi",
+      "znajdz liczbe o danych resztach"
+     ],
+     "a": "Klasyczna zagadka Sunzi: x ≡ 2 (mod 3), x ≡ 3 (mod 5), x ≡ 2 (mod 7). Łącząc: z pierwszych dwóch x ≡ 8 (mod 15),\nz trzecim x ≡ 23 (mod 105). Najmniejsza dodatnia odpowiedź to 23, kolejne: 128, 233, …"
+    },
+    {
+     "q": [
+      "do czego crt na olimpiadzie",
+      "wynik modulo liczba złożona crt",
+      "crt zastosowania"
+     ],
+     "a": "(1) Wynik modulo złożone `m = Π p^e`: policz modulo każde `p^e` (np. dwumian przez Lucasa/silnie bez p) i sklej.\n(2) Synchronizacja okresów: zdarzenia co `m_i` z przesunięciem `a_i` — pierwszy wspólny moment. (3) Hashowanie\nmodulo dwie liczby pierwsze to de facto reprezentacja modulo ich iloczyn."
+    },
+    {
+     "q": [
+      "garner",
+      "algorytm garnera",
+      "crt bez int128 wiele modulow"
+     ],
+     "a": "Algorytm Garnera wyznacza współczynniki `x = c1 + c2·m1 + c3·m1·m2 + …` (reprezentacja mieszana), licząc\nkażdy `c_i` modulo `m_i`. Nie potrzebuje dużych liczb w trakcie, a wynik modulo dowolne `P` (np. 10^9+7) można\nzłożyć bez wyliczania pełnego `x`. Przydaje się przy NTT z kilkoma modułami. O(k²) dla k modułów."
+    }
+   ],
+   "related": [
+    "math-extended-euclid",
+    "math-mod-inverse",
+    "math-gcd-lcm",
+    "math-binomial",
+    "num-int128",
+    "math-ntt"
+   ]
+  }
+ ]
+}

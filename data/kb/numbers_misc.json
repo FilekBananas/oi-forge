@@ -1,0 +1,744 @@
+{
+ "chunk": "numbers-misc",
+ "articles": [
+  {
+   "id": "num-inf-constants",
+   "title": "Nieskończoność (INF) i stałe: 1e9, 1e18, 0x3f3f3f3f, INT_MAX",
+   "category": "Liczby i typy",
+   "tags": [
+    "INF",
+    "nieskończoność",
+    "INT_MAX",
+    "LLONG_MAX",
+    "0x3f3f3f3f",
+    "1e18",
+    "stałe",
+    "memset"
+   ],
+   "aliases": [
+    "jaka wartosc inf",
+    "inf c++",
+    "nieskonczonosc w c++",
+    "const int INF",
+    "0x3f3f3f3f",
+    "INT_MAX jako inf",
+    "1e18 long long",
+    "infinity c++",
+    "LLONG_MAX przepelnienie"
+   ],
+   "summary": "Za „nieskończoność” bierz wartość większą od każdego możliwego wyniku, ale taką, by `INF + INF` (lub `INF + waga`) się nie przepełniło: `const int INF = 1e9;` albo `0x3f3f3f3f` dla `int`, `const long long INF = 1e18;` dla `long long`. Unikaj `INT_MAX`/`LLONG_MAX` — dodanie czegokolwiek je przepełnia.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Stała",
+      "Wartość",
+      "2·INF mieści się?",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`1e9` (int)",
+       "1 000 000 000",
+       "tak (2·10^9 < 2,147·10^9)",
+       "ale 3·INF już nie"
+      ],
+      [
+       "`0x3f3f3f3f` (int)",
+       "1 061 109 567",
+       "tak",
+       "da się ustawić `memset(a, 0x3f, sizeof a)`"
+      ],
+      [
+       "`INT_MAX`",
+       "2 147 483 647",
+       "NIE",
+       "`INT_MAX + 1` = przepełnienie"
+      ],
+      [
+       "`1e18` (long long)",
+       "10^18",
+       "tak (2·10^18 < 9,2·10^18)",
+       "standard dla long long"
+      ],
+      [
+       "`0x3f3f3f3f3f3f3f3f` (ll)",
+       "≈ 4,56·10^18",
+       "tak",
+       "memset 0x3f na tablicy long long"
+      ],
+      [
+       "`LLONG_MAX`",
+       "≈ 9,22·10^18",
+       "NIE",
+       "`dist + w` zawija się do ujemnych"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "INF w praktyce",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int INF = 1e9;\nconst long long LINF = 1e18;\n\nint main() {\n    int n = 5;\n    vector<long long> dist(n, LINF);\n    dist[0] = 0;\n    long long w = 7;\n    // relaksacja bez ryzyka przepełnienia: LINF + w < LLONG_MAX\n    if (dist[0] + w < dist[1]) dist[1] = dist[0] + w;\n    for (int v = 0; v < n; v++)\n        cout << (dist[v] >= LINF ? -1 : dist[v]) << ' ';   // -1 = nieosiągalny\n    cout << '\\n';\n\n    int a[100];\n    memset(a, 0x3f, sizeof a);     // każdy int = 0x3f3f3f3f\n    cout << a[0] << '\\n';          // 1061109567\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`memset(a, 1e9, sizeof a)` NIE ustawia elementów na 10^9 — `memset` wpisuje jeden **bajt** w każdy bajt. Działa tylko\ndla 0, -1 i „bajtowych” wzorców typu `0x3f`. Do dowolnej wartości użyj `fill(a, a + n, INF)`."
+    }
+   ],
+   "pitfalls": [
+    "`INT_MAX`/`LLONG_MAX` jako INF i dodawanie do nich.",
+    "`memset(a, INF, sizeof a)` z INF ≠ 0, -1, 0x3f…",
+    "INF mniejsze od faktycznego maksymalnego wyniku.",
+    "Za małe INF typu `int` dla sum w `long long`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jaka wartosc inf wybrac",
+      "inf c++",
+      "const int INF",
+      "jak zdefiniowac nieskonczonosc",
+      "infinity c++ int"
+     ],
+     "a": "Dla `int`: `const int INF = 1e9;` (albo `0x3f3f3f3f`) — większe od typowych wyników, a `INF + INF` wciąż mieści się w `int`.\nDla `long long`: `const long long INF = 1e18;`. Wybierz INF większe od maksymalnego możliwego wyniku (np. suma wag ścieżki\n≤ 10^5 · 10^9 = 10^14 → potrzebne `long long` i 1e18).",
+     "code": "const int INF = 1e9;\nconst long long LINF = 1e18;\ncout << INF << ' ' << LINF << '\\n';"
+    },
+    {
+     "q": [
+      "INT_MAX jako inf",
+      "dlaczego nie uzywac INT_MAX",
+      "INT_MAX + 1",
+      "dijkstra INT_MAX ujemne odleglosci"
+     ],
+     "a": "Bo każde dodanie do `INT_MAX` przepełnia `int`: `dist[u] + w` dla nieosiągniętego `u` daje liczbę ujemną, która\n„wygrywa” porównanie i psuje algorytm. Jeśli musisz użyć `INT_MAX`, zawsze sprawdzaj `if (dist[u] != INT_MAX)` przed dodaniem.\nProściej wybrać INF z zapasem (1e9, 1e18).",
+     "code": "int distU = INT_MAX, w = 5, distV = 100;\nif (distU != INT_MAX && distU + w < distV) distV = distU + w;\ncout << distV << '\\n';"
+    },
+    {
+     "q": [
+      "0x3f3f3f3f",
+      "co to 0x3f3f3f3f",
+      "memset 0x3f",
+      "dlaczego 0x3f3f3f3f jako inf"
+     ],
+     "a": "`0x3f3f3f3f` = 1 061 109 567 ≈ 10^9. Zalety: `2 · 0x3f3f3f3f` mieści się w `int`, a każdy bajt to `0x3f`, więc całą tablicę\n`int` (lub `long long`) można ustawić jednym `memset(a, 0x3f, sizeof a)`. Dla `long long` wartość po memsecie to\n`0x3f3f3f3f3f3f3f3f` ≈ 4,6·10^18.",
+     "code": "int d[1000];\nmemset(d, 0x3f, sizeof d);\ncout << (d[5] == 0x3f3f3f3f) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "const long long INF = 1e18",
+      "1e18 jako long long",
+      "inf dla long long",
+      "LLONG_MAX jako inf"
+     ],
+     "a": "`const long long INF = 1e18;` — `1e18` jest dokładnie reprezentowalne w `double`, więc konwersja daje dokładnie 10^18.\nSuma dwóch takich wartości (2·10^18) mieści się w `long long`. `LLONG_MAX` jako INF jest niebezpieczne z tych samych\npowodów co `INT_MAX`.",
+     "code": "const long long INF = 1e18;\ncout << INF + INF << ' ' << (INF + INF < LLONG_MAX) << '\\n';"
+    },
+    {
+     "q": [
+      "memset na inf nie dziala",
+      "memset(a, 1e9, sizeof a)",
+      "memset dowolna wartosc",
+      "jak wypelnic tablice inf"
+     ],
+     "a": "`memset` ustawia **bajty**, nie elementy. `memset(a, 1e9, ...)` wpisze w każdy bajt najmłodszy bajt liczby 10^9 i dostaniesz\nśmieci. Do dowolnej wartości: `fill(a, a + n, INF);` albo `vector<int> a(n, INF);`. `memset` działa tylko dla 0, -1 i\nwzorców typu `0x3f`.",
+     "code": "int n = 100;\nvector<int> a(n);\nfill(a.begin(), a.end(), 1000000000);\nint b[100];\nfill(b, b + 100, 1000000000);"
+    },
+    {
+     "q": [
+      "minus nieskonczonosc",
+      "-INF dla maksimum",
+      "najmniejsza wartosc na start max"
+     ],
+     "a": "Przy szukaniu maksimum startuj od `-INF` (np. `-1e18` dla `long long`) albo od pierwszego elementu. `LLONG_MIN` też\ndziała, jeśli nic do niego nie dodajesz ani go nie negujesz (`-LLONG_MIN` się przepełnia).",
+     "code": "vector<long long> a = {-5, -2, -9};\nlong long best = -1e18;\nfor (long long x : a) best = max(best, x);\ncout << best << '\\n';   // -2"
+    },
+    {
+     "q": [
+      "nieskonczonosc double",
+      "infinity double c++",
+      "numeric_limits infinity"
+     ],
+     "a": "Dla `double` istnieje prawdziwa nieskończoność: `numeric_limits<double>::infinity()` (albo `INFINITY` z `<cmath>`).\n`inf + 1 == inf`, więc nie ma przepełnienia. Często jednak wystarcza `1e18`.",
+     "code": "double inf = numeric_limits<double>::infinity();\ncout << (inf > 1e300) << ' ' << inf + 1 << '\\n';   // 1 inf"
+    },
+    {
+     "q": [
+      "jak sprawdzic czy wierzcholek nieosiagalny",
+      "dist == INF wypisz -1",
+      "brak sciezki -1"
+     ],
+     "a": "Po algorytmie sprawdzaj `dist[v] >= INF` (lepiej `>=` niż `==`, bo przy pewnych implementacjach INF może zostać\nlekko zmienione przez dodanie wagi). Wtedy wypisz `-1` lub to, co każe treść.",
+     "code": "const long long INF = 1e18;\nvector<long long> dist = {0, 5, INF};\nfor (long long d : dist) cout << (d >= INF ? -1 : d) << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "inf w dp min",
+      "dp inicjalizacja inf",
+      "dp minimum wypelnij inf"
+     ],
+     "a": "W DP na minimum inicjuj stany nieosiągalne wartością INF i przy przejściu `dp[i] = min(dp[i], dp[j] + koszt)`\nupewnij się, że `INF + koszt` się nie przepełnia (INF z zapasem albo pomijanie stanów `>= INF`).",
+     "code": "const int INF = 1e9;\nint n = 10;\nvector<int> dp(n + 1, INF);\ndp[0] = 0;\nfor (int i = 1; i <= n; i++) {\n    dp[i] = dp[i - 1] + 1;\n    if (i >= 3) dp[i] = min(dp[i], dp[i - 3] + 1);\n}\ncout << dp[n] << '\\n';   // 4"
+    }
+   ],
+   "related": [
+    "num-int-types",
+    "num-overflow",
+    "pit-memset",
+    "pit-int-overflow",
+    "cpp-ref-climits-cfloat"
+   ]
+  },
+  {
+   "id": "num-conversions",
+   "title": "Konwersje: string ↔ liczba (stoi, stoll, to_string) i znak ↔ cyfra (c - '0')",
+   "category": "Liczby i typy",
+   "tags": [
+    "stoi",
+    "stoll",
+    "to_string",
+    "atoi",
+    "stod",
+    "konwersja",
+    "char",
+    "ASCII",
+    "c - '0'"
+   ],
+   "aliases": [
+    "string na int",
+    "int na string",
+    "stoi",
+    "to_string",
+    "zamiana stringa na liczbe",
+    "char na int",
+    "cyfra na znak",
+    "string to int c++",
+    "int to string c++",
+    "kod ascii c++",
+    "c - '0'",
+    "atoi"
+   ],
+   "summary": "`stoi(s)` / `stoll(s)` zamieniają napis na `int` / `long long`, `to_string(x)` — liczbę na napis. Znak cyfry na wartość: `c - '0'`; wartość na znak: `char('0' + d)`. Numer litery: `c - 'a'`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Chcę",
+      "Kod",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "string → int",
+       "`stoi(s)`",
+       "rzuca wyjątek przy złym formacie / poza zakresem"
+      ],
+      [
+       "string → long long",
+       "`stoll(s)`",
+       ""
+      ],
+      [
+       "string → double",
+       "`stod(s)`",
+       "kropka dziesiętna"
+      ],
+      [
+       "liczba → string",
+       "`to_string(x)`",
+       "dla double zawsze 6 miejsc: `3.140000`"
+      ],
+      [
+       "cyfra-znak → int",
+       "`c - '0'`",
+       "`'7' - '0' == 7`"
+      ],
+      [
+       "int → cyfra-znak",
+       "`char('0' + d)`",
+       "dla 0 ≤ d ≤ 9"
+      ],
+      [
+       "litera → numer",
+       "`c - 'a'`",
+       "`'a'→0 … 'z'→25`"
+      ],
+      [
+       "numer → litera",
+       "`char('a' + k)`",
+       "bez `char(...)` dostaniesz liczbę!"
+      ],
+      [
+       "znak → kod ASCII",
+       "`(int)c`",
+       "`'A' == 65`, `'a' == 97`, `'0' == 48`"
+      ],
+      [
+       "znak → string",
+       "`string(1, c)`",
+       "albo `string s; s += c;`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Najczęstsze konwersje",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s = \"12345\";\n    int x = stoi(s);\n    long long y = stoll(\"9000000000\");\n    string t = to_string(x * 2);            // \"24690\"\n    int sumaCyfr = 0;\n    for (char c : s) sumaCyfr += c - '0';  // 15\n    char lit = 'a' + 2;                     // 'c' (przypisanie do char)\n    cout << x << ' ' << y << ' ' << t << ' ' << sumaCyfr << ' ' << lit << '\\n';\n    cout << 'a' + 2 << ' ' << char('a' + 2) << '\\n';   // 99 c  (!)\n}"
+    }
+   ],
+   "pitfalls": [
+    "`cout << 'a' + 1` wypisuje liczbę 98.",
+    "`stoi` na pustym napisie / za dużej liczbie — wyjątek (RE).",
+    "`(int)c` zamiast `c - '0'` — kod ASCII zamiast cyfry.",
+    "`to_string(3.14)` daje `\"3.140000\"`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "string na int",
+      "jak zamienic string na liczbe",
+      "string to int c++",
+      "stoi",
+      "konwersja stringa na int"
+     ],
+     "a": "`stoi(s)` zamienia napis na `int`, `stoll(s)` na `long long`. Pomija wiodące białe znaki i czyta, dopóki są cyfry\n(`stoi(\"42abc\") == 42`). Jeśli napis nie zaczyna się od liczby, rzuca wyjątek `invalid_argument`, a gdy liczba nie mieści\nsię w typie — `out_of_range` (program kończy się komunikatem „terminate called…”).",
+     "code": "string s = \"2024\";\nint x = stoi(s);\nlong long big = stoll(\"123456789012\");\ncout << x + 1 << ' ' << big << '\\n';"
+    },
+    {
+     "q": [
+      "int na string",
+      "liczba na string c++",
+      "int to string c++",
+      "to_string",
+      "jak zamienic liczbe na napis"
+     ],
+     "a": "`to_string(x)` działa dla wszystkich typów liczbowych. Dla liczb całkowitych daje zwykły zapis (`to_string(-15) == \"-15\"`),\ndla `double` zawsze 6 miejsc po przecinku (`\"3.140000\"`) — do innego formatu użyj `ostringstream` z `setprecision`.",
+     "code": "int x = 1234;\nstring s = to_string(x);\ncout << s.size() << ' ' << s[0] << '\\n';   // 4 1"
+    },
+    {
+     "q": [
+      "char na int",
+      "cyfra ze znaku",
+      "c - '0'",
+      "jak zamienic znak cyfry na liczbe",
+      "char to int c++"
+     ],
+     "a": "Znaki cyfr mają kolejne kody ASCII (`'0'` = 48 … `'9'` = 57), więc `c - '0'` daje wartość cyfry: `'7' - '0' == 7`.\nSamo `(int)c` dałoby kod ASCII (55), nie cyfrę.",
+     "code": "char c = '7';\nint d = c - '0';\ncout << d << ' ' << (int)c << '\\n';   // 7 55"
+    },
+    {
+     "q": [
+      "int na char",
+      "cyfra na znak",
+      "liczba na znak cyfry",
+      "'0' + d",
+      "int to char c++"
+     ],
+     "a": "`char('0' + d)` dla cyfry `0 ≤ d ≤ 9`. Bez rzutowania `'0' + d` ma typ `int` — `cout` wypisze kod liczbowy, nie znak.",
+     "code": "int d = 5;\nchar c = '0' + d;            // przypisanie do char — OK\ncout << c << ' ' << char('0' + d) << ' ' << '0' + d << '\\n';   // 5 5 53"
+    },
+    {
+     "q": [
+      "cout 'a' + 1 wypisuje liczbe",
+      "dlaczego wypisuje 98 zamiast b",
+      "char plus int wypisuje liczbe",
+      "litera przesunieta o k"
+     ],
+     "a": "`'a' + 1` to wyrażenie typu `int` (znak jest promowany do `int` przy dodawaniu), więc `cout` wypisuje `98`. Zrzutuj\nz powrotem: `char('a' + 1)` albo zapisz wynik do zmiennej typu `char`.",
+     "code": "cout << 'a' + 1 << ' ' << char('a' + 1) << '\\n';   // 98 b"
+    },
+    {
+     "q": [
+      "kod ascii znaku",
+      "ascii c++",
+      "jak wypisac kod ascii",
+      "wartosc liczbowa znaku"
+     ],
+     "a": "Rzutuj na `int`: `(int)c`. Ważne kody: `'0'` = 48, `'A'` = 65, `'a'` = 97, spacja = 32, `'\\n'` = 10. Różnica\n`'a' - 'A'` = 32.",
+     "code": "char c = 'A';\ncout << (int)c << ' ' << (int)'a' << ' ' << (int)'0' << '\\n';   // 65 97 48"
+    },
+    {
+     "q": [
+      "numer litery w alfabecie",
+      "litera na liczbe 0-25",
+      "c - 'a'",
+      "indeks litery"
+     ],
+     "a": "`c - 'a'` daje 0 dla `'a'`, 25 dla `'z'` (dla wielkich `c - 'A'`). Idealne jako indeks w tablicy `cnt[26]`.\nNumer od 1: `c - 'a' + 1`.",
+     "code": "string s = \"kot\";\nfor (char c : s) cout << c - 'a' << ' ';   // 10 14 19\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "stoi wyjatek",
+      "terminate called after throwing invalid_argument",
+      "stoi out of range",
+      "stoi crash"
+     ],
+     "a": "`stoi` rzuca `invalid_argument`, gdy napis nie zaczyna się od liczby (np. pusty, `\"abc\"`), i `out_of_range`, gdy\nliczba nie mieści się w `int` (np. `\"99999999999\"` — użyj `stoll`). Nieobsłużony wyjątek kończy program (RE).\nSprawdź, co faktycznie przekazujesz (np. pusty token po `split`).",
+     "code": "string s = \"99999999999\";\nlong long x = stoll(s);   // stoi(s) rzuciłoby out_of_range\ncout << x << '\\n';"
+    },
+    {
+     "q": [
+      "atoi czy stoi",
+      "atoi c++",
+      "roznica atoi stoi",
+      "atoi zwraca 0"
+     ],
+     "a": "`atoi(const char*)` pochodzi z C: przy złym formacie zwraca 0 (bez błędu), a przy przekroczeniu zakresu zachowanie jest\nniezdefiniowane. `stoi(string)` rzuca wyjątki — łatwiej znaleźć błąd. Dla `string` w `atoi` potrzebne jest `s.c_str()`.\nWarianty: `atoll` (long long), `atof` (double).",
+     "code": "string s = \"123\";\nint a = atoi(s.c_str());\nint b = stoi(s);\ncout << a + b << '\\n';"
+    },
+    {
+     "q": [
+      "string na double",
+      "stod",
+      "zamiana tekstu na liczbe rzeczywista",
+      "string to double c++"
+     ],
+     "a": "`stod(s)` (albo `stold` dla `long double`). Napis musi używać kropki (`\"3.14\"`).",
+     "code": "double x = stod(\"3.75\");\ncout << x * 2 << '\\n';   // 7.5"
+    },
+    {
+     "q": [
+      "char na string",
+      "jak zrobic string z jednego znaku",
+      "string(1, c)",
+      "dodaj znak do stringa"
+     ],
+     "a": "`string(1, c)` tworzy napis z jednego znaku. Do dopisywania: `s += c;` albo `s.push_back(c);`. Uwaga: `string s = c;`\nsię nie kompiluje, a `string s = 'a' + \"bc\"` to arytmetyka wskaźników, nie łączenie napisów.",
+     "code": "char c = 'x';\nstring s(1, c);\ns += 'y';\ns += \"z\";\ncout << s << '\\n';   // xyz"
+    },
+    {
+     "q": [
+      "wlasne parsowanie liczby",
+      "string na liczbe recznie",
+      "parse int manually"
+     ],
+     "a": "Dla każdej cyfry: `x = x * 10 + (c - '0')`. Pozwala to też liczyć od razu modulo (`x = (x * 10 + d) % m`) dla liczb\ndłuższych niż `long long`.",
+     "code": "string s = \"12345678901234567890\";\nlong long m = 1000000007, r = 0;\nfor (char c : s) r = (r * 10 + (c - '0')) % m;\ncout << r << '\\n';"
+    },
+    {
+     "q": [
+      "from_chars",
+      "najszybsza konwersja stringa na int",
+      "from_chars c++17"
+     ],
+     "a": "`from_chars` (C++17, `<charconv>`) — bardzo szybka konwersja bez wyjątków i bez locale. Zwraca strukturę z polem `ec`\n(kod błędu).",
+     "code": "string s = \"4096\";\nint x = 0;\nauto res = from_chars(s.data(), s.data() + s.size(), x);\nif (res.ec == errc()) cout << x << '\\n';"
+    }
+   ],
+   "related": [
+    "str-basic-char-ops",
+    "num-bigint-strings",
+    "io-read-separated",
+    "io-hex-bin",
+    "cpp-casting",
+    "cpp-ref-cstring-cstdlib",
+    "cpp-ref-sstream-fstream",
+    "str-ascii-table",
+    "str-char-arithmetic",
+    "str-char-print"
+   ]
+  },
+  {
+   "id": "num-random",
+   "title": "Liczby losowe w C++: mt19937, uniform_int_distribution, shuffle (i dlaczego nie rand())",
+   "category": "Liczby i typy",
+   "tags": [
+    "losowanie",
+    "random",
+    "mt19937",
+    "rand",
+    "srand",
+    "shuffle",
+    "generator",
+    "seed",
+    "chrono"
+   ],
+   "aliases": [
+    "jak wylosowac liczbe c++",
+    "random c++",
+    "mt19937",
+    "rand() c++",
+    "losowa liczba z przedzialu",
+    "random number c++",
+    "srand time",
+    "shuffle vector",
+    "uniform_int_distribution"
+   ],
+   "summary": "Używaj `mt19937 rng(seed);` i `uniform_int_distribution<int>(a, b)(rng)` — liczba z przedziału [a, b] włącznie. `rand()` ma na Windows zakres tylko do 32767 i słabą jakość.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Nowoczesne losowanie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nmt19937 rng(chrono::steady_clock::now().time_since_epoch().count());\n\nint losuj(int a, int b) {                     // [a, b] włącznie\n    return uniform_int_distribution<int>(a, b)(rng);\n}\n\nint main() {\n    cout << losuj(1, 6) << '\\n';              // rzut kostką\n    mt19937_64 rng64(12345);                  // stałe ziarno = powtarzalne wyniki\n    cout << uniform_int_distribution<long long>(1, (long long)1e18)(rng64) << '\\n';\n    vector<int> v = {1, 2, 3, 4, 5};\n    shuffle(v.begin(), v.end(), rng);         // losowa permutacja\n    double u = uniform_real_distribution<double>(0.0, 1.0)(rng);\n    cout << u << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`random_shuffle` zostało usunięte w C++17 — używaj `shuffle(v.begin(), v.end(), rng)`. `srand(time(0))` zmienia ziarno\ntylko raz na sekundę: dwa uruchomienia w tej samej sekundzie dadzą te same liczby (ważne przy stress-testach!)."
+    }
+   ],
+   "pitfalls": [
+    "`rand()` z `RAND_MAX = 32767` na Windows.",
+    "`srand(time(0))` — to samo ziarno w obrębie jednej sekundy.",
+    "`random_shuffle` usunięte w C++17.",
+    "`uniform_int_distribution(a, b)` obejmuje `b` (w przeciwieństwie do `rand() % b`)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wylosowac liczbe c++",
+      "random c++",
+      "losowa liczba c++",
+      "random number c++",
+      "jak losowac w c++"
+     ],
+     "a": "Utwórz generator `mt19937 rng(ziarno);` i rozkład `uniform_int_distribution<int> d(a, b);` — wtedy `d(rng)` daje\nliczbę z `[a, b]` (oba końce włącznie), równomiernie. Ziarno z zegara (`chrono`) daje inne liczby przy każdym uruchomieniu,\nstałe ziarno — powtarzalne.",
+     "code": "mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());\nuniform_int_distribution<int> kostka(1, 6);\ncout << kostka(rng) << ' ' << kostka(rng) << '\\n';"
+    },
+    {
+     "q": [
+      "rand() c++",
+      "czy uzywac rand",
+      "rand pulapki",
+      "RAND_MAX",
+      "rand tylko do 32767"
+     ],
+     "a": "`rand()` ma wady: na Windows (MSVC/MinGW) `RAND_MAX` to tylko 32767, więc `rand() % 1000000` nigdy nie da dużych liczb;\njakość bywa słaba, a `rand() % n` faworyzuje małe reszty. Do testów i algorytmów losowych używaj `mt19937`.",
+     "code": "mt19937 rng(42);\nint x = uniform_int_distribution<int>(0, 999999)(rng);   // zamiast rand() % 1000000\ncout << x << '\\n';"
+    },
+    {
+     "q": [
+      "srand time 0",
+      "srand(time(NULL))",
+      "zawsze te same liczby losowe",
+      "losowanie daje to samo"
+     ],
+     "a": "Bez ustawienia ziarna generator startuje zawsze tak samo. `srand(time(0))` zmienia ziarno co sekundę — kilka uruchomień\nw tej samej sekundzie (np. w skrypcie stress-testu) da identyczne „losowe” dane. Lepiej: ziarno z `chrono::steady_clock`\n(nanosekundy) albo jawnie z argumentu programu.",
+     "code": "mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());\ncout << rng() << '\\n';"
+    },
+    {
+     "q": [
+      "losowa liczba z przedzialu a b",
+      "random in range c++",
+      "liczba z zakresu od a do b",
+      "losuj od 1 do n",
+      "losowa liczba z przedziału od a do b",
+      "wylosuj liczbę z zakresu"
+     ],
+     "a": "`uniform_int_distribution<long long>(a, b)(rng)` — oba końce włącznie. Typ w nawiasach ostrych dopasuj do zakresu\n(`long long` dla wartości > 2·10^9).",
+     "code": "mt19937_64 rng(7);\nlong long a = -1000000000000LL, b = 1000000000000LL;\nlong long x = uniform_int_distribution<long long>(a, b)(rng);\ncout << x << '\\n';"
+    },
+    {
+     "q": [
+      "shuffle vector",
+      "losowa permutacja",
+      "random_shuffle nie dziala",
+      "przetasuj tablice c++"
+     ],
+     "a": "`shuffle(v.begin(), v.end(), rng)`. `random_shuffle` zostało usunięte w C++17 i nowe kompilatory go nie znają.",
+     "code": "mt19937 rng(123);\nvector<int> p(10);\niota(p.begin(), p.end(), 1);\nshuffle(p.begin(), p.end(), rng);\nfor (int x : p) cout << x << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "losowy double",
+      "random double c++",
+      "losowa liczba rzeczywista",
+      "uniform_real_distribution"
+     ],
+     "a": "`uniform_real_distribution<double>(a, b)(rng)` — liczba z przedziału `[a, b)`.",
+     "code": "mt19937 rng(1);\ndouble x = uniform_real_distribution<double>(0.0, 10.0)(rng);\ncout << x << '\\n';"
+    },
+    {
+     "q": [
+      "mt19937_64",
+      "losowe liczby 64 bitowe",
+      "duze liczby losowe"
+     ],
+     "a": "`mt19937` daje 32-bitowe liczby, `mt19937_64` — 64-bitowe (przydatne do haszowania i dużych zakresów). `rng()` zwraca\nsurową liczbę bez rozkładu.",
+     "code": "mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());\nunsigned long long h = rng();\ncout << h << '\\n';"
+    },
+    {
+     "q": [
+      "generator testow ziarno",
+      "powtarzalne losowanie",
+      "seed z argumentu",
+      "jak odtworzyc losowy test"
+     ],
+     "a": "W generatorze testów bierz ziarno z argumentu programu (`./gen 17`). Gdy stress-test znajdzie błąd, ten sam numer\nodtworzy dokładnie ten sam test.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main(int argc, char* argv[]) {\n    unsigned seed = argc > 1 ? atoi(argv[1]) : 0;\n    mt19937 rng(seed);\n    int n = uniform_int_distribution<int>(1, 10)(rng);\n    cout << n << '\\n';\n    for (int i = 0; i < n; i++) cout << uniform_int_distribution<int>(1, 100)(rng) << \" \\n\"[i == n - 1];\n}"
+    },
+    {
+     "q": [
+      "random_device",
+      "random_device zawsze to samo",
+      "random_device mingw"
+     ],
+     "a": "`random_device` ma dawać prawdziwą losowość, ale na starszych MinGW (Windows) zwracał zawsze tę samą sekwencję.\nBezpieczniej łączyć go z zegarem albo po prostu używać `chrono::steady_clock::now().time_since_epoch().count()`.",
+     "code": "random_device rd;\nmt19937 rng(rd() ^ (unsigned)chrono::steady_clock::now().time_since_epoch().count());\ncout << rng() << '\\n';"
+    },
+    {
+     "q": [
+      "losowy element wektora",
+      "wylosuj element z tablicy",
+      "random element c++"
+     ],
+     "a": "Wylosuj indeks z `[0, n-1]`.",
+     "code": "mt19937 rng(5);\nvector<string> imiona = {\"Ala\", \"Ola\", \"Ela\"};\ncout << imiona[uniform_int_distribution<int>(0, (int)imiona.size() - 1)(rng)] << '\\n';"
+    }
+   ],
+   "related": [
+    "oi-brute-generator",
+    "oi-stress-test",
+    "cpp-ref-chrono-ctime",
+    "cpp-ref-cstring-cstdlib"
+   ]
+  },
+  {
+   "id": "num-bigint-strings",
+   "title": "Duże liczby jako napisy: dodawanie, odejmowanie, mnożenie pisemne",
+   "category": "Liczby i typy",
+   "tags": [
+    "duże liczby",
+    "big integer",
+    "bigint",
+    "dodawanie pisemne",
+    "mnożenie pisemne",
+    "string",
+    "arytmetyka dowolnej precyzji"
+   ],
+   "aliases": [
+    "duze liczby c++",
+    "big integer c++",
+    "dodawanie duzych liczb",
+    "mnozenie duzych liczb",
+    "liczba 1000 cyfr",
+    "bigint c++",
+    "dodawanie pisemne string",
+    "silnia 100 c++"
+   ],
+   "summary": "Gdy liczby mają setki cyfr, trzymaj je jako `string` (lub `vector<int>` cyfr od końca) i licz „pisemnie”: dodawanie i odejmowanie w O(n), mnożenie dwóch liczb w O(n·m). C++ nie ma wbudowanego typu big integer.",
+   "complexity": "dodawanie/odejmowanie: O(n); mnożenie pisemne: O(n·m); modulo przez int: O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Dodawanie i mnożenie pisemne",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// a + b dla nieujemnych liczb zapisanych dziesiętnie\nstring add(const string& a, const string& b) {\n    string r;\n    int i = a.size() - 1, j = b.size() - 1, carry = 0;\n    while (i >= 0 || j >= 0 || carry) {\n        int s = carry;\n        if (i >= 0) s += a[i--] - '0';\n        if (j >= 0) s += b[j--] - '0';\n        r += char('0' + s % 10);\n        carry = s / 10;\n    }\n    reverse(r.begin(), r.end());\n    return r;\n}\n\n// a * b dla nieujemnych\nstring mul(const string& a, const string& b) {\n    int n = a.size(), m = b.size();\n    vector<int> res(n + m, 0);\n    for (int i = n - 1; i >= 0; i--)\n        for (int j = m - 1; j >= 0; j--)\n            res[i + j + 1] += (a[i] - '0') * (b[j] - '0');\n    for (int k = n + m - 1; k > 0; k--) {     // przeniesienia\n        res[k - 1] += res[k] / 10;\n        res[k] %= 10;\n    }\n    string r;\n    for (int d : res) if (!(r.empty() && d == 0)) r += char('0' + d);\n    return r.empty() ? \"0\" : r;\n}\n\nint main() {\n    cout << add(\"99999999999999999999\", \"1\") << '\\n';    // 100000000000000000000\n    cout << mul(\"123456789\", \"987654321\") << '\\n';       // 121932631112635269\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Odejmowanie i porównanie",
+     "code": "// a - b dla a >= b >= 0\nstring sub(const string& a, const string& b) {\n    string r;\n    int i = a.size() - 1, j = b.size() - 1, borrow = 0;\n    while (i >= 0) {\n        int d = (a[i--] - '0') - borrow - (j >= 0 ? b[j--] - '0' : 0);\n        borrow = d < 0;\n        if (d < 0) d += 10;\n        r += char('0' + d);\n    }\n    while (r.size() > 1 && r.back() == '0') r.pop_back();   // zera wiodące\n    reverse(r.begin(), r.end());\n    return r;\n}\n\n// porównanie nieujemnych bez zer wiodących: -1, 0, 1\nint cmp(const string& a, const string& b) {\n    if (a.size() != b.size()) return a.size() < b.size() ? -1 : 1;\n    return a < b ? -1 : (a > b ? 1 : 0);\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Zanim napiszesz big integer, sprawdź, czy nie wystarczy `__int128` (do ~1,7·10^38), `unsigned long long` (do 1,8·10^19)\nalbo wynik modulo. W Pythonie liczby całkowite są nieograniczone — do sprawdzania wyników (brute) to wygodne."
+    }
+   ],
+   "pitfalls": [
+    "Porównanie `\"9\" < \"10\"` leksykograficznie daje fałsz — najpierw długość.",
+    "Zera wiodące w wyniku odejmowania/mnożenia.",
+    "Zapomniane końcowe przeniesienie (`carry`)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dodawanie duzych liczb",
+      "jak dodac dwie duze liczby",
+      "dodawanie pisemne c++",
+      "suma liczb 1000 cyfr",
+      "big number addition c++"
+     ],
+     "a": "Trzymaj liczby jako `string` i dodawaj od końca jak pisemnie: sumuj cyfry z przeniesieniem, dopisuj `s % 10`, przenoś `s / 10`.\nNa końcu odwróć wynik. Złożoność O(długość). Funkcja `add` jest w treści artykułu.",
+     "code": "string a = \"987654321987654321\", b = \"123456789123456789\", r;\nint i = a.size() - 1, j = b.size() - 1, c = 0;\nwhile (i >= 0 || j >= 0 || c) {\n    int s = c + (i >= 0 ? a[i--] - '0' : 0) + (j >= 0 ? b[j--] - '0' : 0);\n    r += char('0' + s % 10);\n    c = s / 10;\n}\nreverse(r.begin(), r.end());\ncout << r << '\\n';   // 1111111111111111110"
+    },
+    {
+     "q": [
+      "mnozenie duzych liczb",
+      "mnozenie pisemne c++",
+      "iloczyn dwoch duzych liczb",
+      "big number multiplication c++"
+     ],
+     "a": "Mnożenie pisemne: cyfra `a[i]` razy cyfra `b[j]` trafia na pozycję `i + j + 1` tablicy wyniku o długości `n + m`; potem\njedno przejście z przeniesieniami. Złożoność O(n·m) — dla liczb po 10^4 cyfr to 10^8 operacji (na granicy). Kod `mul` w treści."
+    },
+    {
+     "q": [
+      "mnozenie duzej liczby przez int",
+      "silnia 100 c++",
+      "duza silnia",
+      "100! dokladnie"
+     ],
+     "a": "Mnożenie przez małą liczbę `k` (≤ ~10^8) jest proste: trzymaj cyfry od końca w `vector<int>` i mnóż każdą przez `k`\nz przeniesieniem. Tak policzysz np. 100! (158 cyfr).",
+     "code": "vector<int> d = {1};   // cyfry od najmłodszej\nfor (int k = 2; k <= 100; k++) {\n    long long carry = 0;\n    for (int& x : d) {\n        long long v = 1LL * x * k + carry;\n        x = v % 10;\n        carry = v / 10;\n    }\n    while (carry) { d.push_back(carry % 10); carry /= 10; }\n}\nfor (int i = d.size() - 1; i >= 0; i--) cout << d[i];\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "porownanie duzych liczb string",
+      "ktora liczba wieksza string",
+      "compare big numbers"
+     ],
+     "a": "Dla liczb nieujemnych bez zer wiodących: dłuższa jest większa, a przy równej długości decyduje porównanie leksykograficzne\nnapisów (`a < b`). Samo `a < b` bez sprawdzenia długości jest błędne: `\"9\" > \"10\"` leksykograficznie.",
+     "code": "string a = \"9\", b = \"10\";\nbool mniejsze = a.size() != b.size() ? a.size() < b.size() : a < b;\ncout << mniejsze << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "odejmowanie duzych liczb",
+      "roznica duzych liczb string",
+      "odejmowanie pisemne"
+     ],
+     "a": "Od końca z pożyczką: odejmij cyfry i pożyczkę; jeśli wynik < 0, dodaj 10 i ustaw pożyczkę na 1. Najpierw upewnij się,\nże `a ≥ b` (inaczej zamień i dopisz minus). Usuń zera wiodące. Funkcja `sub` w treści."
+    },
+    {
+     "q": [
+      "reszta z dzielenia duzej liczby",
+      "duza liczba modulo int",
+      "big number mod",
+      "czy duza liczba jest podzielna przez 7"
+     ],
+     "a": "Nie musisz zamieniać całej liczby — licz resztę „w locie”: `r = (r * 10 + cyfra) % m`. Działa dla liczb o dowolnej długości.",
+     "code": "string s = \"123456789123456789123456789\";\nint m = 7, r = 0;\nfor (char c : s) r = (r * 10 + (c - '0')) % m;\ncout << r << '\\n';"
+    },
+    {
+     "q": [
+      "dzielenie duzej liczby przez int",
+      "big number division by small",
+      "dzielenie pisemne"
+     ],
+     "a": "Dzielenie pisemne przez małą liczbę `k`: idź od najstarszej cyfry, trzymaj resztę `r`, dopisuj cyfrę ilorazu `(r*10 + c) / k`.",
+     "code": "string s = \"1000000000000000000000\";\nlong long k = 7, r = 0;\nstring q;\nfor (char c : s) {\n    r = r * 10 + (c - '0');\n    q += char('0' + r / k);\n    r %= k;\n}\nq.erase(0, min(q.find_first_not_of('0'), q.size() - 1));\ncout << q << \" reszta \" << r << '\\n';"
+    },
+    {
+     "q": [
+      "python duze liczby",
+      "czy python ma big integer",
+      "duze liczby w pythonie"
+     ],
+     "a": "Tak — `int` w Pythonie ma nieograniczoną precyzję, więc `a * b` dla liczb 1000-cyfrowych po prostu działa. Przydatne\ndo pisania wolnego wzorca (brute) i weryfikacji. Na OI rozwiązania zwykle pisze się w C++.",
+     "code": "a = int(\"123456789\" * 20)\nb = int(\"987654321\" * 20)\nprint(a * b)",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "czy uzyc __int128 zamiast stringow",
+      "kiedy big integer",
+      "jak duze liczby potrzebuja stringow"
+     ],
+     "a": "Do ~1,7·10^38 (≈ 38 cyfr) wystarczy `__int128`. Do 1,8·10^19 — `unsigned long long`. Stringi są potrzebne dopiero dla\ndłuższych liczb lub gdy zadanie wprost podaje liczby po kilkaset cyfr."
+    }
+   ],
+   "related": [
+    "num-int128",
+    "num-conversions",
+    "num-mod-arithmetic"
+   ]
+  }
+ ]
+}

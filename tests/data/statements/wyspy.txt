@@ -1,0 +1,18 @@
+Archipelag
+Mapa archipelagu to prostokąt n × m. Znak „#” oznacza ląd, a znak „.” — wodę. Wyspą nazywamy maksymalny obszar lądu,
+w którym z każdego pola da się dojść do każdego innego, przechodząc między polami sąsiadującymi bokiem. Ile wysp jest na
+mapie?
+Wejście
+W pierwszym wierszu znajdują się dwie liczby całkowite n i m (1 ≤ n, m ≤ 2000). W kolejnych n wierszach znajduje się
+opis mapy — po m znaków „#” lub „.” w każdym wierszu.
+Wyjście
+Wypisz liczbę wysp.
+Przykład
+Wejście:
+4 5
+##..#
+#...#
+..#..
+....#
+Wyjście:
+4

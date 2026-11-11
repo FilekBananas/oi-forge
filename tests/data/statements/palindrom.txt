@@ -1,0 +1,18 @@
+Palindrom
+Palindrom to słowo, które czytane od tyłu jest takie samo jak czytane od przodu, np. „kajak”. Sprawdź, czy podane słowo
+jest palindromem.
+Wejście
+Jedyny wiersz wejścia zawiera słowo s złożone z małych liter alfabetu angielskiego (1 ≤ |s| ≤ 10^6).
+Wyjście
+Wypisz TAK, jeśli słowo jest palindromem, albo NIE w przeciwnym przypadku.
+Przykład 1
+Wejście:
+kajak
+Wyjście:
+TAK
+
+Przykład 2
+Wejście:
+kotek
+Wyjście:
+NIE

@@ -1,0 +1,179 @@
+{
+  "examples": [
+    {
+      "id": "array-basic",
+      "title": "Tablica liczb",
+      "category": "Tablice",
+      "description": "Klasyka: n, a potem n liczb w jednej linii. Małe wartości = dużo powtórzeń i kolizji.",
+      "source": "tests 1000          # ile testów (oddzielonych pustą linią — format Testerki)\nn = int(1, 10)\na = array(n, int(-5, 5))\nprint n\nprint a\n"
+    },
+    {
+      "id": "array-growing",
+      "title": "Rosnące rozmiary (testno)",
+      "category": "Tablice",
+      "description": "Pierwsze testy są malutkie (łatwo je debugować), kolejne coraz większe — dzięki zmiennej testno.",
+      "source": "tests 200\n# test 1 ma n = 1, test 2 ma n ≤ 2, ... od testu 30 n ≤ 30\nn = int(1, min(testno, 30))\nprint n\nprint array(n, int(1, 10 * n))\n"
+    },
+    {
+      "id": "array-distributions",
+      "title": "Ciągi o różnych rozkładach",
+      "category": "Tablice",
+      "description": "Posortowane, prawie posortowane, z powtórzeniami, piła — dobre antytesty na quicksorta i zachłanne.",
+      "source": "tests 500\nn = int(1, 12)\nkind = choice(\"uniform\", \"sorted\", \"desc\", \"nearly\", \"repeats\", \"equal\", \"zigzag\")\nprint n\nprint seq(n, 1, 20, kind)\n"
+    },
+    {
+      "id": "array-distinct-pairs",
+      "title": "Różne liczby i suma docelowa",
+      "category": "Tablice",
+      "description": "n różnych liczb oraz szukana suma k — typowe zadanie na dwa wskaźniki / wyszukiwanie binarne.",
+      "source": "tests 500\nn = int(2, 10)\na = distinct(n, 1, 50)\n# w połowie testów k jest sumą dwóch elementów tablicy\nif chance(0.5) {\n    k = a[0] + a[1]\n} else {\n    k = int(2, 100)\n}\nprint n, k\nprint shuffle(a)\n"
+    },
+    {
+      "id": "permutation",
+      "title": "Permutacja",
+      "category": "Tablice",
+      "description": "Losowa permutacja liczb 1..n — np. do zadań o cyklach permutacji lub inwersjach.",
+      "source": "tests 1000\nn = int(1, 9)\nprint n\nprint perm(n)\n"
+    },
+    {
+      "id": "tree-edges",
+      "title": "Drzewo — lista krawędzi",
+      "category": "Drzewa",
+      "description": "Losowe drzewo (kod Prüfera — jednostajnie spośród wszystkich drzew) w formacie „n” + n−1 krawędzi.",
+      "source": "tests 1000\nn = int(1, 8)\nprint n\nprint tree(n)\n"
+    },
+    {
+      "id": "tree-shapes",
+      "title": "Drzewa o różnych kształtach",
+      "category": "Drzewa",
+      "description": "Ścieżka, gwiazda, binarne, gąsienica… Ścieżka wykrywa przepełnienie stosu przy rekurencji, gwiazda — kwadratowe przeglądanie dzieci.",
+      "source": "tests 300\nn = int(2, 10)\nshape = choice(\"random\", \"line\", \"star\", \"binary\", \"caterpillar\", \"deep\")\nprint n\nprint tree(n, shape, weights=(1, 100))\n"
+    },
+    {
+      "id": "tree-parents",
+      "title": "Drzewo jako tablica rodziców",
+      "category": "Drzewa",
+      "description": "Format „n” + p2 p3 … pn (pi < i, korzeń 1) i zapytania o pary wierzchołków (np. LCA).",
+      "source": "tests 500\nn = int(2, 10)\nq = int(1, 5)\nprint n, q\nprint parents(n)\nrepeat q {\n    print int(1, n), int(1, n)\n}\n"
+    },
+    {
+      "id": "graph-dijkstra",
+      "title": "Graf ważony (Dijkstra)",
+      "category": "Grafy",
+      "description": "Spójny graf nieskierowany z wagami, wierzchołek startowy s. Format: „n m s”, potem krawędzie „u v w”.",
+      "source": "tests 500\nn = int(2, 7)\nm = int(n - 1, n * (n - 1) // 2)    # od drzewa do grafu pełnego\ns = int(1, n)\nprint n, m, s\nprint graph(n, m, weights=(1, 20))\n"
+    },
+    {
+      "id": "graph-directed",
+      "title": "Graf skierowany (może być niespójny)",
+      "category": "Grafy",
+      "description": "Skierowany, bez gwarancji spójności — dobre do SCC i BFS z nieosiągalnymi wierzchołkami.",
+      "source": "tests 500\nn = int(1, 7)\nm = int(0, n * (n - 1))\nprint n, m\nprint graph(n, m, directed=1, connected=0)\n"
+    },
+    {
+      "id": "graph-dag",
+      "title": "DAG (sortowanie topologiczne)",
+      "category": "Grafy",
+      "description": "Skierowany graf acykliczny — krawędzie zgodne z losowym porządkiem topologicznym.",
+      "source": "tests 500\nn = int(1, 8)\nm = int(0, n * (n - 1) // 2)\nprint n, m\nprint dag(n, m)\n"
+    },
+    {
+      "id": "graph-dsu",
+      "title": "Las + zapytania (Find & Union)",
+      "category": "Grafy",
+      "description": "Las z dokładnie k składowymi i zapytania „czy u i v są w tej samej składowej”.",
+      "source": "tests 500\nn = int(2, 10)\nk = int(1, n)\nq = int(1, 5)\nprint n, n - k, q\nprint forest(n, k)\nprint queries(q, n, \"pair\")\n"
+    },
+    {
+      "id": "graph-bipartite",
+      "title": "Graf dwudzielny (skojarzenia)",
+      "category": "Grafy",
+      "description": "Lewa strona 1..n1, prawa 1..n2, m krawędzi bez powtórzeń.",
+      "source": "tests 300\nn1 = int(1, 5)\nn2 = int(1, 5)\nm = int(0, n1 * n2)\nprint n1, n2, m\nprint bipartite(n1, n2, m)\n"
+    },
+    {
+      "id": "grid-maze",
+      "title": "Labirynt z gwarantowaną ścieżką (BFS)",
+      "category": "Siatki",
+      "description": "Plansza „#.” z ok. 35% ścian i zawsze istniejącą drogą z lewego górnego do prawego dolnego rogu.",
+      "source": "tests 300\nr = int(1, 6)\nc = int(1, 8)\nprint r, c\nprint grid(r, c, \"#.\", p=0.35, path=1)\n"
+    },
+    {
+      "id": "grid-digits",
+      "title": "Macierz cyfr",
+      "category": "Siatki",
+      "description": "Macierz r×c liczb (np. do sum prefiksowych 2D lub programowania dynamicznego na planszy).",
+      "source": "tests 300\nr = int(1, 5)\nc = int(1, 5)\nprint r, c\nprint matrix(r, c, int(0, 9))\n"
+    },
+    {
+      "id": "strings-small-alphabet",
+      "title": "Napisy nad małym alfabetem",
+      "category": "Napisy",
+      "description": "Krótkie napisy z „ab” — dużo powtórzeń wzorca, idealne do KMP / funkcji prefiksowej.",
+      "source": "tests 1000\ns = string(int(1, 12), \"ab\")\np = string(int(1, 3), \"ab\")\nprint s\nprint p\n"
+    },
+    {
+      "id": "strings-palindromes",
+      "title": "Palindromy i napisy okresowe",
+      "category": "Napisy",
+      "description": "Mieszanka: palindrom, napis okresowy i zupełnie losowy — do Manachera, haszy i okresów.",
+      "source": "tests 500\nn = int(1, 15)\nkind = int(1, 3)\nif kind == 1 {\n    s = palindrome(n, \"abc\")\n} elif kind == 2 {\n    s = periodic(n, int(1, 4), \"abc\")\n} else {\n    s = string(n, \"abc\")\n}\nprint n\nprint s\n"
+    },
+    {
+      "id": "strings-antihash",
+      "title": "Antytest na haszowanie",
+      "category": "Napisy",
+      "description": "Słowo Thue–Morse’a: dwa różne fragmenty mają ten sam hasz modulo 2^64 (dla n ≥ 2048). Sprawdź, czy Twój hasz to przeżyje!",
+      "source": "tests 1\nn = 4096\nprint n\nprint antihash(n)\n"
+    },
+    {
+      "id": "queries-segment-tree",
+      "title": "Zapytania: przypisanie i suma na przedziale",
+      "category": "Zapytania",
+      "description": "Tablica + q zapytań „1 i x” (przypisz) i „2 l r” (suma) — do drzewa przedziałowego / Fenwicka.",
+      "source": "tests 500\nn = int(1, 8)\nq = int(1, 8)\nprint n, q\nprint array(n, int(0, 10))\nprint queries(q, n, \"point_value range\", 0, 10)\n"
+    },
+    {
+      "id": "queries-handwritten",
+      "title": "Zapytania pisane ręcznie (if/else)",
+      "category": "Zapytania",
+      "description": "Gdy format zapytań jest nietypowy: losuj typ i składaj linię sam. Tu: „ADD x”, „DEL x”, „MAX”.",
+      "source": "tests 500\nq = int(1, 10)\nprint q\nrepeat q {\n    op = choice(\"ADD\", \"DEL\", \"MAX\", weights=(3, 1, 1))\n    if op == \"MAX\" {\n        print op\n    } else {\n        print op, int(1, 9)\n    }\n}\n"
+    },
+    {
+      "id": "intervals",
+      "title": "Przedziały (zamiatanie)",
+      "category": "Zapytania",
+      "description": "k przedziałów [l, r] na osi — do zadań o pokryciach i zamiataniu.",
+      "source": "tests 500\nk = int(1, 6)\nprint k\nprint pairs(k, 1, 20)\n"
+    },
+    {
+      "id": "multitest",
+      "title": "Multitest (t przypadków w jednym wejściu)",
+      "category": "Multitest",
+      "description": "Wejście z liczbą przypadków t na początku — każdy przypadek: n i tablica.",
+      "source": "tests 300\nt = int(1, 5)\nprint t\nrepeat t {\n    n = int(1, 6)\n    print n\n    print array(n, int(1, 100))\n}\n"
+    },
+    {
+      "id": "geometry-points",
+      "title": "Punkty na płaszczyźnie",
+      "category": "Geometria",
+      "description": "n różnych punktów o małych współrzędnych (dużo współliniowych — dobre dla otoczki wypukłej).",
+      "source": "tests 500\nn = int(1, 8)\nprint n\nprint points(n, -3, 3)\n"
+    },
+    {
+      "id": "numbers-yes-no",
+      "title": "Liczby rzeczywiste i odpowiedzi TAK/NIE",
+      "category": "Liczby",
+      "description": "Liczby z dokładnością do 2 miejsc po przecinku oraz losowe słowo z listy.",
+      "source": "tests 500\nn = int(1, 5)\nprint n\nfor i in 1..n {\n    print float(-10, 10, 2), choice(\"TAK\", \"NIE\")\n}\n"
+    },
+    {
+      "id": "benchmark-size",
+      "title": "Test na rozmiar (benchmark)",
+      "category": "Benchmark",
+      "description": "Jeden duży test o rozmiarze size — do „Porównania rozwiązań” (size = kolejne rozmiary z listy).",
+      "source": "# size ustawia Porównanie rozwiązań (tu domyślnie 10)\nn = size\nprint n\nprint array(n, int(1, 1e9))\n"
+    }
+  ]
+}

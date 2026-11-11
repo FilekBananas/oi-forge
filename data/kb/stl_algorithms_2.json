@@ -1,0 +1,2424 @@
+{
+ "chunk": "stl-algorithms-2",
+ "articles": [
+  {
+   "id": "stl-min-max",
+   "title": "min, max, min_element, max_element, minmax_element, clamp",
+   "category": "STL algorytmy",
+   "tags": [
+    "min",
+    "max",
+    "min_element",
+    "max_element",
+    "minmax_element",
+    "clamp",
+    "minimum",
+    "maksimum"
+   ],
+   "aliases": [
+    "min max c++",
+    "max_element",
+    "min_element",
+    "największy element vectora",
+    "najmniejszy element tablicy",
+    "clamp",
+    "minmax_element",
+    "maksimum tablicy c++",
+    "max z trzech liczb",
+    "max c++"
+   ],
+   "summary": "`min`/`max` porównują wartości (dwie lub listę), `min_element`/`max_element` zwracają iterator na najmniejszy/największy element zakresu, `clamp` przycina wartość do przedziału. Opis typowego błędu z mieszaniem typów (`max(int, long long)`).",
+   "complexity": "min/max dwóch wartości: O(1); min({...}): O(k); min_element/max_element/minmax_element: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`max(a, b)` i `min(a, b)` wymagają argumentów **tego samego typu** — `max(x, 0LL)` z `int x` się nie skompiluje („deduced conflicting types”). Dla wielu wartości użyj listy: `max({a, b, c})`. Dla zakresu — `max_element`, który zwraca **iterator** (wartość to `*it`, indeks `it - v.begin()`)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Podstawowe użycia",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int a = 5, b = 9, c = 2;\n    cout << max(a, b) << ' ' << min({a, b, c}) << '\\n';        // 9 2\n\n    vector<int> v = {4, 9, 1, 9, 3};\n    auto it = max_element(v.begin(), v.end());\n    cout << *it << \" na indeksie \" << it - v.begin() << '\\n';   // 9 na indeksie 1 (pierwsze maksimum)\n    auto [mn, mx] = minmax_element(v.begin(), v.end());\n    cout << *mn << ' ' << *mx << ' ' << mx - v.begin() << '\\n'; // 1 9 3 (OSTATNIE maksimum!)\n\n    long long duza = 5000000000LL;\n    int x = 7;\n    cout << max<long long>(x, duza) << '\\n';                    // jawny typ szablonu\n    cout << clamp(15, 0, 10) << ' ' << clamp(-3, 0, 10) << '\\n';   // 10 0\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Zwraca",
+      "Przy remisie"
+     ],
+     "rows": [
+      [
+       "`min(a, b)` / `max(a, b)`",
+       "wartość (const&)",
+       "pierwszy argument"
+      ],
+      [
+       "`min({a, b, c})` / `max({...})`",
+       "wartość",
+       "pierwszy z listy"
+      ],
+      [
+       "`min_element(b, e)`",
+       "iterator",
+       "pierwsze minimum"
+      ],
+      [
+       "`max_element(b, e)`",
+       "iterator",
+       "pierwsze maksimum"
+      ],
+      [
+       "`minmax_element(b, e)`",
+       "para iteratorów",
+       "pierwsze minimum, **ostatnie** maksimum"
+      ],
+      [
+       "`minmax(a, b)`",
+       "para wartości",
+       ""
+      ],
+      [
+       "`clamp(x, lo, hi)`",
+       "x przycięte do [lo, hi]",
+       "wymaga lo ≤ hi"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Aktualizacja maksimum w pętli: `best = max(best, wartosc);` — oba argumenty muszą mieć ten sam typ, więc jeśli `best` to `long long`, a `wartosc` to `int`, napisz `max(best, (long long)wartosc)`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "min(a, b) / max(a, b)",
+     "desc": "mniejsza / większa z dwóch wartości tego samego typu",
+     "complexity": "O(1)",
+     "returns": "const T&"
+    },
+    {
+     "sig": "min(a, b, cmp) / max(a, b, cmp)",
+     "desc": "z własnym komparatorem",
+     "complexity": "O(1)",
+     "returns": "const T&"
+    },
+    {
+     "sig": "min({a, b, c, ...}) / max({...})",
+     "desc": "minimum / maksimum z listy inicjalizacyjnej",
+     "complexity": "O(k)",
+     "returns": "T"
+    },
+    {
+     "sig": "minmax(a, b) / minmax({...})",
+     "desc": "para (min, max): dla dwóch argumentów pair referencji (uwaga na temporaria), dla listy — pair kopii",
+     "complexity": "O(1) / O(k)",
+     "returns": "pair"
+    },
+    {
+     "sig": "min_element(first, last[, cmp])",
+     "desc": "iterator na pierwsze minimum (end() dla pustego zakresu)",
+     "complexity": "O(n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "max_element(first, last[, cmp])",
+     "desc": "iterator na pierwsze maksimum",
+     "complexity": "O(n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "minmax_element(first, last[, cmp])",
+     "desc": "para iteratorów (pierwsze min, ostatnie max)",
+     "complexity": "O(n), ~1,5n porównań",
+     "returns": "pair<iterator, iterator>"
+    },
+    {
+     "sig": "clamp(x, lo, hi)",
+     "desc": "C++17: lo gdy x < lo, hi gdy x > hi, inaczej x",
+     "complexity": "O(1)",
+     "returns": "const T&"
+    },
+    {
+     "sig": "ranges::max(v) / ranges::min(v)",
+     "desc": "C++20: maksimum / minimum całego kontenera (wartość)",
+     "complexity": "O(n)",
+     "returns": "T"
+    },
+    {
+     "sig": "ranges::max_element(v)",
+     "desc": "C++20: iterator na maksimum",
+     "complexity": "O(n)",
+     "returns": "iterator"
+    }
+   ],
+   "pitfalls": [
+    "`max(a, b)` z różnymi typami (`int` i `long long`, `int` i `size_t`) się nie kompiluje — rzutuj albo podaj typ: `max<long long>(a, b)`.",
+    "`max_element` zwraca iterator, nie wartość — `int m = max_element(...)` się nie skompiluje; pisz `*max_element(...)`.",
+    "Na pustym zakresie `max_element` zwraca `end()` — dereferencja to UB.",
+    "`minmax_element` zwraca OSTATNIE maksimum (a `max_element` pierwsze) — ważne, gdy liczy się indeks.",
+    "`clamp(x, lo, hi)` z `lo > hi` to UB.",
+    "`max(v.size() - 1, 0)` — typy `size_t` i `int` się nie zgadzają, a `v.size() - 1` dla pustego vectora i tak „zawija się”.",
+    "Nie trzymaj referencji do wyniku `min`/`max` z wartości tymczasowych (`const int& m = max(a + 1, b);`) — wiszące odwołanie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "największy element vectora",
+      "max_element c++",
+      "jak znaleźć maksimum w tablicy",
+      "max of vector c++",
+      "maksimum vectora"
+     ],
+     "a": "`*max_element(v.begin(), v.end())` daje największą wartość w O(n); bez `*` dostajesz iterator, z którego indeks to `it - v.begin()`. W C++20 krócej: `ranges::max(v)`. Na pustym vectorze wynik to `end()` — sprawdź najpierw `!v.empty()`.",
+     "code": "vector<int> v = {3, 8, 2, 8};\nint mx = *max_element(v.begin(), v.end());\nint idx = max_element(v.begin(), v.end()) - v.begin();\ncout << mx << ' ' << idx << ' ' << ranges::max(v) << '\\n';   // 8 1 8"
+    },
+    {
+     "q": [
+      "max int long long błąd",
+      "no matching function for call to max",
+      "deduced conflicting types max",
+      "max z różnymi typami"
+     ],
+     "a": "`std::max` to szablon z jednym typem `T` dla obu argumentów — `max(int, long long)` nie wie, które `T` wybrać, i kompilacja się nie udaje. Rzutuj jeden argument (`max((long long)a, b)`), podaj typ jawnie (`max<long long>(a, b)`) albo trzymaj obie zmienne w tym samym typie.",
+     "code": "int a = 5;\nlong long b = 10000000000LL;\nlong long m1 = max((long long)a, b);\nlong long m2 = max<long long>(a, b);\ncout << m1 << ' ' << m2 << '\\n';"
+    },
+    {
+     "q": [
+      "max z trzech liczb",
+      "max kilku liczb",
+      "min z wielu wartości",
+      "max({a,b,c})",
+      "max of three numbers c++"
+     ],
+     "a": "Użyj listy inicjalizacyjnej: `max({a, b, c})` / `min({a, b, c, d})` — O(k). Wszystkie wartości muszą mieć ten sam typ. Alternatywa: zagnieżdżanie `max(a, max(b, c))`.",
+     "code": "int a = 4, b = 11, c = 7;\ncout << max({a, b, c}) << ' ' << min({a, b, c}) << '\\n';   // 11 4\ncout << max(a, max(b, c)) << '\\n';                         // 11"
+    },
+    {
+     "q": [
+      "indeks maksimum",
+      "pozycja największego elementu",
+      "argmax c++",
+      "na którym miejscu jest max"
+     ],
+     "a": "`max_element(v.begin(), v.end()) - v.begin()` — indeks **pierwszego** maksimum (O(n)). Indeks ostatniego maksimum daje `minmax_element(...).second - v.begin()` (albo zwykła pętla z warunkiem `>=`).",
+     "code": "vector<int> v = {2, 9, 4, 9};\nint pierwszy = max_element(v.begin(), v.end()) - v.begin();                  // 1\nint ostatni = minmax_element(v.begin(), v.end()).second - v.begin();          // 3\ncout << pierwszy << ' ' << ostatni << '\\n';"
+    },
+    {
+     "q": [
+      "min_element",
+      "najmniejszy element tablicy",
+      "minimum vectora c++",
+      "min of array c++"
+     ],
+     "a": "`*min_element(v.begin(), v.end())` — najmniejsza wartość (pierwsze wystąpienie), O(n). Dla tablicy C: `*min_element(a, a + n)`. Z komparatorem możesz szukać np. elementu o najmniejszej wartości bezwzględnej.",
+     "code": "int a[5] = {7, -3, 2, -8, 5};\ncout << *min_element(a, a + 5) << '\\n';                                    // -8\ncout << *min_element(a, a + 5, [](int x, int y) { return abs(x) < abs(y); }) << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "clamp c++",
+      "ogranicz wartość do przedziału",
+      "przytnij liczbę do zakresu",
+      "std::clamp"
+     ],
+     "a": "`clamp(x, lo, hi)` (C++17) zwraca `lo`, gdy x < lo, `hi`, gdy x > hi, a w przeciwnym razie x. Odpowiada `min(max(x, lo), hi)`. Wymaga `lo <= hi` i argumentów tego samego typu.",
+     "code": "int x = 120;\ncout << clamp(x, 0, 100) << ' ' << min(max(x, 0), 100) << '\\n';   // 100 100\ncout << clamp(-5, 0, 100) << '\\n';                                // 0"
+    },
+    {
+     "q": [
+      "minmax_element",
+      "min i max jednocześnie",
+      "minimum i maksimum w jednym przejściu",
+      "minmax c++"
+     ],
+     "a": "`auto [mn, mx] = minmax_element(v.begin(), v.end());` zwraca parę iteratorów w jednym przejściu (~1,5n porównań). Uwaga: `mx` wskazuje **ostatnie** maksimum, `mn` pierwsze minimum. Dla dwóch zmiennych `minmax(a, b)` zwraca parę **referencji** — nie wywołuj jej na wartościach tymczasowych (`minmax(9, 4)` daje wiszące referencje); dla stałych użyj `minmax({9, 4})`.",
+     "code": "vector<int> v = {5, 1, 7, 1, 7};\nauto [mn, mx] = minmax_element(v.begin(), v.end());\ncout << *mn << '@' << mn - v.begin() << ' ' << *mx << '@' << mx - v.begin() << '\\n';   // 1@1 7@4\nint a = 9, b = 4;\nauto [lo, hi] = minmax(a, b);      // referencje do a i b\ncout << lo << ' ' << hi << '\\n';   // 4 9\nauto [p, q] = minmax({9, 4, 7});   // wersja z listą zwraca kopie\ncout << p << ' ' << q << '\\n';     // 4 9"
+    },
+    {
+     "q": [
+      "aktualizacja maksimum w pętli",
+      "best = max(best, x)",
+      "jak zapamiętać największą wartość",
+      "maksimum bieżące"
+     ],
+     "a": "Zainicjalizuj wynik wartością neutralną (np. `LLONG_MIN` albo pierwszym elementem) i w pętli pisz `best = max(best, x)`. Typ `best` i `x` musi być ten sam. Jeśli trzeba zapamiętać też indeks — porównuj ręcznie.",
+     "code": "vector<long long> v = {-5, -2, -9};\nlong long best = LLONG_MIN;\nint gdzie = -1;\nfor (int i = 0; i < (int)v.size(); i++)\n    if (v[i] > best) { best = v[i]; gdzie = i; }\ncout << best << ' ' << gdzie << '\\n';   // -2 1"
+    }
+   ],
+   "related": [
+    "stl-nth-element",
+    "stl-accumulate",
+    "stl-numeric-limits",
+    "pit-int-overflow",
+    "stl-ref-binary-search-minmax"
+   ]
+  },
+  {
+   "id": "stl-nth-element",
+   "title": "nth_element i partial_sort — k-ty element i k najmniejszych",
+   "category": "STL algorytmy",
+   "tags": [
+    "nth_element",
+    "partial_sort",
+    "mediana",
+    "k-ty element",
+    "quickselect",
+    "top k"
+   ],
+   "aliases": [
+    "nth_element",
+    "partial_sort",
+    "k-ty najmniejszy element",
+    "mediana c++",
+    "kth smallest c++",
+    "quickselect c++",
+    "k najmniejszych elementów",
+    "nth element"
+   ],
+   "summary": "`nth_element` ustawia na pozycji k element, który byłby tam po posortowaniu (średnio O(n)) — szybciej niż pełne sortowanie. `partial_sort` sortuje tylko k najmniejszych elementów w O(n log k).",
+   "complexity": "nth_element: O(n) średnio; partial_sort: O(n log k); partial_sort_copy: O(n log k)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Po `nth_element(v.begin(), v.begin() + k, v.end())`: `v[k]` jest k-tym najmniejszym (od 0), wszystkie elementy przed nim są ≤ `v[k]`, a za nim ≥ `v[k]` — ale **żadna z części nie jest posortowana**. To idealne do mediany i k-tej statystyki."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "nth_element i partial_sort",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> v = {9, 2, 7, 4, 5, 1, 8};\n    int k = 3;\n    nth_element(v.begin(), v.begin() + k, v.end());\n    cout << \"4. najmniejszy: \" << v[k] << '\\n';            // 5\n\n    vector<int> w = {9, 2, 7, 4, 5, 1, 8};\n    nth_element(w.begin(), w.begin() + w.size() / 2, w.end());\n    cout << \"mediana: \" << w[w.size() / 2] << '\\n';        // 5\n\n    vector<int> u = {9, 2, 7, 4, 5, 1, 8};\n    partial_sort(u.begin(), u.begin() + 3, u.end());       // 3 najmniejsze posortowane na początku\n    for (int i = 0; i < 3; i++) cout << u[i] << ' ';       // 1 2 4\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Potrzeba",
+      "Algorytm",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "jeden k-ty element / mediana",
+       "`nth_element`",
+       "O(n) średnio"
+      ],
+      [
+       "k najmniejszych, posortowane",
+       "`partial_sort`",
+       "O(n log k)"
+      ],
+      [
+       "k najmniejszych, bez porządku",
+       "`nth_element` + pierwsze k",
+       "O(n) średnio"
+      ],
+      [
+       "wszystko posortowane",
+       "`sort`",
+       "O(n log n)"
+      ],
+      [
+       "k-ty element w strumieniu / dynamicznie",
+       "kopiec rozmiaru k",
+       "O(n log k)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "nth_element(first, nth, last[, cmp])",
+     "desc": "*nth = element z tej pozycji po sortowaniu; mniejsze/równe przed, większe/równe za",
+     "complexity": "O(n) średnio",
+     "returns": "void"
+    },
+    {
+     "sig": "partial_sort(first, middle, last[, cmp])",
+     "desc": "[first, middle) = posortowane najmniejsze elementy",
+     "complexity": "O(n log k)",
+     "returns": "void"
+    },
+    {
+     "sig": "partial_sort_copy(f, l, of, ol[, cmp])",
+     "desc": "kopiuje posortowane najmniejsze elementy do innego zakresu",
+     "complexity": "O(n log k)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "ranges::nth_element(v, it)",
+     "desc": "C++20: wersja na kontenerze",
+     "complexity": "O(n) średnio"
+    }
+   ],
+   "pitfalls": [
+    "Po `nth_element` elementy przed i za k-tym NIE są posortowane — nie zakładaj tego.",
+    "Indeks jest od 0: k-ty najmniejszy „po ludzku” (od 1) to `v.begin() + (k - 1)`.",
+    "`nth_element` zmienia kolejność w tablicy — jeśli potrzebujesz oryginału, działaj na kopii.",
+    "Dla mediany parzystej długości potrzebujesz dwóch środkowych elementów — po `nth_element` na n/2 drugi to `*max_element(v.begin(), v.begin() + n/2)`.",
+    "Złożoność O(n) jest średnia; w libstdc++ pesymistycznie O(n log n) (introselect), ale nie gorzej."
+   ],
+   "qa": [
+    {
+     "q": [
+      "k-ty najmniejszy element",
+      "kth smallest element c++",
+      "nth_element jak używać",
+      "k-ta statystyka pozycyjna"
+     ],
+     "a": "`nth_element(v.begin(), v.begin() + k, v.end());` ustawia w `v[k]` element, który stałby tam po posortowaniu (k od 0). Średnio O(n) — szybciej niż `sort` (O(n log n)). Reszta tablicy zostaje częściowo uporządkowana.",
+     "code": "vector<int> v = {40, 10, 30, 20, 50};\nint k = 1;                                   // drugi najmniejszy\nnth_element(v.begin(), v.begin() + k, v.end());\ncout << v[k] << '\\n';                        // 20"
+    },
+    {
+     "q": [
+      "mediana c++",
+      "jak policzyć medianę",
+      "median of array c++",
+      "mediana nth_element"
+     ],
+     "a": "Dla nieparzystego n mediana to element na pozycji n/2 po posortowaniu: `nth_element(v.begin(), v.begin() + n/2, v.end())`, wynik `v[n/2]` (O(n)). Dla parzystego n potrzebujesz też największego z lewej połowy: `*max_element(v.begin(), v.begin() + n/2)`.",
+     "code": "vector<double> v = {7, 1, 4, 9};\nint n = v.size();\nnth_element(v.begin(), v.begin() + n / 2, v.end());\ndouble gorna = v[n / 2];\ndouble dolna = *max_element(v.begin(), v.begin() + n / 2);\ncout << (n % 2 ? gorna : (dolna + gorna) / 2) << '\\n';   // 5.5"
+    },
+    {
+     "q": [
+      "partial_sort",
+      "posortuj tylko k najmniejszych",
+      "top k sorted c++",
+      "partial sort c++"
+     ],
+     "a": "`partial_sort(v.begin(), v.begin() + k, v.end())` umieszcza k najmniejszych elementów, posortowanych, na początku — O(n log k). Reszta jest w nieokreślonej kolejności. Malejąco (k największych): dodaj `greater<>()`.",
+     "code": "vector<int> v = {5, 3, 9, 1, 7, 2};\npartial_sort(v.begin(), v.begin() + 3, v.end(), greater<>());\nfor (int i = 0; i < 3; i++) cout << v[i] << ' ';   // 9 7 5\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "nth_element czy sort",
+      "kiedy nth_element zamiast sort",
+      "nth_element szybszy niż sort"
+     ],
+     "a": "Jeśli potrzebujesz tylko jednego elementu na konkretnej pozycji (k-ty, mediana) albo podziału na „k najmniejszych i resztę”, `nth_element` wystarczy i działa średnio w O(n). Gdy potrzebujesz pełnego porządku lub wielu różnych pozycji — `sort` raz i odczyt.",
+     "code": "vector<int> v = {8, 3, 5, 1, 9};\nnth_element(v.begin(), v.begin() + 2, v.end());\n// v[0], v[1] <= v[2] <= v[3], v[4] — ale v[0..1] i v[3..4] nieposortowane\ncout << v[2] << '\\n';   // 5"
+    },
+    {
+     "q": [
+      "k największych elementów nth_element",
+      "suma k największych",
+      "wybierz k największych liczb"
+     ],
+     "a": "Użyj `nth_element` z `greater<>()` na pozycji k: pierwsze k elementów to k największych (w dowolnej kolejności). Ich suma przez `accumulate` — razem średnio O(n).",
+     "code": "vector<long long> v = {4, 10, 2, 8, 6};\nint k = 2;\nnth_element(v.begin(), v.begin() + k, v.end(), greater<>());\ncout << accumulate(v.begin(), v.begin() + k, 0LL) << '\\n';   // 18"
+    },
+    {
+     "q": [
+      "nth_element nie sortuje",
+      "po nth_element tablica nieposortowana",
+      "dlaczego nth_element nie posortował"
+     ],
+     "a": "To zamierzone: `nth_element` gwarantuje tylko, że `v[k]` jest na właściwym miejscu i że elementy przed nim są ≤, a za nim ≥. Dzięki temu jest szybszy od sortowania. Jeśli potrzebujesz posortowanego początku — `partial_sort`.",
+     "code": "vector<int> v = {6, 5, 4, 3, 2, 1};\nnth_element(v.begin(), v.begin() + 3, v.end());\ncout << v[3] << '\\n';                                       // 4\ncout << is_sorted(v.begin(), v.begin() + 3) << '\\n';        // może być 0 lub 1 — bez gwarancji"
+    }
+   ],
+   "related": [
+    "stl-sort",
+    "stl-priority-queue",
+    "stl-min-max",
+    "geo-distances",
+    "stl-ref-sorting-partition",
+    "tech-median-stream"
+   ]
+  },
+  {
+   "id": "stl-count-find",
+   "title": "count, count_if, find, find_if, search — zliczanie i wyszukiwanie liniowe",
+   "category": "STL algorytmy",
+   "tags": [
+    "count",
+    "count_if",
+    "find",
+    "find_if",
+    "search",
+    "wyszukiwanie liniowe",
+    "zliczanie"
+   ],
+   "aliases": [
+    "count",
+    "count_if",
+    "find",
+    "find_if",
+    "std::find",
+    "ile razy występuje",
+    "policz elementy spełniające warunek",
+    "znajdź element w vectorze",
+    "count c++",
+    "find c++",
+    "search c++"
+   ],
+   "summary": "Algorytmy liniowe: `count`/`count_if` zliczają elementy (równe x / spełniające warunek), `find`/`find_if` znajdują pierwszy pasujący, `search` szuka podciągu. Wszystkie działają w O(n) na dowolnym kontenerze.",
+   "complexity": "count, count_if, find, find_if, find_if_not: O(n); search: O(n·m) pesymistycznie",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Te algorytmy przechodzą zakres element po elemencie, więc działają na każdym kontenerze (także na liście, secie, stringu), ale zawsze w O(n). Dla `set`/`map` używaj metod `s.count(x)`, `s.find(x)` — O(log n). `find` zwraca iterator (albo `last`, gdy nie znalazł), `count` — liczbę."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "count, count_if, find, find_if, search",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> v = {3, 8, 3, 5, 10, 3};\n    cout << count(v.begin(), v.end(), 3) << '\\n';                                 // 3\n    cout << count_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; }) << '\\n'; // 2\n\n    auto it = find(v.begin(), v.end(), 5);\n    if (it != v.end()) cout << \"5 na indeksie \" << it - v.begin() << '\\n';        // 3\n    auto jt = find_if(v.begin(), v.end(), [](int x) { return x > 6; });\n    cout << *jt << '\\n';                                                          // 8\n\n    string s = \"programowanie\";\n    cout << count(s.begin(), s.end(), 'a') << '\\n';                               // 2\n    vector<int> wzor = {3, 5};\n    auto kt = search(v.begin(), v.end(), wzor.begin(), wzor.end());\n    cout << kt - v.begin() << '\\n';                                               // 2\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Zwraca",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "`count(b, e, x)`",
+       "liczba elementów == x",
+       "O(n)"
+      ],
+      [
+       "`count_if(b, e, pred)`",
+       "liczba elementów z pred == true",
+       "O(n)"
+      ],
+      [
+       "`find(b, e, x)`",
+       "iterator na pierwsze x albo e",
+       "O(n)"
+      ],
+      [
+       "`find_if(b, e, pred)` / `find_if_not`",
+       "pierwszy spełniający / niespełniający",
+       "O(n)"
+      ],
+      [
+       "`search(b, e, wb, we)`",
+       "początek pierwszego wystąpienia podciągu",
+       "O(n·m) pesymistycznie"
+      ],
+      [
+       "`find_end(b, e, wb, we)`",
+       "początek ostatniego wystąpienia podciągu",
+       "O(n·m) pesymistycznie"
+      ],
+      [
+       "`find_first_of(b, e, sb, se)`",
+       "pierwszy element należący do zbioru",
+       "O(n·k)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Wywoływanie `count`/`find` na vectorze w pętli po q zapytaniach daje O(n·q) — przy n = q = 10^5 to 10^10 operacji (TLE). Posortuj dane raz i używaj `binary_search`/`lower_bound`, albo trzymaj liczności w `map`/tablicy."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "count(first, last, x)",
+     "desc": "liczba elementów równych x",
+     "complexity": "O(n)",
+     "returns": "ptrdiff_t"
+    },
+    {
+     "sig": "count_if(first, last, pred)",
+     "desc": "liczba elementów spełniających pred",
+     "complexity": "O(n)",
+     "returns": "ptrdiff_t",
+     "example": "count_if(v.begin(), v.end(), [](int x){ return x < 0; })"
+    },
+    {
+     "sig": "find(first, last, x)",
+     "desc": "pierwszy element równy x",
+     "complexity": "O(n)",
+     "returns": "iterator albo last"
+    },
+    {
+     "sig": "find_if(first, last, pred)",
+     "desc": "pierwszy element spełniający pred",
+     "complexity": "O(n)",
+     "returns": "iterator albo last"
+    },
+    {
+     "sig": "find_if_not(first, last, pred)",
+     "desc": "pierwszy element NIEspełniający pred",
+     "complexity": "O(n)",
+     "returns": "iterator albo last"
+    },
+    {
+     "sig": "search(first, last, s_first, s_last)",
+     "desc": "pierwsze wystąpienie podciągu",
+     "complexity": "O(n·m) pesymistycznie",
+     "returns": "iterator albo last"
+    },
+    {
+     "sig": "find_end(first, last, s_first, s_last)",
+     "desc": "ostatnie wystąpienie podciągu",
+     "complexity": "O(n·m) pesymistycznie",
+     "returns": "iterator albo last"
+    },
+    {
+     "sig": "find_first_of(first, last, s_first, s_last)",
+     "desc": "pierwszy element występujący w drugim zakresie",
+     "complexity": "O(n·k)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "adjacent_find(first, last)",
+     "desc": "pierwsza para równych sąsiadów",
+     "complexity": "O(n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "ranges::count(v, x) / ranges::find(v, x)",
+     "desc": "C++20: wersje na kontenerze",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "`count`/`find` są liniowe — dla `set`/`map` używaj metod kontenera (O(log n)).",
+    "`find` zwraca iterator `last`, gdy nie znalazł — dereferencja bez sprawdzenia to UB.",
+    "Wielokrotne `count`/`find` w pętli po zapytaniach daje O(n·q) — posortuj i używaj wyszukiwania binarnego.",
+    "`count` zwraca typ ze znakiem (`ptrdiff_t`), ale porównanie z `v.size()` (bez znaku) może dać ostrzeżenie — rzutuj na int.",
+    "`std::find` na `string` szuka znaku; podciągu szukaj metodą `s.find(t)` albo `search`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "ile razy występuje element w vectorze",
+      "count c++",
+      "policz wystąpienia w tablicy",
+      "count occurrences vector c++",
+      "zlicz element w vectorze"
+     ],
+     "a": "`count(v.begin(), v.end(), x)` zwraca liczbę elementów równych x w O(n). Dla wielu zapytań o różne x lepiej raz policzyć liczności (`map<int,int>` albo tablica) albo posortować i używać `upper_bound - lower_bound`.",
+     "code": "vector<int> v = {1, 2, 2, 3, 2};\ncout << count(v.begin(), v.end(), 2) << '\\n';   // 3\nmap<int, int> cnt;\nfor (int x : v) cnt[x]++;\ncout << cnt[2] << '\\n';                         // 3 — potem każde zapytanie O(log n)"
+    },
+    {
+     "q": [
+      "count_if",
+      "policz elementy spełniające warunek",
+      "ile liczb parzystych",
+      "count with condition c++"
+     ],
+     "a": "`count_if(b, e, pred)` liczy elementy, dla których predykat (zwykle lambda) zwraca `true` — O(n).",
+     "code": "vector<int> v = {4, 7, 10, 3, 6};\nint parzyste = count_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; });\nint wieksze = count_if(v.begin(), v.end(), [](int x) { return x > 5; });\ncout << parzyste << ' ' << wieksze << '\\n';   // 3 3"
+    },
+    {
+     "q": [
+      "find c++",
+      "znajdź element w vectorze",
+      "std::find",
+      "jak znaleźć indeks elementu",
+      "find index of element c++"
+     ],
+     "a": "`find(v.begin(), v.end(), x)` zwraca iterator na pierwsze wystąpienie x albo `v.end()`. Indeks: `it - v.begin()`. O(n). Dla posortowanego vectora szybciej `lower_bound` (O(log n)).",
+     "code": "vector<int> v = {7, 3, 9, 3};\nauto it = find(v.begin(), v.end(), 3);\nif (it != v.end()) cout << \"indeks \" << it - v.begin() << '\\n';   // 1\nelse cout << \"brak\\n\";"
+    },
+    {
+     "q": [
+      "find_if",
+      "znajdź pierwszy element spełniający warunek",
+      "find with condition c++",
+      "find_if lambda"
+     ],
+     "a": "`find_if(b, e, pred)` zwraca iterator na pierwszy element spełniający warunek (O(n)), `find_if_not` — na pierwszy, który go nie spełnia. Przydatne np. do pierwszej ujemnej liczby albo pierwszej struktury o danym polu.",
+     "code": "struct Os { string imie; int wiek; };\nvector<Os> v = {{\"Ala\", 15}, {\"Bob\", 19}, {\"Cyp\", 21}};\nauto it = find_if(v.begin(), v.end(), [](const Os& o) { return o.wiek >= 18; });\nif (it != v.end()) cout << it->imie << '\\n';   // Bob"
+    },
+    {
+     "q": [
+      "search podciąg w vectorze",
+      "znajdź podtablicę",
+      "std::search",
+      "find subsequence in vector c++"
+     ],
+     "a": "`search(b, e, wb, we)` zwraca początek pierwszego wystąpienia ciągu [wb, we) jako spójnego fragmentu — pesymistycznie O(n·m). Dla napisów działa też `s.find(t)`; dla dużych danych KMP.",
+     "code": "vector<int> v = {1, 4, 2, 4, 2, 9};\nvector<int> w = {4, 2, 9};\nauto it = search(v.begin(), v.end(), w.begin(), w.end());\ncout << (it == v.end() ? -1 : int(it - v.begin())) << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "count find wolne",
+      "count w pętli tle",
+      "find w pętli za wolno",
+      "wiele zapytań czy element istnieje"
+     ],
+     "a": "Każde `count`/`find` to pełne przejście po vectorze (O(n)), więc q zapytań to O(n·q). Rozwiązania: posortuj i używaj `binary_search` (O(log n)), zbuduj `unordered_set`/`set`, albo — dla małych wartości — tablicę obecności (O(1)).",
+     "code": "vector<int> v = {5, 1, 9, 3};\nvector<int> zapytania = {3, 4, 9};\nsort(v.begin(), v.end());\nfor (int x : zapytania) cout << binary_search(v.begin(), v.end(), x);   // 101\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "ranges count",
+      "ranges::find",
+      "count bez begin end",
+      "c++20 ranges find"
+     ],
+     "a": "W C++20 algorytmy z przestrzeni `ranges` przyjmują cały kontener: `ranges::count(v, x)`, `ranges::find(v, x)`, `ranges::count_if(v, pred)`. Złożoność bez zmian (O(n)), ale mniej miejsca na pomyłkę z iteratorami.",
+     "code": "vector<int> v = {2, 4, 4, 8};\ncout << ranges::count(v, 4) << ' ' << (ranges::find(v, 8) - v.begin()) << '\\n';   // 2 3"
+    }
+   ],
+   "related": [
+    "stl-binary-search",
+    "stl-all-any-none",
+    "stl-remove-erase",
+    "stl-set",
+    "stl-ref-nonmodifying"
+   ]
+  },
+  {
+   "id": "stl-remove-erase",
+   "title": "remove, remove_if i idiom erase–remove (oraz erase_if z C++20)",
+   "category": "STL algorytmy",
+   "tags": [
+    "remove",
+    "remove_if",
+    "erase",
+    "erase-remove",
+    "erase_if",
+    "usuwanie elementów",
+    "partition"
+   ],
+   "aliases": [
+    "remove",
+    "remove_if",
+    "erase remove",
+    "erase-remove idiom",
+    "erase_if",
+    "usuń elementy spełniające warunek",
+    "usun z vectora wszystkie",
+    "remove nie usuwa",
+    "vector remove c++"
+   ],
+   "summary": "`remove`/`remove_if` przesuwają elementy do zostawienia na początek i zwracają nowy koniec — ale nie zmieniają rozmiaru. Dopiero `erase` faktycznie usuwa ogon. W C++20 to samo robią w jednej linii `erase(v, x)` i `erase_if(v, pred)`.",
+   "complexity": "remove, remove_if, erase–remove, erase_if: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Algorytmy z `<algorithm>` nie znają kontenera — widzą tylko iteratory, więc nie mogą zmienić jego rozmiaru. `remove(b, e, x)` kopiuje „ocalałe” elementy na początek (zachowując ich kolejność) i zwraca iterator na nowy koniec; elementy za nim mają nieokreśloną wartość. Stąd idiom **erase–remove**: `v.erase(remove(...), v.end())`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "erase–remove i erase_if",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> v = {1, 0, 2, 0, 3};\n    auto nowy_koniec = remove(v.begin(), v.end(), 0);\n    cout << v.size() << ' ' << nowy_koniec - v.begin() << '\\n';   // 5 3 — rozmiar bez zmian!\n    v.erase(nowy_koniec, v.end());                                // teraz {1, 2, 3}\n\n    vector<int> w = {5, -2, 8, -1, 4};\n    w.erase(remove_if(w.begin(), w.end(), [](int x) { return x < 0; }), w.end());   // {5, 8, 4}\n\n    vector<int> u = {1, 2, 3, 4, 5, 6};\n    erase_if(u, [](int x) { return x % 3 == 0; });                // C++20: {1, 2, 4, 5}\n    string s = \"a-b-c\";\n    erase(s, '-');                                                // C++20: \"abc\"\n    cout << v.size() << ' ' << w.size() << ' ' << u.size() << ' ' << s << '\\n';   // 3 3 4 abc\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Kontener",
+      "Usuwanie wszystkich spełniających warunek"
+     ],
+     "rows": [
+      [
+       "vector, string, deque",
+       "`v.erase(remove_if(...), v.end())` albo C++20 `erase_if(v, pred)`"
+      ],
+      [
+       "list",
+       "`l.remove_if(pred)` (metoda) albo `erase_if(l, pred)`"
+      ],
+      [
+       "set, map, unordered_*",
+       "C++20 `erase_if(s, pred)` albo pętla `it = s.erase(it)`"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Usuwanie elementów vectora po kolei w pętli (`v.erase(v.begin() + i)`) kosztuje O(n) na każde usunięcie → O(n²). erase–remove robi wszystko jednym przejściem w O(n)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "remove(first, last, x)",
+     "desc": "przesuwa elementy ≠ x na początek, zwraca nowy koniec (rozmiar bez zmian)",
+     "complexity": "O(n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "remove_if(first, last, pred)",
+     "desc": "jak remove, ale dla elementów spełniających pred",
+     "complexity": "O(n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "v.erase(remove(v.begin(), v.end(), x), v.end())",
+     "desc": "idiom erase–remove: faktyczne usunięcie",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "erase(c, x)",
+     "desc": "C++20: usuwa z vector/string/deque/list wszystkie elementy równe x",
+     "complexity": "O(n)",
+     "returns": "liczba usuniętych"
+    },
+    {
+     "sig": "erase_if(c, pred)",
+     "desc": "C++20: usuwa elementy spełniające pred (także z set/map/unordered)",
+     "complexity": "O(n)",
+     "returns": "liczba usuniętych"
+    },
+    {
+     "sig": "remove_copy / remove_copy_if",
+     "desc": "kopiuje do innego zakresu bez usuwanych elementów",
+     "complexity": "O(n)",
+     "returns": "iterator wyjścia"
+    },
+    {
+     "sig": "partition(first, last, pred)",
+     "desc": "przestawia: najpierw spełniające pred, potem reszta (bez zachowania kolejności)",
+     "complexity": "O(n)",
+     "returns": "iterator granicy"
+    },
+    {
+     "sig": "stable_partition(first, last, pred)",
+     "desc": "jak partition, ale zachowuje kolejność w obu grupach",
+     "complexity": "O(n log n) bez pamięci / O(n) z nią",
+     "returns": "iterator"
+    }
+   ],
+   "pitfalls": [
+    "Samo `remove` NIE usuwa — rozmiar vectora się nie zmienia. Zawsze dopisz `erase(..., v.end())` albo użyj `erase_if`.",
+    "Elementy między nowym końcem a `end()` po `remove` mają nieokreśloną wartość — nie czytaj ich.",
+    "`remove` na `set`/`map` się nie skompiluje (elementy są const) — użyj `erase_if` albo pętli z `it = s.erase(it)`.",
+    "`v.erase(remove(...))` bez drugiego argumentu `v.end()` usuwa tylko JEDEN element (pod zwróconym iteratorem) — częsty błąd.",
+    "Usuwanie po jednym elemencie w pętli to O(n²)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "remove nie usuwa",
+      "dlaczego remove nie zmienia rozmiaru",
+      "remove vector nie działa",
+      "std::remove nic nie robi"
+     ],
+     "a": "`remove` nie ma dostępu do kontenera, tylko do iteratorów — przesuwa zostawiane elementy na początek i zwraca nowy koniec, ale `size()` się nie zmienia. Musisz odciąć ogon: `v.erase(remove(v.begin(), v.end(), x), v.end());` albo w C++20 `erase(v, x)`.",
+     "code": "vector<int> v = {7, 1, 7, 2};\nremove(v.begin(), v.end(), 7);\ncout << v.size() << '\\n';                              // 4 — nadal!\nvector<int> w = {7, 1, 7, 2};\nw.erase(remove(w.begin(), w.end(), 7), w.end());\ncout << w.size() << '\\n';                              // 2"
+    },
+    {
+     "q": [
+      "erase remove idiom",
+      "usuń wszystkie wystąpienia z vectora",
+      "vector erase all occurrences",
+      "usuń wszystkie x z vectora"
+     ],
+     "a": "Idiom erase–remove: `v.erase(remove(v.begin(), v.end(), x), v.end());` — jedno przejście, O(n), zachowuje kolejność pozostałych elementów. W C++20 prościej: `erase(v, x);`.",
+     "code": "vector<int> v = {3, 0, 0, 5, 0};\nv.erase(remove(v.begin(), v.end(), 0), v.end());   // {3, 5}\nvector<int> w = {3, 0, 0, 5, 0};\nerase(w, 0);                                       // C++20: {3, 5}\ncout << v.size() << w.size() << '\\n';              // 22"
+    },
+    {
+     "q": [
+      "erase_if",
+      "usuń elementy spełniające warunek",
+      "remove_if c++",
+      "vector usuń ujemne",
+      "erase if c++20"
+     ],
+     "a": "C++20: `erase_if(v, [](int x){ return x < 0; });` — O(n), zwraca liczbę usuniętych. Starszy sposób: `v.erase(remove_if(v.begin(), v.end(), pred), v.end());`. `erase_if` działa też dla `set`, `map`, `list`, `unordered_map`.",
+     "code": "vector<int> v = {4, -1, 6, -7};\nsize_t ile = erase_if(v, [](int x) { return x < 0; });\nmap<int, int> m = {{1, 0}, {2, 5}};\nerase_if(m, [](const auto& p) { return p.second == 0; });\ncout << ile << ' ' << v.size() << ' ' << m.size() << '\\n';   // 2 2 1"
+    },
+    {
+     "q": [
+      "erase remove bez end",
+      "v.erase(remove(...)) usuwa tylko jeden",
+      "erase remove błąd jeden element"
+     ],
+     "a": "`v.erase(it)` z jednym argumentem usuwa tylko element pod `it`. Wynik `remove` to początek ogona do usunięcia, więc trzeba podać zakres: `v.erase(remove(...), v.end())`. Bez `v.end()` zostaną śmieci z ogona.",
+     "code": "vector<int> v = {1, 9, 9, 2};\nv.erase(remove(v.begin(), v.end(), 9), v.end());   // poprawnie: {1, 2}\ncout << v.size() << '\\n';                          // 2"
+    },
+    {
+     "q": [
+      "usuń ze stringa znaki",
+      "remove_if string",
+      "usuń cyfry ze stringa",
+      "usuń spacje z napisu c++"
+     ],
+     "a": "Na `string` działa to samo: `s.erase(remove_if(s.begin(), s.end(), ::isdigit), s.end());` albo C++20 `erase_if(s, pred)` / `erase(s, ' ')`. O(n).",
+     "code": "string s = \"a1b2 c3\";\nerase_if(s, [](char c) { return isdigit(c); });   // \"ab c\"\nerase(s, ' ');                                    // \"abc\"\ncout << s << '\\n';"
+    },
+    {
+     "q": [
+      "partition c++",
+      "podziel tablicę według warunku",
+      "stable_partition",
+      "najpierw parzyste potem nieparzyste"
+     ],
+     "a": "`partition(b, e, pred)` przestawia elementy tak, że najpierw są te spełniające `pred`, potem reszta; zwraca iterator granicy. O(n), bez zachowania kolejności. `stable_partition` zachowuje względną kolejność w obu grupach.",
+     "code": "vector<int> v = {1, 2, 3, 4, 5, 6};\nauto g = stable_partition(v.begin(), v.end(), [](int x) { return x % 2 == 0; });\nfor (int x : v) cout << x << ' ';           // 2 4 6 1 3 5\ncout << '\\n' << g - v.begin() << '\\n';      // 3"
+    },
+    {
+     "q": [
+      "usuwanie w pętli vector wolne",
+      "erase w pętli o(n^2)",
+      "jak szybko usunąć wiele elementów z vectora"
+     ],
+     "a": "Każde `v.erase(v.begin() + i)` przesuwa resztę vectora — n usunięć to O(n²). Zamiast tego: erase–remove / `erase_if` (O(n)) albo zbuduj nowy vector z elementów do zostawienia.",
+     "code": "vector<int> v(100000);\niota(v.begin(), v.end(), 0);\nerase_if(v, [](int x) { return x % 2 == 1; });   // O(n) zamiast O(n^2)\ncout << v.size() << '\\n';                        // 50000"
+    }
+   ],
+   "related": [
+    "stl-vector",
+    "stl-unique",
+    "stl-count-find",
+    "stl-iterators",
+    "stl-ref-modifying",
+    "stl-ref-sorting-partition",
+    "stl-ref-vector-all"
+   ]
+  },
+  {
+   "id": "stl-all-any-none",
+   "title": "all_of, any_of, none_of — sprawdzanie warunku dla zakresu",
+   "category": "STL algorytmy",
+   "tags": [
+    "all_of",
+    "any_of",
+    "none_of",
+    "predykat",
+    "warunek",
+    "czy wszystkie"
+   ],
+   "aliases": [
+    "all_of",
+    "any_of",
+    "none_of",
+    "czy wszystkie elementy",
+    "czy jakikolwiek element",
+    "czy żaden element",
+    "sprawdź warunek dla vectora",
+    "all of c++"
+   ],
+   "summary": "Trzy algorytmy odpowiadające na pytania „czy wszystkie / czy któryś / czy żaden element spełnia warunek?”. Działają w O(n) i kończą wcześniej, gdy odpowiedź jest już znana.",
+   "complexity": "O(n) pesymistycznie, z wczesnym wyjściem",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`all_of(b, e, pred)` — `true`, gdy każdy element spełnia `pred`; `any_of` — gdy choć jeden; `none_of` — gdy żaden. Dla **pustego** zakresu: `all_of` i `none_of` zwracają `true`, `any_of` zwraca `false` (zgodnie z logiką: „każdy element pustego zbioru…” jest prawdą)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "all_of, any_of, none_of",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> v = {2, 4, 6, 9};\n    auto parzysta = [](int x) { return x % 2 == 0; };\n    cout << all_of(v.begin(), v.end(), parzysta) << ' '     // 0\n         << any_of(v.begin(), v.end(), parzysta) << ' '     // 1\n         << none_of(v.begin(), v.end(), [](int x) { return x < 0; }) << '\\n';   // 1\n\n    string s = \"12345\";\n    cout << all_of(s.begin(), s.end(), ::isdigit) << '\\n';  // 1 — czy napis to liczba\n\n    vector<int> pusty;\n    cout << all_of(pusty.begin(), pusty.end(), parzysta) << any_of(pusty.begin(), pusty.end(), parzysta) << '\\n';   // 10\n}"
+    }
+   ],
+   "functions": [
+    {
+     "sig": "all_of(first, last, pred)",
+     "desc": "czy pred jest prawdziwy dla wszystkich (pusty zakres → true)",
+     "complexity": "O(n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "any_of(first, last, pred)",
+     "desc": "czy pred jest prawdziwy dla któregoś (pusty → false)",
+     "complexity": "O(n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "none_of(first, last, pred)",
+     "desc": "czy pred nie jest prawdziwy dla żadnego (pusty → true)",
+     "complexity": "O(n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "ranges::all_of(v, pred) / ranges::any_of / ranges::none_of",
+     "desc": "C++20: wersje na kontenerze",
+     "complexity": "O(n)",
+     "returns": "bool"
+    }
+   ],
+   "pitfalls": [
+    "Dla pustego zakresu `all_of` zwraca `true` — jeśli „pusty” ma oznaczać fałsz, sprawdź to osobno.",
+    "Predykat z `isdigit`/`isalpha` dla znaków spoza ASCII (ujemne `char`) to UB — rzutuj na `unsigned char` w lambdzie.",
+    "To algorytmy liniowe — dla wielu zapytań o różne warunki rozważ wcześniejsze przeliczenie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "czy wszystkie elementy spełniają warunek",
+      "all_of c++",
+      "sprawdź czy wszystkie liczby są dodatnie",
+      "all of vector condition"
+     ],
+     "a": "`all_of(v.begin(), v.end(), [](int x){ return x > 0; })` zwraca `true`, gdy każdy element spełnia warunek. O(n), przerywa przy pierwszym elemencie, który go nie spełnia. Dla pustego vectora zwraca `true`.",
+     "code": "vector<int> v = {3, 5, 8};\nbool dodatnie = all_of(v.begin(), v.end(), [](int x) { return x > 0; });\ncout << dodatnie << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "any_of",
+      "czy jakikolwiek element",
+      "czy istnieje element spełniający warunek",
+      "any of c++"
+     ],
+     "a": "`any_of(b, e, pred)` — czy przynajmniej jeden element spełnia warunek. O(n), kończy przy pierwszym trafieniu. Równoważne `find_if(b, e, pred) != e`.",
+     "code": "vector<int> v = {1, 3, 6, 7};\ncout << any_of(v.begin(), v.end(), [](int x) { return x % 2 == 0; }) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "none_of",
+      "czy żaden element",
+      "sprawdź czy nie ma ujemnych",
+      "none of c++"
+     ],
+     "a": "`none_of(b, e, pred)` zwraca `true`, gdy żaden element nie spełnia warunku — odwrotność `any_of`. O(n).",
+     "code": "vector<int> v = {4, 0, 9};\ncout << none_of(v.begin(), v.end(), [](int x) { return x < 0; }) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "czy string jest liczbą",
+      "czy napis składa się z cyfr",
+      "is numeric string c++",
+      "sprawdź czy same cyfry"
+     ],
+     "a": "`!s.empty() && all_of(s.begin(), s.end(), [](unsigned char c){ return isdigit(c); })`. Sprawdzenie niepustości jest potrzebne, bo dla pustego napisu `all_of` zwraca `true`.",
+     "code": "string s = \"2024\", t = \"12a\";\nauto cyfry = [](const string& x) {\n    return !x.empty() && all_of(x.begin(), x.end(), [](unsigned char c) { return isdigit(c); });\n};\ncout << cyfry(s) << cyfry(t) << cyfry(\"\") << '\\n';   // 100"
+    },
+    {
+     "q": [
+      "all_of pusty vector",
+      "all_of zwraca true dla pustego",
+      "dlaczego all_of pusty true"
+     ],
+     "a": "To konwencja logiczna („prawda bezwarunkowa”): każdy element pustego zbioru spełnia dowolny warunek, bo nie ma kontrprzykładu. `any_of` dla pustego zakresu zwraca `false`, a `none_of` — `true`.",
+     "code": "vector<int> v;\nauto p = [](int x) { return x > 100; };\ncout << all_of(v.begin(), v.end(), p) << any_of(v.begin(), v.end(), p) << none_of(v.begin(), v.end(), p) << '\\n';   // 101"
+    },
+    {
+     "q": [
+      "czy tablica posortowana all_of",
+      "czy wszystkie elementy równe",
+      "all elements equal c++"
+     ],
+     "a": "Wszystkie równe pierwszemu: `all_of(v.begin(), v.end(), [&](int x){ return x == v[0]; })` (dla niepustego v), albo `adjacent_find(v.begin(), v.end(), not_equal_to<>()) == v.end()`. Posortowanie sprawdza `is_sorted`.",
+     "code": "vector<int> v = {7, 7, 7};\nbool rowne = !v.empty() && all_of(v.begin(), v.end(), [&](int x) { return x == v[0]; });\nbool rowne2 = adjacent_find(v.begin(), v.end(), not_equal_to<>()) == v.end();\ncout << rowne << rowne2 << '\\n';   // 11"
+    }
+   ],
+   "related": [
+    "stl-count-find",
+    "cpp-lambdas",
+    "stl-sort",
+    "stl-ref-nonmodifying"
+   ]
+  },
+  {
+   "id": "stl-merge",
+   "title": "merge i inplace_merge — scalanie posortowanych ciągów",
+   "category": "STL algorytmy",
+   "tags": [
+    "merge",
+    "inplace_merge",
+    "scalanie",
+    "merge sort",
+    "sortowanie przez scalanie",
+    "inwersje"
+   ],
+   "aliases": [
+    "merge",
+    "std::merge",
+    "inplace_merge",
+    "scalanie posortowanych tablic",
+    "merge sort c++",
+    "połącz dwa posortowane vectory",
+    "sortowanie przez scalanie",
+    "merge two sorted arrays c++"
+   ],
+   "summary": "`merge` scala dwa posortowane zakresy w jeden posortowany w O(n + m), `inplace_merge` scala dwie przyległe posortowane części jednego zakresu. Podstawa sortowania przez scalanie i liczenia inwersji.",
+   "complexity": "merge: O(n + m); inplace_merge: O(n) z dodatkową pamięcią, O(n log n) bez niej",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`merge(a.begin(), a.end(), b.begin(), b.end(), out)` zapisuje do `out` wszystkie elementy obu zakresów w porządku rosnącym (zachowuje duplikaty i jest stabilny: przy remisie najpierw idzie element z pierwszego zakresu). Miejsce docelowe musi mieć odpowiedni rozmiar — albo użyj `back_inserter`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "merge i inplace_merge",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> a = {1, 4, 7}, b = {2, 4, 9, 10};\n    vector<int> c(a.size() + b.size());\n    merge(a.begin(), a.end(), b.begin(), b.end(), c.begin());   // 1 2 4 4 7 9 10\n\n    vector<int> d;\n    merge(a.begin(), a.end(), b.begin(), b.end(), back_inserter(d));   // to samo przez dopisywanie\n\n    vector<int> v = {3, 5, 8, 1, 2, 9};          // dwie posortowane połówki: [0,3) i [3,6)\n    inplace_merge(v.begin(), v.begin() + 3, v.end());   // 1 2 3 5 8 9\n    for (int x : c) cout << x << ' ';\n    cout << '\\n';\n    for (int x : v) cout << x << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Merge sort i liczenie inwersji",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// sortowanie przez scalanie + liczba inwersji (par i<j z a[i] > a[j]) w O(n log n)\nlong long inwersje(vector<int>& a, int l, int r) {          // zakres [l, r)\n    if (r - l <= 1) return 0;\n    int m = (l + r) / 2;\n    long long wynik = inwersje(a, l, m) + inwersje(a, m, r);\n    int j = m;\n    for (int i = l; i < m; i++) {                          // ile elementów prawej części < a[i]\n        while (j < r && a[j] < a[i]) j++;\n        wynik += j - m;\n    }\n    inplace_merge(a.begin() + l, a.begin() + m, a.begin() + r);\n    return wynik;\n}\n\nint main() {\n    vector<int> a = {3, 1, 2, 5, 4};\n    cout << inwersje(a, 0, a.size()) << '\\n';               // 3: (3,1) (3,2) (5,4)\n}"
+    }
+   ],
+   "functions": [
+    {
+     "sig": "merge(f1, l1, f2, l2, out[, cmp])",
+     "desc": "scala dwa posortowane zakresy do out (stabilnie)",
+     "complexity": "O(n + m)",
+     "returns": "iterator za ostatnim zapisanym"
+    },
+    {
+     "sig": "inplace_merge(first, middle, last[, cmp])",
+     "desc": "scala posortowane [first, middle) i [middle, last) w miejscu",
+     "complexity": "O(n) z buforem, O(n log n) bez",
+     "returns": "void"
+    },
+    {
+     "sig": "back_inserter(v)",
+     "desc": "iterator wyjściowy dopisujący push_back",
+     "complexity": "O(1) na element"
+    },
+    {
+     "sig": "ranges::merge(a, b, out)",
+     "desc": "C++20: wersja na kontenerach",
+     "complexity": "O(n + m)"
+    },
+    {
+     "sig": "l1.merge(l2) (list)",
+     "desc": "metoda listy: scala posortowane listy bez kopiowania",
+     "complexity": "O(n + m)"
+    }
+   ],
+   "pitfalls": [
+    "Oba zakresy wejściowe muszą być posortowane (tym samym komparatorem) — inaczej wynik nie będzie posortowany.",
+    "Zakres wyjściowy musi mieć miejsce na n + m elementów; do pustego vectora pisz przez `back_inserter`.",
+    "Wyjście nie może nakładać się na wejście — do scalania w miejscu służy `inplace_merge`.",
+    "Do scalania dwóch `set` zwykle prościej `a.insert(b.begin(), b.end())` (O(m log(n+m))) lub `a.merge(b)`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "połącz dwa posortowane vectory",
+      "merge c++",
+      "scal dwie posortowane tablice",
+      "merge two sorted vectors c++"
+     ],
+     "a": "`merge(a.begin(), a.end(), b.begin(), b.end(), back_inserter(c))` tworzy posortowany vector z obu w O(n + m) — szybciej niż sklejenie i `sort` (O((n+m) log(n+m))). Duplikaty zostają.",
+     "code": "vector<int> a = {1, 5, 9}, b = {2, 5, 6};\nvector<int> c;\nmerge(a.begin(), a.end(), b.begin(), b.end(), back_inserter(c));\nfor (int x : c) cout << x << ' ';   // 1 2 5 5 6 9\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "inplace_merge",
+      "scal dwie połówki tablicy",
+      "inplace merge c++",
+      "scalanie w miejscu"
+     ],
+     "a": "`inplace_merge(v.begin(), v.begin() + m, v.end())` zakłada, że [0, m) i [m, n) są posortowane, i scala je w miejscu. Z dostępnym buforem pamięci działa w O(n), bez niego O(n log n).",
+     "code": "vector<int> v = {2, 6, 7, 1, 3, 8};\ninplace_merge(v.begin(), v.begin() + 3, v.end());\nfor (int x : v) cout << x << ' ';   // 1 2 3 6 7 8\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "merge sort c++",
+      "sortowanie przez scalanie implementacja",
+      "mergesort kod",
+      "merge sort implementation"
+     ],
+     "a": "Rekurencyjnie posortuj obie połowy i scal je `inplace_merge` (albo ręcznie przez bufor). Złożoność O(n log n), sortowanie stabilne. W praktyce `sort`/`stable_sort` są szybsze — własny merge sort pisze się głównie do liczenia inwersji.",
+     "code": "void msort(vector<int>& a, int l, int r) {   // [l, r)\n    if (r - l <= 1) return;\n    int m = (l + r) / 2;\n    msort(a, l, m);\n    msort(a, m, r);\n    inplace_merge(a.begin() + l, a.begin() + m, a.begin() + r);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liczba inwersji",
+      "zlicz inwersje c++",
+      "count inversions merge sort",
+      "inwersje w permutacji"
+     ],
+     "a": "Inwersja to para i < j z a[i] > a[j]. W merge sorcie przy scalaniu policz, ile elementów prawej połowy jest mniejszych od każdego elementu lewej. Razem O(n log n). Alternatywa: drzewo Fenwicka po kompresji wartości. Wynik może sięgać n²/2 — `long long`.",
+     "code": "long long inv(vector<int>& a, int l, int r) {\n    if (r - l <= 1) return 0;\n    int m = (l + r) / 2;\n    long long w = inv(a, l, m) + inv(a, m, r);\n    for (int i = l, j = m; i < m; i++) {\n        while (j < r && a[j] < a[i]) j++;\n        w += j - m;\n    }\n    inplace_merge(a.begin() + l, a.begin() + m, a.begin() + r);\n    return w;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "merge brak miejsca",
+      "merge segfault",
+      "merge do pustego vectora",
+      "merge output iterator"
+     ],
+     "a": "`merge` nie powiększa kontenera docelowego — zapis do pustego vectora przez `c.begin()` to wyjście poza pamięć (UB). Albo przygotuj rozmiar (`vector<int> c(a.size() + b.size())`), albo użyj `back_inserter(c)`.",
+     "code": "vector<int> a = {1, 3}, b = {2};\nvector<int> c(a.size() + b.size());           // rozmiar z góry\nmerge(a.begin(), a.end(), b.begin(), b.end(), c.begin());\ncout << c[1] << '\\n';                         // 2"
+    },
+    {
+     "q": [
+      "scal dwa sety",
+      "połącz dwa zbiory set",
+      "set merge c++",
+      "set union insert"
+     ],
+     "a": "Dla `set` najprościej `a.insert(b.begin(), b.end())` (O(m log(n+m))) albo C++17 `a.merge(b)` (przenosi węzły; elementy, które już są w a, zostają w b). `std::merge` na setach też działa (iteratory są posortowane), ale zwraca ciąg z duplikatami.",
+     "code": "set<int> a = {1, 3}, b = {2, 3, 4};\na.merge(b);                                  // a = {1,2,3,4}, b = {3}\ncout << a.size() << ' ' << b.size() << '\\n'; // 4 1"
+    }
+   ],
+   "related": [
+    "stl-sort",
+    "stl-set-operations",
+    "ds-fenwick"
+   ]
+  },
+  {
+   "id": "stl-set-operations",
+   "title": "set_intersection, set_union, set_difference, includes",
+   "category": "STL algorytmy",
+   "tags": [
+    "set_intersection",
+    "set_union",
+    "set_difference",
+    "set_symmetric_difference",
+    "includes",
+    "część wspólna",
+    "suma zbiorów",
+    "różnica zbiorów"
+   ],
+   "aliases": [
+    "set_intersection",
+    "set_union",
+    "set_difference",
+    "część wspólna zbiorów c++",
+    "suma zbiorów c++",
+    "różnica zbiorów c++",
+    "intersection c++",
+    "includes c++",
+    "przecięcie zbiorów"
+   ],
+   "summary": "Operacje teoriomnogościowe na **posortowanych** zakresach (posortowanych vectorach lub setach): część wspólna, suma, różnica, różnica symetryczna i sprawdzanie zawierania — wszystkie w czasie liniowym O(n + m).",
+   "complexity": "set_intersection, set_union, set_difference, set_symmetric_difference, includes: O(n + m)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Algorytmy przechodzą oba posortowane zakresy jednocześnie (jak przy scalaniu) i zapisują wynik do iteratora wyjściowego. Wynik też jest posortowany. Działają na vectorach po `sort` i bezpośrednio na `set` (jego iteratory są posortowane). Dla wyniku w secie użyj `inserter(c, c.begin())`, dla vectora — `back_inserter(c)`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Operacje na zbiorach",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> a = {1, 2, 4, 6, 8}, b = {2, 3, 4, 8, 9};\n    vector<int> wsp, suma, roz, sym;\n    set_intersection(a.begin(), a.end(), b.begin(), b.end(), back_inserter(wsp));        // 2 4 8\n    set_union(a.begin(), a.end(), b.begin(), b.end(), back_inserter(suma));              // 1 2 3 4 6 8 9\n    set_difference(a.begin(), a.end(), b.begin(), b.end(), back_inserter(roz));          // 1 6\n    set_symmetric_difference(a.begin(), a.end(), b.begin(), b.end(), back_inserter(sym));// 1 3 6 9\n\n    set<int> s1 = {5, 1, 3}, s2 = {3, 4, 5}, s3;\n    set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), inserter(s3, s3.begin()));   // {3, 5}\n\n    vector<int> pod = {2, 8};\n    cout << includes(a.begin(), a.end(), pod.begin(), pod.end()) << '\\n';   // 1 — pod ⊆ a\n    for (int x : wsp) cout << x << ' ';\n    cout << \"| \" << suma.size() << ' ' << roz.size() << ' ' << sym.size() << ' ' << s3.size() << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Wynik (zbiory bez powtórzeń)",
+      "Przy powtórzeniach (multizbiory)"
+     ],
+     "rows": [
+      [
+       "`set_intersection`",
+       "A ∩ B",
+       "każdy element min(cA, cB) razy"
+      ],
+      [
+       "`set_union`",
+       "A ∪ B",
+       "max(cA, cB) razy"
+      ],
+      [
+       "`set_difference`",
+       "A \\ B",
+       "max(cA − cB, 0) razy"
+      ],
+      [
+       "`set_symmetric_difference`",
+       "(A \\ B) ∪ (B \\ A)",
+       "|cA − cB| razy"
+      ],
+      [
+       "`includes`",
+       "czy B ⊆ A",
+       "czy cB ≤ cA dla każdego elementu"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "set_intersection(f1, l1, f2, l2, out[, cmp])",
+     "desc": "część wspólna posortowanych zakresów",
+     "complexity": "O(n + m)",
+     "returns": "iterator wyjścia"
+    },
+    {
+     "sig": "set_union(f1, l1, f2, l2, out[, cmp])",
+     "desc": "suma",
+     "complexity": "O(n + m)",
+     "returns": "iterator wyjścia"
+    },
+    {
+     "sig": "set_difference(f1, l1, f2, l2, out[, cmp])",
+     "desc": "elementy pierwszego, których nie ma w drugim",
+     "complexity": "O(n + m)",
+     "returns": "iterator wyjścia"
+    },
+    {
+     "sig": "set_symmetric_difference(f1, l1, f2, l2, out[, cmp])",
+     "desc": "elementy dokładnie jednego z zakresów",
+     "complexity": "O(n + m)",
+     "returns": "iterator wyjścia"
+    },
+    {
+     "sig": "includes(f1, l1, f2, l2[, cmp])",
+     "desc": "czy drugi zakres zawiera się w pierwszym",
+     "complexity": "O(n + m)",
+     "returns": "bool"
+    },
+    {
+     "sig": "back_inserter(v) / inserter(s, s.begin())",
+     "desc": "iteratory wyjściowe dopisujące do vectora / wstawiające do seta",
+     "complexity": "O(1) / O(log n) na element"
+    }
+   ],
+   "pitfalls": [
+    "Oba zakresy muszą być posortowane (tym samym porządkiem) — na nieposortowanych wynik jest błędny bez żadnego komunikatu.",
+    "Wyjścia nie da się zapisać przez `c.begin()` pustego kontenera — używaj `back_inserter` / `inserter` albo przygotuj rozmiar.",
+    "Dla `unordered_set` te algorytmy nie działają poprawnie (brak porządku) — przetnij ręcznie: dla każdego elementu mniejszego zbioru sprawdź `count` w większym.",
+    "Kolejność argumentów w `set_difference` i `includes` ma znaczenie (A \\ B ≠ B \\ A)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "część wspólna dwóch zbiorów",
+      "set_intersection c++",
+      "przecięcie dwóch vectorów",
+      "intersection of two sets c++",
+      "wspólne elementy dwóch tablic"
+     ],
+     "a": "Posortuj oba vectory i użyj `set_intersection(a.begin(), a.end(), b.begin(), b.end(), back_inserter(c))` — O(n + m) po sortowaniu. Dla `set` sortowanie nie jest potrzebne; wynik do seta zapisuj przez `inserter(c, c.begin())`.",
+     "code": "vector<int> a = {5, 1, 3, 7}, b = {7, 2, 3};\nsort(a.begin(), a.end());\nsort(b.begin(), b.end());\nvector<int> c;\nset_intersection(a.begin(), a.end(), b.begin(), b.end(), back_inserter(c));\nfor (int x : c) cout << x << ' ';   // 3 7\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "suma zbiorów c++",
+      "set_union",
+      "połącz dwa zbiory bez powtórzeń",
+      "union of two sets c++"
+     ],
+     "a": "`set_union` zapisuje posortowaną sumę bez dublowania elementów wspólnych — O(n + m). Dla dwóch `set` równie dobrze `a.insert(b.begin(), b.end())`.",
+     "code": "set<int> a = {1, 2}, b = {2, 3};\nvector<int> u;\nset_union(a.begin(), a.end(), b.begin(), b.end(), back_inserter(u));\nfor (int x : u) cout << x << ' ';   // 1 2 3\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "różnica zbiorów c++",
+      "set_difference",
+      "elementy z a których nie ma w b",
+      "difference of sets c++"
+     ],
+     "a": "`set_difference(a..., b..., out)` zapisuje elementy a, których nie ma w b (A \\ B), w O(n + m). Zamiana kolejności argumentów daje B \\ A.",
+     "code": "vector<int> a = {1, 2, 3, 4}, b = {2, 4, 6};\nvector<int> d;\nset_difference(a.begin(), a.end(), b.begin(), b.end(), back_inserter(d));\nfor (int x : d) cout << x << ' ';   // 1 3\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "czy zbiór zawiera się w drugim",
+      "includes c++",
+      "czy b jest podzbiorem a",
+      "subset check c++"
+     ],
+     "a": "`includes(a.begin(), a.end(), b.begin(), b.end())` zwraca `true`, gdy każdy element b występuje w a (dla posortowanych zakresów; z powtórzeniami — w odpowiedniej liczbie). O(n + m).",
+     "code": "set<int> a = {1, 3, 5, 7}, b = {3, 7};\ncout << includes(a.begin(), a.end(), b.begin(), b.end()) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "set_intersection do seta",
+      "wynik set_intersection w set",
+      "inserter set c++",
+      "set_intersection set output"
+     ],
+     "a": "Do seta nie da się pisać przez `c.begin()` (iterator tylko do odczytu, brak miejsca). Użyj `inserter(c, c.begin())` — każdy wynikowy element zostanie wstawiony przez `insert`.",
+     "code": "set<int> a = {1, 2, 3}, b = {2, 3, 4}, c;\nset_intersection(a.begin(), a.end(), b.begin(), b.end(), inserter(c, c.begin()));\ncout << c.size() << ' ' << *c.begin() << '\\n';   // 2 2"
+    },
+    {
+     "q": [
+      "rozmiar części wspólnej",
+      "ile wspólnych elementów",
+      "count common elements c++",
+      "liczba wspólnych elementów dwóch zbiorów"
+     ],
+     "a": "Jeśli potrzebujesz tylko liczby, nie musisz budować wyniku — przejdź dwoma wskaźnikami po posortowanych zakresach (O(n + m)) albo dla małego zbioru A i dużego B (set) policz `count_if` z `B.count(x)` (O(|A| log |B|)).",
+     "code": "vector<int> a = {1, 3, 5, 7}, b = {3, 4, 5, 6, 7};\nint i = 0, j = 0, wspolne = 0;\nwhile (i < (int)a.size() && j < (int)b.size()) {\n    if (a[i] < b[j]) i++;\n    else if (a[i] > b[j]) j++;\n    else { wspolne++; i++; j++; }\n}\ncout << wspolne << '\\n';   // 3"
+    }
+   ],
+   "related": [
+    "stl-merge",
+    "stl-set",
+    "stl-sort",
+    "stl-bitset",
+    "stl-ref-functional-iterator"
+   ]
+  },
+  {
+   "id": "stl-swap",
+   "title": "swap, iter_swap, exchange — zamiana wartości",
+   "category": "STL algorytmy",
+   "tags": [
+    "swap",
+    "zamiana",
+    "iter_swap",
+    "exchange",
+    "move"
+   ],
+   "aliases": [
+    "swap",
+    "std::swap",
+    "zamiana zmiennych c++",
+    "zamień dwie liczby",
+    "swap vector",
+    "swap c++",
+    "iter_swap"
+   ],
+   "summary": "`swap(a, b)` zamienia wartości dwóch obiektów. Dla kontenerów STL działa w O(1) (zamienia wskaźniki), dla tablic C i `std::array` — w O(n). Używany w sortowaniach, przy „podwójnym buforze” w DP i do szybkiego czyszczenia vectora.",
+   "complexity": "swap liczb: O(1); swap vector/string/set/map: O(1); swap tablic C i std::array: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`std::swap` jest przeciążony dla kontenerów: `swap(v, w)` dla dwóch vectorów wymienia tylko wewnętrzne wskaźniki, więc jest O(1) niezależnie od rozmiaru. To pozwala np. w DP po warstwach trzymać `prev` i `cur` i po każdej warstwie robić `swap(prev, cur)` zamiast kopiowania O(n)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "swap, iter_swap, exchange",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int a = 3, b = 7;\n    swap(a, b);\n    cout << a << ' ' << b << '\\n';                  // 7 3\n\n    vector<int> v = {1, 2, 3}, w = {9};\n    swap(v, w);                                     // O(1)\n    cout << v.size() << ' ' << w.size() << '\\n';    // 1 3\n\n    vector<int> t = {5, 6, 7};\n    swap(t[0], t[2]);                               // elementy: 7 6 5\n    iter_swap(t.begin(), t.begin() + 1);            // 6 7 5\n\n    int stara = exchange(a, 100);                   // a = 100, zwraca poprzednią wartość\n    cout << stara << ' ' << a << ' ' << t[0] << '\\n';   // 7 100 6\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Podwójny bufor w DP",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// DP po warstwach z dwoma wierszami: liczba ścieżek w siatce n × m (tylko w prawo/w dół)\nint main() {\n    int n = 3, m = 4;\n    vector<long long> prev(m, 1), cur(m);\n    for (int i = 1; i < n; i++) {\n        cur[0] = 1;\n        for (int j = 1; j < m; j++) cur[j] = cur[j - 1] + prev[j];\n        swap(prev, cur);                            // O(1) zamiast kopiowania\n    }\n    cout << prev[m - 1] << '\\n';                    // 10\n}"
+    }
+   ],
+   "functions": [
+    {
+     "sig": "swap(a, b)",
+     "desc": "zamienia wartości a i b",
+     "complexity": "O(1) dla typów prostych i kontenerów STL; O(n) dla tablic C/std::array"
+    },
+    {
+     "sig": "a.swap(b)",
+     "desc": "metoda kontenerów, to samo co swap(a, b)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "iter_swap(it1, it2)",
+     "desc": "zamienia elementy wskazywane przez iteratory",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "exchange(obj, nowa)",
+     "desc": "C++14: przypisuje nową wartość i zwraca starą",
+     "complexity": "O(1)",
+     "returns": "T"
+    },
+    {
+     "sig": "swap_ranges(f1, l1, f2)",
+     "desc": "zamienia elementy dwóch zakresów parami",
+     "complexity": "O(n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "vector<T>().swap(v)",
+     "desc": "zwalnia pamięć vectora (zamiana z pustym)",
+     "complexity": "O(1) + zwolnienie"
+    }
+   ],
+   "pitfalls": [
+    "`swap` dwóch tablic C (`int a[N], b[N]`) i `std::array` kopiuje elementy — O(N), a nie O(1). Do szybkiej zamiany buforów używaj vectorów albo indeksów warstw (`dp[i & 1]`).",
+    "Zamiana przez XOR (`a ^= b; b ^= a; a ^= b;`) daje 0, gdy a i b to ta sama zmienna (np. `swap(t[i], t[j])` z i == j) — używaj `std::swap`.",
+    "Po `swap(v, w)` iteratory do elementów v wskazują teraz elementy w (należą do drugiego kontenera)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "swap c++",
+      "jak zamienić dwie zmienne",
+      "zamiana wartości c++",
+      "swap two numbers c++",
+      "zamień miejscami dwie liczby"
+     ],
+     "a": "`swap(a, b)` — O(1) dla liczb. Nie potrzeba zmiennej pomocniczej ani sztuczek z XOR. Działa dla każdego typu (pary, stringi, struktury, kontenery).",
+     "code": "int a = 1, b = 2;\nswap(a, b);\nstring s = \"x\", t = \"y\";\nswap(s, t);\ncout << a << b << ' ' << s << t << '\\n';   // 21 yx"
+    },
+    {
+     "q": [
+      "swap vector o(1)",
+      "czy swap vectora jest szybki",
+      "zamiana dwóch vectorów",
+      "swap vector complexity"
+     ],
+     "a": "Tak — `swap(v, w)` dla `vector`, `string`, `set`, `map` itd. zamienia tylko wewnętrzne wskaźniki i rozmiary, więc jest O(1) bez względu na liczbę elementów. Dlatego w DP po warstwach `swap(prev, cur)` jest dużo tańszy niż `prev = cur` (O(n)).",
+     "code": "vector<int> big(1000000, 1), small = {2};\nswap(big, small);                          // natychmiastowe\ncout << big.size() << ' ' << small.size() << '\\n';   // 1 1000000"
+    },
+    {
+     "q": [
+      "swap tablic c",
+      "swap int array",
+      "zamiana dwóch tablic",
+      "swap array complexity"
+     ],
+     "a": "`swap(a, b)` dla tablic C o tym samym rozmiarze zamienia element po elemencie — O(N). Jeśli w DP chcesz przełączać dwie warstwy bez kopiowania, indeksuj je `dp[i & 1][...]` albo trzymaj w vectorach i używaj `swap` vectorów.",
+     "code": "int a[3] = {1, 2, 3}, b[3] = {7, 8, 9};\nswap(a, b);                       // O(3) — kopiuje elementy\nlong long dp[2][5] = {};\nfor (int i = 1; i <= 3; i++)\n    for (int j = 0; j < 5; j++) dp[i & 1][j] = dp[(i - 1) & 1][j] + 1;   // warstwy bez kopiowania\ncout << a[0] << ' ' << dp[1][0] << '\\n';   // 7 3"
+    },
+    {
+     "q": [
+      "swap elementów vectora",
+      "zamień dwa elementy w tablicy",
+      "swap v[i] v[j]",
+      "iter_swap"
+     ],
+     "a": "`swap(v[i], v[j])` zamienia elementy w O(1); dla iteratorów — `iter_swap(it1, it2)`. Działa także, gdy i == j (nic się nie dzieje).",
+     "code": "vector<int> v = {10, 20, 30};\nswap(v[0], v[2]);                          // 30 20 10\niter_swap(v.begin(), v.begin() + 1);       // 20 30 10\ncout << v[0] << ' ' << v[1] << '\\n';"
+    },
+    {
+     "q": [
+      "exchange c++",
+      "std::exchange",
+      "przypisz i zwróć starą wartość"
+     ],
+     "a": "`exchange(x, nowa)` (C++14) ustawia `x = nowa` i zwraca poprzednią wartość x — w jednej instrukcji. Przydatne np. przy przetwarzaniu „poprzedni / bieżący”.",
+     "code": "int poprzedni = 0;\nvector<int> v = {3, 8, 5};\nfor (int x : v) {\n    int p = exchange(poprzedni, x);\n    cout << x - p << ' ';     // 3 5 -3\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "swap xor",
+      "zamiana bez zmiennej pomocniczej",
+      "xor swap c++",
+      "a ^= b ^= a ^= b"
+     ],
+     "a": "Sztuczka XOR działa dla dwóch różnych zmiennych, ale gdy obie nazwy wskazują to samo miejsce (np. `t[i]` i `t[j]` przy i == j), zeruje wartość. Nie jest też szybsza od `std::swap` (kompilator i tak optymalizuje). Używaj `swap`.",
+     "code": "vector<int> t = {5, 6};\nint i = 0, j = 0;\nswap(t[i], t[j]);         // bezpieczne, t[0] nadal 5\ncout << t[0] << '\\n';"
+    }
+   ],
+   "related": [
+    "stl-vector",
+    "dp-intro",
+    "stl-array",
+    "cpp-ref-utility-optional",
+    "stl-ref-modifying",
+    "tech-elementary-sorts"
+   ]
+  },
+  {
+   "id": "stl-gcd-lcm",
+   "title": "gcd, lcm, __gcd — największy wspólny dzielnik i najmniejsza wspólna wielokrotność",
+   "category": "STL algorytmy",
+   "tags": [
+    "gcd",
+    "lcm",
+    "__gcd",
+    "NWD",
+    "NWW",
+    "dzielnik",
+    "wielokrotność",
+    "euklides"
+   ],
+   "aliases": [
+    "gcd",
+    "lcm",
+    "nwd",
+    "nww",
+    "__gcd",
+    "std::gcd",
+    "nwd c++",
+    "nww c++",
+    "największy wspólny dzielnik c++",
+    "najmniejsza wspólna wielokrotność c++",
+    "gcd c++"
+   ],
+   "summary": "`gcd(a, b)` i `lcm(a, b)` z `<numeric>` (C++17) liczą NWD i NWW w O(log min(a, b)). Opis pułapek: przepełnienie przy NWW, liczby ujemne, NWD całej tablicy, różnica z `__gcd`.",
+   "complexity": "gcd, lcm: O(log min(a, b))",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`std::gcd(a, b)` zwraca NWD wartości bezwzględnych (gcd(0, 0) = 0, gcd(a, 0) = |a|). `std::lcm(a, b)` zwraca NWW (lcm(a, 0) = 0). Argumenty mogą mieć różne typy całkowite — wynik ma typ wspólny (np. `gcd(int, long long)` → `long long`). Starsza funkcja GCC `__gcd(a, b)` wymaga argumentów tego samego typu i dla liczb ujemnych może zwrócić wynik ujemny."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "gcd, lcm i NWD tablicy",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    cout << gcd(12, 18) << ' ' << lcm(4, 6) << '\\n';           // 6 12\n    cout << gcd(-12, 18) << ' ' << gcd(0, 7) << '\\n';          // 6 7\n\n    long long a = 1000000000000LL;\n    int b = 750;\n    cout << gcd(a, b) << '\\n';                                 // 250 — różne typy OK\n\n    vector<long long> v = {24, 36, 60};\n    long long g = 0;\n    for (long long x : v) g = gcd(g, x);                       // gcd(0, x) = x\n    cout << g << '\\n';                                         // 12\n\n    long long x = 1000000000, y = 999999999;\n    cout << x / gcd(x, y) * y << '\\n';                         // NWW bez przepełnienia pośredniego\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Algorytm Euklidesa ręcznie",
+     "code": "long long nwd(long long a, long long b) {\n    while (b) {\n        a %= b;\n        swap(a, b);\n    }\n    return a;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "warn",
+     "md": "NWW szybko rośnie: dla liczb do 10^9 wynik może przekroczyć `long long`, a nawet gdy się mieści, iloczyn `a * b` liczony przed dzieleniem przekracza 10^18. Licz `a / gcd(a, b) * b` i — przy NWW wielu liczb — przerwij, gdy wynik przekroczy potrzebny limit."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "gcd(a, b)",
+     "desc": "C++17: NWD |a| i |b| (gcd(0, 0) = 0)",
+     "complexity": "O(log min(a, b))",
+     "returns": "wspólny typ argumentów"
+    },
+    {
+     "sig": "lcm(a, b)",
+     "desc": "C++17: NWW |a| i |b| (lcm(a, 0) = 0); przepełnienie = UB",
+     "complexity": "O(log min(a, b))",
+     "returns": "wspólny typ"
+    },
+    {
+     "sig": "__gcd(a, b)",
+     "desc": "rozszerzenie GCC (starsze), argumenty tego samego typu",
+     "complexity": "O(log min(a, b))",
+     "returns": "T"
+    },
+    {
+     "sig": "a / gcd(a, b) * b",
+     "desc": "bezpieczniejszy wzór na NWW (dzielenie przed mnożeniem)",
+     "complexity": "O(log)"
+    },
+    {
+     "sig": "gcd(gcd(a, b), c)",
+     "desc": "NWD wielu liczb",
+     "complexity": "O(k log)"
+    }
+   ],
+   "pitfalls": [
+    "`a * b / gcd(a, b)` przepełnia się wcześniej niż wynik — pisz `a / gcd(a, b) * b`.",
+    "`lcm` przy wyniku spoza zakresu typu to UB (nie ma ostrzeżenia).",
+    "`__gcd(int, long long)` się nie skompiluje (różne typy) i dla ujemnych argumentów może zwrócić liczbę ujemną — preferuj `std::gcd`.",
+    "NWD całej tablicy: zaczynaj od 0 (element neutralny), nie od 1 — gcd(1, x) = 1.",
+    "`gcd` i `lcm` są w nagłówku `<numeric>` i wymagają C++17."
+   ],
+   "qa": [
+    {
+     "q": [
+      "nwd c++",
+      "gcd c++",
+      "jak policzyć nwd",
+      "największy wspólny dzielnik c++",
+      "gcd function c++"
+     ],
+     "a": "W C++17: `gcd(a, b)` z `<numeric>` — O(log min(a, b)), działa dla `int` i `long long` (nawet mieszanych). W starszych kompilatorach GCC: `__gcd(a, b)`. Ręcznie: algorytm Euklidesa `while (b) { a %= b; swap(a, b); }`.",
+     "code": "cout << gcd(48, 180) << '\\n';       // 12\nlong long a = 84, b = 36;\nwhile (b) { a %= b; swap(a, b); }\ncout << a << '\\n';                  // 12"
+    },
+    {
+     "q": [
+      "nww c++",
+      "lcm c++",
+      "najmniejsza wspólna wielokrotność",
+      "jak policzyć nww",
+      "lcm function c++"
+     ],
+     "a": "`lcm(a, b)` (C++17) albo wzór `a / gcd(a, b) * b` — najpierw dziel, potem mnóż, żeby uniknąć przepełnienia iloczynu. Używaj `long long`: NWW dwóch liczb do 10^9 może sięgać 10^18.",
+     "code": "long long a = 21, b = 6;\ncout << lcm(a, b) << ' ' << a / gcd(a, b) * b << '\\n';   // 42 42"
+    },
+    {
+     "q": [
+      "nwd tablicy",
+      "gcd całego vectora",
+      "nwd wielu liczb",
+      "gcd of array c++"
+     ],
+     "a": "Złóż gcd po kolei, startując od 0 (gcd(0, x) = x): `g = gcd(g, x)` w pętli albo `accumulate` z lambdą. Złożoność O(n log M). Można przerwać, gdy g spadnie do 1.",
+     "code": "vector<long long> v = {18, 30, 42};\nlong long g = 0;\nfor (long long x : v) g = gcd(g, x);\nlong long g2 = accumulate(v.begin(), v.end(), 0LL, [](long long a, long long b) { return gcd(a, b); });\ncout << g << ' ' << g2 << '\\n';   // 6 6"
+    },
+    {
+     "q": [
+      "nww wielu liczb przepełnienie",
+      "lcm of array overflow",
+      "nww tablicy c++",
+      "lcm wielu liczb"
+     ],
+     "a": "NWW rośnie bardzo szybko. Licz `l = l / gcd(l, x) * x` i przed mnożeniem sprawdź, czy wynik nie przekroczy limitu (np. `l / gcd(l, x) > LIMIT / x`). Gdy przekracza — przerwij (np. odpowiedź „za duże” w zadaniu).",
+     "code": "vector<long long> v = {4, 6, 10};\nconst long long LIMIT = (long long)1e18;\nlong long l = 1;\nbool za_duze = false;\nfor (long long x : v) {\n    long long k = l / gcd(l, x);\n    if (k > LIMIT / x) { za_duze = true; break; }\n    l = k * x;\n}\ncout << (za_duze ? -1 : l) << '\\n';   // 60"
+    },
+    {
+     "q": [
+      "__gcd czy gcd",
+      "__gcd c++",
+      "różnica __gcd std::gcd",
+      "__gcd ujemne"
+     ],
+     "a": "`__gcd` to wewnętrzna funkcja libstdc++ (GCC), dostępna od dawna. `std::gcd` jest standardowa (C++17): akceptuje różne typy całkowite i zawsze zwraca wynik nieujemny. `__gcd` wymaga identycznych typów, a dla ujemnych argumentów może zwrócić liczbę ujemną.",
+     "code": "int a = 12;\nlong long b = 18;\ncout << gcd(a, b) << '\\n';               // 6 — std::gcd z różnymi typami\ncout << __gcd(12LL, b) << '\\n';          // 6 — __gcd wymaga tego samego typu"
+    },
+    {
+     "q": [
+      "skracanie ułamka",
+      "uprość ułamek c++",
+      "reduce fraction c++",
+      "ułamek nieskracalny"
+     ],
+     "a": "Podziel licznik i mianownik przez ich NWD. Zadbaj o znak (np. mianownik dodatni). O(log).",
+     "code": "long long p = -6, q = 8;\nlong long g = gcd(p, q);          // 2 (zawsze nieujemny)\np /= g; q /= g;\nif (q < 0) { p = -p; q = -q; }\ncout << p << '/' << q << '\\n';    // -3/4"
+    },
+    {
+     "q": [
+      "złożoność gcd",
+      "jak szybki jest gcd",
+      "euklides złożoność",
+      "gcd time complexity"
+     ],
+     "a": "Algorytm Euklidesa wykonuje O(log min(a, b)) kroków — dla liczb do 10^18 to najwyżej ok. 90 iteracji. Najgorszy przypadek to kolejne liczby Fibonacciego. Można go wywoływać miliony razy w jednym rozwiązaniu.",
+     "code": "long long a = 1134903170, b = 701408733;   // kolejne liczby Fibonacciego\nint kroki = 0;\nwhile (b) { a %= b; swap(a, b); kroki++; }\ncout << a << ' ' << kroki << '\\n';          // 1 43"
+    }
+   ],
+   "related": [
+    "math-gcd-lcm",
+    "math-extended-euclid",
+    "stl-accumulate",
+    "pit-int-overflow",
+    "stl-ref-numeric"
+   ]
+  },
+  {
+   "id": "stl-builtin-bits",
+   "title": "__builtin_popcount, __builtin_clz, __builtin_ctz i nagłówek <bit>",
+   "category": "STL algorytmy",
+   "tags": [
+    "popcount",
+    "__builtin_popcount",
+    "__builtin_clz",
+    "__builtin_ctz",
+    "bity",
+    "maska",
+    "log2",
+    "<bit>",
+    "__lg"
+   ],
+   "aliases": [
+    "__builtin_popcount",
+    "popcount",
+    "__builtin_clz",
+    "__builtin_ctz",
+    "__builtin_popcountll",
+    "liczba jedynek w liczbie",
+    "liczba zapalonych bitów",
+    "count bits c++",
+    "log2 całkowity c++",
+    "__lg",
+    "bit_width"
+   ],
+   "summary": "Wbudowane funkcje GCC liczące bity w O(1): liczba jedynek (`popcount`), zera wiodące (`clz`), zera końcowe (`ctz`). Wersje dla `long long` z sufiksem `ll` oraz standardowe odpowiedniki z C++20 `<bit>`.",
+   "complexity": "wszystkie: O(1) (pojedyncza instrukcja procesora lub kilka)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Funkcje `__builtin_*` to rozszerzenia GCC/Clang (działają z g++ na OI). Wersje bez sufiksu biorą `unsigned int` (32 bity), z sufiksem `l` — `unsigned long`, z `ll` — `unsigned long long` (64 bity). **Przekazanie `long long` do wersji bez `ll` obcina liczbę do 32 bitów** — to częsty błąd."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Funkcje bitowe",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    unsigned x = 0b101100;                               // 44\n    cout << __builtin_popcount(x) << '\\n';               // 3 — liczba jedynek\n    cout << __builtin_ctz(x) << '\\n';                    // 2 — zera na końcu (indeks najmłodszej jedynki)\n    cout << __builtin_clz(x) << '\\n';                    // 26 — zera wiodące w 32 bitach\n    cout << 31 - __builtin_clz(x) << '\\n';               // 5 — floor(log2(x)), indeks najstarszej jedynki\n\n    long long y = 1LL << 40;\n    cout << __builtin_popcountll(y) << ' ' << __builtin_ctzll(y) << ' ' << 63 - __builtin_clzll(y) << '\\n';   // 1 40 40\n    cout << __builtin_popcount(y) << '\\n';               // 0 — BŁĄD: obcięcie do 32 bitów!\n\n    // C++20 <bit> — tylko typy bez znaku\n    cout << popcount(44u) << ' ' << countr_zero(44u) << ' ' << bit_width(44u) << ' ' << has_single_bit(64u) << '\\n';   // 3 2 6 1\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "GCC",
+      "C++20 `<bit>`",
+      "Znaczenie",
+      "Dla x = 0"
+     ],
+     "rows": [
+      [
+       "`__builtin_popcount(x)`",
+       "`popcount(x)`",
+       "liczba jedynek",
+       "0"
+      ],
+      [
+       "`__builtin_ctz(x)`",
+       "`countr_zero(x)`",
+       "zera na końcu (najmłodsza jedynka)",
+       "GCC: **UB**; C++20: liczba bitów typu"
+      ],
+      [
+       "`__builtin_clz(x)`",
+       "`countl_zero(x)`",
+       "zera wiodące",
+       "GCC: **UB**; C++20: liczba bitów typu"
+      ],
+      [
+       "`31 - __builtin_clz(x)`, `__lg(x)`",
+       "`bit_width(x) - 1`",
+       "floor(log2 x)",
+       "UB / −1"
+      ],
+      [
+       "`__builtin_parity(x)`",
+       "`popcount(x) & 1`",
+       "parzystość liczby jedynek",
+       "0"
+      ],
+      [
+       "`x & -x`",
+       "—",
+       "najmłodsza jedynka jako liczba",
+       "0"
+      ],
+      [
+       "—",
+       "`has_single_bit(x)`",
+       "czy x jest potęgą dwójki",
+       "false"
+      ],
+      [
+       "—",
+       "`bit_ceil(x)` / `bit_floor(x)`",
+       "najbliższa potęga 2 ≥ x / ≤ x",
+       "1 / 0"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`__builtin_clz(0)` i `__builtin_ctz(0)` mają **niezdefiniowany** wynik. Jeśli x może być zerem, sprawdź to przed wywołaniem albo użyj `countl_zero`/`countr_zero` z C++20 (dla zera zwracają liczbę bitów typu)."
+    },
+    {
+     "type": "tip",
+     "md": "Funkcje z `<bit>` (C++20) przyjmują wyłącznie typy **bez znaku**: `popcount(5)` z `int` się nie skompiluje — pisz `popcount(5u)` albo `popcount((unsigned)x)` / `popcount((unsigned long long)x)`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "__builtin_popcount(unsigned x) / __builtin_popcountll(unsigned long long x)",
+     "desc": "liczba ustawionych bitów",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "__builtin_ctz(x) / __builtin_ctzll(x)",
+     "desc": "liczba zer na końcu = indeks najmłodszej jedynki (UB dla 0)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "__builtin_clz(x) / __builtin_clzll(x)",
+     "desc": "liczba zer wiodących w 32 / 64 bitach (UB dla 0)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "__builtin_ffs(x) / __builtin_ffsll(x)",
+     "desc": "indeks najmłodszej jedynki + 1 (0 dla x = 0)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "__builtin_parity(x) / __builtin_parityll(x)",
+     "desc": "parzystość liczby jedynek (0/1)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "__lg(x)",
+     "desc": "GCC: floor(log2 x) dla x > 0",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "popcount(x)",
+     "desc": "C++20 <bit>: liczba jedynek (x bez znaku)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "countl_zero(x) / countr_zero(x)",
+     "desc": "C++20: zera wiodące / końcowe (dla 0 — liczba bitów)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "countl_one(x) / countr_one(x)",
+     "desc": "C++20: jedynki wiodące / końcowe",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "bit_width(x)",
+     "desc": "C++20: liczba bitów potrzebna do zapisu x (= floor(log2 x) + 1, dla 0 → 0)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "has_single_bit(x)",
+     "desc": "C++20: czy x jest potęgą dwójki",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "bit_ceil(x) / bit_floor(x)",
+     "desc": "C++20: najmniejsza potęga 2 ≥ x / największa ≤ x",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "rotl(x, s) / rotr(x, s)",
+     "desc": "C++20: rotacja bitowa",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`__builtin_popcount(long long)` obcina do 32 bitów — dla 64-bitowych liczb używaj `__builtin_popcountll`.",
+    "`__builtin_clz(0)`, `__builtin_ctz(0)` (i wersje ll) mają niezdefiniowany wynik.",
+    "`31 - __builtin_clz(x)` działa dla `unsigned int`; dla `long long` pisz `63 - __builtin_clzll(x)`.",
+    "Funkcje z `<bit>` wymagają typów bez znaku — `popcount(x)` z `int x` to błąd kompilacji.",
+    "`1 << k` dla k ≥ 31 przepełnia `int` — do masek 64-bitowych pisz `1LL << k` (lub `1ULL << k`).",
+    "`__builtin_*` to rozszerzenia GCC/Clang — nie działają w MSVC (na OI kompilatorem jest g++, więc to nie problem)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "liczba jedynek w liczbie",
+      "popcount c++",
+      "__builtin_popcount",
+      "ile bitów zapalonych",
+      "count set bits c++"
+     ],
+     "a": "`__builtin_popcount(x)` zwraca liczbę jedynek w zapisie binarnym `unsigned int` w O(1). Dla `long long` — `__builtin_popcountll(x)`. W C++20 standardowo `popcount(x)` dla typów bez znaku.",
+     "code": "int maska = 13;                                      // 1101\nlong long duza = (1LL << 50) | 7;\ncout << __builtin_popcount(maska) << ' '             // 3\n     << __builtin_popcountll(duza) << ' '            // 4\n     << popcount((unsigned)maska) << '\\n';           // 3"
+    },
+    {
+     "q": [
+      "__builtin_popcount long long",
+      "popcount ll",
+      "popcount dla long long zły wynik",
+      "__builtin_popcountll"
+     ],
+     "a": "Wersja bez sufiksu przyjmuje `unsigned int`, więc `long long` zostaje obcięty do dolnych 32 bitów i bity powyżej znikają. Dla liczb 64-bitowych zawsze `__builtin_popcountll` (analogicznie `ctzll`, `clzll`).",
+     "code": "long long x = (1LL << 40) + 1;\ncout << __builtin_popcount(x) << ' ' << __builtin_popcountll(x) << '\\n';   // 1 2"
+    },
+    {
+     "q": [
+      "log2 całkowity",
+      "floor log2 c++",
+      "indeks najstarszego bitu",
+      "__builtin_clz log2",
+      "__lg c++"
+     ],
+     "a": "floor(log2 x) dla x > 0: `31 - __builtin_clz(x)` (int), `63 - __builtin_clzll(x)` (long long) albo `__lg(x)` (GCC) — wszystko O(1). W C++20: `bit_width((unsigned)x) - 1`. Unikaj `(int)log2(x)` dla dużych liczb — błędy zaokrągleń double.",
+     "code": "int x = 1000;\ncout << 31 - __builtin_clz(x) << ' ' << __lg(x) << ' ' << bit_width(1000u) - 1 << '\\n';   // 9 9 9\nlong long y = 1LL << 45;\ncout << 63 - __builtin_clzll(y) << '\\n';   // 45"
+    },
+    {
+     "q": [
+      "__builtin_ctz",
+      "najmłodszy zapalony bit",
+      "indeks najniższej jedynki",
+      "trailing zeros c++",
+      "lowest set bit"
+     ],
+     "a": "`__builtin_ctz(x)` to liczba zer na końcu, czyli indeks najmłodszej jedynki (UB dla x = 0). Samą najmłodszą jedynkę jako wartość daje `x & -x` (używane w drzewie Fenwicka).",
+     "code": "int x = 40;                                   // 101000\ncout << __builtin_ctz(x) << ' ' << (x & -x) << '\\n';   // 3 8"
+    },
+    {
+     "q": [
+      "clz zero",
+      "__builtin_clz(0)",
+      "ctz 0 undefined",
+      "builtin clz zero wynik"
+     ],
+     "a": "Dla x = 0 wynik `__builtin_clz`/`__builtin_ctz` jest niezdefiniowany (na różnych procesorach może być różny). Sprawdź `x != 0` przed wywołaniem albo użyj C++20 `countl_zero`/`countr_zero`, które dla zera zwracają liczbę bitów typu (32 dla `unsigned`).",
+     "code": "unsigned x = 0;\nint a = x ? __builtin_ctz(x) : 32;\ncout << a << ' ' << countr_zero(x) << '\\n';   // 32 32"
+    },
+    {
+     "q": [
+      "czy liczba jest potęgą dwójki",
+      "power of two check c++",
+      "x & (x-1)",
+      "has_single_bit"
+     ],
+     "a": "x > 0 jest potęgą dwójki, gdy ma dokładnie jedną jedynkę: `x > 0 && (x & (x - 1)) == 0` albo `__builtin_popcount(x) == 1`. C++20: `has_single_bit((unsigned)x)`. Najbliższa potęga 2 ≥ x: `bit_ceil`.",
+     "code": "int x = 64, y = 96;\ncout << (x > 0 && (x & (x - 1)) == 0) << ' ' << has_single_bit((unsigned)y) << '\\n';   // 1 0\ncout << bit_ceil(100u) << ' ' << bit_floor(100u) << '\\n';                              // 128 64"
+    },
+    {
+     "q": [
+      "popcount c++20 nie kompiluje",
+      "popcount int error",
+      "no matching function popcount",
+      "std::popcount int"
+     ],
+     "a": "Funkcje z `<bit>` są zdefiniowane tylko dla typów **bez znaku** (`unsigned`, `unsigned long long`, …). `popcount(5)` z literałem `int` się nie skompiluje. Rzutuj: `popcount((unsigned)x)` lub użyj literału `5u`.",
+     "code": "int x = 5;\ncout << popcount((unsigned)x) << ' ' << popcount(5u) << ' ' << popcount((unsigned long long)x) << '\\n';   // 2 2 2"
+    },
+    {
+     "q": [
+      "iteracja po bitach maski",
+      "przejdź po zapalonych bitach",
+      "wszystkie podmaski",
+      "iterate set bits c++"
+     ],
+     "a": "Po jedynkach maski: `for (int m = x; m; m &= m - 1) { int b = __builtin_ctz(m); ... }` — O(liczba jedynek). Wszystkie podmaski maski x: `for (int s = x; s; s = (s - 1) & x)` (plus pusta podmaska osobno).",
+     "code": "int x = 0b10110;\nfor (int m = x; m; m &= m - 1) cout << __builtin_ctz(m) << ' ';   // 1 2 4\ncout << '\\n';\nint ile = 0;\nfor (int s = x; s; s = (s - 1) & x) ile++;\ncout << ile + 1 << '\\n';   // 8 podmasek (z pustą)"
+    },
+    {
+     "q": [
+      "1 << 31 przepełnienie",
+      "przesunięcie bitowe long long",
+      "1ll << k",
+      "maska 64 bity"
+     ],
+     "a": "Literał `1` ma typ `int`, więc `1 << 31` daje przepełnienie (wartość ujemna/UB), a `1 << 40` to UB. Dla dużych przesunięć pisz `1LL << k` (lub `1ULL << k`). Bit k liczby long long sprawdzisz przez `(x >> k) & 1`.",
+     "code": "int k = 40;\nlong long maska = 1LL << k;\nlong long x = maska | 5;\ncout << ((x >> k) & 1) << ' ' << ((x >> 3) & 1) << '\\n';   // 1 0"
+    }
+   ],
+   "related": [
+    "stl-bitset",
+    "tech-bit-tricks",
+    "dp-bitmask",
+    "ds-fenwick",
+    "num-log2",
+    "cpp-ref-bit",
+    "stl-ref-bitset-all",
+    "tech-hanoi"
+   ]
+  },
+  {
+   "id": "stl-numeric-limits",
+   "title": "numeric_limits, INT_MAX, LLONG_MAX — zakresy typów",
+   "category": "STL algorytmy",
+   "tags": [
+    "numeric_limits",
+    "INT_MAX",
+    "LLONG_MAX",
+    "INF",
+    "zakres typu",
+    "lowest",
+    "epsilon"
+   ],
+   "aliases": [
+    "numeric_limits",
+    "INT_MAX",
+    "LLONG_MAX",
+    "INT_MIN",
+    "zakres int",
+    "zakres long long",
+    "max int c++",
+    "nieskończoność c++",
+    "inf c++",
+    "numeric_limits double min"
+   ],
+   "summary": "`numeric_limits<T>` podaje zakres i właściwości typów liczbowych (max, min, lowest, epsilon, infinity). Opis stałych `INT_MAX`/`LLONG_MAX`, bezpiecznego wyboru „nieskończoności” i pułapki `numeric_limits<double>::min()`.",
+   "complexity": "O(1) (stałe czasu kompilacji)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`numeric_limits<T>::max()` / `min()` zwracają największą i najmniejszą wartość typu całkowitego. Dla typów zmiennoprzecinkowych `min()` to **najmniejsza dodatnia** liczba znormalizowana (≈2,2·10^−308 dla double), a najbardziej ujemną daje `lowest()`. Stałe z `<climits>` (`INT_MAX`, `LLONG_MAX`, …) są równoważne i krótsze."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Typ",
+      "min",
+      "max",
+      "Makro"
+     ],
+     "rows": [
+      [
+       "int (32 bity)",
+       "−2 147 483 648",
+       "2 147 483 647 (≈2,1·10^9)",
+       "`INT_MIN`, `INT_MAX`"
+      ],
+      [
+       "unsigned int",
+       "0",
+       "4 294 967 295",
+       "`UINT_MAX`"
+      ],
+      [
+       "long long (64 bity)",
+       "−9 223 372 036 854 775 808",
+       "9 223 372 036 854 775 807 (≈9,2·10^18)",
+       "`LLONG_MIN`, `LLONG_MAX`"
+      ],
+      [
+       "unsigned long long",
+       "0",
+       "18 446 744 073 709 551 615 (≈1,8·10^19)",
+       "`ULLONG_MAX`"
+      ],
+      [
+       "double",
+       "`lowest()` ≈ −1,8·10^308",
+       "≈ 1,8·10^308, ~15–16 cyfr znaczących",
+       "`DBL_MAX`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wartości graniczne",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    cout << numeric_limits<int>::max() << ' ' << INT_MAX << '\\n';      // 2147483647 2147483647\n    cout << numeric_limits<long long>::max() << '\\n';                  // 9223372036854775807\n    cout << numeric_limits<double>::min() << '\\n';                     // 2.22507e-308 — NIE najbardziej ujemna!\n    cout << numeric_limits<double>::lowest() << '\\n';                  // -1.79769e+308\n    cout << numeric_limits<double>::infinity() << '\\n';                // inf\n    cout << numeric_limits<double>::epsilon() << '\\n';                 // 2.22045e-16\n\n    const long long INF = 1e18;                                        // bezpieczna \"nieskończoność\"\n    long long d = INF;\n    cout << (d + 1000000000 > 0) << '\\n';                              // 1 — dodawanie nie przepełnia\n    int x = INT_MAX;\n    cout << (long long)x + 1 << '\\n';                                  // 2147483648 — rzutowanie PRZED dodaniem\n}"
+    },
+    {
+     "type": "warn",
+     "md": "„Nieskończoność” równa `INT_MAX`/`LLONG_MAX` przepełnia się przy pierwszym dodaniu (`dist[v] + w`), co daje liczbę ujemną i fałszywie „krótszą” ścieżkę. Bezpieczniej: `INF = 1e9` dla int (gdy suma dwóch INF ma się zmieścić — `0x3f3f3f3f`), `INF = 1e18` dla long long, albo sprawdzaj `if (dist[v] == INF) continue;` przed relaksacją."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "numeric_limits<T>::max()",
+     "desc": "największa wartość typu",
+     "complexity": "O(1)",
+     "returns": "T"
+    },
+    {
+     "sig": "numeric_limits<T>::min()",
+     "desc": "najmniejsza wartość (dla typów całkowitych); dla double — najmniejsza DODATNIA",
+     "complexity": "O(1)",
+     "returns": "T"
+    },
+    {
+     "sig": "numeric_limits<T>::lowest()",
+     "desc": "najbardziej ujemna wartość (także dla double)",
+     "complexity": "O(1)",
+     "returns": "T"
+    },
+    {
+     "sig": "numeric_limits<double>::infinity()",
+     "desc": "+∞ (porównania działają: inf > każda liczba)",
+     "complexity": "O(1)",
+     "returns": "double"
+    },
+    {
+     "sig": "numeric_limits<double>::epsilon()",
+     "desc": "różnica między 1 a następną liczbą double (≈2,2·10^−16)",
+     "complexity": "O(1)",
+     "returns": "double"
+    },
+    {
+     "sig": "numeric_limits<T>::digits10",
+     "desc": "liczba cyfr dziesiętnych, które typ przechowa bez straty (int: 9, long long: 18, double: 15)",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "numeric_limits<T>::is_signed",
+     "desc": "czy typ jest ze znakiem",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "INT_MAX, INT_MIN, LLONG_MAX, LLONG_MIN, UINT_MAX, ULLONG_MAX",
+     "desc": "makra z <climits>",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`numeric_limits<double>::min()` to najmniejsza dodatnia wartość, a nie najbardziej ujemna — do „minus nieskończoności” użyj `lowest()` lub `-infinity()`.",
+    "`INF = INT_MAX` + jakakolwiek dodatnia waga = przepełnienie (UB, w praktyce liczba ujemna).",
+    "`INT_MAX + 1` jest liczone w `int` (przepełnienie) — rzutuj przed działaniem: `(long long)INT_MAX + 1`.",
+    "`abs(INT_MIN)` i `-INT_MIN` przepełniają się (nie istnieje +2147483648 w int).",
+    "`const long long INF = 1e18;` działa (konwersja z double jest dokładna dla 10^18), ale `1e19` nie mieści się w `long long`.",
+    "Wartość 10^9 mieści się w `int`, ale 3·10^9 już nie; 10^18 mieści się w `long long`, a 10^19 nie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "zakres int",
+      "ile wynosi INT_MAX",
+      "max int c++",
+      "maksymalna wartość int",
+      "int range c++"
+     ],
+     "a": "`int` ma 32 bity: od −2 147 483 648 do 2 147 483 647 (≈2,1·10^9) — `INT_MIN`, `INT_MAX` albo `numeric_limits<int>::min()/max()`. Jeśli wynik może przekroczyć ~2·10^9 (np. suma 10^5 liczb do 10^9 albo iloczyn dwóch liczb do 10^5), użyj `long long`.",
+     "code": "cout << INT_MAX << ' ' << INT_MIN << '\\n';     // 2147483647 -2147483648\nint a = 100000, b = 100000;\nlong long iloczyn = 1LL * a * b;               // 10^10 — w int by się przepełniło\ncout << iloczyn << '\\n';"
+    },
+    {
+     "q": [
+      "zakres long long",
+      "LLONG_MAX",
+      "max long long c++",
+      "ile mieści long long",
+      "long long range"
+     ],
+     "a": "`long long` (64 bity): od −9 223 372 036 854 775 808 do 9 223 372 036 854 775 807 (≈9,2·10^18) — `LLONG_MIN`, `LLONG_MAX`. `unsigned long long` sięga ≈1,8·10^19. Większe liczby wymagają `__int128` (GCC) lub arytmetyki na napisach.",
+     "code": "cout << LLONG_MAX << '\\n';                           // 9223372036854775807\ncout << numeric_limits<unsigned long long>::max() << '\\n';   // 18446744073709551615"
+    },
+    {
+     "q": [
+      "jaką wartość dać jako nieskończoność",
+      "inf c++",
+      "INF w dijkstrze",
+      "nieskończoność int long long",
+      "infinity value c++"
+     ],
+     "a": "Wybierz wartość, która jest większa od każdego możliwego wyniku, a mimo to nie przepełni się przy dodaniu wagi: dla `int` zwykle `1e9` lub `0x3f3f3f3f` (≈1,06·10^9; INF + INF wciąż mieści się w int), dla `long long` — `1e18` (albo `LLONG_MAX` z warunkiem `if (d == INF) continue;`).",
+     "code": "const int INF = 0x3f3f3f3f;\nconst long long LINF = (long long)1e18;\nint d = INF;\nlong long e = LINF;\ncout << (d + INF > 0) << ' ' << (e + 1000000000LL > 0) << '\\n';   // 1 1"
+    },
+    {
+     "q": [
+      "numeric_limits double min",
+      "najmniejsza wartość double",
+      "double min ujemne",
+      "lowest c++"
+     ],
+     "a": "Dla typów zmiennoprzecinkowych `numeric_limits<double>::min()` to najmniejsza **dodatnia** liczba znormalizowana (≈2,2·10^−308). Najbardziej ujemną daje `numeric_limits<double>::lowest()`, a „minus nieskończoność” — `-numeric_limits<double>::infinity()`.",
+     "code": "double best = numeric_limits<double>::lowest();   // start dla maksimum\nfor (double x : {-5.5, -2.0, -9.1}) best = max(best, x);\ncout << best << '\\n';                               // -2"
+    },
+    {
+     "q": [
+      "INT_MAX + 1",
+      "przepełnienie int max",
+      "int max plus 1 ujemne",
+      "overflow int max"
+     ],
+     "a": "`INT_MAX + 1` liczy się w `int` — przepełnienie typu ze znakiem to UB (w praktyce zwykle wynik −2147483648). Przypisanie do `long long` po fakcie nie pomaga: rzutuj jeden składnik PRZED działaniem — `(long long)INT_MAX + 1` albo `1LL * a + b`.",
+     "code": "int a = INT_MAX;\nlong long dobrze = (long long)a + 1;\ncout << dobrze << '\\n';   // 2147483648"
+    },
+    {
+     "q": [
+      "epsilon porównywanie double",
+      "jak porównać double",
+      "double == nie działa",
+      "porównanie liczb zmiennoprzecinkowych"
+     ],
+     "a": "Wyniki obliczeń na `double` mają błędy zaokrągleń, więc `a == b` często zawodzi (np. 0.1 + 0.2 ≠ 0.3). Porównuj z tolerancją: `fabs(a - b) < EPS` (np. `EPS = 1e-9`, dobrane do skali danych). `numeric_limits<double>::epsilon()` (≈2,2·10^−16) to względna precyzja typu, a nie uniwersalna tolerancja.",
+     "code": "double a = 0.1 + 0.2, b = 0.3;\nconst double EPS = 1e-9;\ncout << (a == b) << ' ' << (fabs(a - b) < EPS) << '\\n';   // 0 1"
+    },
+    {
+     "q": [
+      "ile cyfr ma double",
+      "precyzja double",
+      "digits10",
+      "double ile miejsc po przecinku"
+     ],
+     "a": "`double` przechowuje ok. 15–16 znaczących cyfr dziesiętnych (`numeric_limits<double>::digits10` = 15). Liczby całkowite do 2^53 ≈ 9·10^15 są reprezentowane dokładnie; większe — już nie. Do dokładnych obliczeń na dużych liczbach całkowitych używaj `long long`.",
+     "code": "cout << numeric_limits<double>::digits10 << ' ' << numeric_limits<long long>::digits10 << '\\n';   // 15 18\ndouble d = 1e16;\ncout << (long long)(d + 1) - (long long)d << '\\n';   // 0 — 1e16 + 1 nie da się zapisać dokładnie"
+    }
+   ],
+   "related": [
+    "pit-int-overflow",
+    "num-int-types",
+    "num-floating",
+    "stl-memset",
+    "stl-min-max",
+    "num-inf-constants",
+    "num-overflow",
+    "cpp-ref-climits-cfloat"
+   ]
+  },
+  {
+   "id": "stl-shuffle-random",
+   "title": "mt19937, shuffle i liczby losowe w C++",
+   "category": "STL algorytmy",
+   "tags": [
+    "mt19937",
+    "shuffle",
+    "random",
+    "losowanie",
+    "rand",
+    "uniform_int_distribution",
+    "generator testów",
+    "chrono"
+   ],
+   "aliases": [
+    "mt19937",
+    "shuffle",
+    "random c++",
+    "liczby losowe c++",
+    "rand c++",
+    "losowanie c++",
+    "uniform_int_distribution",
+    "random_shuffle",
+    "generator losowy",
+    "losowe liczby z przedziału"
+   ],
+   "summary": "Generowanie liczb losowych w C++: generator `mt19937` (i `mt19937_64`), ziarno z zegara, liczby z przedziału przez `uniform_int_distribution`, tasowanie `shuffle`. Dlaczego nie `rand()` i `random_shuffle`.",
+   "complexity": "jedno losowanie: O(1); shuffle: O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`mt19937` (Mersenne Twister) to szybki generator o bardzo długim okresie, zwracający 32-bitowe liczby bez znaku; `mt19937_64` — 64-bitowe. Ziarno (seed) decyduje o całym ciągu: stałe ziarno = powtarzalne wyniki (dobre do generatora testów), ziarno z zegara = inne liczby przy każdym uruchomieniu (dobre do algorytmów randomizowanych i haszy)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Generator, rozkład i tasowanie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());   // losowe ziarno\n    mt19937 stale(2024);                                                   // powtarzalny ciąg\n\n    uniform_int_distribution<int> kostka(1, 6);       // przedział DOMKNIĘTY [1, 6]\n    for (int i = 0; i < 5; i++) cout << kostka(rng) << ' ';\n    cout << '\\n';\n\n    uniform_real_distribution<double> u(0.0, 1.0);    // [0, 1)\n    double p = u(rng);\n\n    vector<int> v(10);\n    iota(v.begin(), v.end(), 1);\n    shuffle(v.begin(), v.end(), rng);                 // losowa permutacja, O(n)\n\n    mt19937_64 rng64(stale());\n    unsigned long long duza = rng64();                // 64 losowe bity\n    cout << (p >= 0 && p < 1) << ' ' << v.size() << ' ' << duza % 10 << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Generator testów do testerki",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Generator testów: argument z linii poleceń jako ziarno -> różne, ale powtarzalne testy\nint main(int argc, char* argv[]) {\n    int seed = argc > 1 ? atoi(argv[1]) : 1;\n    mt19937 rng(seed);\n    auto los = [&](int a, int b) { return uniform_int_distribution<int>(a, b)(rng); };\n    int n = los(1, 10);\n    cout << n << '\\n';\n    for (int i = 0; i < n; i++) cout << los(-100, 100) << \" \\n\"[i == n - 1];\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sposób",
+      "Ocena"
+     ],
+     "rows": [
+      [
+       "`rand() % n`",
+       "zły: `RAND_MAX` bywa równe 32767 (np. Windows), słaba jakość, lekka nierównomierność"
+      ],
+      [
+       "`random_shuffle`",
+       "usunięty w C++17 — nie skompiluje się w nowym standardzie"
+      ],
+      [
+       "`srand(time(0))`",
+       "ziarno zmienia się co sekundę — uruchomienia w tej samej sekundzie dają ten sam ciąg"
+      ],
+      [
+       "`mt19937` + `uniform_int_distribution`",
+       "zalecany"
+      ],
+      [
+       "`rng() % n`",
+       "akceptowalny w zadaniach (minimalna nierównomierność dla małych n)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`random_device` na niektórych starszych kompilatorach MinGW (Windows) zwracał zawsze ten sam ciąg. Bezpieczne, przenośne ziarno to czas: `chrono::steady_clock::now().time_since_epoch().count()`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "mt19937 rng(seed);",
+     "desc": "generator 32-bitowy z ziarnem",
+     "complexity": "O(1) (inicjalizacja stanu ~624 słów)"
+    },
+    {
+     "sig": "mt19937_64 rng(seed);",
+     "desc": "generator 64-bitowy",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "rng()",
+     "desc": "kolejna losowa liczba bez znaku (32 lub 64 bity)",
+     "complexity": "O(1) zamortyzowane",
+     "returns": "uint32_t / uint64_t"
+    },
+    {
+     "sig": "uniform_int_distribution<T>(a, b)(rng)",
+     "desc": "liczba całkowita z przedziału domkniętego [a, b]",
+     "complexity": "O(1)",
+     "returns": "T"
+    },
+    {
+     "sig": "uniform_real_distribution<double>(a, b)(rng)",
+     "desc": "liczba rzeczywista z przedziału [a, b)",
+     "complexity": "O(1)",
+     "returns": "double"
+    },
+    {
+     "sig": "shuffle(first, last, rng)",
+     "desc": "losowa permutacja zakresu (Fisher–Yates)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "chrono::steady_clock::now().time_since_epoch().count()",
+     "desc": "ziarno zależne od czasu (różne przy każdym uruchomieniu)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "sample(first, last, out, k, rng)",
+     "desc": "C++17: losowy podzbiór k elementów",
+     "complexity": "O(n)",
+     "returns": "iterator wyjścia"
+    }
+   ],
+   "pitfalls": [
+    "`random_shuffle` nie istnieje od C++17 — używaj `shuffle(b, e, rng)`.",
+    "`rand()` ma `RAND_MAX` zależny od platformy (na Windows tylko 32767) — `rand() % 100000` nigdy nie da liczb > 32767.",
+    "`uniform_int_distribution<int>(a, b)` obejmuje OBA końce; `uniform_real_distribution` — bez prawego końca.",
+    "Tworzenie nowego `mt19937` przy każdym losowaniu (z tym samym ziarnem) daje ciągle tę samą liczbę — generator twórz raz.",
+    "`mt19937` zwraca liczby bez znaku — `rng() % n` z ujemnym n albo mieszanie z int może dawać zaskakujące wyniki; rzutuj świadomie.",
+    "Stałe ziarno w rozwiązaniu randomizowanym = deterministyczne zachowanie, które można „trafić” złośliwym testem — używaj ziarna z zegara."
+   ],
+   "qa": [
+    {
+     "q": [
+      "liczby losowe c++",
+      "jak wylosować liczbę",
+      "random c++",
+      "random number c++",
+      "losowanie liczby z przedziału"
+     ],
+     "a": "Utwórz raz generator `mt19937 rng(ziarno);` i losuj przez `uniform_int_distribution<int>(a, b)(rng)` — wynik z przedziału domkniętego [a, b], O(1). Ziarno z zegara daje inne liczby przy każdym uruchomieniu.",
+     "code": "mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());\nint x = uniform_int_distribution<int>(1, 100)(rng);\ncout << (1 <= x && x <= 100) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "shuffle c++",
+      "przetasuj vector",
+      "losowa permutacja c++",
+      "random_shuffle nie działa",
+      "shuffle vector"
+     ],
+     "a": "`shuffle(v.begin(), v.end(), rng)` z generatorem `mt19937` tasuje w O(n) (każda permutacja równie prawdopodobna). `random_shuffle` został usunięty w C++17 i nie skompiluje się z `-std=c++17/20`.",
+     "code": "mt19937 rng(42);\nvector<int> v = {1, 2, 3, 4, 5};\nshuffle(v.begin(), v.end(), rng);\nsort(v.begin(), v.end());\ncout << v[0] << v[4] << '\\n';   // 15 — te same elementy"
+    },
+    {
+     "q": [
+      "mt19937",
+      "co to mt19937",
+      "mersenne twister c++",
+      "mt19937 jak używać"
+     ],
+     "a": "`mt19937` to generator liczb pseudolosowych (Mersenne Twister) z biblioteki `<random>`. `rng()` zwraca 32-bitową liczbę bez znaku w O(1). Jest szybszy i znacznie lepszej jakości niż `rand()`. Wersja `mt19937_64` daje 64 bity.",
+     "code": "mt19937 rng(123);\nunsigned a = rng(), b = rng();\nmt19937 rng2(123);\ncout << (a == rng2()) << ' ' << (b == rng2()) << '\\n';   // 1 1 — to samo ziarno = ten sam ciąg"
+    },
+    {
+     "q": [
+      "rand c++",
+      "dlaczego nie rand",
+      "rand max 32767",
+      "rand() % n zły"
+     ],
+     "a": "`rand()` zwraca liczby z [0, RAND_MAX], a `RAND_MAX` zależy od platformy — na Windows to 32767, więc `rand() % 1000000` nigdy nie przekroczy 32767. Do tego słaba jakość ciągu. Używaj `mt19937`.",
+     "code": "mt19937 rng(7);\nint x = rng() % 1000000;       // pełny zakres 32 bitów, OK w zadaniach\ncout << (x >= 0 && x < 1000000) << ' ' << RAND_MAX << '\\n';"
+    },
+    {
+     "q": [
+      "ziarno losowania",
+      "seed random c++",
+      "srand time",
+      "różne liczby przy każdym uruchomieniu",
+      "chrono seed"
+     ],
+     "a": "Ziarno z zegara o wysokiej rozdzielczości: `mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());`. `srand(time(0))` zmienia ziarno tylko co sekundę. Do generatora testów lepiej podawać ziarno jako argument — testy są wtedy powtarzalne.",
+     "code": "auto seed = chrono::steady_clock::now().time_since_epoch().count();\nmt19937 rng(seed);\nmt19937 testy(5), testy2(5);   // stałe ziarno — ten sam ciąg za każdym razem\nunsigned a = testy();\ncout << (a == testy2()) << ' ' << rng() % 6 + 1 << '\\n';   // 1 i losowa kostka"
+    },
+    {
+     "q": [
+      "generator testów c++",
+      "jak napisać generator losowych testów",
+      "losowe testy do testerki",
+      "test generator c++"
+     ],
+     "a": "Pobierz ziarno z argumentu programu (`argv[1]`), utwórz `mt19937 rng(seed)` i wypisz test w formacie wejścia zadania. Testerka (np. w OI Forge) uruchamia generator z kolejnymi ziarnami i porównuje rozwiązanie z wolnym brutem.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main(int argc, char** argv) {\n    mt19937 rng(argc > 1 ? atoi(argv[1]) : 0);\n    auto los = [&](long long a, long long b) { return uniform_int_distribution<long long>(a, b)(rng); };\n    int n = los(1, 8);\n    cout << n << '\\n';\n    for (int i = 0; i < n; i++) cout << los(1, 1000000000) << (i + 1 < n ? ' ' : '\\n');\n}"
+    },
+    {
+     "q": [
+      "losowa liczba long long",
+      "mt19937_64",
+      "losowanie 64 bity",
+      "random long long c++"
+     ],
+     "a": "`mt19937_64` zwraca 64-bitowe liczby; z `uniform_int_distribution<long long>(a, b)` dostaniesz liczbę z dowolnego przedziału long long. Przydaje się do losowych haszy (np. Zobrist, haszowanie zbiorów przez XOR losowych wartości).",
+     "code": "mt19937_64 rng(99);\nlong long x = uniform_int_distribution<long long>(1, (long long)1e18)(rng);\nunsigned long long h = rng();          // losowy hasz 64-bitowy\ncout << (x >= 1 && x <= (long long)1e18) << ' ' << (h % 2 < 2) << '\\n';   // 1 1"
+    },
+    {
+     "q": [
+      "losowy element vectora",
+      "wylosuj element z tablicy",
+      "random element c++",
+      "sample c++"
+     ],
+     "a": "Losowy indeks: `uniform_int_distribution<int>(0, n - 1)(rng)`. Losowy podzbiór k elementów bez powtórzeń: `sample` (C++17) albo `shuffle` i wzięcie pierwszych k.",
+     "code": "mt19937 rng(1);\nvector<int> v = {10, 20, 30, 40, 50};\nint i = uniform_int_distribution<int>(0, (int)v.size() - 1)(rng);\nvector<int> wyb;\nsample(v.begin(), v.end(), back_inserter(wyb), 2, rng);\ncout << (v[i] % 10 == 0) << ' ' << wyb.size() << '\\n';   // 1 2"
+    }
+   ],
+   "related": [
+    "stl-unordered-map",
+    "oi-stress-test",
+    "stl-iota-fill",
+    "num-random",
+    "cpp-ref-chrono-ctime",
+    "stl-ref-modifying"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,113 @@
+/* Tryb zawodów — duży zegar, karty zadań, oś zdarzeń */
+.ct-body { display: flex; flex-direction: column; gap: 18px; }
+
+/* ---------- przygotowanie ---------- */
+.ct-setup { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 1100px) { .ct-setup { grid-template-columns: 1fr; } }
+.ct-presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.ct-preset { display: flex; gap: 11px; align-items: center; text-align: left; padding: 12px 13px; border-radius: 13px; cursor: pointer;
+  background: var(--panel-2); border: 1px solid var(--border); color: var(--text); transition: border-color .15s, background .15s, transform .15s var(--ease); }
+.ct-preset:hover { border-color: var(--border-2); transform: translateY(-1px); }
+.ct-preset.active { border-color: var(--accent); background: var(--accent-bg); box-shadow: 0 0 0 3px var(--accent-bg); }
+.ct-preset-icon { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex: none; background: var(--panel-3); color: var(--accent-2); }
+.ct-preset.active .ct-preset-icon { background: var(--accent); color: #fff; }
+.ct-preset-title { font-weight: 600; font-size: 13.5px; }
+.ct-preset-sub { font-size: 12px; color: var(--muted); }
+.ct-task-row-edit { display: grid; grid-template-columns: 30px 110px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.ct-short-in { text-transform: none; }
+
+.ct-letter { min-width: 40px; height: 40px; padding: 0 8px; border-radius: 12px; display: grid; place-items: center; flex: none; font-weight: 700;
+  font-family: var(--mono); font-size: 15px; background: var(--panel-3); color: var(--text-2); border: 1px solid var(--border); text-transform: uppercase; }
+.ct-letter.sm { min-width: 28px; height: 28px; font-size: 12.5px; border-radius: 8px; padding: 0 4px; }
+
+/* ---------- układ trwającej sesji ---------- */
+.ct-active { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+@media (max-width: 1180px) { .ct-active { grid-template-columns: 1fr; } }
+
+/* ---------- zegar ---------- */
+.ct-clock { --tone: var(--accent); position: relative; overflow: hidden; border-radius: 20px; padding: 22px 26px 20px; border: 1px solid var(--border);
+  background: radial-gradient(900px 260px at 0% -30%, color-mix(in srgb, var(--tone) 16%, transparent), transparent 62%),
+    radial-gradient(600px 220px at 100% 130%, color-mix(in srgb, var(--tone) 10%, transparent), transparent 60%), var(--panel);
+  box-shadow: var(--shadow); transition: border-color .4s, background .4s; }
+.ct-clock[data-tone="warn"] { --tone: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--border)); }
+.ct-clock[data-tone="danger"], .ct-clock[data-tone="critical"], .ct-clock[data-tone="over"] { --tone: var(--danger); border-color: color-mix(in srgb, var(--danger) 50%, var(--border)); }
+.ct-clock[data-tone="paused"] { --tone: var(--muted); }
+.ct-clock-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.ct-title { font-weight: 600; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-top: 4px; }
+.ct-time { font-family: var(--mono); font-weight: 700; font-size: clamp(64px, 10vw, 128px); line-height: 1.02; letter-spacing: -.035em;
+  font-variant-numeric: tabular-nums; color: var(--text); margin: 2px 0 14px; transition: color .4s; }
+.ct-clock[data-tone="warn"] .ct-time { color: var(--warn); }
+.ct-clock[data-tone="danger"] .ct-time, .ct-clock[data-tone="over"] .ct-time { color: var(--danger); }
+.ct-clock[data-tone="critical"] .ct-time { color: var(--danger); animation: ctPulse 1s ease-in-out infinite; }
+.ct-clock[data-tone="paused"] .ct-time { color: var(--muted); opacity: .75; }
+@keyframes ctPulse { 50% { opacity: .55; } }
+.ct-bar { position: relative; height: 12px; border-radius: 99px; background: var(--panel-3); overflow: visible; }
+.ct-bar-fill { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--accent-3), var(--accent-2)); transition: width .9s linear, background .4s; }
+.ct-clock[data-tone="warn"] .ct-bar-fill { background: linear-gradient(90deg, var(--accent-3), var(--warn)); }
+.ct-clock[data-tone="danger"] .ct-bar-fill, .ct-clock[data-tone="critical"] .ct-bar-fill, .ct-clock[data-tone="over"] .ct-bar-fill { background: linear-gradient(90deg, var(--warn), var(--danger)); }
+.ct-clock[data-tone="paused"] .ct-bar-fill { background: var(--faint); }
+.ct-mark { position: absolute; top: -3px; width: 2px; height: 18px; border-radius: 2px; background: var(--border-2); transform: translateX(-1px); }
+.ct-mark.final { background: var(--warn); }
+.ct-meta { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 12px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ct-meta b { color: var(--text-2); font-weight: 600; }
+.ct-next { display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 13px; color: var(--text-2); min-height: 20px; }
+.ct-next svg { color: var(--tone); flex: none; }
+
+/* ---------- karty zadań ---------- */
+.ct-tasks { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+.ct-task { --st: var(--border-2); position: relative; display: flex; flex-direction: column; gap: 11px; padding: 15px 16px 14px; border-radius: 16px;
+  background: var(--panel); border: 1px solid var(--border); box-shadow: var(--shadow); transition: border-color .2s, box-shadow .2s; min-width: 0; }
+.ct-task::before { content: ""; position: absolute; left: 14px; right: 14px; top: 0; height: 3px; border-radius: 0 0 4px 4px; background: var(--st); transition: background .2s; }
+.ct-task[data-status="reading"] { --st: var(--info); }
+.ct-task[data-status="brute"] { --st: var(--warn); }
+.ct-task[data-status="partial"] { --st: var(--accent); }
+.ct-task[data-status="full"] { --st: var(--success); border-color: color-mix(in srgb, var(--success) 35%, var(--border)); }
+.ct-task.focused { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); box-shadow: var(--shadow), 0 0 0 3px var(--accent-bg); }
+.ct-task-head { display: flex; gap: 12px; align-items: center; }
+.ct-task[data-status="full"] .ct-letter { background: var(--success-bg); color: var(--success); border-color: color-mix(in srgb, var(--success) 35%, transparent); }
+.ct-task.focused .ct-letter { background: var(--accent); color: #fff; border-color: transparent; }
+.ct-task-name { font-weight: 650; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: text; }
+.ct-task-time { display: inline-flex; gap: 5px; align-items: center; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.ct-task.focused .ct-task-time { color: var(--accent-2); }
+.ct-status { display: flex; width: 100%; }
+.ct-status button { flex: 1; justify-content: center; padding: 6px 4px; font-size: 12px; min-width: 0; }
+.ct-status button svg { flex: none; }
+.ct-status button.active[data-value="reading"] { background: var(--info-bg); color: var(--info); }
+.ct-status button.active[data-value="brute"] { background: var(--warn-bg); color: var(--warn); }
+.ct-status button.active[data-value="partial"] { background: var(--accent-bg); color: var(--accent-2); }
+.ct-status button.active[data-value="full"] { background: var(--success-bg); color: var(--success); }
+@media (max-width: 1400px) { .ct-status button svg { display: none; } }
+.segmented.sm button { padding: 3px 9px; font-size: 12px; }
+.ct-points { width: 76px; }
+.ct-task .textarea { min-height: 92px; font-size: 13.5px; }
+.ct-notes-preview { min-height: 92px; padding: 10px 12px; border: 1px dashed var(--border-2); border-radius: 10px; background: var(--panel-2); font-size: 13.5px; }
+.ct-check { border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2); }
+.ct-check > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--text-2); }
+.ct-check > summary::-webkit-details-marker { display: none; }
+.ct-check[open] > summary { border-bottom: 1px solid var(--border); }
+.ct-check-count { font-family: var(--mono); font-size: 12px; padding: 1px 8px; border-radius: 7px; background: var(--warn-bg); color: var(--warn); }
+.ct-check-count.done { background: var(--success-bg); color: var(--success); }
+.ct-checklist { display: flex; flex-direction: column; gap: 7px; padding: 10px 12px 12px; }
+.ct-check-item { display: flex; align-items: flex-start; gap: 8px; }
+.ct-check-item .checkbox { align-items: flex-start; font-size: 13px; line-height: 1.4; flex: 1; }
+.ct-check-item .checkbox input { margin-top: 1px; flex: none; }
+.ct-kb { color: var(--muted); display: grid; place-items: center; padding: 2px; border-radius: 6px; }
+.ct-kb:hover { color: var(--accent-2); background: var(--accent-bg); text-decoration: none; }
+
+/* ---------- przypomnienia i oś zdarzeń ---------- */
+.ct-reminders { display: flex; flex-direction: column; gap: 6px; }
+.ct-rem { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; color: var(--text-2); padding: 6px 8px; border-radius: 9px; }
+.ct-rem.final { background: var(--warn-bg); }
+.ct-rem.fired { color: var(--muted); background: none; text-decoration: line-through; text-decoration-color: var(--faint); }
+.ct-rem.fired svg { color: var(--success); flex: none; }
+.ct-rem-at { color: var(--muted); font-size: 12px; min-width: 56px; }
+.ct-timeline { max-height: 520px; overflow: auto; }
+.ct-events { display: flex; flex-direction: column; }
+.ct-ev { display: flex; gap: 9px; align-items: flex-start; padding: 6px 2px; border-bottom: 1px dashed var(--border); font-size: 12.8px; color: var(--text-2); }
+.ct-ev:last-child { border-bottom: 0; }
+.ct-ev-at { color: var(--muted); font-size: 11.5px; min-width: 52px; padding-top: 1px; }
+.ct-ev-icon { color: var(--muted); padding-top: 2px; }
+.ct-ev.reminder .ct-ev-icon { color: var(--warn); }
+.ct-ev.note .ct-ev-icon { color: var(--accent-2); }
+.ct-ev.start .ct-ev-icon, .ct-ev.stop .ct-ev-icon { color: var(--success); }

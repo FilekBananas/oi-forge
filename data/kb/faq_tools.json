@@ -1,0 +1,799 @@
+{
+ "chunk": "faq-tools",
+ "articles": [
+  {
+   "id": "tool-compile-terminal",
+   "title": "Kompilacja C++ z terminala: g++ na Linuksie, macOS i Windows (MinGW)",
+   "category": "Narzędzia",
+   "tags": [
+    "g++",
+    "kompilacja",
+    "terminal",
+    "MinGW",
+    "MSYS2",
+    "Homebrew",
+    "clang",
+    "a.out",
+    "PATH"
+   ],
+   "aliases": [
+    "jak skompilowac program c++",
+    "g++ terminal",
+    "kompilacja z konsoli",
+    "g++ nie jest rozpoznawany",
+    "mingw instalacja",
+    "jak uruchomic program c++",
+    "g++ macos",
+    "compile c++ command line",
+    "a.out",
+    "g++ windows"
+   ],
+   "summary": "`g++ -std=c++20 -O2 prog.cpp -o prog` kompiluje plik do programu `prog` (na Windows `prog.exe`), który uruchamiasz `./prog` (Linux/macOS) albo `prog.exe` / `.\\prog.exe` (Windows). Na macOS zainstaluj GCC z Homebrew, na Windows — MinGW-w64 (np. przez MSYS2).",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "bash",
+     "title": "Podstawowe polecenia",
+     "code": "# kompilacja (wszystkie systemy)\ng++ -std=c++20 -O2 -Wall -Wextra prog.cpp -o prog\n# uruchomienie\n./prog            # Linux, macOS\n# prog.exe        # Windows cmd\n# .\\prog.exe      # Windows PowerShell"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "System",
+      "Instalacja kompilatora",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "Linux (Debian/Ubuntu)",
+       "`sudo apt install g++ gdb`",
+       "g++ i gdb gotowe w terminalu"
+      ],
+      [
+       "macOS",
+       "`xcode-select --install`, potem `brew install gcc`",
+       "`g++` to Clang (brak `bits/stdc++.h`) — używaj `g++-NN` z Homebrew"
+      ],
+      [
+       "Windows",
+       "MSYS2 → `pacman -S mingw-w64-ucrt-x86_64-gcc` (albo WinLibs)",
+       "dodaj katalog `...\\ucrt64\\bin` do PATH"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Na macOS polecenie `g++` bez numeru wersji uruchamia Apple Clang — `#include <bits/stdc++.h>` kończy się błędem\n„file not found”. Po `brew install gcc` używaj `g++-15`, `g++-16` itd. (sprawdź `ls $(brew --prefix)/bin/g++-*`)."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak skompilowac program c++",
+      "g++ terminal",
+      "kompilacja z konsoli",
+      "compile c++ command line",
+      "jak kompilowac w terminalu"
+     ],
+     "a": "W katalogu z plikiem wpisz `g++ -std=c++20 -O2 prog.cpp -o prog`. `-o prog` to nazwa pliku wynikowego (bez niej powstanie\n`a.out` albo `a.exe`), `-std=c++20` — wersja języka, `-O2` — optymalizacja. Potem uruchom `./prog` (Linux/macOS) lub\n`prog.exe` (Windows).",
+     "code": "g++ -std=c++20 -O2 prog.cpp -o prog\n./prog",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "g++ nie jest rozpoznawany",
+      "g++ is not recognized as an internal or external command",
+      "command not found g++",
+      "brak g++ windows"
+     ],
+     "a": "System nie zna kompilatora: nie jest zainstalowany albo jego katalog nie jest w zmiennej PATH. Na Windows zainstaluj MinGW-w64\n(np. MSYS2: `pacman -S mingw-w64-ucrt-x86_64-gcc`) i dodaj `C:\\msys64\\ucrt64\\bin` do PATH (Ustawienia → Zmienne środowiskowe),\npotem otwórz **nowe** okno terminala. Na Linuksie: `sudo apt install g++`.",
+     "code": "g++ --version",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "g++ macos bits/stdc++.h",
+      "mac kompilator c++",
+      "brew install gcc",
+      "g++ na macu to clang"
+     ],
+     "a": "Na macOS `g++` jest aliasem Apple Clang, który nie ma `bits/stdc++.h`. Zainstaluj GCC: `brew install gcc` i kompiluj\npoleceniem z numerem wersji, np. `g++-15 -std=c++20 -O2 prog.cpp -o prog`. Alternatywnie dołączaj konkretne nagłówki.",
+     "code": "brew install gcc\nls $(brew --prefix)/bin/g++-*\ng++-15 -std=c++20 -O2 prog.cpp -o prog",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "jak uruchomic program c++",
+      "command not found prog",
+      "dlaczego ./prog",
+      "uruchomienie skompilowanego programu"
+     ],
+     "a": "Na Linuksie/macOS bieżący katalog nie jest w PATH, więc trzeba podać ścieżkę: `./prog`. Na Windows w cmd wystarczy `prog`\n(lub `prog.exe`), a w PowerShellu `.\\prog.exe`.",
+     "code": "./prog < in.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "a.out",
+      "a.exe",
+      "co to jest a.out",
+      "gdzie jest skompilowany program"
+     ],
+     "a": "Bez `-o nazwa` g++ zapisuje program jako `a.out` (Linux/macOS) albo `a.exe` (Windows) w bieżącym katalogu. Lepiej zawsze\npodawać `-o`, żeby nie mylić programów (np. `sol`, `brute`, `gen`)."
+    },
+    {
+     "q": [
+      "blad kompilacji jak czytac",
+      "jak czytac bledy kompilatora",
+      "compile error c++ co znaczy",
+      "error expected ; before"
+     ],
+     "a": "Czytaj **pierwszy** błąd — kolejne często są jego skutkiem. Format: `plik:linia:kolumna: error: opis`. Typowe:\n„expected ';'” (brak średnika w poprzedniej linii), „was not declared in this scope” (literówka lub brak nagłówka),\n„no matching function for call” (złe typy argumentów, np. `max(int, long long)`)."
+    },
+    {
+     "q": [
+      "-std=c++17 czy c++20",
+      "jaka wersja c++",
+      "std c++ flaga"
+     ],
+     "a": "`-std=c++17` lub `-std=c++20` — nowsze standardy dają wygodne rzeczy (`structured bindings`, `gcd`, `ssize`, `contains`).\nUżywaj wersji nie nowszej niż na sprawdzarce. Nowe GCC domyślnie używają C++17 lub nowszego, ale lepiej podać flagę jawnie."
+    },
+    {
+     "q": [
+      "kompilacja w vscode",
+      "jak skonfigurowac vscode c++",
+      "code runner c++"
+     ],
+     "a": "VS Code tylko wywołuje kompilator — musi on być zainstalowany i w PATH. Najprościej kompilować i uruchamiać w terminalu\nwbudowanym w VS Code (Ctrl+`) tymi samymi poleceniami `g++ ...` i `./prog < in.txt`."
+    },
+    {
+     "q": [
+      "kompilacja trwa dlugo",
+      "bits/stdc++.h wolna kompilacja",
+      "przyspieszenie kompilacji"
+     ],
+     "a": "`bits/stdc++.h` dołącza całą bibliotekę — kompilacja trwa 1–3 s. Można przygotować prekompilowany nagłówek (PCH), ale na\nzawodach zwykle nie ma takiej potrzeby. Najwięcej czasu oszczędza niekompilowanie z sanitizerami, gdy ich nie potrzebujesz."
+    }
+   ],
+   "related": [
+    "oi-compile-flags",
+    "tool-redirect-io",
+    "tool-gdb-lldb"
+   ]
+  },
+  {
+   "id": "tool-redirect-io",
+   "title": "Przekierowanie wejścia i wyjścia: ./prog < in.txt > out.txt",
+   "category": "Narzędzia",
+   "tags": [
+    "przekierowanie",
+    "<",
+    ">",
+    "stdin",
+    "stdout",
+    "pipe",
+    "potok",
+    "PowerShell",
+    "cmd"
+   ],
+   "aliases": [
+    "jak podac plik na wejscie",
+    "./prog < in.txt",
+    "przekierowanie wejscia",
+    "zapis wyjscia do pliku",
+    "pipe |",
+    "powershell < nie dziala",
+    "redirect input c++",
+    "stdin z pliku"
+   ],
+   "summary": "`./prog < in.txt` podaje plik na standardowe wejście, `> out.txt` zapisuje standardowe wyjście do pliku, `2> err.txt` — wyjście błędów (`cerr`). `./gen 5 | ./prog` przekazuje wyjście jednego programu na wejście drugiego. W PowerShellu `<` nie działa — użyj `Get-Content in.txt | .\\prog.exe` albo cmd.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Zapis",
+      "Znaczenie"
+     ],
+     "rows": [
+      [
+       "`./prog < in.txt`",
+       "stdin z pliku"
+      ],
+      [
+       "`./prog > out.txt`",
+       "stdout do pliku (nadpisuje)"
+      ],
+      [
+       "`./prog >> out.txt`",
+       "stdout dopisywany na końcu"
+      ],
+      [
+       "`./prog 2> err.txt`",
+       "stderr (`cerr`) do pliku"
+      ],
+      [
+       "`./prog > out.txt 2>&1`",
+       "stdout i stderr do jednego pliku"
+      ],
+      [
+       "`./gen 7 | ./prog`",
+       "potok: wyjście `gen` → wejście `prog`"
+      ],
+      [
+       "`echo \"3 4\" | ./prog`",
+       "szybki test z linii poleceń"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "bash",
+     "title": "Na różnych systemach",
+     "code": "# Linux / macOS / Git Bash\n./prog < in.txt > out.txt\n# Windows cmd\nprog.exe < in.txt > out.txt\n# Windows PowerShell (operator < nie jest obsługiwany)\nGet-Content in.txt | .\\prog.exe > out.txt\ncmd /c \"prog.exe < in.txt > out.txt\""
+    },
+    {
+     "type": "warn",
+     "md": "W starszym Windows PowerShell 5.1 operator `>` zapisuje plik w kodowaniu UTF-16 — porównanie z plikiem wzorcowym\npokaże różnice w każdym wierszu. Używaj `cmd /c \"... > out.txt\"` albo PowerShell 7."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak podac plik na wejscie",
+      "./prog < in.txt",
+      "przekierowanie wejscia",
+      "redirect input c++",
+      "stdin z pliku"
+     ],
+     "a": "`./prog < in.txt` — zawartość pliku trafia na standardowe wejście, więc `cin`/`scanf` czytają z niego bez zmian w kodzie.\nTo wygodniejsze niż wpisywanie danych ręcznie i niż `freopen` (nie trzeba nic usuwać przed wysłaniem).",
+     "code": "./prog < in.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "zapis wyjscia do pliku",
+      "./prog > out.txt",
+      "jak zapisac wynik programu do pliku",
+      "redirect output to file"
+     ],
+     "a": "`./prog > out.txt` zapisuje wszystko, co program wypisze na `cout`, do pliku (nadpisując go). `>>` dopisuje na końcu.\n`cerr` nadal pojawi się w terminalu — do pliku przekierujesz go przez `2> err.txt`.",
+     "code": "./prog < in.txt > out.txt 2> err.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "powershell < nie dziala",
+      "the < operator is reserved for future use",
+      "przekierowanie w powershell",
+      "jak podac plik na wejscie windows"
+     ],
+     "a": "PowerShell nie obsługuje `<` („The '<' operator is reserved for future use”). Użyj potoku `Get-Content in.txt | .\\prog.exe`\nalbo uruchom przez cmd: `cmd /c \"prog.exe < in.txt > out.txt\"`. W klasycznym cmd `prog.exe < in.txt` działa normalnie.",
+     "code": "Get-Content in.txt | .\\prog.exe\ncmd /c \"prog.exe < in.txt > out.txt\"",
+     "lang": "powershell"
+    },
+    {
+     "q": [
+      "pipe |",
+      "potok miedzy programami",
+      "./gen | ./prog",
+      "jak polaczyc generator z programem"
+     ],
+     "a": "Znak `|` łączy wyjście jednego programu z wejściem drugiego: `./gen 5 | ./prog` — bez pliku pośredniego. Do stress-testu\nlepiej jednak zapisać test do pliku (`./gen 5 > in.txt`), żeby móc go obejrzeć przy błędzie.",
+     "code": "./gen 5 | ./prog",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "szybki test bez pliku",
+      "echo do programu",
+      "here string bash",
+      "podaj dane z linii polecen"
+     ],
+     "a": "`echo \"3 4\" | ./prog` albo w bashu `./prog <<< \"3 4\"`. Dla kilku wierszy: `printf \"2\\n1 2\\n\" | ./prog`.",
+     "code": "echo \"3 4\" | ./prog\nprintf \"2\\n1 2\\n\" | ./prog",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "stderr do pliku",
+      "2> err.txt",
+      "oddzielenie cerr od cout",
+      "2>&1"
+     ],
+     "a": "`2>` przekierowuje strumień błędów (deskryptor 2, czyli `cerr`). `> out.txt 2>&1` łączy oba strumienie w jednym pliku.\nDzięki temu debug na `cerr` nie miesza się z wynikiem w `out.txt`.",
+     "code": "./prog < in.txt > out.txt 2> debug.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "wyjscie do null",
+      "/dev/null",
+      "ukryj wyjscie programu",
+      "nul windows"
+     ],
+     "a": "Gdy mierzysz czas i nie potrzebujesz wyniku: `./prog < in.txt > /dev/null` (Linux/macOS) albo `prog.exe < in.txt > nul`\n(Windows cmd).",
+     "code": "./prog < big.in > /dev/null",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "utf-16 powershell plik",
+      "dziwne znaki w pliku wynikowym",
+      "out.txt ma podwojne bajty"
+     ],
+     "a": "Windows PowerShell 5.1 zapisuje `>` w UTF-16 (każdy znak 2 bajty), więc `fc`/`diff` widzą różnice wszędzie. Użyj\n`cmd /c \"prog.exe < in.txt > out.txt\"`, `| Out-File -Encoding ascii out.txt` albo PowerShell 7 (UTF-8).",
+     "code": ".\\prog.exe | Out-File -Encoding ascii out.txt",
+     "lang": "powershell"
+    }
+   ],
+   "related": [
+    "tool-diff-files",
+    "io-freopen",
+    "oi-stress-test",
+    "tool-compile-terminal",
+    "cpp-ref-sstream-fstream"
+   ]
+  },
+  {
+   "id": "tool-diff-files",
+   "title": "Porównywanie plików wynikowych: diff, cmp, fc (Windows)",
+   "category": "Narzędzia",
+   "tags": [
+    "diff",
+    "fc",
+    "cmp",
+    "porównanie",
+    "out",
+    "wzorcowy wynik",
+    "białe znaki",
+    "CRLF"
+   ],
+   "aliases": [
+    "jak porownac dwa pliki",
+    "diff out1 out2",
+    "fc windows",
+    "porownanie wyniku z wzorcem",
+    "diff ignoruj spacje",
+    "compare files windows",
+    "diff -w",
+    "fc /w"
+   ],
+   "summary": "Linux/macOS: `diff out.txt wzor.txt` (brak wypisanego tekstu = identyczne), `diff -w` ignoruje białe znaki. Windows: `fc out.txt wzor.txt`, `fc /w` ignoruje białe znaki (w PowerShellu pisz `fc.exe`, bo `fc` to inny alias).",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "bash",
+     "title": "Polecenia",
+     "code": "# Linux / macOS\ndiff out.txt wzor.txt                    # różnice wiersz po wierszu\ndiff -w out.txt wzor.txt                 # ignoruj spacje/tabulatory\ndiff --strip-trailing-cr out.txt wzor.txt   # ignoruj \\r z plików z Windows\ncmp out.txt wzor.txt                     # pierwszy różniący się bajt\ndiff -y out.txt wzor.txt | head          # obok siebie\n# Windows (cmd)\nfc out.txt wzor.txt\nfc /w out.txt wzor.txt\n# Windows (PowerShell)\nfc.exe /w out.txt wzor.txt\nCompare-Object (Get-Content out.txt) (Get-Content wzor.txt)"
+    },
+    {
+     "type": "tip",
+     "md": "Sprawdzarki zwykle porównują wynik „słowo po słowie”, ignorując nadmiarowe białe znaki. Najbliższy odpowiednik lokalnie:\n`diff -w` / `fc /w` albo porównanie tokenów w Pythonie: `open(a).read().split() == open(b).read().split()`."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak porownac dwa pliki",
+      "diff out1 out2",
+      "porownanie wyniku z wzorcem",
+      "compare two files terminal",
+      "jak porównać wyjście dwóch programów",
+      "porównanie wyników dwóch programów",
+      "czy dwa programy dają ten sam wynik"
+     ],
+     "a": "`diff out.txt wzor.txt` — jeśli pliki są identyczne, nic nie wypisze (kod wyjścia 0); w przeciwnym razie pokaże różniące się\nwiersze (`<` z pierwszego pliku, `>` z drugiego). W skryptach sprawdzaj kod wyjścia: `if diff -q a b > /dev/null; then ...`.",
+     "code": "diff out.txt wzor.txt && echo IDENTYCZNE",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "fc windows",
+      "jak porownac pliki na windows",
+      "fc /w",
+      "compare files windows"
+     ],
+     "a": "W cmd: `fc out.txt wzor.txt` (komunikat „FC: no differences encountered”, gdy równe), `fc /w` — ignoruje różnice\nw białych znakach. W PowerShellu `fc` jest aliasem `Format-Custom`, więc pisz `fc.exe`. Alternatywa w PowerShellu:\n`Compare-Object (Get-Content a.txt) (Get-Content b.txt)` (brak wyniku = równe).",
+     "code": "fc.exe /w out.txt wzor.txt",
+     "lang": "powershell"
+    },
+    {
+     "q": [
+      "diff ignoruj spacje",
+      "diff -w",
+      "diff -b",
+      "porownanie bez bialych znakow"
+     ],
+     "a": "`diff -w` ignoruje wszystkie białe znaki w wierszu, `diff -b` — tylko zmiany ich liczby, `diff -B` — puste wiersze.\nTo przybliża sposób, w jaki porównuje sprawdzarka.",
+     "code": "diff -w -B out.txt wzor.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "diff pokazuje roznice w kazdej linii",
+      "\\r w pliku diff",
+      "crlf diff",
+      "pliki identyczne a diff mowi ze nie"
+     ],
+     "a": "Najczęściej jeden plik ma końce wierszy Windows (`\\r\\n`), a drugi Unix (`\\n`), albo jeden jest w UTF-16 (PowerShell 5.1).\nUżyj `diff --strip-trailing-cr` lub skonwertuj plik (`dos2unix plik`). Sprawdź bajty: `od -c plik | head` / `xxd plik | head`.",
+     "code": "diff --strip-trailing-cr out.txt wzor.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "porownanie w pythonie",
+      "skrypt porownujacy wyniki",
+      "porownanie tokenow"
+     ],
+     "a": "Porównanie „po słowach” (jak typowa sprawdzarka), działające na każdym systemie:",
+     "code": "import sys\na = open(sys.argv[1]).read().split()\nb = open(sys.argv[2]).read().split()\nprint(\"OK\" if a == b else \"ROZNICA\")",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "cmp",
+      "porownanie bajt po bajcie",
+      "cmp vs diff"
+     ],
+     "a": "`cmp a b` wskazuje pierwszy różniący się bajt i wiersz — przydatne przy dużych plikach i różnicach „niewidocznych”\n(spacja na końcu, `\\r`). `diff` pokazuje całe różniące się wiersze.",
+     "code": "cmp out.txt wzor.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "porownanie liczb rzeczywistych w wyniku",
+      "diff double z tolerancja",
+      "wyniki rzeczywiste rozne na ostatniej cyfrze"
+     ],
+     "a": "Gdy wynik to liczby rzeczywiste akceptowane z tolerancją, `diff` pokaże różnice na ostatnich cyfrach. Porównuj liczby\nz tolerancją w skrypcie.",
+     "code": "import sys\na = open(sys.argv[1]).read().split()\nb = open(sys.argv[2]).read().split()\nok = len(a) == len(b) and all(abs(float(x) - float(y)) <= 1e-6 * max(1.0, abs(float(y))) for x, y in zip(a, b))\nprint(\"OK\" if ok else \"ROZNICA\")",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "vscode porownanie plikow",
+      "graficzne porownanie plikow",
+      "code --diff"
+     ],
+     "a": "W VS Code: zaznacz dwa pliki w eksploratorze → „Compare Selected”, albo w terminalu `code --diff out.txt wzor.txt`.",
+     "code": "code --diff out.txt wzor.txt",
+     "lang": "bash"
+    }
+   ],
+   "related": [
+    "tool-redirect-io",
+    "oi-stress-test"
+   ]
+  },
+  {
+   "id": "tool-measure-time",
+   "title": "Mierzenie czasu i pamięci programu: time, /usr/bin/time, Measure-Command, chrono",
+   "category": "Narzędzia",
+   "tags": [
+    "czas",
+    "time",
+    "pomiar",
+    "chrono",
+    "Measure-Command",
+    "pamięć",
+    "benchmark",
+    "TLE"
+   ],
+   "aliases": [
+    "jak zmierzyc czas programu",
+    "time ./prog",
+    "pomiar czasu c++",
+    "chrono c++",
+    "measure-command",
+    "ile pamieci zuzywa program",
+    "czy zmieszcze sie w limicie czasu",
+    "jak sprawdzic czas dzialania"
+   ],
+   "summary": "`time ./prog < in.txt > out.txt` pokazuje czas działania (real = zegar ścienny, user = czas procesora). Pamięć: `/usr/bin/time -v` (Linux) lub `/usr/bin/time -l` (macOS). W Windows PowerShell: `Measure-Command { ... }`. W kodzie: `chrono::steady_clock`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "bash",
+     "title": "Z terminala",
+     "code": "# Linux / macOS\ntime ./prog < big.in > out.txt\n/usr/bin/time -v ./prog < big.in > /dev/null    # Linux: \"Maximum resident set size (kbytes)\"\n/usr/bin/time -l ./prog < big.in > /dev/null    # macOS: \"maximum resident set size\" (bajty)\n# Windows PowerShell\nMeasure-Command { cmd /c \"prog.exe < big.in > out.txt\" }"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pomiar fragmentu kodu",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    auto start = chrono::steady_clock::now();\n    long long s = 0;\n    for (int i = 0; i < 100000000; i++) s += i % 7;\n    auto end = chrono::steady_clock::now();\n    double ms = chrono::duration<double, milli>(end - start).count();\n    cout << s << '\\n';\n    cerr << \"czas: \" << ms << \" ms\\n\";   // na cerr, żeby nie psuć wyniku\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Mierz program skompilowany z `-O2` (jak na sprawdzarce), na maksymalnym teście i z wyjściem do pliku — wypisywanie do\nterminala jest wielokrotnie wolniejsze i zafałszowuje pomiar. Sprawdzarka bywa wolniejsza od Twojego komputera — miej zapas."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak zmierzyc czas programu",
+      "time ./prog",
+      "pomiar czasu dzialania",
+      "how to measure program time"
+     ],
+     "a": "Na Linuksie/macOS: `time ./prog < in.txt > out.txt`. Wynik `real` to rzeczywisty czas, `user` — czas procesora w Twoim\nprogramie (zwykle to, co liczy sprawdzarka), `sys` — czas w jądrze systemu. Pomiar rób na największym teście, z `-O2`.",
+     "code": "time ./prog < big.in > out.txt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "measure-command",
+      "pomiar czasu windows",
+      "time w powershell",
+      "jak zmierzyc czas na windows"
+     ],
+     "a": "W PowerShellu: `Measure-Command { cmd /c \"prog.exe < big.in > out.txt\" }` — pole `TotalMilliseconds` to czas. W cmd nie ma\nwygodnego odpowiednika; można też mierzyć w kodzie przez `chrono`.",
+     "code": "Measure-Command { cmd /c \"prog.exe < big.in > out.txt\" }",
+     "lang": "powershell"
+    },
+    {
+     "q": [
+      "chrono c++",
+      "pomiar czasu w kodzie",
+      "steady_clock",
+      "zmierz czas fragmentu kodu"
+     ],
+     "a": "`auto t0 = chrono::steady_clock::now();` przed i po fragmencie, różnicę zamień na milisekundy przez\n`chrono::duration<double, milli>(t1 - t0).count()`. Wypisz na `cerr`, nie na `cout`.",
+     "code": "auto t0 = chrono::steady_clock::now();\nvector<int> v(1000000);\niota(v.begin(), v.end(), 0);\nsort(v.rbegin(), v.rend());\nauto t1 = chrono::steady_clock::now();\ncerr << chrono::duration<double, milli>(t1 - t0).count() << \" ms\\n\";"
+    },
+    {
+     "q": [
+      "ile pamieci zuzywa program",
+      "pomiar pamieci",
+      "maximum resident set size",
+      "/usr/bin/time -v"
+     ],
+     "a": "Linux: `/usr/bin/time -v ./prog < in > /dev/null` → „Maximum resident set size (kbytes)”. macOS: `/usr/bin/time -l` →\n„maximum resident set size” w bajtach. (Samo `time` wbudowane w powłokę nie pokazuje pamięci — potrzebna pełna ścieżka.)",
+     "code": "/usr/bin/time -v ./prog < big.in > /dev/null",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "real user sys co to",
+      "roznica real i user",
+      "time wynik interpretacja"
+     ],
+     "a": "`real` — czas od startu do końca (zegar ścienny, wliczając czekanie), `user` — czas procesora w kodzie programu, `sys` — czas\nprocesora w wywołaniach systemowych (np. I/O). Duże `sys` przy dużym wyjściu sugeruje wolne I/O (np. `endl`)."
+    },
+    {
+     "q": [
+      "czy zmieszcze sie w limicie czasu",
+      "lokalnie 0.8s limit 1s",
+      "sprawdzarka wolniejsza"
+     ],
+     "a": "Jeśli lokalnie (z `-O2`, na najgorszym teście) masz mniej niż połowę limitu — zwykle jest bezpiecznie. Przy 80–100% limitu\nryzyko jest duże: sprawdzarka może być wolniejsza, a dane — trudniejsze niż Twój test. Szukaj lepszej złożoności lub stałej."
+    },
+    {
+     "q": [
+      "clock c++",
+      "clock() CLOCKS_PER_SEC",
+      "czas procesora w kodzie"
+     ],
+     "a": "`clock()` z `<ctime>` mierzy czas procesora procesu: `(double)clock() / CLOCKS_PER_SEC` sekund od startu. Przydatne do\n„przerwij przeszukiwanie, gdy zbliżasz się do limitu” w heurystykach.",
+     "code": "long long it = 0;\nwhile ((double)clock() / CLOCKS_PER_SEC < 0.1) it++;\ncerr << it << \" iteracji w 0.1 s\\n\";"
+    },
+    {
+     "q": [
+      "pomiar czasu z wypisywaniem na ekran",
+      "dlaczego program wolny w terminalu",
+      "terminal spowalnia wypisywanie"
+     ],
+     "a": "Wypisywanie do okna terminala jest bardzo wolne (renderowanie tekstu). Do pomiaru zawsze przekierowuj wyjście do pliku albo\n`/dev/null` (`nul` na Windows).",
+     "code": "time ./prog < big.in > /dev/null",
+     "lang": "bash"
+    }
+   ],
+   "related": [
+    "oi-complexity-limits",
+    "oi-memory",
+    "pit-endl-tle",
+    "tool-redirect-io",
+    "cpp-ref-chrono-ctime",
+    "oi-py-performance"
+   ]
+  },
+  {
+   "id": "tool-gdb-lldb",
+   "title": "Debugger gdb i lldb: podstawy (run, bt, break, next, print)",
+   "category": "Narzędzia",
+   "tags": [
+    "gdb",
+    "lldb",
+    "debugger",
+    "breakpoint",
+    "backtrace",
+    "bt",
+    "segfault",
+    "krokowanie"
+   ],
+   "aliases": [
+    "gdb podstawy",
+    "jak uzywac gdb",
+    "lldb macos",
+    "gdb segfault gdzie",
+    "backtrace c++",
+    "breakpoint gdb",
+    "debugger c++ terminal",
+    "gdb run < in.txt",
+    "lldb input file"
+   ],
+   "summary": "Skompiluj z `-g -O0`, uruchom `gdb ./prog` (Linux, Windows/MinGW) albo `lldb ./prog` (macOS), wpisz `run < in.txt`. Po crashu `bt` pokaże stos wywołań z numerami linii. `break`, `next`, `step`, `print` pozwalają przejść program krok po kroku.",
+   "level": 2,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Czynność",
+      "gdb",
+      "lldb"
+     ],
+     "rows": [
+      [
+       "start z plikiem wejścia",
+       "`run < in.txt`",
+       "`process launch -i in.txt`"
+      ],
+      [
+       "stos wywołań po crashu",
+       "`bt`",
+       "`bt`"
+      ],
+      [
+       "breakpoint na funkcji / linii",
+       "`break solve` / `break prog.cpp:25`",
+       "`b solve` / `b prog.cpp:25`"
+      ],
+      [
+       "następna linia (bez wchodzenia)",
+       "`next` (`n`)",
+       "`next` (`n`)"
+      ],
+      [
+       "wejdź do funkcji",
+       "`step` (`s`)",
+       "`step` (`s`)"
+      ],
+      [
+       "kontynuuj",
+       "`continue` (`c`)",
+       "`continue` (`c`)"
+      ],
+      [
+       "wypisz zmienną",
+       "`print x`, `print v`",
+       "`p x`, `frame variable`"
+      ],
+      [
+       "zmienne lokalne",
+       "`info locals`",
+       "`frame variable` (`v`)"
+      ],
+      [
+       "pułapka na zmianę zmiennej",
+       "`watch x`",
+       "`watchpoint set variable x`"
+      ],
+      [
+       "wyjście z funkcji",
+       "`finish`",
+       "`finish`"
+      ],
+      [
+       "koniec",
+       "`quit`",
+       "`quit`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "bash",
+     "title": "Sesja gdb po crashu",
+     "code": "g++ -std=c++20 -g -O0 prog.cpp -o prog\ngdb ./prog\n(gdb) run < in.txt\n# ... Program received signal SIGSEGV\n(gdb) bt            # która linia i które wywołania\n(gdb) frame 1       # przejdź do ramki\n(gdb) print i\n(gdb) quit"
+    },
+    {
+     "type": "tip",
+     "md": "Na macOS gdb wymaga podpisywania certyfikatem — prościej użyć `lldb` (jest w Xcode Command Line Tools). Na Windows gdb\ninstaluje się razem z MinGW (MSYS2: `pacman -S mingw-w64-ucrt-x86_64-gdb`)."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak uzywac gdb",
+      "gdb podstawy",
+      "gdb tutorial",
+      "debugger w terminalu c++"
+     ],
+     "a": "Skompiluj z `-g -O0` (informacje o liniach, bez optymalizacji), uruchom `gdb ./prog`, wpisz `run < in.txt`. Ustaw breakpoint\n`break nazwa_funkcji` lub `break plik.cpp:linia`, przechodź `next`/`step`, oglądaj zmienne `print x`. Po crashu `bt`.",
+     "code": "g++ -std=c++20 -g -O0 prog.cpp -o prog\ngdb ./prog",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "gdb segfault gdzie",
+      "gdzie program sie wywala",
+      "backtrace c++",
+      "jak znalezc linie crasha",
+      "bt gdb"
+     ],
+     "a": "Uruchom program w debuggerze (`run < in.txt`); przy segfaulcie zatrzyma się w miejscu błędu. `bt` (backtrace) pokaże stos\nwywołań z plikami i numerami linii — szukaj pierwszej ramki z Twojego kodu. `frame N` i `print zmienna` pokażą wartości\n(np. indeks poza zakresem). Szybka alternatywa: kompilacja z `-fsanitize=address`."
+    },
+    {
+     "q": [
+      "lldb macos",
+      "jak uzywac lldb",
+      "lldb podstawy",
+      "debugger na macu"
+     ],
+     "a": "`lldb ./prog`, potem `process launch -i in.txt` (uruchomienie z wejściem z pliku), `b main` / `b prog.cpp:25` (breakpoint),\n`n`, `s`, `c`, `p x`, `frame variable`, `bt`. Komendy są podobne do gdb.",
+     "code": "g++ -std=c++20 -g -O0 prog.cpp -o prog\nlldb ./prog\n(lldb) process launch -i in.txt\n(lldb) bt",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "gdb run < in.txt",
+      "jak podac wejscie w gdb",
+      "lldb input file",
+      "debugger z plikiem wejsciowym"
+     ],
+     "a": "W gdb: `run < in.txt`. W lldb: `process launch -i in.txt` (albo `settings set target.input-path in.txt`, potem `run`).\nDzięki temu nie trzeba wpisywać danych ręcznie."
+    },
+    {
+     "q": [
+      "breakpoint gdb",
+      "zatrzymanie w linii gdb",
+      "break na linii"
+     ],
+     "a": "`break prog.cpp:42` zatrzyma program przed wykonaniem linii 42; `break solve` — przy wejściu do funkcji. Warunkowy:\n`break prog.cpp:42 if i == 1000`. Lista: `info breakpoints`, usunięcie: `delete N`."
+    },
+    {
+     "q": [
+      "print vector gdb",
+      "jak wypisac vector w gdb",
+      "gdb pokaz tablice"
+     ],
+     "a": "Nowe gdb z GCC mają „pretty printers”: `print v` pokaże zawartość `vector`, `map`, `string`. Fragment zwykłej tablicy:\n`print a[0]@10` (10 elementów od `a[0]`). W lldb: `p v`, `frame variable v`."
+    },
+    {
+     "q": [
+      "watch gdb",
+      "sledzenie zmiany zmiennej",
+      "watchpoint"
+     ],
+     "a": "`watch x` zatrzymuje program za każdym razem, gdy wartość `x` się zmienia (pokazuje starą i nową). Przydatne, gdy „coś”\nnadpisuje zmienną (np. wyjście poza tablicę obok). W lldb: `watchpoint set variable x`."
+    },
+    {
+     "q": [
+      "dlaczego zmienne optimized out",
+      "value optimized out gdb",
+      "gdb nie widzi zmiennych"
+     ],
+     "a": "Program skompilowano z optymalizacją (`-O2`) — kompilator usunął lub przeniósł zmienne. Do debugowania kompiluj z `-O0 -g`."
+    },
+    {
+     "q": [
+      "gdb na windows",
+      "debugger mingw",
+      "gdb windows instalacja"
+     ],
+     "a": "W MSYS2: `pacman -S mingw-w64-ucrt-x86_64-gdb`, potem `gdb prog.exe`, `run < in.txt`. Działa tak samo jak na Linuksie.\nW Visual Studio jest wbudowany debugger graficzny."
+    }
+   ],
+   "related": [
+    "oi-debugging",
+    "oi-compile-flags",
+    "tool-compile-terminal",
+    "pit-stack-overflow"
+   ]
+  }
+ ]
+}

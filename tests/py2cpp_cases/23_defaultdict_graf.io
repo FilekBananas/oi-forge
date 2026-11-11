@@ -1,0 +1,15 @@
+=== in
+4 3
+ala ola
+ola ela
+x y
+=== out
+2 5
+1 4
+2 1
+=== in
+1 1
+a a
+=== out
+1 1
+2 1

@@ -1,0 +1,1213 @@
+{
+ "chunk": "io-output",
+ "articles": [
+  {
+   "id": "io-precision",
+   "title": "Wypisywanie liczb rzeczywistych: fixed, setprecision, scientific (np. 2 miejsca po przecinku)",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "setprecision",
+    "fixed",
+    "scientific",
+    "miejsca po przecinku",
+    "double",
+    "zaokrąglenie wyniku",
+    "iomanip",
+    "printf %.2f"
+   ],
+   "aliases": [
+    "setprecision",
+    "fixed setprecision",
+    "jak wypisac 2 miejsca po przecinku",
+    "zaokraglenie do 2 miejsc po przecinku",
+    "round to 2 decimal places c++",
+    "wypisz double z dokladnoscia",
+    "ile miejsc po przecinku cout",
+    "printf %.2f",
+    "jak zaokraglic wynik przy wypisywaniu",
+    "precyzja wypisywania"
+   ],
+   "summary": "`cout << fixed << setprecision(2) << x;` wypisuje `x` z dokładnie 2 cyframi po przecinku (zaokrąglając). Bez `fixed` liczba w `setprecision` oznacza cyfry **znaczące**, a nie miejsca po przecinku!",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Strumień `cout` ma tryb zapisu liczb zmiennoprzecinkowych i precyzję (`#include <iomanip>`, w `bits/stdc++.h` już jest):\n- **domyślnie** (`defaultfloat`): `setprecision(p)` = `p` cyfr **znaczących** (domyślnie 6), a duże/małe liczby idą w notację naukową;\n- **`fixed`**: `setprecision(p)` = dokładnie `p` cyfr **po przecinku**, zawsze zapis dziesiętny;\n- **`scientific`**: zapis `1.234e+03` z `p` cyframi po przecinku.\n\nOba ustawienia są **trwałe** — obowiązują dla wszystkich kolejnych liczb, aż je zmienisz."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Porównanie trybów",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    double x = 3.14159265;\n    cout << fixed << setprecision(2) << x << '\\n';   // 3.14\n    cout << setprecision(4) << x << '\\n';            // 3.1416 (fixed nadal działa)\n    cout << 2.0 << '\\n';                             // 2.0000 — zera dopisane\n    cout << defaultfloat << setprecision(3) << x << '\\n'; // 3.14 (3 cyfry znaczące)\n    cout << setprecision(3) << 1234.5 << '\\n';       // 1.23e+03 (!)\n    cout << scientific << setprecision(2) << 1234.5 << '\\n'; // 1.23e+03\n    printf(\"%.2f\\n\", x);                             // 3.14 — odpowiednik w stylu C\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Kod",
+      "x = 1234.5678",
+      "x = 0.000123"
+     ],
+     "rows": [
+      [
+       "`cout << x`",
+       "`1234.57`",
+       "`0.000123`"
+      ],
+      [
+       "`setprecision(2) << x`",
+       "`1.2e+03`",
+       "`0.00012`"
+      ],
+      [
+       "`fixed << setprecision(2) << x`",
+       "`1234.57`",
+       "`0.00`"
+      ],
+      [
+       "`scientific << setprecision(2) << x`",
+       "`1.23e+03`",
+       "`1.23e-04`"
+      ],
+      [
+       "`printf(\"%.2f\", x)`",
+       "`1234.57`",
+       "`0.00`"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Zaokrąglanie przy wypisywaniu działa na **binarnej** wartości liczby. `2.675` jest w pamięci zapisane jako\n`2.67499999999999982...`, więc `fixed << setprecision(2)` wypisze `2.67`, a nie `2.68`. Gdy wartość jest dokładnie\nw połowie (np. `0.125`), typowe biblioteki (glibc, macOS) zaokrąglają do parzystej: `0.12`."
+    },
+    {
+     "type": "tip",
+     "md": "Gdy zadanie mówi „wynik z dokładnością do 10^-6”, wypisz z zapasem, np. `fixed << setprecision(9)`.\nGdy mówi „zaokrąglij do 2 miejsc” — dokładnie `setprecision(2)` z `fixed`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "setprecision(int p)",
+     "desc": "precyzja: cyfry znaczące (domyślnie) lub po przecinku (z fixed/scientific); trwała",
+     "returns": "manipulator",
+     "example": "cout << fixed << setprecision(2) << x;"
+    },
+    {
+     "sig": "fixed",
+     "desc": "zapis dziesiętny, precyzja = cyfry po przecinku",
+     "example": "cout << fixed << x;"
+    },
+    {
+     "sig": "scientific",
+     "desc": "zapis wykładniczy 1.23e+04",
+     "example": "cout << scientific << x;"
+    },
+    {
+     "sig": "defaultfloat",
+     "desc": "powrót do trybu domyślnego",
+     "example": "cout << defaultfloat;"
+    }
+   ],
+   "pitfalls": [
+    "`setprecision(k)` bez `fixed` = k cyfr znaczących, nie miejsc po przecinku.",
+    "Duży wynik w `double` wypisany domyślnie wychodzi jako `1e+09`.",
+    "`2.675` → `2.67` (reprezentacja binarna), `0.125` → `0.12` (half to even).",
+    "`-0.00` dla małych ujemnych liczb.",
+    "`printf(\"%d\", x)` dla `double` — UB, śmieci."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak zaokraglic do 2 miejsc po przecinku",
+      "jak wypisac 2 miejsca po przecinku",
+      "zaokrąglenie do dwóch miejsc c++",
+      "round to 2 decimal places c++",
+      "wypisz liczbe z dwoma miejscami",
+      "2 miejsca po przecinku cout"
+     ],
+     "a": "`cout << fixed << setprecision(2) << x;` — `fixed` przełącza na zapis dziesiętny, a `setprecision(2)` ustala liczbę cyfr\n**po przecinku**; wynik jest zaokrąglony (np. `3.14159` → `3.14`, `2.0` → `2.00`). W stylu C: `printf(\"%.2f\", x);`.\nUstawienie jest trwałe — kolejne liczby też będą miały 2 miejsca.",
+     "code": "double x = 3.14159;\ncout << fixed << setprecision(2) << x << '\\n';   // 3.14\nprintf(\"%.2f\\n\", x);                             // 3.14"
+    },
+    {
+     "q": [
+      "setprecision bez fixed",
+      "setprecision nie dziala",
+      "setprecision(2) daje 3.1",
+      "dlaczego setprecision pokazuje mniej cyfr",
+      "setprecision cyfry znaczace",
+      "setprecision wypisuje 1.2e+03"
+     ],
+     "a": "Bez `fixed` `setprecision(p)` oznacza `p` cyfr **znaczących** w całej liczbie, nie po przecinku. Dlatego\n`setprecision(2) << 3.14159` daje `3.1`, a `<< 1234.5` daje `1.2e+03`. Dodaj `fixed`:\n`cout << fixed << setprecision(2) << x;`.",
+     "code": "double x = 3.14159;\ncout << setprecision(2) << x << '\\n';           // 3.1  (2 cyfry znaczące)\ncout << fixed << setprecision(2) << x << '\\n';  // 3.14 (2 miejsca po przecinku)"
+    },
+    {
+     "q": [
+      "co robi fixed",
+      "fixed c++",
+      "cout fixed",
+      "fixed manipulator"
+     ],
+     "a": "`fixed` każe wypisywać liczby zmiennoprzecinkowe w zapisie dziesiętnym (bez `e+..`) i sprawia, że `setprecision`\nliczy cyfry **po przecinku**. Bez `setprecision` `fixed` daje domyślnie 6 miejsc (`3.140000`). Działa do odwołania;\nwyłączasz `defaultfloat` (albo `cout.unsetf(ios::fixed)`).",
+     "code": "cout << fixed << 3.14 << '\\n';                    // 3.140000\ncout << defaultfloat << 3.14 << '\\n';             // 3.14"
+    },
+    {
+     "q": [
+      "cout wypisuje 1e+09",
+      "dlaczego wypisuje e+",
+      "notacja naukowa cout jak wylaczyc",
+      "liczba w formacie 1.23457e+06",
+      "duzy double wypisuje sie z e"
+     ],
+     "a": "Domyślnie `cout` wypisuje `double` z 6 cyframi znaczącymi i dla dużych/małych liczb przechodzi na notację naukową\n(`1e+09`, `1.23457e+06`). Na sprawdzarce to zwykle **zła odpowiedź**. Ustaw `cout << fixed << setprecision(k)`.\nJeśli wynik jest całkowity, trzymaj go w `long long`, a nie w `double`.",
+     "code": "double x = 1e9 + 0.5;\ncout << x << '\\n';                              // 1e+09\ncout << fixed << setprecision(1) << x << '\\n';  // 1000000000.5"
+    },
+    {
+     "q": [
+      "printf %.2f",
+      "printf dwa miejsca po przecinku",
+      "printf zaokraglenie",
+      "printf double precyzja",
+      "%.3f"
+     ],
+     "a": "`printf(\"%.2f\", x)` wypisuje `x` z 2 cyframi po przecinku (zaokrąglając). `%.0f` — bez części ułamkowej, `%.10f` — 10 miejsc.\nDla `long double` użyj `%Lf` (`%.2Lf`). Pamiętaj: w `printf` dla `double` jest `%f`, ale w `scanf` musi być `%lf`.",
+     "code": "double x = 2.0 / 3;\nprintf(\"%.2f %.5f %.0f\\n\", x, x, x);   // 0.67 0.66667 1"
+    },
+    {
+     "q": [
+      "setprecision trwale",
+      "jak wylaczyc fixed",
+      "przywrocic domyslne wypisywanie",
+      "defaultfloat",
+      "setprecision dziala na wszystkie liczby"
+     ],
+     "a": "`fixed`, `scientific` i `setprecision` są trwałe — działają do zmiany. Powrót do domyślnego trybu: `cout << defaultfloat\n<< setprecision(6);`. Uwaga: `setw` jest wyjątkiem — działa tylko na następny element.",
+     "code": "cout << fixed << setprecision(2) << 1.0 << ' ' << 2.5 << '\\n';   // 1.00 2.50\ncout << defaultfloat << setprecision(6) << 2.5 << '\\n';           // 2.5"
+    },
+    {
+     "q": [
+      "dlaczego 2.675 zaokragla sie do 2.67",
+      "zle zaokraglanie setprecision",
+      "printf zaokragla zle",
+      "0.125 daje 0.12",
+      "2.675 round 2.67"
+     ],
+     "a": "`2.675` nie da się zapisać dokładnie w systemie dwójkowym — w pamięci jest `2.674999999999999822...`, więc poprawne\nzaokrąglenie to `2.67`. Z kolei `0.125` jest dokładne i leży idealnie w połowie — biblioteki (glibc, macOS) stosują wtedy\n„do parzystej” (round half to even) → `0.12`. Jeśli zadanie wymaga zaokrąglenia „połówek w górę” dla wartości z wejścia\n(np. kwot), licz na liczbach całkowitych (grosze) albo dodaj mały epsilon: `x + 1e-9`.",
+     "code": "cout << fixed << setprecision(2) << 2.675 << ' ' << 0.125 << ' ' << 0.375 << '\\n'; // 2.67 0.12 0.38\ncout << setprecision(20) << 2.675 << '\\n';   // 2.67499999999999982236"
+    },
+    {
+     "q": [
+      "wypisuje -0.00",
+      "minus zero przy wypisywaniu",
+      "dlaczego -0.00",
+      "-0.000 w wyniku"
+     ],
+     "a": "Mała liczba ujemna (np. `-0.001`) po zaokrągleniu do 2 miejsc daje `-0.00` — znak zostaje. Sprawdzarka może to uznać za\nbłąd. Popraw przed wypisaniem: jeśli `x` jest ujemne, ale po zaokrągleniu wyjdzie zero, ustaw `x = 0`.",
+     "code": "double x = -0.001;\nif (x < 0 && x > -0.005) x = 0.0;               // dla 2 miejsc po przecinku\ncout << fixed << setprecision(2) << x << '\\n';  // 0.00"
+    },
+    {
+     "q": [
+      "ile miejsc po przecinku wypisac",
+      "dokladnosc 10^-6 ile cyfr",
+      "z jaka dokladnoscia wypisac wynik",
+      "blad wzgledny 1e-6 wypisywanie"
+     ],
+     "a": "Gdy treść akceptuje błąd np. 10^-6, wypisz z zapasem, np. 9–10 miejsc: `fixed << setprecision(10)`. Więcej cyfr nie\nszkodzi, a za mało daje WA. Gdy treść każe zaokrąglić do k miejsc — wypisz dokładnie k.",
+     "code": "double wynik = acos(-1.0);\ncout << fixed << setprecision(10) << wynik << '\\n';   // 3.1415926536"
+    },
+    {
+     "q": [
+      "jak wypisac double bez zer na koncu",
+      "usun zera po przecinku",
+      "wypisz 2.5 a nie 2.500000",
+      "bez zbednych zer"
+     ],
+     "a": "Tryb domyślny (bez `fixed`) nie dopisuje zer: `cout << 2.5` → `2.5`. Ustaw dużą precyzję znaczącą, np.\n`setprecision(15)`, żeby nie tracić cyfr. Pamiętaj, że dla bardzo dużych/małych liczb pojawi się notacja naukowa.",
+     "code": "cout << setprecision(15) << 2.5 << ' ' << 0.1 + 0.2 << '\\n';   // 2.5 0.3"
+    },
+    {
+     "q": [
+      "setprecision a liczby calkowite",
+      "setprecision int",
+      "czy setprecision dziala na int"
+     ],
+     "a": "Nie — `setprecision` i `fixed` wpływają tylko na typy zmiennoprzecinkowe. `cout << fixed << setprecision(2) << 5;` wypisze `5`.\nJeśli chcesz `5.00`, rzutuj: `(double)5` albo wypisz ręcznie `5 << \".00\"`.",
+     "code": "int a = 5;\ncout << fixed << setprecision(2) << a << ' ' << (double)a << '\\n';   // 5 5.00"
+    },
+    {
+     "q": [
+      "scientific c++",
+      "notacja naukowa wypisywanie",
+      "jak wypisac w formacie e",
+      "printf %e"
+     ],
+     "a": "`cout << scientific << setprecision(3) << x;` → `1.235e+03` (3 cyfry po przecinku mantysy). W C: `printf(\"%.3e\", x)`.",
+     "code": "double x = 1234.5678;\ncout << scientific << setprecision(3) << x << '\\n';   // 1.235e+03\nprintf(\"%.3e\\n\", x);                                 // 1.235e+03"
+    },
+    {
+     "q": [
+      "setprecision long double",
+      "printf long double",
+      "%Lf",
+      "wypisanie long double"
+     ],
+     "a": "`cout << fixed << setprecision(k)` działa tak samo dla `long double`. W `printf` potrzebny jest `%Lf` (wielkie L),\nw `scanf` też `%Lf`. Na MinGW (Windows) `printf` z `long double` bywa zepsuty — bezpieczniej używać `cout`.",
+     "code": "long double x = 1.0L / 3;\ncout << fixed << setprecision(15) << x << '\\n';"
+    },
+    {
+     "q": [
+      "zamien double na string z 2 miejscami",
+      "double to string precyzja",
+      "to_string ile miejsc",
+      "string z liczby 2 miejsca"
+     ],
+     "a": "`to_string(x)` zawsze daje 6 miejsc (`3.140000`). Do własnej precyzji użyj `ostringstream` z `fixed << setprecision`,\n`snprintf` albo (C++20, nowy kompilator) `format(\"{:.2f}\", x)`.",
+     "code": "double x = 3.14159;\nostringstream os;\nos << fixed << setprecision(2) << x;\nstring s = os.str();   // \"3.14\"\ncout << s << '\\n';"
+    },
+    {
+     "q": [
+      "std::format c++20",
+      "format {:.2f}",
+      "format zamiast printf"
+     ],
+     "a": "W C++20 jest `std::format(\"{:.2f}\", x)` (nagłówek `<format>`), działa od GCC 13. Na starszych sprawdzarkach może się\nnie skompilować — na OI bezpieczniej `fixed << setprecision` albo `printf`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    double x = 3.14159;\n    cout << format(\"{:.2f}\", x) << '\\n';   // 3.14\n}"
+    },
+    {
+     "q": [
+      "ile cyfr ma double",
+      "dokladnosc double cyfry",
+      "setprecision 20 dziwne cyfry",
+      "0.1 wypisuje 0.10000000000000000555"
+     ],
+     "a": "`double` ma ok. 15–17 cyfr znaczących. Przy `setprecision(20)` zobaczysz „śmieci” na końcu (np. `0.1` →\n`0.10000000000000000555`), bo `0.1` nie jest dokładnie reprezentowalne binarnie. To nie błąd wypisywania — tak jest\nzapisana liczba.",
+     "code": "cout << setprecision(20) << 0.1 << '\\n';   // 0.10000000000000000555"
+    }
+   ],
+   "related": [
+    "num-rounding",
+    "io-printf-formats",
+    "io-setw-setfill",
+    "num-floating",
+    "cpp-ref-iomanip-streams",
+    "geo-circles"
+   ]
+  },
+  {
+   "id": "io-setw-setfill",
+   "title": "setw i setfill: szerokość pola, wyrównanie i zera wiodące",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "setw",
+    "setfill",
+    "zera wiodące",
+    "wyrównanie",
+    "left",
+    "right",
+    "internal",
+    "godzina 09:05",
+    "tabelka"
+   ],
+   "aliases": [
+    "setw",
+    "setfill",
+    "zera wiodace c++",
+    "jak wypisac 05",
+    "leading zeros c++",
+    "wyrownanie do prawej cout",
+    "jak wypisac godzine z zerem",
+    "formatowanie szerokosci",
+    "printf %02d"
+   ],
+   "summary": "`cout << setw(5) << x;` wypisuje `x` w polu szerokości 5 (dopełniając spacjami z lewej). `setfill('0')` zmienia dopełnienie na zera: `setw(2) << setfill('0') << 5` → `05`. `setw` działa tylko na NASTĘPNY element.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "- `setw(n)` — minimalna szerokość **następnego** wypisywanego elementu (potem wraca do 0). Dłuższe wartości nie są ucinane.\n- `setfill(c)` — znak dopełnienia (domyślnie spacja); **trwały**.\n- `left` / `right` / `internal` — wyrównanie (trwałe). `internal` stawia znak minus po lewej, a zera między nim a cyframi."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Godzina, wyrównanie, liczby ujemne",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int h = 9, m = 5;\n    cout << setfill('0') << setw(2) << h << ':' << setw(2) << m << '\\n'; // 09:05\n    cout << setfill(' ');                                              // przywróć spacje\n    cout << setw(6) << 42 << \"|\\n\";            // \"    42|\"\n    cout << left << setw(6) << 42 << \"|\\n\";    // \"42    |\"\n    cout << right;\n    cout << setw(5) << setfill('0') << -42 << '\\n';            // \"00-42\"  (!)\n    cout << internal << setw(5) << -42 << '\\n';                // \"-0042\"\n    cout << right << setfill(' ');\n    printf(\"%02d:%02d %5d|%-5d| %05d\\n\", h, m, 42, 42, -42);   // 09:05    42|42   | -0042\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`setw` trzeba powtórzyć przed **każdym** elementem: `cout << setw(2) << h << ':' << m` dopełni tylko `h`."
+    }
+   ],
+   "pitfalls": [
+    "`setw` działa tylko na najbliższy element.",
+    "`setfill` zostaje na stałe — pamiętaj przywrócić spację.",
+    "Zera wiodące dla liczby ujemnej przez `setfill('0')` dają `00-42` — użyj `internal` lub `printf(\"%05d\")`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wypisac liczbe z zerami wiodacymi",
+      "zera wiodace c++",
+      "leading zeros c++",
+      "jak wypisac 007",
+      "wypisz 5 jako 05"
+     ],
+     "a": "`cout << setw(k) << setfill('0') << x;` — pole szerokości `k`, dopełnione zerami z lewej. W stylu C: `printf(\"%0kd\", x)`,\nnp. `printf(\"%03d\", 7)` → `007`. Pamiętaj, że `setw` działa tylko na następny element, a `setfill` zostaje na stałe.",
+     "code": "int x = 7;\ncout << setw(3) << setfill('0') << x << '\\n';   // 007\nprintf(\"%03d\\n\", x);                            // 007"
+    },
+    {
+     "q": [
+      "jak wypisac godzine 09:05",
+      "format hh:mm c++",
+      "wypisanie czasu z zerami",
+      "godzina z zerem na poczatku",
+      "print time hh:mm:ss c++"
+     ],
+     "a": "Każdą część wypisz w polu szerokości 2 z zerami: `setfill('0')` raz, `setw(2)` przed każdą liczbą. Najprościej w C:\n`printf(\"%02d:%02d:%02d\\n\", h, m, s);`.",
+     "code": "int h = 9, m = 5, s = 3;\nprintf(\"%02d:%02d:%02d\\n\", h, m, s);   // 09:05:03\ncout << setfill('0') << setw(2) << h << ':' << setw(2) << m << ':' << setw(2) << s << '\\n';"
+    },
+    {
+     "q": [
+      "setw dziala tylko raz",
+      "setw nie dziala na druga liczbe",
+      "dlaczego setw dziala tylko na pierwsza",
+      "setw trwale"
+     ],
+     "a": "Tak jest z definicji: `setw` ustawia szerokość tylko **jednej** najbliższej operacji `<<`, potem resetuje się do 0.\nTrzeba go powtarzać przed każdym elementem. Za to `setfill`, `left`, `right`, `fixed`, `setprecision` są trwałe.",
+     "code": "cout << setw(4) << 1 << setw(4) << 2 << setw(4) << 3 << '\\n';   // \"   1   2   3\""
+    },
+    {
+     "q": [
+      "wyrownanie do lewej cout",
+      "left right cout",
+      "jak wyrownac tekst w kolumnie",
+      "tabelka w konsoli c++"
+     ],
+     "a": "`left` wyrównuje do lewej (dopełnienie z prawej), `right` do prawej (domyślne). W `printf`: `%-10s` do lewej, `%10s` do\nprawej. Przydatne do ładnej tabelki w debugowaniu.",
+     "code": "vector<pair<string,int>> w = {{\"Ala\", 5}, {\"Bartek\", 120}};\nfor (auto& [imie, pkt] : w)\n    cout << left << setw(8) << imie << right << setw(5) << pkt << '\\n';"
+    },
+    {
+     "q": [
+      "setfill zera a liczba ujemna",
+      "zera wiodace dla ujemnej liczby",
+      "00-42 zamiast -0042",
+      "internal cout"
+     ],
+     "a": "Przy wyrównaniu do prawej zera trafiają przed cały napis, więc `setw(5) << setfill('0') << -42` daje `00-42`. Użyj\n`internal` (zera między znakiem a cyframi) → `-0042`, albo `printf(\"%05d\", -42)`, który robi to poprawnie.",
+     "code": "cout << setfill('0') << internal << setw(5) << -42 << '\\n';   // -0042\nprintf(\"%05d\\n\", -42);                                        // -0042"
+    },
+    {
+     "q": [
+      "setw ucina liczbe",
+      "co gdy liczba dluzsza niz setw",
+      "setw za male"
+     ],
+     "a": "Nic nie jest ucinane — `setw` to **minimalna** szerokość. `setw(3) << 12345` wypisze `12345`.",
+     "code": "cout << setw(3) << 12345 << '\\n';   // 12345"
+    },
+    {
+     "q": [
+      "setw z double",
+      "setw i setprecision razem",
+      "wyrownanie liczb rzeczywistych"
+     ],
+     "a": "Można łączyć: `fixed << setprecision(3) << setw(10) << x` — liczba z 3 miejscami po przecinku w polu szerokości 10.\nW C: `printf(\"%10.3f\", x)`.",
+     "code": "double x = 3.14159;\ncout << fixed << setprecision(3) << setw(10) << x << \"|\\n\";   // \"     3.142|\"\nprintf(\"%10.3f|\\n\", x);"
+    },
+    {
+     "q": [
+      "printf %5d",
+      "printf szerokosc pola",
+      "printf %-5d",
+      "printf wyrownanie"
+     ],
+     "a": "`%5d` — liczba w polu szerokości 5 wyrównana do prawej, `%-5d` — do lewej, `%05d` — dopełnienie zerami.\nSzerokość może pochodzić z argumentu: `printf(\"%*d\", w, x)`.",
+     "code": "int w = 6, x = 42;\nprintf(\"[%5d] [%-5d] [%05d] [%*d]\\n\", x, x, x, w, x);"
+    },
+    {
+     "q": [
+      "setfill nie wraca do spacji",
+      "po setfill caly czas zera",
+      "jak cofnac setfill"
+     ],
+     "a": "`setfill` jest trwały. Po wypisaniu z zerami przywróć spację: `cout << setfill(' ');`. Inaczej każde kolejne `setw`\ndopełni zerami.",
+     "code": "cout << setfill('0') << setw(3) << 5 << '\\n' << setfill(' ');\ncout << setw(3) << 5 << '\\n';   // \"  5\""
+    },
+    {
+     "q": [
+      "numer z zerami do stringa",
+      "string z zerami wiodacymi",
+      "to_string z zerami"
+     ],
+     "a": "Dopisz zera ręcznie albo użyj `ostringstream`/`snprintf`.",
+     "code": "int x = 42;\nstring s = to_string(x);\ns = string(max(0, 5 - (int)s.size()), '0') + s;   // \"00042\"\ncout << s << '\\n';"
+    }
+   ],
+   "related": [
+    "io-precision",
+    "io-printf-formats",
+    "io-print-separators",
+    "cpp-ref-iomanip-streams",
+    "tech-dates-time"
+   ]
+  },
+  {
+   "id": "io-printf-formats",
+   "title": "printf i scanf: specyfikatory formatu (%d, %lld, %.2f, %s, %c, %x...)",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "printf",
+    "scanf",
+    "format",
+    "%d",
+    "%lld",
+    "%f",
+    "%lf",
+    "%s",
+    "%c",
+    "%x",
+    "specyfikator"
+   ],
+   "aliases": [
+    "printf formaty",
+    "printf long long",
+    "scanf long long",
+    "printf %lld",
+    "scanf %lf",
+    "printf string",
+    "printf format specifiers",
+    "jak wypisac long long printf",
+    "scanf char",
+    "%d %lld %f"
+   ],
+   "summary": "`printf`/`scanf` wymagają specyfikatora pasującego do typu: `%d` int, `%lld` long long, `%f` double w printf (ale `%lf` w scanf), `%c` char, `%s` napis C. Zły specyfikator to niezdefiniowane zachowanie (śmieci na wyjściu).",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Typ",
+      "printf",
+      "scanf",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "int",
+       "`%d`",
+       "`%d`",
+       ""
+      ],
+      [
+       "unsigned int",
+       "`%u`",
+       "`%u`",
+       ""
+      ],
+      [
+       "long long",
+       "`%lld`",
+       "`%lld`",
+       "na bardzo starym MinGW bywało `%I64d`"
+      ],
+      [
+       "unsigned long long",
+       "`%llu`",
+       "`%llu`",
+       ""
+      ],
+      [
+       "double",
+       "`%f` (`%.2f`)",
+       "`%lf`",
+       "w scanf `%f` = float!"
+      ],
+      [
+       "long double",
+       "`%Lf`",
+       "`%Lf`",
+       "na MinGW bywa problematyczne — wtedy cout"
+      ],
+      [
+       "char",
+       "`%c`",
+       "`\" %c\"`",
+       "spacja przed `%c` pomija białe znaki"
+      ],
+      [
+       "napis char[]",
+       "`%s`",
+       "`%s` (bez `&`)",
+       "dla `std::string` w printf: `s.c_str()`"
+      ],
+      [
+       "szesnastkowo",
+       "`%x` / `%X`",
+       "`%x`",
+       "`%08x` z zerami"
+      ],
+      [
+       "size_t",
+       "`%zu`",
+       "`%zu`",
+       ""
+      ],
+      [
+       "znak %",
+       "`%%`",
+       "",
+       ""
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Modyfikator",
+      "Przykład",
+      "Wynik"
+     ],
+     "rows": [
+      [
+       "szerokość",
+       "`%5d` dla 42",
+       "`   42`"
+      ],
+      [
+       "do lewej",
+       "`%-5d|`",
+       "`42   |`"
+      ],
+      [
+       "zera",
+       "`%05d`",
+       "`00042`"
+      ],
+      [
+       "znak +",
+       "`%+d`",
+       "`+42`"
+      ],
+      [
+       "precyzja",
+       "`%.3f` dla 3.14159",
+       "`3.142`"
+      ],
+      [
+       "szer. + prec.",
+       "`%8.2f`",
+       "`    3.14`"
+      ],
+      [
+       "szer. z arg.",
+       "`%*d` (w, x)",
+       "pole szerokości w"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Komplet podstawowych formatów",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n; long long big; double d; char c; char word[105];\n    if (scanf(\"%d %lld %lf %c %100s\", &n, &big, &d, &c, word) != 5) return 1;\n    printf(\"%d %lld %.3f %c %s\\n\", n, big, d, c, word);\n    string s = word;\n    printf(\"%s ma %zu znakow\\n\", s.c_str(), s.size());\n}"
+    },
+    {
+     "type": "warn",
+     "md": "W `scanf` każda zmienna (poza tablicą `char`) potrzebuje `&`: `scanf(\"%d\", &n)`. Brak `&` = zapis pod losowy adres (crash)."
+    }
+   ],
+   "pitfalls": [
+    "`%f` w `scanf` dla `double` — trzeba `%lf`.",
+    "`%d` dla `long long` — trzeba `%lld`.",
+    "`%s` z `std::string` bez `.c_str()`.",
+    "Brak `&` w `scanf`.",
+    "`%c` nie pomija białych znaków — użyj `\" %c\"`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wypisac long long printf",
+      "printf long long",
+      "%lld",
+      "printf dla long long",
+      "scanf long long"
+     ],
+     "a": "Dla `long long` używaj `%lld` (w `printf` i `scanf`), dla `unsigned long long` — `%llu`. `%d` przy `long long` to\nniezdefiniowane zachowanie: wypisze śmieci albo tylko dolne 32 bity.",
+     "code": "long long x;\nscanf(\"%lld\", &x);\nprintf(\"%lld\\n\", x * 2);"
+    },
+    {
+     "q": [
+      "scanf double %lf",
+      "scanf %f double nie dziala",
+      "printf %lf czy %f",
+      "wczytywanie double scanf"
+     ],
+     "a": "W `scanf` dla `double` **musi** być `%lf` (`%f` oznacza `float` — wczytasz śmieci). W `printf` dla `double` poprawne jest\n`%f` (a od C99 `%lf` też działa). Dla `long double` w obu: `%Lf`.",
+     "code": "double x;\nscanf(\"%lf\", &x);\nprintf(\"%.4f\\n\", x);"
+    },
+    {
+     "q": [
+      "printf string",
+      "printf std::string",
+      "jak wypisac string printf",
+      "printf %s string nie dziala"
+     ],
+     "a": "`%s` oczekuje wskaźnika na napis w stylu C (`const char*`). Dla `std::string` podaj `s.c_str()`. Podanie samego `s`\nto UB (śmieci lub crash).",
+     "code": "string s = \"Ala ma kota\";\nprintf(\"%s\\n\", s.c_str());"
+    },
+    {
+     "q": [
+      "scanf char pomija",
+      "scanf %c wczytuje enter",
+      "scanf %c spacja",
+      "jak wczytac char scanf"
+     ],
+     "a": "`%c` w przeciwieństwie do `%d` **nie** pomija białych znaków, więc po wcześniejszej liczbie wczyta `'\\n'` albo spację.\nDodaj spację w formacie: `scanf(\" %c\", &c)` — spacja oznacza „pomiń wszystkie białe znaki”.",
+     "code": "int n;\nchar c;\nscanf(\"%d\", &n);\nscanf(\" %c\", &c);\nprintf(\"%d %c\\n\", n, c);"
+    },
+    {
+     "q": [
+      "scanf string",
+      "scanf %s char tablica",
+      "scanf %s bez &",
+      "wczytaj slowo scanf"
+     ],
+     "a": "`scanf(\"%s\", buf)` wczytuje słowo (do białego znaku) do tablicy `char` — **bez** `&`, bo nazwa tablicy to już adres.\nZabezpiecz rozmiar: `%100s` dla `char buf[101]`. Do `std::string` `scanf` nie wczyta — użyj `cin >> s`.",
+     "code": "char buf[105];\nscanf(\"%100s\", buf);\nprintf(\"%s\\n\", buf);"
+    },
+    {
+     "q": [
+      "printf procent",
+      "jak wypisac znak % w printf",
+      "printf %%"
+     ],
+     "a": "Znak procentu w formacie zapisujesz jako `%%`.",
+     "code": "int p = 75;\nprintf(\"%d%%\\n\", p);   // 75%"
+    },
+    {
+     "q": [
+      "printf hex",
+      "printf %x",
+      "printf szesnastkowo",
+      "printf hex z zerami"
+     ],
+     "a": "`%x` — małe litery, `%X` — wielkie, `%#x` — z prefiksem `0x`, `%08x` — 8 cyfr z zerami. Dla `long long`: `%llx`.",
+     "code": "unsigned x = 255;\nprintf(\"%x %X %#x %08x\\n\", x, x, x, x);   // ff FF 0xff 000000ff"
+    },
+    {
+     "q": [
+      "co zwraca scanf",
+      "scanf return value",
+      "jak sprawdzic czy scanf wczytal"
+     ],
+     "a": "`scanf` zwraca liczbę poprawnie wczytanych pól, a `EOF` (-1), gdy wejście się skończyło przed pierwszym polem. Sprawdzaj\n`if (scanf(\"%d %d\", &a, &b) == 2)`. `printf` zwraca liczbę wypisanych znaków.",
+     "code": "int a, b;\nif (scanf(\"%d %d\", &a, &b) == 2) printf(\"%d\\n\", a + b);"
+    },
+    {
+     "q": [
+      "printf %d dla double",
+      "printf wypisuje 0 zamiast liczby",
+      "printf zle wartosci",
+      "printf smieci"
+     ],
+     "a": "Typ argumentu musi pasować do specyfikatora. `printf(\"%d\", 3.5)` albo `printf(\"%f\", 3)` to UB — zobaczysz 0 lub\nśmieci. Włącz `-Wall`: kompilator ostrzeże o niezgodności formatu (`-Wformat`). Najbezpieczniej: `cout`, który sam dobiera format.",
+     "code": "double d = 3.5;\nint i = 3;\nprintf(\"%f %d\\n\", d, i);   // dobrze dopasowane"
+    },
+    {
+     "q": [
+      "printf size_t",
+      "%zu",
+      "printf v.size()",
+      "jak wypisac size printf"
+     ],
+     "a": "`size()` zwraca `size_t` — specyfikator `%zu`. Albo rzutuj: `printf(\"%d\", (int)v.size())`.",
+     "code": "vector<int> v(10);\nprintf(\"%zu %d\\n\", v.size(), (int)v.size());"
+    },
+    {
+     "q": [
+      "printf czy cout",
+      "co lepsze printf czy cout",
+      "printf vs cout na olimpiadzie"
+     ],
+     "a": "Oba są OK. `cout` z `sync_with_stdio(false)` jest równie szybki i bezpieczny typowo (nie da się pomylić formatu).\n`printf` bywa wygodniejszy do formatowania (`%.2f`, `%05d`). Ważne, żeby ich nie mieszać po `sync_with_stdio(false)`."
+    },
+    {
+     "q": [
+      "%lld nie dziala na windows",
+      "printf long long windows mingw",
+      "I64d"
+     ],
+     "a": "Bardzo stare MinGW korzystały z biblioteki `msvcrt`, która nie znała `%lld` (stąd `%I64d`). Współczesne MinGW-w64\nobsługują `%lld` poprawnie. Jeśli masz problem lokalnie, użyj `cout` — działa wszędzie."
+    }
+   ],
+   "related": [
+    "io-precision",
+    "io-setw-setfill",
+    "io-fast-io",
+    "io-hex-bin",
+    "cpp-ref-climits-cfloat",
+    "cpp-ref-cstring-cstdlib",
+    "cpp-ref-iomanip-streams",
+    "oi-interactive",
+    "str-char-print",
+    "tech-dates-time"
+   ]
+  },
+  {
+   "id": "io-print-separators",
+   "title": "Wypisywanie list i tablic: separatory, bez spacji na końcu, tablice 2D",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "wypisywanie",
+    "spacja na końcu",
+    "separator",
+    "tablica 2D",
+    "vector",
+    "macierz",
+    "przecinki"
+   ],
+   "aliases": [
+    "jak wypisac tablice",
+    "wypisz vector",
+    "bez spacji na koncu",
+    "jak wypisac liczby oddzielone spacja",
+    "print vector c++",
+    "wypisanie tablicy 2d",
+    "wypisz macierz",
+    "print array without trailing space"
+   ],
+   "summary": "Elementy wypisuj w pętli z separatorem: `if (i) cout << ' ';` przed elementem albo trik `\" \\n\"[i == n-1]`. Tablicę 2D wypisuj wierszami, kończąc każdy wiersz `'\\n'`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Trzy typowe wzorce",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> a = {3, 1, 4, 1, 5};\n    int n = a.size();\n\n    // 1) separator przed każdym elementem poza pierwszym\n    for (int i = 0; i < n; i++) {\n        if (i) cout << ' ';\n        cout << a[i];\n    }\n    cout << '\\n';\n\n    // 2) trik: \" \\n\"[warunek] wybiera spację albo '\\n'\n    for (int i = 0; i < n; i++) cout << a[i] << \" \\n\"[i == n - 1];\n\n    // 3) tablica 2D\n    vector<vector<int>> m = {{1, 2, 3}, {4, 5, 6}};\n    for (auto& row : m) {\n        for (int j = 0; j < (int)row.size(); j++)\n            cout << row[j] << (j + 1 < (int)row.size() ? ' ' : '\\n');\n    }\n}"
+    },
+    {
+     "type": "text",
+     "md": "Trik `\" \\n\"[i == n - 1]`: literał `\" \\n\"` to tablica znaków `{' ', '\\n', '\\0'}`, a `bool` zamienia się na indeks 0 lub 1.\nDla ostatniego elementu dostajesz `'\\n'`, dla pozostałych spację. Uwaga: przy pustej tablicy nic się nie wypisze\n(nawet `'\\n'`)."
+    },
+    {
+     "type": "tip",
+     "md": "Wiele sprawdzarek ignoruje nadmiarowe białe znaki na końcu wiersza i pliku (porównują wynik „słowo po słowie”),\nale nie warto na tym polegać — wypisuj dokładnie w formacie z treści, bez spacji na końcu wiersza."
+    }
+   ],
+   "pitfalls": [
+    "Pętla od końca z `size_t i = v.size() - 1; i >= 0` — nieskończona (unsigned).",
+    "Przy pustej tablicy trik `\" \\n\"[...]` nie wypisuje końca wiersza.",
+    "`cout << pair` się nie kompiluje — wypisz `.first` i `.second`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wypisac tablice",
+      "wypisz vector",
+      "print vector c++",
+      "jak wypisac elementy tablicy",
+      "wypisanie wektora"
+     ],
+     "a": "Pętlą po elementach z separatorem. Najczytelniej: spacja przed każdym elementem oprócz pierwszego (`if (i) cout << ' ';`),\na na końcu `'\\n'`. Dla `vector` można też użyć pętli zakresowej.",
+     "code": "vector<int> a = {1, 2, 3};\nfor (int i = 0; i < (int)a.size(); i++) {\n    if (i) cout << ' ';\n    cout << a[i];\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "bez spacji na koncu",
+      "jak nie wypisac spacji na koncu",
+      "spacja na koncu wiersza",
+      "trailing space c++",
+      "ostatni element bez spacji"
+     ],
+     "a": "Wypisuj separator **przed** elementem, pomijając pierwszy (`if (i) cout << ' ';`), albo użyj triku\n`cout << a[i] << \" \\n\"[i == n - 1];`. Obie wersje dają spację między elementami i `'\\n'` po ostatnim.",
+     "code": "int a[] = {5, 6, 7};\nint n = 3;\nfor (int i = 0; i < n; i++) cout << a[i] << \" \\n\"[i == n - 1];"
+    },
+    {
+     "q": [
+      "co znaczy \" \\n\"[i == n-1]",
+      "trik z \" \\n\"",
+      "\" \\n\"[i+1==n] jak dziala"
+     ],
+     "a": "`\" \\n\"` to tablica znaków `{' ', '\\n', '\\0'}`. Wyrażenie `[i == n - 1]` zamienia `bool` na 0 lub 1, więc wybiera\nspację dla zwykłych elementów i `'\\n'` dla ostatniego. Krótko i bez `if`.",
+     "code": "vector<int> a = {1, 2, 3};\nint n = a.size();\nfor (int i = 0; i < n; i++) cout << a[i] << \" \\n\"[i + 1 == n];"
+    },
+    {
+     "q": [
+      "czy spacja na koncu to blad",
+      "czy sprawdzarka akceptuje spacje na koncu",
+      "nadmiarowe spacje na wyjsciu",
+      "czy enter na koncu jest potrzebny"
+     ],
+     "a": "Zwykle sprawdzarki (w tym typowe na OI) porównują wynik z pominięciem nadmiarowych białych znaków na końcu wiersza\ni pliku, więc spacja na końcu czy brak `'\\n'` po ostatnim wierszu nie szkodzą. Nie ma jednak gwarancji dla każdej\nsprawdzarki — bezpieczniej wypisać dokładnie format z przykładu i kończyć ostatni wiersz `'\\n'`."
+    },
+    {
+     "q": [
+      "wypisz tablice 2d",
+      "jak wypisac macierz",
+      "print 2d array c++",
+      "wypisanie tablicy dwuwymiarowej"
+     ],
+     "a": "Dwie pętle: zewnętrzna po wierszach, wewnętrzna po kolumnach; spacja między elementami w wierszu i `'\\n'` po każdym wierszu.",
+     "code": "int n = 2, m = 3;\nint t[2][3] = {{1, 2, 3}, {4, 5, 6}};\nfor (int i = 0; i < n; i++)\n    for (int j = 0; j < m; j++)\n        cout << t[i][j] << \" \\n\"[j == m - 1];"
+    },
+    {
+     "q": [
+      "wypisz liczby po przecinku",
+      "wypisz z przecinkami",
+      "separator przecinek wypisywanie",
+      "1, 2, 3 wypisywanie"
+     ],
+     "a": "Ten sam wzorzec, tylko inny separator: `if (i) cout << \", \";`.",
+     "code": "vector<int> a = {1, 2, 3};\nfor (size_t i = 0; i < a.size(); i++) {\n    if (i) cout << \", \";\n    cout << a[i];\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "wypisz w odwrotnej kolejnosci",
+      "wypisz tablice od konca",
+      "print reverse c++"
+     ],
+     "a": "Pętla od `n-1` do `0` (licznik ze znakiem — `int`, nie `size_t`!) albo iteratory `rbegin/rend`.",
+     "code": "vector<int> a = {1, 2, 3};\nfor (int i = (int)a.size() - 1; i >= 0; i--) cout << a[i] << ' ';\ncout << '\\n';\nfor (auto it = a.rbegin(); it != a.rend(); ++it) cout << *it << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "funkcja do wypisywania vectora",
+      "operator << dla vector",
+      "print helper vector"
+     ],
+     "a": "Możesz napisać szablon `operator<<` dla `vector` (wygodne przy debugowaniu).",
+     "code": "template <class T>\nostream& operator<<(ostream& os, const vector<T>& v) {\n    for (size_t i = 0; i < v.size(); i++) os << (i ? \" \" : \"\") << v[i];\n    return os;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wypisz pary",
+      "jak wypisac pair",
+      "cout pair blad",
+      "wypisanie pary c++"
+     ],
+     "a": "`cout << p` dla `pair` nie działa (brak operatora). Wypisz pola: `p.first` i `p.second`, albo użyj structured bindings.",
+     "code": "vector<pair<int,int>> v = {{1, 2}, {3, 4}};\nfor (auto& [a, b] : v) cout << a << ' ' << b << '\\n';"
+    },
+    {
+     "q": [
+      "wypisz wynik w jednej linii czy w wielu",
+      "kazdy wynik w nowej linii",
+      "jeden wynik na wiersz"
+     ],
+     "a": "Zawsze trzymaj się formatu z treści i przykładu. Jeśli treść mówi „w kolejnych wierszach”, po każdej liczbie `'\\n'`;\njeśli „w jednym wierszu, oddzielone spacjami” — spacje i jeden `'\\n'` na końcu.",
+     "code": "vector<int> wyniki = {7, 8, 9};\nfor (int w : wyniki) cout << w << '\\n';"
+    },
+    {
+     "q": [
+      "pusty vector wypisywanie",
+      "co wypisac gdy brak elementow",
+      "pusta lista na wyjsciu"
+     ],
+     "a": "Trik `\" \\n\"[i == n-1]` przy pustej tablicy nie wypisze nic, nawet końca wiersza. Jeśli treść wymaga pustego wiersza\n(albo np. `-1`/`BRAK`), obsłuż ten przypadek osobno.",
+     "code": "vector<int> a;\nif (a.empty()) cout << \"BRAK\\n\";"
+    },
+    {
+     "q": [
+      "wypisz tablice od 1",
+      "indeksowanie od 1 wypisywanie",
+      "tablica 1..n wypisanie"
+     ],
+     "a": "Przy indeksowaniu od 1 pętla idzie `for (int i = 1; i <= n; i++)`, a separator dajesz `\" \\n\"[i == n]`.",
+     "code": "int n = 3;\nint a[4] = {0, 10, 20, 30};\nfor (int i = 1; i <= n; i++) cout << a[i] << \" \\n\"[i == n];"
+    }
+   ],
+   "related": [
+    "io-read-grid",
+    "pit-unsigned-size",
+    "io-setw-setfill",
+    "str-escape-whitespace"
+   ]
+  },
+  {
+   "id": "io-print-bool",
+   "title": "Wypisywanie wartości logicznych i odpowiedzi TAK/NIE",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "bool",
+    "boolalpha",
+    "TAK",
+    "NIE",
+    "YES",
+    "NO",
+    "true false",
+    "operator warunkowy"
+   ],
+   "aliases": [
+    "jak wypisac bool",
+    "cout bool wypisuje 1",
+    "boolalpha",
+    "wypisz TAK NIE",
+    "print true false c++",
+    "yes no wypisywanie",
+    "operator ? : w cout"
+   ],
+   "summary": "`cout << b` wypisuje `1`/`0`; `cout << boolalpha << b` wypisuje `true`/`false`. Odpowiedź TAK/NIE najprościej: `cout << (ok ? \"TAK\" : \"NIE\") << '\\n';` — nawiasy są obowiązkowe.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "bool na wyjściu",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    bool ok = true;\n    cout << ok << '\\n';                              // 1\n    cout << boolalpha << ok << noboolalpha << '\\n';  // true\n    cout << (ok ? \"TAK\" : \"NIE\") << '\\n';            // TAK\n    printf(\"%s\\n\", ok ? \"YES\" : \"NO\");               // YES\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`cout << ok ? \"TAK\" : \"NIE\";` bez nawiasów to `(cout << ok) ? \"TAK\" : \"NIE\";` — wypisze `1` albo `0`, a napis zostanie\nzignorowany (kompilator tylko ostrzega). Zawsze bierz `?:` w nawiasy."
+    }
+   ],
+   "pitfalls": [
+    "`cout << ok ? \"TAK\" : \"NIE\"` bez nawiasów wypisuje 0/1.",
+    "Literówka/wielkość liter w odpowiedzi (`Tak` zamiast `TAK`)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wypisac TAK NIE",
+      "wypisz tak lub nie",
+      "yes no c++",
+      "odpowiedz TAK NIE cout",
+      "print yes or no c++"
+     ],
+     "a": "Użyj operatora warunkowego w nawiasach: `cout << (ok ? \"TAK\" : \"NIE\") << '\\n';`. Wielkość liter i dokładna pisownia\nmuszą być identyczne z treścią (`TAK` ≠ `Tak` ≠ `tak` dla wielu sprawdzarek).",
+     "code": "int x = 4;\nbool parzysta = (x % 2 == 0);\ncout << (parzysta ? \"TAK\" : \"NIE\") << '\\n';"
+    },
+    {
+     "q": [
+      "cout bool wypisuje 1",
+      "dlaczego bool wypisuje 0 1",
+      "jak wypisac true false",
+      "boolalpha"
+     ],
+     "a": "Domyślnie `bool` jest wypisywany jako liczba: `true` → `1`, `false` → `0`. Manipulator `boolalpha` przełącza na słowa\n`true`/`false` (trwale, do `noboolalpha`).",
+     "code": "bool b = false;\ncout << b << ' ' << boolalpha << b << noboolalpha << '\\n';   // 0 false"
+    },
+    {
+     "q": [
+      "cout << x ? a : b nie dziala",
+      "operator warunkowy w cout wypisuje 1",
+      "ternary in cout",
+      "?: w cout bez nawiasow"
+     ],
+     "a": "Operator `<<` ma wyższy priorytet niż `?:`. Bez nawiasów najpierw wykonuje się `cout << x`, a wynik (strumień) staje\nsię warunkiem. Wypisze się `0`/`1`, a napisy nie. Rozwiązanie: `cout << (x ? \"A\" : \"B\");`.",
+     "code": "bool x = true;\ncout << (x ? \"A\" : \"B\") << '\\n';"
+    },
+    {
+     "q": [
+      "wczytaj bool",
+      "cin bool",
+      "wczytywanie true false"
+     ],
+     "a": "`cin >> b` dla `bool` wczytuje `0` lub `1`. Z `boolalpha` wczytuje słowa `true`/`false`. Na OI zwykle dostajesz `0/1`\n— możesz po prostu wczytać do `int`.",
+     "code": "bool b;\ncin >> b;   // 0 lub 1"
+    },
+    {
+     "q": [
+      "printf bool",
+      "jak wypisac bool printf",
+      "printf true false"
+     ],
+     "a": "`printf` nie ma formatu dla `bool`; `printf(\"%d\", b)` wypisze 0/1 (bool jest promowany do `int`). Słowa:\n`printf(\"%s\", b ? \"true\" : \"false\")`.",
+     "code": "bool b = true;\nprintf(\"%d %s\\n\", b, b ? \"true\" : \"false\");"
+    },
+    {
+     "q": [
+      "funkcja zwracajaca TAK NIE",
+      "zwroc string tak nie",
+      "funkcja bool a wypisanie"
+     ],
+     "a": "Trzymaj logikę w funkcji `bool`, a dopiero przy wypisywaniu zamieniaj na tekst. Łatwiej testować i nie pomylisz pisowni.",
+     "code": "bool czyPierwsza(int x) {\n    if (x < 2) return false;\n    for (int d = 2; 1LL * d * d <= x; d++)\n        if (x % d == 0) return false;\n    return true;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wypisuje Tak zamiast TAK",
+      "wielkosc liter w odpowiedzi",
+      "czy sprawdzarka rozroznia wielkie litery"
+     ],
+     "a": "Zakładaj, że tak — porównanie jest zwykle dokładne dla słów. Skopiuj odpowiedź (np. `TAK`, `NIE`, `BRAK`) prosto z treści,\nnajlepiej trzymaj ją w stałej.",
+     "code": "const string TAK = \"TAK\", NIE = \"NIE\";\nbool ok = false;\ncout << (ok ? TAK : NIE) << '\\n';"
+    },
+    {
+     "q": [
+      "bool w if wypisywanie wielu odpowiedzi",
+      "multitest tak nie",
+      "kazdy test TAK albo NIE"
+     ],
+     "a": "Dla wielu zapytań wypisuj jedną odpowiedź na wiersz, `'\\n'` zamiast `endl` (szybciej).",
+     "code": "int t;\ncin >> t;\nwhile (t--) {\n    long long a;\n    cin >> a;\n    cout << (a % 3 == 0 ? \"TAK\" : \"NIE\") << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "io-printf-formats",
+    "pit-bit-ops",
+    "cpp-conditions",
+    "cpp-ref-iomanip-streams"
+   ]
+  },
+  {
+   "id": "io-hex-bin",
+   "title": "Liczby szesnastkowe, ósemkowe i binarne: hex, oct, bitset",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "hex",
+    "szesnastkowy",
+    "binarny",
+    "dwójkowy",
+    "bitset",
+    "oct",
+    "ósemkowy",
+    "system liczbowy",
+    "konwersja"
+   ],
+   "aliases": [
+    "jak wypisac liczbe binarnie",
+    "bitset<32>",
+    "liczba w systemie dwojkowym c++",
+    "print binary c++",
+    "cout hex",
+    "zamiana na binarny",
+    "zamiana na szesnastkowy",
+    "wczytaj liczbe hex",
+    "dec to bin"
+   ],
+   "summary": "`cout << hex << x` wypisuje szesnastkowo (`dec` wraca do dziesiętnego), `cout << bitset<32>(x)` — 32 bity z zerami wiodącymi. Wczytanie z innej podstawy: `stoll(s, nullptr, 2)` (binarnie) albo `stoll(s, nullptr, 16)`.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Konwersje systemów liczbowych",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int x = 10;\n    cout << hex << 255 << ' ' << uppercase << 255 << nouppercase << dec << '\\n'; // ff FF\n    cout << oct << 8 << dec << '\\n';                // 10\n    cout << bitset<8>(x) << '\\n';                   // 00001010\n    string b = bitset<32>(x).to_string();\n    b.erase(0, b.find_first_not_of('0'));           // bez zer wiodących\n    if (b.empty()) b = \"0\";\n    cout << b << '\\n';                              // 1010\n    cout << stoll(\"1010\", nullptr, 2) << ' ' << stoll(\"ff\", nullptr, 16) << '\\n'; // 10 255\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Dowolna podstawa ręcznie",
+     "code": "string toBase(long long x, int base) {   // x >= 0, base 2..36\n    if (x == 0) return \"0\";\n    const string digits = \"0123456789abcdefghijklmnopqrstuvwxyz\";\n    string s;\n    while (x > 0) { s += digits[x % base]; x /= base; }\n    reverse(s.begin(), s.end());\n    return s;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "warn",
+     "md": "`hex`/`oct` są trwałe — zapomniany `dec` sprawi, że wszystkie kolejne liczby wypiszą się szesnastkowo.\nLiczby ujemne w `hex`/`bitset` pokazują zapis uzupełnień do dwóch (`-1` → `ffffffff`)."
+    }
+   ],
+   "pitfalls": [
+    "Zapomniany `dec` po `hex`.",
+    "`bitset<n>` z `n` niebędącym stałą — błąd kompilacji.",
+    "Usuwanie zer wiodących z `\"000...0\"` daje pusty napis — obsłuż `x = 0`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wypisac liczbe binarnie",
+      "liczba w systemie dwojkowym c++",
+      "print binary c++",
+      "wypisz bity liczby",
+      "zamiana na binarny c++",
+      "dec to bin c++"
+     ],
+     "a": "Najprościej `cout << bitset<32>(x)` — wypisuje dokładnie 32 bity (z zerami wiodącymi). Bez zer wiodących: zamień\nna string i usuń początkowe zera (pamiętaj o `x = 0`). Dla `long long` użyj `bitset<64>`.",
+     "code": "int x = 13;\ncout << bitset<8>(x) << '\\n';              // 00001101\nstring s = bitset<32>(x).to_string();\ns.erase(0, s.find_first_not_of('0'));\nif (s.empty()) s = \"0\";\ncout << s << '\\n';                         // 1101"
+    },
+    {
+     "q": [
+      "cout hex",
+      "jak wypisac szesnastkowo",
+      "print hex c++",
+      "zamiana na szesnastkowy",
+      "liczba w hex c++"
+     ],
+     "a": "`cout << hex << x` wypisuje małymi literami, `uppercase` — wielkimi, `showbase` — z `0x`. Manipulator jest trwały,\nwięc wróć `dec`. W `printf`: `%x`, `%X`, `%08x`.",
+     "code": "int x = 255;\ncout << hex << x << ' ' << uppercase << x << nouppercase << dec << '\\n';  // ff FF\nprintf(\"%#x %08X\\n\", x, x);                                               // 0xff 000000FF"
+    },
+    {
+     "q": [
+      "wczytaj liczbe binarna",
+      "string binarny na liczbe",
+      "zamiana z binarnego na dziesietny",
+      "bin to dec c++",
+      "stoi base 2"
+     ],
+     "a": "`stoll(s, nullptr, 2)` zamienia napis binarny na liczbę (trzeci argument = podstawa). Alternatywa:\n`bitset<64>(s).to_ullong()`. Ręcznie: `x = x * 2 + (c - '0')` dla każdego znaku.",
+     "code": "string s = \"101101\";\nlong long a = stoll(s, nullptr, 2);\nlong long b = 0;\nfor (char c : s) b = b * 2 + (c - '0');\ncout << a << ' ' << b << '\\n';   // 45 45"
+    },
+    {
+     "q": [
+      "wczytaj liczbe szesnastkowa",
+      "cin hex",
+      "hex to dec c++",
+      "stoi base 16"
+     ],
+     "a": "`cin >> hex >> x` wczytuje szesnastkowo (pamiętaj potem `cin >> dec`). Z napisu: `stoll(s, nullptr, 16)` —\nprzyjmuje małe i wielkie litery, także prefiks `0x`.",
+     "code": "string s = \"1aF\";\ncout << stoll(s, nullptr, 16) << '\\n';   // 431"
+    },
+    {
+     "q": [
+      "zamiana na dowolny system",
+      "system o podstawie k c++",
+      "convert to base k",
+      "liczba w systemie trojkowym"
+     ],
+     "a": "Dziel przez podstawę i zbieraj reszty (od najmniej znaczącej cyfry), potem odwróć. Funkcja `toBase` jest w treści\nartykułu. W drugą stronę: `stoll(s, nullptr, k)` dla k ≤ 36 albo ręcznie `x = x * k + cyfra`.",
+     "code": "long long x = 100;\nint k = 3;\nstring s;\ndo { s += char('0' + x % k); x /= k; } while (x > 0);\nreverse(s.begin(), s.end());\ncout << s << '\\n';   // 10201"
+    },
+    {
+     "q": [
+      "bitset to_string",
+      "bitset na string",
+      "bitset to_ullong"
+     ],
+     "a": "`b.to_string()` daje napis z zerami/jedynkami (najstarszy bit pierwszy), `b.to_ullong()` — liczbę.\nRozmiar bitsetu musi być stałą czasu kompilacji (`bitset<32>`, nie `bitset<n>`).",
+     "code": "bitset<8> b(37);\nstring s = b.to_string();          // \"00100101\"\nunsigned long long v = b.to_ullong();\ncout << s << ' ' << v << ' ' << b.count() << '\\n';"
+    },
+    {
+     "q": [
+      "hex wypisuje sie dalej",
+      "po hex wszystkie liczby szesnastkowo",
+      "jak wrocic do dziesietnego cout",
+      "dec cout"
+     ],
+     "a": "`hex` (i `oct`) są trwałe. Po wypisaniu przywróć `cout << dec;`.",
+     "code": "cout << hex << 255 << dec << ' ' << 255 << '\\n';   // ff 255"
+    },
+    {
+     "q": [
+      "liczba ujemna binarnie",
+      "bitset z ujemnej liczby",
+      "-1 w hex ffffffff"
+     ],
+     "a": "Typy ze znakiem zapisuje się w kodzie uzupełnień do dwóch, więc `bitset<8>(-1)` to `11111111`, a `-1` w `hex` (int) to\n`ffffffff`. Jeśli chcesz zapis „ze znakiem minus”, wypisz `-` i konwertuj `-x`.",
+     "code": "cout << bitset<8>(-1) << ' ' << hex << -1 << dec << '\\n';   // 11111111 ffffffff"
+    },
+    {
+     "q": [
+      "ile bitow ma liczba",
+      "dlugosc zapisu binarnego",
+      "liczba cyfr binarnych"
+     ],
+     "a": "Dla `x > 0` liczba bitów to `__lg(x) + 1` (GCC) albo `bit_width((unsigned)x)` z C++20 (`<bit>`).",
+     "code": "unsigned x = 13;\ncout << __lg(x) + 1 << ' ' << bit_width(x) << '\\n';   // 4 4"
+    },
+    {
+     "q": [
+      "format {:b}",
+      "std::format binary",
+      "wypisz binarnie c++20"
+     ],
+     "a": "W C++20 (GCC 13+): `format(\"{:b}\", x)` — bez zer wiodących, `format(\"{:08b}\", x)` — 8 cyfr. Na starszych\nsprawdzarkach może nie działać; `bitset` działa zawsze.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << format(\"{:b} {:08b} {:x}\", 10, 10, 255) << '\\n';   // 1010 00001010 ff\n}"
+    }
+   ],
+   "related": [
+    "io-printf-formats",
+    "num-conversions",
+    "pit-bit-ops",
+    "cpp-ref-iomanip-streams"
+   ]
+  }
+ ]
+}

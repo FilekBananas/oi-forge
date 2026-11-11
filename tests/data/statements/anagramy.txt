@@ -1,0 +1,21 @@
+Anagramy
+Dwa słowa są anagramami, jeżeli jedno można otrzymać z drugiego przez przestawienie liter, np. „kot” i „tok”.
+Sprawdź, czy dwa podane słowa są anagramami.
+Wejście
+W pierwszym wierszu znajduje się słowo a, a w drugim słowo b. Oba słowa składają się z małych liter alfabetu
+angielskiego, a ich długości nie przekraczają 100 000.
+Wyjście
+Wypisz TAK, jeśli słowa są anagramami, a NIE w przeciwnym razie.
+Przykład 1
+Wejście:
+kot
+tok
+Wyjście:
+TAK
+
+Przykład 2
+Wejście:
+abc
+abd
+Wyjście:
+NIE

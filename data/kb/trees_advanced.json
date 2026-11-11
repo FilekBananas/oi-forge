@@ -1,0 +1,1477 @@
+{
+ "chunk": "trees-advanced",
+ "articles": [
+  {
+   "id": "tree-lca",
+   "title": "LCA — najniższy wspólny przodek metodą binary lifting (skoki potęgami dwójki)",
+   "category": "Drzewa",
+   "tags": [
+    "lca",
+    "najniższy wspólny przodek",
+    "binary lifting",
+    "skoki potęgami dwójki",
+    "k-ty przodek",
+    "jump pointers",
+    "up[k][v]",
+    "przodek"
+   ],
+   "aliases": [
+    "lca",
+    "lca binary lifting",
+    "najniższy wspólny przodek",
+    "najnizszy wspolny przodek",
+    "lowest common ancestor",
+    "lca c++",
+    "binary lifting",
+    "k-ty przodek",
+    "kth ancestor",
+    "skoki potęgami dwójki",
+    "wspólny przodek dwóch wierzchołków",
+    "lca kod"
+   ],
+   "summary": "LCA(u, v) to najgłębszy wierzchołek będący przodkiem obu. Binary lifting trzyma `up[k][v]` — przodka o `2^k` poziomów wyżej — i odpowiada na zapytanie w O(log n) po preprocessingu O(n log n). Daje też k-tego przodka i odległości w drzewie.",
+   "complexity": "preprocessing O(n log n) czasu i pamięci; zapytanie LCA / k-ty przodek O(log n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Najniższy wspólny przodek** `lca(u, v)` to wierzchołek, w którym „spotykają się” ścieżki z `u` i z `v`\ndo korzenia. Przez niego idzie jedyna ścieżka u–v, więc LCA jest kluczem do odległości, sum na ścieżkach\ni wielu zapytań o ścieżki.\n\n**Binary lifting:** `up[0][v]` = rodzic, `up[k][v] = up[k−1][ up[k−1][v] ]` (skok o `2^k` = dwa skoki\no `2^(k−1)`). Zapytanie:\n1. wyrównaj głębokości — podnieś głębszy wierzchołek o `dep[u] − dep[v]`, rozkładając tę liczbę na\n   potęgi dwójki (bity),\n2. jeśli teraz `u == v`, to jest LCA,\n3. w przeciwnym razie dla `k` od największego: jeśli `up[k][u] != up[k][v]`, skocz oboma — po tej pętli\n   `u` i `v` są dziećmi LCA, więc wynik to `up[0][u]`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „najbliższy wspólny szef/przodek”, „odległość między wierzchołkami drzewa, wiele zapytań”,\n„suma/max na ścieżce u–v”, „k-ty przodek”, „kto jest wyżej w hierarchii”, `n, q ≤ 2·10^5…10^6`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "LCA binary lifting — pełny program (n q, krawędzie, zapytania)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int LOG = 20;                   // 2^20 > 10^6 — wystarczy dla n <= 10^6\nint n;\nvector<vector<int>> g, up;            // up[k][v] = przodek v o 2^k poziomów wyżej\nvector<int> dep;\n\nint lca(int a, int b) {\n    if (dep[a] < dep[b]) swap(a, b);\n    int diff = dep[a] - dep[b];\n    for (int k = 0; k < LOG; k++)\n        if (diff >> k & 1) a = up[k][a];          // wyrównanie głębokości\n    if (a == b) return a;\n    for (int k = LOG - 1; k >= 0; k--)\n        if (up[k][a] != up[k][b]) { a = up[k][a]; b = up[k][b]; }\n    return up[0][a];                               // a, b to dzieci LCA\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> n >> q;\n    g.assign(n + 1, {});\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    up.assign(LOG, vector<int>(n + 1, 1));        // przodek korzenia = korzeń (skoki nie wychodzą poza drzewo)\n    dep.assign(n + 1, 0);\n    vector<bool> vis(n + 1, false);\n    queue<int> qu;                                 // BFS zamiast rekurencji: bezpieczne dla n = 10^6\n    qu.push(1); vis[1] = true;\n    while (!qu.empty()) {\n        int v = qu.front(); qu.pop();\n        for (int u : g[v]) if (!vis[u]) {\n            vis[u] = true;\n            up[0][u] = v;\n            dep[u] = dep[v] + 1;\n            qu.push(u);\n        }\n    }\n    for (int k = 1; k < LOG; k++)\n        for (int v = 1; v <= n; v++) up[k][v] = up[k - 1][up[k - 1][v]];\n    while (q--) {\n        int a, b;\n        cin >> a >> b;\n        cout << lca(a, b) << '\\n';\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "k-ty przodek",
+     "code": "const int LOG = 20;\nvector<vector<int>> up;     // jak w programie wyżej\nvector<int> dep;\n// k-ty przodek v (k = 0 -> v); -1 gdy k > głębokość\nint kthAncestor(int v, int k) {\n    if (k > dep[v]) return -1;\n    for (int j = 0; j < LOG; j++)\n        if (k >> j & 1) v = up[j][v];\n    return v;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "n (maks.)",
+      "LOG",
+      "pamięć up[LOG][n] (int)"
+     ],
+     "rows": [
+      [
+       "10^5",
+       "17",
+       "≈ 6,8 MB"
+      ],
+      [
+       "2·10^5",
+       "18",
+       "≈ 14,4 MB"
+      ],
+      [
+       "5·10^5",
+       "19",
+       "≈ 38 MB"
+      ],
+      [
+       "10^6",
+       "20",
+       "≈ 80 MB"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "**LOG musi spełniać `2^LOG > n − 1`** (maksymalna głębokość). Za mały LOG = skoki nie dosięgną korzenia\ni LCA będzie błędne tylko na głębokich drzewach (np. ścieżce) — przykład z treści przejdzie, testy nie.\nGdy pamięć jest ciasna (n = 10^6), rozważ LCA przez HLD (O(n) pamięci) albo Euler tour + sparse table."
+    },
+    {
+     "type": "tip",
+     "md": "Ustawienie `up[k][root] = root` (a nie 0) sprawia, że skok „ponad korzeń” zostaje w korzeniu — pętla nie\nwymaga żadnych dodatkowych warunków. Działa też wariant z wierzchołkiem-wartownikiem 0, jeśli `dep[0] = -1`\ni `up[k][0] = 0`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "lca(a, b)",
+     "desc": "najniższy wspólny przodek a i b",
+     "complexity": "O(log n)",
+     "returns": "int",
+     "example": "int l = lca(u, v);"
+    },
+    {
+     "sig": "kthAncestor(v, k)",
+     "desc": "przodek v o k poziomów wyżej (-1 gdy nie istnieje)",
+     "complexity": "O(log n)",
+     "returns": "int"
+    },
+    {
+     "sig": "up[k][v] = up[k-1][up[k-1][v]]",
+     "desc": "budowa tablicy skoków po poziomach k",
+     "complexity": "O(n log n)"
+    }
+   ],
+   "pitfalls": [
+    "Za mały `LOG` (np. 17 przy n = 10^6) → złe wyniki tylko na głębokich drzewach. Bierz `LOG` z zapasem.",
+    "Kolejność pętli przy budowie: najpierw po `k`, w środku po `v` (żeby `up[k−1]` był gotowy dla wszystkich v). Przy liczeniu w DFS-ie (`up[k][v]` przy wejściu do v) też działa, bo przodkowie są już policzeni.",
+    "`up[0][root]` = 0 bez wartownika (`dep[0]`, `up[k][0]`) → skoki trafiają w wierzchołek 0 i psują wynik.",
+    "Rekurencyjny DFS do budowy `up` na drzewie-ścieżce n = 10^6 → stos. Używaj BFS-a.",
+    "Pamięć `LOG × n` intów: dla n = 10^6 to 80 MB — sprawdź limit pamięci.",
+    "W drugiej pętli iteruj `k` od największego do 0 (malejąco). Rosnąco algorytm jest błędny."
+   ],
+   "qa": [
+    {
+     "q": [
+      "lca",
+      "lca binary lifting",
+      "najniższy wspólny przodek",
+      "lowest common ancestor c++",
+      "lca kod c++"
+     ],
+     "a": "Preprocessing: BFS/DFS od korzenia liczy `dep` i `up[0]` (rodzic), potem `up[k][v] = up[k−1][up[k−1][v]]`\n— O(n log n). Zapytanie: wyrównaj głębokości skokami według bitów różnicy, a potem skacz oboma\nwierzchołkami po malejących `k`, dopóki ich przodkowie są różni; wynik to rodzic. **O(log n)** na\nzapytanie, bo każda potęga dwójki jest sprawdzana raz.",
+     "code": "const int LOG = 20, N = 200005;\nint up[LOG][N], dep[N];\nint lca(int a, int b) {\n    if (dep[a] < dep[b]) swap(a, b);\n    for (int k = LOG - 1; k >= 0; k--)\n        if (dep[a] - (1 << k) >= dep[b]) a = up[k][a];\n    if (a == b) return a;\n    for (int k = LOG - 1; k >= 0; k--)\n        if (up[k][a] != up[k][b]) { a = up[k][a]; b = up[k][b]; }\n    return up[0][a];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "k-ty przodek",
+      "kth ancestor",
+      "przodek o k poziomów wyżej",
+      "skok o k w górę drzewa",
+      "k-ty przodek binary lifting"
+     ],
+     "a": "Zapisz `k` binarnie i dla każdego zapalonego bitu `j` skocz `v = up[j][v]` — łącznie przesuwasz się\no dokładnie `k` poziomów w O(log n). Jeśli `k > dep[v]`, przodek nie istnieje. Offline (wszystkie\nzapytania znane) można też w O(n + q) DFS-em ze stosem ścieżki: przodek = `path[dep[v] − k]`.",
+     "code": "const int LOG = 20, N = 200005;\nint up[LOG][N], dep[N];\nint kth(int v, int k) {\n    if (k > dep[v]) return -1;\n    for (int j = 0; j < LOG; j++) if (k >> j & 1) v = up[j][v];\n    return v;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "jak dobrać LOG",
+      "ile poziomów binary lifting",
+      "LOG 17 czy 20",
+      "rozmiar tablicy up lca"
+     ],
+     "a": "Potrzebujesz `2^LOG > maksymalna głębokość` (≤ n − 1). Dla `n ≤ 10^5` wystarczy 17, dla `2·10^5` — 18,\ndla `10^6` — 20. Bezpiecznie: `LOG = __lg(n) + 1` liczony w programie albo stała z zapasem.\nZa duży LOG kosztuje tylko trochę pamięci i czasu; za mały daje błędne wyniki.",
+     "code": "int n = 1000000;\nint LOG = 1;\nwhile ((1 << LOG) <= n) LOG++;\ncout << LOG << '\\n';   // 20"
+    },
+    {
+     "q": [
+      "dlaczego up[0][root] = root",
+      "przodek korzenia lca",
+      "up korzenia 0 czy root",
+      "lca skok ponad korzeń"
+     ],
+     "a": "W pętli „skacz, dopóki przodkowie są różni” skok może wyjść ponad korzeń. Gdy `up[k][root] = root`,\noba wierzchołki „lądują” w korzeniu, przodkowie są równi i skok nie zostaje wykonany — wszystko działa\nbez warunków brzegowych. Przy `up[0][root] = 0` trzeba dopilnować, by wierzchołek 0 też miał `up[k][0] = 0`\ni nie był mylony z prawdziwym wierzchołkiem (przy numeracji od 1 — OK).",
+     "code": "int n = 3;\nvector<vector<int>> up(2, vector<int>(n + 1));\nup[0] = {0, 1, 1, 2};                            // rodzic korzenia 1 to on sam\nfor (int v = 1; v <= n; v++) up[1][v] = up[0][up[0][v]];\ncout << up[1][3] << ' ' << up[1][1] << '\\n';     // 1 1"
+    },
+    {
+     "q": [
+      "lca złożoność",
+      "lca preprocessing n log n",
+      "ile działa lca",
+      "lca complexity"
+     ],
+     "a": "Binary lifting: preprocessing O(n log n) czasu i pamięci, zapytanie O(log n). Dla `n = q = 2·10^5` to\nok. 4 mln operacji przy budowie i tyle samo na zapytania — ułamek sekundy. Alternatywy: Euler tour +\nsparse table (O(n log n) / O(1)), HLD (O(n) / O(log n)), offline Tarjan z DSU (≈ O(n + q)).",
+     "code": "int n = 200000, LOG = 1;\nwhile ((1 << LOG) <= n) LOG++;                 // 2^LOG > n\nlong long budowa = 1LL * LOG * n;              // tyle wpisów up[k][v]\nint zapytanie = 2 * LOG;                       // wyrównanie + wspólne skoki\ncout << LOG << ' ' << budowa << ' ' << zapytanie << '\\n';   // 18 3600000 36"
+    },
+    {
+     "q": [
+      "lca pamięć 10^6",
+      "lca mle",
+      "binary lifting za dużo pamięci",
+      "lca dla miliona wierzchołków"
+     ],
+     "a": "`up[20][10^6]` intów to 80 MB. Jeśli limit to 64 MB lub mniej: (1) LCA przez HLD — tylko kilka tablic\nrozmiaru n, zapytanie O(log n); (2) Euler tour + sparse table na pozycjach preorderu (wariant z n\nelementami) — wciąż n log n, ale; (3) offline Tarjan z DSU, gdy znasz wszystkie zapytania z góry.\nZamiana `vector<vector<int>>` na płaską tablicę `int up[LOG][N]` usuwa narzut wektorów.",
+     "code": "// LCA przez HLD: O(n) pamięci (tablice par, dep, heavy, head policzone wcześniej)\nconst int N = 1000005;\nint par_[N], dep_[N], head_[N];\nint lcaHLD(int a, int b) {\n    while (head_[a] != head_[b]) {\n        if (dep_[head_[a]] < dep_[head_[b]]) swap(a, b);\n        a = par_[head_[a]];                     // wyskakujemy z łańcucha\n    }\n    return dep_[a] < dep_[b] ? a : b;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "lca bez rekurencji",
+      "lca iteracyjnie",
+      "lca bfs zamiast dfs",
+      "binary lifting bfs"
+     ],
+     "a": "Do binary liftingu potrzebujesz tylko rodzica i głębokości — BFS od korzenia daje je bez rekurencji.\nPotem buduj `up[k][v]` pętlą po `k` (zewnętrzna) i po wszystkich `v` (wewnętrzna). Kolejność `v` nie ma\nznaczenia, bo `up[k−1]` jest już gotowe dla wszystkich. O(n log n), zero ryzyka przepełnienia stosu.",
+     "code": "int n = 4, LOG = 3;\nvector<vector<int>> g = {{}, {2}, {1, 3}, {2, 4}, {3}};\nvector<vector<int>> up(LOG, vector<int>(n + 1, 1));\nvector<int> dep(n + 1, 0), q = {1};\nvector<bool> vis(n + 1, false);\nvis[1] = true;\nfor (size_t i = 0; i < q.size(); i++) {\n    int v = q[i];\n    for (int u : g[v]) if (!vis[u]) { vis[u] = true; up[0][u] = v; dep[u] = dep[v] + 1; q.push_back(u); }\n}\nfor (int k = 1; k < LOG; k++)\n    for (int v = 1; v <= n; v++) up[k][v] = up[k - 1][up[k - 1][v]];\ncout << up[1][4] << ' ' << up[2][4] << '\\n';   // 2 1"
+    },
+    {
+     "q": [
+      "odległość między wierzchołkami lca",
+      "dist u v lca",
+      "odległość w drzewie przez lca"
+     ],
+     "a": "`dist(u, v) = dep[u] + dep[v] − 2·dep[lca(u, v)]` (w krawędziach). Przy wagach zamiast `dep` użyj\nodległości od korzenia w `long long`. Każde zapytanie O(log n). Szczegóły (k-ty wierzchołek na ścieżce,\n„czy x leży na ścieżce”) — w artykule o odległościach w drzewie.",
+     "code": "vector<int> dep = {0, 0, 1, 1, 2, 2, 2, 3};    // drzewo z przykładu: 1-2, 1-3, 2-4, 2-5, 3-6, 5-7\nint u = 7, v = 6, l = 1;\ncout << dep[u] + dep[v] - 2 * dep[l] << '\\n';  // 5"
+    },
+    {
+     "q": [
+      "lca wielu wierzchołków",
+      "lca zbioru wierzchołków",
+      "wspólny przodek trzech wierzchołków",
+      "lca of set"
+     ],
+     "a": "LCA jest łączne: `lca(a, b, c) = lca(lca(a, b), c)`, więc dla zbioru wystarczy złożyć je po kolei\n(k − 1 zapytań). Szybszy trik: LCA zbioru = LCA wierzchołków o **najmniejszym i największym `tin`**\n(czas wejścia DFS) — jedno zapytanie po znalezieniu min/max.",
+     "code": "// lca(int, int) zdefiniowane wcześniej (binary lifting)\nint lca(int a, int b);\nint lcaZbioru(const vector<int>& vs) {\n    int l = vs[0];\n    for (size_t i = 1; i < vs.size(); i++) l = lca(l, vs[i]);\n    return l;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy u jest przodkiem v lca",
+      "sprawdzenie przodka przez lca",
+      "is ancestor using lca"
+     ],
+     "a": "`u` jest przodkiem `v` ⇔ `lca(u, v) == u` — O(log n). Jeśli masz czasy wejścia/wyjścia DFS-a, szybciej:\n`tin[u] ≤ tin[v] && tout[v] ≤ tout[u]` w O(1). Wersja z `tin/tout` pozwala też napisać LCA\nw binary liftingu bez wyrównywania głębokości (skaczesz z `a`, dopóki `up[k][a]` nie jest przodkiem `b`).",
+     "code": "const int LOG = 20, N = 200005;\nint up[LOG][N], tin[N], tout[N];\nbool przodek(int u, int v) { return tin[u] <= tin[v] && tout[v] <= tout[u]; }\nint lca(int a, int b) {\n    if (przodek(a, b)) return a;\n    if (przodek(b, a)) return b;\n    for (int k = LOG - 1; k >= 0; k--)\n        if (!przodek(up[k][a], b)) a = up[k][a];\n    return up[0][a];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "max krawędzi na ścieżce binary lifting",
+      "minimum na ścieżce lca",
+      "binary lifting z maksimum",
+      "najcięższa krawędź na ścieżce"
+     ],
+     "a": "Obok `up[k][v]` trzymaj `mx[k][v]` = max wag na odcinku `v → up[k][v]`: `mx[0][v]` = waga krawędzi do\nrodzica, `mx[k][v] = max(mx[k−1][v], mx[k−1][up[k−1][v]])`. Przy każdym skoku w LCA dorzucaj `mx` do\nwyniku. O(log n) na zapytanie. Klasyczne zastosowanie: „najcięższa krawędź na ścieżce w MST”.",
+     "code": "const int LOG = 18, N = 200005;\nint up[LOG][N], mx[LOG][N];\nvoid zbuduj(int n) {\n    for (int k = 1; k < LOG; k++)\n        for (int v = 1; v <= n; v++) {\n            up[k][v] = up[k - 1][up[k - 1][v]];\n            mx[k][v] = max(mx[k - 1][v], mx[k - 1][up[k - 1][v]]);\n        }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "lca z tablicy rodziców",
+      "lca parent array",
+      "binary lifting gdy znam rodziców"
+     ],
+     "a": "Gdy wejście podaje rodziców, `up[0][v] = p[v]` od razu (dla korzenia `p = root`). Głębokość: przy\n`p[v] < v` pętla `dep[v] = dep[p[v]] + 1`; w ogólnym przypadku BFS od korzenia po listach dzieci.\nReszta bez zmian — O(n log n).",
+     "code": "int n = 5, LOG = 3;\nvector<int> p = {0, 1, 1, 1, 2, 4};                 // p[1] = 1 (korzeń), p[v] < v\nvector<vector<int>> up(LOG, vector<int>(n + 1));\nvector<int> dep(n + 1, 0);\nfor (int v = 1; v <= n; v++) { up[0][v] = p[v]; if (v > 1) dep[v] = dep[p[v]] + 1; }\nfor (int k = 1; k < LOG; k++)\n    for (int v = 1; v <= n; v++) up[k][v] = up[k - 1][up[k - 1][v]];\ncout << dep[5] << ' ' << up[1][5] << '\\n';           // 3 2"
+    }
+   ],
+   "related": [
+    "tree-lca-euler",
+    "tree-distance",
+    "tree-path-sum",
+    "tree-hld",
+    "tree-basics",
+    "tree-dfs-order",
+    "graph-mst-path-max",
+    "tree-virtual"
+   ]
+  },
+  {
+   "id": "tree-lca-euler",
+   "title": "LCA w O(1): Euler tour (2n−1) + sparse table (RMQ)",
+   "category": "Drzewa",
+   "tags": [
+    "lca",
+    "euler tour",
+    "sparse table",
+    "rmq",
+    "lca o(1)",
+    "minimum na przedziale",
+    "pierwsze wystąpienie"
+   ],
+   "aliases": [
+    "lca euler tour",
+    "lca sparse table",
+    "lca o(1)",
+    "lca rmq",
+    "euler tour lca",
+    "lca przez rmq",
+    "lca w czasie stałym",
+    "euler tour 2n-1"
+   ],
+   "summary": "Zapisz wierzchołki w kolejności pełnego obejścia DFS (każde wejście i każdy powrót — 2n−1 pozycji). LCA(u, v) to wierzchołek o najmniejszej głębokości między pierwszymi wystąpieniami u i v, więc LCA = RMQ, a sparse table odpowiada w O(1).",
+   "complexity": "preprocessing O(n log n), zapytanie O(1); pamięć O(n log n)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Pełny Euler tour:** DFS wypisuje `v` przy wejściu i ponownie po powrocie z każdego dziecka. Ciąg ma\n`2n − 1` elementów. `first[v]` = indeks pierwszego wystąpienia `v`.\n\nMiędzy `first[u]` a `first[v]` DFS przechodzi od `u` do `v` — musi przy tym przejść przez `lca(u, v)`\ni nigdy nie wychodzi wyżej. Zatem **LCA to wierzchołek o najmniejszej głębokości na przedziale\n`[first[u], first[v]]`** — klasyczne RMQ. Sparse table: `sp[k][i]` = najpłytszy wierzchołek na\n`[i, i + 2^k)`, zapytanie = porównanie dwóch nachodzących przedziałów długości `2^⌊log len⌋`."
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy zamiast binary liftingu:** bardzo dużo zapytań (`q ≈ 10^6–10^7`), gdzie O(log n) na zapytanie\njuż boli; kiedy i tak masz sparse table w kodzie. Binary lifting jest prostszy i daje dodatkowo k-tego\nprzodka — dlatego to on jest „domyślny”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "LCA przez Euler tour + sparse table — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    // Iteracyjny pełny Euler tour\n    vector<int> euler, first(n + 1), dep(n + 1, 0), par(n + 1, 0), it(n + 1, 0), st = {1};\n    euler.reserve(2 * n);\n    first[1] = 0;\n    euler.push_back(1);\n    while (!st.empty()) {\n        int v = st.back();\n        if (it[v] < (int)g[v].size()) {\n            int u = g[v][it[v]++];\n            if (u == par[v]) continue;\n            par[u] = v;\n            dep[u] = dep[v] + 1;\n            first[u] = euler.size();\n            euler.push_back(u);                    // wejście do u\n            st.push_back(u);\n        } else {\n            st.pop_back();\n            if (!st.empty()) euler.push_back(st.back());   // powrót do rodzica\n        }\n    }\n    int m = euler.size();                          // 2n - 1\n    int K = __lg(m) + 1;\n    auto lepszy = [&](int a, int b) { return dep[a] < dep[b] ? a : b; };\n    vector<vector<int>> sp(K, vector<int>(m));\n    sp[0] = euler;\n    for (int k = 1; k < K; k++)\n        for (int i = 0; i + (1 << k) <= m; i++)\n            sp[k][i] = lepszy(sp[k - 1][i], sp[k - 1][i + (1 << (k - 1))]);\n    auto lca = [&](int u, int v) {\n        int l = first[u], r = first[v];\n        if (l > r) swap(l, r);\n        int k = __lg(r - l + 1);\n        return lepszy(sp[k][l], sp[k][r - (1 << k) + 1]);\n    };\n    while (q--) {\n        int u, v;\n        cin >> u >> v;\n        cout << lca(u, v) << '\\n';\n    }\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Sparse table dla RMQ działa w O(1), bo minimum jest **idempotentne**: dwa nachodzące na siebie przedziały\ndają ten sam wynik, co ich suma. Dla sumy tak się nie da (trzeba by rozkładać na rozłączne kawałki)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "first[v]",
+     "desc": "indeks pierwszego wystąpienia v w Euler tourze",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "lca(u, v)",
+     "desc": "najpłytszy wierzchołek na [first[u], first[v]] ze sparse table",
+     "complexity": "O(1)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Euler tour ma `2n − 1` elementów, nie `n` — tablice i sparse table muszą mieć ten rozmiar.",
+    "Trzeba porównywać GŁĘBOKOŚCI wierzchołków, a nie ich numery.",
+    "`l > r` (gdy `first[u] > first[v]`) — zamień przed zapytaniem.",
+    "`K = __lg(m) + 1` poziomów; za mało → odczyt z niezbudowanego poziomu.",
+    "Pamięć: `(2n) · log(2n)` intów — dla n = 10^6 to ponad 160 MB. Przy dużych n rozważ wariant z n elementami (preorder + rodzic najpłytszego) albo binary lifting/HLD."
+   ],
+   "qa": [
+    {
+     "q": [
+      "lca euler tour sparse table",
+      "lca o(1)",
+      "lca rmq",
+      "lca w czasie stałym",
+      "lca euler c++"
+     ],
+     "a": "Zrób pełny Euler tour (wejście + powrót po każdym dziecku, `2n − 1` pozycji), zapamiętaj `first[v]`\ni głębokości. LCA(u, v) = wierzchołek o minimalnej głębokości na przedziale `[first[u], first[v]]`.\nSparse table na tym ciągu odpowiada na takie minimum w O(1) po O(n log n) preprocessingu.",
+     "code": "// sp[k][i] = najpłytszy wierzchołek na euler[i .. i + 2^k - 1]\nconst int N = 400005, K = 20;\nint sp[K][N], dep[N], first_[N];\nint lepszy(int a, int b) { return dep[a] < dep[b] ? a : b; }\nint lca(int u, int v) {\n    int l = first_[u], r = first_[v];\n    if (l > r) swap(l, r);\n    int k = __lg(r - l + 1);\n    return lepszy(sp[k][l], sp[k][r - (1 << k) + 1]);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "euler tour 2n-1 dlaczego",
+      "dlaczego euler tour ma 2n-1",
+      "ile elementów ma euler tour"
+     ],
+     "a": "Każdy wierzchołek jest zapisywany raz przy wejściu (`n` zapisów), a dodatkowo rodzic jest zapisywany po\npowrocie z każdego dziecka — tyle razy, ile jest krawędzi (`n − 1`). Razem `2n − 1`. Dzięki zapisom\n„powrotów” przedział między dwoma wystąpieniami zawiera całą drogę DFS-a, w tym LCA.",
+     "code": "const int N = 100005;\nvector<int> g[N], euler;\nint first_[N];\nvoid dfs(int v, int p) {\n    first_[v] = euler.size();\n    euler.push_back(v);\n    for (int u : g[v]) if (u != p) { dfs(u, v); euler.push_back(v); }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sparse table min głębokości",
+      "rmq sparse table wierzchołki",
+      "sparse table lca budowa"
+     ],
+     "a": "`sp[0][i] = euler[i]`; `sp[k][i]` = płytszy z `sp[k−1][i]` i `sp[k−1][i + 2^(k−1)]`. Zapytanie na `[l, r]`:\n`k = __lg(r − l + 1)`, wynik = płytszy z `sp[k][l]` i `sp[k][r − 2^k + 1]`. Budowa O(m log m), zapytanie O(1).\nPorównuj po `dep`, ale trzymaj numery wierzchołków (bo wynikiem ma być wierzchołek).",
+     "code": "vector<int> euler = {1, 2, 1, 3, 1}, dep = {0, 0, 1, 1};\nint m = euler.size(), K = __lg(m) + 1;\nvector<vector<int>> sp(K, vector<int>(m));\nsp[0] = euler;\nauto lep = [&](int a, int b) { return dep[a] < dep[b] ? a : b; };\nfor (int k = 1; k < K; k++)\n    for (int i = 0; i + (1 << k) <= m; i++) sp[k][i] = lep(sp[k - 1][i], sp[k - 1][i + (1 << (k - 1))]);\nint l = 1, r = 3, k = __lg(r - l + 1);\ncout << lep(sp[k][l], sp[k][r - (1 << k) + 1]) << '\\n';   // lca(2, 3) = 1"
+    },
+    {
+     "q": [
+      "binary lifting czy euler lca",
+      "które lca wybrać",
+      "porównanie metod lca",
+      "lca która metoda"
+     ],
+     "a": "**Binary lifting** — prosty, daje k-tego przodka i agregaty na ścieżkach (max, suma), O(log n) na zapytanie.\n**Euler + sparse table** — O(1) na zapytanie, ale tylko samo LCA i więcej pamięci (2n log 2n).\n**HLD** — O(n) pamięci, O(log n) na zapytanie, łączy się z drzewem przedziałowym. Na OI zwykle wystarcza\nbinary lifting; po O(1) sięgaj przy milionach zapytań.",
+     "code": "// drzewo 1-2, 1-3, 2-4 (korzeń 1): to samo LCA dwiema metodami\nint up[3][5] = {{0, 1, 1, 1, 2}, {0, 1, 1, 1, 1}, {0, 1, 1, 1, 1}};   // up[k][v]\nint dep[5] = {0, 0, 1, 1, 2};\nauto lcaLifting = [&](int a, int b) {                 // O(log n), daje też k-tego przodka\n    if (dep[a] < dep[b]) swap(a, b);\n    for (int k = 2; k >= 0; k--) if (dep[a] - (1 << k) >= dep[b]) a = up[k][a];\n    if (a == b) return a;\n    for (int k = 2; k >= 0; k--) if (up[k][a] != up[k][b]) { a = up[k][a]; b = up[k][b]; }\n    return up[0][a];\n};\nvector<int> euler = {1, 2, 4, 2, 1, 3, 1}, first_ = {0, 0, 1, 5, 2};\nauto lcaEuler = [&](int a, int b) {                   // min głębokości; sparse table -> O(1)\n    int l = min(first_[a], first_[b]), r = max(first_[a], first_[b]), best = euler[l];\n    for (int i = l; i <= r; i++) if (dep[euler[i]] < dep[best]) best = euler[i];\n    return best;\n};\ncout << lcaLifting(4, 3) << ' ' << lcaEuler(4, 3) << ' '\n     << lcaLifting(4, 2) << ' ' << lcaEuler(4, 2) << '\\n';   // 1 1 2 2"
+    },
+    {
+     "q": [
+      "lca przez rmq na n elementach",
+      "lca preorder rmq",
+      "lca bez 2n euler tour",
+      "lca dfs order trick"
+     ],
+     "a": "Wariant oszczędniejszy: tablica w kolejności preorderu (n elementów). Dla `u ≠ v` z `tin[u] < tin[v]`\nweź wierzchołek `w` o najmniejszej głębokości wśród pozycji `tin[u] + 1 … tin[v]`; LCA = `par[w]`.\nDziała, bo ten przedział leży w poddrzewie LCA i zawiera jego dziecko prowadzące do `v`. Sparse table\no połowę mniejsza, zapytanie dalej O(1).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, q;\n    cin >> n >> q;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> tin(n + 1), dep(n + 1, 0), par(n + 1, 0), ord, st = {1};\n    while (!st.empty()) {                        // preorder iteracyjnie\n        int v = st.back(); st.pop_back();\n        tin[v] = ord.size();\n        ord.push_back(v);\n        for (int u : g[v]) if (u != par[v]) { par[u] = v; dep[u] = dep[v] + 1; st.push_back(u); }\n    }\n    int K = __lg(n) + 1;\n    vector<vector<int>> sp(K, vector<int>(n));\n    sp[0] = ord;\n    auto lep = [&](int a, int b) { return dep[a] < dep[b] ? a : b; };\n    for (int k = 1; k < K; k++)\n        for (int i = 0; i + (1 << k) <= n; i++) sp[k][i] = lep(sp[k - 1][i], sp[k - 1][i + (1 << (k - 1))]);\n    while (q--) {\n        int u, v;\n        cin >> u >> v;\n        if (u == v) { cout << u << '\\n'; continue; }\n        int l = tin[u], r = tin[v];\n        if (l > r) swap(l, r);\n        l++;\n        int k = __lg(r - l + 1);\n        cout << par[lep(sp[k][l], sp[k][r - (1 << k) + 1])] << '\\n';\n    }\n}"
+    },
+    {
+     "q": [
+      "lca offline tarjan",
+      "tarjan lca dsu",
+      "offline lca",
+      "lca wszystkie zapytania naraz"
+     ],
+     "a": "Gdy wszystkie zapytania są znane z góry: DFS, po przetworzeniu dziecka łączysz je w DSU z rodzicem\n(reprezentantem zbioru jest „przodek” `anc`). Po zakończeniu `v`, dla każdego zapytania `(v, u)` z już\nzakończonym `u`, odpowiedź to `anc[find(u)]`. Złożoność ≈ O((n + q)·α(n)), pamięć O(n + q).",
+     "code": "const int N = 100005;\nvector<int> g[N];\nvector<pair<int,int>> zap[N];          // zap[v] = {(u, id)}\nint dsu[N], anc[N], odp[N];\nbool done_[N];\nint find(int x) { return dsu[x] == x ? x : dsu[x] = find(dsu[x]); }\nvoid tarjan(int v, int p) {\n    dsu[v] = v; anc[v] = v;\n    for (int u : g[v]) if (u != p) {\n        tarjan(u, v);\n        dsu[find(u)] = find(v);\n        anc[find(v)] = v;\n    }\n    done_[v] = true;\n    for (auto [u, id] : zap[v]) if (done_[u]) odp[id] = anc[find(u)];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "pamięć sparse table lca",
+      "sparse table mle",
+      "ile pamięci euler sparse table"
+     ],
+     "a": "Euler tour ma `m = 2n − 1` pozycji, sparse table `⌊log₂ m⌋ + 1` poziomów. Dla `n = 2·10^5`: 4·10^5 × 19\n× 4 B ≈ 30 MB. Dla `n = 10^6`: ≈ 168 MB — zwykle za dużo. Wtedy: wariant preorderowy (n pozycji, połowa\npamięci), binary lifting (80 MB) albo HLD (kilka MB).",
+     "code": "long long n = 200000, m = 2 * n - 1;\nint K = __lg(m) + 1;\ncout << m * K * 4 / 1000000 << \" MB\\n\";   // 30 MB"
+    }
+   ],
+   "related": [
+    "tree-lca",
+    "tree-dfs-order",
+    "ds-sparse-table",
+    "tree-distance",
+    "ds-cartesian-tree",
+    "tree-virtual"
+   ]
+  },
+  {
+   "id": "tree-distance",
+   "title": "Odległości w drzewie przez LCA: dist(u, v), k-ty wierzchołek na ścieżce, przecinanie ścieżek",
+   "category": "Drzewa",
+   "tags": [
+    "odległość w drzewie",
+    "lca",
+    "dist",
+    "k-ty wierzchołek na ścieżce",
+    "wierzchołek na ścieżce",
+    "przecięcie ścieżek",
+    "drzewo ważone"
+   ],
+   "aliases": [
+    "odległość w drzewie",
+    "odleglosc w drzewie",
+    "odległość między wierzchołkami drzewa",
+    "distance in tree",
+    "dist u v drzewo",
+    "k-ty wierzchołek na ścieżce",
+    "czy wierzchołek leży na ścieżce",
+    "przecinanie ścieżek w drzewie",
+    "odległość ważona w drzewie"
+   ],
+   "summary": "W drzewie ścieżka między u i v jest jedyna, więc odległość = `dep[u] + dep[v] − 2·dep[lca]` (przy wagach — odległości od korzenia w long long). Z LCA i k-tym przodkiem dostajesz też k-ty wierzchołek na ścieżce i test, czy wierzchołek/ścieżka leży na innej ścieżce.",
+   "complexity": "preprocessing O(n log n), każde zapytanie O(log n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Ścieżka `u → v` idzie w górę do `l = lca(u, v)` i w dół do `v`. Jeśli `D[x]` to odległość od korzenia\n(liczba krawędzi albo suma wag), to\n\n`dist(u, v) = D[u] + D[v] − 2·D[l]`.\n\nDla jednego źródła i wielu celów wystarczy BFS/DFS; dla **wielu par** potrzebujesz LCA — inaczej każde\nzapytanie to O(n)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „q zapytań o odległość między miastami” w drzewie, „czy punkt kontrolny leży na trasie”,\n„k-te miasto na trasie z u do v”, „czy dwie trasy mają wspólne miasto”, „spotkanie w połowie drogi”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Odległość ważona między parami wierzchołków",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int LOG = 18;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<vector<pair<int, int>>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n    vector<vector<int>> up(LOG, vector<int>(n + 1, 1));\n    vector<int> dep(n + 1, 0);\n    vector<long long> D(n + 1, 0);               // odległość od korzenia (suma wag)\n    vector<bool> vis(n + 1, false);\n    queue<int> qu;\n    qu.push(1); vis[1] = true;\n    while (!qu.empty()) {\n        int v = qu.front(); qu.pop();\n        for (auto [u, w] : g[v]) if (!vis[u]) {\n            vis[u] = true;\n            up[0][u] = v;\n            dep[u] = dep[v] + 1;\n            D[u] = D[v] + w;\n            qu.push(u);\n        }\n    }\n    for (int k = 1; k < LOG; k++)\n        for (int v = 1; v <= n; v++) up[k][v] = up[k - 1][up[k - 1][v]];\n    auto lca = [&](int a, int b) {\n        if (dep[a] < dep[b]) swap(a, b);\n        for (int k = LOG - 1; k >= 0; k--) if (dep[a] - (1 << k) >= dep[b]) a = up[k][a];\n        if (a == b) return a;\n        for (int k = LOG - 1; k >= 0; k--) if (up[k][a] != up[k][b]) { a = up[k][a]; b = up[k][b]; }\n        return up[0][a];\n    };\n    while (q--) {\n        int u, v;\n        cin >> u >> v;\n        cout << D[u] + D[v] - 2 * D[lca(u, v)] << '\\n';\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "k-ty wierzchołek na ścieżce u → v",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// k-ty wierzchołek na ścieżce u -> v (k = 0 to u); -1 gdy ścieżka krótsza\nconst int LOG = 18;\nint n;\nvector<vector<int>> g, up;\nvector<int> dep;\n\nint kth(int v, int k) { for (int j = 0; j < LOG; j++) if (k >> j & 1) v = up[j][v]; return v; }\nint lca(int a, int b) {\n    if (dep[a] < dep[b]) swap(a, b);\n    a = kth(a, dep[a] - dep[b]);\n    if (a == b) return a;\n    for (int k = LOG - 1; k >= 0; k--) if (up[k][a] != up[k][b]) { a = up[k][a]; b = up[k][b]; }\n    return up[0][a];\n}\nint kthOnPath(int u, int v, int k) {\n    int l = lca(u, v);\n    int du = dep[u] - dep[l], dv = dep[v] - dep[l];\n    if (k > du + dv) return -1;\n    if (k <= du) return kth(u, k);           // jeszcze w drodze w górę\n    return kth(v, du + dv - k);              // już w drodze w dół: liczymy od v\n}\n\nint main() {\n    int q;\n    cin >> n >> q;\n    g.assign(n + 1, {});\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    up.assign(LOG, vector<int>(n + 1, 1));\n    dep.assign(n + 1, 0);\n    vector<int> order = {1};\n    vector<bool> vis(n + 1, false);\n    vis[1] = true;\n    for (size_t i = 0; i < order.size(); i++) {\n        int v = order[i];\n        for (int u : g[v]) if (!vis[u]) { vis[u] = true; up[0][u] = v; dep[u] = dep[v] + 1; order.push_back(u); }\n    }\n    for (int k = 1; k < LOG; k++)\n        for (int v = 1; v <= n; v++) up[k][v] = up[k - 1][up[k - 1][v]];\n    while (q--) {\n        int u, v, k;\n        cin >> u >> v >> k;\n        cout << kthOnPath(u, v, k) << '\\n';\n    }\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Środek ścieżki u–v (np. „spotkanie w połowie drogi”) to `kthOnPath(u, v, dist / 2)` — przy nieparzystej\ndługości dwa kandydaty: `⌊d/2⌋` i `⌈d/2⌉`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "D[u] + D[v] - 2*D[lca(u,v)]",
+     "desc": "odległość u–v (D = odległość od korzenia)",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "kthOnPath(u, v, k)",
+     "desc": "k-ty wierzchołek na ścieżce z u do v (0 = u)",
+     "complexity": "O(log n)",
+     "returns": "int"
+    },
+    {
+     "sig": "naSciezce(x, u, v)",
+     "desc": "czy x leży na ścieżce u–v",
+     "complexity": "O(log n)",
+     "returns": "bool"
+    }
+   ],
+   "pitfalls": [
+    "Wagi do 10^9 × długość ścieżki do 10^5 → `long long` dla `D`.",
+    "W k-tym wierzchołku na ścieżce przy `k > du` liczysz od `v`: `kth(v, du + dv − k)`, nie `kth(v, k − du)`.",
+    "Test `dist(u,x) + dist(x,v) == dist(u,v)` jest poprawny przy wagach dodatnich (przy zerowych wagach może zaliczyć wierzchołek poza ścieżką) — bezpieczniejszy jest test przez LCA/przodków.",
+    "Jedno źródło, wiele celów → zwykły BFS/DFS O(n); LCA potrzebne dopiero przy wielu parach.",
+    "BFS po drzewie ważonym zamiast Dijkstry jest OK — ścieżka jest jedyna, więc kolejność odwiedzin nie ma znaczenia."
+   ],
+   "qa": [
+    {
+     "q": [
+      "odległość w drzewie",
+      "odległość między wierzchołkami drzewa",
+      "distance in tree lca",
+      "dist u v drzewo",
+      "odleglosc miedzy dwoma wierzcholkami drzewa"
+     ],
+     "a": "W drzewie ścieżka jest jedyna, więc `dist(u, v) = dep[u] + dep[v] − 2·dep[lca(u, v)]`. Głębokości policz\nBFS-em od korzenia, LCA binary liftingiem — każde zapytanie O(log n) po O(n log n) preprocessingu.\nDla jednego zapytania wystarczy BFS z `u` (O(n)).",
+     "code": "const int LOG = 18, N = 200005;\nint up[LOG][N], dep[N];\nint lca(int a, int b);                       // binary lifting (patrz tree-lca)\nint dist(int u, int v) { return dep[u] + dep[v] - 2 * dep[lca(u, v)]; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "odległość ważona drzewo",
+      "suma wag na ścieżce drzewo long long",
+      "weighted tree distance queries"
+     ],
+     "a": "Zamiast głębokości trzymaj `D[v]` = suma wag od korzenia (`D[u] = D[v] + w` przy wejściu do dziecka),\nw `long long`. Odległość = `D[u] + D[v] − 2·D[lca]`. LCA liczysz dalej po zwykłej głębokości (liczbie\nkrawędzi) — wagi nie wpływają na strukturę drzewa.",
+     "code": "vector<long long> D = {0, 0, 3, 5, 5, 7, 6};   // drzewo z przykładu (1-2:3, 1-3:5, 2-4:2, 2-5:4, 3-6:1)\nint u = 4, v = 6, l = 1;\ncout << D[u] + D[v] - 2 * D[l] << '\\n';        // 11"
+    },
+    {
+     "q": [
+      "k-ty wierzchołek na ścieżce",
+      "kth vertex on path",
+      "k-te miasto na trasie u v",
+      "wierzcholek na sciezce o indeksie k"
+     ],
+     "a": "Niech `l = lca(u, v)`, `du = dep[u] − dep[l]`, `dv = dep[v] − dep[l]`. Jeśli `k ≤ du`, wynik to k-ty\nprzodek `u`. W przeciwnym razie jesteśmy na odcinku `l → v`, a licząc od `v` to pozycja `du + dv − k`,\nwięc wynik to `(du + dv − k)`-ty przodek `v`. Dwa wywołania k-tego przodka — O(log n).",
+     "code": "int kth(int v, int k);    // k-ty przodek (binary lifting)\nint lca(int a, int b);\nextern int dep[];\nint kthOnPath(int u, int v, int k) {\n    int l = lca(u, v), du = dep[u] - dep[l], dv = dep[v] - dep[l];\n    if (k > du + dv) return -1;\n    return k <= du ? kth(u, k) : kth(v, du + dv - k);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy wierzchołek leży na ścieżce",
+      "x na ścieżce u v",
+      "is vertex on path tree",
+      "czy punkt jest na trasie drzewo"
+     ],
+     "a": "`x` leży na ścieżce u–v ⇔ `x` jest przodkiem `u` lub `v` **i** `lca(u, v)` jest przodkiem `x`. Z czasami\ntin/tout to O(1) (plus jedno LCA). Alternatywa przy dodatnich wagach/bez wag:\n`dist(u, x) + dist(x, v) == dist(u, v)` — trzy odległości, O(log n).",
+     "code": "const int N = 200005;\nint tin[N], tout[N];\nint lca(int a, int b);\nbool przodek(int a, int b) { return tin[a] <= tin[b] && tout[b] <= tout[a]; }\nbool naSciezce(int x, int u, int v) {\n    int l = lca(u, v);\n    return przodek(l, x) && (przodek(x, u) || przodek(x, v));\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy ścieżki się przecinają drzewo",
+      "przecięcie dwóch ścieżek w drzewie",
+      "do two paths intersect tree",
+      "wspolny wierzcholek dwoch tras"
+     ],
+     "a": "Ścieżki a–b i c–d mają wspólny wierzchołek ⇔ `lca(a, b)` leży na ścieżce c–d **lub** `lca(c, d)` leży na\nścieżce a–b. (Wystarczy sprawdzić głębsze z dwóch LCA: jeśli ścieżki się przecinają, to głębsze LCA\nleży na drugiej ścieżce.) O(log n) przy LCA w O(log n).",
+     "code": "int lca(int a, int b);\nbool naSciezce(int x, int u, int v);       // z poprzedniego pytania\nbool przecinaja(int a, int b, int c, int d) {\n    return naSciezce(lca(a, b), c, d) || naSciezce(lca(c, d), a, b);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "odległość od jednego wierzchołka do wszystkich drzewo",
+      "bfs w drzewie odległości",
+      "odległość od korzenia do wszystkich"
+     ],
+     "a": "Dla jednego źródła nie potrzebujesz LCA: BFS/DFS od źródła daje wszystkie odległości w O(n) (w drzewie\nważonym też, bo ścieżki są jedyne — wystarczy sumować wagi). LCA opłaca się dopiero przy wielu\nparach (u, v). Suma odległości od każdego wierzchołka do wszystkich — rerooting w O(n).",
+     "code": "int n = 4;\nvector<vector<pair<int,int>>> g = {{}, {{2, 1}, {3, 4}}, {{1, 1}, {4, 2}}, {{1, 4}}, {{2, 2}}};\nvector<long long> d(n + 1, -1);\nvector<int> st = {3};\nd[3] = 0;\nwhile (!st.empty()) {\n    int v = st.back(); st.pop_back();\n    for (auto [u, w] : g[v]) if (d[u] == -1) { d[u] = d[v] + w; st.push_back(u); }\n}\ncout << d[4] << '\\n';   // 4 + 1 + 2 = 7"
+    },
+    {
+     "q": [
+      "środek ścieżki w drzewie",
+      "spotkanie w połowie drogi drzewo",
+      "midpoint of path tree"
+     ],
+     "a": "Długość `d = dist(u, v)`; środek to `kthOnPath(u, v, d / 2)` (przy nieparzystym `d` drugi kandydat to\n`kthOnPath(u, v, (d + 1) / 2)`). Przydaje się m.in. przy liczeniu, które wierzchołki są bliżej `u`, a które\n`v` (podział drzewa przez środek ścieżki). O(log n).",
+     "code": "int kthOnPath(int u, int v, int k);\nint dist(int u, int v);\npair<int, int> srodek(int u, int v) {\n    int d = dist(u, v);\n    return {kthOnPath(u, v, d / 2), kthOnPath(u, v, (d + 1) / 2)};\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liczba wierzchołków bliżej u niż v",
+      "ile wierzchołków jest bliżej",
+      "równo odległe wierzchołki drzewo"
+     ],
+     "a": "Jeśli `d = dist(u, v)` jest parzyste, środek `m` ścieżki jest równo odległy od obu; wierzchołki „po stronie\nu” to te w części drzewa zawierającej `u` po odcięciu krawędzi przy `m`. Rozmiary takich części dają\nsię policzyć z `sz[]` i k-tego przodka (np. `sz` dziecka `m` w stronę `u`), więc odpowiedź jest w O(log n)\nna zapytanie. To klasyczne zadanie „ile wierzchołków jest jednakowo odległych od u i v”.",
+     "code": "// równo odległe od u i v przy dep[u] == dep[v] (m = lca), cu, cv = dzieci m w stronę u i v\nint n = 7;\nvector<int> sz = {0, 7, 4, 2, 1, 2, 1, 1};     // drzewo 1-2, 1-3, 2-4, 2-5, 3-6, 5-7\nint cu = 2, cv = 3;                            // u = 5, v = 6 (obie głębokości 2), m = lca = 1\ncout << n - sz[cu] - sz[cv] << '\\n';            // 1 (tylko wierzchołek 1)"
+    }
+   ],
+   "related": [
+    "tree-lca",
+    "tree-path-sum",
+    "tree-diameter",
+    "tree-rerooting",
+    "tree-dfs-order",
+    "tree-virtual"
+   ]
+  },
+  {
+   "id": "tree-dp",
+   "title": "Programowanie dynamiczne na drzewie: zbiór niezależny, pokrycie, dominowanie, plecak",
+   "category": "Drzewa",
+   "tags": [
+    "dp na drzewie",
+    "programowanie dynamiczne",
+    "zbiór niezależny",
+    "pokrycie wierzchołkowe",
+    "zbiór dominujący",
+    "plecak na drzewie",
+    "dp[v][0] dp[v][1]",
+    "liczenie modulo",
+    "skojarzenie"
+   ],
+   "aliases": [
+    "dp na drzewie",
+    "tree dp",
+    "programowanie dynamiczne na drzewie",
+    "dynamik na drzewie",
+    "maksymalny zbiór niezależny drzewo",
+    "max independent set tree",
+    "pokrycie wierzchołkowe drzewo",
+    "vertex cover tree",
+    "zbiór dominujący drzewo",
+    "plecak na drzewie",
+    "tree knapsack",
+    "impreza firmowa"
+   ],
+   "summary": "DP na drzewie liczy wynik dla poddrzewa każdego wierzchołka z wyników jego dzieci (od liści do korzenia). Typowe stany: `dp[v][0/1]` — czy v jest wybrany. Klasyki: max zbiór niezależny, min pokrycie wierzchołkowe, zbiór dominujący, liczenie konfiguracji modulo, plecak na drzewie (O(n²)).",
+   "complexity": "zwykle O(n) (stała liczba stanów na wierzchołek); plecak na drzewie O(n·k) lub O(n²)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Ukorzeń drzewo. Poddrzewa dzieci są **rozłączne** i łączą się tylko przez `v`, więc optymalne rozwiązanie\ndla poddrzewa `v` składa się z optymalnych rozwiązań dla dzieci — pod warunkiem, że w stanie zapamiętamy,\nco dzieje się w samym `v` (np. czy jest wybrany). To daje DP:\n\n- **max zbiór niezależny** (żadne dwa wybrane nie sąsiadują): `in[v] = val[v] + Σ out[c]`,\n  `out[v] = Σ max(in[c], out[c])`,\n- **min pokrycie wierzchołkowe** (każda krawędź ma wybrany koniec): `in[v] = 1 + Σ min(in[c], out[c])`,\n  `out[v] = Σ in[c]`,\n- **liczba zbiorów niezależnych**: `in[v] = Π out[c]`, `out[v] = Π (in[c] + out[c])` (mod p).\n\nKolejność: dzieci przed rodzicem — postorder DFS albo kolejność BFS przetwarzana od końca."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** drzewo + „wybierz zbiór wierzchołków/krawędzi tak, że…”, „żadni dwaj sąsiedzi”, „każda droga\npilnowana”, „ile jest sposobów (modulo)”, „szef i bezpośredni podwładny nie mogą razem” (impreza firmowa),\n„przedmiot wymaga przedmiotu-rodzica” (plecak na drzewie)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Zbiór niezależny, pokrycie wierzchołkowe i liczenie — jedno przejście",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst long long MOD = 1000000007;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order, st = {1};\n    while (!st.empty()) {                       // kolejność: rodzic przed dziećmi\n        int v = st.back(); st.pop_back();\n        order.push_back(v);\n        for (int u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); }\n    }\n    vector<long long> misIn(n + 1), misOut(n + 1), vcIn(n + 1), vcOut(n + 1), cIn(n + 1), cOut(n + 1);\n    for (int i = n - 1; i >= 0; i--) {            // od liści do korzenia\n        int v = order[i];\n        misIn[v] = 1; misOut[v] = 0;              // max zbiór niezależny\n        vcIn[v] = 1;  vcOut[v] = 0;               // min pokrycie wierzchołkowe\n        cIn[v] = 1;   cOut[v] = 1;                // liczba zbiorów niezależnych\n        for (int c : g[v]) {\n            if (c == par[v]) continue;\n            misIn[v] += misOut[c];\n            misOut[v] += max(misIn[c], misOut[c]);\n            vcIn[v] += min(vcIn[c], vcOut[c]);\n            vcOut[v] += vcIn[c];                  // v niewybrany -> każde dziecko musi być wybrane\n            cIn[v] = cIn[v] * cOut[c] % MOD;\n            cOut[v] = cOut[v] * ((cIn[c] + cOut[c]) % MOD) % MOD;\n        }\n    }\n    cout << max(misIn[1], misOut[1]) << '\\n';\n    cout << min(vcIn[1], vcOut[1]) << '\\n';\n    cout << (cIn[1] + cOut[1]) % MOD << '\\n';     // wliczając zbiór pusty\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Problem",
+      "Stan",
+      "Przejście"
+     ],
+     "rows": [
+      [
+       "max zbiór niezależny (z wagami)",
+       "in/out",
+       "in = w + Σ out[c]; out = Σ max(in[c], out[c])"
+      ],
+      [
+       "min pokrycie wierzchołkowe",
+       "in/out",
+       "in = 1 + Σ min(in[c], out[c]); out = Σ in[c]"
+      ],
+      [
+       "min zbiór dominujący",
+       "a / b / c",
+       "a: v wybrany; b: v pokryty przez dziecko; c: v czeka na rodzica"
+      ],
+      [
+       "liczba zbiorów niezależnych",
+       "in/out",
+       "in = Π out[c]; out = Π (in[c] + out[c])"
+      ],
+      [
+       "spójne podzbiory zawierające v",
+       "f",
+       "f = Π (1 + f[c])"
+      ],
+      [
+       "plecak na drzewie",
+       "dp[v][j]",
+       "łączenie dzieci jak plecak, O(n²) łącznie"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Dla drzew (grafów dwudzielnych) zachodzi: **min pokrycie wierzchołkowe = max skojarzenie**, a **max zbiór\nniezależny = n − min pokrycie**. Dobry test poprawności DP."
+    },
+    {
+     "type": "warn",
+     "md": "Rekurencyjne DP na drzewie-ścieżce z n = 10^6 może przepełnić stos. Wersja z kolejnością BFS/DFS\nprzetwarzaną od końca (jak wyżej) jest iteracyjna i równie krótka."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dp[v][0], dp[v][1]",
+     "desc": "najlepszy wynik w poddrzewie v, gdy v niewybrany / wybrany",
+     "complexity": "O(deg v) na wierzchołek"
+    },
+    {
+     "sig": "for (i = n-1; i >= 0; i--) v = order[i]",
+     "desc": "przetwarzanie dzieci przed rodzicem bez rekurencji",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Kolejność obliczeń: dziecko MUSI być policzone przed rodzicem (postorder albo odwrócony BFS).",
+    "Przy liczeniu modulo mnożenie dwóch liczb < 10^9+7 nie mieści się w `int` — `long long` i `% MOD` po każdym mnożeniu.",
+    "Zbiór pusty: czy liczy się do odpowiedzi? (`in + out` w korzeniu go zawiera.)",
+    "Wagi mogą być ujemne — w max zbiorze niezależnym wybór „nie bierz” jest zawsze dostępny, ale inne DP mogą wymagać `LLONG_MIN` jako „niemożliwe”.",
+    "Plecak na drzewie łączony naiwnie po `k` dla każdego dziecka to O(n·k²) — ograniczaj pętle rozmiarami poddrzew.",
+    "Liść w zbiorze dominującym nie może być „pokryty przez dziecko” (stan b = ∞)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dp na drzewie",
+      "programowanie dynamiczne na drzewie",
+      "tree dp c++",
+      "dynamik na drzewie jak",
+      "dp na drzewach"
+     ],
+     "a": "Ukorzeń drzewo i dla każdego `v` licz wynik dla jego poddrzewa z wyników dzieci. Stan zawiera to, co\nrodzic musi wiedzieć o `v` (np. czy `v` jest wybrany). Liczysz od liści do korzenia — rekurencyjnym DFS-em\n(wynik po powrocie z dzieci) albo iteracyjnie po kolejności BFS od końca. Zwykle **O(n)**, bo każda\nkrawędź jest użyta raz.",
+     "code": "const int N = 200005;\nvector<int> g[N];\nlong long dp0[N], dp1[N];\nint val[N];\nvoid dfs(int v, int p) {            // max suma wartości, żadni sąsiedzi naraz\n    dp1[v] = val[v]; dp0[v] = 0;\n    for (int c : g[v]) if (c != p) {\n        dfs(c, v);\n        dp1[v] += dp0[c];\n        dp0[v] += max(dp0[c], dp1[c]);\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "maksymalny zbiór niezależny drzewo",
+      "max independent set tree",
+      "impreza firmowa",
+      "szef i podwładny nie mogą razem",
+      "najwieksza suma niesasiadujacych wierzcholkow drzewo"
+     ],
+     "a": "`in[v]` = najlepsza suma w poddrzewie, gdy `v` wybrany (dzieci nie mogą być): `val[v] + Σ out[c]`.\n`out[v]` = gdy `v` niewybrany (dzieci dowolnie): `Σ max(in[c], out[c])`. Odpowiedź `max(in[root], out[root])`.\nO(n). To zadanie „impreza firmowa”: pracownik nie przychodzi z bezpośrednim szefem, maksymalizuj radość.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> val(n + 1);\n    for (int i = 1; i <= n; i++) cin >> val[i];\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order, st = {1};\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        order.push_back(v);\n        for (int u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); }\n    }\n    vector<long long> in(n + 1), out(n + 1);\n    for (int i = n - 1; i >= 0; i--) {\n        int v = order[i];\n        in[v] = val[v]; out[v] = 0;\n        for (int c : g[v]) if (c != par[v]) { in[v] += out[c]; out[v] += max(in[c], out[c]); }\n    }\n    cout << max(in[1], out[1]) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "pokrycie wierzchołkowe drzewo",
+      "vertex cover tree",
+      "strażnicy na krawędziach",
+      "min vertex cover drzewo",
+      "każda krawędź pilnowana"
+     ],
+     "a": "Każda krawędź musi mieć wybrany co najmniej jeden koniec. `in[v] = 1 + Σ min(in[c], out[c])` (v wybrany —\ndzieci dowolnie), `out[v] = Σ in[c]` (v niewybrany — każde dziecko musi być wybrane, by pokryć krawędź\nv–c). Wynik `min(in[root], out[root])`, O(n). W drzewie to też równa się rozmiarowi max skojarzenia.",
+     "code": "const int N = 200005;\nvector<int> g[N];\nint vin[N], vout[N];\nvoid dfs(int v, int p) {\n    vin[v] = 1; vout[v] = 0;\n    for (int c : g[v]) if (c != p) {\n        dfs(c, v);\n        vin[v] += min(vin[c], vout[c]);\n        vout[v] += vin[c];\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "zbiór dominujący drzewo",
+      "strażnicy w wierzchołkach pilnują sąsiadów",
+      "dominating set tree",
+      "min liczba strażników drzewo"
+     ],
+     "a": "Każdy wierzchołek ma być wybrany albo sąsiadować z wybranym. Trzy stany: `a[v]` — v wybrany\n(`1 + Σ min(a, b, c)` dzieci); `b[v]` — v niewybrany, pokryty przez któreś dziecko (dzieci w `a` lub `b`,\nco najmniej jedno w `a`); `c[v]` — v niewybrany i niepokryty, czeka na rodzica (dzieci w `a` lub `b`).\nWynik `min(a[root], b[root])`. O(n).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int x, y;\n        cin >> x >> y;\n        g[x].push_back(y);\n        g[y].push_back(x);\n    }\n    vector<int> par(n + 1, 0), order, st = {1};\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        order.push_back(v);\n        for (int u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); }\n    }\n    const int INF = 1e9;\n    vector<int> a(n + 1), b(n + 1), c(n + 1);\n    for (int i = n - 1; i >= 0; i--) {\n        int v = order[i];\n        a[v] = 1; c[v] = 0;\n        int S = 0, minDiff = INF;\n        bool dzieci = false;\n        for (int u : g[v]) if (u != par[v]) {\n            dzieci = true;\n            a[v] += min({a[u], b[u], c[u]});\n            int m = min(a[u], b[u]);\n            S += m;\n            minDiff = min(minDiff, a[u] - m);   // koszt wymuszenia strażnika w dziecku\n        }\n        c[v] = S;\n        b[v] = dzieci ? S + minDiff : INF;\n    }\n    cout << min(a[1], b[1]) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "liczba zbiorów niezależnych modulo",
+      "ile jest zbiorów niezależnych w drzewie",
+      "count independent sets tree",
+      "na ile sposobów wybrać wierzchołki bez sąsiadów"
+     ],
+     "a": "Zamiast max liczysz liczbę sposobów: `in[v] = Π out[c]` (v wybrany, dzieci nie), `out[v] = Π (in[c] + out[c])`.\nOdpowiedź `in[root] + out[root]` (z pustym zbiorem). Mnożenie, bo wybory w różnych poddrzewach są niezależne.\nWszystko modulo, w `long long`. O(n). Dla ścieżki z `n` wierzchołków wychodzą liczby Fibonacciego.",
+     "code": "const long long MOD = 1000000007;\nconst int N = 200005;\nvector<int> g[N];\nlong long cin_[N], cout_[N];\nvoid dfs(int v, int p) {\n    cin_[v] = 1; cout_[v] = 1;\n    for (int c : g[v]) if (c != p) {\n        dfs(c, v);\n        cin_[v] = cin_[v] * cout_[c] % MOD;\n        cout_[v] = cout_[v] * ((cin_[c] + cout_[c]) % MOD) % MOD;\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "plecak na drzewie",
+      "tree knapsack",
+      "wybierz k wierzchołków spójnie z korzeniem",
+      "przedmioty z zależnościami drzewo",
+      "dp[v][j] drzewo"
+     ],
+     "a": "`dp[v][j]` = najlepsza suma, gdy w poddrzewie `v` wybieramy `j` wierzchołków tworzących spójny kawałek\nz `v` (v wybrany). Dzieci dołączasz jak w plecaku: `nowe[i + j] = max(dp[v][i] + dp[c][j])`. Jeśli pętle\nidą tylko do aktualnych rozmiarów poddrzew, łączny koszt to **O(n²)** (każda para wierzchołków „spotyka\nsię” raz w LCA), a z limitem `k` — O(n·k).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst long long NEG = LLONG_MIN / 4;\nint n, K;\nvector<vector<int>> g;\nvector<long long> val;\nvector<vector<long long>> dp;\nvoid dfs(int v, int p) {\n    dp[v] = {NEG, val[v]};                 // dp[v][0] niemożliwe (v musi być wybrany), dp[v][1] = val\n    for (int c : g[v]) if (c != p) {\n        dfs(c, v);\n        int a = dp[v].size() - 1, b = dp[c].size() - 1;\n        vector<long long> nowe(min(a + b, K) + 1, NEG);\n        for (int i = 1; i <= a; i++) {\n            if (dp[v][i] == NEG) continue;\n            nowe[i] = max(nowe[i], dp[v][i]);             // dziecka nie bierzemy\n            for (int j = 1; j <= b && i + j <= K; j++)\n                if (dp[c][j] != NEG) nowe[i + j] = max(nowe[i + j], dp[v][i] + dp[c][j]);\n        }\n        dp[v] = nowe;\n    }\n}\nint main() {\n    cin >> n >> K;\n    g.assign(n + 1, {});\n    val.assign(n + 1, 0);\n    dp.assign(n + 1, {});\n    for (int i = 1; i <= n; i++) cin >> val[i];\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    dfs(1, 0);\n    cout << (K < (int)dp[1].size() && dp[1][K] != NEG ? dp[1][K] : -1) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "skojarzenie w drzewie",
+      "max matching tree",
+      "maksymalne skojarzenie drzewo",
+      "pary sąsiednich wierzchołków drzewo"
+     ],
+     "a": "Zachłannie od liści: przetwarzaj wierzchołki od najgłębszych (odwrócony BFS); jeśli `v` i jego rodzic są\njeszcze wolni — połącz je w parę. Liść zawsze opłaca się skojarzyć z rodzicem (wymiana argumentem), więc\nwynik jest optymalny. O(n). Można też DP `dp[v][0/1]` (czy v jest skojarzony z dzieckiem).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order = {1};\n    vector<bool> vis(n + 1, false), wolny(n + 1, true);\n    vis[1] = true;\n    for (size_t i = 0; i < order.size(); i++)\n        for (int u : g[order[i]]) if (!vis[u]) { vis[u] = true; par[u] = order[i]; order.push_back(u); }\n    int pary = 0;\n    for (int i = n - 1; i > 0; i--) {\n        int v = order[i];\n        if (wolny[v] && wolny[par[v]]) { wolny[v] = wolny[par[v]] = false; pary++; }\n    }\n    cout << pary << '\\n';\n}"
+    },
+    {
+     "q": [
+      "liczba spójnych poddrzew",
+      "ile jest spójnych podzbiorów drzewa",
+      "count subtrees connected subsets"
+     ],
+     "a": "`f[v]` = liczba spójnych podzbiorów, w których `v` jest najwyższym wierzchołkiem: każde dziecko albo\npomijamy, albo dołączamy dowolny spójny kawałek zaczynający się w nim, więc `f[v] = Π (1 + f[c])`.\nOdpowiedź = `Σ f[v]` (każdy spójny podzbiór ma jeden najwyższy wierzchołek). O(n), modulo.",
+     "code": "int n = 3;\nvector<vector<int>> ch = {{}, {2}, {3}, {}};    // ścieżka 1-2-3\nvector<long long> f(n + 1, 1);\nlong long suma = 0;\nfor (int v = n; v >= 1; v--) {                  // dzieci mają większe numery\n    for (int c : ch[v]) f[v] *= (1 + f[c]);\n    suma += f[v];\n}\ncout << suma << '\\n';   // 6"
+    },
+    {
+     "q": [
+      "dp na drzewie bez rekurencji",
+      "dp drzewo kolejność bfs od tyłu",
+      "iteracyjne dp na drzewie",
+      "tree dp iterative"
+     ],
+     "a": "Zrób BFS (albo DFS ze stosem) od korzenia, zapisując kolejność odwiedzin `order` i rodziców. W `order`\nkażdy rodzic jest przed swoimi dziećmi, więc pętla `for (i = n − 1; i >= 0; i--)` przetwarza dzieci\nprzed rodzicem — dokładnie tak, jak postorder w rekurencji. O(n), bezpieczne dla n = 10^6.",
+     "code": "int n = 4;\nvector<vector<int>> g = {{}, {2, 3}, {1, 4}, {1}, {2}};\nvector<int> par(n + 1, 0), order = {1}, sz(n + 1, 1);\nvector<bool> vis(n + 1, false);\nvis[1] = true;\nfor (size_t i = 0; i < order.size(); i++)\n    for (int u : g[order[i]]) if (!vis[u]) { vis[u] = true; par[u] = order[i]; order.push_back(u); }\nfor (int i = n - 1; i > 0; i--) sz[par[order[i]]] += sz[order[i]];\ncout << sz[1] << ' ' << sz[2] << '\\n';   // 4 2"
+    },
+    {
+     "q": [
+      "dp[v][0] dp[v][1] co znaczy",
+      "stany dp na drzewie",
+      "jak dobrać stan dp drzewo"
+     ],
+     "a": "`dp[v][s]` = najlepszy wynik dla **poddrzewa** `v`, gdy sam `v` jest w stanie `s` (np. 0 = niewybrany,\n1 = wybrany). Stan musi zawierać dokładnie to, od czego zależy, co może zrobić rodzic `v` — reszta\npoddrzewa jest „zamknięta”. Jeśli rodzic potrzebuje więcej informacji (np. czy `v` jest już pokryty),\ndodaj stan (jak w zbiorze dominującym: 3 stany).",
+     "code": "// dp[v][0] = v niewybrany, dp[v][1] = v wybrany\nconst int N = 100005;\nlong long dp[N][2];\nvoid polacz(int v, int c) {          // dołączenie dziecka c do v (zbiór niezależny)\n    dp[v][1] += dp[c][0];\n    dp[v][0] += max(dp[c][0], dp[c][1]);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dp na drzewie złożoność plecak",
+      "dlaczego plecak na drzewie jest O(n^2)",
+      "tree knapsack complexity"
+     ],
+     "a": "Łącząc poddrzewo o rozmiarze `a` z dzieckiem o rozmiarze `b` robisz `a·b` operacji — tyle, ile par\n(wierzchołek z pierwszego, wierzchołek z drugiego). Każda para wierzchołków drzewa jest liczona dokładnie\nraz (w ich LCA), więc suma to ≤ n²/2. Z ograniczeniem `j ≤ k` koszt spada do O(n·k). Ważne: pętle tylko\ndo aktualnych rozmiarów, nie do `k` od razu.",
+     "code": "// łączenie poddrzew o rozmiarach a i b kosztuje a*b; suma po całym drzewie = liczba par\nint n = 2000;\nmt19937 rng(1);\nvector<int> p(n + 1, 0);\nfor (int v = 2; v <= n; v++) p[v] = rng() % (v - 1) + 1;   // losowe drzewo, p[v] < v\nvector<long long> sz(n + 1, 1);\nlong long ops = 0;\nfor (int v = n; v >= 2; v--) { ops += sz[p[v]] * sz[v]; sz[p[v]] += sz[v]; }\ncout << ops << ' ' << 1LL * n * (n - 1) / 2 << '\\n';      // 1999000 1999000"
+    }
+   ],
+   "related": [
+    "tree-basics",
+    "tree-rerooting",
+    "tree-small-to-large",
+    "dp-intro",
+    "graph-dag-dp",
+    "tree-virtual"
+   ]
+  },
+  {
+   "id": "tree-rerooting",
+   "title": "Rerooting — DP na drzewie dla wszystkich korzeni naraz",
+   "category": "Drzewa",
+   "tags": [
+    "rerooting",
+    "zmiana korzenia",
+    "dp dla każdego korzenia",
+    "suma odległości",
+    "dp w górę",
+    "dp w dół",
+    "prefiksy i sufiksy",
+    "all roots dp"
+   ],
+   "aliases": [
+    "rerooting",
+    "reroot",
+    "dp dla wszystkich korzeni",
+    "zmiana korzenia dp",
+    "reroot tree dp",
+    "suma odległości do wszystkich wierzchołków",
+    "sum of distances in tree",
+    "dp w górę i w dół",
+    "dla każdego wierzchołka jako korzenia"
+   ],
+   "summary": "Gdy odpowiedź trzeba policzyć dla każdego wierzchołka jako korzenia, zamiast n razy DFS (O(n²)) robimy dwa przejścia: w dół (wynik dla poddrzew) i w górę (wkład „reszty drzewa” z perspektywy rodzica). O(n).",
+   "complexity": "O(n) (albo O(n log n), gdy łączenie wymaga sortowania)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Schemat:**\n1. **W dół:** ukorzeń w 1 i policz `down[v]` — wynik dla poddrzewa `v` (zwykłe DP na drzewie).\n2. **W górę:** policz `up[v]` — wynik dla „reszty drzewa” widzianej z `v`, czyli części po stronie rodzica\n   (wszystko poza poddrzewem `v`). `up[c]` dla dziecka `c` buduje się z `up[v]` i `down` **pozostałych**\n   dzieci `v`.\n3. **Odpowiedź** dla `v` jako korzenia = połączenie `down[v]` z `up[v]`.\n\n**Przykład — suma odległości do wszystkich:** `down[v] = Σ (down[c] + sz[c])`. Przesuwając korzeń z `v`\ndo dziecka `c`, `sz[c]` wierzchołków przybliża się o 1, a `n − sz[c]` oddala o 1:\n`ans[c] = ans[v] − sz[c] + (n − sz[c])`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „dla każdego wierzchołka policz sumę/maksimum odległości do pozostałych”, „wybierz korzeń\nminimalizujący…”, „odpowiedz dla każdego miasta jako stolicy”, `n ≤ 2·10^5` (więc O(n²) odpada)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Suma odległości z każdego wierzchołka do wszystkich",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order = {1};\n    vector<bool> vis(n + 1, false);\n    vis[1] = true;\n    for (size_t i = 0; i < order.size(); i++)\n        for (int u : g[order[i]]) if (!vis[u]) { vis[u] = true; par[u] = order[i]; order.push_back(u); }\n    vector<long long> sz(n + 1, 1), down(n + 1, 0), ans(n + 1, 0);\n    for (int i = n - 1; i > 0; i--) {             // przejście w dół (od liści)\n        int v = order[i], p = par[v];\n        sz[p] += sz[v];\n        down[p] += down[v] + sz[v];               // każdy wierzchołek poddrzewa v jest o 1 dalej od p\n    }\n    ans[1] = down[1];\n    for (int i = 1; i < n; i++) {                 // przejście w górę (od korzenia)\n        int c = order[i], v = par[c];\n        ans[c] = ans[v] - sz[c] + (n - sz[c]);\n    }\n    for (int v = 1; v <= n; v++) cout << ans[v] << (v == n ? '\\n' : ' ');\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Rerooting z prefiksami i sufiksami (bez dzielenia modulo)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Dla każdego v: liczba spójnych podzbiorów zawierających v, modulo M (M nie musi być pierwsze!).\n// f(v) = Π (1 + f(sąsiad w kierunku od v)). Dzielenia modulo nie ma -> prefiksy i sufiksy po dzieciach.\nint main() {\n    int n;\n    long long M;\n    cin >> n >> M;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order = {1};\n    vector<bool> vis(n + 1, false);\n    vis[1] = true;\n    for (size_t i = 0; i < order.size(); i++)\n        for (int u : g[order[i]]) if (!vis[u]) { vis[u] = true; par[u] = order[i]; order.push_back(u); }\n    vector<vector<int>> ch(n + 1);\n    for (int i = 1; i < n; i++) ch[par[order[i]]].push_back(order[i]);\n    vector<long long> down(n + 1, 1), up(n + 1, 0), ans(n + 1);\n    for (int i = n - 1; i >= 0; i--) {\n        int v = order[i];\n        for (int c : ch[v]) down[v] = down[v] * (1 + down[c]) % M;\n    }\n    for (int i = 0; i < n; i++) {\n        int v = order[i];\n        int k = ch[v].size();\n        long long zGory = (v == 1) ? 1 : (1 + up[v]) % M;     // wkład strony rodzica\n        ans[v] = down[v] * zGory % M;\n        vector<long long> pre(k + 1, 1), suf(k + 1, 1);\n        for (int j = 0; j < k; j++) pre[j + 1] = pre[j] * (1 + down[ch[v][j]]) % M;\n        for (int j = k - 1; j >= 0; j--) suf[j] = suf[j + 1] * (1 + down[ch[v][j]]) % M;\n        for (int j = 0; j < k; j++)                            // wszystko poza dzieckiem j\n            up[ch[v][j]] = pre[j] * suf[j + 1] % M * zGory % M;\n    }\n    for (int v = 1; v <= n; v++) cout << ans[v] << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Gdy operacja łączenia jest odwracalna (suma, iloczyn modulo pierwszą bez zer), „wszystko poza dzieckiem c”\ndostajesz odejmując/dzieląc wkład `c`. Gdy nie jest (max, min, iloczyn modulo dowolną liczbą), użyj\nprefiksów i sufiksów po liście dzieci albo trzymaj **dwa najlepsze** wyniki (dla max/min)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "down[v]",
+     "desc": "wynik DP dla poddrzewa v (korzeń 1)",
+     "complexity": "O(n) łącznie"
+    },
+    {
+     "sig": "up[c]",
+     "desc": "wynik dla części drzewa poza poddrzewem c, z perspektywy c",
+     "complexity": "O(n) łącznie"
+    },
+    {
+     "sig": "ans[c] = ans[v] - sz[c] + (n - sz[c])",
+     "desc": "przesunięcie korzenia v → c dla sumy odległości",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Liczenie `up[c]` z `ans[v]` wymaga „odjęcia” wkładu `c` — przy max/min to nie działa; potrzebne dwa najlepsze dzieci albo prefiksy/sufiksy.",
+    "Kolejność: przejście w dół od liści (odwrócony BFS), przejście w górę od korzenia (BFS w przód).",
+    "Sumy odległości dla n = 2·10^5 sięgają ~2·10^10 — `long long`.",
+    "Rekurencyjne dwa DFS-y na drzewie-ścieżce n = 10^6 → stos; wersja z `order` jest iteracyjna.",
+    "W wersji z prefiksami nie zapomnij o wkładzie strony rodzica (`up[v]`) przy liczeniu `up` dzieci."
+   ],
+   "qa": [
+    {
+     "q": [
+      "rerooting",
+      "dp dla wszystkich korzeni",
+      "zmiana korzenia dp",
+      "reroot tree dp",
+      "rerooting c++"
+     ],
+     "a": "Dwa przejścia po drzewie: w dół liczysz `down[v]` dla poddrzew (korzeń 1), w górę liczysz `up[c]` —\nwynik dla reszty drzewa widzianej z dziecka `c` — z `up[v]` i `down` rodzeństwa. Odpowiedź dla `v` to\npołączenie `down[v]` i `up[v]`. Łącznie **O(n)** zamiast O(n²) dla n osobnych DFS-ów.",
+     "code": "// szkic: suma odległości\nint n = 3;\nvector<int> order = {1, 2, 3}, par = {0, 0, 1, 2};    // ścieżka 1-2-3\nvector<long long> sz(n + 1, 1), down(n + 1, 0), ans(n + 1);\nfor (int i = n - 1; i > 0; i--) { int v = order[i]; sz[par[v]] += sz[v]; down[par[v]] += down[v] + sz[v]; }\nans[1] = down[1];\nfor (int i = 1; i < n; i++) { int c = order[i]; ans[c] = ans[par[c]] - sz[c] + (n - sz[c]); }\ncout << ans[1] << ' ' << ans[2] << ' ' << ans[3] << '\\n';   // 3 2 3"
+    },
+    {
+     "q": [
+      "suma odległości do wszystkich wierzchołków",
+      "sum of distances in tree",
+      "suma odleglosci z kazdego wierzcholka",
+      "dla każdego wierzchołka suma odległości"
+     ],
+     "a": "`down[v] = Σ (down[c] + sz[c])` liczysz od liści. Dla korzenia `ans[1] = down[1]`. Przechodząc do dziecka\n`c`: `sz[c]` wierzchołków jest o 1 bliżej, a `n − sz[c]` o 1 dalej, więc `ans[c] = ans[v] − sz[c] + n − sz[c]`.\nDwa przejścia, O(n). Wynik w `long long`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order = {1};\n    vector<bool> vis(n + 1, false);\n    vis[1] = true;\n    for (size_t i = 0; i < order.size(); i++)\n        for (int u : g[order[i]]) if (!vis[u]) { vis[u] = true; par[u] = order[i]; order.push_back(u); }\n    vector<long long> sz(n + 1, 1), ans(n + 1, 0);\n    for (int i = n - 1; i > 0; i--) { int v = order[i]; sz[par[v]] += sz[v]; ans[1] += sz[v]; }\n    for (int i = 1; i < n; i++) { int c = order[i]; ans[c] = ans[par[c]] + n - 2 * sz[c]; }\n    cout << *min_element(ans.begin() + 1, ans.end()) << '\\n';   // najlepszy korzeń\n}"
+    },
+    {
+     "q": [
+      "najdalszy wierzchołek od każdego rerooting",
+      "max odległość z każdego wierzchołka",
+      "eccentricity rerooting",
+      "wysokość drzewa dla każdego korzenia"
+     ],
+     "a": "`down1[v]`, `down2[v]` — dwie najdłuższe gałęzie w dół (z różnych dzieci), `up[v]` — najdłuższa droga\nzaczynająca się krawędzią do rodzica. Dla dziecka `c`: `up[c] = 1 + max(up[v], najlepsza gałąź v nie przez c)`\n— stąd potrzeba dwóch najlepszych. Odpowiedź `max(down1[v], up[v])`. O(n). (Alternatywa: max odległości\ndo końców średnicy.)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order = {1};\n    vector<bool> vis(n + 1, false);\n    vis[1] = true;\n    for (size_t i = 0; i < order.size(); i++)\n        for (int u : g[order[i]]) if (!vis[u]) { vis[u] = true; par[u] = order[i]; order.push_back(u); }\n    vector<int> d1(n + 1, 0), d2(n + 1, 0), via(n + 1, 0), up(n + 1, 0);\n    for (int i = n - 1; i > 0; i--) {\n        int v = order[i], p = par[v], d = d1[v] + 1;\n        if (d > d1[p]) { d2[p] = d1[p]; d1[p] = d; via[p] = v; }\n        else if (d > d2[p]) d2[p] = d;\n    }\n    for (int i = 1; i < n; i++) {\n        int c = order[i], v = par[c];\n        int bok = (via[v] == c) ? d2[v] : d1[v];      // najlepsza gałąź v, która nie idzie przez c\n        up[c] = 1 + max(up[v], bok);\n    }\n    for (int v = 1; v <= n; v++) cout << max(d1[v], up[v]) << (v == n ? '\\n' : ' ');\n}"
+    },
+    {
+     "q": [
+      "rerooting dwa najlepsze dzieci",
+      "dlaczego trzymać dwa maksima rerooting",
+      "rerooting max bez odejmowania"
+     ],
+     "a": "Przy maksimum nie da się „odjąć” wkładu dziecka `c` od `max` po wszystkich dzieciach. Ale jeśli pamiętasz\nnajlepszą (`m1`, z dziecka `via`) i drugą najlepszą (`m2`) wartość, to „max bez c” = `c == via ? m2 : m1`\n— O(1). Dla ogólnych operacji nieodwracalnych używasz prefiksów i sufiksów po liście dzieci.",
+     "code": "vector<int> wart = {5, 9, 3};          // wkłady dzieci 0, 1, 2\nint m1 = -1, m2 = -1, via = -1;\nfor (int i = 0; i < 3; i++) {\n    if (wart[i] > m1) { m2 = m1; m1 = wart[i]; via = i; }\n    else if (wart[i] > m2) m2 = wart[i];\n}\nfor (int i = 0; i < 3; i++) cout << (i == via ? m2 : m1) << ' ';   // 9 5 9\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "rerooting prefiksy sufiksy",
+      "rerooting bez dzielenia modulo",
+      "edpc v subtree",
+      "rerooting iloczyn modulo"
+     ],
+     "a": "Gdy wynik to iloczyn po dzieciach modulo dowolne `M` (np. AtCoder DP „Subtree”), nie można podzielić przez\nwkład dziecka. Dla listy dzieci `c_1..c_k` licz prefiksy `pre[j]` i sufiksy `suf[j]` iloczynów; „wszystko poza\n`c_j`” = `pre[j] · suf[j+1]` (razy wkład od rodzica). Koszt O(deg v) na wierzchołek, razem O(n).",
+     "code": "long long M = 100;\nvector<long long> wklad = {2, 5, 10};           // (1 + down[c_j]) dla dzieci\nint k = wklad.size();\nvector<long long> pre(k + 1, 1), suf(k + 1, 1);\nfor (int j = 0; j < k; j++) pre[j + 1] = pre[j] * wklad[j] % M;\nfor (int j = k - 1; j >= 0; j--) suf[j] = suf[j + 1] * wklad[j] % M;\nfor (int j = 0; j < k; j++) cout << pre[j] * suf[j + 1] % M << ' ';   // 50 20 10\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "rerooting złożoność",
+      "dlaczego nie n razy dfs",
+      "n dfs za wolno drzewo"
+     ],
+     "a": "DFS z każdego wierzchołka to `n · O(n) = O(n²)` — dla `n = 2·10^5` to 4·10^10 operacji. Rerooting robi\ndwa przejścia, a przy każdym przesunięciu korzenia o jedną krawędź aktualizuje wynik w O(1) (albo\nO(deg) przy prefiksach) — razem O(n).",
+     "code": "// ścieżka 1-2-...-n: n BFS-ów (n^2 kroków) kontra rerooting (2 przejścia)\nint n = 2000;\nvector<vector<int>> g(n + 1);\nfor (int v = 1; v < n; v++) { g[v].push_back(v + 1); g[v + 1].push_back(v); }\nlong long kroki = 0;\nvector<long long> naiwnie(n + 1, 0);\nfor (int s = 1; s <= n; s++) {\n    vector<int> d(n + 1, -1);\n    queue<int> q; q.push(s); d[s] = 0;\n    while (!q.empty()) {\n        int v = q.front(); q.pop(); kroki++;\n        naiwnie[s] += d[v];\n        for (int u : g[v]) if (d[u] == -1) { d[u] = d[v] + 1; q.push(u); }\n    }\n}\nvector<long long> ans(n + 1);\nans[1] = 1LL * n * (n - 1) / 2;                                  // suma głębokości od 1\nfor (int v = 2; v <= n; v++) ans[v] = ans[v - 1] + n - 2LL * (n - v + 1);   // sz[v] = n - v + 1\nbool zgodne = equal(ans.begin() + 1, ans.end(), naiwnie.begin() + 1);\ncout << kroki << ' ' << 2 * n << ' ' << (zgodne ? \"OK\" : \"ZLE\") << '\\n';   // 4000000 4000 OK"
+    },
+    {
+     "q": [
+      "wybierz korzeń minimalizujący sumę głębokości",
+      "najlepsza stolica drzewo",
+      "korzeń z minimalną sumą odległości",
+      "gdzie postawić magazyn drzewo suma odległości"
+     ],
+     "a": "Suma głębokości przy korzeniu `v` = suma odległości z `v` do wszystkich. Policz ją rerootingiem dla każdego\n`v` (O(n)) i weź minimum. Taki wierzchołek to zawsze **centroid** (mediana drzewa) — można więc też znaleźć\ncentroid i policzyć dla niego jedną sumę BFS-em.",
+     "code": "vector<long long> ans = {0, 9, 6, 5, 8, 8};    // drzewo 1-2, 2-3, 3-4, 3-5: sumy dla v = 1..5\nint best = min_element(ans.begin() + 1, ans.end()) - ans.begin();\ncout << best << ' ' << ans[best] << '\\n';      // 3 5"
+    }
+   ],
+   "related": [
+    "tree-dp",
+    "tree-diameter",
+    "tree-centroid",
+    "tree-basics",
+    "tree-distance",
+    "tree-isomorphism"
+   ]
+  },
+  {
+   "id": "tree-small-to-large",
+   "title": "Small-to-large (DSU on tree, sack) — łączenie mniejszego do większego",
+   "category": "Drzewa",
+   "tags": [
+    "small to large",
+    "dsu on tree",
+    "sack",
+    "łączenie zbiorów",
+    "mniejszy do większego",
+    "kolory w poddrzewie",
+    "zapytania o poddrzewa offline",
+    "heavy child"
+   ],
+   "aliases": [
+    "small to large",
+    "small-to-large",
+    "mniejszy do większego",
+    "dsu on tree",
+    "sack technique",
+    "łączenie zbiorów mniejszy do większego",
+    "liczba różnych kolorów w poddrzewie",
+    "distinct colors subtree",
+    "najczęstszy kolor w poddrzewie"
+   ],
+   "summary": "Każdy wierzchołek zbiera informacje o swoim poddrzewie, przelewając zbiory dzieci do największego z nich. Element przeniesiony do większego zbioru za każdym razem trafia do zbioru co najmniej 2× większego, więc jest przenoszony O(log n) razy — razem O(n log n) operacji na zbiorach.",
+   "complexity": "O(n log n) przeniesień; z `set`/`map` O(n log² n); wersja z tablicą liczników (sack) O(n log n)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Problem:** dla każdego wierzchołka odpowiedz na pytanie o multizbiór wartości w jego poddrzewie (ile różnych\nkolorów, najczęstszy kolor, ile wartości ≥ k…). Naiwnie kopiowanie zbiorów dzieci do rodzica to O(n²)\n(ścieżka!).\n\n**Small-to-large:** zbiór rodzica przejmuje (przez `swap` w O(1)) **największy** zbiór dziecka, a pozostałe\nmniejsze zbiory wkłada element po elemencie. Gdy element jest przenoszony, ląduje w zbiorze co najmniej\ndwa razy większym niż ten, z którego wyszedł — więc może to się zdarzyć tylko `log₂ n` razy.\n\n**Sack (DSU on tree):** to samo z globalną tablicą liczników: najpierw przetwarzasz lekkie dzieci i czyścisz\nich wkład, potem ciężkie dziecko (wkład zostaje), a na końcu dokładasz lekkie poddrzewa jeszcze raz. O(n log n)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „dla każdego wierzchołka podaj liczbę różnych kolorów w poddrzewie”, „najczęstszy kolor\nw poddrzewie”, „ile wierzchołków na głębokości d w poddrzewie v”, zapytania offline o poddrzewa,\nn ≤ 10^5–10^6. Ta sama idea działa w DSU (union by size) i przy łączeniu kopców/zbiorów."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Liczba różnych kolorów w każdym poddrzewie (set + small-to-large)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    vector<int> col(n + 1);\n    for (int i = 1; i <= n; i++) cin >> col[i];\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order = {1};\n    vector<bool> vis(n + 1, false);\n    vis[1] = true;\n    for (size_t i = 0; i < order.size(); i++)\n        for (int u : g[order[i]]) if (!vis[u]) { vis[u] = true; par[u] = order[i]; order.push_back(u); }\n\n    vector<set<int>> S(n + 1);\n    vector<int> ans(n + 1);\n    for (int i = n - 1; i >= 0; i--) {            // dzieci przed rodzicem\n        int v = order[i];\n        S[v].insert(col[v]);                      // S[v] zawiera już scalone zbiory dzieci\n        ans[v] = S[v].size();\n        if (v == 1) break;\n        int p = par[v];\n        if (S[p].size() < S[v].size()) swap(S[p], S[v]);   // O(1): zamiana wnętrz\n        for (int x : S[v]) S[p].insert(x);       // mniejszy do większego\n        S[v].clear();\n    }\n    for (int v = 1; v <= n; v++) cout << ans[v] << (v == n ? '\\n' : ' ');\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Sack / DSU on tree z tablicą liczników",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Sack (DSU on tree): tablica liczników cnt[kolor], O(n log n), bez set-ów.\nconst int MAXN = 200005;\nint n, col[MAXN], sz[MAXN], big[MAXN], tin[MAXN], tout[MAXN], ver[MAXN], timer_ = 0;\nint cnt[MAXN], distinct_ = 0, ans[MAXN];\nvector<int> g[MAXN];\n\nvoid prep(int v, int p) {                 // rozmiary, ciężkie dziecko, kolejność Eulera\n    sz[v] = 1; big[v] = 0;\n    tin[v] = ++timer_; ver[timer_] = v;\n    for (int u : g[v]) if (u != p) {\n        prep(u, v);\n        sz[v] += sz[u];\n        if (!big[v] || sz[u] > sz[big[v]]) big[v] = u;\n    }\n    tout[v] = timer_;\n}\nvoid addV(int v, int d) {\n    if (d > 0 && cnt[col[v]]++ == 0) distinct_++;\n    if (d < 0 && --cnt[col[v]] == 0) distinct_--;\n}\nvoid sack(int v, int p, bool keep) {\n    for (int u : g[v]) if (u != p && u != big[v]) sack(u, v, false);   // lekkie: policz i wyczyść\n    if (big[v]) sack(big[v], v, true);                                  // ciężkie: zostaw liczniki\n    for (int u : g[v]) if (u != p && u != big[v])\n        for (int t = tin[u]; t <= tout[u]; t++) addV(ver[t], +1);       // dołóż lekkie poddrzewa\n    addV(v, +1);\n    ans[v] = distinct_;\n    if (!keep)\n        for (int t = tin[v]; t <= tout[v]; t++) addV(ver[t], -1);\n}\n\nint main() {\n    cin >> n;\n    for (int i = 1; i <= n; i++) cin >> col[i];\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    prep(1, 0);\n    sack(1, 0, true);\n    for (int v = 1; v <= n; v++) cout << ans[v] << (v == n ? '\\n' : ' ');\n}"
+    },
+    {
+     "type": "tip",
+     "md": "`swap` dwóch `std::set`/`std::map`/`std::vector` działa w O(1) — zamienia tylko wskaźniki wewnętrzne. To\ndzięki temu „przejęcie” największego zbioru dziecka nic nie kosztuje."
+    },
+    {
+     "type": "warn",
+     "md": "Kolory/wartości do 10^9 w wersji z tablicą liczników — najpierw skompresuj je do `0..n−1`. Wersja z `set`\ntego nie wymaga."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "swap(S[p], S[v])",
+     "desc": "zamiana zawartości dwóch zbiorów",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "sack(v, p, keep)",
+     "desc": "DSU on tree: liczy odpowiedź dla v, keep = czy zostawić liczniki",
+     "complexity": "O(n log n) łącznie"
+    }
+   ],
+   "pitfalls": [
+    "Wkładanie WIĘKSZEGO zbioru do mniejszego → O(n²) na ścieżce. Zawsze porównuj rozmiary i ewentualnie `swap`.",
+    "Odpowiedź dla `v` trzeba zapisać, zanim jego zbiór zostanie wlany do rodzica (potem `S[v]` jest pusty/zmieniony).",
+    "Kopiowanie `S[p] = S[v]` zamiast `swap` kosztuje O(rozmiar) — psuje złożoność.",
+    "W sacku lekkie dzieci muszą być przetworzone PRZED ciężkim, a ich wkład wyczyszczony (`keep = false`).",
+    "Rekurencja w sacku ma głębokość równą wysokości drzewa — przy ścieżce 10^6 uważaj na stos.",
+    "Liczniki w `map` zamiast tablicy: dodatkowe log n (O(n log² n)) — zwykle OK dla n ≤ 2·10^5."
+   ],
+   "qa": [
+    {
+     "q": [
+      "small to large",
+      "mniejszy do większego",
+      "łączenie zbiorów mniejszy do większego",
+      "small-to-large merging",
+      "small to large drzewo"
+     ],
+     "a": "Łącząc dwa zbiory, przenoś elementy **mniejszego** do **większego**. Element przeniesiony trafia do zbioru\nco najmniej 2× większego niż jego poprzedni, więc przez całe działanie przeniesie się najwyżej `log₂ n` razy —\nłącznie O(n log n) wstawień (z `set` O(n log² n)). Na drzewie: rodzic przejmuje największy zbiór dziecka\ni dokłada do niego pozostałe.",
+     "code": "set<int> a = {1, 2}, b = {2, 3, 4, 5};\nif (a.size() < b.size()) swap(a, b);    // a = większy (O(1))\nfor (int x : b) a.insert(x);            // przenosimy mniejszy\nb.clear();\ncout << a.size() << '\\n';               // 5"
+    },
+    {
+     "q": [
+      "dsu on tree",
+      "sack technique",
+      "liczba różnych kolorów w poddrzewie",
+      "distinct colors in subtree",
+      "ile różnych kolorów w poddrzewie"
+     ],
+     "a": "Dla każdego wierzchołka chcesz liczbę różnych kolorów w jego poddrzewie. Z `set`: zbiory dzieci łączysz\nsmall-to-large, odpowiedź to `S[v].size()` — O(n log² n). Sack: globalna tablica `cnt[kolor]`, licznik\nróżnych; lekkie dzieci liczone i czyszczone, ciężkie zachowane — O(n log n). Oba sposoby offline,\njedno przejście po drzewie.",
+     "code": "// wkład wierzchołka do licznika różnych kolorów\nconst int N = 200005;\nint cnt[N], rozne = 0;\nvoid dodaj(int kolor) { if (cnt[kolor]++ == 0) rozne++; }\nvoid usun(int kolor)  { if (--cnt[kolor] == 0) rozne--; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dlaczego small to large jest n log n",
+      "złożoność small to large",
+      "dowód log n przeniesień"
+     ],
+     "a": "Śledź jeden element. Za każdym razem, gdy jest przenoszony, jego zbiór był mniejszy (≤ połowy wynikowego),\nwięc rozmiar zbioru zawierającego element co najmniej się podwaja. Rozmiar nie przekroczy `n`, więc\npodwojeń jest ≤ `log₂ n`. `n` elementów × `log n` przeniesień × koszt wstawienia (O(1) dla tablicy/wektora,\nO(log n) dla `set`).",
+     "code": "// losowe łączenie n zbiorów jednoelementowych: ile razy przeniesiono jeden element?\nint n = 1 << 12;\nmt19937 rng(7);\nvector<vector<int>> S(n);\nvector<int> przen(n, 0), zywe(n);\nfor (int i = 0; i < n; i++) S[i] = {i};\niota(zywe.begin(), zywe.end(), 0);\nwhile (zywe.size() > 1) {\n    int i = rng() % zywe.size(), j = rng() % (zywe.size() - 1);\n    if (j >= i) j++;\n    int a = zywe[i], b = zywe[j];\n    if (S[a].size() < S[b].size()) swap(a, b);        // a = większy\n    for (int x : S[b]) { przen[x]++; S[a].push_back(x); }\n    S[b].clear();\n    int idx = (zywe[i] == b) ? i : j;\n    zywe[idx] = zywe.back(); zywe.pop_back();\n}\nint mx = *max_element(przen.begin(), przen.end());\ncout << (mx <= __lg(n) ? \"OK\" : \"ZLE\") << '\\n';       // każdy element <= log2(n) = 12 razy"
+    },
+    {
+     "q": [
+      "swap setów o(1)",
+      "czy swap set jest szybki",
+      "swap dwóch map c++ złożoność"
+     ],
+     "a": "Tak — `std::swap(a, b)` (albo `a.swap(b)`) dla `set`, `map`, `vector`, `unordered_map` wymienia tylko wewnętrzne\nwskaźniki i rozmiary: O(1), niezależnie od liczby elementów. (Wyjątek: `std::array` — tam swap kopiuje\nelementy.) Zamiast swapować można też trzymać indeksy/wskaźniki do zbiorów i zamieniać je.",
+     "code": "set<int> a, b = {1, 2, 3};\nfor (int i = 0; i < 1000; i++) a.insert(i);\nswap(a, b);                        // natychmiastowe\ncout << a.size() << ' ' << b.size() << '\\n';   // 3 1000"
+    },
+    {
+     "q": [
+      "najczęstszy kolor w poddrzewie",
+      "suma dominujących kolorów poddrzewo",
+      "lomsat gelral",
+      "most frequent color subtree"
+     ],
+     "a": "Każdy wierzchołek trzyma `map<kolor, liczność>`, maksymalną liczność `mx` i sumę kolorów o liczności `mx`.\nŁącząc small-to-large, przy każdym wstawieniu aktualizujesz `mx` i sumę (gdy liczność przekroczy `mx` —\nreset sumy; gdy wyrówna — dodanie). O(n log² n). Klasyk z Codeforces („Lomsat gelral”).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<int> col(n + 1);\n    for (int i = 1; i <= n; i++) cin >> col[i];\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order = {1};\n    vector<bool> vis(n + 1, false);\n    vis[1] = true;\n    for (size_t i = 0; i < order.size(); i++)\n        for (int u : g[order[i]]) if (!vis[u]) { vis[u] = true; par[u] = order[i]; order.push_back(u); }\n    vector<map<int, int>> M(n + 1);\n    vector<int> mx(n + 1, 0);\n    vector<long long> sum(n + 1, 0), ans(n + 1);\n    auto wstaw = [&](int v, int c, int k) {          // dodaj k wystąpień koloru c do zbioru v\n        int& x = M[v][c];\n        x += k;\n        if (x > mx[v]) { mx[v] = x; sum[v] = c; }\n        else if (x == mx[v]) sum[v] += c;\n    };\n    for (int i = n - 1; i >= 0; i--) {\n        int v = order[i];\n        wstaw(v, col[v], 1);\n        ans[v] = sum[v];\n        if (v == 1) break;\n        int p = par[v];\n        if (M[p].size() < M[v].size()) { swap(M[p], M[v]); swap(mx[p], mx[v]); swap(sum[p], sum[v]); }\n        for (auto [c, k] : M[v]) wstaw(p, c, k);\n        M[v].clear();\n    }\n    for (int v = 1; v <= n; v++) cout << ans[v] << (v == n ? '\\n' : ' ');\n}"
+    },
+    {
+     "q": [
+      "ile wierzchołków na głębokości d w poddrzewie",
+      "zapytania offline o poddrzewo głębokość",
+      "subtree depth queries offline"
+     ],
+     "a": "Zapytania „ile wierzchołków poddrzewa `v` ma głębokość `d`” zbierasz offline przy `v`. Każdy wierzchołek\ntrzyma `map<głębokość, liczba>` swojego poddrzewa; łączysz small-to-large i odpowiadasz na zapytania `v`,\ngdy jego mapa jest kompletna. O((n + q) log² n). Alternatywa: wierzchołki tej samej głębokości posortowane\npo `tin` i dwa wyszukiwania binarne (`[tin[v], tout[v]]`) — O(log n) na zapytanie, online.",
+     "code": "// wersja z tin/tout: wierzchołki na głębokości d posortowane po tin\nvector<vector<int>> poGlebokosci = {{1}, {2, 4}, {3, 5}};   // tin wierzchołków na głębokości 0, 1, 2\nauto ile = [&](int d, int tinV, int toutV) {\n    auto& w = poGlebokosci[d];\n    return int(upper_bound(w.begin(), w.end(), toutV) - lower_bound(w.begin(), w.end(), tinV));\n};\ncout << ile(2, 2, 3) << '\\n';   // poddrzewo z tin w [2, 3] ma 1 wierzchołek na głębokości 2"
+    },
+    {
+     "q": [
+      "small to large dsu",
+      "union by size dlaczego log",
+      "łączenie list mniejsza do większej dsu"
+     ],
+     "a": "To ta sama idea co **union by size** w DSU: podpinasz mniejsze drzewo pod większe, więc głębokość każdego\nwierzchołka rośnie tylko przy podwojeniu rozmiaru jego zbioru — O(log n). Wersja „jawna”: każdy zbiór\ntrzyma listę elementów, a łącząc przepisujesz etykiety mniejszej listy — razem O(n log n).",
+     "code": "vector<int> lbl = {0, 1, 2, 3, 4};\nvector<vector<int>> elems = {{}, {1}, {2}, {3}, {4}};\nauto unite = [&](int a, int b) {\n    a = lbl[a]; b = lbl[b];\n    if (a == b) return;\n    if (elems[a].size() < elems[b].size()) swap(a, b);\n    for (int x : elems[b]) { lbl[x] = a; elems[a].push_back(x); }\n    elems[b].clear();\n};\nunite(1, 2); unite(3, 4); unite(2, 4);\ncout << (lbl[1] == lbl[4]) << ' ' << elems[lbl[1]].size() << '\\n';   // 1 4"
+    }
+   ],
+   "related": [
+    "tree-dfs-order",
+    "tree-dp",
+    "tree-hld",
+    "graph-dsu",
+    "tree-basics",
+    "ds-cartesian-tree",
+    "tree-virtual"
+   ]
+  },
+  {
+   "id": "tree-centroid",
+   "title": "Centroid drzewa i dekompozycja centroidowa",
+   "category": "Drzewa",
+   "tags": [
+    "centroid",
+    "dekompozycja centroidowa",
+    "centroid decomposition",
+    "ścieżki długości k",
+    "dziel i zwyciężaj",
+    "drzewo centroidów",
+    "najbliższy wierzchołek"
+   ],
+   "aliases": [
+    "centroid",
+    "centroid drzewa",
+    "centroid decomposition",
+    "dekompozycja centroidowa",
+    "rozkład na centroidy",
+    "liczba ścieżek długości k",
+    "pary w odległości k",
+    "centroid tree",
+    "najbliższy pokolorowany wierzchołek",
+    "centroid decomposition c++"
+   ],
+   "summary": "Centroid to wierzchołek, po którego usunięciu każdy kawałek ma ≤ n/2 wierzchołków. Dekompozycja: weź centroid, policz wszystkie ścieżki przez niego, usuń go i rekurencyjnie rozłóż kawałki. Głębokość rekurencji O(log n), więc problemy „o wszystkich ścieżkach” rozwiązuje się w O(n log n).",
+   "complexity": "znalezienie centroidu O(n); dekompozycja O(n log n) (czasem O(n log² n)); zapytania O(log n)",
+   "level": 5,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Centroid:** wierzchołek `c`, dla którego największy kawałek drzewa po usunięciu `c` ma ≤ ⌊n/2⌋ wierzchołków.\nZawsze istnieje (jeden albo dwa sąsiednie). Szukanie: policz `sz[]` od dowolnego korzenia; dla `v` kawałki to\npoddrzewa dzieci (`sz[c]`) i „góra” (`n − sz[v]`).\n\n**Dekompozycja centroidowa:** każda ścieżka w drzewie albo przechodzi przez centroid `c`, albo leży w całości\nw jednym z kawałków po usunięciu `c`. Liczymy ścieżki przez `c` (BFS/DFS z `c`, łączymy wyniki z różnych\npoddrzew), usuwamy `c` i powtarzamy w kawałkach. Kawałki mają ≤ n/2 wierzchołków, więc poziomów jest\n≤ log₂ n, a na każdym poziomie przetwarzamy łącznie ≤ n wierzchołków."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „policz pary wierzchołków w odległości dokładnie/co najwyżej k”, „ścieżka o sumie wag K\nz najmniejszą liczbą krawędzi” (IOI 2011 Race), „zapytania: pomaluj wierzchołek / odległość do najbliższego\npomalowanego”, `n ≤ 10^5–2·10^5`, statyczne drzewo."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Znajdowanie centroidu (jednego lub dwóch)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Centroid(y) drzewa: wierzchołki, dla których największy kawałek po usunięciu ma <= n/2\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order = {1}, sz(n + 1, 1);\n    vector<bool> vis(n + 1, false);\n    vis[1] = true;\n    for (size_t i = 0; i < order.size(); i++)\n        for (int u : g[order[i]]) if (!vis[u]) { vis[u] = true; par[u] = order[i]; order.push_back(u); }\n    for (int i = n - 1; i > 0; i--) sz[par[order[i]]] += sz[order[i]];\n    for (int v = 1; v <= n; v++) {\n        int najw = n - sz[v];                     // kawałek „nad” v\n        for (int u : g[v]) if (u != par[v]) najw = max(najw, sz[u]);\n        if (2 * najw <= n) cout << v << ' ';\n    }\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Dekompozycja centroidowa: pary w odległości dokładnie K",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Liczba par wierzchołków w odległości dokładnie K — dekompozycja centroidowa, O(n log n)\nint n, K;\nvector<vector<int>> g;\nvector<bool> removed;\nvector<int> sz, par_;\nvector<long long> cnt;                    // cnt[d] = ile wierzchołków w odległości d od centroidu (już przetworzone)\nlong long wynik = 0;\n\nint znajdzCentroid(int root) {\n    vector<int> order = {root};\n    par_[root] = 0;\n    for (size_t i = 0; i < order.size(); i++)\n        for (int u : g[order[i]]) if (!removed[u] && u != par_[order[i]]) { par_[u] = order[i]; order.push_back(u); }\n    int total = order.size();\n    for (int i = total - 1; i >= 0; i--) {\n        int v = order[i];\n        sz[v] = 1;\n        for (int u : g[v]) if (!removed[u] && u != par_[v]) sz[v] += sz[u];\n    }\n    for (int v : order) {\n        int najw = total - sz[v];\n        for (int u : g[v]) if (!removed[u] && u != par_[v]) najw = max(najw, sz[u]);\n        if (2 * najw <= total) return v;\n    }\n    return root;\n}\n\nint main() {\n    cin >> n >> K;\n    g.assign(n + 1, {});\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    removed.assign(n + 1, false);\n    sz.assign(n + 1, 0);\n    par_.assign(n + 1, 0);\n    cnt.assign(K + 1, 0);\n    vector<int> doZrobienia = {1};             // korzenie kawałków (zamiast rekurencji)\n    while (!doZrobienia.empty()) {\n        int r = doZrobienia.back(); doZrobienia.pop_back();\n        int c = znajdzCentroid(r);\n        removed[c] = true;\n        cnt[0] = 1;                            // sam centroid\n        int maxd = 0;\n        for (int s : g[c]) {\n            if (removed[s]) continue;\n            vector<int> glebokosci;\n            vector<array<int, 3>> q = {{s, c, 1}};   // (wierzchołek, rodzic, odległość od c)\n            for (size_t i = 0; i < q.size(); i++) {\n                auto [v, p, d] = q[i];\n                if (d > K) continue;\n                glebokosci.push_back(d);\n                for (int u : g[v]) if (u != p && !removed[u]) q.push_back({u, v, d + 1});\n            }\n            for (int d : glebokosci) wynik += cnt[K - d];      // pary z wcześniejszymi poddrzewami\n            for (int d : glebokosci) { cnt[d]++; maxd = max(maxd, d); }\n        }\n        fill(cnt.begin(), cnt.begin() + maxd + 1, 0);\n        for (int s : g[c]) if (!removed[s]) doZrobienia.push_back(s);\n    }\n    cout << wynik << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Rekurencja dekompozycji ma głębokość tylko O(log n), ale wewnętrzne DFS-y po kawałkach mogą mieć głębokość\nO(n) — dlatego w kodzie wyżej wszystko jest BFS-ami, a kolejka kawałków zastępuje rekurencję."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "znajdzCentroid(root)",
+     "desc": "centroid kawałka zawierającego root (pomija usunięte wierzchołki)",
+     "complexity": "O(rozmiar kawałka)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Liczenie par przez centroid bez odejmowania par z tego samego poddrzewa → ścieżki, które nie przechodzą przez centroid, liczone podwójnie. Albo dodawaj poddrzewa po kolei (jak wyżej), albo odejmuj wynik „wewnątrz poddrzewa”.",
+    "Rozmiary `sz` trzeba liczyć dla AKTUALNEGO kawałka (z pominięciem usuniętych), nie z oryginalnego drzewa.",
+    "Czyszczenie `cnt` całego rozmiaru K przy każdym centroidzie → O(n·K); czyść tylko do `maxd`.",
+    "Rekurencyjne DFS-y wewnątrz kawałka na ścieżce n = 10^5+ → stos; używaj BFS.",
+    "Centroid ≠ środek drzewa (środek minimalizuje odległość, centroid — rozmiar kawałka).",
+    "Dla zapytań online trzymaj dla każdego wierzchołka listę (przodek centroidowy, odległość) — O(n log n) pamięci."
+   ],
+   "qa": [
+    {
+     "q": [
+      "centroid drzewa",
+      "jak znaleźć centroid",
+      "centroid tree c++",
+      "co to centroid",
+      "centroid definicja"
+     ],
+     "a": "Centroid to wierzchołek, którego usunięcie zostawia kawałki o rozmiarze ≤ n/2. Policz `sz[]` od korzenia;\ndla `v` największy kawałek to `max(n − sz[v], max sz[dziecko])` — centroid to `v` z wartością ≤ n/2. O(n).\nZawsze istnieje: idź od korzenia do dziecka z `sz > n/2`, dopóki takie jest — w końcu staniesz w centroidzie.",
+     "code": "int n = 5;\nvector<vector<int>> ch = {{}, {2}, {3, 5}, {4}, {}, {}};   // ukorzenione w 1\nvector<int> sz(n + 1, 1);\nfor (int v = n; v >= 1; v--) for (int c : ch[v]) sz[v] += sz[c];   // dzieci mają większe numery\nint v = 1;\nwhile (true) {                                  // schodzimy do „ciężkiego” dziecka\n    int nast = 0;\n    for (int c : ch[v]) if (2 * sz[c] > n) nast = c;\n    if (!nast) break;\n    v = nast;\n}\ncout << v << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "centroid decomposition",
+      "dekompozycja centroidowa",
+      "rozkład na centroidy",
+      "centroid decomposition c++",
+      "dekompozycja centroidowa jak działa"
+     ],
+     "a": "Znajdź centroid `c`, przetwórz wszystkie ścieżki przechodzące przez `c`, usuń `c` (oznacz `removed`) i powtórz\ndla każdego kawałka. Kawałki mają ≤ połowy rozmiaru, więc poziomów jest ≤ log₂ n; na każdym poziomie\nłączna praca to O(n) — razem **O(n log n)**. Każda ścieżka zostaje policzona dokładnie raz: w centroidzie,\nktóry jako pierwszy ją „przeciął”.",
+     "code": "// szkielet (rekurencja ma głębokość O(log n))\nconst int N = 200005;\nvector<int> g[N];\nbool removed[N];\nint znajdzCentroid(int root);          // jak w artykule\nvoid przetworzSciezkiPrzez(int c);     // zależy od zadania\nvoid decompose(int root) {\n    int c = znajdzCentroid(root);\n    przetworzSciezkiPrzez(c);\n    removed[c] = true;\n    for (int u : g[c]) if (!removed[u]) decompose(u);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liczba ścieżek długości k",
+      "pary w odległości k drzewo",
+      "ile par wierzchołków w odległości k",
+      "count pairs distance k tree",
+      "distance in tree k"
+     ],
+     "a": "W centroidzie `c` zbierz odległości od `c` dla każdego poddrzewa osobno. Dla kolejnego poddrzewa najpierw\ndolicz pary z już przetworzonymi (`wynik += cnt[K − d]`), potem dodaj jego odległości do `cnt`. Sam centroid\nto `cnt[0] = 1`. Pary wewnątrz jednego poddrzewa policzą się w głębszych centroidach. O(n log n).",
+     "code": "// przetwarzanie jednego centroidu: glebokosciPoddrzew[i] = odległości od c w i-tym poddrzewie\nint K = 2;\nvector<vector<int>> glebokosciPoddrzew = {{1, 2}, {1}};\nvector<long long> cnt(K + 1, 0);\ncnt[0] = 1;\nlong long wynik = 0;\nfor (auto& gl : glebokosciPoddrzew) {\n    for (int d : gl) if (d <= K) wynik += cnt[K - d];\n    for (int d : gl) if (d <= K) cnt[d]++;\n}\ncout << wynik << '\\n';   // 2: (c, wierzchołek w odl. 2) i (dwa wierzchołki w odl. 1 z różnych poddrzew)"
+    },
+    {
+     "q": [
+      "dlaczego głębokość log n centroid",
+      "ile poziomów dekompozycji centroidowej",
+      "centroid decomposition complexity"
+     ],
+     "a": "Po usunięciu centroidu każdy kawałek ma ≤ połowy wierzchołków. Wierzchołek należy więc do kawałków rozmiaru\n≤ n, ≤ n/2, ≤ n/4, … — najwyżej `log₂ n + 1` poziomów. Na jednym poziomie kawałki są rozłączne, więc praca\nw nich to łącznie O(n). Stąd O(n log n) (albo O(n log² n), gdy w każdym kawałku sortujesz).",
+     "code": "// pomiar: liczba poziomów dekompozycji centroidowej losowego drzewa\nint n = 1000;\nmt19937 rng(3);\nvector<vector<int>> g(n + 1);\nfor (int v = 2; v <= n; v++) { int p = rng() % (v - 1) + 1; g[p].push_back(v); g[v].push_back(p); }\nvector<bool> removed(n + 1, false);\nvector<int> sz(n + 1), par(n + 1);\nint maxPoziom = 0;\nvector<pair<int, int>> todo = {{1, 1}};               // (wierzchołek kawałka, poziom)\nwhile (!todo.empty()) {\n    auto [r, poziom] = todo.back(); todo.pop_back();\n    maxPoziom = max(maxPoziom, poziom);\n    vector<int> ord = {r};\n    par[r] = 0;\n    for (size_t i = 0; i < ord.size(); i++)\n        for (int u : g[ord[i]]) if (!removed[u] && u != par[ord[i]]) { par[u] = ord[i]; ord.push_back(u); }\n    int tot = ord.size(), c = r;\n    for (int i = tot - 1; i >= 0; i--) {\n        int v = ord[i];\n        sz[v] = 1;\n        for (int u : g[v]) if (!removed[u] && u != par[v]) sz[v] += sz[u];\n    }\n    for (int v : ord) {\n        int mx = tot - sz[v];\n        for (int u : g[v]) if (!removed[u] && u != par[v]) mx = max(mx, sz[u]);\n        if (2 * mx <= tot) { c = v; break; }\n    }\n    removed[c] = true;\n    for (int u : g[c]) if (!removed[u]) todo.push_back({u, poziom + 1});\n}\ncout << (maxPoziom <= __lg(n) + 1 ? \"OK\" : \"ZLE\") << '\\n';   // <= 10 poziomów dla n = 1000"
+    },
+    {
+     "q": [
+      "najbliższy pokolorowany wierzchołek zapytania",
+      "xenia and tree",
+      "odległość do najbliższego czerwonego",
+      "pomaluj wierzchołek zapytanie o najbliższy"
+     ],
+     "a": "W drzewie centroidów każdy wierzchołek `v` ma O(log n) przodków-centroidów `c` i znane odległości `dist(v, c)`.\nTrzymaj `best[c]` = min odległość od `c` do pomalowanego wierzchołka w jego kawałku. Malowanie `v`:\ndla każdego przodka `best[c] = min(best[c], dist(v, c))`. Zapytanie: `min(best[c] + dist(v, c))`. Każda ścieżka\nprzechodzi przez jakiegoś wspólnego przodka-centroid, więc wynik jest poprawny. O(log n) na operację.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint n;\nvector<vector<int>> g;\nvector<bool> removed;\nvector<int> sz_, par_, best;\nvector<vector<pair<int,int>>> anc;          // anc[v] = (centroid, odległość) dla przodków w drzewie centroidów\nint centroid(int root) {\n    vector<int> ord = {root};\n    par_[root] = 0;\n    for (size_t i = 0; i < ord.size(); i++)\n        for (int u : g[ord[i]]) if (!removed[u] && u != par_[ord[i]]) { par_[u] = ord[i]; ord.push_back(u); }\n    int tot = ord.size();\n    for (int i = tot - 1; i >= 0; i--) {\n        sz_[ord[i]] = 1;\n        for (int u : g[ord[i]]) if (!removed[u] && u != par_[ord[i]]) sz_[ord[i]] += sz_[u];\n    }\n    for (int v : ord) {\n        int mx = tot - sz_[v];\n        for (int u : g[v]) if (!removed[u] && u != par_[v]) mx = max(mx, sz_[u]);\n        if (2 * mx <= tot) return v;\n    }\n    return root;\n}\nint main() {\n    int m;\n    cin >> n >> m;\n    g.assign(n + 1, {});\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    removed.assign(n + 1, false); sz_.assign(n + 1, 0); par_.assign(n + 1, 0);\n    best.assign(n + 1, INT_MAX / 2); anc.assign(n + 1, {});\n    vector<int> todo = {1};\n    while (!todo.empty()) {\n        int c = centroid(todo.back()); todo.pop_back();\n        vector<array<int,3>> q = {{c, 0, 0}};      // BFS: odległości od c w jego kawałku\n        for (size_t i = 0; i < q.size(); i++) {\n            auto [v, p, d] = q[i];\n            anc[v].push_back({c, d});\n            for (int u : g[v]) if (u != p && !removed[u]) q.push_back({u, v, d + 1});\n        }\n        removed[c] = true;\n        for (int u : g[c]) if (!removed[u]) todo.push_back(u);\n    }\n    auto paint = [&](int v) { for (auto [c, d] : anc[v]) best[c] = min(best[c], d); };\n    auto query = [&](int v) { int r = INT_MAX; for (auto [c, d] : anc[v]) r = min(r, best[c] + d); return r; };\n    paint(1);                                   // na początku czerwony jest wierzchołek 1\n    while (m--) {\n        int t, v;\n        cin >> t >> v;\n        if (t == 1) paint(v); else cout << query(v) << '\\n';\n    }\n}"
+    },
+    {
+     "q": [
+      "centroid a środek drzewa",
+      "centroid vs center",
+      "różnica centroid środek"
+     ],
+     "a": "Centroid minimalizuje **rozmiar** największego kawałka po usunięciu (≤ n/2), środek minimalizuje **odległość**\ndo najdalszego wierzchołka. Centroid minimalizuje też sumę odległości do wszystkich wierzchołków (jest\n„medianą” drzewa). Na ścieżce pokrywają się, na drzewach niezrównoważonych — nie.",
+     "code": "// „miotła”: ścieżka 1-2-3-4-5 i liście 6, 7, 8, 9 przy 5; środki = 3 i 4, centroid = 5\nint n = 9;\nvector<vector<int>> ch = {{}, {2}, {3}, {4}, {5}, {6, 7, 8, 9}, {}, {}, {}, {}};\nvector<int> sz(n + 1, 1);\nfor (int v = n; v >= 1; v--) for (int c : ch[v]) sz[v] += sz[c];\nfor (int v = 1; v <= n; v++) {\n    int mx = n - sz[v];\n    for (int c : ch[v]) mx = max(mx, sz[c]);\n    if (2 * mx <= n) cout << v << '\\n';    // 5\n}"
+    },
+    {
+     "q": [
+      "ścieżka o sumie wag k minimalna liczba krawędzi",
+      "ioi race centroid",
+      "ścieżki o sumie wag ≤ k centroid",
+      "centroid decomposition weighted paths"
+     ],
+     "a": "W każdym centroidzie zbierz dla poddrzew pary (suma wag od `c`, liczba krawędzi). Dla „sumy dokładnie K\nz min krawędziami” trzymaj tablicę/mapę `najlepsze[suma] = min krawędzi` z wcześniejszych poddrzew\ni łącz `najlepsze[K − s] + e` (IOI 2011 Race). Dla „ile ścieżek o sumie ≤ K” posortuj sumy i użyj dwóch\nwskaźników, odejmując pary z tego samego poddrzewa. O(n log n) albo O(n log² n).",
+     "code": "int K = 5;\nvector<vector<pair<int,int>>> poddrzewa = {{{2, 1}, {5, 2}}, {{3, 1}, {1, 1}}};   // (suma wag, krawędzie)\nmap<int, int> najlepsze;\nnajlepsze[0] = 0;                                 // sam centroid\nint wynik = INT_MAX;\nfor (auto& sciezki : poddrzewa) {\n    for (auto [s, e] : sciezki)\n        if (s <= K && najlepsze.count(K - s)) wynik = min(wynik, najlepsze[K - s] + e);\n    for (auto [s, e] : sciezki)\n        if (s <= K && (!najlepsze.count(s) || najlepsze[s] > e)) najlepsze[s] = e;\n}\ncout << wynik << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "drzewo centroidów",
+      "centroid tree rodzic",
+      "cpar centroid",
+      "przodkowie w drzewie centroidów"
+     ],
+     "a": "Zapisując, który centroid „rozbił” kawałek zawierający dany centroid, dostajesz **drzewo centroidów**\n(`cpar[c]`) o głębokości O(log n). Ścieżka u–v w oryginalnym drzewie przechodzi przez LCA `u` i `v` w drzewie\ncentroidów. Dlatego zapytania o pary/odległości rozkładają się na O(log n) przodków.",
+     "code": "// cpar[c] = centroid poziom wyżej (0 dla korzenia drzewa centroidów)\nvector<int> cpar = {0, 2, 0, 2, 2, 4};\nint v = 5, glebokosc = 0;\nfor (int c = v; c; c = cpar[c]) glebokosc++;\ncout << glebokosc << '\\n';   // 3: 5 -> 4 -> 2"
+    }
+   ],
+   "related": [
+    "tree-center",
+    "tree-rerooting",
+    "tree-distance",
+    "tree-hld",
+    "tree-basics"
+   ]
+  },
+  {
+   "id": "tree-hld",
+   "title": "Heavy-light decomposition (HLD) — zapytania i aktualizacje na ścieżkach",
+   "category": "Drzewa",
+   "tags": [
+    "hld",
+    "heavy light decomposition",
+    "dekompozycja ciężkich ścieżek",
+    "ścieżki",
+    "drzewo przedziałowe",
+    "zapytania na ścieżce",
+    "ciężkie dziecko",
+    "łańcuchy"
+   ],
+   "aliases": [
+    "hld",
+    "heavy light decomposition",
+    "heavy-light",
+    "dekompozycja ciężkich ścieżek",
+    "ciężko-lekka dekompozycja",
+    "zapytania na ścieżce z aktualizacjami",
+    "suma na ścieżce update",
+    "max na ścieżce z aktualizacjami",
+    "hld c++"
+   ],
+   "summary": "HLD dzieli drzewo na łańcuchy „ciężkich” krawędzi (do dziecka o największym poddrzewie) tak, że każda ścieżka przecina O(log n) łańcuchów. Łańcuchy leżą w tablicy kolejno, więc zapytanie/aktualizacja na ścieżce = O(log n) zapytań drzewa przedziałowego.",
+   "complexity": "preprocessing O(n); zapytanie/aktualizacja na ścieżce O(log² n); LCA O(log n); pamięć O(n)",
+   "level": 5,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Ciężkie dziecko** `heavy[v]` = dziecko o największym poddrzewie. Krawędź do niego jest ciężka, pozostałe lekkie.\nCiężkie krawędzie układają się w rozłączne **łańcuchy**; każdy wierzchołek należy do dokładnie jednego,\n`head[v]` to jego najwyższy wierzchołek.\n\n**Kluczowa własność:** schodząc lekką krawędzią z `v` do `u`, `sz[u] ≤ sz[v]/2`. Dlatego na ścieżce od\ndowolnego wierzchołka do korzenia jest ≤ log₂ n lekkich krawędzi, czyli ≤ log₂ n + 1 łańcuchów.\n\nNumerujemy wierzchołki (`pos[v]`) tak, by każdy łańcuch był **spójnym przedziałem**. Zapytanie u–v: dopóki\n`u` i `v` są w różnych łańcuchach, bierzemy ten z głębszą głową, pytamy o przedział `[pos[head[u]], pos[u]]`\ni skaczemy do `par[head[u]]`. Gdy są w jednym łańcuchu — ostatni przedział między nimi."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „zmień wartość wierzchołka/krawędzi” + „podaj sumę/max/min na ścieżce u–v”, „dodaj x na ścieżce”,\nmieszanka zapytań o ścieżki i poddrzewa, `n, q ≤ 10^5–2·10^5`. Bez aktualizacji zwykle wystarczą prefiksy +\nLCA (suma) albo binary lifting (max)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "HLD + drzewo przedziałowe: suma i max na ścieżce, zmiana wartości",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint n, N;\nvector<long long> tsum, tmax;            // drzewo przedziałowe bottom-up: suma i max\n\nvoid ustaw(int i, long long x) {\n    i += N;\n    tsum[i] = tmax[i] = x;\n    for (i >>= 1; i; i >>= 1) {\n        tsum[i] = tsum[2 * i] + tsum[2 * i + 1];\n        tmax[i] = max(tmax[2 * i], tmax[2 * i + 1]);\n    }\n}\npair<long long, long long> zapytaj(int l, int r) {     // [l, r] -> (suma, max)\n    long long s = 0, m = LLONG_MIN;\n    for (l += N, r += N + 1; l < r; l >>= 1, r >>= 1) {\n        if (l & 1) { s += tsum[l]; m = max(m, tmax[l]); l++; }\n        if (r & 1) { --r; s += tsum[r]; m = max(m, tmax[r]); }\n    }\n    return {s, m};\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> n >> q;\n    vector<long long> val(n + 1);\n    for (int i = 1; i <= n; i++) cin >> val[i];\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    // 1) BFS: rodzic, głębokość; rozmiary i ciężkie dzieci od liści\n    vector<int> par(n + 1, 0), dep(n + 1, 0), sz(n + 1, 1), heavy(n + 1, 0), order = {1};\n    vector<bool> vis(n + 1, false);\n    vis[1] = true;\n    for (size_t i = 0; i < order.size(); i++)\n        for (int u : g[order[i]]) if (!vis[u]) {\n            vis[u] = true; par[u] = order[i]; dep[u] = dep[order[i]] + 1; order.push_back(u);\n        }\n    for (int i = n - 1; i > 0; i--) {\n        int v = order[i], p = par[v];\n        sz[p] += sz[v];\n    }\n    for (int i = n - 1; i > 0; i--) {\n        int v = order[i], p = par[v];\n        if (!heavy[p] || sz[v] > sz[heavy[p]]) heavy[p] = v;\n    }\n    // 2) łańcuchy: każdy wierzchołek, który nie jest ciężkim dzieckiem, zaczyna nowy łańcuch\n    vector<int> head(n + 1), pos(n + 1);\n    int cur = 0;\n    for (int v : order) {\n        if (v != 1 && heavy[par[v]] == v) continue;\n        for (int x = v; x; x = heavy[x]) { head[x] = v; pos[x] = cur++; }\n    }\n    N = 1;\n    while (N < n) N <<= 1;\n    tsum.assign(2 * N, 0);\n    tmax.assign(2 * N, LLONG_MIN);\n    for (int v = 1; v <= n; v++) ustaw(pos[v], val[v]);\n\n    auto sciezka = [&](int u, int v) {                // (suma, max) na ścieżce u–v\n        long long s = 0, m = LLONG_MIN;\n        while (head[u] != head[v]) {\n            if (dep[head[u]] < dep[head[v]]) swap(u, v);\n            auto [a, b] = zapytaj(pos[head[u]], pos[u]);\n            s += a; m = max(m, b);\n            u = par[head[u]];\n        }\n        if (dep[u] > dep[v]) swap(u, v);\n        auto [a, b] = zapytaj(pos[u], pos[v]);       // u = LCA\n        return make_pair(s + a, max(m, b));\n    };\n    while (q--) {\n        int t, a, b;\n        cin >> t >> a >> b;\n        if (t == 1) ustaw(pos[a], b);                 // 1 v x : wartość v := x\n        else if (t == 2) cout << sciezka(a, b).first << '\\n';    // 2 u v : suma na ścieżce\n        else cout << sciezka(a, b).second << '\\n';               // 3 u v : max na ścieżce\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "HLD rekurencyjnie: ścieżki i poddrzewa w jednej numeracji",
+     "code": "// Wersja rekurencyjna z numeracją „ciężkie dziecko pierwsze”: wtedy KAŻDE poddrzewo też jest przedziałem\n// [pos[v], pos[v] + sz[v] - 1], więc ta sama struktura obsłuży zapytania o ścieżki i o poddrzewa.\nconst int MAXN = 200005;\nvector<int> g[MAXN];\nint par_[MAXN], dep_[MAXN], sz_[MAXN], heavy_[MAXN], head_[MAXN], pos_[MAXN], cur_ = 0;\n\nvoid dfsSz(int v, int p) {\n    par_[v] = p; sz_[v] = 1; heavy_[v] = 0;\n    for (int u : g[v]) if (u != p) {\n        dep_[u] = dep_[v] + 1;\n        dfsSz(u, v);\n        sz_[v] += sz_[u];\n        if (!heavy_[v] || sz_[u] > sz_[heavy_[v]]) heavy_[v] = u;\n    }\n}\nvoid dfsHld(int v, int h) {\n    head_[v] = h; pos_[v] = cur_++;\n    if (heavy_[v]) dfsHld(heavy_[v], h);                 // ciężkie dziecko kontynuuje łańcuch\n    for (int u : g[v]) if (u != par_[v] && u != heavy_[v]) dfsHld(u, u);   // lekkie zaczynają nowy\n}\n// wywołanie: dfsSz(1, 0); dfsHld(1, 1);  poddrzewo v = [pos_[v], pos_[v] + sz_[v] - 1]",
+     "scope": "global"
+    },
+    {
+     "type": "warn",
+     "md": "Wartości na **krawędziach**: przypisz wagę krawędzi `(par[v], v)` do dziecka `v`. Na ścieżce u–v ostatni\nprzedział to wtedy `[pos[u] + 1, pos[v]]` (bez LCA, który „niesie” krawędź do swojego rodzica, nie\nnależącą do ścieżki)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "sciezka(u, v)",
+     "desc": "agregat (suma, max) na ścieżce u–v",
+     "complexity": "O(log² n)",
+     "returns": "pair<long long,long long>"
+    },
+    {
+     "sig": "ustaw(pos[v], x)",
+     "desc": "zmiana wartości wierzchołka v w drzewie przedziałowym",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "head[v], pos[v]",
+     "desc": "głowa łańcucha v i pozycja v w tablicy",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Porównuj głębokości GŁÓW łańcuchów (`dep[head[u]] < dep[head[v]]`), nie samych `u`, `v` — inaczej można przeskoczyć ponad LCA.",
+    "Wartości na krawędziach: przy ostatnim odcinku pomiń LCA (`pos[u] + 1`), a gdy `u == v` — przedział pusty.",
+    "Wersja z łańcuchami numerowanymi „po BFS” (jak w pełnym programie) NIE daje spójnych poddrzew; do zapytań o poddrzewa użyj numeracji DFS z ciężkim dzieckiem pierwszym.",
+    "Rekurencyjne `dfsSz`/`dfsHld` na ścieżce n = 10^6 → stos; użyj wersji iteracyjnej.",
+    "Drzewo przedziałowe ma n pozycji (0..n−1), a nie indeksy wierzchołków — zawsze przez `pos[v]`.",
+    "Max z pustego przedziału: inicjalizuj neutralnym `LLONG_MIN`, a nie 0 (wartości mogą być ujemne)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "hld",
+      "heavy light decomposition",
+      "dekompozycja ciężkich ścieżek",
+      "hld c++",
+      "heavy-light decomposition jak działa"
+     ],
+     "a": "Dla każdego wierzchołka wybierz ciężkie dziecko (największe poddrzewo); ciężkie krawędzie tworzą łańcuchy,\nktóre numerujesz kolejno w tablicy. Każda ścieżka w drzewie rozpada się na O(log n) kawałków łańcuchów\n(bo lekka krawędź co najmniej połowi rozmiar poddrzewa), a każdy kawałek to przedział tablicy → drzewo\nprzedziałowe. Zapytanie O(log² n), preprocessing O(n).",
+     "code": "const int N = 200005;\nint par_[N], dep_[N], head_[N], pos_[N];\nlong long query(int l, int r);              // drzewo przedziałowe na pozycjach\nlong long sumaNaSciezce(int u, int v) {\n    long long s = 0;\n    while (head_[u] != head_[v]) {\n        if (dep_[head_[u]] < dep_[head_[v]]) swap(u, v);\n        s += query(pos_[head_[u]], pos_[u]);\n        u = par_[head_[u]];\n    }\n    if (dep_[u] > dep_[v]) swap(u, v);\n    return s + query(pos_[u], pos_[v]);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "zapytania na ścieżce z aktualizacjami",
+      "suma na ścieżce update",
+      "max na ścieżce zmiana wartości",
+      "path query with updates tree"
+     ],
+     "a": "Bez aktualizacji sumę na ścieżce dają prefiksy od korzenia + LCA. Gdy wartości się zmieniają, a pytasz\no max/min (albo dodajesz na całych ścieżkach), potrzebujesz HLD: zmiana wartości `v` = punktowa aktualizacja\nw `pos[v]` (O(log n)), zapytanie = O(log n) przedziałów (O(log² n)). Dla „dodaj na ścieżce” użyj drzewa\nprzedziałowego z lazy propagation.",
+     "code": "// dodawanie x na ścieżce: te same przedziały co przy zapytaniu\nconst int N = 200005;\nint par_[N], dep_[N], head_[N], pos_[N];\nvoid dodajNaPrzedziale(int l, int r, long long x);   // lazy segment tree\nvoid dodajNaSciezce(int u, int v, long long x) {\n    while (head_[u] != head_[v]) {\n        if (dep_[head_[u]] < dep_[head_[v]]) swap(u, v);\n        dodajNaPrzedziale(pos_[head_[u]], pos_[u], x);\n        u = par_[head_[u]];\n    }\n    if (dep_[u] > dep_[v]) swap(u, v);\n    dodajNaPrzedziale(pos_[u], pos_[v], x);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dlaczego log n łańcuchów hld",
+      "hld złożoność dowód",
+      "lekkie krawędzie log n"
+     ],
+     "a": "Jeśli `u` jest lekkim dzieckiem `v`, to istnieje ciężkie dziecko `h` z `sz[h] ≥ sz[u]`, więc\n`sz[v] ≥ 1 + sz[u] + sz[h] > 2·sz[u]`. Idąc od dowolnego wierzchołka w górę, przy każdej lekkiej krawędzi\nrozmiar poddrzewa co najmniej się podwaja — takich krawędzi jest ≤ log₂ n. Między nimi idziemy łańcuchem,\nczyli jednym przedziałem. Stąd O(log n) przedziałów na ścieżkę.",
+     "code": "// pomiar: najwięcej lekkich krawędzi na ścieżce od korzenia w losowym drzewie\nint n = 100000;\nmt19937 rng(5);\nvector<int> p(n + 1, 0), sz(n + 1, 1), heavy(n + 1, 0), light(n + 1, 0);\nfor (int v = 2; v <= n; v++) p[v] = rng() % (v - 1) + 1;          // p[v] < v\nfor (int v = n; v >= 2; v--) sz[p[v]] += sz[v];\nfor (int v = 2; v <= n; v++) if (!heavy[p[v]] || sz[v] > sz[heavy[p[v]]]) heavy[p[v]] = v;\nint najwiecej = 0;\nfor (int v = 2; v <= n; v++) {\n    light[v] = light[p[v]] + (heavy[p[v]] != v);                  // lekka krawędź p[v] -> v?\n    najwiecej = max(najwiecej, light[v]);\n}\ncout << (najwiecej <= __lg(n) ? \"OK\" : \"ZLE\") << '\\n';             // <= log2(n) = 16"
+    },
+    {
+     "q": [
+      "wartości na krawędziach hld",
+      "hld wagi krawędzi",
+      "edge values hld",
+      "hld krawędzie zamiast wierzchołków"
+     ],
+     "a": "Przypisz wagę krawędzi `(par[v], v)` wierzchołkowi `v` (dziecku). Zapytanie o ścieżkę u–v robisz jak dla\nwierzchołków, ale ostatni przedział (w łańcuchu LCA) to `[pos[lca] + 1, pos[głębszy]]` — LCA reprezentuje\nkrawędź do swojego rodzica, która nie należy do ścieżki. Gdy `u == v`, wynik jest neutralny.",
+     "code": "const int N = 200005;\nint par_[N], dep_[N], head_[N], pos_[N];\nlong long query(int l, int r);\nlong long sumaKrawedzi(int u, int v) {\n    long long s = 0;\n    while (head_[u] != head_[v]) {\n        if (dep_[head_[u]] < dep_[head_[v]]) swap(u, v);\n        s += query(pos_[head_[u]], pos_[u]);\n        u = par_[head_[u]];\n    }\n    if (dep_[u] > dep_[v]) swap(u, v);\n    if (u != v) s += query(pos_[u] + 1, pos_[v]);   // bez LCA\n    return s;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "hld poddrzewo i ścieżka",
+      "hld zapytania o poddrzewo",
+      "hld subtree query",
+      "jedna numeracja dla ścieżek i poddrzew"
+     ],
+     "a": "Numeruj wierzchołki DFS-em, wchodząc **najpierw do ciężkiego dziecka**. Wtedy łańcuchy są spójne (bo ciężkie\ndziecko dostaje kolejny numer), a jednocześnie każde poddrzewo to przedział `[pos[v], pos[v] + sz[v] − 1]`\n(bo to zwykły preorder). Jedno drzewo przedziałowe obsługuje oba typy zapytań.",
+     "code": "const int N = 200005;\nint pos_[N], sz_[N];\nlong long query(int l, int r);\nlong long sumaPoddrzewa(int v) { return query(pos_[v], pos_[v] + sz_[v] - 1); }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "lca przez hld",
+      "hld lca",
+      "lca o(n) pamięci"
+     ],
+     "a": "Dopóki `u` i `v` są w różnych łańcuchach, podnieś ten, którego głowa jest głębiej: `u = par[head[u]]`. Gdy są\nw tym samym łańcuchu, LCA to płytszy z nich. O(log n) na zapytanie i tylko O(n) pamięci — dobra alternatywa\ndla binary liftingu przy n = 10^6.",
+     "code": "const int N = 200005;\nint par_[N], dep_[N], head_[N];\nint lca(int u, int v) {\n    while (head_[u] != head_[v]) {\n        if (dep_[head_[u]] < dep_[head_[v]]) swap(u, v);\n        u = par_[head_[u]];\n    }\n    return dep_[u] < dep_[v] ? u : v;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "hld czy binary lifting",
+      "kiedy hld a kiedy lca",
+      "czy potrzebuję hld"
+     ],
+     "a": "**Brak aktualizacji**: suma/XOR na ścieżce → prefiksy + LCA; max/min → binary lifting z agregatem. **Zmiana\nwartości punktu + suma na ścieżce** → Euler tour + Fenwick (zmiana `v` dotyczy poddrzewa). **Zmiany + max/min\nna ścieżce** albo **dodawanie na ścieżce** → HLD + drzewo przedziałowe. HLD jest najogólniejsze, ale najdłuższe\nw implementacji.",
+     "code": "auto technika = [](bool aktualizacje, bool maxMin, bool dodawanieNaSciezce) -> string {\n    if (dodawanieNaSciezce) return \"HLD + lazy segment tree\";\n    if (!aktualizacje) return maxMin ? \"binary lifting z agregatem\" : \"prefiksy + LCA\";\n    return maxMin ? \"HLD + drzewo przedziałowe\" : \"Euler tour + Fenwick\";\n};\ncout << technika(false, false, false) << '\\n'       // statyczna suma na ścieżce\n     << technika(false, true, false) << '\\n'        // statyczne max na ścieżce\n     << technika(true, false, false) << '\\n'        // zmiana wartości + suma\n     << technika(true, true, false) << '\\n';        // zmiana wartości + max"
+    },
+    {
+     "q": [
+      "hld złożoność log^2",
+      "ile działa hld",
+      "hld complexity"
+     ],
+     "a": "Ścieżka rozpada się na ≤ 2·log₂ n przedziałów (po obu stronach LCA), każdy kosztuje O(log n) w drzewie\nprzedziałowym — razem **O(log² n)** na zapytanie. Dla n = q = 2·10^5 to rząd 10^8 prostych operacji w\nnajgorszym przypadku, w praktyce dużo mniej (mało łańcuchów na typowej ścieżce). Preprocessing O(n).",
+     "code": "// pomiar: na ile odcinków łańcuchów rozpada się losowa ścieżka u–v\nint n = 100000;\nmt19937 rng(9);\nvector<int> p(n + 1, 0), sz(n + 1, 1), heavy(n + 1, 0), head(n + 1), dep(n + 1, 0);\nfor (int v = 2; v <= n; v++) p[v] = rng() % (v - 1) + 1;\nfor (int v = n; v >= 2; v--) sz[p[v]] += sz[v];\nfor (int v = 2; v <= n; v++) if (!heavy[p[v]] || sz[v] > sz[heavy[p[v]]]) heavy[p[v]] = v;\nhead[1] = 1;\nfor (int v = 2; v <= n; v++) { dep[v] = dep[p[v]] + 1; head[v] = (heavy[p[v]] == v) ? head[p[v]] : v; }\nint maxOdc = 0;\nfor (int it = 0; it < 1000; it++) {\n    int u = rng() % n + 1, v = rng() % n + 1, odc = 1;\n    while (head[u] != head[v]) {\n        if (dep[head[u]] < dep[head[v]]) swap(u, v);\n        u = p[head[u]];                 // każdy skok = jedno zapytanie O(log n) do drzewa przedziałowego\n        odc++;\n    }\n    maxOdc = max(maxOdc, odc);\n}\ncout << (maxOdc <= 2 * __lg(n) + 1 ? \"OK\" : \"ZLE\") << '\\n';"
+    }
+   ],
+   "related": [
+    "tree-lca",
+    "tree-path-sum",
+    "tree-dfs-order",
+    "ds-segment-tree",
+    "tree-small-to-large"
+   ]
+  }
+ ]
+}

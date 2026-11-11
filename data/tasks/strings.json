@@ -1,0 +1,603 @@
+{
+ "chunk": "strings",
+ "templates": [
+  {
+   "id": "palindrome-check",
+   "name": "Czy napis jest palindromem",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "STR"
+   ],
+   "signals": {
+    "any": [
+     "palindrom\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; cin >> s;\nstring r(s.rbegin(), s.rend());\ncout << (s == r ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "kajak\n",
+    "output": "{{YES}}\n"
+   },
+   "brute": "string s; cin >> s;\nbool ok = true; for (size_t i = 0; i < s.size(); i++) if (s[i] != s[s.size() - 1 - i]) ok = false;\ncout << (ok ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";"
+  },
+  {
+   "id": "reverse-string",
+   "name": "Odwróć napis",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "STR"
+   ],
+   "signals": {
+    "any": [
+     "odwr\\w*",
+     "od tylu",
+     "od konca"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; cin >> s;\nreverse(s.begin(), s.end());\ncout << s << \"\\n\";",
+   "example": {
+    "input": "abc\n",
+    "output": "cba\n"
+   }
+  },
+  {
+   "id": "reverse-line",
+   "name": "Odwróć całą linię",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "STR",
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "odwr\\w*",
+     "od tylu"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 0.6,
+   "globals": "",
+   "solve": "string s; getline(cin, s);\nreverse(s.begin(), s.end());\ncout << s << \"\\n\";",
+   "example": {
+    "input": "ala ma\n",
+    "output": "am ala\n"
+   }
+  },
+  {
+   "id": "string-length",
+   "name": "Długość napisu",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "STR"
+   ],
+   "signals": {
+    "any": [
+     "dlugos\\w* (napisu|slowa|tekstu)",
+     "ile (jest )?(znakow|liter)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; getline(cin, s); while (!s.empty() && (s.back() == '\\r' || s.back() == ' ')) s.pop_back();\ncout << s.size() << \"\\n\";",
+   "example": {
+    "input": "kot\n",
+    "output": "3\n"
+   }
+  },
+  {
+   "id": "count-vowels",
+   "name": "Liczba samogłosek",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "STR",
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "samoglosk\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s, t; while (cin >> t) s += t;\nll c = 0; for (char ch : s) if (string(\"aeiouyAEIOUY\").find(ch) != string::npos) c++;\ncout << c << \"\\n\";",
+   "example": {
+    "input": "programowanie\n",
+    "output": "6\n"
+   }
+  },
+  {
+   "id": "is-vowel",
+   "name": "Czy litera jest samogłoską",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "STR"
+   ],
+   "signals": {
+    "any": [
+     "samoglosk\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; cin >> s;\nbool v = !s.empty() && string(\"aeiouyAEIOUY\").find(s[0]) != string::npos;\ncout << (v ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "a\n",
+    "output": "{{YES}}\n"
+   }
+  },
+  {
+   "id": "count-letters",
+   "name": "Częstości liter (litera liczba)",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "STR",
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "(zlicz|policz)\\w* (\\w+ )?liter",
+     "ile razy (wystepuje )?(kazda )?liter",
+     "czestos\\w*",
+     "statystyk\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s, t; while (cin >> t) s += t;\nmap<char, ll> c; for (char ch : s) if (isalpha((unsigned char)ch)) c[ch]++;\nfor (auto &[k, v] : c) cout << k << \" \" << v << \"\\n\";",
+   "example": {
+    "input": "abca\n",
+    "output": "a 2\nb 1\nc 1\n"
+   },
+   "variants": [
+    {
+     "id": "count-letters-26",
+     "name": "Liczniki 26 liter (a–z)",
+     "solve": "string s, t; while (cin >> t) s += t;\nll c[26] = {0}; for (char ch : s) if (ch >= 'a' && ch <= 'z') c[ch - 'a']++;\nfor (int i = 0; i < 26; i++) cout << c[i] << (i == 25 ? \"\\n\" : \" \");"
+    },
+    {
+     "id": "count-letters-ci",
+     "name": "Częstości liter (bez wielkości liter)",
+     "solve": "string s, t; while (cin >> t) s += t;\nmap<char, ll> c; for (char ch : s) if (isalpha((unsigned char)ch)) c[(char)tolower(ch)]++;\nfor (auto &[k, v] : c) cout << k << \" \" << v << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "anagram-check",
+   "name": "Czy dwa słowa są anagramami",
+   "description": "",
+   "algos": [
+    "string_processing",
+    "sorting"
+   ],
+   "shapes": [
+    "STR2"
+   ],
+   "signals": {
+    "any": [
+     "anagram\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string a, b; cin >> a >> b;\nsort(a.begin(), a.end()); sort(b.begin(), b.end());\ncout << (a == b ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "takt\ntkat\n",
+    "output": "{{YES}}\n"
+   },
+   "brute": "string a, b; cin >> a >> b;\nbool ok = a.size() == b.size();\nfor (char c = 0; c < 127 && ok; c++) if (count(a.begin(), a.end(), c) != count(b.begin(), b.end(), c)) ok = false;   // brute\ncout << (ok ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";"
+  },
+  {
+   "id": "anagram-check-multi",
+   "name": "Anagramy — wiele par",
+   "description": "",
+   "algos": [
+    "string_processing",
+    "sorting"
+   ],
+   "shapes": [
+    "T*STR2",
+    "NSTR2"
+   ],
+   "signals": {
+    "any": [
+     "anagram\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll t; cin >> t;\nwhile (t--) { string a, b; cin >> a >> b; sort(a.begin(), a.end()); sort(b.begin(), b.end()); cout << (a == b ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\"; }",
+   "example": {
+    "input": "2\nab ba\nab bb\n",
+    "output": "{{YES}}\n{{NO}}\n"
+   }
+  },
+  {
+   "id": "to-upper",
+   "name": "Zamień na wielkie litery",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "STR",
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "wielk\\w* liter",
+     "duz\\w* liter"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; getline(cin, s);\nfor (auto &c : s) c = toupper((unsigned char)c);\ncout << s << \"\\n\";",
+   "example": {
+    "input": "Ala ma kota\n",
+    "output": "ALA MA KOTA\n"
+   },
+   "variants": [
+    {
+     "id": "to-lower",
+     "name": "Zamień na małe litery",
+     "solve": "string s; getline(cin, s);\nfor (auto &c : s) c = tolower((unsigned char)c);\ncout << s << \"\\n\";"
+    },
+    {
+     "id": "swap-case",
+     "name": "Zamień wielkość liter",
+     "solve": "string s; getline(cin, s);\nfor (auto &c : s) c = isupper((unsigned char)c) ? tolower(c) : toupper(c);\ncout << s << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "caesar-k-text",
+   "name": "Szyfr Cezara (k, potem tekst)",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "NSTR",
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "cezar\\w*",
+     "szyfr\\w*",
+     "przesun\\w* (w alfabecie|liter)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll k; cin >> k; string s; getline(cin >> ws, s);\nk = ((k % 26) + 26) % 26;\nfor (auto &c : s) { if (c >= 'a' && c <= 'z') c = 'a' + (c - 'a' + k) % 26; else if (c >= 'A' && c <= 'Z') c = 'A' + (c - 'A' + k) % 26; }\ncout << s << \"\\n\";",
+   "example": {
+    "input": "3\nabz\n",
+    "output": "dec\n"
+   },
+   "variants": [
+    {
+     "id": "caesar-decode",
+     "name": "Szyfr Cezara — odszyfrowanie",
+     "solve": "ll k; cin >> k; string s; getline(cin >> ws, s);\nk = ((-k % 26) + 26) % 26;\nfor (auto &c : s) { if (c >= 'a' && c <= 'z') c = 'a' + (c - 'a' + k) % 26; else if (c >= 'A' && c <= 'Z') c = 'A' + (c - 'A' + k) % 26; }\ncout << s << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "caesar-mode",
+   "name": "Szyfr Cezara (tryb szyfruj/odszyfruj, k, tekst)",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "cezar\\w*",
+     "szyfr\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string mode; ll k; cin >> mode >> k; string s; getline(cin >> ws, s);\nif (mode[0] == 'o' || mode[0] == 'd' || mode[0] == 'O' || mode[0] == 'D') k = -k;\nk = ((k % 26) + 26) % 26;\nfor (auto &c : s) { if (c >= 'a' && c <= 'z') c = 'a' + (c - 'a' + k) % 26; else if (c >= 'A' && c <= 'Z') c = 'A' + (c - 'A' + k) % 26; }\ncout << s << \"\\n\";",
+   "example": {
+    "input": "szyfruj\n3\nabz\n",
+    "output": "dec\n"
+   }
+  },
+  {
+   "id": "brackets-check",
+   "name": "Poprawność nawiasowania",
+   "description": "",
+   "algos": [
+    "simulation_queue",
+    "string_processing"
+   ],
+   "shapes": [
+    "STR"
+   ],
+   "signals": {
+    "any": [
+     "nawias\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; cin >> s;\nstring st; bool ok = true;\nfor (char c : s) { if (c == '(' || c == '[' || c == '{') st.push_back(c); else if (c == ')' || c == ']' || c == '}') { char o = c == ')' ? '(' : (c == ']' ? '[' : '{'); if (st.empty() || st.back() != o) { ok = false; break; } st.pop_back(); } }\ncout << (ok && st.empty() ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "(()())\n",
+    "output": "{{YES}}\n"
+   },
+   "brute": "string s; cin >> s;\n// brute: usuwaj pary „()”, „[]”, „{}” stojące obok siebie, dopóki się da\nbool ch = true; while (ch) { ch = false; for (string p : {\"()\", \"[]\", \"{}\"}) { size_t i; while ((i = s.find(p)) != string::npos) { s.erase(i, 2); ch = true; } } }\ncout << (s.empty() ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";"
+  },
+  {
+   "id": "brackets-check-multi",
+   "name": "Poprawność nawiasowania — wiele napisów",
+   "description": "",
+   "algos": [
+    "simulation_queue",
+    "string_processing"
+   ],
+   "shapes": [
+    "NLINES",
+    "T*STR"
+   ],
+   "signals": {
+    "any": [
+     "nawias\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nwhile (n--) { string s; cin >> s; string st; bool ok = true; for (char c : s) { if (c == '(' || c == '[' || c == '{') st.push_back(c); else if (c == ')' || c == ']' || c == '}') { char o = c == ')' ? '(' : (c == ']' ? '[' : '{'); if (st.empty() || st.back() != o) { ok = false; break; } st.pop_back(); } } cout << (ok && st.empty() ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\"; }",
+   "example": {
+    "input": "2\n(())\n(()\n",
+    "output": "{{YES}}\n{{NO}}\n"
+   }
+  },
+  {
+   "id": "count-words",
+   "name": "Liczba słów",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "(ile|liczb\\w*) (jest )?slow",
+     "zlicz\\w* slow"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 0.7,
+   "globals": "",
+   "solve": "string w; ll c = 0; while (cin >> w) c++;\ncout << c << \"\\n\";",
+   "example": {
+    "input": "Ala ma kota\n",
+    "output": "3\n"
+   }
+  },
+  {
+   "id": "longest-word",
+   "name": "Najdłuższe słowo",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "najdluzsz\\w* slow"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 0.7,
+   "globals": "",
+   "solve": "string w, b; while (cin >> w) if (w.size() > b.size()) b = w;\ncout << b << \"\\n\";",
+   "example": {
+    "input": "Ala ma kotka\n",
+    "output": "kotka\n"
+   }
+  },
+  {
+   "id": "lcs-length",
+   "name": "Najdłuższy wspólny podciąg (LCS)",
+   "description": "",
+   "algos": [
+    "dp"
+   ],
+   "shapes": [
+    "STR2"
+   ],
+   "signals": {
+    "any": [
+     "wspoln\\w* podciag",
+     "\\blcs\\b"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string a, b; cin >> a >> b;\nll n = a.size(), m = b.size(); vector<vector<int>> f(n + 1, vector<int>(m + 1, 0));\nfor (ll i = 1; i <= n; i++) for (ll j = 1; j <= m; j++) f[i][j] = a[i-1] == b[j-1] ? f[i-1][j-1] + 1 : max(f[i-1][j], f[i][j-1]);\ncout << f[n][m] << \"\\n\";",
+   "example": {
+    "input": "abcde\nace\n",
+    "output": "3\n"
+   },
+   "brute": "string a, b; cin >> a >> b;\nif (a.size() > b.size()) swap(a, b);\nll n = a.size(), best = 0;   // brute: każdy podciąg krótszego słowa (2^n) — tylko dla małych n\nfor (ll mask = 0; mask < (1LL << n); mask++) { string t; for (ll i = 0; i < n; i++) if (mask >> i & 1) t += a[i];\n    size_t j = 0; for (char c : b) if (j < t.size() && t[j] == c) j++; if (j == t.size()) best = max(best, (ll)t.size()); }\ncout << best << \"\\n\";"
+  },
+  {
+   "id": "edit-distance",
+   "name": "Odległość edycyjna",
+   "description": "",
+   "algos": [
+    "dp"
+   ],
+   "shapes": [
+    "STR2"
+   ],
+   "signals": {
+    "any": [
+     "odleglosc\\w* edycyjn",
+     "levenshtein",
+     "(wstawien|usunie|zamian)\\w*.{0,40}(wstawien|usunie|zamian)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string a, b; cin >> a >> b;\nll n = a.size(), m = b.size(); vector<vector<ll>> f(n + 1, vector<ll>(m + 1));\nfor (ll i = 0; i <= n; i++) f[i][0] = i; for (ll j = 0; j <= m; j++) f[0][j] = j;\nfor (ll i = 1; i <= n; i++) for (ll j = 1; j <= m; j++) f[i][j] = min({f[i-1][j] + 1, f[i][j-1] + 1, f[i-1][j-1] + (a[i-1] != b[j-1])});\ncout << f[n][m] << \"\\n\";",
+   "example": {
+    "input": "kot\nkat\n",
+    "output": "1\n"
+   }
+  },
+  {
+   "id": "pattern-count",
+   "name": "Ile razy wzorzec występuje w tekście",
+   "description": "",
+   "algos": [
+    "kmp",
+    "string_processing"
+   ],
+   "shapes": [
+    "STR2"
+   ],
+   "signals": {
+    "any": [
+     "wzorzec\\w*|wzorc\\w*",
+     "wystapien\\w*",
+     "podslow\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string t, p; cin >> t >> p;\nstring s = p + '#' + t; vector<int> pi(s.size(), 0); ll c = 0;\nfor (size_t i = 1; i < s.size(); i++) { int k = pi[i-1]; while (k > 0 && s[i] != s[k]) k = pi[k-1]; if (s[i] == s[k]) k++; pi[i] = k; if ((size_t)k == p.size()) c++; }\ncout << c << \"\\n\";",
+   "example": {
+    "input": "abababa\naba\n",
+    "output": "3\n"
+   },
+   "variants": [
+    {
+     "id": "pattern-count-rev",
+     "name": "Wzorzec (najpierw wzorzec, potem tekst)",
+     "solve": "string p, t; cin >> p >> t;\nstring s = p + '#' + t; vector<int> pi(s.size(), 0); ll c = 0;\nfor (size_t i = 1; i < s.size(); i++) { int k = pi[i-1]; while (k > 0 && s[i] != s[k]) k = pi[k-1]; if (s[i] == s[k]) k++; pi[i] = k; if ((size_t)k == p.size()) c++; }\ncout << c << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "count-char-c",
+   "name": "Ile razy dany znak występuje w napisie",
+   "description": "",
+   "algos": [
+    "string_processing"
+   ],
+   "shapes": [
+    "STR2"
+   ],
+   "signals": {
+    "any": [
+     "ile razy",
+     "wystepuj\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 0.6,
+   "globals": "",
+   "solve": "string s, c; cin >> s >> c;\ncout << count(s.begin(), s.end(), c[0]) << \"\\n\";",
+   "example": {
+    "input": "banana\na\n",
+    "output": "3\n"
+   }
+  },
+  {
+   "id": "rpn-eval",
+   "name": "Odwrotna Notacja Polska (ONP)",
+   "description": "",
+   "algos": [
+    "simulation_queue"
+   ],
+   "shapes": [
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "\\bonp\\b",
+     "odwrotn\\w* notacj\\w* polsk"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "vector<ll> st; string t;\nwhile (cin >> t) { if (t.size() == 1 && string(\"+-*/\").find(t[0]) != string::npos) { ll b = st.back(); st.pop_back(); ll a = st.back(); st.pop_back(); ll r = t[0] == '+' ? a + b : t[0] == '-' ? a - b : t[0] == '*' ? a * b : a / b; st.push_back(r); } else if (t == \"=\") break; else st.push_back(stoll(t)); }\nif (!st.empty()) cout << st.back() << \"\\n\";",
+   "example": {
+    "input": "3 4 + 2 *\n",
+    "output": "14\n"
+   }
+  }
+ ]
+}

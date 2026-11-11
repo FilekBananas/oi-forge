@@ -1,0 +1,713 @@
+{
+ "chunk": "oi-workflow",
+ "articles": [
+  {
+   "id": "oi-brute-generator",
+   "title": "Jak napisać brute force i generator testów",
+   "category": "OI praktyka",
+   "tags": [
+    "brute force",
+    "brut",
+    "generator",
+    "testy losowe",
+    "rozwiązanie wzorcowe",
+    "seed",
+    "mt19937"
+   ],
+   "aliases": [
+    "jak napisac brute",
+    "brute force c++",
+    "generator testow c++",
+    "jak generowac testy",
+    "losowe testy",
+    "wolne rozwiazanie wzorcowe",
+    "generator drzewa losowego",
+    "generator grafu"
+   ],
+   "summary": "Brute force to najprostsze, oczywiście poprawne (choć wolne) rozwiązanie — np. sprawdzenie wszystkich możliwości. Generator to program wypisujący losowy MAŁY test dla zadanego ziarna. Razem z Twoim rozwiązaniem tworzą stress-test.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Generator ciągu liczb",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// gen.cpp — użycie: ./gen <seed>\nint main(int argc, char* argv[]) {\n    mt19937 rng(argc > 1 ? atoi(argv[1]) : 1);\n    auto los = [&](int a, int b) { return uniform_int_distribution<int>(a, b)(rng); };\n    int n = los(1, 8);                 // MAŁE dane — łatwiej znaleźć i zrozumieć błąd\n    cout << n << '\\n';\n    for (int i = 0; i < n; i++) cout << los(-5, 5) << \" \\n\"[i == n - 1];\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Brute force do porównania",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// brute.cpp — maksymalna suma spójnego fragmentu w O(n^3): oczywiście poprawne\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    long long best = LLONG_MIN;\n    for (int l = 0; l < n; l++)\n        for (int r = l; r < n; r++) {\n            long long s = 0;\n            for (int k = l; k <= r; k++) s += a[k];\n            best = max(best, s);\n        }\n    cout << best << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Generator losowego drzewa",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Losowe drzewo: ojciec wierzchołka i to losowy z 1..i-1, potem losowa permutacja etykiet\nint main(int argc, char* argv[]) {\n    mt19937 rng(argc > 1 ? atoi(argv[1]) : 1);\n    int n = uniform_int_distribution<int>(1, 10)(rng);\n    vector<int> perm(n);\n    iota(perm.begin(), perm.end(), 1);\n    shuffle(perm.begin(), perm.end(), rng);\n    cout << n << '\\n';\n    for (int i = 2; i <= n; i++) {\n        int p = uniform_int_distribution<int>(1, i - 1)(rng);\n        cout << perm[p - 1] << ' ' << perm[i - 1] << '\\n';\n    }\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak napisac brute",
+      "brute force c++",
+      "co to jest brut",
+      "wolne rozwiazanie wzorcowe",
+      "naiwne rozwiazanie",
+      "jak napisać brute force do sprawdzania",
+      "wolne rozwiązanie do sprawdzania wzorcówki"
+     ],
+     "a": "Brute force ma być **oczywiście poprawny**, a nie szybki: sprawdź wszystkie możliwości wprost z definicji w treści\n(wszystkie przedziały, podzbiory, permutacje). Nie używaj w nim sprytnych obserwacji z rozwiązania głównego — wtedy\noba programy mogą mieć ten sam błąd. Sprawdź brute na przykładzie z treści."
+    },
+    {
+     "q": [
+      "generator testow c++",
+      "jak generowac testy",
+      "losowe testy c++",
+      "jak napisac generator"
+     ],
+     "a": "Generator dostaje ziarno jako argument (`./gen 17`), tworzy `mt19937 rng(seed)` i wypisuje test zgodny z formatem wejścia.\nUżywaj **małych** rozmiarów (n ≤ 10, wartości np. 1..10) — błędy wychodzą szybciej, a test da się przeanalizować ręcznie.\nZiarno z argumentu sprawia, że test można odtworzyć."
+    },
+    {
+     "q": [
+      "generator losowego drzewa",
+      "losowe drzewo c++",
+      "jak wygenerowac drzewo",
+      "random tree generator"
+     ],
+     "a": "Dla każdego wierzchołka `i ≥ 2` wylosuj ojca spośród `1..i-1` — zawsze powstaje drzewo. Żeby nie było zawsze „1 korzeniem”,\nprzetasuj etykiety losową permutacją. Dla ścieżek/gwiazd (przypadki skrajne) dodaj osobne tryby."
+    },
+    {
+     "q": [
+      "generator grafu",
+      "losowy graf bez multikrawedzi",
+      "random graph generator c++"
+     ],
+     "a": "Losuj pary `(a, b)` z `a != b` i odrzucaj powtórzenia (trzymaj `set<pair<int,int>>`). Jeśli graf ma być spójny, najpierw\nwygeneruj losowe drzewo, a potem dodaj dodatkowe krawędzie.",
+     "code": "mt19937 rng(7);\nint n = 6, m = 8;\nset<pair<int,int>> kr;\nwhile ((int)kr.size() < m) {\n    int a = uniform_int_distribution<int>(1, n)(rng), b = uniform_int_distribution<int>(1, n)(rng);\n    if (a == b) continue;\n    if (a > b) swap(a, b);\n    kr.insert({a, b});\n}\ncout << n << ' ' << m << '\\n';\nfor (auto [a, b] : kr) cout << a << ' ' << b << '\\n';"
+    },
+    {
+     "q": [
+      "generator permutacji",
+      "losowa permutacja test",
+      "generator napisow"
+     ],
+     "a": "Permutacja: `iota` + `shuffle`. Napis: losuj znaki z małego alfabetu (np. `'a' + los(0, 2)`) — przy 2–3 literach częściej\npojawiają się powtórzenia i palindromy, które wywołują błędy.",
+     "code": "mt19937 rng(3);\nint n = 8;\nstring s;\nfor (int i = 0; i < n; i++) s += char('a' + uniform_int_distribution<int>(0, 2)(rng));\nvector<int> p(n);\niota(p.begin(), p.end(), 1);\nshuffle(p.begin(), p.end(), rng);\ncout << s << '\\n';"
+    },
+    {
+     "q": [
+      "dlaczego male testy",
+      "jak duze testy w stress tescie",
+      "male czy duze dane do testow"
+     ],
+     "a": "Małe testy (n ≤ 10) wystarczają do znalezienia większości błędów logicznych, brute działa na nich błyskawicznie, a znaleziony\nkontrprzykład łatwo prześledzić ręcznie. Duże testy generuj osobno — do sprawdzenia czasu działania i przepełnień."
+    },
+    {
+     "q": [
+      "generator duzego testu",
+      "test na maksymalne dane",
+      "jak sprawdzic czas na duzym tescie"
+     ],
+     "a": "Ten sam generator z parametrem rozmiaru (np. `./gen 1 200000`) wygeneruje test maksymalny. Uruchom na nim tylko rozwiązanie\ngłówne i zmierz czas. Sprawdź też przypadki skrajne: wszystkie wartości maksymalne, posortowane dane, ścieżka jako drzewo.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main(int argc, char* argv[]) {\n    mt19937 rng(argc > 1 ? atoi(argv[1]) : 1);\n    int n = argc > 2 ? atoi(argv[2]) : 10;\n    cout << n << '\\n';\n    for (int i = 0; i < n; i++) cout << uniform_int_distribution<int>(1, 1000000000)(rng) << \" \\n\"[i == n - 1];\n}"
+    },
+    {
+     "q": [
+      "brute na podzbiorach",
+      "brute force po wszystkich podzbiorach",
+      "sprawdz wszystkie mozliwosci c++"
+     ],
+     "a": "Dla n ≤ 20 przejdź wszystkie maski `0..2^n - 1`; dla permutacji użyj `next_permutation` na posortowanym wektorze.",
+     "code": "vector<int> p = {1, 2, 3};\ndo {\n    for (int x : p) cout << x;\n    cout << ' ';\n} while (next_permutation(p.begin(), p.end()));\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "oi-stress-test",
+    "num-random",
+    "oi-strategy"
+   ]
+  },
+  {
+   "id": "oi-stress-test",
+   "title": "Stress-test: automatyczne porównanie rozwiązania z brute force (skrypt / testerka)",
+   "category": "OI praktyka",
+   "tags": [
+    "stress-test",
+    "testerka",
+    "porównanie",
+    "brute",
+    "generator",
+    "skrypt",
+    "diff",
+    "fc"
+   ],
+   "aliases": [
+    "stress test",
+    "jak zrobic stress test",
+    "testerka",
+    "porownanie z brutem",
+    "skrypt do testowania",
+    "jak znalezc test na ktorym program sie myli",
+    "stress testing c++",
+    "bash petla testy",
+    "testowanie na losowych danych"
+   ],
+   "summary": "Stress-test to pętla: wygeneruj losowy test → uruchom rozwiązanie i brute → porównaj wyniki → przy różnicy zatrzymaj się i pokaż test. W kilka minut znajduje kontrprzykłady, których ręcznie szuka się godzinami.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "stress.py — przenośny (Linux, macOS, Windows)",
+     "code": "#!/usr/bin/env python3\n\"\"\"Stress-test: python3 stress.py  (wymaga skompilowanych sol, brute, gen).\"\"\"\nimport os\nimport subprocess\nimport sys\n\nEXE = \".exe\" if os.name == \"nt\" else \"\"\nSOL, BRUTE, GEN = \"./sol\" + EXE, \"./brute\" + EXE, \"./gen\" + EXE\n\ndef run(cmd, inp=None):\n    return subprocess.run(cmd, input=inp, capture_output=True, text=True, timeout=10).stdout\n\nfor seed in range(1, 2001):\n    test = run([GEN, str(seed)])\n    out_sol = run([SOL], test)\n    out_brute = run([BRUTE], test)\n    if out_sol.split() != out_brute.split():      # porównanie słowo po słowie\n        print(f\"ROZNICA dla seed={seed}\")\n        print(\"Test:\\n\" + test)\n        print(\"sol:  \", out_sol)\n        print(\"brute:\", out_brute)\n        with open(\"fail.in\", \"w\") as f:\n            f.write(test)\n        sys.exit(1)\n    if seed % 100 == 0:\n        print(f\"{seed} testow OK\")\nprint(\"Wszystkie testy OK\")"
+    },
+    {
+     "type": "code",
+     "lang": "bash",
+     "title": "stress.sh — Linux/macOS",
+     "code": "#!/bin/bash\n# Kompilacja raz, potem pętla po ziarnach\ng++ -std=c++20 -O2 sol.cpp -o sol\ng++ -std=c++20 -O2 brute.cpp -o brute\ng++ -std=c++20 -O2 gen.cpp -o gen\nfor i in $(seq 1 1000); do\n    ./gen $i > in.txt\n    ./sol < in.txt > out1.txt\n    ./brute < in.txt > out2.txt\n    if ! diff -w out1.txt out2.txt > /dev/null; then\n        echo \"ROZNICA dla seed=$i\"\n        cat in.txt\n        echo \"sol:\";   cat out1.txt\n        echo \"brute:\"; cat out2.txt\n        exit 1\n    fi\ndone\necho \"Wszystkie testy OK\""
+    },
+    {
+     "type": "code",
+     "lang": "bat",
+     "title": "stress.bat — Windows (cmd)",
+     "code": "@echo off\nrem stress.bat — Windows (cmd)\nfor /L %%i in (1,1,1000) do (\n    gen.exe %%i > in.txt\n    sol.exe < in.txt > out1.txt\n    brute.exe < in.txt > out2.txt\n    fc /w out1.txt out2.txt > nul\n    if errorlevel 1 (\n        echo ROZNICA dla seed=%%i\n        type in.txt\n        exit /b 1\n    )\n)\necho Wszystkie testy OK"
+    },
+    {
+     "type": "text",
+     "md": "**Kolejne kroki po znalezieniu różnicy:** zapisz test (`fail.in`), zmniejsz go ręcznie, jeśli się da, i prześledź\nrozwiązanie na kartce albo z wypisywaniem stanu na `cerr`. Po poprawce uruchom stress-test ponownie — często jest\nwięcej niż jeden błąd. W OI Forge możesz to samo zrobić w narzędziach z grupy „Testowanie”."
+    },
+    {
+     "type": "warn",
+     "md": "Jeśli zadanie dopuszcza wiele poprawnych odpowiedzi, porównywanie wyjść znak w znak nie zadziała — napisz program\nsprawdzający (checker), który weryfikuje poprawność odpowiedzi rozwiązania dla danego testu."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak zrobic stress test",
+      "stress test c++",
+      "porownanie z brutem",
+      "testerka",
+      "stress testing"
+     ],
+     "a": "Potrzebujesz trzech programów: `sol` (Twoje rozwiązanie), `brute` (wolne, pewne), `gen` (losowy mały test z ziarna).\nSkrypt w pętli: `gen i > in`, `sol < in > out1`, `brute < in > out2`, porównaj `out1` i `out2`; przy różnicy wypisz test\ni zakończ. Gotowe skrypty (Python — działa wszędzie, bash, bat) są w treści artykułu."
+    },
+    {
+     "q": [
+      "skrypt stress test python",
+      "stress test windows",
+      "testerka w pythonie",
+      "przenosny stress test"
+     ],
+     "a": "Python działa tak samo na Windows, Linuksie i macOS, więc to najwygodniejszy język skryptu. `subprocess.run` z `input=`\npodaje test na wejście programu, a porównanie `out1.split() == out2.split()` ignoruje różnice w białych znakach.",
+     "code": "#!/usr/bin/env python3\n\"\"\"Stress-test: python3 stress.py  (wymaga skompilowanych sol, brute, gen).\"\"\"\nimport os\nimport subprocess\nimport sys\n\nEXE = \".exe\" if os.name == \"nt\" else \"\"\nSOL, BRUTE, GEN = \"./sol\" + EXE, \"./brute\" + EXE, \"./gen\" + EXE\n\ndef run(cmd, inp=None):\n    return subprocess.run(cmd, input=inp, capture_output=True, text=True, timeout=10).stdout\n\nfor seed in range(1, 2001):\n    test = run([GEN, str(seed)])\n    out_sol = run([SOL], test)\n    out_brute = run([BRUTE], test)\n    if out_sol.split() != out_brute.split():      # porównanie słowo po słowie\n        print(f\"ROZNICA dla seed={seed}\")\n        print(\"Test:\\n\" + test)\n        print(\"sol:  \", out_sol)\n        print(\"brute:\", out_brute)\n        with open(\"fail.in\", \"w\") as f:\n            f.write(test)\n        sys.exit(1)\n    if seed % 100 == 0:\n        print(f\"{seed} testow OK\")\nprint(\"Wszystkie testy OK\")",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "stress test bash",
+      "petla bash testy",
+      "skrypt sh do testowania",
+      "for i in seq bash diff"
+     ],
+     "a": "W bashu: pętla `for i in $(seq 1 1000)`, generowanie testu z ziarnem `$i`, uruchomienie obu programów z przekierowaniem\ni `diff -w` (ignoruje różnice w spacjach). `if ! diff ...` zatrzymuje pętlę przy pierwszej różnicy.",
+     "code": "#!/bin/bash\n# Kompilacja raz, potem pętla po ziarnach\ng++ -std=c++20 -O2 sol.cpp -o sol\ng++ -std=c++20 -O2 brute.cpp -o brute\ng++ -std=c++20 -O2 gen.cpp -o gen\nfor i in $(seq 1 1000); do\n    ./gen $i > in.txt\n    ./sol < in.txt > out1.txt\n    ./brute < in.txt > out2.txt\n    if ! diff -w out1.txt out2.txt > /dev/null; then\n        echo \"ROZNICA dla seed=$i\"\n        cat in.txt\n        echo \"sol:\";   cat out1.txt\n        echo \"brute:\"; cat out2.txt\n        exit 1\n    fi\ndone\necho \"Wszystkie testy OK\"",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "stress test bat",
+      "petla w cmd windows",
+      "fc w petli",
+      "testowanie na windows skrypt"
+     ],
+     "a": "W cmd: `for /L %%i in (1,1,1000) do (...)`, a porównanie przez `fc /w` (ignoruje białe znaki); `if errorlevel 1` oznacza\nróżnicę. W pliku `.bat` zmienna pętli to `%%i`, w konsoli `%i`.",
+     "code": "@echo off\nrem stress.bat — Windows (cmd)\nfor /L %%i in (1,1,1000) do (\n    gen.exe %%i > in.txt\n    sol.exe < in.txt > out1.txt\n    brute.exe < in.txt > out2.txt\n    fc /w out1.txt out2.txt > nul\n    if errorlevel 1 (\n        echo ROZNICA dla seed=%%i\n        type in.txt\n        exit /b 1\n    )\n)\necho Wszystkie testy OK",
+     "lang": "bat"
+    },
+    {
+     "q": [
+      "stress test nic nie znajduje",
+      "brute i sol zgodne a WA",
+      "stress test nie wykrywa bledu"
+     ],
+     "a": "Możliwe przyczyny: (1) testy za małe albo za mało różnorodne (np. brak przypadków n = 1, ujemnych liczb, powtórzeń),\n(2) błąd pojawia się tylko przy dużych danych (przepełnienie, TLE, za mała tablica) — przetestuj duży test osobno,\n(3) brute ma ten sam błąd (np. źle zrozumiana treść), (4) zły format wyjścia, którego porównanie „po słowach” nie widzi."
+    },
+    {
+     "q": [
+      "checker wiele odpowiedzi",
+      "jak testowac gdy wiele poprawnych odpowiedzi",
+      "weryfikator odpowiedzi"
+     ],
+     "a": "Napisz `checker`, który czyta test i odpowiedź rozwiązania i sprawdza, czy jest poprawna (np. czy wypisana ścieżka istnieje\ni ma optymalną długość — długość optymalną weź z brute'a). W skrypcie zamiast porównania wyjść uruchamiaj checker.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n// checker: argv[1] = test, argv[2] = odpowiedź; sprawdza, czy wypisana para (i, j) ma a[i] + a[j] == x\nint main(int argc, char* argv[]) {\n    if (argc < 3) return 2;\n    ifstream test(argv[1]), odp(argv[2]);\n    int n; long long x;\n    test >> n >> x;\n    vector<long long> a(n + 1);\n    for (int i = 1; i <= n; i++) test >> a[i];\n    int i, j;\n    if (!(odp >> i >> j) || i < 1 || j > n || i >= j || a[i] + a[j] != x) { cout << \"ZLE\\n\"; return 1; }\n    cout << \"OK\\n\";\n}"
+    },
+    {
+     "q": [
+      "test na czas stress",
+      "sprawdzanie tle lokalnie",
+      "jak sprawdzic czy program jest szybki"
+     ],
+     "a": "Osobno od stress-testu: wygeneruj test o maksymalnym rozmiarze i zmierz czas `sol` (`time ./sol < big.in > /dev/null`).\nSprawdź też przypadki najgorsze dla Twojego algorytmu (np. posortowane dane dla quicksorta, ścieżka dla DFS).",
+     "code": "time ./sol < big.in > /dev/null",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "ile testow w stress tescie",
+      "jak dlugo puszczac stress test",
+      "ile iteracji stress testu"
+     ],
+     "a": "Kilkaset do kilku tysięcy małych testów zwykle wystarcza; to kilkadziesiąt sekund. Jeśli nic nie znaleziono, zmień parametry\ngeneratora (inne zakresy, więcej powtórzeń, skrajne przypadki) i puść ponownie."
+    }
+   ],
+   "related": [
+    "oi-brute-generator",
+    "tool-diff-files",
+    "tool-redirect-io",
+    "num-random",
+    "oi-interactive"
+   ]
+  },
+  {
+   "id": "oi-compile-flags",
+   "title": "Kompilacja i flagi: -O2, -Wall -Wextra, sanitizery, -D_GLIBCXX_DEBUG",
+   "category": "OI praktyka",
+   "tags": [
+    "kompilacja",
+    "flagi",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "sanitizer",
+    "-fsanitize",
+    "_GLIBCXX_DEBUG",
+    "ostrzeżenia"
+   ],
+   "aliases": [
+    "flagi kompilacji",
+    "jak kompilowac c++",
+    "-Wall -Wextra",
+    "fsanitize address",
+    "sanitizer c++",
+    "_GLIBCXX_DEBUG",
+    "jakie flagi na olimpiade",
+    "g++ flagi debug",
+    "ostrzezenia kompilatora"
+   ],
+   "summary": "Do testowania kompiluj z ostrzeżeniami i sanitizerami: `g++ -std=c++20 -Wall -Wextra -g -fsanitize=address,undefined -D_GLIBCXX_DEBUG prog.cpp -o prog`. Do pomiaru czasu — jak na sprawdzarce: `g++ -std=c++20 -O2 prog.cpp -o prog`.",
+   "level": 2,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Flaga",
+      "Co robi",
+      "Kiedy"
+     ],
+     "rows": [
+      [
+       "`-std=c++20`",
+       "wersja języka",
+       "zawsze (taka jak na sprawdzarce lub niższa)"
+      ],
+      [
+       "`-O2`",
+       "optymalizacja",
+       "pomiar czasu, wersja „jak na sprawdzarce”"
+      ],
+      [
+       "`-Wall -Wextra`",
+       "ostrzeżenia o typowych błędach",
+       "zawsze"
+      ],
+      [
+       "`-Wshadow`",
+       "ostrzega przed przesłanianiem zmiennych",
+       "przydatne"
+      ],
+      [
+       "`-g`",
+       "informacje dla debuggera (numery linii)",
+       "debugowanie"
+      ],
+      [
+       "`-fsanitize=address`",
+       "wykrywa wyjście poza tablicę, use-after-free",
+       "testowanie (Linux/macOS)"
+      ],
+      [
+       "`-fsanitize=undefined`",
+       "wykrywa przepełnienie int, złe przesunięcia itp.",
+       "testowanie"
+      ],
+      [
+       "`-D_GLIBCXX_DEBUG`",
+       "sprawdzanie indeksów i iteratorów w STL (GCC)",
+       "testowanie"
+      ],
+      [
+       "`-DLOCAL`",
+       "własne makro do kodu tylko lokalnego",
+       "debug, freopen"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "bash",
+     "title": "Dwa zestawy flag",
+     "code": "# wersja do szukania błędów\ng++ -std=c++20 -Wall -Wextra -Wshadow -g -fsanitize=address,undefined -D_GLIBCXX_DEBUG -DLOCAL prog.cpp -o prog\n# wersja \"jak na sprawdzarce\" (pomiar czasu)\ng++ -std=c++20 -O2 prog.cpp -o prog"
+    },
+    {
+     "type": "warn",
+     "md": "Sanitizery nie działają w MinGW na Windows (zwykle błąd linkowania). Tam użyj `-D_GLIBCXX_DEBUG`, `-ftrapv` albo WSL.\nNa macOS polecenie `g++` to często Clang (bez `bits/stdc++.h`) — zainstaluj GCC z Homebrew (`g++-14`, `g++-15`…)."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jakie flagi kompilacji",
+      "flagi do testowania",
+      "jak kompilowac do debugowania",
+      "g++ flagi debug",
+      "best compiler flags cp"
+     ],
+     "a": "Do szukania błędów: `-std=c++20 -Wall -Wextra -g -fsanitize=address,undefined -D_GLIBCXX_DEBUG`. Ostrzeżenia\nwyłapują literówki (`=` zamiast `==`, porównania signed/unsigned), sanitizery — wyjścia poza tablicę i przepełnienia\nw trakcie działania, `_GLIBCXX_DEBUG` — złe indeksy w `vector`. Do pomiaru czasu kompiluj z `-O2` bez sanitizerów.",
+     "code": "g++ -std=c++20 -Wall -Wextra -g -fsanitize=address,undefined -D_GLIBCXX_DEBUG prog.cpp -o prog",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "fsanitize address",
+      "address sanitizer",
+      "asan c++",
+      "jak uzyc sanitizera"
+     ],
+     "a": "`-fsanitize=address` (ASan) zatrzymuje program przy pierwszym niepoprawnym dostępie do pamięci (poza tablicę, po `delete`,\nprzepełnienie stosu) i wypisuje stos wywołań z numerami linii (dodaj `-g`). Program działa ~2× wolniej — tylko do testów.",
+     "code": "g++ -std=c++20 -g -fsanitize=address prog.cpp -o prog && ./prog < test.in",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "fsanitize undefined",
+      "ubsan",
+      "wykrywanie przepelnienia sanitizer",
+      "runtime error signed integer overflow"
+     ],
+     "a": "`-fsanitize=undefined` (UBSan) wykrywa niezdefiniowane zachowania: przepełnienie typów ze znakiem, przesunięcie o za dużo\nbitów, dzielenie przez zero, złe rzutowania. Komunikat „runtime error: signed integer overflow” wskazuje plik i linię."
+    },
+    {
+     "q": [
+      "-O2 co daje",
+      "optymalizacja O2",
+      "czy kompilowac z O2",
+      "O2 vs O0"
+     ],
+     "a": "`-O2` włącza optymalizacje — program bywa kilka-kilkanaście razy szybszy niż bez nich (`-O0`). Sprawdzarki kompilują\nz optymalizacją, więc czas mierz z `-O2`. Do debugowania krok po kroku lepsze `-O0 -g` (zmienne nie „znikają”)."
+    },
+    {
+     "q": [
+      "-Wall -Wextra",
+      "ostrzezenia kompilatora",
+      "czy czytac warningi",
+      "warning c++ co robic"
+     ],
+     "a": "Czytaj je! Najcenniejsze: „suggest parentheses around assignment” (`=` w `if`), „comparison of integer expressions of different\nsignedness” (`int` vs `size()`), „may be used uninitialized”, „control reaches end of non-void function” (brak `return`),\n„unused variable” (często literówka w nazwie)."
+    },
+    {
+     "q": [
+      "sanitizer windows",
+      "fsanitize mingw nie dziala",
+      "address sanitizer windows",
+      "cannot find -lasan"
+     ],
+     "a": "MinGW na Windows zwykle nie ma bibliotek sanitizerów (błąd typu „cannot find -lasan”). Opcje: `-D_GLIBCXX_DEBUG` (sprawdza STL),\n`-ftrapv` (przerywa przy przepełnieniu), WSL z Linuksem albo Clang z Visual Studio (`/fsanitize=address`)."
+    },
+    {
+     "q": [
+      "_GLIBCXX_DEBUG",
+      "D_GLIBCXX_DEBUG co robi",
+      "debug mode stl gcc"
+     ],
+     "a": "Makro `_GLIBCXX_DEBUG` włącza tryb debugowania biblioteki standardowej GCC: `v[i]` sprawdza zakres, iteratory pilnują\nunieważnienia, `sort` wykrywa część błędnych komparatorów. Działa tylko z libstdc++ (GCC), mocno spowalnia."
+    },
+    {
+     "q": [
+      "jakie flagi na sprawdzarce oi",
+      "jak kompiluje sio2",
+      "wersja c++ na olimpiadzie"
+     ],
+     "a": "Dokładny kompilator i flagi podają ustalenia techniczne danej edycji/serwisu — zwykle to GCC z optymalizacją (np. `-O2`\nlub `-O3`) i dość nowym standardem C++. Nie polegaj na rozszerzeniach dostępnych tylko u Ciebie (MSVC, `-march=native`)."
+    },
+    {
+     "q": [
+      "bits/stdc++.h not found",
+      "fatal error bits stdc++ h file not found",
+      "mac bits/stdc++.h"
+     ],
+     "a": "Na macOS `g++` jest aliasem Clanga z biblioteką libc++, która nie ma `bits/stdc++.h`. Zainstaluj GCC (`brew install gcc`)\ni kompiluj `g++-14`/`g++-15` (numer wersji z Homebrew) albo dołączaj zwykłe nagłówki (`<iostream>`, `<vector>`, …).",
+     "code": "brew install gcc\ng++-15 -std=c++20 -O2 prog.cpp -o prog",
+     "lang": "bash"
+    }
+   ],
+   "related": [
+    "tool-compile-terminal",
+    "oi-debugging",
+    "pit-out-of-bounds",
+    "num-overflow"
+   ]
+  },
+  {
+   "id": "oi-debugging",
+   "title": "Debugowanie: cerr, makro debug, assert i systematyczne szukanie błędu",
+   "category": "OI praktyka",
+   "tags": [
+    "debugowanie",
+    "cerr",
+    "debug",
+    "assert",
+    "makro",
+    "dbg",
+    "szukanie błędów"
+   ],
+   "aliases": [
+    "jak debugowac",
+    "jak znalezc blad w programie",
+    "makro debug",
+    "cerr debug",
+    "assert c++",
+    "program daje zly wynik co robic",
+    "debug print c++",
+    "wypisywanie zmiennych do debugowania"
+   ],
+   "summary": "Wypisuj stan programu na `cerr` (sprawdzarka go ignoruje) przez makro, które znika bez `-DLOCAL`. Sprawdzaj założenia `assert`-em. Szukaj błędu systematycznie: najmniejszy test, który psuje wynik → prześledź stan krok po kroku.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Makro dbg i assert",
+     "code": "#include <bits/stdc++.h>\n#include <cassert>   // nowe GCC nie dołączają cassert w bits/stdc++.h\nusing namespace std;\n\n#ifdef LOCAL\ntemplate <class... T> void dbg_out(const T&... t) { ((cerr << t << ' '), ...); cerr << '\\n'; }\n#define dbg(...) cerr << \"[\" << __LINE__ << \"] \" << #__VA_ARGS__ << \": \", dbg_out(__VA_ARGS__)\n#else\n#define dbg(...)\n#endif\n\ntemplate <class T> ostream& operator<<(ostream& os, const vector<T>& v) {\n    os << '{';\n    for (size_t i = 0; i < v.size(); i++) os << (i ? \", \" : \"\") << v[i];\n    return os << '}';\n}\n\nint main() {\n    int n = 3;\n    vector<int> a = {4, 1, 7};\n    dbg(n, a);                  // z -DLOCAL: \"[21] n, a: 3 {4, 1, 7}\"\n    assert(n == (int)a.size()); // przerwie program, jeśli założenie jest fałszywe\n    cout << n << '\\n';\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Systematyczne szukanie błędu:**\n1. Znajdź **najmniejszy** test, na którym wynik jest zły (stress-test z małymi danymi).\n2. Policz poprawny wynik ręcznie albo brute'em.\n3. Wypisz stan po każdym kroku (tablica DP, odległości, zawartość struktury) i znajdź pierwszy moment, w którym różni się\n   od oczekiwanego.\n4. Sprawdź „podejrzanych”: przepełnienie, granice pętli, inicjalizację, czyszczenie w multitestach, zły typ."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak debugowac",
+      "jak znalezc blad w programie",
+      "program daje zly wynik co robic",
+      "how to debug c++"
+     ],
+     "a": "Zacznij od najmniejszego testu, na którym program się myli (stress-test). Wypisuj na `cerr` stan po kolejnych krokach\ni porównuj z obliczeniami ręcznymi. Gdy wynik się „rozjeżdża”, błąd jest w kodzie między ostatnim dobrym a pierwszym złym\nstanem. Równolegle przejrzyj typową listę: overflow, off-by-one, niezainicjalizowane zmienne, brak czyszczenia."
+    },
+    {
+     "q": [
+      "makro debug",
+      "dbg macro c++",
+      "makro do wypisywania zmiennych",
+      "#define debug"
+     ],
+     "a": "Makro z `#__VA_ARGS__` wypisuje nazwy i wartości zmiennych, a opakowane w `#ifdef LOCAL` znika przy kompilacji na\nsprawdzarce (nie trzeba usuwać przed wysłaniem). Kompiluj lokalnie z `-DLOCAL`. Pełna wersja w treści artykułu.",
+     "code": "#ifdef LOCAL\n#define dbg(x) cerr << __LINE__ << \": \" << #x << \" = \" << (x) << '\\n'\n#else\n#define dbg(x)\n#endif",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "cerr debug",
+      "czy cerr psuje wynik",
+      "cerr a sprawdzarka",
+      "wypisywanie na stderr"
+     ],
+     "a": "`cerr` pisze na standardowe wyjście błędów, które sprawdzarka zwykle ignoruje — nie zepsuje odpowiedzi. Ale zajmuje czas\n(jest niebuforowany), więc duża ilość debugowania może dać TLE. Bezpiecznie: makro pod `#ifdef LOCAL`.",
+     "code": "int x = 5;\ncerr << \"x = \" << x << '\\n';\ncout << x * 2 << '\\n';"
+    },
+    {
+     "q": [
+      "assert c++",
+      "jak uzyc assert",
+      "assert co robi",
+      "sprawdzanie zalozen w kodzie",
+      "assert was not declared in this scope"
+     ],
+     "a": "`assert(warunek)` przerywa program z komunikatem (plik, linia, warunek), gdy warunek jest fałszywy. Używaj do sprawdzania\nzałożeń: zakresów indeksów, niezmienników, poprawności wczytanych danych. Kompilacja z `-DNDEBUG` wyłącza asercje.\nNa sprawdzarce nieudany `assert` da RE. Uwaga: nowe wersje GCC (np. 16) **nie** dołączają `<cassert>` w `bits/stdc++.h` —\ndopisz `#include <cassert>`, inaczej dostaniesz „'assert' was not declared in this scope”.",
+     "code": "#include <bits/stdc++.h>\n#include <cassert>\nusing namespace std;\nint main() {\n    int n = 5, i = 3;\n    assert(0 <= i && i < n);\n    cout << \"ok\\n\";\n}"
+    },
+    {
+     "q": [
+      "wypisz tablice debug",
+      "debug vector cerr",
+      "jak wypisac kontener do debugowania"
+     ],
+     "a": "Zdefiniuj `operator<<` dla `vector` (i ewentualnie `pair`) — wtedy `cerr << v` wypisze całą zawartość. Wzór w treści.",
+     "code": "template <class A, class B> ostream& operator<<(ostream& os, const pair<A, B>& p) {\n    return os << '(' << p.first << \", \" << p.second << ')';\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "debugowanie rekurencji",
+      "jak sledzic rekurencje",
+      "wypisywanie wglebienia rekurencji"
+     ],
+     "a": "Przekazuj głębokość i wypisuj wcięcie — zobaczysz drzewo wywołań i wartości zwracane.",
+     "code": "int fib(int n, int d = 0) {\n    cerr << string(2 * d, ' ') << \"fib(\" << n << \")\\n\";\n    if (n < 2) return n;\n    return fib(n - 1, d + 1) + fib(n - 2, d + 1);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "program dziala na przykladzie a nie na testach",
+      "jakie testy brzegowe",
+      "przypadki brzegowe lista"
+     ],
+     "a": "Lista przypadków brzegowych: n = 1 (i 0, jeśli dozwolone), wszystkie elementy równe, posortowane rosnąco/malejąco,\nmaksymalne wartości (przepełnienie!), ujemne liczby, graf niespójny / ścieżka / gwiazda, brak rozwiązania, wiele testów\nw jednym wejściu."
+    },
+    {
+     "q": [
+      "debugger zamiast cout",
+      "gdb czy cerr",
+      "kiedy uzywac debuggera"
+     ],
+     "a": "Debugger (gdb/lldb) jest najlepszy przy crashach — `bt` pokaże dokładne miejsce i stos wywołań. Przy złych wynikach\nszybsze bywa wypisywanie stanu na `cerr`. Patrz artykuł o gdb/lldb."
+    },
+    {
+     "q": [
+      "rubber duck debugging",
+      "tlumaczenie kodu na glos",
+      "jak samemu znalezc blad"
+     ],
+     "a": "Przeczytaj kod linijka po linijce i wytłumacz (komuś albo sobie na głos), co robi każda — dlaczego ta granica pętli, dlaczego\nten typ. Zaskakująco często błąd wychodzi przy próbie uzasadnienia konkretnej linijki."
+    }
+   ],
+   "related": [
+    "oi-compile-flags",
+    "tool-gdb-lldb",
+    "oi-stress-test",
+    "pit-endl-tle",
+    "oi-interactive"
+   ]
+  },
+  {
+   "id": "oi-template",
+   "title": "Szablon programu na zawody (C++)",
+   "category": "OI praktyka",
+   "tags": [
+    "szablon",
+    "template",
+    "bits/stdc++.h",
+    "using namespace std",
+    "fast io",
+    "long long",
+    "multitest"
+   ],
+   "aliases": [
+    "szablon na olimpiade",
+    "template c++ cp",
+    "szablon c++ zawody",
+    "od czego zaczac program",
+    "bits/stdc++.h",
+    "competitive programming template",
+    "szablon oi"
+   ],
+   "summary": "Krótki szablon: `#include <bits/stdc++.h>`, `using namespace std;`, alias `using ll = long long;`, szybkie I/O i makro debugowania pod `#ifdef LOCAL`. Nie przesadzaj z makrami — kod ma być czytelny dla Ciebie podczas debugowania.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szablon",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nusing ll = long long;\nusing pii = pair<int, int>;\nconst ll INF = 1e18;\nconst int MOD = 1'000'000'007;\n\n#ifdef LOCAL\ntemplate <class... T> void dbg_out(const T&... t) { ((cerr << t << ' '), ...); cerr << '\\n'; }\n#define dbg(...) cerr << \"[\" << __LINE__ << \"] \" << #__VA_ARGS__ << \": \", dbg_out(__VA_ARGS__)\n#else\n#define dbg(...)\n#endif\n\nvoid solve() {\n    int n;\n    cin >> n;\n    vector<ll> a(n);\n    for (auto& x : a) cin >> x;\n    ll suma = accumulate(a.begin(), a.end(), 0LL);\n    dbg(n, suma);\n    cout << suma << '\\n';\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int t = 1;\n    // cin >> t;          // odkomentuj, gdy wejście zawiera wiele testów\n    while (t--) solve();\n}"
+    },
+    {
+     "type": "tip",
+     "md": "`bits/stdc++.h` to nagłówek GCC dołączający całą bibliotekę standardową — wygodny na zawodach, ale niedostępny w MSVC\ni w domyślnym Clangu na macOS (tam zainstaluj GCC albo użyj shima). Kompilacja z nim trwa chwilę dłużej."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "szablon na olimpiade",
+      "template c++ cp",
+      "szablon c++ zawody",
+      "competitive programming template"
+     ],
+     "a": "Minimalny i wystarczający szablon: nagłówek `bits/stdc++.h`, `using namespace std;`, `using ll = long long;`, szybkie I/O\n(`sync_with_stdio(false)`, `cin.tie(nullptr)`), funkcja `solve()` i opcjonalnie makro `dbg` pod `#ifdef LOCAL`. Pełny kod\njest w treści artykułu — przepisz go kilka razy, żeby znać na pamięć."
+    },
+    {
+     "q": [
+      "bits/stdc++.h co to",
+      "czy uzywac bits/stdc++.h",
+      "bits stdc++ h"
+     ],
+     "a": "`#include <bits/stdc++.h>` dołącza wszystkie nagłówki biblioteki standardowej naraz (rozszerzenie GCC). Na zawodach oszczędza\npisania i błędów „brak nagłówka”. Nie działa w MSVC ani w Clangu z libc++ (macOS). Kompiluje się trochę dłużej."
+    },
+    {
+     "q": [
+      "using namespace std czy uzywac",
+      "std:: czy using namespace",
+      "using namespace std wady"
+     ],
+     "a": "Na zawodach — tak, skraca kod. Wada: konflikty nazw globalnych z biblioteką (`next`, `count`, `y1`…) — nazywaj globalne\nzmienne inaczej albo trzymaj je lokalnie."
+    },
+    {
+     "q": [
+      "define int long long",
+      "#define int long long signed main",
+      "czy uzywac define int long long"
+     ],
+     "a": "`#define int long long` zamienia wszystkie `int` na `long long` (chroni przed przepełnieniem), ale wymaga `signed main()`\n(bo `main` musi zwracać `int`), psuje `printf(\"%d\")` i zwiększa zużycie pamięci 2×. Bezpieczniej świadomie używać `ll`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n#define int long long\nsigned main() {\n    int a = 3000000000;\n    cout << a * 3 << '\\n';\n}"
+    },
+    {
+     "q": [
+      "funkcja solve",
+      "multitest szablon",
+      "while t-- solve"
+     ],
+     "a": "Logika testu w `solve()`, a w `main` pętla `while (t--) solve();`. Gdy zadanie ma jeden test, `t = 1`; gdy wiele —\nodkomentuj `cin >> t`. Zmienne lokalne w `solve()` same się resetują między testami."
+    },
+    {
+     "q": [
+      "makra w szablonie",
+      "rep makro",
+      "#define rep for",
+      "czy uzywac makr"
+     ],
+     "a": "Makra typu `#define rep(i,a,b) for(...)` skracają pisanie, ale utrudniają czytanie i debugowanie, a błędy w nich są podstępne.\nWystarczą: `ll`, ewentualnie `pii`, `all(x)` (`x.begin(), x.end()`) i `dbg`.",
+     "code": "#define all(x) (x).begin(), (x).end()",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "stale w szablonie",
+      "MOD INF w szablonie",
+      "const zamiast define"
+     ],
+     "a": "Stałe deklaruj jako `const` (`const int MOD = 1'000'000'007;`, `const ll INF = 1e18;`) — mają typ i nie psują się jak makra\n(`#define MOD 1e9+7` to `double`, a `x % MOD` się nie skompiluje).",
+     "code": "const long long MOD = 1000000007;\nlong long x = 123456789012LL % MOD;\ncout << x << '\\n';"
+    },
+    {
+     "q": [
+      "szablon z freopen",
+      "czytanie z pliku w szablonie",
+      "lokalne testowanie szablon"
+     ],
+     "a": "Dodaj do `main` blok `#ifdef LOCAL freopen(\"in.txt\", \"r\", stdin); #endif` — lokalnie (z `-DLOCAL`) czytasz z pliku,\nna sprawdzarce ze standardowego wejścia.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n#ifdef LOCAL\n    freopen(\"in.txt\", \"r\", stdin);\n#endif\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    if (cin >> n) cout << n << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "io-fast-io",
+    "oi-debugging",
+    "pit-name-collisions",
+    "pit-multitest-reset",
+    "io-freopen"
+   ]
+  }
+ ]
+}

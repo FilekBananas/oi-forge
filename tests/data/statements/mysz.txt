@@ -1,0 +1,25 @@
+Mysz i ser
+Mysz (pole oznaczone literą M) chce dobiec do sera (pole oznaczone literą S) w prostokątnym labiryncie. Pola oznaczone
+literą X to przeszkody, a kropki to wolne pola. Mysz w jednym kroku przechodzi na pole sąsiednie w poziomie lub w pionie.
+Ile najmniej kroków potrzebuje mysz, żeby dotrzeć do sera?
+Wejście
+W pierwszym wierszu znajdują się dwie liczby całkowite n, m (1 ≤ n, m ≤ 500) — wymiary labiryntu. Każdy z kolejnych n
+wierszy zawiera m znaków ze zbioru {., X, M, S}. Litery M i S występują w labiryncie dokładnie raz.
+Wyjście
+Wypisz najmniejszą liczbę kroków. Jeśli mysz nie może dotrzeć do sera, wypisz NIE.
+Przykład 1
+Wejście:
+3 4
+M..X
+.X..
+...S
+Wyjście:
+5
+
+Przykład 2
+Wejście:
+2 3
+MX.
+XXS
+Wyjście:
+NIE

@@ -1,0 +1,230 @@
+{
+  "examples": [
+    {
+      "id": "lower-bound",
+      "title": "lower_bound / upper_bound na vectorze",
+      "category": "STL algorytmy",
+      "description": "Wyszukiwanie binarne w posortowanym vectorze: pierwszy element ≥ x i pierwszy > x.",
+      "tags": ["lower_bound", "upper_bound", "wyszukiwanie binarne"],
+      "code": "vector<int> v = {1, 3, 3, 5, 8, 13};\nint x = 3;\nauto lo = lower_bound(v.begin(), v.end(), x);   // pierwszy >= x\nauto hi = upper_bound(v.begin(), v.end(), x);   // pierwszy > x\ncout << \"indeks lower_bound: \" << lo - v.begin() << '\\n';\ncout << \"indeks upper_bound: \" << hi - v.begin() << '\\n';\ncout << \"ile razy wystepuje \" << x << \": \" << hi - lo << '\\n';\n? (lower_bound(v.begin(), v.end(), 6) == v.end() ? -1 : *lower_bound(v.begin(), v.end(), 6))"
+    },
+    {
+      "id": "bitset",
+      "title": "bitset — szybkie operacje na bitach",
+      "category": "Struktury danych",
+      "description": "bitset<N> to tablica bitów z operacjami &, |, ^, <<, count() — 64 razy szybsza niż vector<bool> w pętlach.",
+      "tags": ["bitset", "bity", "count"],
+      "code": "bitset<16> a(\"1011\"), b(6);   // 6 = 110\ncout << \"a     = \" << a << '\\n';\ncout << \"b     = \" << b << '\\n';\ncout << \"a & b = \" << (a & b) << '\\n';\ncout << \"a | b = \" << (a | b) << '\\n';\ncout << \"a << 3 = \" << (a << 3) << '\\n';\ncout << \"zapalonych bitow w a: \" << a.count() << '\\n';\na.set(10);\na.reset(0);\ncout << \"po set(10), reset(0): \" << a << \" = \" << a.to_ulong() << '\\n';"
+    },
+    {
+      "id": "pq-min",
+      "title": "priority_queue jako kopiec MINIMUM",
+      "category": "STL kontenery",
+      "description": "Domyślnie priority_queue zwraca największy element. greater<int> odwraca kolejność — tak robi się Dijkstrę.",
+      "tags": ["priority_queue", "kopiec", "greater", "dijkstra"],
+      "code": "priority_queue<int> maks;\npriority_queue<int, vector<int>, greater<int>> mini;\nfor (int x : {5, 1, 8, 3, 9, 2}) {\n    maks.push(x);\n    mini.push(x);\n}\ncout << \"max-heap: \" << maks << '\\n';\ncout << \"min-heap: \" << mini << '\\n';\n// pary (odleglosc, wierzcholek) — najmniejsza odleglosc pierwsza\npriority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;\npq.push({7, 1}); pq.push({2, 4}); pq.push({5, 3});\nauto [d, v] = pq.top();\ncout << \"najblizej: wierzcholek \" << v << \", odleglosc \" << d << '\\n';"
+    },
+    {
+      "id": "structured-bindings",
+      "title": "Structured bindings (auto [a, b])",
+      "category": "C++ język",
+      "description": "Rozpakowanie pary, krotki albo struktury w jednej linii — także w pętli po mapie.",
+      "tags": ["structured bindings", "auto", "map", "pair"],
+      "code": "map<string, int> wiek = {{\"Ala\", 15}, {\"Bartek\", 17}, {\"Celina\", 16}};\nfor (auto& [imie, lat] : wiek)\n    cout << imie << \" ma \" << lat << \" lat\\n\";\npair<int, int> p = {3, 4};\nauto [x, y] = p;\ncout << \"x + y = \" << x + y << '\\n';\nstruct Pkt { int a, b; };\nPkt q{10, 20};\nauto [qa, qb] = q;\nqa * qb"
+    },
+    {
+      "id": "int128",
+      "title": "__int128 — liczby do ~1.7·10^38",
+      "category": "Liczby i typy",
+      "description": "Mnożenie dwóch long longów bez przepełnienia. Playground ma gotowe cout << __int128 (w OI trzeba je napisać samemu).",
+      "tags": ["__int128", "overflow", "duże liczby"],
+      "code": "long long a = 1'000'000'000'000LL, b = 987'654'321'987LL;\n__int128 iloczyn = (__int128)a * b;\ncout << \"a * b = \" << iloczyn << '\\n';\nlong long zle = a * b;   // przepełnienie!\ncout << \"w long long (zle): \" << zle << '\\n';\n// mnozenie modulo duzej liczby\nlong long M = 1'000'000'000'000'000'003LL;\nlong long wynik = (long long)((__int128)a * b % M);\nwynik"
+    },
+    {
+      "id": "mt19937",
+      "title": "mt19937 — porządne losowanie",
+      "category": "STL algorytmy",
+      "description": "Generator Mersenne Twister + rozkład jednostajny. Stałe ziarno = powtarzalne testy; shuffle zamiast random_shuffle.",
+      "tags": ["mt19937", "losowanie", "shuffle", "generator"],
+      "code": "mt19937 rng(2024);   // stale ziarno -> zawsze te same liczby\nuniform_int_distribution<int> kostka(1, 6);\nvector<int> rzuty;\nfor (int i = 0; i < 10; i++) rzuty.push_back(kostka(rng));\ncout << \"rzuty: \" << rzuty << '\\n';\nvector<int> perm(8);\niota(perm.begin(), perm.end(), 1);\nshuffle(perm.begin(), perm.end(), rng);\ncout << \"losowa permutacja: \" << perm << '\\n';\n? rng() % 100"
+    },
+    {
+      "id": "set-comparator",
+      "title": "set z własnym komparatorem",
+      "category": "STL kontenery",
+      "description": "Kolejność w secie wyznacza komparator: tu malejąco i po długości napisu.",
+      "tags": ["set", "komparator", "greater", "lambda"],
+      "code": "set<int, greater<int>> malejaco = {4, 1, 9, 7};\ncout << malejaco << '\\n';\nauto cmp = [](const string& a, const string& b) {\n    if (a.size() != b.size()) return a.size() < b.size();\n    return a < b;\n};\nset<string, decltype(cmp)> slowa(cmp);\nfor (string s : {\"kot\", \"ala\", \"pies\", \"a\", \"zebra\"}) slowa.insert(s);\ncout << slowa << '\\n';"
+    },
+    {
+      "id": "string-ops",
+      "title": "Operacje na stringach",
+      "category": "Teksty",
+      "description": "substr, find, replace, reverse, to_string/stoi i zliczanie znaków.",
+      "tags": ["string", "substr", "find", "reverse", "stoi"],
+      "code": "string s = \"olimpiada informatyczna\";\ncout << s.substr(0, 9) << '\\n';            // od 0, 9 znakow\ncout << s.find(\"info\") << '\\n';            // pozycja albo string::npos\nstring t = s;\nreverse(t.begin(), t.end());\ncout << t << '\\n';\ncout << count(s.begin(), s.end(), 'a') << \" liter a\\n\";\nint n = stoi(\"1234\") + 1;\nstring w = to_string(n) + \"!\";\ns.replace(0, 9, \"OI\");\ndbg(n, w, s);\ns.size()"
+    },
+    {
+      "id": "sort-pairs",
+      "title": "Sortowanie par i własny porządek",
+      "category": "STL algorytmy",
+      "description": "Pary sortują się leksykograficznie; lambda w sort pozwala posortować np. malejąco po drugim elemencie.",
+      "tags": ["sort", "pair", "lambda", "komparator"],
+      "code": "vector<pair<int, int>> v = {{3, 1}, {1, 5}, {3, 0}, {2, 5}};\nsort(v.begin(), v.end());\ncout << \"rosnaco: \" << v << '\\n';\nsort(v.begin(), v.end(), [](const auto& a, const auto& b) {\n    if (a.second != b.second) return a.second > b.second;   // malejaco po drugim\n    return a.first < b.first;\n});\ncout << \"po drugim malejaco: \" << v << '\\n';"
+    },
+    {
+      "id": "prefix-sums",
+      "title": "Sumy prefiksowe (partial_sum)",
+      "category": "Techniki",
+      "description": "Suma na przedziale [l, r] w O(1) po wstępnym O(n). accumulate liczy sumę całości.",
+      "tags": ["sumy prefiksowe", "partial_sum", "accumulate"],
+      "code": "vector<long long> a = {3, 1, 4, 1, 5, 9, 2, 6};\nvector<long long> pref(a.size() + 1, 0);\nfor (size_t i = 0; i < a.size(); i++) pref[i + 1] = pref[i] + a[i];\ncout << \"pref = \" << pref << '\\n';\nauto suma = [&](int l, int r) { return pref[r + 1] - pref[l]; };   // [l, r] wlacznie\ncout << \"suma [2, 5] = \" << suma(2, 5) << '\\n';\ncout << \"calosc = \" << accumulate(a.begin(), a.end(), 0LL) << '\\n';"
+    },
+    {
+      "id": "unique-erase",
+      "title": "Usuwanie duplikatów: sort + unique + erase",
+      "category": "STL algorytmy",
+      "description": "unique przesuwa powtórzenia na koniec i zwraca iterator — erase je usuwa. Podstawa kompresji współrzędnych.",
+      "tags": ["unique", "erase", "kompresja współrzędnych"],
+      "code": "vector<int> v = {5, 1, 5, 3, 1, 9, 3};\nsort(v.begin(), v.end());\nv.erase(unique(v.begin(), v.end()), v.end());\ncout << v << '\\n';\n// kompresja: wartosc -> indeks w posortowanym vectorze\nint x = 9;\nlower_bound(v.begin(), v.end(), x) - v.begin()"
+    },
+    {
+      "id": "next-permutation",
+      "title": "next_permutation — wszystkie permutacje",
+      "category": "STL algorytmy",
+      "description": "Brute force po permutacjach: zacznij od posortowanego ciągu i wołaj next_permutation w pętli do-while.",
+      "tags": ["next_permutation", "brute force", "permutacje"],
+      "code": "vector<int> p = {1, 2, 3};\nint ile = 0;\ndo {\n    cout << p << '\\n';\n    ile++;\n} while (next_permutation(p.begin(), p.end()));\nile"
+    },
+    {
+      "id": "bit-tricks",
+      "title": "Sztuczki bitowe i __builtin_*",
+      "category": "Liczby i typy",
+      "description": "popcount, najniższy zapalony bit, log2 i iteracja po podmaskach.",
+      "tags": ["bitmaski", "popcount", "__lg", "podmaski"],
+      "code": "int x = 0b101100;\ncout << \"popcount = \" << __builtin_popcount(x) << '\\n';\ncout << \"najnizszy bit = \" << (x & -x) << '\\n';\ncout << \"log2 = \" << __lg(x) << '\\n';\ncout << \"zera na koncu = \" << __builtin_ctz(x) << '\\n';\nvector<int> podmaski;\nfor (int s = x; s; s = (s - 1) & x) podmaski.push_back(s);\ncout << \"podmaski \" << x << \": \" << podmaski << '\\n';\n? (1LL << 40)"
+    },
+    {
+      "id": "map-count",
+      "title": "map — zliczanie wystąpień",
+      "category": "STL kontenery",
+      "description": "m[x]++ tworzy brakujący klucz z wartością 0. Iteracja po mapie idzie w kolejności kluczy.",
+      "tags": ["map", "zliczanie", "unordered_map"],
+      "code": "string tekst = \"abrakadabra\";\nmap<char, int> ile;\nfor (char c : tekst) ile[c]++;\ncout << ile << '\\n';\nauto najczestsza = max_element(ile.begin(), ile.end(), [](auto& a, auto& b) { return a.second < b.second; });\ncout << \"najczestsza: \" << najczestsza->first << \" (\" << najczestsza->second << \")\\n\";\nile.count('z')"
+    },
+    {
+      "id": "deque-window",
+      "title": "deque — maksimum w przesuwnym oknie",
+      "category": "Techniki",
+      "description": "Kolejka monotoniczna: maksima wszystkich okien długości k w O(n).",
+      "tags": ["deque", "okno przesuwne", "kolejka monotoniczna"],
+      "code": "vector<int> a = {1, 3, -1, -3, 5, 3, 6, 7};\nint k = 3;\ndeque<int> dq;   // indeksy, wartosci malejaco\nvector<int> maksima;\nfor (int i = 0; i < (int)a.size(); i++) {\n    while (!dq.empty() && a[dq.back()] <= a[i]) dq.pop_back();\n    dq.push_back(i);\n    if (dq.front() <= i - k) dq.pop_front();\n    if (i >= k - 1) maksima.push_back(a[dq.front()]);\n}\nmaksima"
+    },
+    {
+      "id": "fast-pow",
+      "title": "Szybkie potęgowanie modulo + gcd/lcm",
+      "category": "Matematyka",
+      "description": "a^b mod m w O(log b) i odwrotność modulo liczby pierwszej z małego twierdzenia Fermata.",
+      "tags": ["potęgowanie", "modulo", "gcd", "lcm", "fermat"],
+      "code": "const long long MOD = 1'000'000'007;\nlong long pw(long long a, long long b, long long m = MOD) {\n    long long r = 1;\n    a %= m;\n    for (; b; b >>= 1, a = a * a % m)\n        if (b & 1) r = r * a % m;\n    return r;\n}\ncout << pw(2, 10) << ' ' << pw(3, 1'000'000'000) << '\\n';\nlong long inv2 = pw(2, MOD - 2);\ncout << \"odwrotnosc 2: \" << inv2 << \", sprawdzenie: \" << 2 * inv2 % MOD << '\\n';\ncout << gcd(84, 36) << ' ' << lcm(4, 6) << '\\n';"
+    },
+    {
+      "id": "multiset-erase",
+      "title": "multiset — usuwanie JEDNEJ kopii",
+      "category": "Pułapki",
+      "description": "ms.erase(x) usuwa wszystkie kopie x! Jedną kopię usuwa ms.erase(ms.find(x)).",
+      "tags": ["multiset", "erase", "pułapka"],
+      "code": "multiset<int> ms = {1, 2, 2, 2, 3};\nms.erase(ms.find(2));\ncout << \"po erase(find(2)): \" << ms << '\\n';\nms.erase(2);\ncout << \"po erase(2):       \" << ms << '\\n';\n? *ms.rbegin()"
+    },
+    {
+      "id": "stringstream",
+      "title": "getline + stringstream — parsowanie linii",
+      "category": "Wejście/wyjście",
+      "description": "Wczytanie całej linii i rozbicie jej na liczby. Wpisz dane w polu „Wejście”.",
+      "tags": ["getline", "stringstream", "wejście"],
+      "code": "string linia;\nvector<vector<int>> wiersze;\nwhile (getline(cin, linia)) {\n    stringstream ss(linia);\n    vector<int> w;\n    int x;\n    while (ss >> x) w.push_back(x);\n    if (!w.empty()) wiersze.push_back(w);\n}\ncout << wiersze << '\\n';\nwiersze.size()",
+      "input": "1 2 3\n4 5\n\n6 7 8 9\n"
+    },
+    {
+      "id": "grid-dirs",
+      "title": "Siatka 2D i tablica kierunków",
+      "category": "Grafy",
+      "description": "vector<vector<char>> + dx/dy — typowy początek BFS po planszy.",
+      "tags": ["siatka", "grid", "bfs", "kierunki"],
+      "code": "vector<string> g = {\n    \"..#.\",\n    \".##.\",\n    \"....\",\n};\nint n = g.size(), m = g[0].size();\nint dx[] = {1, -1, 0, 0}, dy[] = {0, 0, 1, -1};\nint r = 2, c = 1, wolne = 0;\nfor (int d = 0; d < 4; d++) {\n    int nr = r + dx[d], nc = c + dy[d];\n    if (nr >= 0 && nr < n && nc >= 0 && nc < m && g[nr][nc] == '.') wolne++;\n}\ndbg(n, m, r, c, wolne);"
+    },
+    {
+      "id": "dbg-demo",
+      "title": "dbg(...) — szybkie debugowanie",
+      "category": "Narzędzia",
+      "description": "dbg wypisuje nazwy i wartości (także kontenerów) z numerem linii na stderr — nie psuje wyjścia programu.",
+      "tags": ["dbg", "debugowanie", "stderr"],
+      "code": "int n = 5;\nvector<int> dp(n + 1);\ndp[0] = 1;\nfor (int i = 1; i <= n; i++) {\n    dp[i] = dp[i - 1] * i;\n    dbg(i, dp[i]);\n}\nmap<string, vector<int>> m = {{\"pierwsze\", {2, 3, 5}}, {\"parzyste\", {2, 4}}};\ndbg(dp, m);\ncout << dp[n] << '\\n';"
+    },
+    {
+      "id": "repl",
+      "title": "Tryb REPL: ? wyrażenie",
+      "category": "Narzędzia",
+      "description": "Linia zaczynająca się od ? wypisuje wartość wyrażenia; ostatnie wyrażenie bez średnika też jest wypisywane.",
+      "tags": ["repl", "wypisywanie", "kalkulator"],
+      "code": "? 7 / 2\n? 7 / 2.0\n? 7 % -3\n? (-7) / 2\n? 1e9 + 7\n? sizeof(long long)\n? INT_MAX\n? (long long)INT_MAX + 1\n? __gcd(12, 18)\n? sqrt(2)\nnumeric_limits<long long>::max()"
+    },
+    {
+      "id": "tuple-tie",
+      "title": "tuple, tie i porównywanie krotek",
+      "category": "C++ język",
+      "description": "tie(a, b) < tie(c, d) — wygodne porównanie wielu pól naraz (np. w komparatorze struktury).",
+      "tags": ["tuple", "tie", "komparator", "get"],
+      "code": "struct Zawodnik {\n    string imie;\n    int pkt, czas;\n    bool operator<(const Zawodnik& o) const {\n        return tie(o.pkt, czas) < tie(pkt, o.czas);   // wiecej pkt, potem krotszy czas\n    }\n};\nvector<Zawodnik> v = {{\"Ala\", 100, 50}, {\"Bob\", 120, 70}, {\"Cyp\", 100, 30}};\nsort(v.begin(), v.end());\nfor (auto& z : v) cout << z.imie << ' ' << z.pkt << ' ' << z.czas << '\\n';\ntuple<int, string, double> t = {1, \"dwa\", 3.0};\n? get<1>(t)\nt"
+    },
+    {
+      "id": "argsort",
+      "title": "iota + sort indeksów (argsort)",
+      "category": "STL algorytmy",
+      "description": "Sortowanie indeksów według wartości — gdy trzeba zapamiętać oryginalne pozycje.",
+      "tags": ["iota", "sort", "indeksy"],
+      "code": "vector<int> a = {40, 10, 30, 20};\nvector<int> idx(a.size());\niota(idx.begin(), idx.end(), 0);\nsort(idx.begin(), idx.end(), [&](int i, int j) { return a[i] < a[j]; });\nidx"
+    },
+    {
+      "id": "set-lower-bound",
+      "title": "set::lower_bound — najbliższy element",
+      "category": "STL kontenery",
+      "description": "Na secie używaj s.lower_bound(x) (O(log n)), a nie std::lower_bound (O(n)). Poprzednik: --it.",
+      "tags": ["set", "lower_bound", "poprzednik", "następnik"],
+      "code": "set<int> s = {10, 20, 30, 40};\nint x = 25;\nauto it = s.lower_bound(x);\ncout << \"nastepnik >= \" << x << \": \" << *it << '\\n';\nif (it != s.begin()) cout << \"poprzednik < \" << x << \": \" << *prev(it) << '\\n';\ns.insert(25);\ns.erase(10);\ns"
+    },
+    {
+      "id": "setprecision",
+      "title": "fixed i setprecision — liczby rzeczywiste",
+      "category": "Wejście/wyjście",
+      "description": "Wypisywanie z ustaloną liczbą miejsc po przecinku; uwaga na porównywanie double z ==.",
+      "tags": ["setprecision", "fixed", "double", "precyzja"],
+      "code": "double x = 2.0 / 3;\ncout << x << '\\n';\ncout << fixed << setprecision(3) << x << '\\n';\ncout << setprecision(10) << sqrt(2.0) << '\\n';\nbool rowne = (0.1 + 0.2 == 0.3);\nbool prawie = fabs(0.1 + 0.2 - 0.3) < 1e-9;\ndbg(rowne, prawie);"
+    },
+    {
+      "id": "read-input",
+      "title": "Wczytywanie danych z pola „Wejście”",
+      "category": "Wejście/wyjście",
+      "description": "Typowe wczytanie n i n liczb. Deklaracje przed pierwszą instrukcją stają się globalne.",
+      "tags": ["cin", "wejście", "wczytywanie"],
+      "code": "int n;\ncin >> n;\nvector<long long> a(n);\nfor (auto& x : a) cin >> x;\nsort(a.begin(), a.end());\ncout << \"min = \" << a.front() << \", max = \" << a.back() << '\\n';\naccumulate(a.begin(), a.end(), 0LL)",
+      "input": "5\n7 2 9 4 1\n"
+    },
+    {
+      "id": "memo-fib",
+      "title": "Rekurencja z memoizacją",
+      "category": "Programowanie dynamiczne",
+      "description": "Funkcja przed main, tablica memo globalna — fib(90) liczy się natychmiast.",
+      "tags": ["rekurencja", "memoizacja", "dp", "fibonacci"],
+      "code": "long long memo[100];\nlong long fib(int n) {\n    if (n < 2) return n;\n    if (memo[n]) return memo[n];\n    return memo[n] = fib(n - 1) + fib(n - 2);\n}\nvector<long long> pierwsze;\nfor (int i = 0; i < 10; i++) pierwsze.push_back(fib(i));\ncout << pierwsze << '\\n';\nfib(90)"
+    },
+    {
+      "id": "lambda-recursion",
+      "title": "Rekurencyjna lambda (DFS)",
+      "category": "Grafy",
+      "description": "function<void(int)> albo auto self — DFS po drzewie zapisany wewnątrz main.",
+      "tags": ["lambda", "dfs", "rekurencja", "function"],
+      "code": "int n = 6;\nvector<vector<int>> g(n);\nvector<pair<int, int>> kraw = {{0, 1}, {0, 2}, {1, 3}, {1, 4}, {2, 5}};\nfor (auto [a, b] : kraw) {\n    g[a].push_back(b);\n    g[b].push_back(a);\n}\nvector<int> gl(n, 0);\nfunction<void(int, int)> dfs = [&](int v, int p) {\n    for (int u : g[v])\n        if (u != p) {\n            gl[u] = gl[v] + 1;\n            dfs(u, v);\n        }\n};\ndfs(0, -1);\ngl"
+    }
+  ]
+}

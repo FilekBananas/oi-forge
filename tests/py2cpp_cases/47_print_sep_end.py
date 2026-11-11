@@ -1,0 +1,12 @@
+a = list(map(int, input().split()))
+print(*a, sep=', ')
+print(*a, sep='\n')
+print(len(a), *a)
+print("start", end=' ')
+print("koniec")
+for x in a:
+    print(x, end=' ')
+print()
+print('a', 'b', 'c', sep='')
+print(a)
+print()

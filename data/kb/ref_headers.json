@@ -1,0 +1,3961 @@
+{
+ "chunk": "ref_headers",
+ "articles": [
+  {
+   "id": "cpp-ref-cmath",
+   "title": "Dokumentacja: <cmath> — funkcje matematyczne",
+   "category": "Liczby i typy",
+   "tags": [
+    "cmath",
+    "math.h",
+    "funkcje matematyczne",
+    "sqrt",
+    "pow",
+    "atan2",
+    "hypot",
+    "fmod",
+    "floor ceil round trunc",
+    "trygonometria",
+    "logarytm",
+    "isnan",
+    "dokumentacja"
+   ],
+   "aliases": [
+    "cmath",
+    "<cmath>",
+    "math.h",
+    "dokumentacja cmath",
+    "funkcje z cmath",
+    "biblioteka cmath",
+    "lista funkcji matematycznych c++",
+    "cmath reference",
+    "funkcje matematyczne c++",
+    "ściąga cmath",
+    "co jest w cmath"
+   ],
+   "summary": "Kompletna ściąga nagłówka `<cmath>`: wartość bezwzględna, pierwiastki, potęgi, logarytmy, trygonometria (z `atan2` i `hypot`), zaokrąglanie, `fmod`/`remainder`, `isnan`/`isinf` i stała π. Funkcje liczą na `double` (są przeciążenia dla `float` i `long double`), więc wynik jest przybliżony.",
+   "complexity": "każda funkcja O(1); sqrt i floor to pojedyncze instrukcje, pow/exp/log/sin/atan2 kosztują kilkadziesiąt cykli",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`#include <cmath>` (jest w `bits/stdc++.h`). Najważniejsze zasady:\n- argumenty całkowite są zamieniane na `double`, a wynik to **`double`** — także `pow(2, 10)`, `floor(x)`, `round(x)`;\n- funkcje trygonometryczne przyjmują i zwracają **radiany** (`stopnie * PI / 180`);\n- z `using namespace std;` działają przeciążenia `std::abs`, `std::sqrt` itd. dla `float`, `double`, `long double`\n  (wersje z sufiksem `f`/`l`, np. `sqrtl`, są równoważne);\n- błąd dziedziny (`sqrt(-1)`, `acos(2)`, `log(-1)`) nie przerywa programu — zwraca **NaN**, a przepełnienie zwraca **±inf**.\n\nTematy szczegółowe mają osobne artykuły: zaokrąglanie (`num-rounding`), pierwiastek/potęga na intach\n(`num-sqrt-pow`), logarytmy całkowite (`num-log2`), porównywanie `double` (`num-floating`)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Co robi",
+      "Przykład → wynik"
+     ],
+     "rows": [
+      [
+       "`abs(x)`, `fabs(x)`",
+       "wartość bezwzględna (abs: int / long long / double)",
+       "`abs(-3.5)` → `3.5`"
+      ],
+      [
+       "`sqrt(x)`",
+       "pierwiastek kwadratowy, x ≥ 0",
+       "`sqrt(2)` → `1.41421`"
+      ],
+      [
+       "`cbrt(x)`",
+       "pierwiastek sześcienny (także z ujemnych)",
+       "`cbrt(-27)` → `-3`"
+      ],
+      [
+       "`pow(a, b)`",
+       "aᵇ jako double",
+       "`pow(2, 0.5)` → `1.41421`"
+      ],
+      [
+       "`exp(x)`, `exp2(x)`",
+       "eˣ, 2ˣ",
+       "`exp(1)` → `2.71828`"
+      ],
+      [
+       "`log(x)`",
+       "logarytm **naturalny** ln x",
+       "`log(exp(2))` → `2`"
+      ],
+      [
+       "`log2(x)`, `log10(x)`",
+       "logarytm o podstawie 2 i 10",
+       "`log10(1000)` → `3`"
+      ],
+      [
+       "`log1p(x)`, `expm1(x)`",
+       "ln(1+x), eˣ−1 — dokładne dla małych x",
+       "`log1p(1e-12)` → `1e-12`"
+      ],
+      [
+       "`sin`, `cos`, `tan`",
+       "trygonometria, x w radianach",
+       "`sin(PI / 6)` → `0.5`"
+      ],
+      [
+       "`asin`, `acos`, `atan`",
+       "funkcje odwrotne (wynik w radianach)",
+       "`acos(-1)` → `3.14159`"
+      ],
+      [
+       "`atan2(y, x)`",
+       "kąt wektora (x, y) w (−π, π]",
+       "`atan2(1, -1)` → `2.35619`"
+      ],
+      [
+       "`hypot(x, y)`, `hypot(x, y, z)`",
+       "√(x²+y²) bez przepełnienia",
+       "`hypot(3, 4)` → `5`"
+      ],
+      [
+       "`sinh`, `cosh`, `tanh`",
+       "funkcje hiperboliczne",
+       "`tanh(0)` → `0`"
+      ],
+      [
+       "`floor(x)`, `ceil(x)`",
+       "zaokrąglenie w dół / w górę",
+       "`floor(-2.5)` → `-3`"
+      ],
+      [
+       "`round(x)`",
+       "do najbliższej, połówki od zera",
+       "`round(-2.5)` → `-3`"
+      ],
+      [
+       "`trunc(x)`",
+       "obcięcie części ułamkowej (w stronę zera)",
+       "`trunc(-2.7)` → `-2`"
+      ],
+      [
+       "`lround(x)`, `llround(x)`",
+       "jak `round`, ale zwraca `long` / `long long`",
+       "`llround(2.5)` → `3`"
+      ],
+      [
+       "`rint(x)`, `nearbyint(x)`",
+       "do najbliższej, połówki do parzystej",
+       "`nearbyint(2.5)` → `2`"
+      ],
+      [
+       "`fmod(a, b)`",
+       "reszta z dzielenia double, znak jak `a`",
+       "`fmod(-7.5, 2)` → `-1.5`"
+      ],
+      [
+       "`remainder(a, b)`",
+       "reszta w [−b/2, b/2]",
+       "`remainder(7.5, 2)` → `-0.5`"
+      ],
+      [
+       "`modf(x, &ip)`",
+       "rozbicie na część całkowitą i ułamkową",
+       "`modf(3.75, &ip)` → `0.75`, ip = 3"
+      ],
+      [
+       "`fmin(a, b)`, `fmax(a, b)`",
+       "min / max dla double (ignorują NaN)",
+       "`fmax(2, 3.5)` → `3.5`"
+      ],
+      [
+       "`fdim(a, b)`",
+       "max(a − b, 0)",
+       "`fdim(2, 5)` → `0`"
+      ],
+      [
+       "`fma(a, b, c)`",
+       "a·b + c z jednym zaokrągleniem",
+       "`fma(2, 3, 1)` → `7`"
+      ],
+      [
+       "`copysign(a, b)`",
+       "|a| ze znakiem b",
+       "`copysign(3, -1)` → `-3`"
+      ],
+      [
+       "`isnan`, `isinf`, `isfinite`",
+       "test NaN / ±inf / zwykła liczba",
+       "`isnan(sqrt(-1))` → `true`"
+      ],
+      [
+       "`signbit(x)`",
+       "czy ustawiony bit znaku (też dla −0.0)",
+       "`signbit(-0.0)` → `true`"
+      ],
+      [
+       "`lerp(a, b, t)` (C++20)",
+       "a + t·(b − a)",
+       "`lerp(0, 10, 0.3)` → `3`"
+      ],
+      [
+       "`acos(-1.0)`, `numbers::pi`, `M_PI`",
+       "π (M_PI nie jest standardem)",
+       "`3.14159265358979`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: trójkąt, kąty, zaokrąglenia, reszty, NaN",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    const double PI = acos(-1.0);                  // albo std::numbers::pi (C++20)\n\n    // Trójkąt A(0,0), B(4,0), C(1,3)\n    double ax = 0, ay = 0, bx = 4, by = 0, cx = 1, cy = 3;\n    double a = hypot(cx - bx, cy - by);            // |BC| = 4.2426\n    double b = hypot(cx - ax, cy - ay);            // |AC| = 3.1623\n    double c = hypot(bx - ax, by - ay);            // |AB| = 4\n    double s = (a + b + c) / 2;\n    double area = sqrt(s * (s - a) * (s - b) * (s - c));   // wzór Herona\n    cout << fixed << setprecision(4);\n    cout << \"pole: \" << area << '\\n';                      // 6.0000\n\n    // Kąt wektora AC względem osi OX: atan2(y, x), wynik w radianach\n    double ang = atan2(cy - ay, cx - ax);\n    cout << \"kat AC: \" << ang * 180 / PI << \" stopni\\n\";    // 71.5651\n\n    // Zaokrąglenia\n    for (double x : {2.5, -2.5, 2.7, -2.7})\n        cout << x << \": floor=\" << floor(x) << \" ceil=\" << ceil(x)\n             << \" round=\" << round(x) << \" trunc=\" << trunc(x) << '\\n';\n\n    // Reszta z dzielenia dla double (operator % działa tylko na intach)\n    cout << fmod(7.5, 2) << ' ' << fmod(-7.5, 2) << ' ' << remainder(7.5, 2) << '\\n'; // 1.5 -1.5 -0.5\n\n    // Logarytmy i potęgi\n    cout << log(exp(2.0)) << ' ' << log2(1024.0) << ' ' << log10(1e6) << ' '\n         << log(81.0) / log(3.0) << '\\n';                  // 2 10 6 4 (przybliżenia!)\n    cout << pow(2.0, 0.5) << ' ' << cbrt(-27.0) << '\\n';   // 1.4142 -3.0000\n\n    // NaN i nieskończoność\n    double bad = sqrt(-1.0), big = exp(1000.0);\n    cout << isnan(bad) << ' ' << isinf(big) << ' ' << isfinite(area) << '\\n';  // 1 1 1\n    cout << (bad == bad) << '\\n';                          // 0 — NaN nie jest równy niczemu\n}"
+    },
+    {
+     "type": "warn",
+     "md": "**Liczby całkowite a `<cmath>`:** `pow`, `sqrt`, `floor`, `round` zwracają `double`, który ma tylko 53 bity mantysy.\n`(long long)pow(10, 18)` albo `(long long)sqrt(n)` dla `n` rzędu 10^18 potrafi wyjść o 1 za mało. Potęgi całkowite\nlicz pętlą lub szybkim potęgowaniem, pierwiastek całkowity poprawiaj pętlą `while` (artykuł `num-sqrt-pow`)."
+    },
+    {
+     "type": "tip",
+     "md": "**π:** `const double PI = acos(-1.0);` działa wszędzie. W C++20 jest `std::numbers::pi` (nagłówek `<numbers>`),\na dla `long double` — `numbers::pi_v<long double>`. `M_PI` to rozszerzenie POSIX: działa w g++ na Linuksie/macOS,\nale w MSVC wymaga `#define _USE_MATH_DEFINES` przed include."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "abs(x) / fabs(x)",
+     "desc": "wartość bezwzględna; `abs` przeciążone dla int, long long i double, `fabs` zawsze double",
+     "complexity": "O(1)",
+     "returns": "ten sam typ co x (fabs: double)",
+     "example": "long long d = abs(a - b);"
+    },
+    {
+     "sig": "sqrt(x)",
+     "desc": "pierwiastek kwadratowy; dla x < 0 zwraca NaN",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "double r = sqrt(2.0);"
+    },
+    {
+     "sig": "cbrt(x)",
+     "desc": "pierwiastek sześcienny, działa też dla ujemnych x",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "cbrt(-8.0) // -2"
+    },
+    {
+     "sig": "pow(a, b)",
+     "desc": "a do potęgi b (także ułamkowej); dla liczb całkowitych lepiej własna pętla",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "pow(2.0, 0.5) // 1.41421"
+    },
+    {
+     "sig": "exp(x) / exp2(x)",
+     "desc": "e do potęgi x / 2 do potęgi x",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "exp(1.0) // 2.71828"
+    },
+    {
+     "sig": "expm1(x)",
+     "desc": "e^x − 1, dokładne dla małych x",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "expm1(1e-10) // 1e-10"
+    },
+    {
+     "sig": "log(x)",
+     "desc": "logarytm naturalny (podstawa e); log(0) = -inf, log(<0) = NaN",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "log(exp(3.0)) // 3"
+    },
+    {
+     "sig": "log2(x) / log10(x)",
+     "desc": "logarytm o podstawie 2 / 10",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "log2(1024.0) // 10"
+    },
+    {
+     "sig": "log1p(x)",
+     "desc": "ln(1 + x), dokładne dla małych x",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "log1p(1e-12) // 1e-12"
+    },
+    {
+     "sig": "sin(x) / cos(x) / tan(x)",
+     "desc": "funkcje trygonometryczne; x w radianach",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "sin(acos(-1.0) / 6) // 0.5"
+    },
+    {
+     "sig": "asin(x) / acos(x)",
+     "desc": "arcus sinus / cosinus; x ∈ [-1, 1], poza zakresem NaN",
+     "complexity": "O(1)",
+     "returns": "double w [-π/2, π/2] / [0, π]",
+     "example": "acos(clamp(c, -1.0, 1.0))"
+    },
+    {
+     "sig": "atan(x)",
+     "desc": "arcus tangens; nie rozróżnia ćwiartek",
+     "complexity": "O(1)",
+     "returns": "double w (-π/2, π/2)",
+     "example": "atan(1.0) // π/4"
+    },
+    {
+     "sig": "atan2(y, x)",
+     "desc": "kąt wektora (x, y) względem osi OX; najpierw y, potem x; działa dla x = 0",
+     "complexity": "O(1)",
+     "returns": "double w (-π, π]",
+     "example": "double ang = atan2(dy, dx);"
+    },
+    {
+     "sig": "hypot(x, y) / hypot(x, y, z)",
+     "desc": "√(x²+y²) (C++17: także 3D) bez przepełnienia pośredniego",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "double d = hypot(x2 - x1, y2 - y1);"
+    },
+    {
+     "sig": "sinh(x) / cosh(x) / tanh(x)",
+     "desc": "funkcje hiperboliczne (asinh, acosh, atanh — odwrotne)",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "tanh(0.0) // 0"
+    },
+    {
+     "sig": "floor(x)",
+     "desc": "największa liczba całkowita ≤ x",
+     "complexity": "O(1)",
+     "returns": "double (rzutuj na long long)",
+     "example": "long long f = (long long)floor(x);"
+    },
+    {
+     "sig": "ceil(x)",
+     "desc": "najmniejsza liczba całkowita ≥ x",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "ceil(2.1) // 3"
+    },
+    {
+     "sig": "round(x)",
+     "desc": "zaokrąglenie do najbliższej, połówki od zera (2.5 → 3, -2.5 → -3)",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "round(2.5) // 3"
+    },
+    {
+     "sig": "trunc(x)",
+     "desc": "obcięcie części ułamkowej w stronę zera",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "trunc(-2.7) // -2"
+    },
+    {
+     "sig": "lround(x) / llround(x)",
+     "desc": "jak round, ale od razu zwraca liczbę całkowitą",
+     "complexity": "O(1)",
+     "returns": "long / long long",
+     "example": "long long r = llround(x);"
+    },
+    {
+     "sig": "rint(x) / nearbyint(x) / llrint(x)",
+     "desc": "zaokrąglenie wg bieżącego trybu (domyślnie połówki do parzystej)",
+     "complexity": "O(1)",
+     "returns": "double (llrint: long long)",
+     "example": "nearbyint(2.5) // 2"
+    },
+    {
+     "sig": "fmod(a, b)",
+     "desc": "reszta z dzielenia double; znak jak a, |wynik| < |b|",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "fmod(-7.5, 2.0) // -1.5"
+    },
+    {
+     "sig": "remainder(a, b)",
+     "desc": "a − n·b, gdzie n = a/b zaokrąglone do najbliższej (połówki do parzystej)",
+     "complexity": "O(1)",
+     "returns": "double w [-|b|/2, |b|/2]",
+     "example": "remainder(7.5, 2.0) // -0.5"
+    },
+    {
+     "sig": "modf(x, double* ip)",
+     "desc": "rozbija x na część całkowitą (*ip) i ułamkową (wynik)",
+     "complexity": "O(1)",
+     "returns": "double — część ułamkowa",
+     "example": "double ip; double fr = modf(3.75, &ip); // 0.75, ip = 3"
+    },
+    {
+     "sig": "fmin(a, b) / fmax(a, b)",
+     "desc": "min / max jako double; jeśli jeden argument to NaN, zwraca drugi",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "fmax(2, 3.5) // 3.5 (int i double razem — OK)"
+    },
+    {
+     "sig": "fdim(a, b)",
+     "desc": "dodatnia różnica: max(a − b, 0)",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "fdim(5.0, 2.0) // 3"
+    },
+    {
+     "sig": "fma(a, b, c)",
+     "desc": "a·b + c z jednym zaokrągleniem (dokładniej)",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "fma(2.0, 3.0, 1.0) // 7"
+    },
+    {
+     "sig": "copysign(a, b)",
+     "desc": "wartość |a| ze znakiem b",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "copysign(3.0, -0.0) // -3"
+    },
+    {
+     "sig": "isnan(x) / isinf(x) / isfinite(x)",
+     "desc": "czy NaN / czy ±nieskończoność / czy zwykła skończona liczba",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "if (isnan(r)) r = 0;"
+    },
+    {
+     "sig": "signbit(x)",
+     "desc": "czy liczba ma ustawiony bit znaku (rozpoznaje -0.0)",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "signbit(-0.0) // true"
+    },
+    {
+     "sig": "frexp(x, int* e) / ldexp(m, e)",
+     "desc": "rozkład x = m·2^e (m ∈ [0.5, 1)) i składanie z powrotem",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "ldexp(1.0, 10) // 1024"
+    },
+    {
+     "sig": "lerp(a, b, t)",
+     "desc": "C++20: interpolacja liniowa a + t·(b − a)",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "lerp(0.0, 10.0, 0.3) // 3"
+    },
+    {
+     "sig": "acos(-1.0) / numbers::pi / M_PI",
+     "desc": "stała π: acos(-1) — zawsze; numbers::pi — C++20 <numbers>; M_PI — niestandardowe",
+     "returns": "double",
+     "example": "const double PI = acos(-1.0);"
+    },
+    {
+     "sig": "numbers::e / numbers::sqrt2 / numbers::ln2",
+     "desc": "C++20 <numbers>: stałe e, √2, ln 2 (także pi_v<long double>)",
+     "returns": "double",
+     "example": "double e = numbers::e;"
+    },
+    {
+     "sig": "HUGE_VAL / INFINITY / NAN",
+     "desc": "makra: nieskończoność (double / float) i cichy NaN",
+     "returns": "double / float",
+     "example": "double inf = HUGE_VAL;"
+    }
+   ],
+   "pitfalls": [
+    "Trygonometria liczy w radianach: `sin(30)` to sinus 30 radianów, a nie 0.5. Zamieniaj `deg * PI / 180`.",
+    "`atan2(y, x)` — najpierw **y**. `atan(y / x)` gubi ćwiartkę i dzieli przez zero dla `x == 0`.",
+    "`pow`, `sqrt`, `floor`, `round` zwracają `double` — `(long long)pow(10, 18)` lub `(int)sqrt(n)` może wyjść o 1 za mało.",
+    "`acos(x)` / `asin(x)` dla `x` minimalnie większego niż 1 (błąd zaokrąglenia) daje NaN — użyj `clamp(x, -1.0, 1.0)`.",
+    "`%` nie działa dla `double` (błąd kompilacji `invalid operands`) — użyj `fmod`; wynik ma znak dzielnej.",
+    "`round(2.5) == 3`, ale `nearbyint(2.5) == 2` i `printf(\"%.0f\", 2.5)` wypisuje `2` (połówki do parzystej).",
+    "NaN nie jest równy niczemu (nawet sobie), więc `max`, `sort` i `==` przestają działać — sprawdzaj `isnan`.",
+    "`log(x)` to logarytm naturalny, nie dziesiętny. Dziesiętny to `log10`.",
+    "`max(2, 3.5)` nie kompiluje się (różne typy) — `max(2.0, 3.5)` albo `fmax(2, 3.5)`.",
+    "`M_PI` nie jest w standardzie C++ — na MSVC bez `_USE_MATH_DEFINES` go nie ma. Pewne: `acos(-1.0)`.",
+    "Na Apple Silicon `long double` to zwykły `double` — `sqrtl` nie da tam większej precyzji."
+   ],
+   "qa": [
+    {
+     "q": [
+      "atan2 c++",
+      "jak policzyć kąt wektora",
+      "jak policzyc kat punktu wzgledem osi x",
+      "atan2 kolejnosc argumentow",
+      "atan2 vs atan",
+      "atan2(y, x) czy atan2(x, y)",
+      "angle of vector c++",
+      "kąt nachylenia odcinka"
+     ],
+     "a": "`atan2(y, x)` — **najpierw y, potem x** — zwraca kąt wektora (x, y) względem dodatniej półosi OX, w radianach,\nw przedziale (−π, π]. W odróżnieniu od `atan(y / x)` rozpoznaje ćwiartkę i działa dla `x == 0`.\nNa stopnie: `* 180 / PI`. Zakres [0, 2π): dodaj `2 * PI`, gdy wynik jest ujemny. Do sortowania kątowego\nna liczbach całkowitych lepszy jest iloczyn wektorowy (artykuł o sortowaniu kątowym).",
+     "code": "const double PI = acos(-1.0);\ndouble a = atan2(1.0, -1.0);      // 3π/4 ≈ 2.35619 (II ćwiartka)\ndouble b = atan(1.0 / -1.0);      // -π/4 — atan zgubił ćwiartkę!\ndouble t = atan2(-1.0, 0.0);      // -π/2 — x = 0 nie przeszkadza\nif (t < 0) t += 2 * PI;           // 3π/2, zakres [0, 2π)\ncout << a * 180 / PI << ' ' << b * 180 / PI << ' ' << t << '\\n';   // 135 -45 4.71239"
+    },
+    {
+     "q": [
+      "hypot c++",
+      "co robi hypot",
+      "hypot czy sqrt(x*x+y*y)",
+      "długość wektora c++",
+      "dlugosc wektora 3d hypot",
+      "hypot 3 argumenty",
+      "vector length c++ hypot"
+     ],
+     "a": "`hypot(x, y)` = √(x² + y²), ale bez przepełnienia i niedomiaru w środku (np. dla `x = 1e200`). Od C++17 jest też\n`hypot(x, y, z)` dla 3D. Jest kilka razy wolniejszy niż `sqrt(x*x + y*y)`, więc w gorących pętlach przy\numiarkowanych wartościach wystarcza `sqrt`. Gdy tylko **porównujesz** odległości punktów o całkowitych\nwspółrzędnych, porównuj kwadraty w `long long` — bez pierwiastka i bez błędów.",
+     "code": "cout << hypot(3.0, 4.0) << '\\n';            // 5\ncout << hypot(1.0, 2.0, 2.0) << '\\n';       // 3 (C++17, 3D)\ncout << hypot(1e200, 1e200) << ' ' << sqrt(1e200 * 1e200 + 1e200 * 1e200) << '\\n'; // 1.41421e+200 inf\nlong long dx = 3, dy = 4;\nlong long d2 = dx * dx + dy * dy;            // 25 — do porównań wystarczy kwadrat"
+    },
+    {
+     "q": [
+      "fmod c++",
+      "% dla double nie działa",
+      "invalid operands of types double to binary operator%",
+      "fmod vs remainder",
+      "modulo float c++",
+      "fmod ujemne",
+      "reszta z dzielenia liczb rzeczywistych"
+     ],
+     "a": "Operator `%` działa tylko na typach całkowitych. Dla `double` są dwie funkcje:\n- `fmod(a, b)` — reszta „jak `%`”: znak jak `a`, |wynik| < |b| (`fmod(-7.5, 2) == -1.5`);\n- `remainder(a, b)` — reszta względem **najbliższej** wielokrotności, wynik w [−b/2, b/2] (`remainder(7.5, 2) == -0.5`).\n\nNormalizacja kąta do [0, 2π): `x = fmod(x, 2 * PI); if (x < 0) x += 2 * PI;`.",
+     "code": "const double PI = acos(-1.0);\ncout << fmod(7.5, 2.0) << ' ' << fmod(-7.5, 2.0) << ' ' << remainder(7.5, 2.0) << '\\n';  // 1.5 -1.5 -0.5\ndouble ang = -7.0;\nang = fmod(ang, 2 * PI);\nif (ang < 0) ang += 2 * PI;                  // ang w [0, 2π)\ncout << ang << '\\n';                         // 5.56637"
+    },
+    {
+     "q": [
+      "isnan c++",
+      "jak sprawdzić czy wynik to nan",
+      "program wypisuje nan",
+      "wypisuje -nan albo inf",
+      "skąd się bierze nan",
+      "check if double is nan c++",
+      "isinf c++",
+      "acos zwraca nan"
+     ],
+     "a": "**NaN** („not a number”) powstaje z `sqrt(ujemnej)`, `acos(x)`/`asin(x)` dla |x| > 1, `log(ujemnej)`, `0.0 / 0.0`,\n`inf - inf`. **inf** — z przepełnienia (`exp(1000)`), `log(0)`, dzielenia przez 0.0. Sprawdzaj:\n`isnan(x)`, `isinf(x)`, `isfinite(x)`. NaN jest „zaraźliwy” (każde działanie z nim daje NaN), a porównania z nim\nzawsze dają `false` — psuje `max`, `sort` i `==`. Najczęstsza przyczyna w geometrii: `acos(dot / (len1 * len2))`,\ngdy przez zaokrąglenia argument wyjdzie `1.0000000001` — przytnij go `clamp`.",
+     "code": "double c = 1.0000000001;\ncout << acos(c) << '\\n';                          // nan\ncout << acos(clamp(c, -1.0, 1.0)) << '\\n';         // 0\ndouble z = sqrt(-4.0);\ncout << isnan(z) << ' ' << (z == z) << ' ' << isinf(log(0.0)) << '\\n';   // 1 0 1"
+    },
+    {
+     "q": [
+      "M_PI nie działa",
+      "M_PI was not declared",
+      "M_PI undeclared identifier",
+      "M_PI vs acos(-1)",
+      "numbers::pi c++20",
+      "skąd wziąć pi w c++",
+      "pi constant c++ portable"
+     ],
+     "a": "`M_PI` nie należy do standardu C++ — to rozszerzenie POSIX. g++ na Linuksie i macOS go zna, ale MSVC wymaga\n`#define _USE_MATH_DEFINES` **przed** `#include <cmath>`, a przy niektórych flagach (`-std=c++20` na MinGW\nze ścisłym trybem) też może zniknąć. Pewne sposoby:\n- `const double PI = acos(-1.0);` — działa wszędzie, pełna precyzja double;\n- `std::numbers::pi` (C++20, `<numbers>`), dla `long double`: `numbers::pi_v<long double>`.",
+     "code": "const double PI = acos(-1.0);\nconst long double PIL = acosl(-1.0L);\ncout << setprecision(17) << PI << ' ' << numbers::pi << '\\n';   // 3.1415926535897931 dwa razy"
+    },
+    {
+     "q": [
+      "sin w stopniach c++",
+      "sin(30) nie daje 0.5",
+      "dlaczego sin(90) nie zwraca 1",
+      "zamiana stopni na radiany c++",
+      "degrees to radians c++",
+      "cos kąta w stopniach",
+      "sin(pi) nie jest zero"
+     ],
+     "a": "Wszystkie funkcje trygonometryczne w `<cmath>` przyjmują **radiany**. Zamiana: `rad = deg * PI / 180`,\nz powrotem `deg = rad * 180 / PI`. Wynik jest przybliżony: `sin(PI)` daje około `1.2e-16`, a nie dokładne 0 —\nporównuj z epsilonem albo wypisuj z `fixed << setprecision(k)`.",
+     "code": "const double PI = acos(-1.0);\nauto rad = [&](double deg) { return deg * PI / 180; };\ncout << sin(30) << ' ' << sin(rad(30)) << ' ' << cos(rad(60)) << '\\n';  // -0.988032 0.5 0.5\ncout << sin(PI) << '\\n';                                                // 1.22465e-16 (nie 0!)"
+    },
+    {
+     "q": [
+      "log w c++ jaka podstawa",
+      "log c++ to ln czy log10",
+      "logarytm naturalny c++",
+      "ln w c++",
+      "log1p expm1",
+      "natural log c++",
+      "log10 c++"
+     ],
+     "a": "`log(x)` to logarytm **naturalny** (ln, podstawa e). Dziesiętny to `log10(x)`, dwójkowy `log2(x)`, a o podstawie k:\n`log(x) / log(k)` (dla liczb całkowitych lepiej pętla — wynik zmiennoprzecinkowy bywa o włos za mały, np. `log(1000)/log(10)`\ndaje `2.9999999999999996`). `log1p(x)` = ln(1+x) i `expm1(x)` = eˣ−1 są dokładne dla bardzo małych x.",
+     "code": "cout << setprecision(17);\ncout << log(exp(1.0)) << ' ' << log10(1000.0) << ' ' << log2(8.0) << '\\n';  // 1 3 3\ncout << log(1000.0) / log(10.0) << '\\n';            // 2.9999999999999996 (!)\ncout << log(1 + 1e-17) << ' ' << log1p(1e-17) << '\\n';  // 0 1.0000000000000001e-17"
+    },
+    {
+     "q": [
+      "round vs rint vs nearbyint",
+      "nearbyint c++",
+      "rint c++",
+      "zaokrąglanie do parzystej c++",
+      "zaokrąglanie bankierskie c++",
+      "lround llround różnica",
+      "round half to even c++"
+     ],
+     "a": "- `round(x)` — do najbliższej, **połówki od zera**: 2.5 → 3, −2.5 → −3; zwraca `double`.\n- `lround` / `llround` — to samo, ale zwracają `long` / `long long` (bez rzutowania).\n- `rint` / `nearbyint` / `llrint` — według trybu zaokrąglania, domyślnie **połówki do parzystej** („bankierskie”):\n  2.5 → 2, 3.5 → 4. Tak samo zaokrągla `printf(\"%.0f\")` i `setprecision`.\n- `floor` / `ceil` / `trunc` — w dół / w górę / w stronę zera.",
+     "code": "for (double x : {0.5, 1.5, 2.5, -2.5})\n    cout << x << \": round=\" << round(x) << \" nearbyint=\" << nearbyint(x)\n         << \" llround=\" << llround(x) << '\\n';\n// 0.5: 1 0 1 | 1.5: 2 2 2 | 2.5: 3 2 3 | -2.5: -3 -2 -3"
+    },
+    {
+     "q": [
+      "fmax c++",
+      "fmin vs min",
+      "max dla int i double nie kompiluje",
+      "no matching function for call to max(int, double)",
+      "fmax nan",
+      "fmin fmax c++"
+     ],
+     "a": "`std::max(a, b)` wymaga **tego samego typu** obu argumentów, więc `max(2, 3.5)` się nie kompiluje. Rozwiązania:\n`max(2.0, 3.5)`, `max<double>(2, 3.5)` albo `fmax(2, 3.5)` (z `<cmath>`, zamienia na `double`).\nRóżnica przy NaN: `fmax(NaN, 1)` zwraca `1`, a `max` zwraca zależnie od kolejności.",
+     "code": "int a = 2; double b = 3.5;\ncout << max<double>(a, b) << ' ' << fmax(a, b) << ' ' << fmin(a, b) << '\\n';   // 3.5 3.5 2\ncout << fmax(NAN, 1.0) << '\\n';                                                 // 1"
+    },
+    {
+     "q": [
+      "co jest w cmath",
+      "jakie funkcje są w cmath",
+      "lista funkcji cmath",
+      "funkcje matematyczne c++ lista",
+      "cmath ściąga",
+      "what functions are in cmath",
+      "cmath wszystkie funkcje"
+     ],
+     "a": "`<cmath>` w skrócie (wszystko na `double`, O(1)):\n- **moduł, pierwiastki, potęgi:** `abs`, `fabs`, `sqrt`, `cbrt`, `pow`, `exp`, `exp2`, `expm1`, `hypot`;\n- **logarytmy:** `log` (naturalny!), `log2`, `log10`, `log1p`;\n- **trygonometria (radiany):** `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`, `tanh`;\n- **zaokrąglanie:** `floor`, `ceil`, `round`, `trunc`, `lround`, `llround`, `rint`, `nearbyint`;\n- **reszty:** `fmod`, `remainder`, `modf`;\n- **różne:** `fmin`, `fmax`, `fdim`, `fma`, `copysign`, `lerp` (C++20);\n- **klasyfikacja:** `isnan`, `isinf`, `isfinite`, `signbit`;\n- **stałe:** `acos(-1.0)` lub `numbers::pi` (π), `HUGE_VAL`, `INFINITY`, `NAN`.\n\nPełna tabela z przykładami jest w tym artykule."
+    }
+   ],
+   "related": [
+    "num-rounding",
+    "num-sqrt-pow",
+    "num-log2",
+    "num-floating",
+    "num-negative-mod",
+    "geo-pitfalls",
+    "geo-cross-dot",
+    "pit-abs-long-long",
+    "pit-double-equal",
+    "cpp-ref-climits-cfloat"
+   ]
+  },
+  {
+   "id": "cpp-ref-cstring-cstdlib",
+   "title": "Dokumentacja: <cstring> i <cstdlib> — napisy w stylu C, pamięć, konwersje",
+   "category": "C++ język",
+   "tags": [
+    "cstring",
+    "cstdlib",
+    "string.h",
+    "stdlib.h",
+    "strlen",
+    "strcmp",
+    "memcpy",
+    "memmove",
+    "memset",
+    "strtol",
+    "atoi",
+    "qsort",
+    "exit",
+    "char*",
+    "dokumentacja"
+   ],
+   "aliases": [
+    "cstring",
+    "<cstring>",
+    "cstdlib",
+    "<cstdlib>",
+    "string.h",
+    "stdlib.h",
+    "dokumentacja cstring",
+    "dokumentacja cstdlib",
+    "funkcje z cstring",
+    "funkcje z cstdlib",
+    "napisy w stylu c",
+    "c string functions"
+   ],
+   "summary": "Ściąga dwóch nagłówków z C: `<cstring>` — operacje na napisach `char[]` zakończonych `'\\0'` (`strlen`, `strcmp`, `strcpy`, `strstr`…) i na surowej pamięci (`memcpy`, `memmove`, `memset`, `memcmp`); `<cstdlib>` — konwersje napis→liczba (`atoi`, `strtol` z dowolną podstawą), `abs`/`div`, `rand`, `qsort`, `exit`.",
+   "complexity": "str*/mem*: O(długość napisu / liczba bajtów); strstr: O(n·m) w najgorszym razie; qsort: O(n log n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Napis w stylu C** to tablica `char` zakończona bajtem zerowym `'\\0'`. `char s[100] = \"ala\";` zajmuje 4 bajty\n(`a`, `l`, `a`, `\\0`), a reszta tablicy jest nieużywana. Funkcje z `<cstring>` szukają końca napisu, idąc do\n`'\\0'` — dlatego `strlen` jest **O(n)**, a brak `'\\0'` kończy się czytaniem śmieci.\n\nFunkcje `mem*` działają na **bajtach**: rozmiar podajesz w bajtach (`n * sizeof(int)` albo `sizeof tab`) i nie\npatrzą na `'\\0'`. Na zawodach w C++ zwykle wygodniej użyć `std::string`, `std::copy`, `fill`, `stoi` — ale funkcje\nz C są szybkie, pojawiają się w cudzym kodzie i przy `scanf(\"%s\", s)`."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Nagłówek",
+      "Co robi",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "`strlen(s)`",
+       "cstring",
+       "długość napisu (bez `'\\0'`)",
+       "O(n)"
+      ],
+      [
+       "`strcmp(a, b)`, `strncmp(a, b, n)`",
+       "cstring",
+       "porównanie leksykograficzne: <0, 0, >0",
+       "O(n)"
+      ],
+      [
+       "`strcpy(d, s)`, `strncpy(d, s, n)`",
+       "cstring",
+       "kopiuje napis (z `'\\0'`) do `d`",
+       "O(n)"
+      ],
+      [
+       "`strcat(d, s)`, `strncat(d, s, n)`",
+       "cstring",
+       "dopisuje `s` na koniec `d`",
+       "O(|d| + |s|)"
+      ],
+      [
+       "`strchr(s, c)`, `strrchr(s, c)`",
+       "cstring",
+       "pierwsze / ostatnie wystąpienie znaku",
+       "O(n)"
+      ],
+      [
+       "`strstr(s, t)`",
+       "cstring",
+       "pierwsze wystąpienie podnapisu `t`",
+       "O(n·m) najgorzej"
+      ],
+      [
+       "`strtok(s, delim)`",
+       "cstring",
+       "dzieli napis na tokeny (niszczy `s`)",
+       "O(n)"
+      ],
+      [
+       "`memcpy(d, s, n)`",
+       "cstring",
+       "kopiuje `n` bajtów (obszary rozłączne)",
+       "O(n)"
+      ],
+      [
+       "`memmove(d, s, n)`",
+       "cstring",
+       "kopiuje `n` bajtów (obszary mogą się nakładać)",
+       "O(n)"
+      ],
+      [
+       "`memset(p, b, n)`",
+       "cstring",
+       "wypełnia `n` bajtów wartością bajtu `b`",
+       "O(n)"
+      ],
+      [
+       "`memcmp(a, b, n)`",
+       "cstring",
+       "porównuje `n` bajtów",
+       "O(n)"
+      ],
+      [
+       "`memchr(p, c, n)`",
+       "cstring",
+       "szuka bajtu w pierwszych `n` bajtach",
+       "O(n)"
+      ],
+      [
+       "`atoi`, `atol`, `atoll`, `atof`",
+       "cstdlib",
+       "napis → int / long / long long / double (bez kontroli błędów)",
+       "O(n)"
+      ],
+      [
+       "`strtol`, `strtoll`, `strtoull`, `strtod`",
+       "cstdlib",
+       "napis → liczba z podstawą 2..36 i wskaźnikiem końca",
+       "O(n)"
+      ],
+      [
+       "`abs`, `labs`, `llabs`",
+       "cstdlib",
+       "wartość bezwzględna liczb całkowitych",
+       "O(1)"
+      ],
+      [
+       "`div`, `ldiv`, `lldiv`",
+       "cstdlib",
+       "iloraz i reszta w jednej strukturze",
+       "O(1)"
+      ],
+      [
+       "`rand()`, `srand(s)`, `RAND_MAX`",
+       "cstdlib",
+       "stary generator losowy (lepiej `mt19937`)",
+       "O(1)"
+      ],
+      [
+       "`qsort(a, n, size, cmp)`",
+       "cstdlib",
+       "sortowanie w stylu C",
+       "O(n log n)"
+      ],
+      [
+       "`bsearch(key, a, n, size, cmp)`",
+       "cstdlib",
+       "wyszukiwanie binarne w stylu C",
+       "O(log n)"
+      ],
+      [
+       "`exit(code)`, `EXIT_SUCCESS`",
+       "cstdlib",
+       "kończy program z dowolnego miejsca",
+       "—"
+      ],
+      [
+       "`malloc`, `calloc`, `free`",
+       "cstdlib",
+       "ręczna alokacja (w C++ używaj `vector`)",
+       "—"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: napisy C, pamięć, konwersje, qsort",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint cmpInt(const void* a, const void* b) {\n    int x = *(const int*)a, y = *(const int*)b;\n    return (x > y) - (x < y);                  // NIE: x - y (przepełnienie)\n}\n\nint main() {\n    char s[100] = \"ala ma kota\";\n    char t[100];\n    int n = strlen(s);                         // 11 — licz RAZ, nie w warunku pętli\n    strcpy(t, s);                              // t = \"ala ma kota\"\n    strcat(t, \"!\");                            // t = \"ala ma kota!\"\n    cout << n << ' ' << t << '\\n';\n    cout << (strcmp(\"abc\", \"abd\") < 0) << ' ' << (strcmp(s, t) == 0) << '\\n';   // 1 0\n\n    const char* p = strstr(s, \"ma\");           // wskaźnik na \"ma kota\" albo nullptr\n    if (p) cout << \"ma na pozycji \" << p - s << '\\n';             // 4\n    const char* q = strchr(s, 'k');            // pierwsze 'k'\n    cout << \"k na pozycji \" << q - s << '\\n';                     // 7\n\n    int a[5] = {5, 3, 9, 1, 7}, b[5];\n    memcpy(b, a, sizeof a);                    // kopiuje 5 intów (rozmiar w bajtach!)\n    memmove(a + 1, a, 4 * sizeof(int));        // przesunięcie w prawo — obszary się nakładają\n    cout << a[0] << a[1] << a[2] << ' ' << (memcmp(b, a, sizeof a) != 0) << '\\n';  // 553 1\n    memset(b, 0, sizeof b);                    // zerowanie (bezpieczne: 0 i -1)\n\n    // Konwersje (cstdlib)\n    cout << atoi(\"123\") + 1 << ' ' << atoll(\"9000000000\") << ' ' << atof(\"2.5\") * 2 << '\\n'; // 124 9000000000 5\n    cout << strtol(\"ff\", nullptr, 16) << ' ' << strtol(\"1011\", nullptr, 2) << ' '\n         << strtoll(\"-z\", nullptr, 36) << '\\n';                                         // 255 11 -35\n    char* end;\n    long v = strtol(\"42abc\", &end, 10);        // v = 42, end wskazuje na \"abc\"\n    cout << v << \" reszta: \" << end << '\\n';\n\n    div_t d = div(17, 5);\n    cout << d.quot << ' ' << d.rem << ' ' << llabs(-5000000000LL) << '\\n';  // 3 2 5000000000\n\n    int arr[] = {4, -2, 7, 0};\n    qsort(arr, 4, sizeof(int), cmpInt);        // w C++ prościej: sort(arr, arr + 4)\n    for (int x : arr) cout << x << ' ';        // -2 0 4 7\n    cout << '\\n';\n    exit(0);                                   // jak return 0 z main, ale działa z dowolnej funkcji\n}"
+    },
+    {
+     "type": "warn",
+     "md": "**`strlen` w warunku pętli** — `for (int i = 0; i < strlen(s); i++)` liczy długość w każdym obrocie, więc pętla\njest O(n²): dla n = 10^6 to TLE. Zapisz `int n = strlen(s);` przed pętlą. (Dla `std::string` `s.size()` jest O(1).)"
+    },
+    {
+     "type": "tip",
+     "md": "Odpowiedniki z C++: `strlen` → `s.size()`, `strcmp` → `a < b` / `a == b`, `strcpy` → `a = b`, `strcat` → `a += b`,\n`strstr` → `s.find(t)`, `memcpy` → `copy(src, src + n, dst)`, `memset` → `fill`, `atoi` → `stoi`,\n`qsort` → `sort`, `rand` → `mt19937`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "strlen(const char* s)",
+     "desc": "długość napisu do pierwszego '\\0' (bez niego)",
+     "complexity": "O(n)",
+     "returns": "size_t",
+     "example": "int n = strlen(s);"
+    },
+    {
+     "sig": "strcmp(a, b)",
+     "desc": "porównanie leksykograficzne napisów C",
+     "complexity": "O(min(|a|, |b|))",
+     "returns": "int: < 0 gdy a < b, 0 gdy równe, > 0 gdy a > b (nie koniecznie -1/1)",
+     "example": "if (strcmp(a, b) == 0) { /* równe */ }"
+    },
+    {
+     "sig": "strncmp(a, b, n)",
+     "desc": "porównuje co najwyżej n pierwszych znaków (np. prefiks)",
+     "complexity": "O(n)",
+     "returns": "int jak strcmp",
+     "example": "strncmp(s, \"abc\", 3) == 0 // s zaczyna się od abc"
+    },
+    {
+     "sig": "strcpy(dst, src)",
+     "desc": "kopiuje napis razem z '\\0'; dst musi mieć miejsce",
+     "complexity": "O(n)",
+     "returns": "dst",
+     "example": "strcpy(t, s);"
+    },
+    {
+     "sig": "strncpy(dst, src, n)",
+     "desc": "kopiuje co najwyżej n znaków; NIE dopisuje '\\0', gdy src jest dłuższy",
+     "complexity": "O(n)",
+     "returns": "dst",
+     "example": "strncpy(t, s, 5); t[5] = '\\0';"
+    },
+    {
+     "sig": "strcat(dst, src) / strncat(dst, src, n)",
+     "desc": "dopisuje src na koniec dst",
+     "complexity": "O(|dst| + |src|)",
+     "returns": "dst",
+     "example": "strcat(t, \"!\");"
+    },
+    {
+     "sig": "strchr(s, c) / strrchr(s, c)",
+     "desc": "pierwsze / ostatnie wystąpienie znaku c",
+     "complexity": "O(n)",
+     "returns": "wskaźnik albo nullptr",
+     "example": "const char* p = strchr(s, '.');"
+    },
+    {
+     "sig": "strstr(s, t)",
+     "desc": "pierwsze wystąpienie podnapisu t w s",
+     "complexity": "O(n·m) najgorzej",
+     "returns": "wskaźnik albo nullptr",
+     "example": "if (strstr(s, \"ab\")) { /* zawiera */ }"
+    },
+    {
+     "sig": "strtok(s, delim)",
+     "desc": "kolejne tokeny oddzielone znakami z delim; modyfikuje s; dalej strtok(nullptr, delim)",
+     "complexity": "O(n) łącznie",
+     "returns": "char* albo nullptr",
+     "example": "for (char* p = strtok(s, \" ,\"); p; p = strtok(nullptr, \" ,\")) {}"
+    },
+    {
+     "sig": "memcpy(dst, src, bytes)",
+     "desc": "kopiuje bajty; obszary NIE mogą się nakładać",
+     "complexity": "O(bytes)",
+     "returns": "dst",
+     "example": "memcpy(b, a, n * sizeof(int));"
+    },
+    {
+     "sig": "memmove(dst, src, bytes)",
+     "desc": "kopiuje bajty; obszary mogą się nakładać",
+     "complexity": "O(bytes)",
+     "returns": "dst",
+     "example": "memmove(a + 1, a, (n - 1) * sizeof(int));"
+    },
+    {
+     "sig": "memset(p, byte, bytes)",
+     "desc": "ustawia każdy bajt na byte — sensowne tylko 0, -1, 0x3f itp.",
+     "complexity": "O(bytes)",
+     "returns": "p",
+     "example": "memset(dist, 0x3f, sizeof dist);"
+    },
+    {
+     "sig": "memcmp(a, b, bytes)",
+     "desc": "porównuje bajty (np. dwie tablice)",
+     "complexity": "O(bytes)",
+     "returns": "int: < 0, 0, > 0",
+     "example": "if (memcmp(a, b, sizeof a) == 0) { /* równe */ }"
+    },
+    {
+     "sig": "memchr(p, byte, bytes)",
+     "desc": "szuka bajtu w obszarze pamięci",
+     "complexity": "O(bytes)",
+     "returns": "void* albo nullptr",
+     "example": "memchr(buf, '\\n', len)"
+    },
+    {
+     "sig": "atoi(s) / atol(s) / atoll(s)",
+     "desc": "napis → int / long / long long; brak kontroli błędów, przepełnienie to UB",
+     "complexity": "O(n)",
+     "returns": "liczba (0, gdy napis nie jest liczbą)",
+     "example": "long long x = atoll(\"9000000000\");"
+    },
+    {
+     "sig": "atof(s)",
+     "desc": "napis → double",
+     "complexity": "O(n)",
+     "returns": "double",
+     "example": "double d = atof(\"2.5\");"
+    },
+    {
+     "sig": "strtol(s, char** end, int base) / strtoll / strtoul / strtoull",
+     "desc": "napis → liczba w podstawie 2..36 (0 = wykryj 0x/0); *end wskazuje pierwszy nieprzetworzony znak",
+     "complexity": "O(n)",
+     "returns": "long / long long / unsigned…",
+     "example": "long long v = strtoll(\"ff\", nullptr, 16); // 255"
+    },
+    {
+     "sig": "strtod(s, char** end)",
+     "desc": "napis → double z informacją, gdzie skończono",
+     "complexity": "O(n)",
+     "returns": "double",
+     "example": "char* e; double d = strtod(\"3.5xyz\", &e);"
+    },
+    {
+     "sig": "abs(x) / labs(x) / llabs(x)",
+     "desc": "wartość bezwzględna int / long / long long (std::abs przeciążone dla wszystkich)",
+     "complexity": "O(1)",
+     "returns": "ten sam typ",
+     "example": "llabs(-5000000000LL)"
+    },
+    {
+     "sig": "div(a, b) / ldiv / lldiv",
+     "desc": "iloraz i reszta naraz (obcięcie w stronę zera)",
+     "complexity": "O(1)",
+     "returns": "div_t {quot, rem} / ldiv_t / lldiv_t",
+     "example": "auto [q, r] = div(17, 5); // 3 2"
+    },
+    {
+     "sig": "rand() / srand(seed)",
+     "desc": "pseudolosowa liczba 0..RAND_MAX; RAND_MAX bywa 32767 (Windows)",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "srand(time(0)); int r = rand() % 6;"
+    },
+    {
+     "sig": "qsort(base, n, size, cmp)",
+     "desc": "sortowanie w stylu C; cmp(const void*, const void*) zwraca <0/0/>0",
+     "complexity": "O(n log n)",
+     "returns": "void",
+     "example": "qsort(a, n, sizeof(int), cmpInt);"
+    },
+    {
+     "sig": "bsearch(key, base, n, size, cmp)",
+     "desc": "wyszukiwanie binarne w posortowanej tablicy",
+     "complexity": "O(log n)",
+     "returns": "void* na element albo nullptr",
+     "example": "int* p = (int*)bsearch(&x, a, n, sizeof(int), cmpInt);"
+    },
+    {
+     "sig": "exit(code) / EXIT_SUCCESS / EXIT_FAILURE",
+     "desc": "kończy program z dowolnego miejsca; opróżnia bufory cout/printf",
+     "returns": "nie wraca",
+     "example": "if (found) { cout << ans << '\\n'; exit(0); }"
+    },
+    {
+     "sig": "malloc(bytes) / calloc(n, size) / free(p)",
+     "desc": "ręczna alokacja pamięci; w C++ zamiast tego vector",
+     "returns": "void* / nullptr",
+     "example": "int* t = (int*)calloc(n, sizeof(int)); free(t);"
+    }
+   ],
+   "pitfalls": [
+    "`for (i = 0; i < strlen(s); i++)` — O(n²) przez liczenie długości w każdym obrocie. Policz `strlen` raz.",
+    "`strcmp` zwraca liczbę < 0 / 0 / > 0, a nie `bool`: `if (strcmp(a, b))` znaczy „RÓŻNE”. Równość: `strcmp(a, b) == 0`.",
+    "`a == b` dla `char*` / `char[]` porównuje **adresy**, nie treść — użyj `strcmp` albo `std::string`.",
+    "`strcpy`/`strcat` nie sprawdzają rozmiaru — tablica docelowa musi pomieścić napis i `'\\0'` (np. `char s[N + 1]`).",
+    "`memcpy` na nakładających się obszarach to UB — przesunięcia w tej samej tablicy rób `memmove`.",
+    "`memset(a, 1, sizeof a)` na `int` daje 16843009, nie 1 — memset ustawia bajty (artykuł `pit-memset`).",
+    "`sizeof tab` w funkcji, do której przekazano tablicę, to rozmiar **wskaźnika** (8), nie tablicy.",
+    "`atoi` nie zgłasza błędów i przepełnia się po cichu (UB) — `atoi(\"abc\") == 0`. Do kontroli użyj `strtol` z `end`.",
+    "Komparator `qsort` jako `return x - y;` przepełnia się dla dużych liczb — `(x > y) - (x < y)`.",
+    "`rand()` na Windows zwraca najwyżej 32767 — do losowania używaj `mt19937`.",
+    "`strncpy` nie dopisuje `'\\0'`, gdy źródło jest dłuższe niż `n` — dopisz ręcznie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "strtol c++",
+      "strtol podstawa",
+      "strtoll base 2",
+      "zamiana napisu binarnego na liczbę",
+      "napis szesnastkowy na liczbę",
+      "parse hex string c++",
+      "jak sprawdzić czy cały napis to liczba",
+      "strtol end pointer"
+     ],
+     "a": "`strtol(s, &end, base)` / `strtoll` zamienia napis na liczbę w podstawie 2..36 (cyfry `0-9`, potem `a-z`\nbez względu na wielkość liter). Podstawa `0` wykrywa prefiks: `0x1A` → 16, `017` → 8, inaczej 10. Pomija\nwiodące białe znaki i przyjmuje znak `+`/`-`. Przez `end` dostajesz wskaźnik na pierwszy **nieprzetworzony**\nznak — jeśli `*end != '\\0'`, napis nie był w całości liczbą. Dla `std::string`: `s.c_str()` albo prościej\n`stoll(s, nullptr, base)` (rzuca wyjątek przy błędzie).",
+     "code": "cout << strtol(\"1011\", nullptr, 2) << ' ' << strtol(\"FF\", nullptr, 16) << ' '\n     << strtol(\"0x1A\", nullptr, 0) << ' ' << strtoll(\"zz\", nullptr, 36) << '\\n';   // 11 255 26 1295\nstring s = \"123x\";\nchar* end;\nlong long v = strtoll(s.c_str(), &end, 10);\nbool whole = (*end == '\\0' && end != s.c_str());   // false — został \"x\"\ncout << v << ' ' << whole << '\\n';                   // 123 0"
+    },
+    {
+     "q": [
+      "memcpy c++",
+      "memcpy vs memmove",
+      "memmove c++",
+      "memcpy nakładające się obszary",
+      "memcpy czy std::copy",
+      "kopiowanie tablicy memcpy",
+      "memcpy overlapping",
+      "jak skopiować tablicę int"
+     ],
+     "a": "- `memcpy(dst, src, bajty)` — najszybsze kopiowanie bajtów, ale obszary **nie mogą się nakładać** (inaczej UB).\n- `memmove(dst, src, bajty)` — to samo, ale działa poprawnie, gdy obszary się nakładają (przesunięcie w tej samej tablicy).\n- `copy(src, src + n, dst)` (`<algorithm>`) — wersja C++: liczy w **elementach**, a nie bajtach, działa z każdym typem\n  (też `string`, `vector`), a dla typów prostych kompilator i tak zamienia ją na `memmove`.\n\nRozmiar w `mem*` zawsze w bajtach: `n * sizeof(int)` albo `sizeof tab` (dla całej tablicy statycznej).\nCałą tablicę statyczną można też skopiować przez `std::array` (`b = a;`).",
+     "code": "int a[6] = {1, 2, 3, 4, 5, 6}, b[6];\nmemcpy(b, a, sizeof a);                  // b = a (rozłączne)\nmemmove(a + 2, a, 4 * sizeof(int));      // a = {1,2,1,2,3,4} — nakładanie OK\ncopy(b, b + 6, a);                       // C++: liczba elementów, nie bajtów\ncopy_backward(a, a + 5, a + 6);          // przesunięcie w prawo o 1 w C++"
+    },
+    {
+     "q": [
+      "strcmp c++",
+      "co zwraca strcmp",
+      "strcmp zwraca -1 czy liczbę ujemną",
+      "if (strcmp(a, b)) co znaczy",
+      "porównanie char* przez ==",
+      "compare char arrays c++",
+      "strcmp == 0",
+      "dlaczego == nie działa dla char*"
+     ],
+     "a": "`strcmp(a, b)` zwraca liczbę **ujemną**, gdy `a < b` leksykograficznie, **0**, gdy napisy są równe, i **dodatnią**,\ngdy `a > b` — standard nie gwarantuje, że to dokładnie −1/1. Pułapka: `if (strcmp(a, b))` jest prawdziwe, gdy napisy\nsą **różne**. Równość sprawdzaj `strcmp(a, b) == 0`. Operator `==` dla `char*` / `char[]` porównuje adresy w pamięci,\nwięc dla dwóch różnych tablic z tym samym tekstem da `false`. Najprościej zamienić na `std::string`.",
+     "code": "char a[] = \"kot\", b[] = \"kot\";\ncout << (a == b) << ' ' << (strcmp(a, b) == 0) << ' ' << (strcmp(\"abc\", \"abd\") < 0) << '\\n';  // 0 1 1\ncout << (string(a) == b) << '\\n';                                                            // 1"
+    },
+    {
+     "q": [
+      "strlen w pętli",
+      "strlen w warunku for",
+      "dlaczego strlen daje tle",
+      "złożoność strlen",
+      "strlen o(n)",
+      "strlen slow loop",
+      "pętla po char tablicy tle"
+     ],
+     "a": "`strlen(s)` przechodzi cały napis aż do `'\\0'`, więc kosztuje **O(n)**. Wpisany w warunek pętli liczy się w każdym\nobrocie: `for (int i = 0; i < strlen(s); i++)` to O(n²) — dla 10^6 znaków TLE (kompilator nie zawsze to zoptymalizuje,\nzwłaszcza gdy pętla modyfikuje `s`). Policz długość raz albo iteruj do `'\\0'`. `std::string::size()` jest O(1).",
+     "code": "char s[1000001];\nscanf(\"%1000000s\", s);\nint n = strlen(s);                       // raz\nlong long cnt = 0;\nfor (int i = 0; i < n; i++) cnt += (s[i] == 'a');\nfor (char* p = s; *p; p++) cnt += (*p == 'b');   // albo do '\\0'"
+    },
+    {
+     "q": [
+      "strstr c++",
+      "strchr c++",
+      "szukanie podnapisu w tablicy char",
+      "find w char*",
+      "strrchr",
+      "find substring in char array",
+      "pozycja znaku w char*"
+     ],
+     "a": "`strstr(s, t)` zwraca wskaźnik na pierwsze wystąpienie podnapisu `t` w `s` (albo `nullptr`), `strchr(s, c)` /\n`strrchr(s, c)` — na pierwsze / ostatnie wystąpienie znaku. Pozycję (indeks) dostajesz odejmując wskaźniki: `p - s`.\nKolejne wystąpienia: szukaj od `p + 1`. `strstr` może być O(n·m) — do wielu wyszukiwań w długim tekście użyj KMP.",
+     "code": "const char* s = \"abracadabra\";\nfor (const char* p = strstr(s, \"abra\"); p; p = strstr(p + 1, \"abra\"))\n    cout << p - s << ' ';                                           // 0 7\ncout << '\\n' << strchr(s, 'c') - s << ' ' << strrchr(s, 'a') - s << '\\n';   // 4 10"
+    },
+    {
+     "q": [
+      "atoi c++",
+      "atoi vs stoi",
+      "atoi czy stoi",
+      "char* na int",
+      "atoi przepełnienie",
+      "atoll c++",
+      "atof c++",
+      "konwersja tablicy char na liczbę"
+     ],
+     "a": "- `atoi`/`atol`/`atoll`/`atof` (`<cstdlib>`) — przyjmują `const char*`, **nie zgłaszają błędów**: `atoi(\"abc\") == 0`,\n  a przepełnienie to UB. Szybkie i proste, gdy wejście na pewno jest poprawne.\n- `stoi`/`stoll`/`stod` (`<string>`) — przyjmują `std::string`, przy złym napisie rzucają `invalid_argument`,\n  przy przepełnieniu `out_of_range`; mają parametr podstawy.\n- `strtol`/`strtoll` — jak `atoi`, ale z podstawą i wskaźnikiem końca (kontrola błędów bez wyjątków).",
+     "code": "char buf[] = \"12345\";\nint a = atoi(buf);                 // 12345\nlong long b = atoll(\"9000000000\"); // 9000000000\nint c = stoi(string(\"  42abc\"));   // 42 (zatrzymuje się na 'a')\nint d = atoi(\"abc\");               // 0 — bez błędu!\ncout << a << ' ' << b << ' ' << c << ' ' << d << '\\n';"
+    },
+    {
+     "q": [
+      "qsort c++",
+      "qsort komparator",
+      "qsort vs sort",
+      "jak użyć qsort",
+      "qsort compare function",
+      "sortowanie w stylu c"
+     ],
+     "a": "`qsort(tab, n, sizeof(elem), cmp)` sortuje tablicę; komparator dostaje dwa `const void*` i zwraca < 0, 0 lub > 0.\nW C++ prawie zawsze lepszy jest `sort(tab, tab + n)` — jest szybszy (komparator się inlinuje), bezpieczny typowo\ni prostszy. Uwaga na komparator `return x - y;` — przepełnienie dla dużych wartości; pisz `(x > y) - (x < y)`.",
+     "code": "int cmp(const void* a, const void* b) {\n    long long x = *(const long long*)a, y = *(const long long*)b;\n    return (x > y) - (x < y);\n}\nvoid demo() {\n    long long t[] = {5, -3, 1000000000000LL, 0};\n    qsort(t, 4, sizeof t[0], cmp);   // -3 0 5 1000000000000\n    sort(t, t + 4);                  // to samo w C++\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "div c++",
+      "div_t",
+      "iloraz i reszta jednocześnie",
+      "lldiv",
+      "quotient and remainder c++",
+      "div quot rem"
+     ],
+     "a": "`div(a, b)` zwraca strukturę `div_t` z polami `quot` (iloraz) i `rem` (reszta) — dla `long long` jest `lldiv` /\n`lldiv_t`. Zaokrągla jak operator `/` (w stronę zera), więc dla ujemnych reszta ma znak dzielnej. W praktyce\n`a / b` i `a % b` obok siebie kompilator i tak liczy jedną instrukcją, więc `div` to głównie wygoda.",
+     "code": "div_t d = div(-17, 5);\ncout << d.quot << ' ' << d.rem << '\\n';          // -3 -2\nlldiv_t e = lldiv(10000000000LL, 3);\ncout << e.quot << ' ' << e.rem << '\\n';          // 3333333333 1"
+    },
+    {
+     "q": [
+      "exit(0) c++",
+      "jak zakończyć program w środku funkcji",
+      "wyjście z programu z rekurencji",
+      "exit vs return 0",
+      "how to terminate program c++",
+      "zakończ program po znalezieniu odpowiedzi",
+      "przerwać cały program"
+     ],
+     "a": "`exit(0)` (`<cstdlib>`) kończy program natychmiast z dowolnego miejsca — np. z głębokiej rekurencji po znalezieniu\nrozwiązania. Opróżnia bufory (`cout`, `printf`), więc wypisane dane nie przepadną. Kod wyjścia `0` = sukces;\nniezerowy kod sprawdzarka może uznać za błąd wykonania (RE). `return 0;` działa tylko w `main`.\nNie używaj `abort()` ani `_Exit()` — nie opróżniają buforów i dają RE.",
+     "code": "int n = 5, target = 3;\nauto dfs = [&](auto&& self, int v) -> void {\n    if (v == target) { cout << \"znaleziono \" << v << '\\n'; exit(0); }\n    if (v < n) self(self, v + 1);\n};\ndfs(dfs, 0);"
+    }
+   ],
+   "related": [
+    "str-basic-lex-compare",
+    "stl-string",
+    "stl-string-methods",
+    "num-conversions",
+    "math-bases",
+    "pit-memset",
+    "stl-memset",
+    "num-random",
+    "stl-sort",
+    "io-printf-formats"
+   ]
+  },
+  {
+   "id": "cpp-ref-iomanip-streams",
+   "title": "Dokumentacja: <iomanip> i <ios> — manipulatory strumieni i stan strumienia",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "iomanip",
+    "ios",
+    "manipulatory",
+    "setw",
+    "setfill",
+    "showpos",
+    "internal",
+    "showbase",
+    "ws",
+    "cin.fail",
+    "cin.clear",
+    "peek",
+    "unget",
+    "stan strumienia",
+    "dokumentacja"
+   ],
+   "aliases": [
+    "iomanip",
+    "<iomanip>",
+    "<ios>",
+    "dokumentacja iomanip",
+    "manipulatory strumienia",
+    "lista manipulatorów cout",
+    "wszystkie manipulatory cout",
+    "stan strumienia",
+    "flagi strumienia cin",
+    "iomanip reference",
+    "stream manipulators c++"
+   ],
+   "summary": "Pełna lista manipulatorów formatowania (`setw`, `setfill`, `setprecision`, `fixed`, `left`/`right`/`internal`, `boolalpha`, `showpos`, `hex`/`oct`, `uppercase`, `showbase`, `ws`…) oraz funkcji stanu strumienia (`good`, `fail`, `eof`, `clear`, `ignore`, `peek`, `get`, `unget`). Wszystkie poza `setw` działają trwale.",
+   "complexity": "manipulatory O(1); ignore/getline O(liczba pominiętych znaków)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Manipulatory wstawia się w łańcuch `<<` (lub `>>`). Są dwie grupy:\n- **trwałe** — zmieniają ustawienie strumienia do odwołania: `fixed`, `setprecision`, `setfill`, `left`, `hex`,\n  `boolalpha`, `showpos`…;\n- **jednorazowe** — tylko `setw(n)`: dotyczy wyłącznie **następnego** wypisywanego elementu.\n\nManipulatory z argumentem (`setw`, `setfill`, `setprecision`, `setbase`, `quoted`) są w `<iomanip>`, bez argumentu —\nw `<ios>` (dołączane przez `<iostream>`). Szczegóły precyzji: artykuł `io-precision`; szerokość i zera wiodące:\n`io-setw-setfill`; systemy liczbowe: `io-hex-bin`.\n\nStrumień ma też **stan**: po nieudanym wczytaniu (np. litera zamiast liczby) ustawia `failbit` i **ignoruje\nwszystkie kolejne** operacje, aż wywołasz `clear()`."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Manipulator",
+      "Działanie",
+      "Trwały?",
+      "Przykład → wynik"
+     ],
+     "rows": [
+      [
+       "`setw(n)`",
+       "minimalna szerokość pola",
+       "nie (1 element)",
+       "`setw(5) << 42` → `   42`"
+      ],
+      [
+       "`setfill(c)`",
+       "znak dopełnienia",
+       "tak",
+       "`setfill('0') << setw(5) << 42` → `00042`"
+      ],
+      [
+       "`left` / `right`",
+       "wyrównanie w polu do lewej / prawej",
+       "tak",
+       "`left << setw(5) << 42` → `42   `"
+      ],
+      [
+       "`internal`",
+       "znak/prefiks z lewej, dopełnienie po nim",
+       "tak",
+       "`internal << setfill('0') << setw(6) << -42` → `-00042`"
+      ],
+      [
+       "`setprecision(p)`",
+       "cyfry znaczące / po przecinku (z fixed)",
+       "tak",
+       "`setprecision(3) << 3.14159` → `3.14`"
+      ],
+      [
+       "`fixed`",
+       "zapis dziesiętny, p cyfr po przecinku",
+       "tak",
+       "`fixed << setprecision(2) << 1.0` → `1.00`"
+      ],
+      [
+       "`scientific`",
+       "zapis wykładniczy",
+       "tak",
+       "`scientific << 1234.5` → `1.234500e+03`"
+      ],
+      [
+       "`defaultfloat`",
+       "powrót do trybu domyślnego",
+       "tak",
+       "`defaultfloat << 2.5` → `2.5`"
+      ],
+      [
+       "`showpoint`",
+       "zawsze pokazuj kropkę i zera",
+       "tak",
+       "`showpoint << 2.0` → `2.00000`"
+      ],
+      [
+       "`boolalpha` / `noboolalpha`",
+       "bool jako true/false",
+       "tak",
+       "`boolalpha << true` → `true`"
+      ],
+      [
+       "`showpos` / `noshowpos`",
+       "znak `+` przy dodatnich",
+       "tak",
+       "`showpos << 5` → `+5`"
+      ],
+      [
+       "`hex` / `oct` / `dec`",
+       "system 16 / 8 / 10",
+       "tak",
+       "`hex << 255` → `ff`"
+      ],
+      [
+       "`setbase(b)`",
+       "to samo co hex/oct/dec (b = 16, 8, 10)",
+       "tak",
+       "`setbase(16) << 255` → `ff`"
+      ],
+      [
+       "`uppercase`",
+       "wielkie litery w hex i `E`",
+       "tak",
+       "`hex << uppercase << 255` → `FF`"
+      ],
+      [
+       "`showbase`",
+       "prefiks `0x` / `0`",
+       "tak",
+       "`hex << showbase << 255` → `0xff`"
+      ],
+      [
+       "`ws`",
+       "(wejście) zjada białe znaki",
+       "—",
+       "`cin >> ws; getline(cin, s);`"
+      ],
+      [
+       "`noskipws` / `skipws`",
+       "(wejście) `>>` nie pomija / pomija białych znaków",
+       "tak",
+       "`cin >> noskipws >> c;`"
+      ],
+      [
+       "`endl` / `flush`",
+       "`'\\n'` + opróżnienie bufora / samo opróżnienie",
+       "—",
+       "`cout << flush;`"
+      ],
+      [
+       "`quoted(s)`",
+       "wypisz/wczytaj napis w cudzysłowie",
+       "—",
+       "`quoted(\"a b\")` → `\"a b\"`"
+      ]
+     ],
+     "title": "Manipulatory"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja strumienia",
+      "Co robi / zwraca"
+     ],
+     "rows": [
+      [
+       "`s.good()`",
+       "true, gdy brak jakiegokolwiek błędu i nie EOF"
+      ],
+      [
+       "`s.fail()`",
+       "true, gdy ostatnia operacja się nie udała (failbit lub badbit)"
+      ],
+      [
+       "`s.eof()`",
+       "true, gdy próbowano czytać za końcem danych"
+      ],
+      [
+       "`s.bad()`",
+       "poważny błąd strumienia (np. sprzętowy) — rzadkie"
+      ],
+      [
+       "`if (s)` / `!s`",
+       "to samo co `!s.fail()` / `s.fail()`; `while (cin >> x)` to wykorzystuje"
+      ],
+      [
+       "`s.clear()`",
+       "zdejmuje wszystkie flagi błędów (strumień znów działa)"
+      ],
+      [
+       "`s.ignore(n, d)`",
+       "pomija do `n` znaków albo do znaku `d` włącznie"
+      ],
+      [
+       "`s.peek()`",
+       "podgląda następny znak bez zjadania (EOF jako `char_traits<char>::eof()`)"
+      ],
+      [
+       "`s.get()` / `s.get(c)`",
+       "wczytuje jeden znak, także spację i `'\\n'`"
+      ],
+      [
+       "`s.unget()` / `s.putback(c)`",
+       "oddaje ostatnio wczytany znak do strumienia"
+      ],
+      [
+       "`s.gcount()`",
+       "ile znaków wczytała ostatnia operacja niesformatowana (get, getline, ignore, read)"
+      ],
+      [
+       "`s.flags()` / `s.precision()` / `s.fill()` / `s.width()`",
+       "odczyt (i zapis z argumentem) ustawień formatu"
+      ],
+      [
+       "`s.setf(f)` / `s.unsetf(f)`",
+       "włącza / wyłącza flagi, np. `cout.setf(ios::fixed)`"
+      ]
+     ],
+     "title": "Stan i funkcje strumienia"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: wszystkie manipulatory i obsługa stanu",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // --- Wyjście: manipulatory ---\n    double x = 3.14159;\n    cout << fixed << setprecision(2) << x << '\\n';                  // 3.14\n    cout << scientific << x << '\\n';                                // 3.14e+00\n    cout << defaultfloat << setprecision(6) << x << '\\n';           // 3.14159\n    cout << '[' << setw(6) << 42 << ']' << '\\n';                    // [    42]\n    cout << '[' << left << setw(6) << 42 << ']' << right << '\\n';   // [42    ]\n    cout << setfill('0') << setw(5) << 42 << '\\n';                  // 00042\n    cout << internal << setw(6) << -42 << setfill(' ') << right << '\\n';  // -00042\n    cout << boolalpha << (2 > 1) << ' ' << noboolalpha << (2 > 1) << '\\n'; // true 1\n    cout << showpos << 5 << ' ' << -5 << noshowpos << '\\n';         // +5 -5\n    cout << hex << 255 << ' ' << uppercase << 255 << ' ' << showbase << 255 << '\\n'; // ff FF 0XFF\n    cout << nouppercase << noshowbase << dec;                       // przywróć\n    cout << oct << 8 << dec << ' ' << 8 << '\\n';                    // 10 8\n    cout << showpoint << 2.0 << noshowpoint << '\\n';                // 2.00000\n\n    // --- Wejście: stan strumienia (na istringstream, z cin działa tak samo) ---\n    istringstream in(\"12 abc 7\\nreszta linii\\nX\");\n    int a, b;\n    in >> a;                          // 12\n    in >> b;                          // porażka: \"abc\" to nie liczba → failbit\n    cout << a << ' ' << in.fail() << '\\n';                          // 12 1\n    in.clear();                       // zdejmij flagi błędu\n    string word;\n    in >> word >> b;                  // \"abc\", 7\n    in.ignore(numeric_limits<streamsize>::max(), '\\n');            // pomiń resztę wiersza\n    string line;\n    getline(in, line);                // \"reszta linii\"\n    cout << word << ' ' << b << \" [\" << line << \"]\\n\";\n    cout << (char)in.peek() << '\\n';  // X — podgląd bez zjadania\n    char c = in.get();                // X\n    in.unget();                       // oddaj znak\n    in >> c;                          // znów X\n    in >> c;                          // koniec danych → eof + fail, c bez zmian\n    cout << c << ' ' << in.eof() << ' ' << (bool)in << '\\n';      // X 1 0\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Po nieudanym `cin >> x` strumień jest „zablokowany”: każde kolejne `>>` od razu się nie udaje, a pętla\n`while (true) { cin >> x; ... }` kręci się w nieskończoność. Najpierw `cin.clear()`, potem usuń błędne znaki\n(`cin.ignore(...)` albo wczytaj je do `string`). Od C++11 przy nieudanym wczytaniu liczby `x` dostaje wartość `0`."
+    },
+    {
+     "type": "tip",
+     "md": "Ustawienia formatu można zapamiętać i przywrócić: `auto f = cout.flags(); auto p = cout.precision();` … `cout.flags(f);\ncout.precision(p);` — przydatne w funkcji debugującej, która nie powinna psuć formatu głównego wyjścia."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "setw(int n)",
+     "desc": "minimalna szerokość następnego elementu (wyrównanie w prawo); działa tylko raz",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << setw(4) << i;"
+    },
+    {
+     "sig": "setfill(char c)",
+     "desc": "znak wypełnienia pola przy setw; trwały",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << setfill('0') << setw(3) << 7; // 007"
+    },
+    {
+     "sig": "setprecision(int p)",
+     "desc": "precyzja liczb zmiennoprzecinkowych (cyfry znaczące; z fixed — po przecinku)",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << fixed << setprecision(6) << x;"
+    },
+    {
+     "sig": "fixed / scientific / defaultfloat / hexfloat",
+     "desc": "tryb zapisu double: dziesiętny / wykładniczy / domyślny / szesnastkowy",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << scientific << 1e-9;"
+    },
+    {
+     "sig": "showpoint / noshowpoint",
+     "desc": "zawsze pokazuj kropkę dziesiętną i końcowe zera",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << showpoint << 2.0; // 2.00000"
+    },
+    {
+     "sig": "left / right / internal",
+     "desc": "wyrównanie w polu setw; internal: znak z lewej, wypełnienie po znaku",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << left << setw(10) << name;"
+    },
+    {
+     "sig": "boolalpha / noboolalpha",
+     "desc": "bool jako true/false (także przy wczytywaniu)",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << boolalpha << ok;"
+    },
+    {
+     "sig": "showpos / noshowpos",
+     "desc": "znak + przed liczbami dodatnimi (i zerem)",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << showpos << 5; // +5"
+    },
+    {
+     "sig": "hex / oct / dec",
+     "desc": "system liczbowy dla liczb całkowitych (wypisywanie i wczytywanie)",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << hex << 255 << dec; // ff"
+    },
+    {
+     "sig": "setbase(int b)",
+     "desc": "ustawia podstawę 8, 10 lub 16 (inne → 10)",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << setbase(8) << 8; // 10"
+    },
+    {
+     "sig": "uppercase / nouppercase",
+     "desc": "wielkie litery w hex (FF), w wykładniku (E) i prefiksie (0X)",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << hex << uppercase << 3054;"
+    },
+    {
+     "sig": "showbase / noshowbase",
+     "desc": "prefiks systemu: 0x dla hex, 0 dla oct",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cout << hex << showbase << 255; // 0xff"
+    },
+    {
+     "sig": "ws",
+     "desc": "wejście: pomija wszystkie białe znaki (spacje, '\\n', tab) do pierwszego innego",
+     "complexity": "O(liczba pominiętych)",
+     "returns": "manipulator",
+     "example": "cin >> ws; getline(cin, line);"
+    },
+    {
+     "sig": "skipws / noskipws",
+     "desc": "czy >> pomija białe znaki (domyślnie skipws)",
+     "complexity": "O(1)",
+     "returns": "manipulator",
+     "example": "cin >> noskipws >> c; // c może być spacją"
+    },
+    {
+     "sig": "endl / flush / ends",
+     "desc": "endl: '\\n' + flush; flush: tylko opróżnij bufor",
+     "complexity": "O(1) + koszt flush",
+     "returns": "manipulator",
+     "example": "cout << \"pytanie\" << endl; // interaktywne"
+    },
+    {
+     "sig": "quoted(s)",
+     "desc": "C++14: wypisuje napis w cudzysłowie (z escapowaniem) / wczytuje taki napis ze spacjami",
+     "complexity": "O(|s|)",
+     "returns": "manipulator",
+     "example": "cout << quoted(\"a b\"); // \"a b\""
+    },
+    {
+     "sig": "s.good() / s.fail() / s.eof() / s.bad()",
+     "desc": "flagi stanu: wszystko OK / ostatnia operacja nieudana / koniec danych / poważny błąd",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "if (cin.fail()) cin.clear();"
+    },
+    {
+     "sig": "explicit operator bool / !s",
+     "desc": "strumień w warunku: true, gdy !fail()",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "while (cin >> x) sum += x;"
+    },
+    {
+     "sig": "s.clear()",
+     "desc": "zeruje flagi błędów (failbit, eofbit, badbit); nie usuwa danych z bufora",
+     "complexity": "O(1)",
+     "returns": "void",
+     "example": "cin.clear();"
+    },
+    {
+     "sig": "s.ignore(n = 1, delim = EOF)",
+     "desc": "pomija do n znaków lub do delim włącznie",
+     "complexity": "O(n)",
+     "returns": "strumień (&s)",
+     "example": "cin.ignore(numeric_limits<streamsize>::max(), '\\n');"
+    },
+    {
+     "sig": "s.peek()",
+     "desc": "następny znak bez zjadania; na końcu zwraca EOF (-1)",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "if (cin.peek() == '\\n') { /* koniec wiersza */ }"
+    },
+    {
+     "sig": "s.get() / s.get(char& c)",
+     "desc": "wczytuje jeden znak, w tym białe znaki",
+     "complexity": "O(1)",
+     "returns": "int (EOF na końcu) / strumień",
+     "example": "char c; while (cin.get(c)) { }"
+    },
+    {
+     "sig": "s.unget() / s.putback(c)",
+     "desc": "cofa ostatni wczytany znak (putback: oddaje konkretny znak c)",
+     "complexity": "O(1)",
+     "returns": "strumień",
+     "example": "cin.unget();"
+    },
+    {
+     "sig": "s.gcount()",
+     "desc": "liczba znaków pobranych przez ostatnią operację niesformatowaną",
+     "complexity": "O(1)",
+     "returns": "streamsize",
+     "example": "char buf[100]; cin.getline(buf, 100); int k = cin.gcount();"
+    },
+    {
+     "sig": "s.flags() / s.flags(f)",
+     "desc": "odczyt / ustawienie wszystkich flag formatu (do zapamiętania i przywrócenia)",
+     "complexity": "O(1)",
+     "returns": "ios::fmtflags",
+     "example": "auto f = cout.flags(); /* ... */ cout.flags(f);"
+    },
+    {
+     "sig": "s.precision() / s.width() / s.fill()",
+     "desc": "funkcyjne odpowiedniki setprecision / setw / setfill (z argumentem ustawiają)",
+     "complexity": "O(1)",
+     "returns": "poprzednia wartość",
+     "example": "cout.precision(10); cout.width(5); cout.fill('.');"
+    },
+    {
+     "sig": "s.setf(flag) / s.unsetf(flag)",
+     "desc": "włącza / wyłącza pojedyncze flagi (ios::fixed, ios::showpos, ios::left…)",
+     "complexity": "O(1)",
+     "returns": "poprzednie flagi",
+     "example": "cout.setf(ios::fixed); cout.unsetf(ios::fixed);"
+    },
+    {
+     "sig": "s.copyfmt(other)",
+     "desc": "kopiuje całe formatowanie z innego strumienia",
+     "complexity": "O(1)",
+     "returns": "strumień",
+     "example": "ios saved(nullptr); saved.copyfmt(cout); /* ... */ cout.copyfmt(saved);"
+    }
+   ],
+   "pitfalls": [
+    "`setw` działa tylko na **jeden** następny element — w pętli wstaw go przed każdym elementem.",
+    "`setfill('0')` jest trwały: późniejsze `setw` też dopełni zerami. Wróć przez `setfill(' ')`.",
+    "`setfill('0') << setw(5) << -42` daje `00-42` — dla liczb ujemnych dodaj `internal` (`-0042`).",
+    "`hex` zostaje na stałe — kolejne liczby (także w innych miejscach programu) wyjdą szesnastkowo. Wróć przez `dec`.",
+    "Po nieudanym `cin >> x` wszystkie kolejne odczyty kończą się porażką, dopóki nie wywołasz `cin.clear()`.",
+    "`cin.clear()` nie usuwa błędnych znaków z wejścia — po nim trzeba je pominąć (`ignore` albo wczytać do stringa).",
+    "`cin.ignore()` bez argumentów pomija tylko **jeden** znak.",
+    "`while (!cin.eof())` przetwarza ostatnią wartość dwa razy — pisz `while (cin >> x)`.",
+    "`cin.get()` zwraca `int` — przypisanie do `char` przed porównaniem z `EOF` gubi informację o końcu danych.",
+    "`showbase` przy wartości 0 w hex wypisuje samo `0`, nie `0x0`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "co robi ws",
+      "cin >> ws",
+      "manipulator ws",
+      "std::ws c++",
+      "pomiń białe znaki przed getline",
+      "skip leading whitespace c++",
+      "ws cin"
+     ],
+     "a": "`ws` to manipulator wejścia: `cin >> ws` zjada wszystkie białe znaki (spacje, tabulatory, `'\\n'`) aż do pierwszego\n„normalnego” znaku. Typowe użycie: po `cin >> n` zostaje w buforze `'\\n'`, przez który `getline` zwróciłby pusty\nwiersz — `getline(cin >> ws, line)` go pomija. Uwaga: pominie też **puste wiersze**, jeśli są istotne w zadaniu\n(wtedy użyj `cin.ignore(numeric_limits<streamsize>::max(), '\\n')`).",
+     "code": "int n;\nstring line;\ncin >> n;\ngetline(cin >> ws, line);    // pierwszy niepusty wiersz po liczbie"
+    },
+    {
+     "q": [
+      "cin.fail",
+      "cin.clear",
+      "cin przestaje wczytywać po błędzie",
+      "wpisałem literę do int i pętla się zapętla",
+      "jak naprawić cin po złym wejściu",
+      "reset cin after invalid input",
+      "failbit c++",
+      "cin zablokowany"
+     ],
+     "a": "Gdy `cin >> x` nie może wczytać liczby (np. jest litera), strumień ustawia `failbit`, `x` dostaje 0, a błędne znaki\n**zostają** w buforze. Każde kolejne `>>` od razu się nie udaje. Naprawa w dwóch krokach:\n1. `cin.clear();` — zdejmuje flagę błędu,\n2. usuń śmieci: `cin.ignore(numeric_limits<streamsize>::max(), '\\n');` (cały wiersz) albo wczytaj token do `string`.\nNa zawodach wejście jest poprawne, więc to się zdarza głównie przy złym formacie (np. `long long` > zakres lub\nprzecinek zamiast kropki).",
+     "code": "istringstream in(\"abc 42\");\nint x;\nin >> x;                         // nie wyszło: x = 0, fail() = true\nif (in.fail()) {\n    in.clear();                  // 1) zdejmij flagę\n    string junk; in >> junk;     // 2) zjedz błędny token \"abc\"\n}\nin >> x;                         // 42\ncout << x << '\\n';"
+    },
+    {
+     "q": [
+      "cin.peek",
+      "peek c++",
+      "podejrzeć następny znak",
+      "sprawdzić następny znak bez wczytywania",
+      "unget c++",
+      "putback c++",
+      "look ahead next char cin",
+      "czy następny znak to koniec linii"
+     ],
+     "a": "`cin.peek()` zwraca następny znak **bez** zdejmowania go ze strumienia (na końcu danych `EOF`, czyli -1), więc\nmożesz zdecydować, jak czytać dalej — np. czy w wierszu jest jeszcze liczba albo czy zaczyna się minus.\n`cin.unget()` cofa ostatnio wczytany znak, a `cin.putback(c)` oddaje znak `c`. Białe znaki `peek` też widzi —\nczęsto najpierw robi się `cin >> ws`.",
+     "code": "istringstream in(\"12 7 3\\n99\");\nint x, sum = 0;\nwhile (in.peek() != '\\n' && in >> x)   // sumuj liczby tylko z pierwszego wiersza\n    sum += x;\ncout << sum << '\\n';                   // 22\nchar c = in.get();                     // '\\n'\nin.unget();                            // oddany — następny get() zwróci '\\n' znowu"
+    },
+    {
+     "q": [
+      "cin.ignore parametry",
+      "cin.ignore numeric_limits",
+      "pominąć resztę linii",
+      "cin.ignore() pomija tylko jeden znak",
+      "skip rest of line c++",
+      "ignore do końca wiersza",
+      "streamsize max ignore"
+     ],
+     "a": "`cin.ignore(n, delim)` pomija **co najwyżej n** znaków albo do znaku `delim` **włącznie** — co nastąpi pierwsze.\nBez argumentów (`cin.ignore()`) pomija tylko 1 znak. Pominięcie reszty wiersza niezależnie od jego długości:\n`cin.ignore(numeric_limits<streamsize>::max(), '\\n');` (wartość `max()` oznacza „bez limitu”).",
+     "code": "istringstream in(\"5 komentarz do pominiecia\\nAla ma kota\");\nint n; string s;\nin >> n;\nin.ignore(numeric_limits<streamsize>::max(), '\\n');   // reszta pierwszego wiersza\ngetline(in, s);                                        // \"Ala ma kota\"\ncout << n << \" | \" << s << '\\n';"
+    },
+    {
+     "q": [
+      "showpos",
+      "wypisać plus przed liczbą dodatnią",
+      "znak + przy liczbach dodatnich",
+      "print plus sign c++",
+      "+5 cout",
+      "printf plus znak"
+     ],
+     "a": "`cout << showpos` dopisuje `+` przed liczbami dodatnimi (i przed zerem: `+0`), aż do `noshowpos`. W `printf`\nodpowiednikiem jest flaga `+`: `printf(\"%+d\", x)`. Jeśli zero ma być bez znaku, wypisz je osobno.",
+     "code": "cout << showpos << 5 << ' ' << -3 << ' ' << 0 << noshowpos << ' ' << 5 << '\\n';  // +5 -3 +0 5\nprintf(\"%+d %+.2f\\n\", 7, 1.5);                                                    // +7 +1.50"
+    },
+    {
+     "q": [
+      "internal c++",
+      "zera wiodące dla liczby ujemnej",
+      "setfill 0 z minusem",
+      "00-42 zamiast -0042",
+      "internal setw setfill",
+      "zera wiodące minus cout"
+     ],
+     "a": "`setfill('0') << setw(5) << -42` daje `00-42`, bo domyślnie (`right`) wypełnienie idzie przed całym napisem,\nrazem ze znakiem. Manipulator `internal` wstawia wypełnienie **między** znak (albo prefiks `0x`) a cyfry:\n`-0042`. To odpowiednik `printf(\"%05d\", -42)`.",
+     "code": "cout << setfill('0') << setw(5) << -42 << '\\n';               // 00-42\ncout << internal << setw(5) << -42 << '\\n';                   // -0042\ncout << hex << showbase << setw(6) << 255 << dec << '\\n';     // 0x00ff\ncout << right << setfill(' ') << noshowbase;                  // przywróć\nprintf(\"%05d\\n\", -42);                                         // -0042"
+    },
+    {
+     "q": [
+      "showbase",
+      "wypisać 0x przed liczbą hex",
+      "hex wielkimi literami",
+      "uppercase hex cout",
+      "0x prefix cout",
+      "jak wypisać FF zamiast ff"
+     ],
+     "a": "`showbase` dodaje prefiks systemu: `0x` dla `hex`, `0` dla `oct` (dla `dec` nic). `uppercase` zmienia litery na\nwielkie: cyfry `A-F`, prefiks `0X` i wykładnik `E` w zapisie naukowym. Oba są trwałe — wyłączasz `noshowbase`,\n`nouppercase`, a system wracasz `dec`. W `printf`: `%x`, `%X`, `%#x` (z prefiksem).",
+     "code": "cout << hex << 255 << ' ' << uppercase << 255 << ' ' << showbase << 255 << '\\n';  // ff FF 0XFF\ncout << nouppercase << 255 << ' ' << oct << 8 << '\\n';                          // 0xff 010\ncout << dec << noshowbase;\nprintf(\"%x %X %#x\\n\", 255, 255, 255);                                           // ff FF 0xff"
+    },
+    {
+     "q": [
+      "jak przywrócić ustawienia cout",
+      "zapisać i przywrócić format cout",
+      "cout.flags",
+      "reset cout formatting",
+      "copyfmt",
+      "cout wróć do domyślnych ustawień",
+      "jak wyłączyć fixed i hex naraz"
+     ],
+     "a": "Wszystkie trwałe ustawienia formatu (fixed, hex, showpos, left…) siedzą w `cout.flags()`, a precyzja i znak wypełnienia\nosobno (`cout.precision()`, `cout.fill()`). Zapamiętaj je przed zmianą i przywróć po. Najkrócej — skopiuj całe\nformatowanie do pomocniczego obiektu `ios` przez `copyfmt`. Pełny reset do domyślnych: `cout.flags(ios::fmtflags{});`\nplus `cout.precision(6); cout.fill(' ');` — ale wtedy zgubisz np. `dec`, więc lepiej zapamiętać stan na starcie.",
+     "code": "auto f = cout.flags();\nauto p = cout.precision();\ncout << fixed << setprecision(2) << hex << showpos << 3.14159 << ' ' << 255 << '\\n';  // +3.14 ff\ncout.flags(f);\ncout.precision(p);\ncout << 3.14159 << ' ' << 255 << '\\n';                                               // 3.14159 255\nios saved(nullptr);\nsaved.copyfmt(cout);          // zapamiętaj wszystko naraz\ncout << setfill('*') << left;\ncout.copyfmt(saved);          // przywróć"
+    },
+    {
+     "q": [
+      "cin.get",
+      "wczytać znak razem ze spacją",
+      "cin >> char pomija spacje",
+      "noskipws",
+      "read char including spaces c++",
+      "cin.get vs cin >>",
+      "jak wczytać spację do char"
+     ],
+     "a": "`cin >> c` dla `char` pomija białe znaki — spacji ani `'\\n'` w ten sposób nie wczytasz. Opcje:\n- `cin.get(c)` — wczytuje dokładnie następny znak (także spację i `'\\n'`); w warunku zwraca strumień;\n- `int c = cin.get();` — zwraca kod znaku albo `EOF` na końcu (zostaw w `int`!);\n- `cin >> noskipws >> c` — wyłącza pomijanie białych znaków dla `>>` (do `skipws`).\nDo wczytywania całych wierszy ze spacjami służy `getline`.",
+     "code": "istringstream in(\"a b\\n\");\nchar c;\nint spaces = 0, all = 0;\nwhile (in.get(c)) { all++; if (c == ' ') spaces++; }\ncout << all << ' ' << spaces << '\\n';      // 4 1  (a, spacja, b, \\n)"
+    },
+    {
+     "q": [
+      "eof fail bad różnica",
+      "co to failbit eofbit badbit",
+      "cin.good",
+      "stan strumienia c++",
+      "stream state flags c++",
+      "kiedy eof zwraca true",
+      "fail vs eof"
+     ],
+     "a": "Strumień ma trzy flagi:\n- `eofbit` — próbowano czytać **za** końcem danych (`eof()`); ustawia się dopiero po nieudanej próbie, nie „z góry”;\n- `failbit` — operacja się nie udała (zły format albo brak danych); `fail()` zwraca true dla failbit **lub** badbit;\n- `badbit` — poważny błąd strumienia (`bad()`), w praktyce rzadki.\n`good()` = żadna flaga nie jest ustawiona. `if (cin)` i `while (cin >> x)` sprawdzają `!fail()`. Wczytanie ostatniej\nliczby bez `'\\n'` na końcu pliku ustawia `eof`, ale **nie** `fail` — dlatego pętla `while (!cin.eof())` jest zawodna.",
+     "code": "istringstream in(\"5\");\nint x;\nin >> x;\ncout << x << ' ' << in.eof() << ' ' << in.fail() << '\\n';   // 5 1 0 — eof, ale odczyt udany\nin >> x;\ncout << in.eof() << ' ' << in.fail() << ' ' << in.good() << '\\n';  // 1 1 0"
+    }
+   ],
+   "related": [
+    "io-precision",
+    "io-setw-setfill",
+    "io-hex-bin",
+    "io-print-bool",
+    "io-getline",
+    "io-read-until-eof",
+    "io-fast-io",
+    "io-printf-formats",
+    "cpp-ref-sstream-fstream"
+   ]
+  },
+  {
+   "id": "cpp-ref-sstream-fstream",
+   "title": "Dokumentacja: <sstream> i <fstream> — strumienie napisowe i plikowe",
+   "category": "Wejście/wyjście",
+   "tags": [
+    "sstream",
+    "fstream",
+    "stringstream",
+    "istringstream",
+    "ostringstream",
+    "ifstream",
+    "ofstream",
+    "is_open",
+    "ios::app",
+    "tryby otwarcia",
+    "rdbuf",
+    "parsowanie wiersza",
+    "dokumentacja"
+   ],
+   "aliases": [
+    "sstream",
+    "<sstream>",
+    "fstream",
+    "<fstream>",
+    "dokumentacja sstream",
+    "dokumentacja fstream",
+    "strumienie napisowe",
+    "strumienie plikowe",
+    "stringstream reference",
+    "ifstream ofstream",
+    "operacje na plikach c++"
+   ],
+   "summary": "`<sstream>` daje strumienie działające na `string` (`istringstream` do parsowania, `ostringstream` do budowania napisu, `stringstream` do obu), a `<fstream>` — strumienie plikowe (`ifstream`, `ofstream`, `fstream`). Używa się ich dokładnie jak `cin`/`cout`: `>>`, `<<`, `getline`, manipulatory, sprawdzanie stanu.",
+   "complexity": "odczyt/zapis O(liczba znaków); konstrukcja stringstream z napisu O(|s|) (kopiuje napis)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Wszystkie te klasy dziedziczą po `istream` / `ostream`, więc działa na nich **wszystko**, co znasz z `cin`/`cout`:\n`>>` (pomija białe znaki), `<<`, `getline(s, line)`, `getline(s, tok, ',')`, `fixed`, `setw`, `ws`, `fail()`, `clear()`.\nFunkcję przyjmującą `istream&` możesz wywołać z `cin`, z pliku albo z napisu.\n\n- **`istringstream`** — czyta z napisu: parsowanie jednego wiersza, dzielenie po separatorze.\n- **`ostringstream`** — pisze do napisu: sklejanie tekstu z liczbami, potem `.str()`.\n- **`stringstream`** — oba kierunki (najczęściej spotykany, choć do jednego kierunku lepsze są wersje i/o).\n- **`ifstream` / `ofstream` / `fstream`** — plik do odczytu / zapisu / obu.\n\nNa OI dane idą przez standardowe wejście i wyjście — pliki przydają się do testów lokalnych (generator, brute force,\nporównywanie wyników). Przekierowanie `cin`/`cout` z pliku: `freopen` (artykuł `io-freopen`)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Klasa / funkcja",
+      "Co robi",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "`istringstream in(s)`",
+       "strumień wejściowy z napisu `s`",
+       "`in >> a >> b;`"
+      ],
+      [
+       "`ostringstream out`",
+       "strumień wyjściowy do napisu",
+       "`out << x << ' ';` → `out.str()`"
+      ],
+      [
+       "`stringstream ss(s)`",
+       "wejście i wyjście na napisie",
+       "`ss << 42; ss >> n;`"
+      ],
+      [
+       "`ss.str()`",
+       "kopia aktualnej treści",
+       "`string r = out.str();`"
+      ],
+      [
+       "`ss.str(s)`",
+       "podmienia treść (pozycja na początek)",
+       "`ss.str(line);`"
+      ],
+      [
+       "`ss.clear()`",
+       "zeruje flagi błędu/EOF (nie treść!)",
+       "`ss.str(line); ss.clear();`"
+      ],
+      [
+       "`getline(ss, tok, ',')`",
+       "token do separatora",
+       "`while (getline(ss, tok, ',')) ...`"
+      ],
+      [
+       "`ifstream in(\"plik\")`",
+       "otwiera plik do odczytu",
+       "`in >> n;`"
+      ],
+      [
+       "`ofstream out(\"plik\")`",
+       "otwiera do zapisu (czyści plik)",
+       "`out << ans << '\\n';`"
+      ],
+      [
+       "`ofstream out(\"plik\", ios::app)`",
+       "dopisywanie na końcu",
+       "`out << log << '\\n';`"
+      ],
+      [
+       "`fstream f(\"plik\", ios::in | ios::out)`",
+       "odczyt i zapis (plik musi istnieć)",
+       "`f.seekg(0);`"
+      ],
+      [
+       "`f.is_open()`",
+       "czy plik udało się otworzyć",
+       "`if (!in.is_open()) return 1;`"
+      ],
+      [
+       "`f.open(name, mode)` / `f.close()`",
+       "otwórz później / zamknij (i zapisz bufor)",
+       "`out.close();`"
+      ],
+      [
+       "`in.rdbuf()`",
+       "bufor pliku — kopiowanie całości",
+       "`ss << in.rdbuf();`"
+      ],
+      [
+       "`in.seekg(pos)` / `in.tellg()`",
+       "ustaw / odczytaj pozycję odczytu",
+       "`in.seekg(0, ios::end);`"
+      ],
+      [
+       "`f.read(buf, n)` / `f.write(buf, n)`",
+       "surowe bajty (tryb `ios::binary`)",
+       "`out.write(p, n);`"
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Tryb",
+      "Znaczenie"
+     ],
+     "rows": [
+      [
+       "`ios::in`",
+       "odczyt (domyślny dla ifstream)"
+      ],
+      [
+       "`ios::out`",
+       "zapis (domyślny dla ofstream; sam w sobie czyści plik)"
+      ],
+      [
+       "`ios::app`",
+       "każdy zapis na końcu pliku (dopisywanie)"
+      ],
+      [
+       "`ios::trunc`",
+       "wyczyść plik przy otwarciu"
+      ],
+      [
+       "`ios::ate`",
+       "po otwarciu ustaw się na końcu (można potem przesuwać)"
+      ],
+      [
+       "`ios::binary`",
+       "bez konwersji końców linii (ważne na Windows)"
+      ]
+     ],
+     "title": "Tryby otwarcia (łącz przez |)"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: zapis i odczyt pliku, parsowanie wiersza, budowanie napisu",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // 1) Zapis do pliku\n    ofstream out(\"dane.txt\");                   // domyślnie: utwórz / wyczyść\n    if (!out.is_open()) { cerr << \"nie da sie otworzyc\\n\"; return 1; }\n    out << \"3\\n10 20 30\\nAla,ma,kota\\n\";\n    out.close();                                // zapisuje bufor; potrzebne przed ponownym otwarciem\n\n    ofstream app(\"dane.txt\", ios::app);         // dopisywanie na końcu\n    app << \"7 8\\n\";\n    app.close();\n\n    // 2) Odczyt z pliku — dokładnie jak z cin\n    ifstream in(\"dane.txt\");\n    int n;\n    in >> n;\n    vector<int> v(n);\n    for (int& x : v) in >> x;\n    string csv;\n    getline(in >> ws, csv);                     // ws zjada '\\n' po liczbach → \"Ala,ma,kota\"\n\n    // 3) Dzielenie po przecinku: istringstream + getline z separatorem\n    istringstream parts(csv);\n    string tok;\n    vector<string> words;\n    while (getline(parts, tok, ',')) words.push_back(tok);\n\n    // 4) Reszta pliku do EOF: while (in >> x), nie while (!in.eof())\n    int x, rest = 0;\n    while (in >> x) rest += x;                  // 7 + 8\n\n    // 5) Budowanie napisu: ostringstream\n    ostringstream os;\n    os << \"suma=\" << accumulate(v.begin(), v.end(), 0) << \" slow=\" << words.size() << \" reszta=\" << rest;\n    cout << os.str() << '\\n';                   // suma=60 slow=3 reszta=15\n\n    // 6) Jeden stringstream wiele razy: str(nowa_treść) + clear()\n    stringstream ss;\n    for (string line : {\"1 2 3\", \"4 5\"}) {\n        ss.str(line);\n        ss.clear();                             // bez tego po pierwszym wierszu flaga EOF blokuje odczyt\n        int s = 0, y;\n        while (ss >> y) s += y;\n        cout << s << ' ';                       // 6 9\n    }\n    cout << '\\n';\n    remove(\"dane.txt\");                         // <cstdio>: usuń plik testowy\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`ss.clear()` **nie czyści treści** — tylko flagi błędu i EOF. Treść podmieniasz `ss.str(\"nowy\")` (albo `ss.str(\"\")`,\nżeby wyczyścić). Przy ponownym użyciu strumienia, który doczytał do końca, potrzebne są **oba** wywołania.\nProściej i równie szybko: twórz nowy `istringstream` w każdym obrocie pętli."
+    },
+    {
+     "type": "tip",
+     "md": "Plik otwarty bez ścieżki (`ifstream in(\"in.txt\")`) jest szukany w **katalogu roboczym** — tam, skąd uruchamiasz program,\na nie tam, gdzie leży plik `.cpp`. Gdy `is_open()` zwraca `false`, sprawdź katalog i nazwę (rozszerzenie!)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "istringstream in(s)",
+     "desc": "strumień wejściowy czytający z kopii napisu s",
+     "complexity": "O(|s|)",
+     "returns": "obiekt strumienia",
+     "example": "istringstream in(line); int a, b; in >> a >> b;"
+    },
+    {
+     "sig": "ostringstream out",
+     "desc": "strumień wyjściowy zapisujący do napisu",
+     "complexity": "O(1)",
+     "returns": "obiekt strumienia",
+     "example": "ostringstream out; out << x << ' ' << y;"
+    },
+    {
+     "sig": "stringstream ss / ss(s)",
+     "desc": "strumień dwukierunkowy na napisie",
+     "complexity": "O(|s|)",
+     "returns": "obiekt strumienia",
+     "example": "stringstream ss; ss << 255; int n; ss >> n;"
+    },
+    {
+     "sig": "ss.str()",
+     "desc": "kopia całej treści bufora",
+     "complexity": "O(długość)",
+     "returns": "string",
+     "example": "string res = out.str();"
+    },
+    {
+     "sig": "ss.str(s)",
+     "desc": "zastępuje treść napisem s i ustawia pozycję na początek (flag nie zmienia)",
+     "complexity": "O(|s|)",
+     "returns": "void",
+     "example": "ss.str(line); ss.clear();"
+    },
+    {
+     "sig": "ss.clear()",
+     "desc": "zdejmuje flagi failbit/eofbit; treść zostaje",
+     "complexity": "O(1)",
+     "returns": "void",
+     "example": "ss.clear();"
+    },
+    {
+     "sig": "getline(strumień, s, delim = '\\n')",
+     "desc": "wczytuje do separatora (separator jest zjadany, nie trafia do s)",
+     "complexity": "O(długość)",
+     "returns": "strumień (w warunku: czy się udało)",
+     "example": "while (getline(ss, tok, ';')) v.push_back(tok);"
+    },
+    {
+     "sig": "strumień >> x / strumień << x",
+     "desc": "sformatowany odczyt / zapis jak dla cin i cout",
+     "complexity": "O(długość tokenu)",
+     "returns": "strumień",
+     "example": "while (in >> x) sum += x;"
+    },
+    {
+     "sig": "ifstream in(nazwa [, tryb])",
+     "desc": "otwiera plik do odczytu (ios::in)",
+     "complexity": "O(1)",
+     "returns": "obiekt; sprawdź is_open()",
+     "example": "ifstream in(\"test.in\");"
+    },
+    {
+     "sig": "ofstream out(nazwa [, tryb])",
+     "desc": "otwiera do zapisu; bez ios::app czyści plik",
+     "complexity": "O(1)",
+     "returns": "obiekt",
+     "example": "ofstream out(\"wynik.out\");"
+    },
+    {
+     "sig": "fstream f(nazwa, ios::in | ios::out)",
+     "desc": "plik do odczytu i zapisu (musi istnieć, chyba że dodasz ios::trunc)",
+     "complexity": "O(1)",
+     "returns": "obiekt",
+     "example": "fstream f(\"a.txt\", ios::in | ios::out);"
+    },
+    {
+     "sig": "f.is_open()",
+     "desc": "czy otwarcie pliku się udało",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "if (!in.is_open()) { cerr << \"brak pliku\"; }"
+    },
+    {
+     "sig": "f.open(nazwa, tryb) / f.close()",
+     "desc": "otwiera później / zamyka i opróżnia bufor (destruktor też zamyka)",
+     "complexity": "O(1)",
+     "returns": "void",
+     "example": "out.open(\"log.txt\", ios::app); out.close();"
+    },
+    {
+     "sig": "ios::in / out / app / trunc / ate / binary",
+     "desc": "tryby otwarcia, łączone operatorem |",
+     "returns": "ios::openmode",
+     "example": "ofstream out(\"a.bin\", ios::binary | ios::app);"
+    },
+    {
+     "sig": "in.rdbuf()",
+     "desc": "wskaźnik na bufor — `ss << in.rdbuf()` kopiuje cały plik",
+     "complexity": "O(rozmiar pliku)",
+     "returns": "streambuf*",
+     "example": "stringstream ss; ss << in.rdbuf(); string all = ss.str();"
+    },
+    {
+     "sig": "in.seekg(pos [, ios::beg|cur|end]) / in.tellg()",
+     "desc": "przesuwa / odczytuje pozycję odczytu (seekp/tellp dla zapisu)",
+     "complexity": "O(1)",
+     "returns": "strumień / streampos",
+     "example": "in.seekg(0, ios::end); auto size = in.tellg(); in.seekg(0);"
+    },
+    {
+     "sig": "f.read(char* buf, n) / f.write(const char* buf, n)",
+     "desc": "surowe bajty (zwykle z ios::binary)",
+     "complexity": "O(n)",
+     "returns": "strumień",
+     "example": "out.write((char*)a, sizeof a);"
+    },
+    {
+     "sig": "f.eof() / f.fail() / (bool)f",
+     "desc": "stan strumienia jak dla cin",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "if (!in) cerr << \"blad odczytu\";"
+    },
+    {
+     "sig": "remove(nazwa) / rename(stara, nowa)",
+     "desc": "<cstdio>: usuwa / zmienia nazwę pliku",
+     "complexity": "O(1)",
+     "returns": "int: 0 = sukces",
+     "example": "remove(\"tmp.txt\");"
+    }
+   ],
+   "pitfalls": [
+    "`ss.clear()` nie usuwa treści, tylko flagi. Do ponownego użycia: `ss.str(nowy); ss.clear();`.",
+    "Po wczytaniu wszystkiego ze `stringstream` ustawia się EOF — bez `clear()` kolejne `>>` po `str(...)` nic nie wczytają.",
+    "`ofstream out(\"plik\")` **czyści** istniejący plik. Do dopisywania potrzebne `ios::app`.",
+    "Plik jest szukany w katalogu roboczym procesu, nie obok `.cpp` — `is_open()` == false to zwykle zła ścieżka.",
+    "`while (!in.eof())` przetwarza ostatnią wartość dwa razy — pisz `while (in >> x)` / `while (getline(in, s))`.",
+    "`getline` po `in >> n` zwraca pusty napis (został `'\\n'`) — użyj `getline(in >> ws, s)` albo `in.ignore(...)`.",
+    "Zapisane dane trafiają do pliku dopiero przy `close()`, `flush` albo zniszczeniu obiektu — nie czytaj pliku przed zamknięciem.",
+    "`stringstream` jest kilka razy wolniejszy niż czytanie wprost z `cin` — nie parsuj nim 10^6 liczb, gdy nie musisz.",
+    "Na Windows plik tekstowy ma `\\r\\n` — przy wczytywaniu przez `getline` na Linuksie/macOS na końcu wiersza zostaje `'\\r'`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wyczyścić stringstream",
+      "stringstream clear nie czyści",
+      "ss.str(\"\") i ss.clear()",
+      "stringstream ponowne użycie",
+      "reset stringstream c++",
+      "stringstream clear vs str",
+      "stringstream drugi raz nie działa"
+     ],
+     "a": "Dwie różne rzeczy:\n- `ss.str(\"\")` (lub `ss.str(nowa)`) — podmienia **treść**;\n- `ss.clear()` — zdejmuje **flagi** (EOF, fail). Nazwa myli: nie czyści treści!\n\nGdy strumień doczytał do końca, ma ustawiony EOF i każde kolejne `>>` się nie uda — nawet po `str(...)`.\nDlatego przy ponownym użyciu wywołaj oba: `ss.str(line); ss.clear();`. Alternatywa bez pułapek: nowy\n`istringstream` w każdym obrocie pętli.",
+     "code": "stringstream ss;\nint x, sum = 0;\nfor (string line : {\"1 2\", \"3 4\"}) {\n    ss.str(line);\n    ss.clear();            // bez tego drugi wiersz byłby pominięty\n    while (ss >> x) sum += x;\n}\ncout << sum << '\\n';       // 10"
+    },
+    {
+     "q": [
+      "istringstream vs stringstream",
+      "ostringstream c++",
+      "różnica stringstream istringstream",
+      "który stringstream wybrać",
+      "sstream c++",
+      "czym się różni ostringstream"
+     ],
+     "a": "- `istringstream` — tylko odczyt z napisu (`>>`, `getline`); konstruktor przyjmuje napis.\n- `ostringstream` — tylko zapis do napisu (`<<`), wynik przez `.str()`.\n- `stringstream` — oba kierunki; wygodny, ale łatwo się pomylić (zapis i odczyt mają osobne pozycje).\nWybieraj wersję jednokierunkową, gdy wiesz, czego potrzebujesz — kod jest czytelniejszy, a błędy (np. `<<` do\nstrumienia wejściowego) wyłapie kompilator.",
+     "code": "istringstream in(\"10 20\");\nint a, b;\nin >> a >> b;\nostringstream out;\nout << a + b << \" punktow\";\nstring s = out.str();      // \"30 punktow\""
+    },
+    {
+     "q": [
+      "ostringstream jak zbudować string",
+      "sklejanie stringa z liczbami",
+      "string builder c++",
+      "dołączyć liczbę do stringa",
+      "format string c++ jak sprintf",
+      "string z double z dwoma miejscami"
+     ],
+     "a": "`ostringstream` zbiera tekst tak jak `cout` — z manipulatorami (`fixed`, `setprecision`, `setw`) — a `.str()` zwraca\ngotowy `string`. Do pojedynczej liczby wystarczy `to_string(x)` (ale dla `double` daje zawsze 6 miejsc), a dla\nprostego sklejania napisów — `s += ...`. W C++20 jest też `format` (nagłówek `<format>`; na starszych sprawdzarkach\nmoże go nie być).",
+     "code": "double avg = 7.0 / 3;\nostringstream os;\nos << \"srednia: \" << fixed << setprecision(2) << avg << \", n=\" << 3;\nstring s = os.str();               // \"srednia: 2.33, n=3\"\nstring t = \"x=\" + to_string(42);   // \"x=42\"\ncout << s << '\\n' << t << '\\n';"
+    },
+    {
+     "q": [
+      "is_open",
+      "sprawdzić czy plik się otworzył",
+      "ifstream nie czyta pliku",
+      "plik się nie wczytuje",
+      "ifstream not opening file",
+      "gdzie położyć plik dla ifstream",
+      "ifstream zwraca zera"
+     ],
+     "a": "`in.is_open()` mówi, czy otwarcie się udało (albo krócej `if (!in)`). Gdy plik się nie otworzy, każde `in >> x`\npo cichu nic nie wczytuje i zmienne mają 0. Najczęstsze przyczyny:\n- plik leży w innym katalogu niż **katalog roboczy** (ten, z którego uruchamiasz program — w IDE bywa to np. `build/`);\n- zła nazwa lub rozszerzenie (Windows ukrywa `.txt`, więc powstaje `test.txt.txt`);\n- plik jest otwarty do zapisu w innym strumieniu, który jeszcze nie został zamknięty.",
+     "code": "ifstream in(\"test.in\");\nif (!in.is_open()) {\n    cerr << \"Nie moge otworzyc test.in\\n\";\n} else {\n    int n;\n    in >> n;\n}"
+    },
+    {
+     "q": [
+      "dopisywanie do pliku c++",
+      "ios::app",
+      "ofstream append",
+      "ofstream nadpisuje plik",
+      "append to file c++",
+      "dopisać na końcu pliku",
+      "jak nie nadpisywać pliku"
+     ],
+     "a": "`ofstream out(\"plik\")` otwiera w trybie `ios::out`, który **czyści** istniejący plik. Żeby dopisywać na końcu, dodaj\n`ios::app`: `ofstream out(\"plik\", ios::app);` — każdy zapis trafi na koniec. Inne tryby: `ios::trunc` (wyczyść),\n`ios::ate` (zacznij na końcu, ale można się przesuwać), `ios::binary` (bez zamiany końców linii).",
+     "code": "{\n    ofstream out(\"log.txt\", ios::app);\n    out << \"kolejny test OK\\n\";\n}                                   // zamknięcie przy wyjściu z bloku\nremove(\"log.txt\");"
+    },
+    {
+     "q": [
+      "wczytać cały plik do stringa",
+      "cały plik naraz c++",
+      "rdbuf",
+      "read whole file into string c++",
+      "wczytaj całe wejście do stringa",
+      "skopiować plik c++"
+     ],
+     "a": "Najkrócej przez bufor strumienia: `ss << in.rdbuf();` kopiuje całą zawartość pliku do `stringstream`, a `ss.str()`\nzwraca ją jako `string`. To samo działa dla standardowego wejścia: `ss << cin.rdbuf();`. Alternatywa z iteratorami:\n`string all((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());`. Kopia pliku: `out << in.rdbuf();`.",
+     "code": "ifstream in(\"dane.txt\");\nstringstream ss;\nss << in.rdbuf();\nstring all = ss.str();               // cała zawartość, ze spacjami i '\\n'\ncout << all.size() << '\\n';"
+    },
+    {
+     "q": [
+      "getline z separatorem",
+      "getline z przecinkiem",
+      "getline delimiter",
+      "getline(ss, tok, ',')",
+      "podział po średniku getline",
+      "split by comma getline",
+      "getline trzeci argument"
+     ],
+     "a": "`getline(strumień, tok, znak)` czyta aż do podanego znaku (separator jest zjadany i **nie** trafia do `tok`).\nW połączeniu z `istringstream` dzieli wiersz po przecinku, średniku, dwukropku itd. Spacje wokół separatora\nzostają w tokenie — jeśli są, przytnij je albo wczytaj liczbę z tokenu przez `stoi`. Uwaga: przy separatorze innym\nniż `'\\n'` znak nowej linii trafi do tokenu.",
+     "code": "string line = \"12,7,,40\";\nistringstream in(line);\nstring tok;\nvector<int> v;\nwhile (getline(in, tok, ','))\n    if (!tok.empty()) v.push_back(stoi(tok));   // 12 7 40 (pusty token pominięty)"
+    },
+    {
+     "q": [
+      "tryby otwarcia pliku c++",
+      "ios::in ios::out ios::trunc",
+      "fstream do odczytu i zapisu",
+      "ios::binary",
+      "file open modes c++",
+      "ios::ate"
+     ],
+     "a": "Tryby łączysz operatorem `|`:\n- `ios::in` — odczyt; `ios::out` — zapis (samo `out` czyści plik);\n- `ios::app` — dopisywanie (każdy zapis na końcu); `ios::trunc` — wyczyść przy otwarciu;\n- `ios::ate` — zacznij na końcu; `ios::binary` — bez konwersji `\\n` ↔ `\\r\\n` (Windows).\n`fstream f(nazwa, ios::in | ios::out)` wymaga, żeby plik istniał; z `| ios::trunc` utworzy nowy pusty.",
+     "code": "fstream f(\"tmp.txt\", ios::in | ios::out | ios::trunc);   // utwórz, czytaj i pisz\nf << 123 << ' ' << 456;\nf.seekg(0);                                                // wróć na początek do odczytu\nint a, b;\nf >> a >> b;                                               // 123 456\nf.close();\nremove(\"tmp.txt\");"
+    },
+    {
+     "q": [
+      "ifstream czy freopen",
+      "freopen vs ifstream",
+      "kiedy używać ifstream",
+      "cin z pliku bez freopen",
+      "jak czytać z pliku i z cin tą samą funkcją"
+     ],
+     "a": "- `freopen(\"in.txt\", \"r\", stdin)` przekierowuje **całe** standardowe wejście — reszta programu dalej używa `cin`,\n  więc kod wysłany na sprawdzarkę różni się jedną linijką (najlepiej w `#ifdef LOCAL`).\n- `ifstream` to osobny strumień — dobry, gdy czytasz z kilku plików naraz albo z pliku **i** z klawiatury.\nFunkcja przyjmująca `istream&` działa z `cin`, `ifstream` i `istringstream` bez zmian.",
+     "code": "long long sumAll(istream& in) {\n    long long s = 0, x;\n    while (in >> x) s += x;\n    return s;\n}\nvoid demo() {\n    istringstream test(\"1 2 3\");\n    cout << sumAll(test) << '\\n';      // 6\n    // sumAll(cin);  albo: ifstream f(\"in.txt\"); sumAll(f);\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "str-basic-split",
+    "io-getline",
+    "io-freopen",
+    "io-read-until-eof",
+    "io-read-separated",
+    "num-conversions",
+    "tool-redirect-io",
+    "cpp-ref-iomanip-streams"
+   ]
+  },
+  {
+   "id": "cpp-ref-chrono-ctime",
+   "title": "Dokumentacja: <chrono> i <ctime> — zegary, pomiar czasu i limit czasu",
+   "category": "Narzędzia",
+   "tags": [
+    "chrono",
+    "ctime",
+    "steady_clock",
+    "high_resolution_clock",
+    "system_clock",
+    "duration_cast",
+    "milliseconds",
+    "clock",
+    "CLOCKS_PER_SEC",
+    "time(0)",
+    "timer",
+    "limit czasu",
+    "dokumentacja"
+   ],
+   "aliases": [
+    "chrono",
+    "<chrono>",
+    "ctime",
+    "<ctime>",
+    "time.h",
+    "dokumentacja chrono",
+    "dokumentacja ctime",
+    "biblioteka chrono",
+    "zegary w c++",
+    "chrono reference",
+    "pomiar czasu w kodzie"
+   ],
+   "summary": "`<chrono>` mierzy czas typowo i precyzyjnie: `steady_clock::now()` daje punkt w czasie, różnica dwóch punktów to `duration`, a `duration_cast<milliseconds>(d).count()` zamienia ją na liczbę. `<ctime>` to starsze `clock()` (czas procesora) i `time(0)` (sekundy od 1970). Na zawodach: pomiar fragmentów kodu, ziarno losowania i przerywanie heurystyki przed limitem czasu.",
+   "complexity": "now(): O(1), ok. 20–50 ns; clock(): O(1), zwykle wolniejsze (wywołanie systemowe)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Trzy pojęcia z `<chrono>` (wszystko w przestrzeni `std::chrono`):\n- **zegar** (`steady_clock`, `system_clock`, `high_resolution_clock`) — ma funkcję `now()`;\n- **punkt w czasie** (`time_point`) — wynik `now()`;\n- **odcinek czasu** (`duration`) — różnica punktów, np. `milliseconds`, `microseconds`, `seconds`.\n\nDo mierzenia **zawsze** wybieraj `steady_clock` — jest monotoniczny (nie cofa się przy zmianie zegara systemowego).\n`system_clock` to „data i godzina”, a `high_resolution_clock` jest w libstdc++ aliasem `system_clock`\n(więc nie jest lepszy). Zamiana na liczbę: `duration_cast<milliseconds>(t2 - t1).count()` (całkowite ms) albo\n`duration<double>(t2 - t1).count()` (sekundy jako `double`).\n\nZ `<ctime>`: `clock()` zwraca czas **procesora** zużyty przez program (w jednostkach `CLOCKS_PER_SEC`) — na Linuksie\ni macOS nie rośnie, gdy program czeka na wejście; na Windows (MSVC/MinGW) działa jak zegar ścienny. `time(nullptr)`\nzwraca sekundy od 1970-01-01 UTC — rozdzielczość 1 s, nadaje się co najwyżej na ziarno."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Element",
+      "Co to",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "`steady_clock::now()`",
+       "punkt w czasie, zegar monotoniczny — do pomiarów",
+       "`auto t0 = steady_clock::now();`"
+      ],
+      [
+       "`system_clock::now()`",
+       "aktualna data/godzina (może skakać)",
+       "`system_clock::to_time_t(system_clock::now())`"
+      ],
+      [
+       "`high_resolution_clock::now()`",
+       "w g++ = system_clock; nie używać do pomiarów",
+       "—"
+      ],
+      [
+       "`t2 - t1`",
+       "duration (w natywnych jednostkach zegara, zwykle ns)",
+       "`auto d = t2 - t1;`"
+      ],
+      [
+       "`duration_cast<milliseconds>(d)`",
+       "zamiana jednostek z obcięciem",
+       "`.count()` → `long long`"
+      ],
+      [
+       "`duration<double>(d).count()`",
+       "sekundy jako double",
+       "`0.137`"
+      ],
+      [
+       "`nanoseconds` … `hours`",
+       "typy jednostek: ns, us, ms, s, min, h",
+       "`milliseconds(500)`"
+      ],
+      [
+       "`100ms`, `2s`, `5us`",
+       "literały (`using namespace std::chrono_literals`)",
+       "`sleep_for(100ms)`"
+      ],
+      [
+       "`tp.time_since_epoch().count()`",
+       "liczba tyknięć od epoki — dobre ziarno",
+       "`mt19937 rng(...)`"
+      ],
+      [
+       "`this_thread::sleep_for(d)`",
+       "uśpienie (nagłówek `<thread>`)",
+       "`sleep_for(1s)`"
+      ],
+      [
+       "`clock()`",
+       "czas procesora w tyknięciach",
+       "`clock() / (double)CLOCKS_PER_SEC`"
+      ],
+      [
+       "`CLOCKS_PER_SEC`",
+       "tyknięcia clock() na sekundę (1000000 w POSIX)",
+       "—"
+      ],
+      [
+       "`time(nullptr)`",
+       "sekundy od 1970-01-01 UTC",
+       "`srand(time(nullptr))`"
+      ],
+      [
+       "`difftime(t1, t0)`",
+       "różnica dwóch `time_t` w sekundach (double)",
+       "—"
+      ],
+      [
+       "`localtime`, `strftime`",
+       "rozbicie `time_t` na datę i formatowanie",
+       "`%Y-%m-%d %H:%M`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: Timer, pomiar fragmentu, przerwanie przed limitem",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nusing namespace std::chrono;\n\nstruct Timer {\n    steady_clock::time_point start = steady_clock::now();\n    double sec() const { return duration<double>(steady_clock::now() - start).count(); }\n    long long ms() const { return duration_cast<milliseconds>(steady_clock::now() - start).count(); }\n};\n\nint main() {\n    Timer t;                                         // start stopera\n    clock_t c0 = clock();                            // czas procesora (ctime)\n\n    // Heurystyka poprawiana aż do ~0.3 s (\"ucieczka\" przed limitem czasu)\n    mt19937 rng(steady_clock::now().time_since_epoch().count());\n    const double LIMIT = 0.3;                        // z dużym zapasem względem limitu zadania\n    long long best = LLONG_MAX, iters = 0;\n    while (true) {\n        if ((++iters & 1023) == 0 && t.sec() > LIMIT) break;   // zegar co 1024 obroty — now() też kosztuje\n        long long cand = rng() % 1000000;            // tu: kolejna próba heurystyki\n        best = min(best, cand);\n    }\n    cout << \"najlepszy: \" << best << \", prob: \" << iters << '\\n';\n\n    // Pomiar jednego fragmentu w mikrosekundach\n    auto t1 = steady_clock::now();\n    long long s = 0;\n    for (int i = 0; i < 10000000; i++) s += i % 7;\n    auto t2 = steady_clock::now();\n    cout << \"petla: \" << duration_cast<microseconds>(t2 - t1).count() << \" us (s=\" << s << \")\\n\";\n\n    cout << \"lacznie: \" << t.ms() << \" ms, CPU: \" << double(clock() - c0) / CLOCKS_PER_SEC << \" s\\n\";\n    cout << \"time(nullptr) = \" << time(nullptr) << \" (sekundy od 1970-01-01 UTC)\\n\";\n}"
+    },
+    {
+     "type": "warn",
+     "md": "**Przerywanie przed limitem czasu** to technika dla heurystyk i zadań optymalizacyjnych, nie lekarstwo na wolny\nalgorytm. Zostaw duży zapas (np. połowę limitu): na SIO2 czas bywa liczony z liczby wykonanych instrukcji\n(sio2jail), a nie zegarem ściennym, a maszyna sprawdzająca może być wolniejsza od Twojej. Wynik zależny od czasu\njest też **niedeterministyczny** — dwa uruchomienia mogą dać różne odpowiedzi."
+    },
+    {
+     "type": "tip",
+     "md": "`now()` kosztuje kilkadziesiąt nanosekund — w bardzo ciasnej pętli sprawdzaj zegar co 256–4096 obrotów\n(`if ((++it & 1023) == 0 && ...)`). Mierząc fragment kodu, kompiluj z `-O2` i **użyj** wyniku (wypisz go), inaczej\nkompilator może usunąć całą pętlę."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "chrono::steady_clock::now()",
+     "desc": "aktualny punkt zegara monotonicznego — do mierzenia odcinków czasu",
+     "complexity": "O(1)",
+     "returns": "steady_clock::time_point",
+     "example": "auto t0 = chrono::steady_clock::now();"
+    },
+    {
+     "sig": "chrono::system_clock::now()",
+     "desc": "aktualna data i godzina (zegar systemowy, może się cofnąć)",
+     "complexity": "O(1)",
+     "returns": "system_clock::time_point",
+     "example": "auto tt = chrono::system_clock::to_time_t(chrono::system_clock::now());"
+    },
+    {
+     "sig": "chrono::high_resolution_clock::now()",
+     "desc": "zegar o największej rozdzielczości; w libstdc++ to alias system_clock",
+     "complexity": "O(1)",
+     "returns": "time_point",
+     "example": "auto t = chrono::high_resolution_clock::now();"
+    },
+    {
+     "sig": "t2 - t1",
+     "desc": "różnica punktów w czasie",
+     "complexity": "O(1)",
+     "returns": "duration (zwykle nanoseconds)",
+     "example": "auto d = t2 - t1;"
+    },
+    {
+     "sig": "chrono::duration_cast<J>(d)",
+     "desc": "zamiana na jednostkę J (milliseconds, microseconds, seconds…) z obcięciem",
+     "complexity": "O(1)",
+     "returns": "duration<…, J>",
+     "example": "long long ms = chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();"
+    },
+    {
+     "sig": "chrono::duration<double>(d).count()",
+     "desc": "czas w sekundach jako liczba zmiennoprzecinkowa",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "double s = chrono::duration<double>(t2 - t1).count();"
+    },
+    {
+     "sig": "d.count()",
+     "desc": "liczba jednostek w odcinku czasu",
+     "complexity": "O(1)",
+     "returns": "rep (zwykle long long)",
+     "example": "cout << ms.count();"
+    },
+    {
+     "sig": "chrono::nanoseconds / microseconds / milliseconds / seconds / minutes / hours",
+     "desc": "typy odcinków czasu; konwersja do drobniejszej jednostki jest niejawna",
+     "complexity": "O(1)",
+     "returns": "duration",
+     "example": "chrono::milliseconds limit(900);"
+    },
+    {
+     "sig": "literały 5ns, 5us, 5ms, 5s, 5min, 5h",
+     "desc": "wymagają `using namespace std::chrono_literals;`",
+     "returns": "duration",
+     "example": "this_thread::sleep_for(200ms);"
+    },
+    {
+     "sig": "tp.time_since_epoch()",
+     "desc": "odcinek od początku epoki zegara (do ziarna losowania)",
+     "complexity": "O(1)",
+     "returns": "duration",
+     "example": "mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());"
+    },
+    {
+     "sig": "this_thread::sleep_for(d) / sleep_until(tp)",
+     "desc": "usypia bieżący wątek (nagłówek <thread>)",
+     "returns": "void",
+     "example": "this_thread::sleep_for(chrono::seconds(1));"
+    },
+    {
+     "sig": "system_clock::to_time_t(tp)",
+     "desc": "zamiana punktu system_clock na time_t z <ctime>",
+     "complexity": "O(1)",
+     "returns": "time_t",
+     "example": "time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());"
+    },
+    {
+     "sig": "clock()",
+     "desc": "czas procesora zużyty przez proces (Windows: czas od startu)",
+     "complexity": "O(1)",
+     "returns": "clock_t",
+     "example": "double cpu = (double)clock() / CLOCKS_PER_SEC;"
+    },
+    {
+     "sig": "CLOCKS_PER_SEC",
+     "desc": "liczba tyknięć clock() na sekundę (POSIX: 1000000, Windows: 1000)",
+     "returns": "stała",
+     "example": "clock() * 1000 / CLOCKS_PER_SEC // ms"
+    },
+    {
+     "sig": "time(nullptr) / time(0)",
+     "desc": "liczba sekund od 1970-01-01 00:00 UTC (rozdzielczość 1 s)",
+     "complexity": "O(1)",
+     "returns": "time_t",
+     "example": "srand(time(nullptr));"
+    },
+    {
+     "sig": "difftime(t1, t0)",
+     "desc": "różnica dwóch time_t w sekundach",
+     "complexity": "O(1)",
+     "returns": "double",
+     "example": "double s = difftime(time(0), start);"
+    },
+    {
+     "sig": "localtime(&t) / gmtime(&t)",
+     "desc": "rozbija time_t na pola daty (tm) w strefie lokalnej / UTC",
+     "complexity": "O(1)",
+     "returns": "tm*",
+     "example": "tm* d = localtime(&now); int rok = d->tm_year + 1900;"
+    },
+    {
+     "sig": "strftime(buf, n, format, tm*)",
+     "desc": "formatuje datę: %Y rok, %m miesiąc, %d dzień, %H:%M:%S",
+     "complexity": "O(n)",
+     "returns": "size_t (liczba znaków)",
+     "example": "char b[32]; strftime(b, 32, \"%Y-%m-%d\", localtime(&now));"
+    }
+   ],
+   "pitfalls": [
+    "`high_resolution_clock` w g++ to `system_clock` — może się cofnąć przy synchronizacji czasu. Do pomiarów: `steady_clock`.",
+    "`clock()` mierzy czas procesora na Linuksie/macOS, a zegar ścienny na Windows — wyniki na różnych systemach się różnią.",
+    "`duration_cast<seconds>` obcina: 1.9 s → 1. Do porównań z ułamkiem sekundy użyj `duration<double>` albo ms.",
+    "Wywołanie `now()` w każdym obrocie ciasnej pętli potrafi spowolnić ją kilkukrotnie — sprawdzaj co 1024 obroty.",
+    "`time(0)` ma rozdzielczość 1 s: dwa uruchomienia w tej samej sekundzie dostaną to samo ziarno.",
+    "Nazwa zmiennej `time` albo funkcji `clock` koliduje z `<ctime>` przy `using namespace std` — błąd kompilacji.",
+    "Mierzony fragment bez użycia wyniku może zostać usunięty przez optymalizator (-O2) — pomiar pokaże 0.",
+    "Czas zmierzony u siebie to nie czas na sprawdzarce (inna maszyna, czasem liczenie instrukcji) — zostaw zapas."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak przerwać program przed limitem czasu",
+      "zatrzymać szukanie przed tle",
+      "wypisz najlepszy wynik zanim skończy się czas",
+      "time limit escape c++",
+      "heurystyka do limitu czasu",
+      "przerwij po 0.9 sekundy",
+      "stop search before time limit",
+      "ucieczka przed limitem czasu"
+     ],
+     "a": "Zapamiętaj czas startu (`steady_clock::now()`), a w pętli szukania co kilkaset/kilka tysięcy obrotów sprawdzaj, ile\nminęło; po przekroczeniu progu przerwij i wypisz najlepszy dotąd wynik. Próg ustaw **z dużym zapasem** (np. 50–70%\nlimitu): wczytanie danych i wypisanie też trwa, sprawdzarka bywa wolniejsza, a na SIO2 czas może być liczony\nz liczby instrukcji. To technika dla heurystyk (losowe próby, symulowane wyżarzanie, przeszukiwanie z obcięciem) —\npoprawne rozwiązanie wzorcowe zwykle jej nie potrzebuje.",
+     "code": "auto start = chrono::steady_clock::now();\nauto elapsed = [&] { return chrono::duration<double>(chrono::steady_clock::now() - start).count(); };\nlong long best = 0, it = 0;\nwhile (true) {\n    if ((++it & 1023) == 0 && elapsed() > 0.5) break;   // 0.5 s przy limicie np. 1 s\n    best = max(best, it % 977);                          // kolejna próba heurystyki\n}\ncout << best << '\\n';"
+    },
+    {
+     "q": [
+      "duration_cast",
+      "chrono na milisekundy",
+      "jak zamienić czas chrono na ms",
+      "chrono count",
+      "chrono duration to seconds double",
+      "czas w sekundach jako double chrono",
+      "duration_cast milliseconds count"
+     ],
+     "a": "Różnica dwóch `now()` to `duration` w jednostkach zegara (zwykle nanosekundy). Na liczbę:\n- całkowite ms: `duration_cast<milliseconds>(t2 - t1).count()` (obcina w dół; analogicznie `microseconds`, `seconds`);\n- sekundy z ułamkiem: `duration<double>(t2 - t1).count()`;\n- ms z ułamkiem: `duration<double, milli>(t2 - t1).count()`.\n`count()` zwraca zwykłą liczbę (`long long` lub `double`), którą można wypisać i porównywać.",
+     "code": "auto t1 = chrono::steady_clock::now();\nlong long s = 0;\nfor (int i = 0; i < 1000000; i++) s += i;\nauto t2 = chrono::steady_clock::now();\nlong long ms = chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();\ndouble sec = chrono::duration<double>(t2 - t1).count();\ndouble msf = chrono::duration<double, milli>(t2 - t1).count();\ncout << ms << \" ms, \" << sec << \" s, \" << msf << \" ms (s=\" << s << \")\\n\";"
+    },
+    {
+     "q": [
+      "clock() c++",
+      "CLOCKS_PER_SEC",
+      "clock vs chrono",
+      "clock mierzy czas procesora",
+      "clock() na windows",
+      "clock_t c++",
+      "dlaczego clock pokazuje mniej niż zegar"
+     ],
+     "a": "`clock()` z `<ctime>` zwraca tyknięcia; sekundy to `clock() / (double)CLOCKS_PER_SEC`. Na Linuksie i macOS mierzy\n**czas procesora** całego procesu (nie rośnie, gdy program czeka na wejście z klawiatury albo śpi; przy kilku wątkach\nrośnie szybciej niż zegar), a na Windows — czas od startu programu. `chrono::steady_clock` mierzy zawsze czas\nrzeczywisty (ścienny) i ma lepszą rozdzielczość, więc jest pewniejszym wyborem. Uwaga: nie nazywaj zmiennej `clock`.",
+     "code": "clock_t c0 = clock();\nvolatile long long s = 0;\nfor (int i = 0; i < 20000000; i++) s = s + i;\ndouble cpu = double(clock() - c0) / CLOCKS_PER_SEC;\ncout << \"CPU: \" << cpu << \" s\\n\";"
+    },
+    {
+     "q": [
+      "steady_clock vs system_clock",
+      "high_resolution_clock",
+      "który zegar chrono wybrać",
+      "which clock to use c++ timing",
+      "system_clock cofnął się",
+      "high_resolution_clock czy steady_clock"
+     ],
+     "a": "- `steady_clock` — monotoniczny (nigdy się nie cofa) — **do mierzenia czasu**;\n- `system_clock` — prawdziwa data i godzina; może skoczyć przy synchronizacji NTP lub zmianie czasu — do dat;\n- `high_resolution_clock` — „najdokładniejszy”, ale w libstdc++ (g++) to alias `system_clock`, a w MSVC `steady_clock`;\n  standard odradza go do pomiarów.\nWszystkie mają rozdzielczość rzędu nanosekund na typowych systemach.",
+     "code": "cout << chrono::steady_clock::is_steady << ' ' << chrono::system_clock::is_steady << ' '\n     << chrono::high_resolution_clock::is_steady << '\\n';   // g++: 1 0 0"
+    },
+    {
+     "q": [
+      "time(0) c++",
+      "time(nullptr)",
+      "co zwraca time(0)",
+      "aktualny czas unix c++",
+      "timestamp c++",
+      "aktualna data c++",
+      "jak wypisać datę i godzinę c++"
+     ],
+     "a": "`time(nullptr)` (to samo co `time(0)`) zwraca `time_t` — liczbę sekund od 1970-01-01 00:00 UTC (czas uniksowy).\nRozdzielczość to 1 s, więc jako ziarno losowania jest słaby (lepsze `steady_clock::now().time_since_epoch().count()`).\nDatę i godzinę dostaniesz przez `localtime(&t)` (pola `tm_year + 1900`, `tm_mon + 1`, `tm_mday`, `tm_hour`…)\nalbo sformatujesz `strftime`.",
+     "code": "time_t now = time(nullptr);\nchar buf[64];\nstrftime(buf, sizeof buf, \"%Y-%m-%d %H:%M:%S\", localtime(&now));\ncout << now << \" = \" << buf << '\\n';"
+    },
+    {
+     "q": [
+      "timer c++",
+      "stoper w c++",
+      "struktura timer chrono",
+      "elapsed time helper c++",
+      "klasa do mierzenia czasu",
+      "jak napisać timer w c++"
+     ],
+     "a": "Wygodny wzorzec: struktura zapamiętująca start w konstruktorze i zwracająca, ile minęło. Wystarczy wkleić ją do\nszablonu i wywołać `t.sec()` / `t.ms()` w dowolnym miejscu (np. `cerr` na końcu programu lub warunek przerwania).",
+     "code": "struct Timer {\n    chrono::steady_clock::time_point st = chrono::steady_clock::now();\n    double sec() const { return chrono::duration<double>(chrono::steady_clock::now() - st).count(); }\n    long long ms() const {\n        return chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - st).count();\n    }\n    void reset() { st = chrono::steady_clock::now(); }\n};\nvoid demo() {\n    Timer t;\n    /* ... obliczenia ... */\n    cerr << \"czas: \" << t.ms() << \" ms\\n\";\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sleep c++",
+      "sleep_for c++",
+      "jak zatrzymać program na sekundę",
+      "opóźnienie w c++",
+      "usleep c++",
+      "wait 1 second c++",
+      "pauza w programie c++"
+     ],
+     "a": "`this_thread::sleep_for(czas)` z `<thread>` usypia program na co najmniej podany czas (może trochę dłużej):\n`this_thread::sleep_for(chrono::milliseconds(500));` albo z literałami `sleep_for(500ms)`. To przenośne\n(Linux, macOS, Windows), w przeciwieństwie do `sleep`/`usleep` z `<unistd.h>` i `Sleep` z `<windows.h>`.\nNa zawodach do niczego niepotrzebne — przydaje się w skryptach testujących i animacjach w terminalu.",
+     "code": "using namespace std::chrono_literals;\nauto t0 = chrono::steady_clock::now();\nthis_thread::sleep_for(50ms);\nauto ms = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - t0).count();\ncout << ms << \" ms\\n\";   // ok. 50"
+    },
+    {
+     "q": [
+      "zmierzyć czas fragmentu kodu w mikrosekundach",
+      "czas jednej funkcji chrono",
+      "benchmark funkcji c++",
+      "porównać szybkość dwóch funkcji",
+      "measure function time microseconds",
+      "pomiar wydajności kodu pokazuje 0"
+     ],
+     "a": "Weź `steady_clock::now()` przed i po fragmencie, a różnicę zamień `duration_cast<microseconds>`. Żeby wynik był\nwiarygodny: kompiluj z `-O2`, powtórz fragment wiele razy (pojedyncze wywołanie bywa krótsze niż szum), i **użyj**\nwyniku (np. wypisz sumę) — inaczej optymalizator może całą pętlę usunąć i zobaczysz 0 µs. Pierwsze uruchomienie\nbywa wolniejsze (pamięć podręczna), więc porównując dwie wersje, zmierz każdą kilka razy.",
+     "code": "auto bench = [](auto f, int reps) {\n    auto t1 = chrono::steady_clock::now();\n    long long sink = 0;\n    for (int r = 0; r < reps; r++) sink += f(r);\n    auto t2 = chrono::steady_clock::now();\n    cerr << \"sink=\" << sink << ' ';\n    return chrono::duration_cast<chrono::microseconds>(t2 - t1).count();\n};\ncout << bench([](int x) { return (long long)x * x % 1000003; }, 1000000) << \" us\\n\";"
+    },
+    {
+     "q": [
+      "chrono literals",
+      "500ms c++",
+      "using namespace chrono_literals",
+      "chrono_literals",
+      "literały czasu c++",
+      "1s 100ms c++"
+     ],
+     "a": "Od C++14 odcinki czasu można zapisywać literałami: `5ns`, `10us`, `100ms`, `2s`, `3min`, `1h`. Wymagają\n`using namespace std::chrono_literals;` (albo `using namespace std::chrono;`). Literały są typami `duration`, więc\nmożna je dodawać, porównywać z różnicą `now()` i przekazywać do `sleep_for`.",
+     "code": "using namespace std::chrono_literals;\nauto limit = 1500ms;\nauto start = chrono::steady_clock::now();\nbool timeUp = chrono::steady_clock::now() - start > limit;   // porównanie duration z literałem\ncout << timeUp << ' ' << chrono::duration_cast<chrono::seconds>(90min).count() << '\\n';   // 0 5400"
+    }
+   ],
+   "related": [
+    "tool-measure-time",
+    "num-random",
+    "stl-shuffle-random",
+    "oi-sio2",
+    "pit-name-collisions",
+    "oi-complexity-limits",
+    "tech-backtracking"
+   ]
+  },
+  {
+   "id": "cpp-ref-utility-optional",
+   "title": "Dokumentacja: <utility>, <optional>, <variant>, <any> — pary, move i typy „może być”",
+   "category": "C++ język",
+   "tags": [
+    "utility",
+    "optional",
+    "variant",
+    "any",
+    "pair",
+    "make_pair",
+    "swap",
+    "move",
+    "exchange",
+    "forward",
+    "cmp_less",
+    "holds_alternative",
+    "visit",
+    "value_or",
+    "dokumentacja"
+   ],
+   "aliases": [
+    "utility",
+    "<utility>",
+    "<optional>",
+    "<variant>",
+    "<any>",
+    "dokumentacja utility",
+    "optional variant any",
+    "std::optional",
+    "std::variant",
+    "typy opcjonalne c++",
+    "utility reference"
+   ],
+   "summary": "`<utility>`: `pair`/`make_pair`, `swap`, `move`, `exchange`, `forward` i (C++20) bezpieczne porównania `cmp_less`. `<optional>`: wartość, której może nie być (`optional<int>` zamiast „-1 = brak”). `<variant>`: wartość jednego z kilku typów, bezpieczny `union`. `<any>`: dowolny typ (rzadko potrzebny).",
+   "complexity": "wszystkie operacje O(1) + koszt kopiowania/przenoszenia przechowywanego obiektu; optional i variant nie alokują pamięci",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**`<utility>`** to drobiazgi używane wszędzie: `pair` (szczegóły w artykule `stl-pair`), `swap`, `move` (zamiana\nkopiowania na „przeniesienie” — tanie dla `vector`/`string`), `exchange` (ustaw nową wartość i zwróć starą) i\n`forward` (w szablonach). W C++20 doszły `cmp_less`, `cmp_greater`, `cmp_equal` i `in_range` — porównania liczb\n**ze znakiem i bez znaku** bez pułapki `-1 < v.size() == false`.\n\n**`optional<T>`** przechowuje albo wartość typu `T`, albo nic (`nullopt`). Zastępuje „magiczne” wartości typu -1\nczy `INF` jako „brak wyniku”. Nie alokuje pamięci: to `T` plus flaga.\n\n**`variant<A, B, ...>`** przechowuje dokładnie jedną wartość z listy typów i pamięta, którą. Dostęp:\n`get<T>` (rzuca wyjątek przy złym typie), `get_if<T>` (wskaźnik albo `nullptr`), `holds_alternative<T>` (test),\n`visit` (wywołanie funkcji dla aktualnego typu). **`any`** trzyma wartość dowolnego typu — w zadaniach prawie\nnigdy niepotrzebne, bo zwykle typy są znane z góry (wtedy lepszy `variant`)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Narzędzie",
+      "Nagłówek",
+      "Do czego",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "`pair<A, B>`, `make_pair`",
+       "utility",
+       "para wartości",
+       "`pair<int,int> p = {1, 2};`"
+      ],
+      [
+       "`swap(a, b)`",
+       "utility",
+       "zamiana wartości (O(1) dla kontenerów)",
+       "`swap(v, w);`"
+      ],
+      [
+       "`move(x)`",
+       "utility",
+       "pozwala przenieść zamiast kopiować",
+       "`v2 = move(v1);`"
+      ],
+      [
+       "`exchange(x, nowa)`",
+       "utility",
+       "ustaw nową, zwróć starą",
+       "`int old = exchange(x, 0);`"
+      ],
+      [
+       "`forward<T>(x)`",
+       "utility",
+       "przekazanie argumentu w szablonie bez zmiany kategorii",
+       "—"
+      ],
+      [
+       "`cmp_less(a, b)`, `in_range<T>(x)`",
+       "utility (C++20)",
+       "porównanie signed/unsigned bez pułapek",
+       "`cmp_less(-1, v.size())`"
+      ],
+      [
+       "`optional<T>`, `nullopt`",
+       "optional",
+       "wartość albo brak",
+       "`optional<int> r = nullopt;`"
+      ],
+      [
+       "`o.value_or(d)`",
+       "optional",
+       "wartość albo domyślna",
+       "`r.value_or(-1)`"
+      ],
+      [
+       "`variant<A, B>`",
+       "variant",
+       "jedna z kilku wartości (bezpieczny union)",
+       "`variant<int, string> v = 5;`"
+      ],
+      [
+       "`holds_alternative<T>(v)`",
+       "variant",
+       "czy aktualnie typ T",
+       "`if (holds_alternative<int>(v))`"
+      ],
+      [
+       "`get<T>(v)`, `get_if<T>(&v)`",
+       "variant",
+       "dostęp (wyjątek / wskaźnik)",
+       "`get<int>(v)`"
+      ],
+      [
+       "`visit(f, v)`",
+       "variant",
+       "wywołaj f dla aktualnej wartości",
+       "`visit([](auto& x){...}, v);`"
+      ],
+      [
+       "`any`, `any_cast<T>`",
+       "any",
+       "wartość dowolnego typu",
+       "`any a = 5; any_cast<int>(a);`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: pair, swap/exchange/move, optional, variant, any, cmp_less",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// optional: funkcja, która może nie mieć wyniku (zamiast -1)\noptional<int> findIndex(const vector<int>& v, int x) {\n    for (int i = 0; i < (int)v.size(); i++)\n        if (v[i] == x) return i;\n    return nullopt;\n}\n\n// variant: token wyrażenia — liczba, operator albo nazwa\nusing Token = variant<long long, char, string>;\n\nstring describe(const Token& t) {\n    return visit([](const auto& x) -> string {\n        using T = decay_t<decltype(x)>;\n        if constexpr (is_same_v<T, long long>) return \"liczba \" + to_string(x);\n        else if constexpr (is_same_v<T, char>) return string(\"operator \") + x;\n        else return \"nazwa \" + x;\n    }, t);\n}\n\nint main() {\n    // pair + structured bindings\n    pair<int, string> p = make_pair(3, \"ala\");\n    auto [num, name] = p;\n    cout << p.first << ' ' << name << '\\n';                  // 3 ala\n\n    // swap / exchange / move\n    int a = 1, b = 2;\n    swap(a, b);                                              // a = 2, b = 1\n    int old = exchange(a, 10);                               // old = 2, a = 10\n    vector<int> big(5, 7);\n    vector<int> stolen = move(big);                          // O(1); big jest teraz pusty (w praktyce)\n    cout << a << ' ' << b << ' ' << old << ' ' << stolen.size() << '\\n';   // 10 1 2 5\n\n    // optional\n    vector<int> v = {4, 8, 15};\n    if (auto r = findIndex(v, 8)) cout << \"znaleziono na \" << *r << '\\n';  // 1\n    cout << findIndex(v, 99).value_or(-1) << '\\n';           // -1\n\n    // variant\n    vector<Token> toks = {42LL, '+', string(\"x\")};\n    for (auto& t : toks) cout << describe(t) << '\\n';\n    if (holds_alternative<char>(toks[1])) cout << get<char>(toks[1]) << '\\n';    // +\n    if (auto pv = get_if<long long>(&toks[0])) cout << *pv * 2 << '\\n';           // 84\n    cout << toks[2].index() << '\\n';                         // 2 (indeks typu na liście)\n\n    // any (rzadko potrzebne)\n    any box = 5;\n    box = string(\"tekst\");\n    cout << any_cast<string>(box) << ' ' << box.has_value() << '\\n';   // tekst 1\n\n    // C++20: porównanie signed z unsigned bez pułapki\n    int neg = -1;\n    size_t sz = v.size();\n    cout << (neg < sz) << ' ' << cmp_less(neg, sz) << '\\n';  // 0 1 (!)\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`*opt` na pustym `optional` to UB (śmieci, bez błędu), a `opt.value()` rzuca `bad_optional_access` (RE).\nZawsze sprawdź `if (opt)` / `opt.has_value()` albo użyj `value_or`. Podobnie `get<T>(v)` przy innym aktualnym typie\nrzuca `bad_variant_access`, a `any_cast<T>(a)` — `bad_any_cast`."
+    },
+    {
+     "type": "tip",
+     "md": "`move` niczego nie przenosi samo — tylko pozwala wybrać „przenoszący” konstruktor lub przypisanie. Po `w = move(v)`\nobiekt `v` jest w poprawnym, ale nieokreślonym stanie: można go wyczyścić (`v.clear()`) lub przypisać na nowo, ale\nnie zakładaj, co zawiera. Przy `return lokalna;` nie pisz `move` — kompilator i tak nie kopiuje."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "pair<A, B> p(a, b) / {a, b}",
+     "desc": "para; pola first i second; porównanie leksykograficzne",
+     "complexity": "O(1)",
+     "returns": "pair",
+     "example": "pair<int, int> p = {2, 5};"
+    },
+    {
+     "sig": "make_pair(a, b)",
+     "desc": "tworzy parę z wydedukowanymi typami",
+     "complexity": "O(1)",
+     "returns": "pair<A, B>",
+     "example": "v.push_back(make_pair(x, y));"
+    },
+    {
+     "sig": "auto [a, b] = p",
+     "desc": "structured bindings: rozpakowanie pary/tuple/struktury (C++17)",
+     "complexity": "O(1)",
+     "example": "for (auto& [k, val] : mp) {}"
+    },
+    {
+     "sig": "swap(a, b)",
+     "desc": "zamienia wartości; dla kontenerów STL O(1) (zamiana wskaźników), dla tablic C O(n)",
+     "complexity": "O(1)",
+     "returns": "void",
+     "example": "swap(cur, nxt);"
+    },
+    {
+     "sig": "move(x)",
+     "desc": "rzutowanie na r-wartość: umożliwia przeniesienie zasobów zamiast kopii",
+     "complexity": "O(1)",
+     "returns": "T&&",
+     "example": "res.push_back(move(row));"
+    },
+    {
+     "sig": "exchange(obj, nowa)",
+     "desc": "przypisuje obj = nowa i zwraca poprzednią wartość (C++14)",
+     "complexity": "O(1)",
+     "returns": "stara wartość",
+     "example": "int prev = exchange(cur, 0);"
+    },
+    {
+     "sig": "forward<T>(x)",
+     "desc": "w szablonie z T&& przekazuje argument dalej, zachowując l/r-wartość (perfect forwarding)",
+     "complexity": "O(1)",
+     "returns": "T&&",
+     "example": "template<class T> void f(T&& x) { g(forward<T>(x)); }"
+    },
+    {
+     "sig": "as_const(x)",
+     "desc": "C++17: stała referencja do x (np. by wymusić const-wersję metody)",
+     "complexity": "O(1)",
+     "returns": "const T&",
+     "example": "for (auto& e : as_const(v)) {}"
+    },
+    {
+     "sig": "cmp_less(a, b) / cmp_greater / cmp_equal / cmp_less_equal…",
+     "desc": "C++20: porównanie liczb całkowitych różnych typów matematycznie poprawnie (signed vs unsigned)",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "cmp_less(-1, v.size()) // true"
+    },
+    {
+     "sig": "in_range<T>(x)",
+     "desc": "C++20: czy x mieści się w zakresie typu T",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "in_range<int>(5000000000LL) // false"
+    },
+    {
+     "sig": "optional<T> o / o = nullopt",
+     "desc": "pusty optional albo z wartością; nullopt = brak",
+     "complexity": "O(1)",
+     "returns": "optional<T>",
+     "example": "optional<int> best;"
+    },
+    {
+     "sig": "o.has_value() / if (o)",
+     "desc": "czy jest wartość",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "if (best) cout << *best;"
+    },
+    {
+     "sig": "*o / o->pole / o.value()",
+     "desc": "dostęp do wartości; *o bez sprawdzenia (UB, gdy pusty), value() rzuca bad_optional_access",
+     "complexity": "O(1)",
+     "returns": "T&",
+     "example": "int x = *best;"
+    },
+    {
+     "sig": "o.value_or(d)",
+     "desc": "wartość albo d, gdy pusty",
+     "complexity": "O(1)",
+     "returns": "T",
+     "example": "cout << res.value_or(-1);"
+    },
+    {
+     "sig": "o.reset() / o.emplace(args…)",
+     "desc": "opróżnia / konstruuje wartość w miejscu",
+     "complexity": "O(1)",
+     "returns": "void / T&",
+     "example": "best.reset();"
+    },
+    {
+     "sig": "make_optional(x)",
+     "desc": "tworzy optional z wartością",
+     "complexity": "O(1)",
+     "returns": "optional<T>",
+     "example": "auto o = make_optional(5);"
+    },
+    {
+     "sig": "variant<A, B, …> v",
+     "desc": "dokładnie jedna wartość z listy typów (domyślnie pierwszy typ)",
+     "complexity": "O(1)",
+     "returns": "variant",
+     "example": "variant<int, string> v = \"ala\"s;"
+    },
+    {
+     "sig": "holds_alternative<T>(v)",
+     "desc": "czy v aktualnie przechowuje typ T",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "if (holds_alternative<string>(v)) {}"
+    },
+    {
+     "sig": "get<T>(v) / get<I>(v)",
+     "desc": "dostęp po typie lub indeksie; zły typ → wyjątek bad_variant_access",
+     "complexity": "O(1)",
+     "returns": "T&",
+     "example": "int x = get<int>(v);"
+    },
+    {
+     "sig": "get_if<T>(&v)",
+     "desc": "wskaźnik na wartość albo nullptr, gdy inny typ (bez wyjątków)",
+     "complexity": "O(1)",
+     "returns": "T* / nullptr",
+     "example": "if (auto p = get_if<int>(&v)) cout << *p;"
+    },
+    {
+     "sig": "v.index()",
+     "desc": "numer aktualnego typu na liście (od 0)",
+     "complexity": "O(1)",
+     "returns": "size_t",
+     "example": "switch (v.index()) { case 0: break; }"
+    },
+    {
+     "sig": "visit(f, v)",
+     "desc": "wywołuje f(aktualna_wartość); f musi obsłużyć każdy typ (np. lambda z auto)",
+     "complexity": "O(1)",
+     "returns": "wynik f",
+     "example": "visit([](auto& x) { cout << x; }, v);"
+    },
+    {
+     "sig": "monostate",
+     "desc": "pusty typ — pierwszy na liście pozwala na „pusty” variant",
+     "complexity": "O(1)",
+     "example": "variant<monostate, int, string> v;"
+    },
+    {
+     "sig": "any a / a = wartość",
+     "desc": "przechowuje wartość dowolnego (kopiowalnego) typu; może alokować",
+     "complexity": "O(1)",
+     "returns": "any",
+     "example": "any a = 3.14;"
+    },
+    {
+     "sig": "any_cast<T>(a) / any_cast<T>(&a)",
+     "desc": "wyciąga wartość; zły typ → bad_any_cast (wersja ze wskaźnikiem: nullptr)",
+     "complexity": "O(1)",
+     "returns": "T / T*",
+     "example": "double d = any_cast<double>(a);"
+    },
+    {
+     "sig": "a.has_value() / a.reset() / a.type()",
+     "desc": "czy niepusty / opróżnij / informacja o typie (type_info)",
+     "complexity": "O(1)",
+     "returns": "bool / void / const type_info&",
+     "example": "if (a.type() == typeid(int)) {}"
+    }
+   ],
+   "pitfalls": [
+    "`*opt` na pustym `optional` to UB; `opt.value()` rzuca `bad_optional_access` (na sprawdzarce: RE).",
+    "`optional<bool>` w warunku `if (o)` sprawdza, czy JEST wartość, a nie czy jest `true` — pisz `if (o && *o)`.",
+    "`get<T>(v)` przy innym aktualnym typie rzuca `bad_variant_access` — sprawdzaj `holds_alternative` lub używaj `get_if`.",
+    "`variant<string, bool> v = \"tekst\";` w starszych standardach wybierało `bool` (wskaźnik → bool). Pisz `string(\"tekst\")` lub `\"tekst\"s`.",
+    "Po `w = move(v)` nie zakładaj, że `v` jest pusty ani że ma starą zawartość — przypisz go na nowo.",
+    "`move` na obiekcie `const` po cichu robi kopię (nie można przenieść z const).",
+    "`return move(lokalna);` blokuje optymalizację RVO — pisz po prostu `return lokalna;`.",
+    "`-1 < v.size()` daje `false` (konwersja na unsigned); w C++20 `cmp_less(-1, v.size())` daje poprawne `true`.",
+    "`any` wymaga dokładnego typu przy `any_cast`: `any a = 5; any_cast<long long>(a)` rzuca wyjątek (to był `int`)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "optional c++",
+      "std::optional jak używać",
+      "funkcja zwraca wynik albo nic",
+      "jak zwrócić brak wyniku z funkcji",
+      "zamiast zwracać -1",
+      "value_or c++",
+      "optional return nothing c++"
+     ],
+     "a": "`optional<T>` (`<optional>`, C++17) to „wartość typu T albo nic”. Funkcja zwraca wynik (`return x;`) albo\n`return nullopt;`. Wywołujący sprawdza `if (r)` / `r.has_value()` i czyta `*r`, a `r.value_or(d)` daje wartość\ndomyślną. Lepsze niż -1, gdy -1 może być prawidłowym wynikiem, i czytelniejsze niż `pair<bool, T>`.\nKoszt: rozmiar `T` + flaga, bez alokacji.",
+     "code": "optional<long long> safeDiv(long long a, long long b) {\n    if (b == 0) return nullopt;\n    return a / b;\n}\nvoid demo() {\n    if (auto r = safeDiv(10, 3)) cout << *r << '\\n';   // 3\n    cout << safeDiv(1, 0).value_or(-1) << '\\n';        // -1\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "bad_optional_access",
+      "optional value() wyjątek",
+      "*opt na pustym optional",
+      "optional pusty błąd",
+      "optional has_value",
+      "terminate called after throwing bad_optional_access"
+     ],
+     "a": "Dostęp do pustego `optional`:\n- `o.value()` rzuca `bad_optional_access` → program kończy się błędem (`terminate called…`, na sprawdzarce RE);\n- `*o` / `o->pole` **nie sprawdza** — to UB (czytasz śmieci).\nZawsze najpierw `if (o)` lub `o.has_value()`, albo użyj `o.value_or(domyślna)`. Uwaga przy `optional<bool>` i\n`optional<int>`: `if (o)` pyta o obecność wartości, nie o jej treść (`optional<int>(0)` jest „prawdziwy”).",
+     "code": "optional<int> o;                 // pusty\ncout << o.has_value() << ' ' << o.value_or(7) << '\\n';   // 0 7\no = 0;\ncout << (bool)o << ' ' << *o << '\\n';                    // 1 0 — jest wartość, choć równa 0"
+    },
+    {
+     "q": [
+      "variant c++",
+      "std::variant",
+      "holds_alternative",
+      "jak sprawdzić jaki typ jest w variant",
+      "typ który może być int albo string",
+      "union c++ bezpieczny",
+      "get variant"
+     ],
+     "a": "`variant<int, string> v;` przechowuje **jedną** wartość z listy typów i wie, którą (bezpieczny `union`).\nPrzypisanie zmienia typ: `v = 5;`, `v = \"ala\"s;`. Sprawdzenie: `holds_alternative<int>(v)` albo `v.index()`\n(numer typu). Odczyt: `get<int>(v)` (wyjątek przy złym typie) lub `get_if<int>(&v)` (wskaźnik / `nullptr`).\nDomyślnie variant zawiera wartość **pierwszego** typu; „pusty” uzyskasz, dając `monostate` na początku listy.",
+     "code": "variant<int, string> v = 42;\nif (holds_alternative<int>(v)) cout << get<int>(v) + 1 << '\\n';    // 43\nv = string(\"ala\");\nif (auto p = get_if<string>(&v)) cout << p->size() << '\\n';        // 3\ncout << v.index() << '\\n';                                         // 1"
+    },
+    {
+     "q": [
+      "visit variant",
+      "std::visit",
+      "jak przejść po wszystkich typach variant",
+      "visit lambda auto",
+      "overloaded visit c++",
+      "visit c++17"
+     ],
+     "a": "`visit(f, v)` wywołuje `f` z aktualną wartością variantu — `f` musi przyjmować każdy z typów. Najprościej lambda\nz `auto` i `if constexpr` po typie, albo wzorzec `overloaded` (kilka lambd sklejonych w jeden obiekt).",
+     "code": "template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };\ntemplate<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;\n\nvoid demo() {\n    vector<variant<int, double, string>> v = {1, 2.5, string(\"trzy\")};\n    for (auto& x : v)\n        visit(overloaded{\n            [](int i) { cout << \"int \" << i << '\\n'; },\n            [](double d) { cout << \"double \" << d << '\\n'; },\n            [](const string& s) { cout << \"string \" << s << '\\n'; }\n        }, x);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "std::move co robi",
+      "move c++ vector",
+      "przeniesienie zamiast kopiowania",
+      "czy po move można używać zmiennej",
+      "move semantics c++",
+      "kiedy używać std::move"
+     ],
+     "a": "`move(x)` sam niczego nie przenosi — rzutuje `x` na r-wartość, dzięki czemu wybrany zostaje **konstruktor\nprzenoszący**: `vector`/`string` przekazują wtedy wewnętrzny wskaźnik w O(1) zamiast kopiować n elementów.\nPo `w = move(v)` obiekt `v` jest poprawny, ale w nieokreślonym stanie (dla `vector` w praktyce pusty) — można go\nwyczyścić albo przypisać od nowa. Przydaje się przy `push_back(move(duzy))`, zamianie buforów w DP i łączeniu\nzbiorów (small-to-large). Nie pisz `return move(lokalna);` — psuje to optymalizację.",
+     "code": "vector<vector<int>> rows;\nvector<int> row(1000000, 1);\nrows.push_back(move(row));       // bez kopiowania miliona elementów\nrow.assign(5, 0);                // po move: przypisz od nowa, potem używaj\nvector<long long> cur(10), nxt(10);\ncur = move(nxt);                 // DP na dwóch warstwach — albo po prostu swap(cur, nxt)"
+    },
+    {
+     "q": [
+      "cmp_less",
+      "porównanie int z size_t",
+      "porównanie signed i unsigned c++20",
+      "-1 < v.size() false",
+      "comparison of integer expressions of different signedness",
+      "in_range c++20",
+      "cmp_greater"
+     ],
+     "a": "Przy porównaniu `int` z `unsigned`/`size_t` liczba ze znakiem jest zamieniana na bez znaku, więc `-1 < v.size()`\ndaje `false` (-1 staje się ogromną liczbą). C++20 ma w `<utility>` funkcje porównujące **matematycznie**:\n`cmp_less(a, b)`, `cmp_greater`, `cmp_equal`, `cmp_not_equal`, `cmp_less_equal`, `cmp_greater_equal`, oraz\n`in_range<T>(x)` — czy `x` mieści się w typie `T`. Starszy sposób: rzutuj rozmiar na `int` / `long long`.",
+     "code": "vector<int> v(3);\nint i = -1;\ncout << (i < v.size()) << ' ' << cmp_less(i, v.size()) << ' ' << (i < (int)v.size()) << '\\n';  // 0 1 1\ncout << in_range<int>(3000000000LL) << ' ' << in_range<unsigned>(-5) << '\\n';                  // 0 0"
+    },
+    {
+     "q": [
+      "std::any",
+      "any_cast",
+      "bad_any_cast",
+      "kontener dowolnego typu",
+      "any vs variant",
+      "any c++17"
+     ],
+     "a": "`any` przechowuje wartość **dowolnego** kopiowalnego typu (`any a = 5; a = string(\"x\");`). Odczyt przez\n`any_cast<T>(a)` — typ musi się zgadzać **dokładnie** (`int` to nie `long long`), inaczej `bad_any_cast`; wersja\nze wskaźnikiem `any_cast<T>(&a)` zwraca `nullptr`. Może alokować pamięć i jest wolniejszy od `variant`. Jeśli\nznasz listę możliwych typów, użyj `variant`; na zawodach `any` praktycznie się nie przydaje.",
+     "code": "any a = 5;\ncout << any_cast<int>(a) << ' ' << (any_cast<long long>(&a) == nullptr) << '\\n';   // 5 1\na = string(\"abc\");\ncout << a.type().name() << ' ' << any_cast<string&>(a).size() << '\\n';           // nazwa typu, 3"
+    },
+    {
+     "q": [
+      "std::forward",
+      "co to forward",
+      "perfect forwarding",
+      "forward vs move",
+      "auto&& forward",
+      "universal reference c++"
+     ],
+     "a": "`forward<T>(x)` stosuje się w szablonie przyjmującym `T&& x` (tzw. referencja uniwersalna): przekazuje argument dalej\n**tak, jak został podany** — l-wartość jako l-wartość, r-wartość jako r-wartość (perfect forwarding). `move`\nzawsze robi r-wartość. W kodzie zawodniczym potrzebne rzadko (np. własny `emplace` albo wrapper funkcji); w zwykłym\nkodzie wystarczy `const T&` lub przekazanie przez wartość.",
+     "code": "void show(const string&) { cout << \"kopia/referencja\\n\"; }\nvoid show(string&&) { cout << \"r-wartosc\\n\"; }\n\ntemplate<class T> void wrapper(T&& x) { show(forward<T>(x)); }\n\nvoid demo() {\n    string s = \"a\";\n    wrapper(s);                // kopia/referencja\n    wrapper(string(\"b\"));      // r-wartosc\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "stl-pair",
+    "stl-tuple",
+    "stl-swap",
+    "cpp-references",
+    "cpp-modern-cpp",
+    "cpp-templates",
+    "pit-unsigned-size",
+    "cpp-lambdas"
+   ]
+  },
+  {
+   "id": "cpp-ref-bit",
+   "title": "Dokumentacja: <bit> (C++20) — popcount, countl_zero, bit_width, bit_ceil, rotl",
+   "category": "Liczby i typy",
+   "tags": [
+    "bit",
+    "c++20",
+    "popcount",
+    "countl_zero",
+    "countr_zero",
+    "countl_one",
+    "countr_one",
+    "bit_width",
+    "bit_ceil",
+    "bit_floor",
+    "has_single_bit",
+    "rotl",
+    "rotr",
+    "bit_cast",
+    "endian",
+    "__builtin",
+    "dokumentacja"
+   ],
+   "aliases": [
+    "<bit>",
+    "nagłówek bit",
+    "naglowek bit c++20",
+    "dokumentacja bit",
+    "funkcje bitowe c++20",
+    "bit header c++20",
+    "biblioteka bit",
+    "std bit functions"
+   ],
+   "summary": "Nagłówek `<bit>` (C++20) zawiera przenośne, zdefiniowane także dla zera odpowiedniki `__builtin_*`: liczba jedynek (`popcount`), zera/jedynki wiodące i końcowe (`countl_zero`, `countr_zero`, `countl_one`, `countr_one`), długość binarna (`bit_width`), potęgi dwójki (`bit_floor`, `bit_ceil`, `has_single_bit`), rotacje (`rotl`, `rotr`) i `bit_cast`. Działają **tylko na typach bez znaku**.",
+   "complexity": "wszystkie O(1) — jedna lub kilka instrukcji procesora (popcnt, lzcnt, tzcnt, rol)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`#include <bit>` (jest w `bits/stdc++.h` przy `-std=c++20`). Wszystkie funkcje są szablonami przyjmującymi\n**wyłącznie typy bez znaku**: `unsigned`, `unsigned long long`, `uint32_t`, `uint64_t`… Wywołanie z `int` albo\n`long long` **nie kompiluje się** (`no matching function for call to popcount(int&)`) — rzutuj:\n`popcount((unsigned)x)`, `popcount((unsigned long long)x)`.\n\nW odróżnieniu od `__builtin_clz(0)` / `__builtin_ctz(0)` (zachowanie niezdefiniowane), funkcje z `<bit>` mają\nokreślony wynik dla zera: `countl_zero(0u) == 32`, `countr_zero(0u) == 32`, `bit_width(0u) == 0`, `bit_ceil(0u) == 1`.\nLiczba bitów zależy od typu argumentu (32 dla `unsigned`, 64 dla `unsigned long long`).\n\nStarsze odpowiedniki GCC i triki bitowe opisują artykuły `stl-builtin-bits` i `tech-bit-tricks`."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "<bit> (C++20)",
+      "Wynik dla x = 0b0110'1000 (104u)",
+      "GCC builtin",
+      "Dla x = 0"
+     ],
+     "rows": [
+      [
+       "`popcount(x)`",
+       "3 — liczba jedynek",
+       "`__builtin_popcount(x)` / `...ll`",
+       "0"
+      ],
+      [
+       "`countr_zero(x)`",
+       "3 — zera na końcu (indeks najniższej jedynki)",
+       "`__builtin_ctz(x)` / `...ll`",
+       "32 (builtin: UB)"
+      ],
+      [
+       "`countl_zero(x)`",
+       "25 — zera na początku (32 bity)",
+       "`__builtin_clz(x)` / `...ll`",
+       "32 (builtin: UB)"
+      ],
+      [
+       "`countr_one(x)`",
+       "0 — jedynki na końcu",
+       "`__builtin_ctz(~x)`",
+       "0"
+      ],
+      [
+       "`countl_one(x)`",
+       "0 — jedynki na początku",
+       "`__builtin_clz(~x)`",
+       "0"
+      ],
+      [
+       "`bit_width(x)`",
+       "7 — ile bitów potrzeba (⌊log₂x⌋ + 1)",
+       "`__lg(x) + 1`",
+       "0 (`__lg(0)`: UB)"
+      ],
+      [
+       "`bit_floor(x)`",
+       "64 — największa potęga 2 ≤ x",
+       "`1u << __lg(x)`",
+       "0"
+      ],
+      [
+       "`bit_ceil(x)`",
+       "128 — najmniejsza potęga 2 ≥ x",
+       "—",
+       "1"
+      ],
+      [
+       "`has_single_bit(x)`",
+       "false — czy potęga dwójki",
+       "`x && !(x & (x - 1))`",
+       "false"
+      ],
+      [
+       "`rotl(x, s)` / `rotr(x, s)`",
+       "rotacja cykliczna o s bitów",
+       "`__builtin_rotateleft32` (clang)",
+       "0"
+      ],
+      [
+       "`bit_cast<To>(y)`",
+       "te same bity jako inny typ tego samego rozmiaru",
+       "`memcpy`",
+       "—"
+      ],
+      [
+       "`endian::native`",
+       "kolejność bajtów platformy (little na x86/ARM)",
+       "—",
+       "—"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: wszystkie funkcje <bit> i porównanie z __builtin",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    unsigned x = 0b10110000u;                    // 176\n    unsigned long long y = 1ULL << 40;\n\n    cout << popcount(x) << '\\n';                 // 3 — liczba jedynek\n    cout << countr_zero(x) << '\\n';              // 4 — zera na końcu (najniższa jedynka na pozycji 4)\n    cout << countl_zero(x) << '\\n';              // 24 — zera na początku (32-bitowy unsigned)\n    cout << countr_one(0b0111u) << '\\n';         // 3 — jedynki na końcu\n    cout << countl_one(~0u << 28) << '\\n';       // 4 — jedynki na początku\n    cout << bit_width(x) << '\\n';                // 8 — floor(log2 x) = bit_width(x) - 1 = 7\n    cout << bit_floor(x) << ' ' << bit_ceil(x) << '\\n';               // 128 256\n    cout << has_single_bit(x) << ' ' << has_single_bit(256u) << '\\n'; // 0 1\n    cout << rotl(0x80000001u, 1) << ' ' << rotr(1u, 1) << '\\n';       // 3 2147483648\n    cout << countr_zero(y) << ' ' << bit_width(y) << '\\n';            // 40 41\n\n    // Wartości brzegowe — tu <bit> jest bezpieczniejsze od __builtin_*\n    cout << countl_zero(0u) << ' ' << countr_zero(0u) << ' ' << bit_width(0u) << ' '\n         << bit_ceil(0u) << '\\n';                                    // 32 32 0 1\n\n    // Dla typów ze znakiem — rzutuj na unsigned!\n    int s = 13;\n    long long big = (1LL << 40) + 5;\n    cout << popcount((unsigned)s) << ' ' << __builtin_popcount(s) << ' '\n         << popcount((unsigned long long)big) << ' ' << __builtin_popcountll(big) << '\\n';  // 3 3 3 3\n\n    // bit_cast: bity double jako liczba całkowita\n    double d = 1.0;\n    cout << hex << bit_cast<unsigned long long>(d) << dec << '\\n';   // 3ff0000000000000\n    cout << (endian::native == endian::little) << '\\n';              // 1 na x86 i ARM\n}"
+    },
+    {
+     "type": "warn",
+     "md": "**Tylko typy bez znaku.** `popcount(x)` dla `int x` to błąd kompilacji, a nie ostrzeżenie. Rzutując liczbę ujemną,\npamiętaj o szerokości: `popcount((unsigned)-1) == 32`, ale `popcount((unsigned long long)-1) == 64`.\nPrzesunięcia w stałych też muszą być 64-bitowe: `1ULL << 40`, nie `1 << 40`."
+    },
+    {
+     "type": "tip",
+     "md": "Kiedy co: na sprawdzarce z g++ ≥ 10 i `-std=c++20` używaj `<bit>` (czytelne, bezpieczne dla 0). Jeśli sprawdzarka\nkompiluje w C++17 lub starszym, zostają `__builtin_popcount`, `__builtin_clz`, `__builtin_ctz`, `__lg` (z sufiksem\n`ll` dla `long long`). Obie wersje kompilują się do tych samych instrukcji — szybkość jest taka sama."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "popcount(x)",
+     "desc": "liczba bitów ustawionych na 1",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "int k = popcount((unsigned)mask);"
+    },
+    {
+     "sig": "countl_zero(x)",
+     "desc": "liczba zer od najstarszego bitu (dla 0: szerokość typu)",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "countl_zero(1u) // 31"
+    },
+    {
+     "sig": "countr_zero(x)",
+     "desc": "liczba zer od najmłodszego bitu = indeks najniższej jedynki (dla 0: szerokość typu)",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "countr_zero(12u) // 2"
+    },
+    {
+     "sig": "countl_one(x)",
+     "desc": "liczba kolejnych jedynek od najstarszego bitu",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "countl_one(0xF0000000u) // 4"
+    },
+    {
+     "sig": "countr_one(x)",
+     "desc": "liczba kolejnych jedynek od najmłodszego bitu (= indeks najniższego zera)",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "countr_one(0b1011u) // 2"
+    },
+    {
+     "sig": "bit_width(x)",
+     "desc": "liczba bitów potrzebna do zapisu x = ⌊log₂x⌋ + 1; dla 0 zwraca 0",
+     "complexity": "O(1)",
+     "returns": "int (w starszych g++: typ argumentu)",
+     "example": "int lg = bit_width(n) - 1; // floor(log2 n), n > 0"
+    },
+    {
+     "sig": "bit_floor(x)",
+     "desc": "największa potęga dwójki ≤ x (dla 0: 0)",
+     "complexity": "O(1)",
+     "returns": "T",
+     "example": "bit_floor(100u) // 64"
+    },
+    {
+     "sig": "bit_ceil(x)",
+     "desc": "najmniejsza potęga dwójki ≥ x (dla 0 i 1: 1); UB, gdy wynik się nie mieści",
+     "complexity": "O(1)",
+     "returns": "T",
+     "example": "unsigned size = bit_ceil((unsigned)n); // rozmiar drzewa przedziałowego"
+    },
+    {
+     "sig": "has_single_bit(x)",
+     "desc": "czy x jest potęgą dwójki (dokładnie jeden bit); dla 0: false",
+     "complexity": "O(1)",
+     "returns": "bool",
+     "example": "has_single_bit(64u) // true"
+    },
+    {
+     "sig": "rotl(x, s) / rotr(x, s)",
+     "desc": "rotacja cykliczna w lewo / prawo o s bitów (s może być ujemne lub ≥ szerokości)",
+     "complexity": "O(1)",
+     "returns": "T",
+     "example": "rotl(0x80000001u, 1) // 3"
+    },
+    {
+     "sig": "bit_cast<To>(from)",
+     "desc": "reinterpretuje bity obiektu jako inny typ o tym samym rozmiarze (bez UB)",
+     "complexity": "O(1)",
+     "returns": "To",
+     "example": "auto bits = bit_cast<uint64_t>(1.0);"
+    },
+    {
+     "sig": "endian::native / endian::little / endian::big",
+     "desc": "kolejność bajtów platformy",
+     "returns": "enum endian",
+     "example": "if constexpr (endian::native == endian::little) {}"
+    },
+    {
+     "sig": "byteswap(x)",
+     "desc": "C++23 (-std=c++23): odwraca kolejność bajtów liczby całkowitej",
+     "complexity": "O(1)",
+     "returns": "T",
+     "example": "byteswap(0x12345678u) // 0x78563412"
+    },
+    {
+     "sig": "__builtin_popcount(x) / __builtin_popcountll(x)",
+     "desc": "GCC: liczba jedynek (unsigned / unsigned long long)",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "__builtin_popcountll(mask)"
+    },
+    {
+     "sig": "__builtin_clz(x) / __builtin_clzll(x)",
+     "desc": "GCC: zera wiodące; x = 0 → UB",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "31 - __builtin_clz(x) // log2"
+    },
+    {
+     "sig": "__builtin_ctz(x) / __builtin_ctzll(x)",
+     "desc": "GCC: zera końcowe; x = 0 → UB",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "__builtin_ctz(x & -x)"
+    },
+    {
+     "sig": "__lg(x)",
+     "desc": "GCC: ⌊log₂x⌋ dla x > 0 (int / long long)",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "int k = __lg(n);"
+    },
+    {
+     "sig": "__builtin_parity(x) / __builtin_ffs(x)",
+     "desc": "GCC: parzystość liczby jedynek / indeks najniższej jedynki + 1 (0 dla x = 0)",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "__builtin_ffs(8) // 4"
+    }
+   ],
+   "pitfalls": [
+    "Funkcje `<bit>` nie przyjmują `int`/`long long` — błąd kompilacji. Rzutuj na `unsigned` / `unsigned long long`.",
+    "Wynik `countl_zero` zależy od typu: `countl_zero(1u) == 31`, `countl_zero(1ULL) == 63`.",
+    "`popcount((unsigned)x)` dla `long long x` obcina górne 32 bity — rzutuj na `unsigned long long`.",
+    "`__builtin_clz(0)` i `__builtin_ctz(0)` to UB (różne wyniki na różnych maszynach); `countl_zero(0u)` jest zdefiniowane (32).",
+    "`bit_ceil(x)` dla x większego niż największa potęga dwójki w typie (np. > 2^31 dla `unsigned`) to UB.",
+    "`bit_width(x) - 1` to ⌊log₂x⌋ tylko dla x > 0; dla x = 0 daje -1.",
+    "Na sprawdzarce kompilującej w C++17 nagłówka `<bit>` nie ma — sprawdź flagi (na SIO2 sprawdź komunikat kompilacji).",
+    "`__builtin_popcount` dla `long long` liczy tylko 32 młodsze bity — potrzebny wariant `...ll`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "popcount dla int ze znakiem",
+      "std::popcount int error",
+      "no matching function for call to popcount(int&)",
+      "countl_zero int nie działa",
+      "bit functions require unsigned",
+      "popcount liczby ujemnej",
+      "popcount long long c++20"
+     ],
+     "a": "Wszystkie funkcje z `<bit>` przyjmują **tylko** typy bez znaku, więc `popcount(x)` dla `int x` kończy się błędem\n`no matching function for call to 'popcount(int&)'`. Rzutuj: `popcount((unsigned)x)` dla `int`,\n`popcount((unsigned long long)x)` dla `long long`. Dla liczb ujemnych wynik zależy od szerokości typu, na który\nrzutujesz (zapis w kodzie U2). Alternatywa bez rzutowania: `__builtin_popcount(x)` / `__builtin_popcountll(x)`.",
+     "code": "int a = -1;\nlong long b = (1LL << 40) | 7;\ncout << popcount((unsigned)a) << ' ' << popcount((unsigned long long)a) << '\\n';  // 32 64\ncout << popcount((unsigned long long)b) << ' ' << __builtin_popcountll(b) << '\\n'; // 4 4"
+    },
+    {
+     "q": [
+      "bit_width",
+      "bit_width co zwraca",
+      "floor log2 c++20",
+      "ile bitów ma liczba binarnie",
+      "długość zapisu binarnego liczby",
+      "bit length c++",
+      "najstarszy bit c++20"
+     ],
+     "a": "`bit_width(x)` zwraca liczbę bitów potrzebnych do zapisu `x` (bez zer wiodących): `bit_width(5u) == 3` (101),\n`bit_width(8u) == 4`, `bit_width(0u) == 0`. Stąd:\n- ⌊log₂x⌋ = `bit_width(x) - 1` (dla x > 0) — dokładnie, bez `double`;\n- pozycja najstarszej jedynki = `bit_width(x) - 1`;\n- liczba poziomów sparse table: `bit_width((unsigned)n)`.\nOdpowiednik GCC: `__lg(x) + 1`.",
+     "code": "for (unsigned x : {1u, 5u, 8u, 1000u})\n    cout << x << \": width=\" << bit_width(x) << \" floor_log2=\" << bit_width(x) - 1 << '\\n';\n// 1: 1 0 | 5: 3 2 | 8: 4 3 | 1000: 10 9"
+    },
+    {
+     "q": [
+      "bit_ceil",
+      "najmniejsza potęga dwójki większa lub równa n",
+      "next power of two c++",
+      "zaokrąglenie w górę do potęgi 2",
+      "rozmiar drzewa przedziałowego potęga dwójki",
+      "bit_floor",
+      "największa potęga dwójki mniejsza od n"
+     ],
+     "a": "`bit_ceil(x)` — najmniejsza potęga dwójki ≥ x (`bit_ceil(5u) == 8`, `bit_ceil(8u) == 8`, `bit_ceil(0u) == 1`).\n`bit_floor(x)` — największa potęga dwójki ≤ x (`bit_floor(5u) == 4`, `bit_floor(0u) == 0`). Typowe użycie: rozmiar\ndrzewa przedziałowego „od dołu” (`size = bit_ceil((unsigned)n)`) albo długość dla FFT. Uwaga: jeśli wynik nie\nmieści się w typie (np. `bit_ceil(3'000'000'000u)`), zachowanie jest niezdefiniowane — użyj `unsigned long long`.",
+     "code": "int n = 100000;\nunsigned size = bit_ceil((unsigned)n);           // 131072\nvector<long long> tree(2 * size);\ncout << size << ' ' << bit_floor((unsigned)n) << ' ' << bit_ceil(1ULL << 40 | 1) << '\\n';  // 131072 65536 2199023255552"
+    },
+    {
+     "q": [
+      "countr_zero",
+      "najmłodszy zapalony bit",
+      "ile zer na końcu liczby binarnie",
+      "trailing zeros c++20",
+      "lowbit x & -x",
+      "największa potęga dwójki dzieląca n",
+      "indeks najniższego bitu"
+     ],
+     "a": "`countr_zero(x)` zwraca liczbę zer na końcu zapisu binarnego, czyli **indeks najniższego zapalonego bitu**\n(`countr_zero(12u) == 2`, bo 12 = 1100). Wartość tego bitu (lowbit, używany w drzewie Fenwicka) to `x & -x`\nalbo `1u << countr_zero(x)`, a największa potęga dwójki dzieląca `n` to właśnie `n & -n`. Dla `x = 0` funkcja\nzwraca szerokość typu (32/64), a `__builtin_ctz(0)` to UB.",
+     "code": "unsigned x = 40;                                 // 101000\ncout << countr_zero(x) << ' ' << (x & -x) << ' ' << (1u << countr_zero(x)) << '\\n';   // 3 8 8\nfor (unsigned m = 0b10110u; m; m &= m - 1)       // iteracja po zapalonych bitach\n    cout << countr_zero(m) << ' ';               // 1 2 4\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "rotl",
+      "rotacja bitów c++",
+      "przesunięcie cykliczne bitów",
+      "rotate bits left c++",
+      "rotr",
+      "cykliczne przesunięcie maski"
+     ],
+     "a": "`rotl(x, s)` przesuwa bity `x` w lewo o `s` pozycji, a bity „wypadające” z lewej wracają z prawej (`rotr` — w drugą\nstronę). Szerokość cyklu to szerokość typu (32 dla `unsigned`, 64 dla `unsigned long long`). Dla maski\no **innej** długości n (np. n = 5 bitów planszy) trzeba samemu: `((m << s) | (m >> (n - s))) & ((1u << n) - 1)`.\nPrzydaje się w haszowaniu i przy cyklicznych przesunięciach masek.",
+     "code": "cout << rotl(0x80000001u, 1) << ' ' << rotr(1u, 1) << ' ' << rotl(1ULL, 63) << '\\n';  // 3 2147483648 9223372036854775808\nunsigned n = 5, m = 0b10011, s = 2;\nunsigned r = ((m << s) | (m >> (n - s))) & ((1u << n) - 1);   // rotacja w obrębie 5 bitów: 01110\ncout << r << '\\n';                                            // 14"
+    },
+    {
+     "q": [
+      "__builtin czy <bit>",
+      "__builtin_popcount czy std::popcount",
+      "co lepsze builtin czy bit",
+      "builtin_clz(0)",
+      "różnica __builtin_ctz i countr_zero",
+      "builtin vs std bit c++20",
+      "czy builtin jest szybszy"
+     ],
+     "a": "Działają tak samo szybko (kompilują się do tych samych instrukcji). Różnice:\n- `<bit>` jest standardowy (działa też w MSVC/clang), wymaga C++20 i typów **bez znaku**;\n- `__builtin_*` to rozszerzenie GCC/clang, działa w każdym standardzie i przyjmuje `int`, ale ma osobne wersje\n  `...ll` dla `long long` (bez `ll` liczy tylko 32 bity!);\n- dla zera: `__builtin_clz(0)`, `__builtin_ctz(0)` i `__lg(0)` to UB, a `countl_zero(0u)` / `countr_zero(0u)` = 32,\n  `bit_width(0u)` = 0.\nNa zawodach z C++20 wygodniej `<bit>`; gdy nie wiesz, jaki standard ma sprawdzarka, `__builtin_*` są pewniejsze.",
+     "code": "unsigned x = 0;\ncout << countl_zero(x) << ' ' << countr_zero(x) << ' ' << bit_width(x) << '\\n';   // 32 32 0\n// __builtin_clz(0) — niezdefiniowane; sprawdź x != 0 przed użyciem\nunsigned long long y = 1ULL << 35;\ncout << __builtin_ctzll(y) << ' ' << countr_zero(y) << '\\n';                     // 35 35"
+    },
+    {
+     "q": [
+      "bit_cast",
+      "bity double jako liczba",
+      "reinterpret double as long long",
+      "jak zobaczyć bity floata",
+      "bit_cast c++20",
+      "reprezentacja binarna double c++"
+     ],
+     "a": "`bit_cast<To>(x)` zwraca obiekt typu `To` o **tych samych bitach** co `x` (typy muszą mieć ten sam rozmiar i być\ntrywialnie kopiowalne). To poprawna wersja sztuczki `*(long long*)&d` (która łamie reguły aliasingu, czyli UB).\nPrzydaje się do podejrzenia zapisu IEEE 754 i do haszowania liczb zmiennoprzecinkowych.",
+     "code": "double d = -2.5;\nuint64_t b = bit_cast<uint64_t>(d);\ncout << bitset<64>(b) << '\\n';                  // znak | wykładnik (11 bitów) | mantysa (52 bity)\ncout << (b >> 63) << ' ' << ((b >> 52) & 0x7FF) - 1023 << '\\n';   // 1 1 (znak minus, 2.5 = 1.25 · 2^1)\ncout << bit_cast<double>(b) << '\\n';            // -2.5"
+    },
+    {
+     "q": [
+      "countr_one",
+      "ile jedynek na końcu liczby",
+      "trailing ones c++",
+      "countl_one",
+      "najniższy zgaszony bit",
+      "indeks najniższego zera w masce"
+     ],
+     "a": "`countr_one(x)` liczy kolejne jedynki od najmłodszego bitu — to jednocześnie **indeks najniższego zera** (pierwsze\nwolne miejsce w masce zajętości). `countl_one(x)` liczy jedynki od najstarszego bitu (dla `unsigned` w 32 bitach).\nOdpowiedniki GCC: `__builtin_ctz(~x)` i `__builtin_clz(~x)` (UB, gdy `~x == 0`).",
+     "code": "unsigned used = 0b0111;                          // zajęte sloty 0, 1, 2\nint freeSlot = countr_one(used);                 // 3\nused |= 1u << freeSlot;                          // zajmij\ncout << freeSlot << ' ' << countr_one(used) << ' ' << countl_one(0xF0000000u) << '\\n';   // 3 4 4"
+    }
+   ],
+   "related": [
+    "stl-builtin-bits",
+    "tech-bit-tricks",
+    "pit-bit-ops",
+    "num-log2",
+    "dp-bitmask",
+    "stl-bitset",
+    "ds-segment-tree-iterative",
+    "ds-fenwick"
+   ]
+  },
+  {
+   "id": "cpp-ref-climits-cfloat",
+   "title": "Dokumentacja: <climits>, <cfloat>, <cstdint> — stałe zakresów i typy o stałej szerokości",
+   "category": "Liczby i typy",
+   "tags": [
+    "climits",
+    "cfloat",
+    "cstdint",
+    "limits.h",
+    "float.h",
+    "stdint.h",
+    "CHAR_BIT",
+    "LLONG_MIN",
+    "UINT_MAX",
+    "DBL_MAX",
+    "DBL_EPSILON",
+    "DBL_MIN",
+    "int64_t",
+    "uint64_t",
+    "int32_t",
+    "INT64_MAX",
+    "PRId64",
+    "dokumentacja"
+   ],
+   "aliases": [
+    "climits",
+    "<climits>",
+    "cfloat",
+    "<cfloat>",
+    "cstdint",
+    "<cstdint>",
+    "limits.h",
+    "float.h",
+    "stdint.h",
+    "dokumentacja climits",
+    "dokumentacja cstdint",
+    "stałe zakresów typów",
+    "typy o stałej szerokości",
+    "fixed width integer types"
+   ],
+   "summary": "Makra z zakresami typów: `<climits>` (`CHAR_BIT`, `INT_MIN`/`INT_MAX`, `UINT_MAX`, `LLONG_MIN`/`LLONG_MAX`, `ULLONG_MAX`…), `<cfloat>` (`DBL_MAX`, `DBL_MIN` — najmniejsza **dodatnia**!, `DBL_EPSILON`, `DBL_DIG`) oraz `<cstdint>` — typy o gwarantowanej szerokości (`int32_t`, `int64_t`, `uint64_t`…) i ich stałe (`INT64_MAX`, `UINT64_MAX`, `SIZE_MAX`). Nowocześniejsza alternatywa to `numeric_limits<T>`.",
+   "complexity": "stałe czasu kompilacji — koszt 0",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Te nagłówki to w większości **makra-stałe** znane w czasie kompilacji (są w `bits/stdc++.h`). Wartości poniżej\ndotyczą typowych platform zawodniczych (64-bitowy Linux, macOS, Windows z MinGW). Standard gwarantuje tylko\nminimalne zakresy — dlatego `long` ma 64 bity na Linuksie i macOS, ale **32 bity na Windows**. Jeśli potrzebujesz\nkonkretnej szerokości, użyj `long long` albo typów z `<cstdint>` (`int64_t`).\n\nWersja szablonowa tych samych informacji to `numeric_limits<T>` (artykuł `stl-numeric-limits`), a wybór „nieskończoności”\nopisuje `num-inf-constants`."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Stała",
+      "Wartość (typowo)",
+      "Znaczenie"
+     ],
+     "rows": [
+      [
+       "`CHAR_BIT`",
+       "8",
+       "bitów w bajcie (`char`)"
+      ],
+      [
+       "`SCHAR_MIN` / `SCHAR_MAX`",
+       "-128 / 127",
+       "zakres `signed char`"
+      ],
+      [
+       "`UCHAR_MAX`",
+       "255",
+       "maksimum `unsigned char`"
+      ],
+      [
+       "`CHAR_MIN` / `CHAR_MAX`",
+       "-128 / 127 (x86), 0 / 255 (ARM Linux)",
+       "`char` bywa ze znakiem albo bez!"
+      ],
+      [
+       "`SHRT_MIN` / `SHRT_MAX`",
+       "-32768 / 32767",
+       "zakres `short`"
+      ],
+      [
+       "`USHRT_MAX`",
+       "65535",
+       "maksimum `unsigned short`"
+      ],
+      [
+       "`INT_MIN` / `INT_MAX`",
+       "-2147483648 / 2147483647",
+       "zakres `int` (≈ ±2.1·10⁹)"
+      ],
+      [
+       "`UINT_MAX`",
+       "4294967295",
+       "maksimum `unsigned` (≈ 4.3·10⁹)"
+      ],
+      [
+       "`LONG_MIN` / `LONG_MAX`",
+       "±9.2·10¹⁸ (Linux/macOS), ±2.1·10⁹ (Windows)",
+       "zakres `long` — zależy od systemu"
+      ],
+      [
+       "`ULONG_MAX`",
+       "18446744073709551615 / 4294967295",
+       "maksimum `unsigned long`"
+      ],
+      [
+       "`LLONG_MIN` / `LLONG_MAX`",
+       "-9223372036854775808 / 9223372036854775807",
+       "zakres `long long` (≈ ±9.2·10¹⁸)"
+      ],
+      [
+       "`ULLONG_MAX`",
+       "18446744073709551615",
+       "maksimum `unsigned long long` (≈ 1.8·10¹⁹)"
+      ],
+      [
+       "`FLT_MAX` / `FLT_EPSILON`",
+       "3.40282e+38 / 1.19209e-07",
+       "`float`: ~7 cyfr znaczących"
+      ],
+      [
+       "`DBL_MAX`",
+       "1.79769e+308",
+       "największy `double`"
+      ],
+      [
+       "`DBL_MIN`",
+       "2.22507e-308",
+       "najmniejszy **dodatni** znormalizowany `double`"
+      ],
+      [
+       "`DBL_TRUE_MIN`",
+       "4.94066e-324",
+       "najmniejszy dodatni (zdenormalizowany) `double`"
+      ],
+      [
+       "`DBL_EPSILON`",
+       "2.22045e-16",
+       "odstęp między 1.0 a następnym `double`"
+      ],
+      [
+       "`DBL_DIG` / `DBL_MANT_DIG`",
+       "15 / 53",
+       "pewne cyfry dziesiętne / bity mantysy `double`"
+      ],
+      [
+       "`LDBL_MAX` / `LDBL_EPSILON`",
+       "1.18973e+4932 / 1.0842e-19 (x86)",
+       "`long double` (na Apple M = double!)"
+      ],
+      [
+       "`INT8_MIN`…`INT64_MAX`",
+       "np. `INT32_MAX` = 2147483647",
+       "zakresy `int8_t`…`int64_t`"
+      ],
+      [
+       "`UINT8_MAX`…`UINT64_MAX`",
+       "255 … 18446744073709551615",
+       "zakresy `uint8_t`…`uint64_t`"
+      ],
+      [
+       "`SIZE_MAX`",
+       "18446744073709551615 (64-bit)",
+       "maksimum `size_t`"
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Typ z <cstdint>",
+      "Bity",
+      "Odpowiada zwykle",
+      "Uwaga"
+     ],
+     "rows": [
+      [
+       "`int8_t` / `uint8_t`",
+       "8",
+       "`signed char` / `unsigned char`",
+       "`cout` wypisuje jako **znak**!"
+      ],
+      [
+       "`int16_t` / `uint16_t`",
+       "16",
+       "`short` / `unsigned short`",
+       ""
+      ],
+      [
+       "`int32_t` / `uint32_t`",
+       "32",
+       "`int` / `unsigned`",
+       ""
+      ],
+      [
+       "`int64_t` / `uint64_t`",
+       "64",
+       "`long` (Linux/macOS) lub `long long` (Windows)",
+       "printf: `PRId64`"
+      ],
+      [
+       "`intmax_t` / `uintmax_t`",
+       "64",
+       "największy typ całkowity (bez `__int128`)",
+       ""
+      ],
+      [
+       "`int_fast32_t`, `int_least32_t`",
+       "≥ 32",
+       "najszybszy / najmniejszy z co najmniej 32 bitami",
+       "rzadko potrzebne"
+      ],
+      [
+       "`size_t`",
+       "64 (32 na 32-bit)",
+       "`unsigned long` / `unsigned long long`",
+       "wynik `size()`, `sizeof`"
+      ],
+      [
+       "`ptrdiff_t`",
+       "64",
+       "różnica wskaźników / iteratorów",
+       "ze znakiem"
+      ]
+     ],
+     "title": "Typy o stałej szerokości"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny przykład: wartości stałych i pułapki typów",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    cout << \"CHAR_BIT   = \" << CHAR_BIT << '\\n';                 // 8\n    cout << \"INT_MIN    = \" << INT_MIN << '\\n';                  // -2147483648\n    cout << \"INT_MAX    = \" << INT_MAX << '\\n';                  // 2147483647\n    cout << \"UINT_MAX   = \" << UINT_MAX << '\\n';                 // 4294967295\n    cout << \"LLONG_MIN  = \" << LLONG_MIN << '\\n';                // -9223372036854775808\n    cout << \"LLONG_MAX  = \" << LLONG_MAX << '\\n';                // 9223372036854775807\n    cout << \"ULLONG_MAX = \" << ULLONG_MAX << '\\n';               // 18446744073709551615\n    cout << \"sizeof(long) = \" << sizeof(long) << '\\n';          // 8 na Linux/macOS, 4 na Windows!\n\n    cout << \"DBL_MAX     = \" << DBL_MAX << '\\n';                 // 1.79769e+308\n    cout << \"DBL_MIN     = \" << DBL_MIN << \" (najmniejsza DODATNIA)\\n\";   // 2.22507e-308\n    cout << \"-DBL_MAX    = \" << -DBL_MAX << \" (najmniejsza wartosc)\\n\";\n    cout << \"DBL_EPSILON = \" << DBL_EPSILON << '\\n';             // 2.22045e-16\n    cout << \"DBL_DIG     = \" << DBL_DIG << '\\n';                 // 15\n    cout << \"LDBL_EPSILON= \" << LDBL_EPSILON << '\\n';            // 1.0842e-19 (x86), 2.22045e-16 (Apple M)\n\n    int64_t a = INT64_MAX;                                       // to samo co LLONG_MAX\n    uint64_t b = UINT64_MAX;\n    int32_t c = INT32_MIN;\n    uint8_t d = 65;\n    cout << a << ' ' << b << ' ' << c << '\\n';\n    cout << d << ' ' << +d << ' ' << (int)d << '\\n';             // A 65 65 — uint8_t to unsigned char!\n    printf(\"%\" PRId64 \" %lld\\n\", a, (long long)a);              // przenośny printf dla int64_t\n    cout << SIZE_MAX << '\\n';                                    // 18446744073709551615\n    cout << INT64_C(1) << 40 << ' ' << (INT64_C(1) << 40) << '\\n';   // 140 1099511627776 — bez nawiasów << wypisuje!\n}"
+    },
+    {
+     "type": "warn",
+     "md": "**`DBL_MIN` nie jest „minus nieskończonością”** — to najmniejsza **dodatnia** liczba (≈ 2.2·10⁻³⁰⁸). Jako początkowe\nmaksimum szukane wśród liczb ujemnych daje błędny wynik. Najmniejszy `double` to `-DBL_MAX`\n(= `numeric_limits<double>::lowest()`), a nieskończoność — `HUGE_VAL` / `numeric_limits<double>::infinity()`."
+    },
+    {
+     "type": "tip",
+     "md": "Szybka ściąga rzędów wielkości: `int` ≈ 2·10⁹, `unsigned` ≈ 4·10⁹, `long long` ≈ 9·10¹⁸, `unsigned long long`\n≈ 1.8·10¹⁹, `__int128` ≈ 1.7·10³⁸. Iloczyn dwóch liczb do 10⁹ mieści się w `long long`, trzech — już nie."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "CHAR_BIT",
+     "desc": "liczba bitów w bajcie (w praktyce 8)",
+     "returns": "int",
+     "example": "int bits = sizeof(int) * CHAR_BIT; // 32"
+    },
+    {
+     "sig": "SCHAR_MIN / SCHAR_MAX / UCHAR_MAX",
+     "desc": "zakres signed char (-128..127) i maksimum unsigned char (255)",
+     "returns": "int",
+     "example": "UCHAR_MAX // 255"
+    },
+    {
+     "sig": "CHAR_MIN / CHAR_MAX",
+     "desc": "zakres zwykłego char — ze znakiem na x86, bez znaku np. na ARM Linux",
+     "returns": "int",
+     "example": "bool charSigned = CHAR_MIN < 0;"
+    },
+    {
+     "sig": "SHRT_MIN / SHRT_MAX / USHRT_MAX",
+     "desc": "zakres short (-32768..32767) i unsigned short (65535)",
+     "returns": "int",
+     "example": "SHRT_MAX // 32767"
+    },
+    {
+     "sig": "INT_MIN / INT_MAX",
+     "desc": "zakres int: -2147483648..2147483647",
+     "returns": "int",
+     "example": "int best = INT_MIN;"
+    },
+    {
+     "sig": "UINT_MAX",
+     "desc": "maksimum unsigned int: 4294967295",
+     "returns": "unsigned",
+     "example": "unsigned m = UINT_MAX;"
+    },
+    {
+     "sig": "LONG_MIN / LONG_MAX / ULONG_MAX",
+     "desc": "zakres long — 64 bity na Linux/macOS, 32 bity na Windows",
+     "returns": "long",
+     "example": "static_assert(LONG_MAX > INT_MAX, \"long ma 32 bity\");"
+    },
+    {
+     "sig": "LLONG_MIN / LLONG_MAX",
+     "desc": "zakres long long: ±9223372036854775807 (min o 1 mniejsze)",
+     "returns": "long long",
+     "example": "long long lo = LLONG_MAX;"
+    },
+    {
+     "sig": "ULLONG_MAX",
+     "desc": "maksimum unsigned long long: 18446744073709551615",
+     "returns": "unsigned long long",
+     "example": "unsigned long long h = ULLONG_MAX;"
+    },
+    {
+     "sig": "FLT_MAX / FLT_MIN / FLT_EPSILON",
+     "desc": "float: największy, najmniejszy dodatni znormalizowany, epsilon (1.19e-7)",
+     "returns": "float",
+     "example": "float f = FLT_MAX;"
+    },
+    {
+     "sig": "DBL_MAX",
+     "desc": "największy skończony double (1.79769e+308); -DBL_MAX = najmniejszy",
+     "returns": "double",
+     "example": "double best = -DBL_MAX;"
+    },
+    {
+     "sig": "DBL_MIN",
+     "desc": "najmniejszy DODATNI znormalizowany double (2.22507e-308) — nie ujemny!",
+     "returns": "double",
+     "example": "DBL_MIN > 0 // true"
+    },
+    {
+     "sig": "DBL_TRUE_MIN",
+     "desc": "najmniejszy dodatni double w ogóle (zdenormalizowany, 4.9e-324)",
+     "returns": "double",
+     "example": "DBL_TRUE_MIN"
+    },
+    {
+     "sig": "DBL_EPSILON",
+     "desc": "różnica między 1.0 a następnym double (2.22e-16) — błąd względny, nie bezwzględny",
+     "returns": "double",
+     "example": "fabs(a - b) <= DBL_EPSILON * max(fabs(a), fabs(b))"
+    },
+    {
+     "sig": "DBL_DIG / DBL_MANT_DIG / DBL_MAX_EXP",
+     "desc": "cyfry dziesiętne zachowane bez straty (15) / bity mantysy (53) / maks. wykładnik",
+     "returns": "int",
+     "example": "cout << setprecision(DBL_DIG) << x;"
+    },
+    {
+     "sig": "LDBL_MAX / LDBL_EPSILON / LDBL_DIG",
+     "desc": "to samo dla long double (80-bit na x86; na Apple M równe double)",
+     "returns": "long double",
+     "example": "LDBL_EPSILON // 1.0842e-19 na x86"
+    },
+    {
+     "sig": "int8_t / int16_t / int32_t / int64_t",
+     "desc": "liczby ze znakiem o dokładnie 8/16/32/64 bitach",
+     "returns": "typ",
+     "example": "int64_t sum = 0;"
+    },
+    {
+     "sig": "uint8_t / uint16_t / uint32_t / uint64_t",
+     "desc": "liczby bez znaku o dokładnie 8/16/32/64 bitach (arytmetyka mod 2^n)",
+     "returns": "typ",
+     "example": "uint64_t h = 1469598103934665603ULL;"
+    },
+    {
+     "sig": "INT8_MIN … INT64_MIN / INT8_MAX … INT64_MAX",
+     "desc": "zakresy typów intN_t",
+     "returns": "stała",
+     "example": "int64_t inf = INT64_MAX / 2;"
+    },
+    {
+     "sig": "UINT8_MAX … UINT64_MAX",
+     "desc": "maksima typów uintN_t",
+     "returns": "stała",
+     "example": "UINT32_MAX // 4294967295"
+    },
+    {
+     "sig": "SIZE_MAX",
+     "desc": "maksimum size_t (18446744073709551615 na 64-bit)",
+     "returns": "size_t",
+     "example": "size_t none = SIZE_MAX;"
+    },
+    {
+     "sig": "intmax_t / uintmax_t",
+     "desc": "największe standardowe typy całkowite (64-bit; bez __int128)",
+     "returns": "typ",
+     "example": "intmax_t x = 0;"
+    },
+    {
+     "sig": "int_fast32_t / int_least32_t",
+     "desc": "najszybszy / najmniejszy typ mający co najmniej 32 bity",
+     "returns": "typ",
+     "example": "int_fast32_t i = 0;"
+    },
+    {
+     "sig": "INT64_C(x) / UINT64_C(x)",
+     "desc": "makro tworzące stałą typu int64_t / uint64_t (np. do przesunięć)",
+     "returns": "stała",
+     "example": "int64_t big = INT64_C(1) << 40;"
+    },
+    {
+     "sig": "PRId64 / PRIu64 / SCNd64",
+     "desc": "<cinttypes>: specyfikatory printf/scanf dla int64_t / uint64_t",
+     "returns": "napis",
+     "example": "printf(\"%\" PRId64 \"\\n\", x);"
+    }
+   ],
+   "pitfalls": [
+    "`DBL_MIN` to najmniejsza **dodatnia** liczba, nie najmniejsza w ogóle — jako „minus nieskończoność” użyj `-DBL_MAX`.",
+    "`long` ma 32 bity na Windows — kod liczący na 64-bitowy `long` przepełni się po kompilacji MinGW. Używaj `long long`.",
+    "`uint8_t`/`int8_t` to typy znakowe: `cout << (uint8_t)65` wypisuje `A`. Wypisuj `+x` albo `(int)x`.",
+    "`-2147483648` w kodzie to minus zastosowany do `2147483648` (nie mieści się w `int`, więc ma typ `long`/`long long`) — pisz `INT_MIN`.",
+    "`abs(INT_MIN)` i `-INT_MIN` to przepełnienie (UB) — wynik nie mieści się w `int`.",
+    "`INT_MAX + 1` to przepełnienie (UB), `UINT_MAX + 1` daje 0 (zawijanie modulo 2³²).",
+    "`DBL_EPSILON` to błąd **względny** przy wartościach rzędu 1 — dla liczb rzędu 10⁶ jest za mały jako eps porównania.",
+    "`printf(\"%lld\", (int64_t)x)` na Linuksie daje ostrzeżenie (tam `int64_t` to `long`) — użyj `PRId64` lub rzutuj na `long long`.",
+    "Na Apple Silicon `long double` = `double` (`LDBL_EPSILON == DBL_EPSILON`) — nie zyskasz precyzji jak na x86.",
+    "`char` może być bez znaku (np. ARM Linux): `char c = 200; c < 0` daje różne wyniki na różnych maszynach."
+   ],
+   "qa": [
+    {
+     "q": [
+      "DBL_MIN",
+      "DBL_MIN jest dodatnie",
+      "najmniejsza wartość double",
+      "minimalna wartość double c++",
+      "DBL_MIN zamiast minus nieskończoności",
+      "lowest double c++",
+      "maksimum z ujemnych double DBL_MIN"
+     ],
+     "a": "`DBL_MIN` (≈ 2.2·10⁻³⁰⁸) to najmniejsza **dodatnia** znormalizowana liczba `double` — nie najmniejsza w ogóle.\nGdy szukasz maksimum i zaczynasz od `best = DBL_MIN`, dla samych ujemnych danych dostaniesz złą odpowiedź.\nNajmniejszy `double` to `-DBL_MAX` = `numeric_limits<double>::lowest()`; nieskończoność to `HUGE_VAL` albo\n`numeric_limits<double>::infinity()`. Tak samo `numeric_limits<double>::min()` zwraca najmniejszą dodatnią!",
+     "code": "vector<double> v = {-5.5, -2.0, -7.25};\ndouble wrong = DBL_MIN, good = -DBL_MAX;\nfor (double x : v) { wrong = max(wrong, x); good = max(good, x); }\ncout << wrong << ' ' << good << '\\n';                       // 2.22507e-308 -2\ncout << (numeric_limits<double>::lowest() == -DBL_MAX) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "DBL_EPSILON",
+      "co to epsilon maszynowy",
+      "DBL_EPSILON jako eps",
+      "machine epsilon c++",
+      "czy używać DBL_EPSILON do porównań",
+      "epsilon double wartość 2.22e-16"
+     ],
+     "a": "`DBL_EPSILON` ≈ 2.22·10⁻¹⁶ to odstęp między `1.0` a najbliższym większym `double` — miara **względnej** precyzji\n(ok. 15–16 cyfr znaczących). Jako stały eps do porównań zwykle się nie nadaje: dla wartości rzędu 10⁶ błędy\nzaokrągleń są rzędu 10⁻¹⁰, a `DBL_EPSILON` jest dużo mniejszy. Na zawodach bierz eps dopasowany do danych\n(np. `1e-9` dla współrzędnych do 10⁴) albo porównanie względne: `fabs(a - b) <= 1e-9 * max(1.0, max(fabs(a), fabs(b)))`.",
+     "code": "double a = 0.1 + 0.2, b = 0.3;\ncout << (a == b) << ' ' << (fabs(a - b) <= DBL_EPSILON) << '\\n';      // 0 1\ndouble x = 1e6 + 0.1 + 0.2, y = 1e6 + 0.3;\ncout << (fabs(x - y) <= DBL_EPSILON) << ' ' << (fabs(x - y) <= 1e-9 * max(fabs(x), fabs(y))) << '\\n';  // 0 1"
+    },
+    {
+     "q": [
+      "int64_t",
+      "int64_t vs long long",
+      "co to int64_t",
+      "cstdint c++",
+      "typy o stałej szerokości c++",
+      "uint64_t c++",
+      "fixed width integers c++",
+      "uint32_t"
+     ],
+     "a": "`<cstdint>` definiuje typy o **gwarantowanej** liczbie bitów: `int8_t`, `int16_t`, `int32_t`, `int64_t` i ich wersje\nbez znaku `uint…_t`, plus stałe `INT64_MAX`, `UINT32_MAX` itd. `int64_t` to w praktyce to samo co `long long`\n(na Linuksie formalnie `long`, na Windows `long long`) — różnice wychodzą tylko przy `printf` i przeciążeniach.\n`uint64_t` przydaje się do haszowania (arytmetyka modulo 2⁶⁴), `uint32_t` — do generatorów i masek.\nNa zawodach `long long` jest równie dobre i krótsze; `int64_t` jest czytelniejsze, gdy liczy się szerokość.",
+     "code": "int64_t a = INT64_MAX;\nuint64_t h = 1469598103934665603ULL;     // haszowanie FNV-1a: mnożenie modulo 2^64 bez UB\nfor (char ch : string(\"abc\")) { h ^= (unsigned char)ch; h *= 1099511628211ULL; }\nuint32_t m = UINT32_MAX;\ncout << a << ' ' << h << ' ' << m << ' ' << sizeof(int64_t) * CHAR_BIT << '\\n';"
+    },
+    {
+     "q": [
+      "uint8_t wypisuje znak",
+      "int8_t cout wypisuje dziwny znak",
+      "cout uint8_t prints char",
+      "dlaczego uint8_t wypisuje literę",
+      "unsigned char jako liczba cout",
+      "uint8_t cin wczytuje znak"
+     ],
+     "a": "`int8_t` i `uint8_t` to w praktyce `signed char` i `unsigned char`, więc `cout` traktuje je jak **znaki**:\n`uint8_t x = 65; cout << x;` wypisze `A`, a `cin >> x` wczyta jeden znak (np. `'7'` → 55), a nie liczbę.\nWypisuj `+x` lub `(int)x`; wczytuj do `int` i dopiero przypisz. Do oszczędzania pamięci w dużych tablicach\n(np. `uint8_t dp[5000][5000]`) to dobry typ — tylko uważaj przy wejściu/wyjściu.",
+     "code": "uint8_t x = 65;\nint8_t y = -3;\ncout << x << ' ' << +x << ' ' << (int)y << '\\n';    // A 65 -3\nistringstream in(\"200\");\nint tmp; in >> tmp;\nuint8_t z = tmp;                                     // poprawnie 200\ncout << +z << '\\n';"
+    },
+    {
+     "q": [
+      "long 32 bity na windows",
+      "long vs long long",
+      "sizeof long",
+      "czy long ma 64 bity",
+      "long na windows przepełnienie",
+      "long size windows linux",
+      "long czy long long"
+     ],
+     "a": "Standard gwarantuje dla `long` tylko ≥ 32 bity. Na Linuksie i macOS (64-bit) `long` ma **64** bity, ale na Windows\n(MSVC i MinGW) — **32** bity, tyle co `int`. Program z `long` działający u Ciebie na Linuksie może się przepełnić\npo skompilowaniu na Windows (i odwrotnie: u Ciebie na Windows źle, na sprawdzarce dobrze). Zawsze używaj\n`long long` (≥ 64 bity wszędzie) albo `int64_t`.",
+     "code": "cout << sizeof(int) << ' ' << sizeof(long) << ' ' << sizeof(long long) << '\\n';   // 4 8 8 (Linux/macOS), 4 4 8 (Windows)\ncout << LONG_MAX << ' ' << LLONG_MAX << '\\n';"
+    },
+    {
+     "q": [
+      "CHAR_BIT",
+      "ile bitów ma bajt",
+      "liczba bitów typu c++",
+      "sizeof w bitach",
+      "bits in int c++",
+      "ile bitów ma int"
+     ],
+     "a": "`CHAR_BIT` (z `<climits>`) to liczba bitów w bajcie — praktycznie zawsze 8. `sizeof(T)` podaje rozmiar w bajtach,\nwięc liczba bitów typu to `sizeof(T) * CHAR_BIT`: `int` — 32, `long long` — 64. To samo daje\n`numeric_limits<unsigned T>::digits`. Przydaje się przy pętlach po bitach (`for (int b = 0; b < 64; b++)`)\ni przy `bitset<sizeof(x) * CHAR_BIT>`.",
+     "code": "cout << CHAR_BIT << ' ' << sizeof(int) * CHAR_BIT << ' ' << sizeof(long long) * CHAR_BIT << '\\n';  // 8 32 64\ncout << numeric_limits<unsigned long long>::digits << '\\n';                                     // 64\nlong long x = 10;\ncout << bitset<sizeof(x) * CHAR_BIT>(x).count() << '\\n';                                         // 2"
+    },
+    {
+     "q": [
+      "printf int64_t",
+      "PRId64",
+      "jak wypisać int64_t printf",
+      "%lld czy %ld dla int64_t",
+      "scanf int64_t",
+      "SCNd64"
+     ],
+     "a": "`int64_t` to na Linuksie `long` (specyfikator `%ld`), a na Windows `long long` (`%lld`), więc jeden zapis nie pasuje\nwszędzie bez ostrzeżeń. Przenośnie: makra z `<cinttypes>` — `printf(\"%\" PRId64, x)`, `PRIu64` dla `uint64_t`,\n`scanf(\"%\" SCNd64, &x)`. Prościej: rzutuj na `long long` i używaj `%lld`, albo pisz przez `cout`.",
+     "code": "int64_t x = 9000000000LL;\nuint64_t u = UINT64_MAX;\nprintf(\"%\" PRId64 \" %\" PRIu64 \"\\n\", x, u);\nprintf(\"%lld\\n\", (long long)x);"
+    },
+    {
+     "q": [
+      "-2147483648 literał",
+      "INT_MIN jak zapisać",
+      "abs(INT_MIN)",
+      "-INT_MIN przepełnienie",
+      "dlaczego -2147483648 nie jest int",
+      "INT_MIN to -2147483648 czy -2147483647"
+     ],
+     "a": "W C++ nie ma ujemnych literałów: `-2147483648` to minus zastosowany do `2147483648`, który nie mieści się w `int`,\nwięc dostaje większy typ: `long` na Linuksie/macOS, `long long` na Windows (`auto x = -2147483648;` ma 8 bajtów).\nDlatego `INT_MIN` jest zdefiniowane jako\n`(-2147483647 - 1)`. Zakres `int` jest niesymetryczny: `-INT_MIN` i `abs(INT_MIN)` się nie mieszczą (przepełnienie,\nUB). Gdy liczysz moduł lub negację wartości mogącej być `INT_MIN`, przejdź na `long long`.",
+     "code": "auto x = -2147483648;\ncout << sizeof(x) << ' ' << is_same_v<decltype(x), int> << ' ' << INT_MIN << '\\n';   // 8 0 -2147483648\nint m = INT_MIN;\nlong long safe = -(long long)m;                                          // 2147483648 — bez przepełnienia\ncout << safe << ' ' << llabs((long long)m) << '\\n';"
+    },
+    {
+     "q": [
+      "INT64_MAX",
+      "LLONG_MAX vs INT64_MAX",
+      "maksymalna wartość int64_t",
+      "INT64_C",
+      "stała 64-bitowa c++",
+      "UINT64_MAX"
+     ],
+     "a": "`INT64_MAX` (z `<cstdint>`) = 9223372036854775807 — dokładnie to samo co `LLONG_MAX` na wszystkich popularnych\nplatformach; `INT64_MIN` = `LLONG_MIN`, `UINT64_MAX` = `ULLONG_MAX` = 18446744073709551615. Makra `INT64_C(x)` /\n`UINT64_C(x)` tworzą stałe odpowiedniego typu (np. do przesunięć `INT64_C(1) << 40`), ale krócej jest dopisać\nsufiks `LL` / `ULL`: `1LL << 40`.",
+     "code": "static_assert(INT64_MAX == LLONG_MAX);\nint64_t inf = INT64_MAX / 2;               // „nieskończoność” bezpieczna przy dodawaniu dwóch\ncout << INT64_MAX << ' ' << UINT64_MAX << ' ' << (INT64_C(1) << 40) << ' ' << (1LL << 40) << ' ' << inf << '\\n';"
+    }
+   ],
+   "related": [
+    "stl-numeric-limits",
+    "num-int-types",
+    "num-inf-constants",
+    "num-overflow",
+    "num-floating",
+    "io-printf-formats",
+    "num-int128",
+    "pit-int-overflow",
+    "cpp-ref-cmath"
+   ]
+  }
+ ]
+}

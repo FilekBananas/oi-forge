@@ -1,0 +1,986 @@
+{
+ "chunk": "math",
+ "templates": [
+  {
+   "id": "gcd-two",
+   "name": "NWD dwóch liczb",
+   "description": "",
+   "algos": [
+    "gcd",
+    "math"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "\\bnwd\\b",
+     "najwieksz\\w* wspoln\\w* dzielnik",
+     "\\bgcd\\b"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\ncout << __gcd(llabs(a), llabs(b)) << \"\\n\";",
+   "example": {
+    "input": "12 18\n",
+    "output": "6\n"
+   }
+  },
+  {
+   "id": "lcm-two",
+   "name": "NWW dwóch liczb",
+   "description": "",
+   "algos": [
+    "gcd",
+    "math"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "\\bnww\\b",
+     "najmniejsz\\w* wspoln\\w* wielokrotn",
+     "\\blcm\\b"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\ncout << a / __gcd(a, b) * b << \"\\n\";",
+   "example": {
+    "input": "4 6\n",
+    "output": "12\n"
+   }
+  },
+  {
+   "id": "gcd-lcm-two",
+   "name": "NWD i NWW dwóch liczb",
+   "description": "",
+   "algos": [
+    "gcd",
+    "math"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "\\bnwd\\b",
+      "wspoln\\w* dzielnik"
+     ],
+     [
+      "\\bnww\\b",
+      "wspoln\\w* wielokrotn"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\nll g = __gcd(a, b);\ncout << g << \" \" << a / g * b << \"\\n\";",
+   "example": {
+    "input": "4 6\n",
+    "output": "2 12\n"
+   }
+  },
+  {
+   "id": "gcd-array",
+   "name": "NWD wielu liczb",
+   "description": "",
+   "algos": [
+    "gcd",
+    "math"
+   ],
+   "shapes": [
+    "NA",
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "\\bnwd\\b",
+     "najwieksz\\w* wspoln\\w* dzielnik",
+     "sprawiedliwie",
+     "rowno (podziel|rozdziel)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nll g = 0; for (ll i = 0; i < n; i++) { ll x; cin >> x; g = __gcd(g, llabs(x)); }\ncout << g << \"\\n\";",
+   "example": {
+    "input": "4\n60 96 624 174\n",
+    "output": "6\n"
+   },
+   "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) { cin >> x; x = llabs(x); }\nll mn = *min_element(a.begin(), a.end()), best = 0;\nauto all_div = [&](ll d) { for (ll x : a) if (x % d) return false; return true; };\nfor (ll d = 1; d * d <= mn; d++) if (mn % d == 0) {   // brute: każdy dzielnik min sprawdzany na całej tablicy\n    if (all_div(d)) best = max(best, d);\n    if (all_div(mn / d)) best = max(best, mn / d);\n}\nif (mn == 0) { ll g = 0; for (ll x : a) g = __gcd(g, x); best = g; }\ncout << best << \"\\n\";"
+  },
+  {
+   "id": "gcd-all-input",
+   "name": "NWD wszystkich liczb z wejścia",
+   "description": "",
+   "algos": [
+    "gcd",
+    "math"
+   ],
+   "shapes": [
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "\\bnwd\\b",
+     "wspoln\\w* dzielnik",
+     "sprawiedliwie",
+     "rowno (podziel|rozdziel|obdarow)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 0.7,
+   "globals": "",
+   "solve": "ll x, g = 0; bool any = false; while (cin >> x) { g = __gcd(g, llabs(x)); any = true; }\nif (!any || g == 0) cout << \"{{NONE}}\" << \"\\n\"; else cout << g << \"\\n\";",
+   "example": {
+    "input": "12 18 24\n",
+    "output": "6\n"
+   }
+  },
+  {
+   "id": "lcm-array",
+   "name": "NWW wielu liczb",
+   "description": "",
+   "algos": [
+    "gcd",
+    "math"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "\\bnww\\b",
+     "wspoln\\w* wielokrotn"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nll l = 1; for (ll i = 0; i < n; i++) { ll x; cin >> x; l = l / __gcd(l, x) * x; }\ncout << l << \"\\n\";",
+   "example": {
+    "input": "3\n2 3 4\n",
+    "output": "12\n"
+   }
+  },
+  {
+   "id": "is-prime",
+   "name": "Czy liczba jest pierwsza",
+   "description": "",
+   "algos": [
+    "math",
+    "sieve"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "liczb\\w* pierwsz\\w*|\\bpierwsz[aey]\\b(?! (wiersz|lini|linijk|liczb|wartosc|element|zestaw|test|zapytan|dzien|osob|krok))|pierwszosc\\w*|\\bprime\\b",
+     "przestepn\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nbool p = n >= 2; for (ll d = 2; d * d <= n && p; d++) if (n % d == 0) p = false;\ncout << (p ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "13\n",
+    "output": "{{YES}}\n"
+   },
+   "brute": "ll n; cin >> n;\nll c = 0; for (ll d = 1; d <= n; d++) if (n % d == 0) c++;   // brute: pierwsza ⇔ dokładnie 2 dzielniki\ncout << (c == 2 ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";"
+  },
+  {
+   "id": "is-prime-multi",
+   "name": "Pierwszość wielu liczb",
+   "description": "",
+   "algos": [
+    "math",
+    "sieve"
+   ],
+   "shapes": [
+    "NA",
+    "NR1"
+   ],
+   "signals": {
+    "any": [
+     "liczb\\w* pierwsz\\w*|\\bpierwsz[aey]\\b(?! (wiersz|lini|linijk|liczb|wartosc|element|zestaw|test|zapytan|dzien|osob|krok))|pierwszosc\\w*|\\bprime\\b",
+     "przestepn\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nfor (ll i = 0; i < n; i++) { ll x; cin >> x; bool p = x >= 2; for (ll d = 2; d * d <= x && p; d++) if (x % d == 0) p = false; cout << (p ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\"; }",
+   "example": {
+    "input": "3\n2\n4\n7\n",
+    "output": "{{YES}}\n{{NO}}\n{{YES}}\n"
+   }
+  },
+  {
+   "id": "primes-up-to",
+   "name": "Liczby pierwsze ≤ n (sito)",
+   "description": "",
+   "algos": [
+    "sieve"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "sito",
+     "(wszystkie|wypisz) (\\w+ )?liczb\\w* pierwsz",
+     "liczb\\w* pierwsz\\w* (nie wieksz|mniejsz|do)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<bool> c(max(2LL, n + 1), false);\nbool first = true;\nfor (ll i = 2; i <= n; i++) { if (c[i]) continue; cout << (first ? \"\" : \" \") << i; first = false; for (ll j = i * i; j <= n; j += i) c[j] = true; }\ncout << \"\\n\";",
+   "example": {
+    "input": "20\n",
+    "output": "2 3 5 7 11 13 17 19\n"
+   }
+  },
+  {
+   "id": "count-primes",
+   "name": "Ile liczb pierwszych ≤ n",
+   "description": "",
+   "algos": [
+    "sieve"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "ile (jest )?liczb\\w* pierwsz",
+     "liczb\\w* liczb pierwsz"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<bool> c(max(2LL, n + 1), false); ll cnt = 0;\nfor (ll i = 2; i <= n; i++) { if (c[i]) continue; cnt++; for (ll j = i * i; j <= n; j += i) c[j] = true; }\ncout << cnt << \"\\n\";",
+   "example": {
+    "input": "20\n",
+    "output": "8\n"
+   },
+   "brute": "ll n; cin >> n;\nll cnt = 0; for (ll x = 2; x <= n; x++) { bool p = true; for (ll d = 2; d * d <= x; d++) if (x % d == 0) { p = false; break; } if (p) cnt++; }\ncout << cnt << \"\\n\";"
+  },
+  {
+   "id": "kth-prime",
+   "name": "k-ta liczba pierwsza",
+   "description": "",
+   "algos": [
+    "sieve"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "[a-z]-?t\\w* liczb\\w* pierwsz"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll k; cin >> k;\nconst ll N = 20000000; vector<bool> c(N + 1, false); ll cnt = 0;\nfor (ll i = 2; i <= N; i++) { if (c[i]) continue; if (++cnt == k) { cout << i << \"\\n\"; return; } for (ll j = i * i; j <= N; j += i) c[j] = true; }",
+   "example": {
+    "input": "5\n",
+    "output": "11\n"
+   }
+  },
+  {
+   "id": "factorize",
+   "name": "Rozkład na czynniki pierwsze (lista)",
+   "description": "",
+   "algos": [
+    "math",
+    "sieve"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "rozklad\\w*",
+     "czynnik\\w* pierwsz",
+     "dzielnik\\w* pierwsz"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nbool first = true;\nfor (ll d = 2; d * d <= n; d++) while (n % d == 0) { cout << (first ? \"\" : \" \") << d; first = false; n /= d; }\nif (n > 1) cout << (first ? \"\" : \" \") << n;\ncout << \"\\n\";",
+   "example": {
+    "input": "60\n",
+    "output": "2 2 3 5\n"
+   },
+   "variants": [
+    {
+     "id": "factorize-star",
+     "name": "Rozkład na czynniki (a*b*c)",
+     "solve": "ll n; cin >> n;\nbool first = true;\nfor (ll d = 2; d * d <= n; d++) while (n % d == 0) { cout << (first ? \"\" : \"*\") << d; first = false; n /= d; }\nif (n > 1) cout << (first ? \"\" : \"*\") << n;\ncout << \"\\n\";"
+    },
+    {
+     "id": "factorize-pow",
+     "name": "Rozkład na czynniki (p^k)",
+     "solve": "ll n; cin >> n;\nbool first = true;\nfor (ll d = 2; d * d <= n; d++) if (n % d == 0) { int k = 0; while (n % d == 0) { n /= d; k++; } cout << (first ? \"\" : \"*\") << d; if (k > 1) cout << \"^\" << k; first = false; }\nif (n > 1) cout << (first ? \"\" : \"*\") << n;\ncout << \"\\n\";"
+    },
+    {
+     "id": "factorize-distinct",
+     "name": "Różne dzielniki pierwsze",
+     "solve": "ll n; cin >> n;\nbool first = true;\nfor (ll d = 2; d * d <= n; d++) if (n % d == 0) { cout << (first ? \"\" : \" \") << d; first = false; while (n % d == 0) n /= d; }\nif (n > 1) cout << (first ? \"\" : \" \") << n;\ncout << \"\\n\";"
+    },
+    {
+     "id": "factorize-lines",
+     "name": "Rozkład: p k w wierszach",
+     "solve": "ll n; cin >> n;\nfor (ll d = 2; d * d <= n; d++) if (n % d == 0) { int k = 0; while (n % d == 0) { n /= d; k++; } cout << d << \" \" << k << \"\\n\"; }\nif (n > 1) cout << n << \" 1\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "factorize-multi",
+   "name": "Rozkład wielu liczb na czynniki",
+   "description": "",
+   "algos": [
+    "sieve",
+    "math"
+   ],
+   "shapes": [
+    "NA",
+    "NR1"
+   ],
+   "signals": {
+    "any": [
+     "rozklad\\w*",
+     "czynnik\\w* pierwsz"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nfor (ll i = 0; i < n; i++) { ll x; cin >> x; bool first = true; for (ll d = 2; d * d <= x; d++) while (x % d == 0) { cout << (first ? \"\" : \" \") << d; first = false; x /= d; } if (x > 1) cout << (first ? \"\" : \" \") << x; cout << \"\\n\"; }",
+   "example": {
+    "input": "2\n12\n7\n",
+    "output": "2 2 3\n7\n"
+   },
+   "variants": [
+    {
+     "id": "factorize-multi-star",
+     "name": "Rozkład wielu liczb (a*b)",
+     "solve": "ll n; cin >> n;\nfor (ll i = 0; i < n; i++) { ll x; cin >> x; bool first = true; for (ll d = 2; d * d <= x; d++) while (x % d == 0) { cout << (first ? \"\" : \"*\") << d; first = false; x /= d; } if (x > 1) cout << (first ? \"\" : \"*\") << x; cout << \"\\n\"; }"
+    }
+   ]
+  },
+  {
+   "id": "divisors",
+   "name": "Wszystkie dzielniki",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "dzielnik\\w*",
+     "kazdy (?:z nich )?otrzymal\\w* (?:dokladnie )?tyle samo"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> d;\nfor (ll i = 1; i * i <= n; i++) if (n % i == 0) { d.push_back(i); if (i != n / i) d.push_back(n / i); }\nsort(d.begin(), d.end());\nfor (size_t i = 0; i < d.size(); i++) cout << d[i] << (i + 1 == d.size() ? \"\\n\" : \" \");",
+   "example": {
+    "input": "12\n",
+    "output": "1 2 3 4 6 12\n"
+   }
+  },
+  {
+   "id": "count-divisors",
+   "name": "Liczba dzielników",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "(ile|liczb\\w*) dzielnik"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nll c = 0; for (ll i = 1; i * i <= n; i++) if (n % i == 0) c += (i * i == n) ? 1 : 2;\ncout << c << \"\\n\";",
+   "example": {
+    "input": "12\n",
+    "output": "6\n"
+   },
+   "brute": "ll n; cin >> n;\nll c = 0; for (ll d = 1; d <= n; d++) if (n % d == 0) c++;   // brute: O(n)\ncout << c << \"\\n\";"
+  },
+  {
+   "id": "sum-divisors",
+   "name": "Suma dzielników",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "sum\\w* dzielnik",
+     "doskonal\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nll s = 0; for (ll i = 1; i * i <= n; i++) if (n % i == 0) { s += i; if (i != n / i) s += n / i; }\ncout << s << \"\\n\";",
+   "example": {
+    "input": "12\n",
+    "output": "28\n"
+   }
+  },
+  {
+   "id": "factorial",
+   "name": "Silnia",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "silni\\w*",
+     "\\bn!"
+    ],
+    "all": [],
+    "none": [
+     "modulo|reszt\\w* z dzielenia"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nunsigned long long r = 1; for (ll i = 2; i <= n; i++) r *= i;\ncout << r << \"\\n\";",
+   "example": {
+    "input": "5\n",
+    "output": "120\n"
+   }
+  },
+  {
+   "id": "factorial-mod",
+   "name": "Silnia modulo",
+   "description": "",
+   "algos": [
+    "math",
+    "combinatorics"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "silni\\w*",
+      "\\bn!"
+     ],
+     [
+      "modulo|reszt\\w* z dzielenia"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nconst ll M = {{MOD}}; ll r = 1 % M; for (ll i = 2; i <= n; i++) r = r * (i % M) % M;\ncout << r << \"\\n\";",
+   "example": {
+    "input": "5\n",
+    "output": "120\n"
+   }
+  },
+  {
+   "id": "fibonacci",
+   "name": "Ciąg Fibonacciego",
+   "description": "",
+   "algos": [
+    "dp",
+    "math"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "fibonacci\\w*"
+    ],
+    "all": [],
+    "none": [
+     "modulo|reszt\\w* z dzielenia"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nunsigned long long a = 0, b = 1; for (ll i = 0; i < n; i++) { unsigned long long c = a + b; a = b; b = c; }\ncout << a << \"\\n\";",
+   "example": {
+    "input": "10\n",
+    "output": "55\n"
+   },
+   "variants": [
+    {
+     "id": "fibonacci-1based",
+     "name": "Fibonacci (F1 = F2 = 1, indeks od 1, F0 = 1)",
+     "solve": "ll n; cin >> n;\nunsigned long long a = 1, b = 1; for (ll i = 1; i < n; i++) { unsigned long long c = a + b; a = b; b = c; }\ncout << a << \"\\n\";"
+    },
+    {
+     "id": "fibonacci-list",
+     "name": "n pierwszych wyrazów Fibonacciego",
+     "solve": "ll n; cin >> n;\nunsigned long long a = 1, b = 1; for (ll i = 0; i < n; i++) { cout << a << (i + 1 == n ? \"\\n\" : \" \"); unsigned long long c = a + b; a = b; b = c; }"
+    }
+   ]
+  },
+  {
+   "id": "fibonacci-mod",
+   "name": "Fibonacci modulo (także n do 10^18)",
+   "description": "",
+   "algos": [
+    "matrix_pow",
+    "fast_pow",
+    "dp"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "fibonacci\\w*"
+    ],
+    "all": [
+     [
+      "modulo|reszt\\w* z dzielenia|10\\^9|10\\^1[0-8]"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nconst ll M = {{MOD}};\nauto mul = [&](array<ll,4> x, array<ll,4> y) { return array<ll,4>{(x[0]*y[0] + x[1]*y[2]) % M, (x[0]*y[1] + x[1]*y[3]) % M, (x[2]*y[0] + x[3]*y[2]) % M, (x[2]*y[1] + x[3]*y[3]) % M}; };\narray<ll,4> r = {1, 0, 0, 1}, b = {1, 1, 1, 0};\nll e = n; while (e > 0) { if (e & 1) r = mul(r, b); b = mul(b, b); e >>= 1; }\ncout << r[1] % M << \"\\n\";",
+   "example": {
+    "input": "10\n",
+    "output": "55\n"
+   },
+   "brute": "ll n; cin >> n;\nconst ll M = {{MOD}};\nll a = 0, b = 1; for (ll i = 0; i < n; i++) { ll c = (a + b) % M; a = b; b = c; }   // brute: O(n), tylko dla małych n\ncout << a << \"\\n\";"
+  },
+  {
+   "id": "fast-pow-mod3",
+   "name": "a^b mod m (trzy liczby)",
+   "description": "",
+   "algos": [
+    "fast_pow"
+   ],
+   "shapes": [
+    "S3"
+   ],
+   "signals": {
+    "any": [
+     "poteg\\w*",
+     "\\^"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b, m; cin >> a >> b >> m;\nll r = 1 % m; a %= m; if (a < 0) a += m;\nwhile (b > 0) { if (b & 1) r = (__int128)r * a % m; a = (__int128)a * a % m; b >>= 1; }\ncout << r << \"\\n\";",
+   "example": {
+    "input": "2 10 1000\n",
+    "output": "24\n"
+   },
+   "brute": "ll a, b, m; cin >> a >> b >> m;\nll r = 1 % m; a %= m; for (ll i = 0; i < b; i++) r = (__int128)r * a % m;   // brute: b mnożeń, tylko dla małych b\ncout << r << \"\\n\";"
+  },
+  {
+   "id": "fast-pow-mod2",
+   "name": "a^b modulo stała",
+   "description": "",
+   "algos": [
+    "fast_pow"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "poteg\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\nconst ll m = {{MOD}};\nll r = 1 % m; a %= m; if (a < 0) a += m;\nwhile (b > 0) { if (b & 1) r = r * a % m; a = a * a % m; b >>= 1; }\ncout << r << \"\\n\";",
+   "example": {
+    "input": "2 10\n",
+    "output": "1024\n"
+   }
+  },
+  {
+   "id": "pow-two",
+   "name": "a^b (bez modulo)",
+   "description": "",
+   "algos": [
+    "fast_pow"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "poteg\\w*"
+    ],
+    "all": [],
+    "none": [
+     "modulo|reszt\\w* z dzielenia"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\nunsigned long long r = 1; for (ll i = 0; i < b; i++) r *= a;\ncout << r << \"\\n\";",
+   "example": {
+    "input": "3 4\n",
+    "output": "81\n"
+   }
+  },
+  {
+   "id": "pow-last-digit",
+   "name": "Ostatnia cyfra a^b",
+   "description": "",
+   "algos": [
+    "fast_pow"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "ostatni\\w* cyfr\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\nll r = 1 % 10, x = a % 10;\nwhile (b > 0) { if (b & 1) r = r * x % 10; x = x * x % 10; b >>= 1; }\ncout << r << \"\\n\";",
+   "example": {
+    "input": "3 4\n",
+    "output": "1\n"
+   }
+  },
+  {
+   "id": "isqrt",
+   "name": "Część całkowita z pierwiastka",
+   "description": "",
+   "algos": [
+    "binary_search",
+    "math"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "pierwiast\\w*",
+     "√"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nll r = (ll)sqrtl((long double)n); while (r * r > n) r--; while ((r + 1) * (r + 1) <= n) r++;\ncout << r << \"\\n\";",
+   "example": {
+    "input": "17\n",
+    "output": "4\n"
+   }
+  },
+  {
+   "id": "sqrt-above",
+   "name": "Najmniejsze p > √n",
+   "description": "",
+   "algos": [
+    "binary_search",
+    "math"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "pierwiast\\w*",
+     "√"
+    ],
+    "all": [
+     [
+      "najmniejsz\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nll r = (ll)sqrtl((long double)n); while (r > 0 && r * r > n) r--; while ((r + 1) * (r + 1) <= n) r++;\ncout << r + 1 << \"\\n\";",
+   "example": {
+    "input": "16\n",
+    "output": "5\n"
+   }
+  },
+  {
+   "id": "binomial-small",
+   "name": "Dwumian Newtona C(n, k)",
+   "description": "",
+   "algos": [
+    "combinatorics"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "dwumian\\w*|symbol\\w* newtona|n po k",
+     "na ile sposobow (mozna )?wybrac"
+    ],
+    "all": [],
+    "none": [
+     "modulo"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nif (k < 0 || k > n) { cout << 0 << \"\\n\"; return; }\nk = min(k, n - k); unsigned long long r = 1; for (ll i = 1; i <= k; i++) r = r * (n - k + i) / i;\ncout << r << \"\\n\";",
+   "example": {
+    "input": "5 2\n",
+    "output": "10\n"
+   }
+  },
+  {
+   "id": "binomial-mod",
+   "name": "C(n, k) modulo",
+   "description": "",
+   "algos": [
+    "combinatorics",
+    "mod_inverse"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "dwumian\\w*|symbol\\w* newtona|n po k|wybrac"
+     ],
+     [
+      "modulo"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nconst ll M = {{MOD}};\nif (k < 0 || k > n) { cout << 0 << \"\\n\"; return; }\nauto pw = [&](ll a, ll e) { ll r = 1; a %= M; while (e) { if (e & 1) r = r * a % M; a = a * a % M; e >>= 1; } return r; };\nll num = 1, den = 1; for (ll i = 0; i < k; i++) { num = num * ((n - i) % M) % M; den = den * ((i + 1) % M) % M; }\ncout << num * pw(den, M - 2) % M << \"\\n\";",
+   "example": {
+    "input": "5 2\n",
+    "output": "10\n"
+   }
+  },
+  {
+   "id": "stairs",
+   "name": "Schody (krok 1 lub 2)",
+   "description": "",
+   "algos": [
+    "dp"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "schod\\w*",
+     "o 1 lub (o )?2"
+    ],
+    "all": [],
+    "none": [
+     "modulo"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nunsigned long long a = 1, b = 1; for (ll i = 1; i < n; i++) { unsigned long long c = a + b; a = b; b = c; }\ncout << (n == 0 ? 1 : b) << \"\\n\";",
+   "example": {
+    "input": "4\n",
+    "output": "5\n"
+   }
+  },
+  {
+   "id": "stairs-mod",
+   "name": "Schody modulo",
+   "description": "",
+   "algos": [
+    "dp"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "schod\\w*",
+      "o 1 lub (o )?2"
+     ],
+     [
+      "modulo"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nconst ll M = {{MOD}};\nll a = 1, b = 1; for (ll i = 1; i < n; i++) { ll c = (a + b) % M; a = b; b = c; }\ncout << (n == 0 ? 1 : b) % M << \"\\n\";",
+   "example": {
+    "input": "4\n",
+    "output": "5\n"
+   },
+   "brute": "ll n; cin >> n;\nconst ll M = {{MOD}};\nvector<ll> f(max(2LL, n + 1), 0); f[0] = 1;   // brute: f[i] = suma po ostatnim kroku (1 albo 2)\nfor (ll i = 1; i <= n; i++) for (ll step : {1, 2}) if (i - step >= 0) f[i] = (f[i] + f[i - step]) % M;\ncout << f[n] % M << \"\\n\";"
+  },
+  {
+   "id": "triangle-check",
+   "name": "Czy z boków da się zbudować trójkąt",
+   "description": "",
+   "algos": [
+    "geometry",
+    "math"
+   ],
+   "shapes": [
+    "S3"
+   ],
+   "signals": {
+    "any": [
+     "trojkat\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b, c; cin >> a >> b >> c;\nbool ok = a + b > c && a + c > b && b + c > a;\ncout << (ok ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "3 4 5\n",
+    "output": "{{YES}}\n"
+   }
+  },
+  {
+   "id": "collatz-steps",
+   "name": "Problem Collatza (liczba kroków)",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "collatz\\w*",
+     "3 ?\\* ?n ?\\+ ?1|3n ?\\+ ?1"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nll s = 0; while (n != 1 && n > 0) { n = (n % 2 == 0) ? n / 2 : 3 * n + 1; s++; }\ncout << s << \"\\n\";",
+   "example": {
+    "input": "6\n",
+    "output": "8\n"
+   }
+  },
+  {
+   "id": "count-primes-range",
+   "name": "Ile liczb pierwszych w przedziale [a, b] (sito)",
+   "description": "",
+   "algos": [
+    "sieve"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "przedzial\\w*|\\[a, ?b\\]|od a do b"
+    ],
+    "all": [
+     [
+      "liczb\\w* pierwsz\\w*|\\bpierwsz[aey]\\b(?! (wiersz|lini|linijk|liczb|wartosc|element|zestaw|test|zapytan|dzien|osob|krok))|pierwszosc\\w*|\\bprime\\b"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\nif (a > b) swap(a, b);\nvector<char> comp(b + 1, 0); ll cnt = 0;\nfor (ll i = 2; i <= b; i++) { if (comp[i]) continue; if (i >= a) cnt++; for (ll j = i * i; j <= b; j += i) comp[j] = 1; }\ncout << cnt << \"\\n\";",
+   "example": {
+    "input": "1 10\n",
+    "output": "4\n"
+   },
+   "brute": "ll a, b; cin >> a >> b;\nif (a > b) swap(a, b);\nll cnt = 0; for (ll x = max(a, 2LL); x <= b; x++) { bool p = true; for (ll d = 2; d * d <= x; d++) if (x % d == 0) { p = false; break; } if (p) cnt++; }\ncout << cnt << \"\\n\";",
+   "variants": [
+    {
+     "id": "list-primes-range",
+     "name": "Liczby pierwsze z przedziału [a, b] (wypisz)",
+     "solve": "ll a, b; cin >> a >> b;\nif (a > b) swap(a, b);\nvector<char> comp(b + 1, 0); ll cnt = 0;\nfor (ll i = 2; i <= b; i++) { if (comp[i]) continue; if (i >= a) { cout << i << \"\\n\"; cnt++; } for (ll j = i * i; j <= b; j += i) comp[j] = 1; }"
+    },
+    {
+     "id": "sum-primes-range",
+     "name": "Suma liczb pierwszych w przedziale [a, b]",
+     "solve": "ll a, b; cin >> a >> b;\nif (a > b) swap(a, b);\nvector<char> comp(b + 1, 0); ll cnt = 0;\nfor (ll i = 2; i <= b; i++) { if (comp[i]) continue; if (i >= a) cnt += i; for (ll j = i * i; j <= b; j += i) comp[j] = 1; }\ncout << cnt << \"\\n\";"
+    }
+   ]
+  }
+ ]
+}

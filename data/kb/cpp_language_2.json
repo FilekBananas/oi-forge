@@ -1,0 +1,1850 @@
+{
+ "chunk": "cpp-language-2",
+ "articles": [
+  {
+   "id": "cpp-global-vs-local",
+   "title": "Zmienne globalne vs lokalne: inicjalizacja zerami, stos i pamięć statyczna",
+   "category": "C++ język",
+   "tags": [
+    "zmienne globalne",
+    "zmienne lokalne",
+    "inicjalizacja",
+    "śmieci",
+    "stos",
+    "pamięć statyczna",
+    "przesłanianie",
+    "wiele testów"
+   ],
+   "aliases": [
+    "zmienne globalne",
+    "zmienna globalna c++",
+    "zmienne lokalne",
+    "globalna tablica",
+    "czy globalne są zerowane",
+    "niezainicjalizowana zmienna",
+    "śmieci w zmiennej",
+    "global vs local c++",
+    "tablica w main czy globalnie"
+   ],
+   "summary": "Zmienne globalne (i `static`) są automatycznie zerowane i leżą w pamięci statycznej, a lokalne mają nieokreślone wartości i (dla tablic) leżą na stosie. Skąd biorą się „śmieci”, dlaczego duże tablice deklaruje się globalnie i jak przesłonięcie zmiennej psuje program.",
+   "complexity": "brak kosztu w czasie działania; zerowanie globalnych odbywa się przy starcie programu",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Zmienna zadeklarowana **poza funkcjami** (globalna) istnieje przez cały czas działania programu, jest widoczna we wszystkich funkcjach i — jeśli nie podasz wartości — jest **wyzerowana**. Zmienna lokalna (w funkcji) typu prostego bez inicjalizacji ma **nieokreśloną wartość**; jej odczyt to UB (w praktyce „śmieci”, które mogą być różne na Twoim komputerze i na sprawdzarce)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Inicjalizacja zmiennych",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint licznik;                 // globalna: 0\nint tab[1000000];            // globalna tablica: same zera, pamięć statyczna (nie stos)\nvector<int> adj[200005];     // globalna tablica vectorów — wygodna lista sąsiedztwa\n\nint main() {\n    int x;                   // lokalna: NIEOKREŚLONA wartość (nie czytaj przed przypisaniem!)\n    int y = 0;               // lokalna, jawnie wyzerowana\n    int t[5] = {};           // lokalna tablica wyzerowana (puste klamry)\n    int u[5] = {7};          // {7, 0, 0, 0, 0}\n    static int duza[1000000];  // static lokalna: też zerowana i poza stosem\n    x = 3;\n    cout << licznik << ' ' << tab[999999] << ' ' << y << ' ' << t[4] << ' ' << u[1] << ' ' << duza[5] << ' ' << x << '\\n';\n    // 0 0 0 0 0 0 3\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "",
+      "Globalna / static",
+      "Lokalna (automatyczna)"
+     ],
+     "rows": [
+      [
+       "wartość początkowa bez inicjalizatora",
+       "zero",
+       "nieokreślona (UB przy odczycie)"
+      ],
+      [
+       "gdzie leży",
+       "pamięć statyczna (BSS/data)",
+       "stos"
+      ],
+      [
+       "limit rozmiaru",
+       "limit pamięci zadania",
+       "rozmiar stosu (często kilka MB!)"
+      ],
+      [
+       "czas życia",
+       "cały program",
+       "do końca bloku `{ }`"
+      ],
+      [
+       "widoczność",
+       "wszystkie funkcje poniżej deklaracji",
+       "tylko w bloku"
+      ],
+      [
+       "przy wielu testach",
+       "trzeba ręcznie zerować",
+       "tworzona od nowa przy każdym wejściu w blok"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "**Przesłanianie (shadowing):** jeśli masz globalne `int n;` i w `main` napiszesz `int n; cin >> n;`, to wczytujesz do NOWEJ zmiennej lokalnej. Funkcje (np. `dfs`) nadal widzą globalne `n == 0`. Kompilacja z `-Wshadow` ostrzega o takich sytuacjach."
+    },
+    {
+     "type": "tip",
+     "md": "Typowy układ rozwiązania: duże tablice i struktury grafu globalnie (z rozmiarem z ograniczeń, np. `MAXN = 200005`), a w `main` tylko wczytywanie i wywołania. Przy wielu testach w jednym pliku czyść globalne struktury na początku każdego testu."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "T nazwa; (poza funkcjami)",
+     "desc": "zmienna globalna — zerowana, pamięć statyczna",
+     "complexity": "—"
+    },
+    {
+     "sig": "T nazwa; (w funkcji)",
+     "desc": "zmienna lokalna — wartość nieokreślona dla typów prostych",
+     "complexity": "—"
+    },
+    {
+     "sig": "T nazwa{}; / T tab[N] = {};",
+     "desc": "jawne wyzerowanie zmiennej / tablicy lokalnej",
+     "complexity": "O(N)"
+    },
+    {
+     "sig": "static T nazwa; (w funkcji)",
+     "desc": "zmienna lokalna o statycznym czasie życia — zerowana, poza stosem",
+     "complexity": "—"
+    },
+    {
+     "sig": "::nazwa",
+     "desc": "dostęp do zmiennej globalnej przesłoniętej przez lokalną",
+     "complexity": "—"
+    },
+    {
+     "sig": "-Wshadow / -Wall -Wextra",
+     "desc": "flagi kompilatora ostrzegające o przesłanianiu i niezainicjalizowanych zmiennych",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "Lokalna zmienna bez inicjalizacji ma „śmieci” — program może działać u Ciebie i dawać WA na sprawdzarce.",
+    "Duża tablica lokalna (np. `int a[1000000]` w main) może przepełnić stos → segfault od razu po starcie.",
+    "Ponowna deklaracja zmiennej globalnej w main (`int n;`) tworzy nową zmienną — funkcje widzą starą (zero).",
+    "Globalne tablice NIE są zerowane między testami w jednym uruchomieniu — wyczyść je ręcznie (najlepiej tylko używaną część).",
+    "`vector<int> v;` lokalnie jest pusty (nie zawiera śmieci) — problem dotyczy tylko typów prostych i tablic C.",
+    "Nazwy globalne mogą kolidować z funkcjami biblioteki przy `using namespace std` (np. `y1`, `count`, `next`)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "czy zmienne globalne są zerowane",
+      "globalna zmienna wartość początkowa",
+      "czy tablica globalna ma zera",
+      "global variables initialized to zero c++"
+     ],
+     "a": "Tak — zmienne globalne i `static` bez inicjalizatora są zerowane przed startem `main` (liczby = 0, wskaźniki = nullptr, bool = false). Dotyczy to też dużych tablic globalnych. Zmienne lokalne typów prostych NIE są zerowane.",
+     "code": "int a[5];\nlong long s;\nbool odw[10];\nint main() {\n    cout << a[3] << ' ' << s << ' ' << odw[9] << '\\n';   // 0 0 0\n}"
+    },
+    {
+     "q": [
+      "śmieci w zmiennej",
+      "dziwne wartości w tablicy",
+      "niezainicjalizowana zmienna",
+      "uninitialized variable c++",
+      "u mnie działa a na sprawdzarce nie"
+     ],
+     "a": "Zmienna lokalna bez inicjalizacji przyjmuje to, co akurat było w pamięci — u Ciebie może to być 0, na sprawdzarce coś innego. To jeden z najczęstszych powodów „u mnie działa, na sprawdzarce WA”. Zawsze inicjalizuj: `int suma = 0;`, `int t[N] = {};`, albo przenieś tablicę do zmiennych globalnych. Kompilacja z `-Wall` i sanitizerami pomaga to wykryć.",
+     "code": "int main() {\n    int suma = 0;                // zawsze inicjalizuj liczniki i sumy\n    int cnt[26] = {};            // tablica lokalna — puste klamry zerują\n    string s = \"abca\";\n    for (char c : s) { cnt[c - 'a']++; suma++; }\n    cout << cnt[0] << ' ' << suma << '\\n';   // 2 4\n}"
+    },
+    {
+     "q": [
+      "tablica globalnie czy w main",
+      "gdzie deklarować duże tablice",
+      "duża tablica w main segfault",
+      "int a[1000000] w main"
+     ],
+     "a": "Duże tablice deklaruj globalnie (albo jako `static`, albo jako `vector`). Tablica lokalna leży na stosie, który często ma tylko kilka MB — `int a[1000000]` (4 MB) lokalnie potrafi wywołać segfault zaraz po starcie. Tablica globalna jest w pamięci statycznej, ograniczonej tylko limitem pamięci zadania.",
+     "code": "const int MAXN = 1000005;\nint a[MAXN];                     // globalnie: OK\nint main() {\n    vector<int> b(MAXN);         // vector: dane na stercie — też OK\n    a[MAXN - 1] = 1; b[0] = 2;\n    cout << a[MAXN - 1] + b[0] << '\\n';   // 3\n}"
+    },
+    {
+     "q": [
+      "przesłanianie zmiennej",
+      "zmienna globalna i lokalna o tej samej nazwie",
+      "shadowing c++",
+      "funkcja widzi n = 0",
+      "dfs nie działa n jest zero"
+     ],
+     "a": "Jeśli globalnie jest `int n;`, a w `main` deklarujesz ponownie `int n;`, to `cin >> n` wczytuje do zmiennej lokalnej, a inne funkcje używają globalnej (równej 0). Usuń typ przy drugiej deklaracji — pisz po prostu `cin >> n;`. Flaga `-Wshadow` wykrywa takie błędy.",
+     "code": "int n;                           // globalne\nint policz() { return n * 2; }   // używa globalnego n\nint main() {\n    n = 21;                      // DOBRZE: przypisanie do globalnego (bez \"int\")\n    // int n = 21;               // ŹLE: nowa zmienna lokalna, policz() zwróciłoby 0\n    cout << policz() << '\\n';    // 42\n}"
+    },
+    {
+     "q": [
+      "wiele testów zerowanie tablic",
+      "multitest czyszczenie globalnych",
+      "reset globalnych zmiennych między testami",
+      "t testów zmienne globalne"
+     ],
+     "a": "Globalne tablice są zerowane tylko raz — przy starcie programu. W zadaniu z wieloma testami musisz je wyczyścić na początku każdego testu, najlepiej tylko w zakresie używanym przez dany test (`fill(cnt, cnt + n + 1, 0)`, `adj[i].clear()` dla i ≤ n). Zerowanie całej ogromnej tablicy w każdym teście może dać TLE.",
+     "code": "const int MAXN = 200005;\nint cnt[MAXN];\nvector<int> adj[MAXN];\nint main() {\n    int t = 2;\n    while (t--) {\n        int n = 3;\n        for (int i = 0; i <= n; i++) { cnt[i] = 0; adj[i].clear(); }   // tylko używana część\n        cnt[1]++;\n        adj[1].push_back(2);\n        cout << cnt[1] << adj[1].size() << ' ';   // 11 11\n    }\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "inicjalizacja tablicy lokalnej",
+      "int t[n] = {}",
+      "jak wyzerować tablicę lokalną",
+      "tablica lokalna zera"
+     ],
+     "a": "Pusta lista inicjalizacyjna zeruje całą tablicę: `int t[100] = {};` (albo `int t[100]{};`). Lista z wartościami wypełnia początek, a resztę zeruje: `int t[5] = {1, 2};` → {1, 2, 0, 0, 0}. Uwaga: `int t[5] = {-1};` daje {-1, 0, 0, 0, 0}, a nie same −1.",
+     "code": "int a[5] = {};          // 0 0 0 0 0\nint b[5] = {1, 2};      // 1 2 0 0 0\nint c[5] = {-1};        // -1 0 0 0 0 (!)\nint d[5];\nfill(d, d + 5, -1);     // -1 -1 -1 -1 -1\ncout << a[4] << b[1] << b[4] << c[1] << d[4] << '\\n';   // 0200-1"
+    },
+    {
+     "q": [
+      "globalne vectory",
+      "vector globalny",
+      "vector<int> adj[MAXN] globalnie",
+      "lista sąsiedztwa globalna"
+     ],
+     "a": "Globalny `vector<int> adj[MAXN];` to tablica pustych vectorów (pusty vector zajmuje ~24 B i nie alokuje danych). Wygodne w grafach, bo `dfs` widzi graf bez przekazywania argumentów. Alternatywa: globalne `vector<vector<int>> adj;` i `adj.assign(n + 1, {})` w main.",
+     "code": "const int MAXN = 100005;\nvector<int> adj[MAXN];\nbool odw[MAXN];\nvoid dfs(int v) {\n    odw[v] = true;\n    for (int u : adj[v]) if (!odw[u]) dfs(u);\n}\nint main() {\n    adj[1] = {2}; adj[2] = {3};\n    dfs(1);\n    cout << odw[3] << '\\n';   // 1\n}"
+    },
+    {
+     "q": [
+      "czy zmienne globalne są złe",
+      "czy używać zmiennych globalnych",
+      "globalne zmienne dobra praktyka cp",
+      "zmienna widoczna w każdej funkcji",
+      "jak zrobić zmienną globalną",
+      "zmienna dostępna we wszystkich funkcjach"
+     ],
+     "a": "W dużych projektach unika się zmiennych globalnych, ale w rozwiązaniach zawodniczych (jeden plik, jedno wykonanie) są normalne i wygodne: zerowane, bez limitu stosu, widoczne w rekurencji. Pilnuj tylko czyszczenia przy wielu testach i unikaj nazw kolidujących z biblioteką.",
+     "code": "long long dp[5005][1005];       // duża tablica DP (~40 MB) — globalnie\nint main() {\n    dp[1][1] = 1;\n    cout << dp[1][1] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dostęp do zmiennej globalnej ::",
+      "operator :: zmienna globalna",
+      "jak odwołać się do globalnej gdy jest lokalna"
+     ],
+     "a": "Gdy zmienna lokalna przesłania globalną o tej samej nazwie, do globalnej odwołasz się przez `::nazwa`. Lepiej jednak nie dopuszczać do przesłaniania — używaj różnych nazw.",
+     "code": "int x = 10;\nint main() {\n    int x = 3;\n    cout << x << ' ' << ::x << '\\n';   // 3 10\n}"
+    }
+   ],
+   "related": [
+    "cpp-stack-overflow",
+    "cpp-static",
+    "stl-memset",
+    "cpp-bits-stdcpp",
+    "pit-multitest-reset",
+    "pit-uninitialized",
+    "cpp-c-arrays",
+    "cpp-scope"
+   ]
+  },
+  {
+   "id": "cpp-static",
+   "title": "Słowo kluczowe static: zmienne lokalne static i składowe statyczne",
+   "category": "C++ język",
+   "tags": [
+    "static",
+    "zmienna statyczna",
+    "pamięć statyczna",
+    "składowa statyczna",
+    "inline static"
+   ],
+   "aliases": [
+    "static c++",
+    "static",
+    "zmienna static",
+    "static w funkcji",
+    "static int",
+    "static member",
+    "static tablica w funkcji"
+   ],
+   "summary": "`static` przy zmiennej lokalnej sprawia, że istnieje ona przez cały program (inicjalizowana raz, zerowana, poza stosem). Przy polu struktury — jedno pole wspólne dla wszystkich obiektów. Przy funkcji/zmiennej globalnej — widoczność tylko w pliku.",
+   "complexity": "brak kosztu w czasie działania; inicjalizacja tylko przy pierwszym wykonaniu deklaracji",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`static int x;` wewnątrz funkcji: zmienna jest tworzona i inicjalizowana **raz** (przy pierwszym przejściu przez deklarację), zachowuje wartość między wywołaniami i jest zerowana jak globalna. Leży w pamięci statycznej, więc `static int t[10000000];` w funkcji nie przepełni stosu."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "static lokalne i składowe statyczne",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint kolejny_id() {\n    static int id = 0;          // inicjalizacja tylko raz\n    return ++id;\n}\n\nstruct Wezel {\n    static int ile;             // wspólne dla wszystkich obiektów\n    int v;\n    Wezel(int v_) : v(v_) { ile++; }\n};\nint Wezel::ile = 0;             // definicja składowej statycznej (albo: inline static int ile = 0; w C++17)\n\nint main() {\n    cout << kolejny_id() << kolejny_id() << kolejny_id() << '\\n';   // 123\n    Wezel a(1), b(2), c(3);\n    cout << Wezel::ile << '\\n';                                      // 3\n\n    static long long duza[5000000];   // 40 MB poza stosem, wyzerowana\n    duza[4999999] = 1;\n    cout << duza[4999999] << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Użycie",
+      "Znaczenie"
+     ],
+     "rows": [
+      [
+       "`static T x;` w funkcji",
+       "jedna kopia na cały program, inicjalizacja raz, zerowana, poza stosem"
+      ],
+      [
+       "`static T pole;` w struct",
+       "pole wspólne dla wszystkich obiektów (dostęp `S::pole`)"
+      ],
+      [
+       "`inline static T pole = w;` w struct",
+       "C++17: definicja w miejscu deklaracji"
+      ],
+      [
+       "`static T metoda()` w struct",
+       "metoda bez `this`, wołana `S::metoda()`"
+      ],
+      [
+       "`static` przy globalnej funkcji/zmiennej",
+       "widoczna tylko w tym pliku (w jednoplikowym rozwiązaniu bez znaczenia)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Zmienna `static` w funkcji rekurencyjnej jest **jedna dla wszystkich wywołań** — nie nadaje się na „lokalny” stan każdego poziomu rekurencji. Nie jest też resetowana między testami."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "static T x = w; (w funkcji)",
+     "desc": "zmienna o statycznym czasie życia, inicjalizowana raz",
+     "complexity": "—"
+    },
+    {
+     "sig": "static T tab[N]; (w funkcji)",
+     "desc": "duża tablica poza stosem, wyzerowana",
+     "complexity": "—"
+    },
+    {
+     "sig": "struct S { static T pole; }; T S::pole = w;",
+     "desc": "składowa statyczna z definicją poza strukturą",
+     "complexity": "—"
+    },
+    {
+     "sig": "struct S { inline static T pole = w; };",
+     "desc": "C++17: składowa statyczna z definicją w środku",
+     "complexity": "—"
+    },
+    {
+     "sig": "struct S { static R f(...); };",
+     "desc": "metoda statyczna (bez obiektu), wywołanie S::f(...)",
+     "complexity": "—"
+    },
+    {
+     "sig": "static constexpr T C = w;",
+     "desc": "stała związana z typem (np. rozmiar w strukturze)",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "Zmienna `static` w funkcji nie jest resetowana przy kolejnych wywołaniach ani testach — to cecha, ale łatwo o niej zapomnieć.",
+    "W rekurencji zmienna `static` jest współdzielona przez wszystkie poziomy — nie używaj jej jako lokalnego stanu.",
+    "Składowa `static` (bez `inline`/`constexpr`) wymaga definicji poza strukturą (`int S::ile = 0;`) — inaczej błąd linkera „undefined reference”.",
+    "Wartość inicjalizująca static lokalnej zmiennej jest obliczana tylko raz — `static int n = wczytaj();` nie wczyta drugi raz."
+   ],
+   "qa": [
+    {
+     "q": [
+      "static w funkcji",
+      "static zmienna lokalna",
+      "co robi static int w funkcji",
+      "static local variable c++"
+     ],
+     "a": "Lokalna zmienna `static` żyje przez cały program: inicjalizuje się przy pierwszym wejściu w deklarację i zachowuje wartość między wywołaniami funkcji. Jest zerowana (jak globalna) i nie leży na stosie.",
+     "code": "int licz() {\n    static int ile = 0;\n    return ++ile;\n}\nint main() {\n    licz(); licz();\n    cout << licz() << '\\n';   // 3\n}"
+    },
+    {
+     "q": [
+      "static tablica w funkcji",
+      "duża tablica static",
+      "static int a[1000000]",
+      "jak uniknąć przepełnienia stosu static"
+     ],
+     "a": "Dopisanie `static` do dużej tablicy lokalnej przenosi ją ze stosu do pamięci statycznej — nie przepełni stosu i będzie wyzerowana. Pamiętaj, że jest tylko jedna kopia (nie resetuje się przy kolejnych wywołaniach).",
+     "code": "int main() {\n    static int t[10000000];      // 40 MB — bez static mogłoby wywołać segfault\n    t[9999999] = 5;\n    cout << t[9999999] + t[0] << '\\n';   // 5\n}"
+    },
+    {
+     "q": [
+      "static member c++",
+      "pole statyczne w strukturze",
+      "static w struct",
+      "undefined reference static member"
+     ],
+     "a": "`static` pole struktury jest jedno dla wszystkich obiektów. W C++17 najprościej `inline static int licznik = 0;` w środku struktury. Bez `inline` trzeba dodać definicję poza strukturą: `int S::licznik = 0;`, inaczej linker zgłosi *undefined reference*.",
+     "code": "struct Licznik {\n    inline static int utworzone = 0;\n    Licznik() { utworzone++; }\n};\nint main() {\n    Licznik a, b;\n    cout << Licznik::utworzone << '\\n';   // 2\n}"
+    },
+    {
+     "q": [
+      "static w rekurencji",
+      "static zmienna rekurencja błąd",
+      "static shared between recursive calls"
+     ],
+     "a": "W funkcji rekurencyjnej zmienna `static` jest wspólna dla wszystkich poziomów — zmiana na głębszym poziomie jest widoczna po powrocie. Do stanu „na poziom” używaj zwykłych zmiennych lokalnych albo parametrów; `static` nadaje się np. do globalnego licznika wywołań.",
+     "code": "int glebia(int n) {\n    static int wywolania = 0;    // wspólny licznik — OK do zliczania\n    wywolania++;\n    if (n == 0) return wywolania;\n    return glebia(n - 1);\n}\nint main() { cout << glebia(4) << '\\n'; }   // 5"
+    },
+    {
+     "q": [
+      "static constexpr w struct",
+      "stała w strukturze",
+      "static const member",
+      "rozmiar tablicy w struct static"
+     ],
+     "a": "`static constexpr int N = 100;` w strukturze definiuje stałą wspólną dla typu — można jej użyć jako rozmiaru tablicy w polu struktury.",
+     "code": "struct Plansza {\n    static constexpr int N = 8;\n    char p[N][N];\n};\nint main() {\n    Plansza b{};\n    cout << Plansza::N * Plansza::N << ' ' << sizeof(b.p) << '\\n';   // 64 64\n}"
+    },
+    {
+     "q": [
+      "static funkcja globalna",
+      "static przed funkcją",
+      "static void c++ znaczenie"
+     ],
+     "a": "`static` przed funkcją lub zmienną globalną oznacza wewnętrzną widoczność (tylko w tym pliku .cpp). W rozwiązaniu jednoplikowym nie zmienia działania programu. Nie myl tego ze `static` wewnątrz funkcji (czas życia) ani w strukturze (składowa wspólna).",
+     "code": "static int pomocnicza(int x) { return x * 2; }\nint main() { cout << pomocnicza(21) << '\\n'; }   // 42"
+    }
+   ],
+   "related": [
+    "cpp-global-vs-local",
+    "cpp-stack-overflow",
+    "cpp-const-constexpr",
+    "cpp-struct",
+    "cpp-scope"
+   ]
+  },
+  {
+   "id": "cpp-const-constexpr",
+   "title": "const i constexpr — stałe, rozmiary tablic i funkcje czasu kompilacji",
+   "category": "C++ język",
+   "tags": [
+    "const",
+    "constexpr",
+    "stała",
+    "MAXN",
+    "MOD",
+    "rozmiar tablicy",
+    "VLA"
+   ],
+   "aliases": [
+    "const",
+    "constexpr",
+    "const c++",
+    "constexpr c++",
+    "stała c++",
+    "const int MAXN",
+    "const vs constexpr",
+    "const czy define",
+    "tablica o zmiennym rozmiarze",
+    "vla c++"
+   ],
+   "summary": "`const` oznacza „nie zmienię tej wartości”, `constexpr` — „wartość znana w czasie kompilacji”. Jak definiować stałe (`MAXN`, `MOD`, `INF`), dlaczego rozmiar tablicy musi być stały i czym grozi `int a[n]` (VLA).",
+   "complexity": "brak kosztu w czasie działania (constexpr liczone podczas kompilacji)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`const int x = w;` — x nie może być zmienione (próba = błąd kompilacji); wartość może pochodzić z obliczeń w czasie działania. `constexpr int x = w;` — dodatkowo wartość musi być znana **podczas kompilacji**, więc można jej użyć jako rozmiaru tablicy, argumentu szablonu (`bitset<N>`, `array<int, N>`) czy w `static_assert`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Stałe w rozwiązaniu",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconstexpr int MAXN = 200'005;                 // rozmiar tablic\nconstexpr long long MOD = 1'000'000'007;\nconstexpr long long INF = 1e18;              // konwersja z double — dokładna dla 10^18\nconst int LOG = 18;\n\nconstexpr long long silnia(int n) { return n <= 1 ? 1 : n * silnia(n - 1); }   // funkcja constexpr\nconstexpr long long S10 = silnia(10);        // policzone podczas kompilacji\nstatic_assert(S10 == 3628800);\n\nint a[MAXN];\nbitset<MAXN> bs;\nint up[LOG][MAXN];                           // const int ze stałą też może być rozmiarem\n\nint main() {\n    int n = 0;\n    cin >> n;\n    const int polowa = n / 2;                // const z wartością z wejścia — OK, ale NIE jest constexpr\n    // int t[polowa];                        // to byłaby tablica o zmiennym rozmiarze (VLA) — unikaj\n    vector<int> t(max(polowa, 0));           // zamiast VLA\n    cout << S10 % MOD << ' ' << INF / MOD << ' ' << t.size() << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "",
+      "const",
+      "constexpr",
+      "#define"
+     ],
+     "rows": [
+      [
+       "typ",
+       "tak",
+       "tak",
+       "nie (podmiana tekstu)"
+      ],
+      [
+       "wartość z wejścia",
+       "tak",
+       "nie",
+       "nie"
+      ],
+      [
+       "rozmiar tablicy / szablonu",
+       "tylko gdy inicjalizator stały",
+       "tak",
+       "tak"
+      ],
+      [
+       "zasięg (scope)",
+       "tak",
+       "tak",
+       "nie"
+      ],
+      [
+       "zalecane do stałych",
+       "tak",
+       "**tak**",
+       "nie"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`int a[n];` z n wczytanym z wejścia to **VLA** — rozszerzenie GCC, niezgodne ze standardem C++. Tablica powstaje na stosie, więc przy dużym n powoduje przepełnienie stosu (segfault), a `sizeof`/inicjalizacja działają inaczej niż zwykle. Używaj `vector<int> a(n)`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "const T x = w;",
+     "desc": "zmienna niemodyfikowalna (wartość może być z czasu działania)",
+     "complexity": "—"
+    },
+    {
+     "sig": "constexpr T x = w;",
+     "desc": "stała czasu kompilacji (rozmiary tablic, szablony)",
+     "complexity": "—"
+    },
+    {
+     "sig": "constexpr R f(args) { ... }",
+     "desc": "funkcja, którą można wywołać w czasie kompilacji",
+     "complexity": "—"
+    },
+    {
+     "sig": "static_assert(warunek);",
+     "desc": "sprawdzenie warunku podczas kompilacji",
+     "complexity": "—"
+    },
+    {
+     "sig": "const T& param",
+     "desc": "parametr przekazany bez kopii i bez możliwości modyfikacji",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "R metoda() const",
+     "desc": "metoda niemodyfikująca obiektu",
+     "complexity": "—"
+    },
+    {
+     "sig": "1'000'000'007",
+     "desc": "separator cyfr (C++14) dla czytelności literałów",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "`int a[n]` z n z wejścia to VLA (niestandardowe, na stosie) — używaj `vector`.",
+    "`const int MAXN = 2e5 + 5;` działa (konwersja z double przy `=`), ale `const int MAXN{2e5 + 5};` (klamry) to błąd zawężenia (narrowing).",
+    "`constexpr` wymaga stałego inicjalizatora — `constexpr int n = wczytaj();` się nie skompiluje.",
+    "Stała `const int MOD = 1e9 + 7;` jest typu int — `a * b % MOD` dla `int a, b` przepełni się przed `%`; użyj `long long`.",
+    "`#define MOD 1e9+7` to double i bez nawiasów — `x % MOD` się nie skompiluje, a `2 * MOD` da `2*1e9+7`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "const czy constexpr",
+      "różnica const constexpr",
+      "const vs constexpr c++",
+      "kiedy constexpr"
+     ],
+     "a": "`const` — wartości nie da się zmienić po inicjalizacji, ale może ona pochodzić z wejścia. `constexpr` — wartość musi być znana podczas kompilacji; tylko taka może być rozmiarem tablicy (`int t[N]`), `bitset<N>`, `array<T, N>`. Do stałych w rozwiązaniu (MAXN, MOD, INF) używaj `constexpr`.",
+     "code": "constexpr int N = 1000;\nint main() {\n    int n = 5;\n    const int m = n * 2;        // const z wartości czasu działania\n    bitset<N> b;                // OK — N jest constexpr\n    // bitset<m> c;             // błąd — m nie jest stałą czasu kompilacji\n    cout << m << ' ' << b.size() << '\\n';   // 10 1000\n}"
+    },
+    {
+     "q": [
+      "const int maxn",
+      "jak zdefiniować stałą maxn",
+      "maxn c++",
+      "stała rozmiaru tablicy"
+     ],
+     "a": "Zdefiniuj globalnie `constexpr int MAXN = 200005;` (maksymalne n z treści plus mały zapas) i użyj jako rozmiaru tablic globalnych. Zapas (+5) chroni przed błędami o jeden przy indeksowaniu od 1.",
+     "code": "constexpr int MAXN = 200005;\nint a[MAXN], pref[MAXN];\nint main() {\n    int n = 3;\n    for (int i = 1; i <= n; i++) { a[i] = i; pref[i] = pref[i - 1] + a[i]; }\n    cout << pref[n] << '\\n';   // 6\n}"
+    },
+    {
+     "q": [
+      "int a[n] c++",
+      "tablica o rozmiarze n z wejścia",
+      "vla c++",
+      "variable length array c++",
+      "czy można int tab[n]"
+     ],
+     "a": "`int a[n];` z n znanym dopiero w czasie działania to VLA — g++ to akceptuje jako rozszerzenie, ale standard C++ nie. Tablica ląduje na stosie, więc dla dużego n program wywala się (segfault). Używaj `vector<int> a(n);` albo globalnej tablicy o rozmiarze MAXN.",
+     "code": "int main() {\n    int n = 100000;\n    vector<int> a(n, 0);        // zamiast int a[n];\n    a[n - 1] = 1;\n    cout << a.size() << '\\n';\n}"
+    },
+    {
+     "q": [
+      "const mod",
+      "const int mod = 1e9+7",
+      "jak zdefiniować modulo",
+      "mod 1e9+7 stała"
+     ],
+     "a": "`constexpr long long MOD = 1'000'000'007;` (albo `= 1e9 + 7;`). Typ `long long` sprawia, że `a * b % MOD` dla liczb < MOD nie przepełni się (iloczyn jest mniejszy niż ok. 1,0000001·10^18, a long long sięga ≈9,2·10^18). Nie używaj `#define MOD 1e9+7` — to double.",
+     "code": "constexpr long long MOD = 1'000'000'007;\nint main() {\n    long long a = 999999999, b = 999999999;\n    cout << a * b % MOD << '\\n';   // 64\n}"
+    },
+    {
+     "q": [
+      "constexpr funkcja",
+      "obliczenia w czasie kompilacji",
+      "constexpr function c++",
+      "static_assert"
+     ],
+     "a": "Funkcja `constexpr` może zostać policzona podczas kompilacji, jeśli jej argumenty są stałe — np. do wyliczenia tablicy potęg lub rozmiaru. `static_assert(warunek)` sprawdza warunek w czasie kompilacji (błąd kompilacji, jeśli fałsz).",
+     "code": "constexpr int potega2(int k) { return k == 0 ? 1 : 2 * potega2(k - 1); }\nconstexpr int ROZ = potega2(10);\nstatic_assert(ROZ == 1024);\nint drzewo[2 * ROZ];\nint main() { cout << sizeof(drzewo) / sizeof(int) << '\\n'; }   // 2048"
+    },
+    {
+     "q": [
+      "const metoda",
+      "metoda const w strukturze",
+      "passing const as this argument discards qualifiers",
+      "błąd discards qualifiers"
+     ],
+     "a": "Błąd *passing 'const X' as 'this' argument discards qualifiers* oznacza, że wywołujesz metodę bez `const` na obiekcie stałym (np. przez `const X&` albo w komparatorze seta). Dopisz `const` po liście parametrów metod, które nie zmieniają obiektu.",
+     "code": "struct P {\n    int x;\n    int podwojone() const { return 2 * x; }   // const — można wołać na const P&\n};\nint f(const P& p) { return p.podwojone(); }\nint main() { cout << f(P{4}) << '\\n'; }      // 8"
+    },
+    {
+     "q": [
+      "const int z double",
+      "const int n = 2e5",
+      "narrowing conversion const",
+      "1e5 jako int"
+     ],
+     "a": "`const int N = 2e5 + 5;` (z `=`) kompiluje się — double zostanie niejawnie skonwertowany na int (200005). Z klamrami `const int N{2e5 + 5};` kompilator zgłosi błąd zawężenia (narrowing). Bezpieczniej pisać literał całkowity: `200'005`.",
+     "code": "const int A = 2e5 + 5;          // OK: 200005\nconstexpr int B = 200'005;      // czytelny literał całkowity\nint main() { cout << A << ' ' << (A == B) << '\\n'; }   // 200005 1"
+    }
+   ],
+   "related": [
+    "cpp-macros-typedef",
+    "cpp-static",
+    "cpp-stack-overflow",
+    "cpp-struct",
+    "num-mod-arithmetic"
+   ]
+  },
+  {
+   "id": "cpp-stack-overflow",
+   "title": "Przepełnienie stosu: duże tablice lokalne i głęboka rekurencja",
+   "category": "C++ język",
+   "tags": [
+    "stack overflow",
+    "przepełnienie stosu",
+    "segfault",
+    "rekurencja",
+    "stos",
+    "SIGSEGV",
+    "głęboka rekurencja",
+    "RE"
+   ],
+   "aliases": [
+    "przepełnienie stosu",
+    "stack overflow c++",
+    "segmentation fault rekurencja",
+    "segfault duża tablica",
+    "rekurencja za głęboka",
+    "dfs segfault",
+    "sigsegv",
+    "program wywala się od razu",
+    "naruszenie ochrony pamięci"
+   ],
+   "summary": "Stos wywołań ma ograniczony rozmiar. Przekraczają go duże tablice lokalne i bardzo głęboka rekurencja (np. DFS po ścieżce 10^6 wierzchołków). Objaw: segfault (RE). Rozwiązania: tablice globalne/`static`/`vector`, rekurencja → iteracja.",
+   "complexity": "—",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Każde wywołanie funkcji odkłada na stosie ramkę: zmienne lokalne, argumenty, adres powrotu. Typowy domyślny rozmiar stosu to 8 MB na Linuksie i 1 MB na Windowsie; limit na sprawdzarce zależy od jej konfiguracji. Gdy stos się skończy, program dostaje sygnał SIGSEGV (segmentation fault) i kończy się błędem wykonania (RE) — bez czytelnego komunikatu."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Przyczyna",
+      "Przykład",
+      "Naprawa"
+     ],
+     "rows": [
+      [
+       "duża tablica lokalna",
+       "`int main() { int a[2000000]; }` (8 MB)",
+       "tablica globalna, `static` albo `vector`"
+      ],
+      [
+       "VLA",
+       "`int t[n];` z dużym n",
+       "`vector<int> t(n);`"
+      ],
+      [
+       "głęboka rekurencja",
+       "DFS po ścieżce 10^6 wierzchołków",
+       "DFS iteracyjny z jawnym stosem / BFS"
+      ],
+      [
+       "nieskończona rekurencja",
+       "brak warunku stopu",
+       "popraw warunek bazowy"
+      ],
+      [
+       "duże obiekty w ramce",
+       "`array<int, 100000>` jako zmienna lokalna w rekurencji",
+       "przenieś dane poza funkcję"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "DFS bez rekurencji + obliczenie rozmiarów poddrzew",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// DFS iteracyjny — działa dla ścieżki o milionie wierzchołków bez ryzyka przepełnienia stosu\nint main() {\n    int n = 1000000;\n    vector<vector<int>> adj(n);\n    for (int i = 0; i + 1 < n; i++) { adj[i].push_back(i + 1); adj[i + 1].push_back(i); }\n\n    vector<int> rodzic(n, -1), kolejnosc;\n    kolejnosc.reserve(n);\n    vector<int> st = {0};\n    vector<char> odw(n, 0);\n    odw[0] = 1;\n    while (!st.empty()) {\n        int v = st.back();\n        st.pop_back();\n        kolejnosc.push_back(v);\n        for (int u : adj[v])\n            if (!odw[u]) { odw[u] = 1; rodzic[u] = v; st.push_back(u); }\n    }\n    // przetwarzanie „od liści”: odwrotna kolejność odwiedzin (np. rozmiary poddrzew)\n    vector<int> rozmiar(n, 1);\n    for (int i = n - 1; i > 0; i--) rozmiar[rodzic[kolejnosc[i]]] += rozmiar[kolejnosc[i]];\n    cout << rozmiar[0] << ' ' << rozmiar[n - 1] << '\\n';   // 1000000 1\n}"
+    },
+    {
+     "type": "tip",
+     "md": "W OI Forge programy kompilowane w trybie release są uruchamiane z dużym stosem (512 MB), więc głęboka rekurencja może tu przechodzić, a na innej sprawdzarce już nie. Jeśli rekurencja może mieć głębokość rzędu 10^5–10^6, rozważ wersję iteracyjną albo sprawdź, jaki limit stosu ma sprawdzarka Twoich zawodów."
+    },
+    {
+     "type": "warn",
+     "md": "Sam rozmiar „tablica 4 MB lokalnie” nie musi od razu wywalić programu na Twoim komputerze — zależy to od systemu i ustawień. Nie testuj tego „na szczęście”: duże tablice zawsze deklaruj globalnie albo jako vector."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "T tab[N]; (globalnie)",
+     "desc": "tablica w pamięci statycznej — nie zużywa stosu",
+     "complexity": "—"
+    },
+    {
+     "sig": "static T tab[N]; (w funkcji)",
+     "desc": "jak globalna, ale widoczna tylko w funkcji",
+     "complexity": "—"
+    },
+    {
+     "sig": "vector<T> v(n);",
+     "desc": "dane na stercie — tylko ~24 B na stosie",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "vector<int> st; st.push_back(v); ... st.back(); st.pop_back();",
+     "desc": "jawny stos zamiast rekurencji",
+     "complexity": "O(1) na operację"
+    },
+    {
+     "sig": "ulimit -s unlimited (Linux, lokalnie)",
+     "desc": "zwiększenie limitu stosu w terminalu do testów lokalnych",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "`int a[1000000]` jako zmienna lokalna (4 MB) może przepełnić stos — przenieś ją poza `main`.",
+    "Rekurencja głębokości 10^6 (DFS po długiej ścieżce, rekurencyjne DP po n) często przepełnia stos — przepisz iteracyjnie.",
+    "Każde wywołanie rekurencyjne zużywa stos proporcjonalnie do lokalnych zmiennych — duże lokalne tablice w funkcji rekurencyjnej szybko go wyczerpią.",
+    "Kod wyjścia 139 (Linux) / -11 / SIGSEGV oznacza segfault — przepełnienie stosu to jedna z typowych przyczyn obok wyjścia poza tablicę.",
+    "Lokalnie zwiększony stos (`ulimit -s`, duży stos w OI Forge) może ukryć problem, który wystąpi na sprawdzarce.",
+    "Przekazywanie dużych obiektów przez wartość w rekurencji kopiuje je, ale dane vectora leżą na stercie — stos zużywa głównie głębokość rekurencji."
+   ],
+   "qa": [
+    {
+     "q": [
+      "przepełnienie stosu c++",
+      "stack overflow c++",
+      "co to przepełnienie stosu",
+      "stack overflow rekurencja"
+     ],
+     "a": "Stos to obszar pamięci na zmienne lokalne i ramki wywołań funkcji; ma ograniczony rozmiar (często kilka MB). Przepełniasz go dużymi tablicami lokalnymi lub bardzo głęboką rekurencją. Skutek: segmentation fault (RE). Naprawa: tablice globalne/`vector`, rekurencję zamień na pętlę z jawnym stosem.",
+     "code": "const int N = 5000000;\nint duza[N];                 // globalnie — nie na stosie\nint main() {\n    duza[N - 1] = 1;\n    cout << duza[N - 1] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "segfault od razu po uruchomieniu",
+      "program wywala się na starcie",
+      "segmentation fault duża tablica",
+      "runtime error przed wczytaniem danych"
+     ],
+     "a": "Jeśli program kończy się segfaultem zanim cokolwiek zrobi, najczęstszą przyczyną jest duża tablica lokalna w `main` (np. `int a[10000000]` = 40 MB na stosie). Przenieś deklarację przed `main` (zmienna globalna) albo użyj `vector`.",
+     "code": "int a[10000000];             // było w main -> przeniesione globalnie\nint main() {\n    int n = 3;\n    for (int i = 0; i < n; i++) a[i] = i;\n    cout << a[2] << '\\n';    // 2\n}"
+    },
+    {
+     "q": [
+      "dfs segfault",
+      "rekurencja segfault dla dużych danych",
+      "dfs stack overflow",
+      "dfs wywala się dla n = 10^6",
+      "głęboka rekurencja c++"
+     ],
+     "a": "Rekurencyjny DFS na grafie-ścieżce o 10^6 wierzchołkach ma głębokość 10^6; każda ramka to kilkadziesiąt–kilkaset bajtów → dziesiątki lub setki MB stosu. Przepisz DFS na wersję z jawnym stosem (`vector<int>`), a obliczenia „po powrocie” wykonuj w odwrotnej kolejności odwiedzin.",
+     "code": "int n = 6;\nvector<vector<int>> adj = {{1}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {4}};\nvector<int> st = {0}, odw(n, 0), kol;\nodw[0] = 1;\nwhile (!st.empty()) {\n    int v = st.back(); st.pop_back();\n    kol.push_back(v);\n    for (int u : adj[v]) if (!odw[u]) { odw[u] = 1; st.push_back(u); }\n}\ncout << kol.size() << '\\n';   // 6"
+    },
+    {
+     "q": [
+      "u mnie działa a na sprawdzarce re",
+      "lokalnie działa na sio re",
+      "rekurencja działa lokalnie a na serwerze nie",
+      "different stack size judge"
+     ],
+     "a": "Limit stosu zależy od systemu i ustawień: lokalnie (zwłaszcza w OI Forge, gdzie programy dostają 512 MB stosu, albo po `ulimit -s unlimited`) głęboka rekurencja może przejść, a na sprawdzarce z mniejszym stosem — nie. Drugą częstą przyczyną RE są niezainicjalizowane zmienne i wyjście poza tablicę (uruchom z sanitizerami). Bezpieczna praktyka: duże tablice globalnie, głęboką rekurencję zastąp iteracją.",
+     "code": "// zamiast rekurencyjnego f(n) = f(n-1) + ... dla n do 10^6 — pętla\nint n = 1000000;\nvector<long long> f(n + 1);\nf[0] = 1;\nfor (int i = 1; i <= n; i++) f[i] = (f[i - 1] * 2) % 1000000007;\ncout << f[n] << '\\n';"
+    },
+    {
+     "q": [
+      "jak duży jest stos",
+      "rozmiar stosu c++",
+      "ile wynosi limit stosu",
+      "stack size linux windows"
+     ],
+     "a": "Domyślnie: Linux zwykle 8 MB (`ulimit -s` pokazuje wartość w KB), Windows 1 MB dla programów konsolowych. Sprawdzarki konfigurują limit samodzielnie — bywa równy limitowi pamięci, ale nie zawsze. Nie zakładaj dużego stosu: unikaj lokalnych tablic > ~1 MB i rekurencji o głębokości > ~10^5.",
+     "code": "int glebokosc(int n) { return n == 0 ? 0 : 1 + glebokosc(n - 1); }\nint main() {\n    cout << glebokosc(10000) << '\\n';   // płytka rekurencja — bezpieczna\n}"
+    },
+    {
+     "q": [
+      "vector na stosie czy stercie",
+      "czy vector zużywa stos",
+      "vector lokalny duży",
+      "vector local stack memory"
+     ],
+     "a": "Obiekt `vector` (wskaźnik + rozmiar + pojemność, ok. 24 B) leży tam, gdzie go zadeklarujesz, ale jego elementy są zawsze na **stercie**. Dlatego `vector<int> a(10000000);` w `main` nie przepełni stosu, w odróżnieniu od `int a[10000000];`.",
+     "code": "int main() {\n    vector<int> a(10000000, 1);   // 40 MB na stercie — stos bezpieczny\n    cout << a.size() << ' ' << sizeof(a) << '\\n';   // 10000000 24\n}"
+    },
+    {
+     "q": [
+      "rekurencja na iterację",
+      "jak zamienić rekurencję na pętlę",
+      "iterative instead of recursion",
+      "eliminacja rekurencji"
+     ],
+     "a": "Ogólny sposób: jawny stos z informacją, co jeszcze zostało do zrobienia w danym wywołaniu (np. para (wierzchołek, indeks następnego sąsiada)). Dla DP po n zamiast rekurencji z memoizacją wypełnij tablicę pętlą w kolejności zależności.",
+     "code": "int n = 5;\nvector<vector<int>> adj = {{1, 2}, {3}, {4}, {}, {}};\nvector<int> post;                                  // kolejność post-order\nvector<pair<int, int>> st = {{0, 0}};             // (wierzchołek, następny indeks sąsiada)\nwhile (!st.empty()) {\n    auto& [v, i] = st.back();\n    if (i < (int)adj[v].size()) {\n        int u = adj[v][i++];\n        st.push_back({u, 0});                      // „wywołanie rekurencyjne”\n    } else {\n        post.push_back(v);                         // „powrót”\n        st.pop_back();\n    }\n}\nfor (int v : post) cout << v << ' ';               // 3 1 4 2 0\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "exit code 139",
+      "kod wyjścia 139",
+      "sigsegv co oznacza",
+      "signal 11",
+      "segmentation fault c++ przyczyny"
+     ],
+     "a": "Kod 139 (= 128 + 11) oznacza, że proces zabił sygnał 11 — SIGSEGV, czyli dostęp do niedozwolonej pamięci. Typowe przyczyny: wyjście poza tablicę/vector, dereferencja `nullptr` lub `end()`, przepełnienie stosu. Uruchom program z sanitizerami (`-fsanitize=address,undefined`), żeby dostać numer linii.",
+     "code": "vector<int> v(5);\nint i = 5;\nif (i < (int)v.size()) v[i] = 1;   // sprawdzanie zakresu chroni przed SIGSEGV\nelse cout << \"indeks poza zakresem\\n\";"
+    }
+   ],
+   "related": [
+    "cpp-global-vs-local",
+    "cpp-static",
+    "cpp-const-constexpr",
+    "stl-stack",
+    "graph-dfs",
+    "oi-debugging",
+    "pit-stack-overflow",
+    "cpp-c-arrays",
+    "cpp-recursion-basics",
+    "graph-flood-fill",
+    "oi-py-recursion"
+   ]
+  },
+  {
+   "id": "cpp-bits-stdcpp",
+   "title": "#include <bits/stdc++.h> i using namespace std — wygoda i pułapki",
+   "category": "C++ język",
+   "tags": [
+    "bits/stdc++.h",
+    "using namespace std",
+    "nagłówki",
+    "include",
+    "kolizje nazw",
+    "y1",
+    "ambiguous"
+   ],
+   "aliases": [
+    "bits/stdc++.h",
+    "#include <bits/stdc++.h>",
+    "using namespace std",
+    "bits stdc++",
+    "jakie include c++",
+    "reference to is ambiguous",
+    "y1 redeclared",
+    "nagłówki c++",
+    "include all c++"
+   ],
+   "summary": "`#include <bits/stdc++.h>` dołącza całą bibliotekę standardową GCC jednym wierszem, a `using namespace std;` pozwala pisać `vector` zamiast `std::vector`. Kiedy to działa, ile kosztuje i jakie kolizje nazw powoduje (`y1`, `count`, `next`…).",
+   "complexity": "brak kosztu w czasie działania; dłuższa kompilacja (zwykle o 1–3 s bez prekompilowanego nagłówka)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`bits/stdc++.h` to wewnętrzny nagłówek **libstdc++ (GCC)**, który zawiera wszystkie standardowe nagłówki. Na zawodach z g++ (OI, Codeforces) jest dostępny i powszechnie używany. Nie istnieje w MSVC, a Apple clang na macOS też go nie ma — OI Forge dostarcza dla clanga własny zamiennik (`include/bits/stdc++.h`). Nie wpływa na szybkość programu, tylko wydłuża kompilację."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Standardowy szablon rozwiązania",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    vector<int> v = {3, 1, 2};\n    sort(v.begin(), v.end());\n    cout << v[0] << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcjonalność",
+      "Pojedynczy nagłówek"
+     ],
+     "rows": [
+      [
+       "cin, cout",
+       "`<iostream>`"
+      ],
+      [
+       "vector, string, array",
+       "`<vector>`, `<string>`, `<array>`"
+      ],
+      [
+       "sort, lower_bound, max_element…",
+       "`<algorithm>`"
+      ],
+      [
+       "accumulate, iota, gcd, partial_sum",
+       "`<numeric>`"
+      ],
+      [
+       "set/multiset, map/multimap",
+       "`<set>`, `<map>`"
+      ],
+      [
+       "unordered_map/set",
+       "`<unordered_map>`, `<unordered_set>`"
+      ],
+      [
+       "queue, priority_queue, stack, deque",
+       "`<queue>`, `<stack>`, `<deque>`"
+      ],
+      [
+       "memset, strlen",
+       "`<cstring>`"
+      ],
+      [
+       "sqrt, pow, abs (double)",
+       "`<cmath>`"
+      ],
+      [
+       "bitset",
+       "`<bitset>`"
+      ],
+      [
+       "mt19937, chrono",
+       "`<random>`, `<chrono>`"
+      ],
+      [
+       "INT_MAX, LLONG_MAX",
+       "`<climits>`"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Kolizje nazw.** `using namespace std;` wciąga do przestrzeni globalnej tysiące nazw (`count`, `distance`, `next`, `prev`, `hash`, `data`, `size`, `rank`, `left`, `right`, `max`, `min`…). Zmienna globalna o takiej nazwie daje błąd *reference to 'X' is ambiguous*. Dodatkowo `<cmath>` deklaruje globalnie funkcje Bessela `y0`, `y1`, `yn`, `j0`, `j1`, `jn` — dlatego globalne `int y1;` kończy się błędem *'int y1' redeclared as different kind of entity*."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Bezpieczne nazwy zmiennych globalnych",
+     "code": "// int y1, count, next;      // BŁĘDY: kolizja z funkcjami biblioteki przy bits/stdc++.h + using namespace std\nint y_1, ile, nastepny;      // bezpieczne nazwy globalne\nint x1_, y1_;                // albo z podkreśleniem",
+     "scope": "global"
+    }
+   ],
+   "functions": [
+    {
+     "sig": "#include <bits/stdc++.h>",
+     "desc": "cała biblioteka standardowa (GCC/libstdc++)",
+     "complexity": "dłuższa kompilacja"
+    },
+    {
+     "sig": "using namespace std;",
+     "desc": "dostęp do nazw z std bez przedrostka std::",
+     "complexity": "—"
+    },
+    {
+     "sig": "std::nazwa",
+     "desc": "jawne odwołanie (działa zawsze, także bez using namespace std)",
+     "complexity": "—"
+    },
+    {
+     "sig": "using std::vector;",
+     "desc": "wciągnięcie pojedynczej nazwy zamiast całej przestrzeni",
+     "complexity": "—"
+    },
+    {
+     "sig": "#include <ext/pb_ds/assoc_container.hpp>",
+     "desc": "rozszerzenia GCC (pb_ds) — NIE są w bits/stdc++.h",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "Globalna zmienna `y1`, `y0`, `j0`, `j1`, `yn`, `jn` koliduje z funkcjami z `<cmath>` — błąd „redeclared as different kind of entity”.",
+    "Globalne nazwy `count`, `next`, `prev`, `distance`, `hash`, `rank`, `data`, `size`, `left`, `right` mogą dać „reference is ambiguous”.",
+    "`bits/stdc++.h` nie istnieje w MSVC ani w Apple clang (bez zamiennika) — kod z nim nie skompiluje się tam „z pudełka”.",
+    "Nagłówki pb_ds (`ordered_set`) trzeba dołączyć osobno — nie ma ich w `bits/stdc++.h`.",
+    "Kompilacja z `bits/stdc++.h` trwa dłużej — przy częstym testowaniu pomaga prekompilowany nagłówek."
+   ],
+   "qa": [
+    {
+     "q": [
+      "bits/stdc++.h co to",
+      "#include <bits/stdc++.h>",
+      "czy używać bits stdc++",
+      "jeden include do wszystkiego",
+      "what is bits stdc++ h"
+     ],
+     "a": "To nagłówek GCC, który dołącza całą bibliotekę standardową — nie musisz pamiętać, w którym pliku jest `sort`, `map` czy `gcd`. Nie spowalnia programu (kompilator i tak wkleja tylko deklaracje), wydłuża jedynie kompilację. Na zawodach z g++ można go śmiało używać.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    map<string, int> m;\n    m[\"ok\"] = gcd(12, 18);\n    cout << m[\"ok\"] << '\\n';   // 6\n}"
+    },
+    {
+     "q": [
+      "using namespace std",
+      "co daje using namespace std",
+      "std:: czy using namespace",
+      "czy pisać std::"
+     ],
+     "a": "`using namespace std;` pozwala pisać `vector`, `cout`, `sort` bez przedrostka `std::`. W kodzie zawodniczym to standard — skraca kod. Wada: możliwe kolizje z Twoimi nazwami (np. globalne `count`, `next`, `y1`). W dużych projektach unika się tego, w CP — nie ma potrzeby.",
+     "code": "#include <bits/stdc++.h>\nint main() {\n    std::vector<int> v = {2, 1};          // bez using namespace std trzeba pisać std::\n    std::sort(v.begin(), v.end());\n    std::cout << v[0] << '\\n';            // 1\n}"
+    },
+    {
+     "q": [
+      "y1 redeclared as different kind of entity",
+      "int y1 błąd",
+      "zmienna y1 nie kompiluje",
+      "y1 conflicts with previous declaration"
+     ],
+     "a": "Biblioteka matematyczna (`<cmath>`, dołączana przez `bits/stdc++.h`) deklaruje w przestrzeni globalnej funkcję Bessela `y1` (oraz `y0`, `yn`, `j0`, `j1`, `jn`). Globalna zmienna o tej nazwie koliduje z nią. Zmień nazwę (`ya`, `y_1`) albo zadeklaruj zmienną lokalnie w `main`.",
+     "code": "int xa, ya, xb, yb;       // zamiast x1, y1, x2, y2 globalnie\nint main() {\n    int y1 = 5;           // lokalnie przesłania funkcję — kompiluje się\n    xa = 1; ya = y1;\n    cout << xa + ya << '\\n';   // 6\n}"
+    },
+    {
+     "q": [
+      "reference to count is ambiguous",
+      "is ambiguous c++",
+      "error reference ambiguous",
+      "zmienna count błąd kompilacji",
+      "zmienna next ambiguous"
+     ],
+     "a": "Globalna zmienna o nazwie takiej jak funkcja z `std` (np. `count`, `next`, `prev`, `distance`, `hash`, `rank`, `data`) przy `using namespace std` powoduje niejednoznaczność — kompilator nie wie, czy chodzi o Twoją zmienną, czy o `std::count`. Zmień nazwę zmiennej (np. `cnt`, `nxt`).",
+     "code": "int cnt[100];             // zamiast \"int count[100];\"\nint nxt[100];             // zamiast \"int next[100];\"\nint main() {\n    cnt[1] = 2; nxt[1] = 3;\n    cout << cnt[1] + nxt[1] << '\\n';   // 5\n}"
+    },
+    {
+     "q": [
+      "bits/stdc++.h nie działa",
+      "bits/stdc++.h file not found",
+      "fatal error bits stdc++ mac",
+      "bits stdc++ clang macos",
+      "bits/stdc++.h visual studio"
+     ],
+     "a": "Nagłówek istnieje tylko w bibliotece GCC (libstdc++). Apple clang na macOS (libc++) i MSVC go nie mają — stąd *file not found*. Rozwiązania: użyj g++ z Homebrew (`g++-16`), dodaj własny plik `bits/stdc++.h` w ścieżce include (OI Forge robi to automatycznie dla clanga) albo dołącz potrzebne nagłówki ręcznie.",
+     "code": "#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\nint main() {\n    vector<int> v = {3, 2, 1};\n    sort(v.begin(), v.end());\n    cout << v[0] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "czy bits/stdc++.h spowalnia program",
+      "bits stdc++ wydajność",
+      "czy include wszystkiego jest wolne"
+     ],
+     "a": "Nie spowalnia działania programu — dołączone, a nieużywane deklaracje nie trafiają do wynikowego kodu maszynowego. Wydłuża natomiast kompilację (parsowanie całej biblioteki, zwykle 1–3 s). Przy częstym kompilowaniu przyspiesza to prekompilowany nagłówek (`.gch`).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() { cout << \"czas działania bez zmian\\n\"; }"
+    },
+    {
+     "q": [
+      "jakie include potrzebne",
+      "jaki nagłówek dla sort",
+      "include dla map",
+      "w jakim nagłówku jest accumulate",
+      "which header for"
+     ],
+     "a": "Najczęstsze: `<iostream>` (cin/cout), `<vector>`, `<string>`, `<algorithm>` (sort, lower_bound, max_element), `<numeric>` (accumulate, iota, gcd), `<map>`, `<set>`, `<unordered_map>`, `<queue>` (queue, priority_queue), `<stack>`, `<cstring>` (memset), `<cmath>`, `<climits>`. Albo po prostu `bits/stdc++.h`.",
+     "code": "#include <iostream>\n#include <vector>\n#include <numeric>\n#include <algorithm>\nusing namespace std;\nint main() {\n    vector<int> v(5);\n    iota(v.begin(), v.end(), 1);\n    cout << accumulate(v.begin(), v.end(), 0) << ' ' << *max_element(v.begin(), v.end()) << '\\n';   // 15 5\n}"
+    },
+    {
+     "q": [
+      "ordered_set include",
+      "pb_ds include bits stdc++",
+      "tree_policy not included",
+      "pb_ds nagłówki"
+     ],
+     "a": "Struktury pb_ds (np. `tree` jako ordered_set, `gp_hash_table`) nie są częścią `bits/stdc++.h` — dołącz `<ext/pb_ds/assoc_container.hpp>` i `<ext/pb_ds/tree_policy.hpp>` oraz użyj `using namespace __gnu_pbds;`.",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\nint main() {\n    tree<int, null_type, less<int>, rb_tree_tag, tree_order_statistics_node_update> s;\n    s.insert(5); s.insert(2);\n    cout << *s.find_by_order(0) << '\\n';   // 2\n}"
+    }
+   ],
+   "related": [
+    "cpp-pbds-ordered-set",
+    "cpp-global-vs-local",
+    "io-fast-io",
+    "cpp-macros-typedef",
+    "oi-compile-flags",
+    "pit-name-collisions",
+    "cpp-variables-types-intro"
+   ]
+  },
+  {
+   "id": "cpp-modern-cpp",
+   "title": "Nowoczesny C++ (C++17/20) przydatny na zawodach",
+   "category": "C++ język",
+   "tags": [
+    "c++17",
+    "c++20",
+    "structured bindings",
+    "if z inicjalizacją",
+    "contains",
+    "ranges",
+    "views",
+    "spaceship",
+    "ssize"
+   ],
+   "aliases": [
+    "c++17",
+    "c++20",
+    "nowy c++",
+    "structured bindings",
+    "if init",
+    "contains c++20",
+    "ranges c++",
+    "views iota",
+    "std::ranges",
+    "co nowego w c++20",
+    "c++20 features cp"
+   ],
+   "summary": "Przegląd funkcji C++17 i C++20, które skracają kod zawodniczy: structured bindings, `if` z inicjalizacją, `contains()`, `erase_if`, `std::ranges` i widoki (`views::iota`, `views::reverse`), `<=>`, `ssize`, `starts_with`, `numbers::pi`.",
+   "complexity": "bez dodatkowego kosztu w czasie działania (to głównie wygodniejszy zapis)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Kompilację w danym standardzie wybiera flaga `-std=c++17` / `-std=c++20` (OI Forge domyślnie używa C++20). Przed zawodami sprawdź, jaki standard ustawia sprawdzarka — jeśli tylko C++17, funkcje z C++20 (`contains`, `ranges`, `<=>`, `erase_if`) się nie skompilują."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Przegląd C++17/C++20",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // C++17: structured bindings\n    map<string, int> m = {{\"ala\", 3}, {\"ola\", 5}};\n    for (auto& [imie, wiek] : m) wiek++;\n    auto [mn, mx] = minmax({4, 9, 1});\n\n    // C++17: if z inicjalizacją — zmienna widoczna tylko w if/else\n    if (auto it = m.find(\"ola\"); it != m.end()) cout << it->second << '\\n';   // 6\n\n    // C++20: contains, erase_if, starts_with\n    set<int> s = {1, 2, 3, 4};\n    cout << s.contains(3) << m.contains(\"ewa\") << '\\n';                        // 10\n    erase_if(s, [](int x) { return x % 2 == 0; });                              // {1, 3}\n    string plik = \"zad.cpp\";\n    cout << plik.ends_with(\".cpp\") << '\\n';                                    // 1\n\n    // C++20: ranges i widoki\n    vector<int> v = {5, 2, 8, 1};\n    ranges::sort(v);\n    for (int i : views::iota(0, 3)) cout << i;                                 // 012\n    cout << ' ';\n    for (int x : v | views::reverse) cout << x << ' ';                         // 8 5 2 1\n    cout << '\\n';\n    auto parzyste = v | views::filter([](int x) { return x % 2 == 0; });\n    for (int x : parzyste) cout << x << ' ';                                   // 2 8\n    cout << '\\n' << mn << mx << ' ' << ssize(v) - 5 << '\\n';                    // 19 -1\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Standard",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "structured bindings",
+       "C++17",
+       "`auto [a, b] = para;`, `for (auto& [k, v] : m)`"
+      ],
+      [
+       "if/switch z inicjalizacją",
+       "C++17",
+       "`if (auto it = m.find(k); it != m.end())`"
+      ],
+      [
+       "CTAD (dedukcja argumentów szablonu klasy)",
+       "C++17",
+       "`vector v = {1, 2, 3};` → `vector<int>`"
+      ],
+      [
+       "gcd, lcm, clamp",
+       "C++17",
+       "`gcd(a, b)`, `clamp(x, 0, 10)`"
+      ],
+      [
+       "`contains`",
+       "C++20",
+       "`s.contains(x)`, `m.contains(k)`"
+      ],
+      [
+       "`erase(v, x)`, `erase_if(c, pred)`",
+       "C++20",
+       "usuwanie bez idiomu erase–remove"
+      ],
+      [
+       "`starts_with`, `ends_with`",
+       "C++20",
+       "`s.starts_with(\"ab\")`"
+      ],
+      [
+       "`ranges::sort` itp., widoki `views::`",
+       "C++20",
+       "`ranges::sort(v)`, `views::iota(0, n)`"
+      ],
+      [
+       "`operator<=> = default`",
+       "C++20",
+       "porównania struktur po polach"
+      ],
+      [
+       "designated initializers",
+       "C++20",
+       "`P p{.x = 1, .y = 2};`"
+      ],
+      [
+       "`ssize(c)`",
+       "C++20",
+       "rozmiar ze znakiem — `ssize(v) - 1` bez zawijania"
+      ],
+      [
+       "`<bit>`: popcount, bit_width…",
+       "C++20",
+       "`popcount(x)` dla typów bez znaku"
+      ],
+      [
+       "`numbers::pi`",
+       "C++20",
+       "`numbers::pi` zamiast `acos(-1)`"
+      ],
+      [
+       "pętla zakresowa z inicjalizacją",
+       "C++20",
+       "`for (int i = 0; auto x : v)`"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Widoki (`views::filter`, `views::transform`) są leniwe — nie kopiują danych, ale odwołują się do oryginału. Nie zwracaj widoku zbudowanego na lokalnym vectorze z funkcji (wisząca referencja) i nie modyfikuj rozmiaru kontenera podczas przechodzenia po widoku."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "auto [a, b, ...] = obj;",
+     "desc": "C++17: rozpakowanie pary/krotki/array/struktury",
+     "complexity": "—"
+    },
+    {
+     "sig": "if (init; warunek) { ... }",
+     "desc": "C++17: if z instrukcją inicjalizującą (też switch)",
+     "complexity": "—"
+    },
+    {
+     "sig": "c.contains(x)",
+     "desc": "C++20: czy klucz/element jest w set/map/unordered_*",
+     "complexity": "O(log n) / średnio O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "erase(c, x) / erase_if(c, pred)",
+     "desc": "C++20: usuwanie elementów z kontenera",
+     "complexity": "O(n)",
+     "returns": "liczba usuniętych"
+    },
+    {
+     "sig": "s.starts_with(t) / s.ends_with(t)",
+     "desc": "C++20: prefiks/sufiks napisu",
+     "complexity": "O(|t|)",
+     "returns": "bool"
+    },
+    {
+     "sig": "ranges::sort(v) / ranges::max(v) / ranges::find(v, x)",
+     "desc": "C++20: algorytmy na całych kontenerach",
+     "complexity": "jak odpowiedniki z <algorithm>"
+    },
+    {
+     "sig": "views::iota(a, b)",
+     "desc": "C++20: leniwy zakres liczb a, a+1, …, b−1",
+     "complexity": "O(1) na element"
+    },
+    {
+     "sig": "v | views::reverse / views::filter(p) / views::transform(f)",
+     "desc": "C++20: widoki na kontenerze (bez kopiowania)",
+     "complexity": "O(1) na element"
+    },
+    {
+     "sig": "ssize(c)",
+     "desc": "C++20: rozmiar jako liczba ze znakiem (ptrdiff_t)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "numbers::pi",
+     "desc": "C++20: stała π (double) z <numbers>",
+     "complexity": "—"
+    },
+    {
+     "sig": "midpoint(a, b)",
+     "desc": "C++20: środek bez przepełnienia (a + (b − a) / 2 dla liczb całkowitych)",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Funkcje C++20 (`contains`, `ranges`, `erase_if`, `<=>`) nie skompilują się z `-std=c++17` — sprawdź standard na sprawdzarce.",
+    "`views::filter` na danych, które zmieniasz w trakcie iteracji, może dać zaskakujące wyniki — widoki są leniwe.",
+    "`views::iota(0, n)` z mieszanymi typami (`int` i `size_t`, np. `views::iota(0, v.size())`) może się nie skompilować — rzutuj: `views::iota(0, (int)v.size())`.",
+    "`contains` dla `string` (szukanie podnapisu) jest dopiero w C++23 — w C++20 użyj `s.find(t) != string::npos`.",
+    "Structured bindings z `auto` tworzą kopie — do modyfikacji użyj `auto&`.",
+    "Zmienna z `if (auto it = ...; ...)` nie jest widoczna za blokiem if/else."
+   ],
+   "qa": [
+    {
+     "q": [
+      "co nowego w c++20",
+      "c++20 przydatne funkcje",
+      "c++20 na olimpiadzie",
+      "c++20 features competitive programming"
+     ],
+     "a": "Najprzydatniejsze w zadaniach: `contains()` w set/map, `erase_if`, `starts_with`/`ends_with`, algorytmy `ranges::` (bez `begin/end`), widoki `views::iota`/`views::reverse`, `operator<=> = default` dla struktur, `ssize()`, `<bit>` (popcount, bit_width) i designated initializers. Kompilacja: `g++ -std=c++20`.",
+     "code": "set<int> s = {1, 5};\nvector<int> v = {3, 1, 2};\nranges::sort(v);\ncout << s.contains(5) << ' ' << v[0] << ' ' << ssize(v) << '\\n';   // 1 1 3"
+    },
+    {
+     "q": [
+      "structured bindings c++17",
+      "auto [a, b]",
+      "rozpakowanie pary c++",
+      "auto [key, value] map"
+     ],
+     "a": "`auto [a, b] = para;` rozpakowuje parę, krotkę, `array` lub prostą strukturę na nazwane zmienne (C++17). W pętli po mapie: `for (auto& [klucz, wartosc] : m)`. Z `auto&` dostajesz referencje (modyfikacja oryginału), z `auto` — kopie.",
+     "code": "pair<int, string> p = {7, \"siedem\"};\nauto [liczba, slowo] = p;\narray<int, 3> t = {1, 2, 3};\nauto& [x, y, z] = t;\nz = 30;\ncout << liczba << slowo << ' ' << t[2] << '\\n';   // 7siedem 30"
+    },
+    {
+     "q": [
+      "if z inicjalizacją",
+      "if init statement",
+      "if (auto it = m.find",
+      "c++17 if with initializer"
+     ],
+     "a": "C++17 pozwala zadeklarować zmienną w nagłówku `if`: `if (auto it = m.find(k); it != m.end()) { ... }`. Zmienna istnieje tylko w if/else, więc nie zaśmieca zasięgu i nie trzeba wymyślać nowych nazw (`it2`, `it3`).",
+     "code": "map<int, int> m = {{1, 10}, {2, 20}};\nif (auto it = m.find(2); it != m.end()) cout << it->second << '\\n';   // 20\nelse cout << \"brak\\n\";\nif (auto it = m.find(5); it == m.end()) cout << \"brak 5\\n\";"
+    },
+    {
+     "q": [
+      "contains c++",
+      "map contains",
+      "set contains c++20",
+      "contains nie działa",
+      "has no member named contains"
+     ],
+     "a": "`s.contains(x)` / `m.contains(k)` (C++20) zwraca `bool` — czytelniej niż `count`. Błąd *has no member named 'contains'* oznacza kompilację w starszym standardzie (dodaj `-std=c++20`) albo próbę użycia na typie, który tej metody nie ma (`vector` nie ma; `string::contains` jest od C++23).",
+     "code": "map<string, int> m = {{\"a\", 1}};\nunordered_set<int> u = {4};\ncout << m.contains(\"a\") << u.contains(5) << '\\n';   // 10"
+    },
+    {
+     "q": [
+      "ranges c++20",
+      "std::ranges",
+      "ranges::sort",
+      "algorytmy bez begin end",
+      "ranges podstawy"
+     ],
+     "a": "W przestrzeni `std::ranges` są wersje algorytmów przyjmujące cały kontener: `ranges::sort(v)`, `ranges::reverse(v)`, `ranges::max(v)`, `ranges::count(v, x)`, `ranges::lower_bound(v, x)`. Dodatkowo obsługują projekcje: `ranges::sort(v, {}, &P::y)` sortuje po polu y.",
+     "code": "struct P { int x, y; };\nvector<P> v = {{1, 9}, {2, 3}, {3, 6}};\nranges::sort(v, {}, &P::y);\nauto it = ranges::max_element(v, {}, &P::x);\ncout << v[0].x << ' ' << it->x << '\\n';   // 2 3"
+    },
+    {
+     "q": [
+      "views iota",
+      "for i in range c++",
+      "views::iota",
+      "pętla jak w pythonie range",
+      "c++20 range loop"
+     ],
+     "a": "`for (int i : views::iota(0, n))` przechodzi i = 0..n−1 jak `range(n)` w Pythonie. Oba argumenty powinny mieć ten sam typ (`views::iota(0, (int)v.size())`). Widok jest leniwy — nie tworzy tablicy.",
+     "code": "int n = 4;\nlong long s = 0;\nfor (int i : views::iota(0, n)) s += i;\nfor (int i : views::iota(1, 4) | views::reverse) cout << i;   // 321\ncout << ' ' << s << '\\n';                                      // 6"
+    },
+    {
+     "q": [
+      "views reverse",
+      "iteracja od końca c++20",
+      "views::filter",
+      "views::transform",
+      "widoki c++"
+     ],
+     "a": "Widoki łączy się operatorem `|`: `v | views::reverse` (od końca), `v | views::filter(pred)` (tylko spełniające warunek), `v | views::transform(f)` (przekształcone wartości). Nic nie jest kopiowane — elementy liczone są „w locie” podczas iteracji.",
+     "code": "vector<int> v = {1, 2, 3, 4, 5, 6};\nfor (int x : v | views::filter([](int x) { return x % 2; }) | views::transform([](int x) { return x * x; }))\n    cout << x << ' ';   // 1 9 25\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "ssize c++20",
+      "rozmiar ze znakiem",
+      "ssize zamiast size",
+      "signed size vector"
+     ],
+     "a": "`ssize(v)` (C++20) zwraca rozmiar jako liczbę ze znakiem (`ptrdiff_t`). Dzięki temu `ssize(v) - 1` dla pustego vectora daje −1, a nie ogromną liczbę, i znikają ostrzeżenia o porównaniu `int` z `size_t`.",
+     "code": "vector<int> v;\nfor (int i = 0; i < ssize(v) - 1; i++) cout << i;   // brak iteracji, bez zawijania\ncout << ssize(v) - 1 << '\\n';                       // -1"
+    },
+    {
+     "q": [
+      "ctad",
+      "vector v = {1,2,3} bez typu",
+      "dedukcja argumentów szablonu klasy",
+      "pair p(1, 2) bez typów"
+     ],
+     "a": "C++17 dedukuje parametry szablonu klasy z konstruktora: `vector v = {1, 2, 3};` to `vector<int>`, `pair p(1, 2.5);` to `pair<int, double>`. Uważaj na typy: `vector v = {1, 2};` to `vector<int>`, nawet jeśli potem chcesz wkładać `long long`.",
+     "code": "vector v = {1, 2, 3};          // vector<int>\npair p(5, 2.5);                // pair<int, double>\ntuple t(1, 'a', 2.0);          // tuple<int, char, double>\ncout << v.size() << ' ' << p.second << ' ' << get<1>(t) << '\\n';   // 3 2.5 a"
+    },
+    {
+     "q": [
+      "numbers pi",
+      "pi w c++",
+      "stała pi c++20",
+      "acos(-1) pi",
+      "M_PI c++"
+     ],
+     "a": "W C++20 `numbers::pi` (nagłówek `<numbers>`, zawarty w `bits/stdc++.h`) to π jako `double`. Wcześniej używano `acos(-1.0)` albo `M_PI` (niestandardowe makro, nie zawsze dostępne).",
+     "code": "double r = 2.0;\ncout << fixed << setprecision(6) << numbers::pi * r * r << ' ' << acos(-1.0) << '\\n';   // 12.566371 3.141593"
+    },
+    {
+     "q": [
+      "midpoint c++",
+      "środek przedziału bez przepełnienia",
+      "(l + r) / 2 overflow",
+      "binsearch mid overflow"
+     ],
+     "a": "`(l + r) / 2` może przepełnić `int`, gdy l + r > 2^31 − 1. Bezpiecznie: `l + (r - l) / 2` albo C++20 `midpoint(l, r)` (zaokrągla w stronę l). Alternatywnie licz w `long long`.",
+     "code": "int l = 2000000000, r = 2100000000;\nint m1 = l + (r - l) / 2;\nint m2 = midpoint(l, r);\ncout << m1 << ' ' << m2 << '\\n';   // 2050000000 2050000000"
+    },
+    {
+     "q": [
+      "jaki standard c++ na olimpiadzie",
+      "c++17 czy c++20",
+      "-std=c++20",
+      "który standard wybrać"
+     ],
+     "a": "Najwygodniej pisać w C++20 (OI Forge kompiluje z `-std=c++20`), ale na zawodach liczy się standard ustawiony na sprawdzarce — sprawdź go w regulaminie/komunikatach. Jeśli dostępny jest tylko C++17, zastąp `contains` przez `count`, `erase_if` przez erase–remove, a `ranges::sort(v)` przez `sort(v.begin(), v.end())`.",
+     "code": "set<int> s = {3};\nbool c17 = s.count(3) > 0;               // działa w C++17\nvector<int> v = {4, 0, 5};\nv.erase(remove(v.begin(), v.end(), 0), v.end());   // zamiast erase(v, 0)\ncout << c17 << ' ' << v.size() << '\\n';  // 1 2"
+    }
+   ],
+   "related": [
+    "cpp-auto-range-for",
+    "cpp-struct",
+    "stl-map",
+    "stl-remove-erase",
+    "stl-builtin-bits",
+    "stl-pair",
+    "cpp-ref-utility-optional",
+    "stl-ref-ranges"
+   ]
+  },
+  {
+   "id": "cpp-pbds-ordered-set",
+   "title": "ordered_set z pb_ds (tree): k-ty element i pozycja w O(log n)",
+   "category": "C++ język",
+   "tags": [
+    "pb_ds",
+    "ordered_set",
+    "tree",
+    "find_by_order",
+    "order_of_key",
+    "statystyki pozycyjne",
+    "gnu_pbds",
+    "inwersje"
+   ],
+   "aliases": [
+    "ordered_set",
+    "ordered set c++",
+    "pb_ds",
+    "pbds",
+    "find_by_order",
+    "order_of_key",
+    "tree gnu_pbds",
+    "k-ty element seta",
+    "indeks elementu w secie",
+    "policy based data structures"
+   ],
+   "summary": "Rozszerzenie GCC (`__gnu_pbds::tree`) działające jak `set` z dwiema dodatkowymi operacjami w O(log n): `find_by_order(k)` — k-ty najmniejszy element, `order_of_key(x)` — liczba elementów mniejszych od x.",
+   "complexity": "insert, erase, find, find_by_order, order_of_key, lower_bound: O(log n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Zwykły `set` nie potrafi szybko odpowiedzieć „jaki jest k-ty element?” ani „ile elementów jest < x?” (wymagałoby to O(n)). Drzewo z pb_ds z polityką `tree_order_statistics_node_update` przechowuje w węzłach rozmiary poddrzew i robi to w O(log n). To rozszerzenie **tylko GCC** — działa z g++ na OI, nie działa w MSVC."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "ordered_set — podstawy",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\n\ntemplate<class T>\nusing ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;\n\nint main() {\n    ordered_set<int> s;\n    for (int x : {10, 40, 20, 30}) s.insert(x);       // {10, 20, 30, 40}\n\n    cout << *s.find_by_order(0) << ' ' << *s.find_by_order(2) << '\\n';   // 10 30 (k od 0)\n    cout << s.order_of_key(25) << ' ' << s.order_of_key(30) << '\\n';     // 2 2 (ile < x)\n    cout << (s.find_by_order(10) == s.end()) << '\\n';                    // 1 — k poza zakresem\n\n    s.erase(20);\n    cout << s.order_of_key(40) << ' ' << s.size() << '\\n';               // 2 3\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Znaczenie"
+     ],
+     "rows": [
+      [
+       "`s.insert(x)`, `s.erase(x)`",
+       "O(log n)",
+       "jak w set (bez duplikatów)"
+      ],
+      [
+       "`s.find_by_order(k)`",
+       "O(log n)",
+       "iterator na k-ty najmniejszy (od 0) albo `end()`"
+      ],
+      [
+       "`s.order_of_key(x)`",
+       "O(log n)",
+       "liczba elementów **ściśle mniejszych** od x"
+      ],
+      [
+       "`s.lower_bound(x)`, `s.upper_bound(x)`",
+       "O(log n)",
+       "jak w set"
+      ],
+      [
+       "`s.find(x)`, `s.size()`",
+       "O(log n), O(1)",
+       ""
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Duplikaty.** Najbezpieczniejszy multiset na pb_ds to `ordered_set<pair<int, int>>` z parami `(wartość, unikalny_id)` — wtedy „ile elementów < x” to `order_of_key({x, INT_MIN})` (dla id ≥ 0 można też `{x, -1}`). Trik z komparatorem `less_equal<T>` działa częściowo, ale psuje `find`, `erase(x)` i znaczenie `lower_bound`/`upper_bound` — lepiej go unikać."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Multiset przez pary (wartość, id) — liczenie inwersji",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\n\nusing ordered_multiset = tree<pair<int, int>, null_type, less<pair<int, int>>, rb_tree_tag, tree_order_statistics_node_update>;\n\n// liczba inwersji w O(n log n): dla każdego elementu — ile wcześniejszych jest od niego większych\nint main() {\n    vector<int> a = {3, 1, 2, 3, 1};\n    ordered_multiset s;\n    long long inw = 0;\n    for (int i = 0; i < (int)a.size(); i++) {\n        inw += i - (long long)s.order_of_key({a[i], INT_MAX});   // wcześniejsze > a[i] = wszystkie − (≤ a[i])\n        s.insert({a[i], i});\n    }\n    cout << inw << '\\n';   // 5\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Stała pb_ds jest kilka razy większa niż zwykłego `set`, a zużycie pamięci — wyższe. Dla n ≈ 10^6 operacji to zwykle jeszcze OK, ale jeśli wystarczy drzewo Fenwicka po kompresji współrzędnych, będzie ono wyraźnie szybsze."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "#include <ext/pb_ds/assoc_container.hpp>, <ext/pb_ds/tree_policy.hpp>",
+     "desc": "wymagane nagłówki (nie ma ich w bits/stdc++.h)",
+     "complexity": "—"
+    },
+    {
+     "sig": "using namespace __gnu_pbds;",
+     "desc": "przestrzeń nazw pb_ds",
+     "complexity": "—"
+    },
+    {
+     "sig": "tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>",
+     "desc": "ordered_set elementów T",
+     "complexity": "—"
+    },
+    {
+     "sig": "tree<K, V, less<K>, rb_tree_tag, tree_order_statistics_node_update>",
+     "desc": "ordered_map (klucz → wartość, z it->second)",
+     "complexity": "—"
+    },
+    {
+     "sig": "s.find_by_order(k)",
+     "desc": "iterator na k-ty najmniejszy element (k od 0); end() gdy k ≥ size",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "s.order_of_key(x)",
+     "desc": "liczba elementów < x (x nie musi należeć do zbioru)",
+     "complexity": "O(log n)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "s.insert(x) / s.erase(x) / s.erase(it)",
+     "desc": "wstawianie / usuwanie",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "s.lower_bound(x) / s.upper_bound(x) / s.find(x)",
+     "desc": "jak w std::set",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "s.size() / s.empty() / s.clear()",
+     "desc": "rozmiar / czy pusty / czyszczenie",
+     "complexity": "O(1) / O(1) / O(n)"
+    },
+    {
+     "sig": "a.join(b) / a.split(x, b)",
+     "desc": "łączenie drzew / podział wg klucza (zaawansowane)",
+     "complexity": "O(log n) — przy spełnionych warunkach"
+    }
+   ],
+   "pitfalls": [
+    "Nagłówki pb_ds trzeba dołączyć osobno — `bits/stdc++.h` ich nie zawiera.",
+    "`order_of_key(x)` liczy elementy ŚCIŚLE mniejsze od x; liczba ≤ x to `order_of_key(x + 1)` dla liczb całkowitych.",
+    "`find_by_order(k)` z k ≥ size zwraca `end()` — dereferencja to UB.",
+    "`tree` z `less<T>` nie przechowuje duplikatów — multiset rób przez pary (wartość, id), nie przez `less_equal`.",
+    "Z `less_equal<T>` przestają poprawnie działać `find`, `erase(x)` i `lower_bound`/`upper_bound` (zamieniają znaczenie).",
+    "To rozszerzenie GCC — nie skompiluje się w MSVC; w Apple clang (libc++) również nie jest dostępne.",
+    "Indeks k jest od 0 — mediana zbioru rozmiaru n to `find_by_order((n - 1) / 2)` (dolna)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "ordered_set c++",
+      "jak użyć ordered set",
+      "pb_ds ordered set",
+      "tree gnu pbds",
+      "policy based data structure c++"
+     ],
+     "a": "Dołącz nagłówki pb_ds i zdefiniuj alias `tree<int, null_type, less<int>, rb_tree_tag, tree_order_statistics_node_update>`. Działa jak `set`, a dodatkowo `find_by_order(k)` zwraca k-ty element (od 0), a `order_of_key(x)` — liczbę elementów < x. Wszystko O(log n).",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\ntypedef tree<int, null_type, less<int>, rb_tree_tag, tree_order_statistics_node_update> ordered_set;\nint main() {\n    ordered_set s;\n    s.insert(7); s.insert(3); s.insert(9);\n    cout << *s.find_by_order(1) << ' ' << s.order_of_key(8) << '\\n';   // 7 2\n}"
+    },
+    {
+     "q": [
+      "k-ty element seta",
+      "k-ty najmniejszy w zbiorze dynamicznym",
+      "find_by_order",
+      "kth element in set c++"
+     ],
+     "a": "W zwykłym `set` k-ty element to `*next(s.begin(), k)` — O(k). W ordered_set: `*s.find_by_order(k)` w O(log n) (k od 0). Sprawdź `k < s.size()`, bo inaczej dostaniesz `end()`.",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\ntemplate<class T> using oset = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;\nint main() {\n    oset<int> s;\n    for (int x : {50, 10, 30}) s.insert(x);\n    int k = 2;\n    if (k < (int)s.size()) cout << *s.find_by_order(k) << '\\n';   // 50\n}"
+    },
+    {
+     "q": [
+      "order_of_key",
+      "ile elementów mniejszych od x w secie",
+      "pozycja elementu w secie",
+      "rank of element set c++",
+      "indeks w posortowanym zbiorze"
+     ],
+     "a": "`s.order_of_key(x)` zwraca liczbę elementów ściśle mniejszych od x — dla x należącego do zbioru to jego indeks (od 0). x nie musi być w zbiorze. Liczba elementów ≤ x (dla intów) to `order_of_key(x + 1)`. O(log n).",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\ntemplate<class T> using oset = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;\nint main() {\n    oset<int> s;\n    for (int x : {2, 4, 6, 8}) s.insert(x);\n    cout << s.order_of_key(6) << ' ' << s.order_of_key(5) << ' ' << s.order_of_key(6 + 1) << '\\n';   // 2 2 3\n}"
+    },
+    {
+     "q": [
+      "ordered multiset",
+      "ordered_set z duplikatami",
+      "pb_ds multiset",
+      "less_equal ordered set"
+     ],
+     "a": "`tree` z `less<T>` odrzuca duplikaty. Najpewniejszy multiset: przechowuj pary `(wartość, unikalny_id)`. Usuwanie konkretnej kopii — `erase({w, id})`; liczba elementów < x — `order_of_key({x, INT_MIN})`. Trik z `less_equal<T>` psuje `find`/`erase` i odwraca sens `lower_bound`/`upper_bound`.",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\nusing P = pair<int, int>;\ntree<P, null_type, less<P>, rb_tree_tag, tree_order_statistics_node_update> ms;\nint main() {\n    int id = 0;\n    for (int x : {5, 5, 3}) ms.insert({x, id++});\n    cout << ms.size() << ' ' << ms.order_of_key({5, INT_MIN}) << '\\n';   // 3 1\n    ms.erase(ms.lower_bound({5, INT_MIN}));                               // usuń jedną piątkę\n    cout << ms.size() << '\\n';                                            // 2\n}"
+    },
+    {
+     "q": [
+      "inwersje ordered set",
+      "liczba inwersji pbds",
+      "count inversions ordered_set"
+     ],
+     "a": "Idź od lewej; przed wstawieniem a[i] liczba wcześniejszych elementów większych od a[i] to `i - order_of_key(a[i] + 1)` (dla intów bez duplikatów w drzewie — przy duplikatach użyj par). Suma po i daje liczbę inwersji w O(n log n).",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\nint main() {\n    vector<int> a = {4, 1, 3, 2};    // różne wartości\n    tree<int, null_type, less<int>, rb_tree_tag, tree_order_statistics_node_update> s;\n    long long inw = 0;\n    for (int i = 0; i < (int)a.size(); i++) {\n        inw += i - s.order_of_key(a[i] + 1);\n        s.insert(a[i]);\n    }\n    cout << inw << '\\n';   // 4\n}"
+    },
+    {
+     "q": [
+      "mediana dynamiczna ordered set",
+      "mediana przy wstawianiu ordered_set",
+      "running median pbds"
+     ],
+     "a": "Po każdym wstawieniu mediana (dolna) to `*s.find_by_order((s.size() - 1) / 2)` — O(log n). Przy powtórzeniach trzymaj pary (wartość, id).",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\nint main() {\n    tree<pair<int, int>, null_type, less<pair<int, int>>, rb_tree_tag, tree_order_statistics_node_update> s;\n    vector<int> a = {5, 2, 8, 2};\n    for (int i = 0; i < (int)a.size(); i++) {\n        s.insert({a[i], i});\n        cout << s.find_by_order((s.size() - 1) / 2)->first << ' ';   // 5 2 5 2\n    }\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "ordered map pbds",
+      "tree z wartością",
+      "ordered_map c++",
+      "pb_ds map find_by_order"
+     ],
+     "a": "Podaj typ wartości zamiast `null_type`: `tree<K, V, less<K>, rb_tree_tag, tree_order_statistics_node_update>`. Działa `m[k]`, a `find_by_order(k)` zwraca iterator na parę (`->first`, `->second`).",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\nint main() {\n    tree<string, int, less<string>, rb_tree_tag, tree_order_statistics_node_update> m;\n    m[\"kot\"] = 3; m[\"ala\"] = 1; m[\"pies\"] = 2;\n    auto it = m.find_by_order(1);\n    cout << it->first << ' ' << it->second << ' ' << m.order_of_key(\"pies\") << '\\n';   // kot 3 2\n}"
+    },
+    {
+     "q": [
+      "ordered set czy fenwick",
+      "pbds wolne",
+      "kiedy fenwick zamiast ordered set",
+      "ordered_set tle"
+     ],
+     "a": "ordered_set jest wygodny (działa online, dowolne wartości), ale ma dużą stałą. Jeśli wszystkie wartości znasz z góry (offline), skompresuj je i użyj drzewa Fenwicka: „ile < x” to suma prefiksowa, k-ty element — zejście po drzewie. Zwykle 3–5× szybciej i mniej pamięci.",
+     "code": "// Fenwick po kompresji: liczba wcześniejszych elementów < a[i]\nvector<int> a = {30, 10, 20};\nvector<int> xs = a;\nsort(xs.begin(), xs.end());\nint m = xs.size();\nvector<int> fw(m + 1, 0);\nauto add = [&](int i) { for (i++; i <= m; i += i & -i) fw[i]++; };\nauto sum = [&](int i) { int s = 0; for (; i > 0; i -= i & -i) s += fw[i]; return s; };   // elementy o indeksie < i\nfor (int x : a) {\n    int id = lower_bound(xs.begin(), xs.end(), x) - xs.begin();\n    cout << sum(id) << ' ';   // 0 0 1\n    add(id);\n}\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "stl-set",
+    "stl-multiset",
+    "ds-fenwick",
+    "stl-iterators",
+    "cpp-bits-stdcpp",
+    "ds-ordered-set",
+    "ds-fenwick-kth",
+    "stl-ref-set-all",
+    "tech-josephus",
+    "tech-median-stream"
+   ]
+  },
+  {
+   "id": "cpp-std-function",
+   "title": "std::function vs lambda (auto) — kiedy co wybrać",
+   "category": "C++ język",
+   "tags": [
+    "std::function",
+    "lambda",
+    "funkcja jako argument",
+    "type erasure",
+    "rekurencja",
+    "wydajność"
+   ],
+   "aliases": [
+    "std::function",
+    "function c++",
+    "std function vs lambda",
+    "function<void(int)>",
+    "przekazanie funkcji jako argumentu",
+    "lambda jako parametr",
+    "bad_function_call"
+   ],
+   "summary": "`std::function<R(Args...)>` to obiekt mogący przechować dowolną funkcję o danej sygnaturze (lambdę, wskaźnik, funktor). Wygodny, ale wolniejszy od lambdy przechowywanej w `auto`. Kiedy używać którego i jak przekazywać funkcje do funkcji.",
+   "complexity": "wywołanie przez std::function: pośrednie (zwykle bez inline'owania); lambda w auto / szablon: bezpośrednie",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Każda lambda ma własny, unikalny typ (stąd `auto`). `std::function<int(int)>` „ukrywa” ten typ (type erasure): w jednej zmiennej można trzymać różne lambdy, wkładać je do vectora, odwoływać się do zmiennej wewnątrz jej własnej lambdy (rekurencja). Cena: wywołanie idzie przez wskaźnik, kompilator zwykle nie może go wkleić, a duże przechwycenia mogą wymagać alokacji."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szablon, std::function i vector funkcji",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// funkcja przyjmująca dowolną funkcję: szablon (szybko) vs std::function (elastycznie)\ntemplate<class F>\nlong long suma_szablon(int n, F f) { long long s = 0; for (int i = 0; i < n; i++) s += f(i); return s; }\nlong long suma_function(int n, const function<long long(int)>& f) { long long s = 0; for (int i = 0; i < n; i++) s += f(i); return s; }\n\nint main() {\n    auto kw = [](int x) -> long long { return 1LL * x * x; };\n    cout << suma_szablon(1000, kw) << ' ' << suma_function(1000, kw) << '\\n';   // 332833500 332833500\n\n    vector<function<int(int)>> ops = {\n        [](int x) { return x + 1; },\n        [](int x) { return x * 2; },\n    };\n    int v = 5;\n    for (auto& op : ops) v = op(v);\n    cout << v << '\\n';                                                          // 12\n\n    function<int(int)> pusta;\n    cout << (pusta ? \"ma funkcje\" : \"pusta\") << '\\n';                           // pusta\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Cecha",
+      "lambda w `auto`",
+      "`std::function`"
+     ],
+     "rows": [
+      [
+       "szybkość wywołania",
+       "jak zwykła funkcja (inline)",
+       "pośrednie, zwykle wolniejsze"
+      ],
+      [
+       "rekurencja",
+       "przez `auto&& self`",
+       "bezpośrednio przez nazwę zmiennej"
+      ],
+      [
+       "różne lambdy w jednej zmiennej / vectorze",
+       "nie",
+       "tak"
+      ],
+      [
+       "może być pusta",
+       "nie",
+       "tak (wywołanie pustej → wyjątek `bad_function_call`)"
+      ],
+      [
+       "parametr funkcji",
+       "szablon `template<class F>` / `auto f`",
+       "`const function<...>&`"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Do DFS w `main` oba sposoby są w porządku przy n ≤ 10^5. Przy milionach wywołań (głęboka rekurencja, memoizacja na dużych stanach) wybierz lambdę z `auto&& self` albo zwykłą funkcję globalną."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "function<R(Args...)> f = lambda;",
+     "desc": "obiekt przechowujący dowolną funkcję o sygnaturze R(Args...)",
+     "complexity": "—"
+    },
+    {
+     "sig": "f(args...)",
+     "desc": "wywołanie (pośrednie)",
+     "complexity": "O(1) + narzut"
+    },
+    {
+     "sig": "if (f)",
+     "desc": "czy f zawiera funkcję",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "template<class F> void g(F f)",
+     "desc": "przyjęcie funkcji przez szablon (szybkie, typ znany kompilatorowi)",
+     "complexity": "—"
+    },
+    {
+     "sig": "void g(auto f)",
+     "desc": "C++20: to samo krócej",
+     "complexity": "—"
+    },
+    {
+     "sig": "function<void(int)> dfs = [&](int v) { ... dfs(u); };",
+     "desc": "rekurencja przez nazwę zmiennej",
+     "complexity": "wolniejsza od auto self"
+    }
+   ],
+   "pitfalls": [
+    "Wywołanie pustego `std::function` rzuca `bad_function_call` (RE) — sprawdź `if (f)`.",
+    "`std::function` jest wolniejsze od lambdy w `auto` — w gorących pętlach i bardzo głębokiej rekurencji to może mieć znaczenie.",
+    "Lambda zapisana w `std::function` z przechwyceniem `[&]` nie może przeżyć zmiennych, do których się odwołuje.",
+    "Przekazywanie `std::function` przez wartość kopiuje obiekt (i ewentualnie przechwycone dane) — używaj `const function<...>&`.",
+    "Sygnatura musi się zgadzać: `function<int(int)>` nie przyjmie lambdy wymagającej dwóch argumentów."
+   ],
+   "qa": [
+    {
+     "q": [
+      "std::function c++",
+      "co to std::function",
+      "function<void(int)>",
+      "jak używać std::function"
+     ],
+     "a": "`std::function<R(Args...)>` przechowuje dowolną funkcję o danej sygnaturze, np. `function<int(int, int)> f = [](int a, int b) { return a + b; };`. Przydaje się do rekurencyjnych lambd, tablic funkcji i parametrów przyjmujących „jakąkolwiek” funkcję.",
+     "code": "function<int(int, int)> op = [](int a, int b) { return a + b; };\ncout << op(2, 3) << ' ';      // 5\nop = [](int a, int b) { return a * b; };\ncout << op(2, 3) << '\\n';     // 6"
+    },
+    {
+     "q": [
+      "std::function vs lambda",
+      "function czy auto",
+      "czy std::function jest wolne",
+      "lambda auto czy function"
+     ],
+     "a": "Lambda w zmiennej `auto` ma typ znany kompilatorowi — wywołanie jest bezpośrednie i zwykle wklejane (inline). `std::function` dodaje pośrednie wywołanie i blokuje optymalizacje. Używaj `auto`, gdy możesz; `std::function` — gdy potrzebujesz rekurencji przez nazwę, pustej wartości albo trzymania różnych funkcji w jednej zmiennej.",
+     "code": "auto szybka = [](int x) { return x * 3; };\nfunction<int(int)> wolniejsza = szybka;\nlong long s1 = 0, s2 = 0;\nfor (int i = 0; i < 1000; i++) { s1 += szybka(i); s2 += wolniejsza(i); }\ncout << (s1 == s2) << '\\n';   // 1 — ten sam wynik, różna wydajność"
+    },
+    {
+     "q": [
+      "przekazanie funkcji jako argumentu",
+      "funkcja jako parametr c++",
+      "lambda jako argument funkcji",
+      "pass lambda to function c++"
+     ],
+     "a": "Najszybciej przez szablon: `template<class F> void g(F f)` (lub w C++20 `void g(auto f)`) — kompilator zna typ lambdy. Prościej w zapisie, ale wolniej: `void g(const function<int(int)>& f)`. Zwykłą funkcję można też przekazać wskaźnikiem `int (*f)(int)`.",
+     "code": "template<class F>\nint zastosuj_dwa_razy(F f, int x) { return f(f(x)); }\nint podwoj(int x) { return 2 * x; }\nint main() {\n    cout << zastosuj_dwa_razy([](int x) { return x + 3; }, 1) << ' '   // 7\n         << zastosuj_dwa_razy(podwoj, 5) << '\\n';                      // 20\n}"
+    },
+    {
+     "q": [
+      "bad_function_call",
+      "terminate called after throwing bad_function_call",
+      "pusta std::function"
+     ],
+     "a": "Wyjątek `bad_function_call` oznacza wywołanie `std::function`, do której nic nie przypisano (np. zadeklarowałeś `function<void(int)> dfs;`, a przypisanie lambdy jest później lub w innym bloku). Przypisz funkcję przed pierwszym wywołaniem i/lub sprawdzaj `if (f)`.",
+     "code": "function<int(int)> f;\nif (!f) cout << \"pusta\\n\";\nf = [](int x) { return x + 1; };\nif (f) cout << f(41) << '\\n';   // 42"
+    },
+    {
+     "q": [
+      "rekurencja std::function",
+      "dfs function<void(int)>",
+      "rekurencyjna lambda function",
+      "function recursive lambda"
+     ],
+     "a": "`function<void(int)> dfs = [&](int v) { ... dfs(u); };` — lambda przechwytuje przez referencję zmienną `dfs`, która w chwili wywołania jest już zainicjalizowana. Działa, ale każde wywołanie jest pośrednie. Szybsza alternatywa: `auto dfs = [&](auto&& self, int v) -> void { ... };`.",
+     "code": "vector<vector<int>> g = {{1, 2}, {3}, {}, {}};\nvector<int> rozmiar(4, 1);\nfunction<void(int)> dfs = [&](int v) {\n    for (int u : g[v]) { dfs(u); rozmiar[v] += rozmiar[u]; }\n};\ndfs(0);\ncout << rozmiar[0] << ' ' << rozmiar[1] << '\\n';   // 4 2"
+    },
+    {
+     "q": [
+      "vector funkcji",
+      "tablica lambd",
+      "vector<function>",
+      "lista operacji jako funkcje"
+     ],
+     "a": "Różne lambdy mają różne typy, więc do jednego vectora trzeba je opakować: `vector<function<int(int)>> ops`. Przydatne np. do symulacji z listą operacji albo testowania kilku wariantów rozwiązania.",
+     "code": "vector<function<long long(long long)>> kroki = {\n    [](long long x) { return x + 5; },\n    [](long long x) { return x * x; },\n    [](long long x) { return x - 1; },\n};\nlong long v = 1;\nfor (auto& k : kroki) v = k(v);\ncout << v << '\\n';   // 35"
+    },
+    {
+     "q": [
+      "memoizacja lambda function",
+      "dp z memoizacją w lambdzie",
+      "rekurencyjne dp lambda"
+     ],
+     "a": "Do DP z memoizacją w `main` możesz użyć lambdy z `auto&& self` (szybciej) albo `std::function`. Tablicę wyników trzymaj na zewnątrz lambdy (przechwycenie `[&]`), z wartością „nie policzone” (np. −1).",
+     "code": "int n = 40;\nvector<long long> memo(n + 1, -1);\nauto fib = [&](auto&& self, int k) -> long long {\n    if (k < 2) return k;\n    if (memo[k] != -1) return memo[k];\n    return memo[k] = self(self, k - 1) + self(self, k - 2);\n};\ncout << fib(fib, n) << '\\n';   // 102334155"
+    }
+   ],
+   "related": [
+    "cpp-lambdas",
+    "cpp-templates",
+    "cpp-stack-overflow",
+    "dp-intro",
+    "stl-ref-functional-iterator"
+   ]
+  }
+ ]
+}

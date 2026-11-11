@@ -1,0 +1,10 @@
+n = int(input())
+a = list(map(float, input().split()))
+avg = sum(a) / n
+print(avg)
+print(round(avg, 2))
+print(round(2.5), round(3.5), round(-0.5))
+print(max(a) - min(a))
+print(n / 2, n // 2, 7 / 7)
+print(1e-5, 123456789.0 * 1000000000, 0.1 + 0.2)
+print(abs(-3.5), float(n))

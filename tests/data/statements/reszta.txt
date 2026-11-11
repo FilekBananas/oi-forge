@@ -1,0 +1,21 @@
+Wydawanie reszty
+W Bajtocji używa się n rodzajów monet o nominałach c_1, ..., c_n; monet każdego rodzaju jest nieograniczenie wiele.
+Kasjer musi wydać dokładnie K bajtalarów, używając jak najmniejszej liczby monet. Ile monet musi wydać?
+Wejście
+W pierwszym wierszu znajdują się dwie liczby całkowite n oraz K (1 ≤ n ≤ 100, 1 ≤ K ≤ 100 000). W drugim wierszu
+znajduje się n różnych liczb całkowitych c_1, ..., c_n (1 ≤ c_i ≤ 100 000) — nominały monet.
+Wyjście
+Wypisz najmniejszą liczbę monet albo -1, jeśli kwoty K nie da się wydać.
+Przykład 1
+Wejście:
+3 11
+1 5 6
+Wyjście:
+2
+
+Przykład 2
+Wejście:
+2 7
+2 4
+Wyjście:
+-1

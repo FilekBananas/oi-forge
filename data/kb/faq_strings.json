@@ -1,0 +1,1125 @@
+{
+ "chunk": "faq-strings",
+ "articles": [
+  {
+   "id": "str-basic-char-ops",
+   "title": "Operacje na znakach: isdigit, isalpha, tolower, toupper (cctype)",
+   "category": "Teksty",
+   "tags": [
+    "isdigit",
+    "isalpha",
+    "isalnum",
+    "isspace",
+    "tolower",
+    "toupper",
+    "islower",
+    "isupper",
+    "cctype",
+    "znak"
+   ],
+   "aliases": [
+    "isdigit",
+    "czy znak jest cyfra",
+    "czy znak jest litera",
+    "tolower toupper",
+    "zamiana na male litery",
+    "zamiana na wielkie litery",
+    "uppercase string c++",
+    "lowercase string c++",
+    "jak sprawdzic czy char jest liczba"
+   ],
+   "summary": "Funkcje z `<cctype>`: `isdigit(c)`, `isalpha(c)`, `isalnum(c)`, `isspace(c)`, `islower(c)`, `isupper(c)` sprawdzają rodzaj znaku, a `tolower(c)` / `toupper(c)` zmieniają wielkość litery. Zwracają `int` — przy wypisywaniu rzutuj na `char`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Funkcja",
+      "Prawda dla",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "`isdigit(c)`",
+       "`'0'`–`'9'`",
+       "`isdigit('7')`"
+      ],
+      [
+       "`isalpha(c)`",
+       "litery a–z, A–Z",
+       "`isalpha('q')`"
+      ],
+      [
+       "`isalnum(c)`",
+       "litera lub cyfra",
+       "`isalnum('5')`"
+      ],
+      [
+       "`isspace(c)`",
+       "spacja, `\\t`, `\\n`, `\\r`…",
+       "`isspace(' ')`"
+      ],
+      [
+       "`islower(c)` / `isupper(c)`",
+       "mała / wielka litera",
+       "`isupper('K')`"
+      ],
+      [
+       "`tolower(c)` / `toupper(c)`",
+       "zwraca zamienioną literę (inne znaki bez zmian)",
+       "`toupper('a') == 'A'`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Przykłady",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s = \"Ala ma 2 koty!\";\n    int cyfry = 0, litery = 0;\n    for (char c : s) {\n        if (isdigit((unsigned char)c)) cyfry++;\n        if (isalpha((unsigned char)c)) litery++;\n    }\n    string male = s, wielkie = s;\n    for (char& c : male) c = tolower((unsigned char)c);\n    transform(wielkie.begin(), wielkie.end(), wielkie.begin(), [](unsigned char c) { return toupper(c); });\n    cout << cyfry << ' ' << litery << '\\n' << male << '\\n' << wielkie << '\\n';\n    cout << char(toupper('x')) << ' ' << toupper('x') << '\\n';   // X 88 (!)\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Polskie litery w UTF-8 (`ą`, `ż`…) zajmują 2 bajty — `isalpha` ich nie rozpozna, a `tolower` nie zmieni. Na OI dane\ntekstowe są zwykle w ASCII (małe litery a–z). Przekazuj do funkcji `(unsigned char)c`, bo ujemny `char` to UB."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "czy znak jest cyfra",
+      "isdigit",
+      "jak sprawdzic czy char jest liczba",
+      "check if char is digit c++"
+     ],
+     "a": "`isdigit(c)` zwraca wartość niezerową dla `'0'`…`'9'`. Bez biblioteki: `c >= '0' && c <= '9'`. Wartość cyfry to `c - '0'`.",
+     "code": "char c = '7';\nif (isdigit((unsigned char)c)) cout << \"cyfra \" << c - '0' << '\\n';\nif (c >= '0' && c <= '9') cout << \"to samo recznie\\n\";"
+    },
+    {
+     "q": [
+      "czy znak jest litera",
+      "isalpha",
+      "check if char is letter c++",
+      "litera czy nie"
+     ],
+     "a": "`isalpha(c)` — prawda dla liter angielskiego alfabetu (a–z, A–Z). Ręcznie: `(c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')`.",
+     "code": "char c = 'G';\ncout << (isalpha((unsigned char)c) ? \"litera\" : \"nie litera\") << '\\n';"
+    },
+    {
+     "q": [
+      "zamiana na male litery",
+      "tolower string",
+      "lowercase string c++",
+      "jak zamienic napis na male litery"
+     ],
+     "a": "Przejdź po znakach i zamień każdy `c = tolower(c)`. Działa dla liter ASCII; inne znaki zostają bez zmian.",
+     "code": "string s = \"OlimpiadA\";\nfor (char& c : s) c = tolower((unsigned char)c);\ncout << s << '\\n';   // olimpiada"
+    },
+    {
+     "q": [
+      "zamiana na wielkie litery",
+      "toupper string",
+      "uppercase string c++",
+      "jak zamienic na duze litery"
+     ],
+     "a": "`for (char& c : s) c = toupper((unsigned char)c);` albo `transform` z lambdą. Ręcznie dla małej litery: `c - 'a' + 'A'`\n(różnica między małą a wielką literą w ASCII to 32).",
+     "code": "string s = \"abc xyz\";\ntransform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return toupper(c); });\ncout << s << '\\n';   // ABC XYZ"
+    },
+    {
+     "q": [
+      "toupper wypisuje liczbe",
+      "cout toupper daje 65",
+      "tolower zwraca int"
+     ],
+     "a": "`toupper`/`tolower` zwracają `int`, więc `cout << toupper('a')` wypisze `65`. Rzutuj: `cout << (char)toupper(c)`\nalbo przypisz wynik do zmiennej `char`.",
+     "code": "char c = 'a';\ncout << toupper(c) << ' ' << (char)toupper(c) << '\\n';   // 65 A"
+    },
+    {
+     "q": [
+      "czy litera jest mala",
+      "islower isupper",
+      "czy znak jest wielka litera"
+     ],
+     "a": "`islower(c)` / `isupper(c)`. Ręcznie: `c >= 'a' && c <= 'z'` / `c >= 'A' && c <= 'Z'`.",
+     "code": "string s = \"AbC\";\nint wielkie = 0;\nfor (char c : s) if (isupper((unsigned char)c)) wielkie++;\ncout << wielkie << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "isspace",
+      "bialy znak c++",
+      "czy znak to spacja"
+     ],
+     "a": "`isspace(c)` — prawda dla spacji, tabulatora, `'\\n'`, `'\\r'`, `'\\v'`, `'\\f'`. Przydatne przy ręcznym parsowaniu i usuwaniu\nbiałych znaków z końca napisu.",
+     "code": "string s = \"tekst  \\r\\n\";\nwhile (!s.empty() && isspace((unsigned char)s.back())) s.pop_back();\ncout << \"[\" << s << \"]\\n\";"
+    },
+    {
+     "q": [
+      "polskie znaki c++",
+      "isalpha nie dziala dla ą",
+      "utf-8 string c++ dlugosc",
+      "polskie litery w stringu"
+     ],
+     "a": "W UTF-8 polskie litery zajmują 2 bajty, więc `s.size()` liczy bajty, a `isalpha`/`tolower` ich nie obsługują. Na OI dane są\nzwykle w ASCII. Jeśli musisz obsłużyć UTF-8, traktuj bajty ≥ 128 jako części znaków wielobajtowych (lub przetwarzaj tekst\nw Pythonie, który operuje na znakach Unicode).",
+     "code": "string s = \"żółw\";\ncout << s.size() << '\\n';   // 7 bajtów, nie 4 znaki"
+    },
+    {
+     "q": [
+      "usun znaki niebedace literami",
+      "zostaw tylko litery",
+      "filtruj string"
+     ],
+     "a": "Zbuduj nowy napis z wybranych znaków albo użyj `erase(remove_if(...))`.",
+     "code": "string s = \"A-la, ma 2 koty!\";\ns.erase(remove_if(s.begin(), s.end(), [](unsigned char c) { return !isalpha(c); }), s.end());\ncout << s << '\\n';   // Alamakoty"
+    },
+    {
+     "q": [
+      "dlaczego (unsigned char)",
+      "isalpha ujemny char",
+      "cctype undefined behavior"
+     ],
+     "a": "Funkcje z `<cctype>` przyjmują `int` z zakresu `unsigned char` (lub `EOF`). `char` z bajtem ≥ 128 (np. z polskiej litery)\nbywa ujemny i przekazanie go wprost to UB (czasem crash). Rzutowanie `(unsigned char)c` to bezpieczny nawyk."
+    }
+   ],
+   "related": [
+    "str-basic-count-letters",
+    "num-conversions",
+    "str-basic-caesar",
+    "str-ascii-table",
+    "str-case-tricks",
+    "str-signed-char",
+    "str-utf8-polish"
+   ]
+  },
+  {
+   "id": "str-basic-count-letters",
+   "title": "Zliczanie liter i znaków: int cnt[26], anagramy, najczęstsza litera",
+   "category": "Teksty",
+   "tags": [
+    "zliczanie",
+    "cnt[26]",
+    "częstość",
+    "anagram",
+    "litery",
+    "histogram",
+    "map<char,int>"
+   ],
+   "aliases": [
+    "zliczanie liter",
+    "ile razy wystepuje litera",
+    "cnt[c - 'a']",
+    "czy slowa sa anagramami",
+    "najczestsza litera",
+    "count characters in string c++",
+    "czestosc znakow",
+    "anagram c++"
+   ],
+   "summary": "Dla małych liter a–z najprościej tablica `int cnt[26] = {}` i `cnt[c - 'a']++`. Dla dowolnych znaków — `int cnt[256]` indeksowane `(unsigned char)c` albo `map<char,int>`. Dwa słowa są anagramami, gdy mają identyczne liczniki.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Licznik liter",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s = \"abrakadabra\";\n    int cnt[26] = {};\n    for (char c : s) cnt[c - 'a']++;\n    for (int i = 0; i < 26; i++)\n        if (cnt[i]) cout << char('a' + i) << \": \" << cnt[i] << '\\n';\n    int best = max_element(cnt, cnt + 26) - cnt;\n    cout << \"najczestsza: \" << char('a' + best) << '\\n';   // a\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Anagramy w O(n)",
+     "code": "bool anagramy(const string& a, const string& b) {\n    if (a.size() != b.size()) return false;\n    int cnt[26] = {};\n    for (char c : a) cnt[c - 'a']++;\n    for (char c : b) cnt[c - 'a']--;\n    for (int x : cnt) if (x != 0) return false;\n    return true;\n}",
+     "scope": "global"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "zliczanie liter",
+      "ile razy wystepuje kazda litera",
+      "count letters c++",
+      "czestosc liter w tekscie"
+     ],
+     "a": "Dla małych liter: `int cnt[26] = {};` i dla każdego znaku `cnt[c - 'a']++` (`c - 'a'` zamienia `'a'..'z'` na `0..25`).\nWypisując, zamieniaj indeks z powrotem: `char('a' + i)`. Złożoność O(n).",
+     "code": "string s = \"olimpiada\";\nint cnt[26] = {};\nfor (char c : s) cnt[c - 'a']++;\ncout << cnt['a' - 'a'] << ' ' << cnt['i' - 'a'] << '\\n';   // 2 2"
+    },
+    {
+     "q": [
+      "czy slowa sa anagramami",
+      "anagram c++",
+      "sprawdz anagram",
+      "are two strings anagrams"
+     ],
+     "a": "Anagramy mają te same litery w tych samych ilościach. Porównaj liczniki 26 liter (O(n)) albo posortuj oba napisy i porównaj\n(O(n log n)).",
+     "code": "string a = \"kot\", b = \"tok\";\nstring x = a, y = b;\nsort(x.begin(), x.end());\nsort(y.begin(), y.end());\ncout << (x == y ? \"anagramy\" : \"nie\") << '\\n';"
+    },
+    {
+     "q": [
+      "ile razy wystepuje znak",
+      "count znak w stringu",
+      "std::count string",
+      "zlicz wystapienia litery"
+     ],
+     "a": "Dla jednego znaku: `count(s.begin(), s.end(), 'a')`.",
+     "code": "string s = \"banana\";\ncout << count(s.begin(), s.end(), 'a') << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "najczestsza litera",
+      "litera ktora wystepuje najczesciej",
+      "most frequent character"
+     ],
+     "a": "Policz `cnt[26]`, potem `max_element` zwróci wskaźnik na największy licznik; odejmij początek tablicy, żeby dostać indeks.\nPrzy remisie `max_element` zwraca pierwszy (alfabetycznie najwcześniejszy).",
+     "code": "string s = \"mississippi\";\nint cnt[26] = {};\nfor (char c : s) cnt[c - 'a']++;\nint i = max_element(cnt, cnt + 26) - cnt;\ncout << char('a' + i) << ' ' << cnt[i] << '\\n';   // i 4"
+    },
+    {
+     "q": [
+      "zliczanie dowolnych znakow",
+      "cnt[256]",
+      "map char int",
+      "licznik wszystkich znakow"
+     ],
+     "a": "Gdy znaki są dowolne (wielkie litery, cyfry, interpunkcja), użyj `int cnt[256]` z indeksem `(unsigned char)c`, albo\n`map<char,int>` (wypisze znaki posortowane).",
+     "code": "string s = \"Aa1!a\";\nmap<char, int> m;\nfor (char c : s) m[c]++;\nfor (auto [c, k] : m) cout << c << ':' << k << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "wielkie i male litery razem",
+      "zliczanie bez wzgledu na wielkosc liter",
+      "case insensitive count"
+     ],
+     "a": "Przed zliczaniem zamień znak na małą literę i pomiń nie-litery.",
+     "code": "string s = \"Ala Ma Kota\";\nint cnt[26] = {};\nfor (char c : s) if (isalpha((unsigned char)c)) cnt[tolower((unsigned char)c) - 'a']++;\ncout << cnt[0] << '\\n';   // 4 (a)"
+    },
+    {
+     "q": [
+      "czy wszystkie litery rozne",
+      "unikalne znaki w stringu",
+      "czy litery sie powtarzaja"
+     ],
+     "a": "Zlicz litery i sprawdź, czy żaden licznik nie przekracza 1 — albo wstaw znaki do `set` i porównaj rozmiar.",
+     "code": "string s = \"olimp\";\nset<char> st(s.begin(), s.end());\ncout << (st.size() == s.size() ? \"wszystkie rozne\" : \"powtorki\") << '\\n';"
+    },
+    {
+     "q": [
+      "ile roznych liter",
+      "liczba unikalnych znakow",
+      "distinct characters count"
+     ],
+     "a": "Policz liczniki i zlicz niezerowe — albo `set<char>(s.begin(), s.end()).size()`.",
+     "code": "string s = \"abrakadabra\";\nint cnt[26] = {}, rozne = 0;\nfor (char c : s) cnt[c - 'a']++;\nfor (int x : cnt) if (x) rozne++;\ncout << rozne << '\\n';   // 5"
+    },
+    {
+     "q": [
+      "cnt c - 'a' ujemny indeks",
+      "zliczanie liter crash",
+      "wielka litera w cnt[26]"
+     ],
+     "a": "`cnt[c - 'a']` zakłada małą literę. Wielka litera (`'A' - 'a' = -32`), cyfra czy spacja dadzą indeks poza tablicą (UB).\nSprawdź `islower(c)` przed zliczaniem lub zamień na małe litery."
+    }
+   ],
+   "related": [
+    "str-basic-char-ops",
+    "num-conversions",
+    "pit-out-of-bounds",
+    "str-case-tricks",
+    "str-char-arithmetic",
+    "tech-counting-sort"
+   ]
+  },
+  {
+   "id": "str-basic-reverse",
+   "title": "Odwracanie napisu, słów i liczby",
+   "category": "Teksty",
+   "tags": [
+    "reverse",
+    "odwracanie",
+    "rbegin",
+    "string",
+    "słowa",
+    "cyfry"
+   ],
+   "aliases": [
+    "odwroc string",
+    "reverse string c++",
+    "jak odwrocic napis",
+    "odwracanie slow w zdaniu",
+    "odwroc liczbe",
+    "string od tylu",
+    "reverse c++"
+   ],
+   "summary": "`reverse(s.begin(), s.end())` odwraca napis w miejscu w O(n). Odwróconą kopię daje `string(s.rbegin(), s.rend())`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Napis i słowa",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s = \"olimpiada\";\n    string kopia(s.rbegin(), s.rend());   // odwrócona kopia\n    reverse(s.begin(), s.end());          // w miejscu\n    cout << s << ' ' << kopia << '\\n';    // adaipmilo adaipmilo\n\n    // kolejność słów\n    string zdanie = \"ala ma kota\", w;\n    stringstream ss(zdanie);\n    vector<string> slowa;\n    while (ss >> w) slowa.push_back(w);\n    reverse(slowa.begin(), slowa.end());\n    for (size_t i = 0; i < slowa.size(); i++) cout << (i ? \" \" : \"\") << slowa[i];\n    cout << '\\n';                         // kota ma ala\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "odwroc string",
+      "reverse string c++",
+      "jak odwrocic napis",
+      "string od tylu",
+      "odwrocenie napisu"
+     ],
+     "a": "`reverse(s.begin(), s.end());` (nagłówek `<algorithm>`) odwraca `s` w miejscu. Jeśli potrzebujesz zachować oryginał:\n`string r(s.rbegin(), s.rend());`.",
+     "code": "string s = \"abc\";\nreverse(s.begin(), s.end());\ncout << s << '\\n';   // cba"
+    },
+    {
+     "q": [
+      "odwracanie recznie",
+      "reverse bez funkcji",
+      "odwroc string petla"
+     ],
+     "a": "Zamieniaj znaki z początku i końca, idąc do środka (two pointers).",
+     "code": "string s = \"kajak1\";\nfor (int i = 0, j = (int)s.size() - 1; i < j; i++, j--) swap(s[i], s[j]);\ncout << s << '\\n';   // 1kajak"
+    },
+    {
+     "q": [
+      "odwracanie slow w zdaniu",
+      "odwroc kolejnosc slow",
+      "reverse words c++"
+     ],
+     "a": "Rozbij zdanie na słowa (`stringstream`), odwróć wektor słów i złącz je spacjami — pełny kod w treści artykułu."
+    },
+    {
+     "q": [
+      "odwroc kazde slowo",
+      "odwrocenie liter w kazdym slowie",
+      "reverse each word"
+     ],
+     "a": "Wczytuj kolejne słowa i odwracaj każde osobno.",
+     "code": "string zdanie = \"ala ma kota\", w, wynik;\nstringstream ss(zdanie);\nwhile (ss >> w) {\n    reverse(w.begin(), w.end());\n    if (!wynik.empty()) wynik += ' ';\n    wynik += w;\n}\ncout << wynik << '\\n';   // ala am atok"
+    },
+    {
+     "q": [
+      "odwroc liczbe",
+      "odwrocenie cyfr liczby",
+      "reverse number c++",
+      "liczba od tylu"
+     ],
+     "a": "Arytmetycznie: bierz ostatnią cyfrę `x % 10` i doklejaj ją do wyniku `r = r * 10 + d`. Albo przez napis: `to_string`,\n`reverse`, `stoll`. Uwaga na przepełnienie (odwrotność 1 000 000 009 to 9 000 000 001 > INT_MAX).",
+     "code": "long long x = 12345, r = 0;\nwhile (x > 0) { r = r * 10 + x % 10; x /= 10; }\ncout << r << '\\n';   // 54321"
+    },
+    {
+     "q": [
+      "odwroc fragment stringa",
+      "reverse czesci napisu",
+      "reverse od i do j"
+     ],
+     "a": "`reverse(s.begin() + i, s.begin() + j + 1)` odwraca fragment od `i` do `j` włącznie (drugi iterator wskazuje za koniec).",
+     "code": "string s = \"abcdef\";\nint i = 1, j = 3;\nreverse(s.begin() + i, s.begin() + j + 1);\ncout << s << '\\n';   // adcbef"
+    },
+    {
+     "q": [
+      "odwroc vector",
+      "reverse tablicy",
+      "odwrocenie tablicy c++"
+     ],
+     "a": "Ta sama funkcja działa dla `vector` i tablic: `reverse(v.begin(), v.end())`, `reverse(a, a + n)`.",
+     "code": "int a[] = {1, 2, 3, 4};\nreverse(a, a + 4);\ncout << a[0] << '\\n';   // 4"
+    },
+    {
+     "q": [
+      "wypisz string od konca",
+      "petla od konca stringa",
+      "iteracja wstecz po napisie"
+     ],
+     "a": "Pętla od `(int)s.size() - 1` do 0 (typ `int`, nie `size_t`!) albo iteratory `rbegin`/`rend`.",
+     "code": "string s = \"xyz\";\nfor (int i = (int)s.size() - 1; i >= 0; i--) cout << s[i];\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "str-basic-palindrome",
+    "str-basic-split",
+    "pit-unsigned-size",
+    "str-utf8-polish"
+   ]
+  },
+  {
+   "id": "str-basic-palindrome",
+   "title": "Palindromy: sprawdzanie napisu, liczby i najdłuższy podpalindrom (prosto)",
+   "category": "Teksty",
+   "tags": [
+    "palindrom",
+    "kajak",
+    "two pointers",
+    "odwrócenie",
+    "środek",
+    "najdłuższy palindrom"
+   ],
+   "aliases": [
+    "czy string jest palindromem",
+    "palindrom c++",
+    "sprawdz palindrom",
+    "palindrome check c++",
+    "czy liczba jest palindromem",
+    "najdluzszy palindrom",
+    "palindrom bez spacji i wielkosci liter"
+   ],
+   "summary": "Napis jest palindromem, gdy czytany od końca jest taki sam: `s == string(s.rbegin(), s.rend())` albo porównanie par `s[i]`, `s[n-1-i]` w O(n). Najdłuższy podpalindrom prostą metodą „rozszerzania od środka” liczysz w O(n²).",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Sprawdzanie i najdłuższy podpalindrom",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nbool palindrom(const string& s) {\n    for (int i = 0, j = (int)s.size() - 1; i < j; i++, j--)\n        if (s[i] != s[j]) return false;\n    return true;\n}\n\n// Najdłuższy spójny podpalindrom — rozszerzanie od każdego środka, O(n^2)\nstring najdluzszy(const string& s) {\n    int n = s.size(), best = 0, start = 0;\n    for (int c = 0; c < n; c++)\n        for (int typ = 0; typ < 2; typ++) {          // 0: nieparzysta długość, 1: parzysta\n            int l = c, r = c + typ;\n            while (l >= 0 && r < n && s[l] == s[r]) { l--; r++; }\n            if (r - l - 1 > best) { best = r - l - 1; start = l + 1; }\n        }\n    return s.substr(start, best);\n}\n\nint main() {\n    cout << palindrom(\"kajak\") << palindrom(\"kajaki\") << '\\n';   // 10\n    cout << najdluzszy(\"abacabad\") << '\\n';                       // abacaba\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Dla n do 10^5–10^6 najdłuższy podpalindrom liczy się w O(n) algorytmem Manachera albo z haszowaniem — O(n²) wystarczy\ndo kilku tysięcy znaków."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "czy string jest palindromem",
+      "palindrom c++",
+      "sprawdz palindrom",
+      "palindrome check c++",
+      "jak sprawdzic palindrom",
+      "czy napis czyta się tak samo od tyłu",
+      "czy słowo czytane od końca jest takie samo"
+     ],
+     "a": "Porównaj napis z jego odwróceniem: `s == string(s.rbegin(), s.rend())` — albo bez kopii: porównuj `s[i]` z `s[n-1-i]`\ndla `i < n/2`. Oba sposoby są O(n).",
+     "code": "string s = \"kajak\";\nbool p = (s == string(s.rbegin(), s.rend()));\ncout << (p ? \"TAK\" : \"NIE\") << '\\n';"
+    },
+    {
+     "q": [
+      "palindrom bez spacji i wielkosci liter",
+      "palindrom zdanie",
+      "kobyla ma maly bok palindrom",
+      "ignoruj spacje palindrom"
+     ],
+     "a": "Najpierw zostaw tylko litery i zamień je na małe, potem sprawdź palindrom.",
+     "code": "string zdanie = \"Kobyla ma maly bok\";\nstring t;\nfor (char c : zdanie) if (isalpha((unsigned char)c)) t += tolower((unsigned char)c);\ncout << (t == string(t.rbegin(), t.rend()) ? \"TAK\" : \"NIE\") << '\\n';   // TAK"
+    },
+    {
+     "q": [
+      "czy liczba jest palindromem",
+      "liczba palindrom c++",
+      "palindrome number"
+     ],
+     "a": "Zamień na napis (`to_string`) i sprawdź jak napis — albo odwróć cyfry arytmetycznie i porównaj z oryginałem.",
+     "code": "long long x = 12321;\nstring s = to_string(x);\ncout << (s == string(s.rbegin(), s.rend())) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "najdluzszy palindrom",
+      "najdluzszy podpalindrom",
+      "longest palindromic substring",
+      "najdluzszy spojny palindrom"
+     ],
+     "a": "Prosta metoda O(n²): dla każdego środka (znaku albo przerwy między znakami) rozszerzaj w obie strony, dopóki znaki są równe.\nKod w treści artykułu. Dla dużych n — algorytm Manachera O(n)."
+    },
+    {
+     "q": [
+      "ile podslow jest palindromami",
+      "liczba palindromicznych podciagow spojnych",
+      "count palindromic substrings"
+     ],
+     "a": "Tą samą metodą rozszerzania od środka: każde udane rozszerzenie to jeden palindrom. O(n²).",
+     "code": "string s = \"aaa\";\nint n = s.size(), ile = 0;\nfor (int c = 0; c < n; c++)\n    for (int typ = 0; typ < 2; typ++)\n        for (int l = c, r = c + typ; l >= 0 && r < n && s[l] == s[r]; l--, r++) ile++;\ncout << ile << '\\n';   // 6"
+    },
+    {
+     "q": [
+      "palindrom po usunieciu jednej litery",
+      "czy mozna zrobic palindrom usuwajac znak",
+      "prawie palindrom"
+     ],
+     "a": "Idź dwoma wskaźnikami od końców; przy pierwszej niezgodności sprawdź, czy palindromem jest fragment bez lewego albo bez\nprawego znaku. O(n).",
+     "code": "auto jestPal = [](const string& s, int i, int j) {\n    while (i < j) if (s[i++] != s[j--]) return false;\n    return true;\n};\nstring s = \"abca\";\nint i = 0, j = (int)s.size() - 1;\nwhile (i < j && s[i] == s[j]) { i++; j--; }\nbool ok = i >= j || jestPal(s, i + 1, j) || jestPal(s, i, j - 1);\ncout << ok << '\\n';   // 1 (usuń 'b' albo 'c')"
+    },
+    {
+     "q": [
+      "czy z liter da sie ulozyc palindrom",
+      "permutacja palindromu",
+      "anagram palindromu"
+     ],
+     "a": "Z liter da się ułożyć palindrom, gdy co najwyżej jedna litera występuje nieparzystą liczbę razy.",
+     "code": "string s = \"aabbc\";\nint cnt[26] = {}, nieparz = 0;\nfor (char c : s) cnt[c - 'a']++;\nfor (int x : cnt) if (x % 2) nieparz++;\ncout << (nieparz <= 1 ? \"TAK\" : \"NIE\") << '\\n';   // TAK (abcba)"
+    },
+    {
+     "q": [
+      "palindrom pusty string",
+      "czy jedna litera to palindrom",
+      "czy pusty napis jest palindromem"
+     ],
+     "a": "Tak — pusty napis i napis jednoznakowy są palindromami (funkcja z treści zwraca `true`). Sprawdź, czy treść zadania nie\ndefiniuje tego inaczej."
+    }
+   ],
+   "related": [
+    "str-basic-reverse",
+    "str-basic-char-ops",
+    "str-basic-count-letters"
+   ]
+  },
+  {
+   "id": "str-basic-split",
+   "title": "Dzielenie napisu na słowa (stringstream, split po separatorze)",
+   "category": "Teksty",
+   "tags": [
+    "split",
+    "stringstream",
+    "słowa",
+    "separator",
+    "getline",
+    "tokeny",
+    "dzielenie napisu"
+   ],
+   "aliases": [
+    "split c++",
+    "jak podzielic string na slowa",
+    "stringstream",
+    "rozdziel string po spacji",
+    "split string by delimiter c++",
+    "ile slow w zdaniu",
+    "podziel napis po przecinku"
+   ],
+   "summary": "Słowa oddzielone białymi znakami: `stringstream ss(s); while (ss >> w) ...`. Inny separator: `while (getline(ss, tok, ','))`. C++ nie ma wbudowanej funkcji `split`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Słowa i split po znaku",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvector<string> split(const string& s, char sep) {\n    vector<string> res;\n    string tok;\n    stringstream ss(s);\n    while (getline(ss, tok, sep)) res.push_back(tok);\n    return res;\n}\n\nint main() {\n    string zdanie = \"  Ala   ma kota \";\n    stringstream ss(zdanie);\n    vector<string> slowa;\n    string w;\n    while (ss >> w) slowa.push_back(w);           // wielokrotne spacje nie przeszkadzają\n    cout << slowa.size() << '\\n';                  // 3\n    for (auto& t : split(\"a,b,,c\", ',')) cout << \"[\" << t << \"]\";   // [a][b][][c]\n    cout << '\\n';\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak podzielic string na slowa",
+      "split c++",
+      "rozdziel string po spacji",
+      "split string by space c++",
+      "podział napisu na słowa",
+      "podzielić zdanie na wyrazy",
+      "rozbić tekst na słowa"
+     ],
+     "a": "Utwórz `stringstream ss(s);` i czytaj `while (ss >> w)` — dostaniesz kolejne słowa, a wielokrotne spacje, tabulatory\ni końce wierszy zostaną pominięte.",
+     "code": "string s = \"ala ma kota\";\nstringstream ss(s);\nstring w;\nwhile (ss >> w) cout << w << '\\n';"
+    },
+    {
+     "q": [
+      "split po przecinku",
+      "podziel napis po separatorze",
+      "split string by delimiter c++",
+      "getline z separatorem"
+     ],
+     "a": "`getline(ss, tok, ',')` czyta do przecinka. W odróżnieniu od `>>` zachowuje puste pola (`\"a,,b\"` → `a`, ``, `b`)\ni spacje wewnątrz pól.",
+     "code": "string s = \"jan,kowalski,17\";\nstringstream ss(s);\nstring tok;\nvector<string> pola;\nwhile (getline(ss, tok, ',')) pola.push_back(tok);\ncout << pola[1] << '\\n';   // kowalski"
+    },
+    {
+     "q": [
+      "ile slow w zdaniu",
+      "policz slowa",
+      "count words c++",
+      "liczba wyrazow"
+     ],
+     "a": "Policz, ile razy uda się `ss >> w`.",
+     "code": "string s = \" to  jest   test \";\nstringstream ss(s);\nstring w;\nint ile = 0;\nwhile (ss >> w) ile++;\ncout << ile << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "liczby ze stringa stringstream",
+      "wczytaj liczby z linii",
+      "parse ints from string"
+     ],
+     "a": "`stringstream` czyta też liczby: `while (ss >> x)`. Idealne, gdy liczby są w jednym wierszu o nieznanej długości.",
+     "code": "string linia = \"3 14 15 92\";\nstringstream ss(linia);\nint x;\nlong long suma = 0;\nwhile (ss >> x) suma += x;\ncout << suma << '\\n';   // 124"
+    },
+    {
+     "q": [
+      "polacz slowa w string",
+      "join c++",
+      "sklej wektor stringow spacjami"
+     ],
+     "a": "C++ nie ma `join` — sklej w pętli, dodając separator przed każdym elementem poza pierwszym.",
+     "code": "vector<string> v = {\"ala\", \"ma\", \"kota\"};\nstring wynik;\nfor (size_t i = 0; i < v.size(); i++) {\n    if (i) wynik += ' ';\n    wynik += v[i];\n}\ncout << wynik << '\\n';"
+    },
+    {
+     "q": [
+      "usun spacje z poczatku i konca",
+      "trim c++",
+      "obetnij biale znaki"
+     ],
+     "a": "Znajdź pierwszy i ostatni znak niebędący spacją (`find_first_not_of`, `find_last_not_of`) i weź `substr`.",
+     "code": "string s = \"   tekst z odstepami  \";\nsize_t a = s.find_first_not_of(\" \\t\\r\\n\"), b = s.find_last_not_of(\" \\t\\r\\n\");\nstring t = (a == string::npos) ? \"\" : s.substr(a, b - a + 1);\ncout << \"[\" << t << \"]\\n\";"
+    },
+    {
+     "q": [
+      "najdluzsze slowo w zdaniu",
+      "znajdz najdluzszy wyraz",
+      "longest word"
+     ],
+     "a": "Czytaj słowa z `stringstream` i pamiętaj najdłuższe.",
+     "code": "string s = \"ala ma bardzo duzego kota\";\nstringstream ss(s);\nstring w, best;\nwhile (ss >> w) if (w.size() > best.size()) best = w;\ncout << best << '\\n';   // bardzo"
+    },
+    {
+     "q": [
+      "stringstream wielokrotne uzycie",
+      "jak wyczyscic stringstream",
+      "ss.clear ss.str"
+     ],
+     "a": "Do ponownego użycia tego samego `stringstream` zrób `ss.clear(); ss.str(nowy);` — samo `str` nie zeruje flagi EOF.\nProściej tworzyć nowy obiekt w każdym obrocie pętli.",
+     "code": "stringstream ss;\nfor (string linia : {\"1 2\", \"3 4\"}) {\n    ss.clear();\n    ss.str(linia);\n    int a, b;\n    ss >> a >> b;\n    cout << a + b << '\\n';\n}"
+    },
+    {
+     "q": [
+      "split szybkosc",
+      "czy stringstream jest wolny",
+      "stringstream dla miliona slow"
+     ],
+     "a": "`stringstream` jest wygodny, ale stosunkowo wolny. Dla milionów słów szybciej przejść ręcznie po znakach albo od razu\nczytać słowa przez `cin >> w` (bez `getline`)."
+    }
+   ],
+   "related": [
+    "io-getline",
+    "io-read-separated",
+    "str-basic-string-ops",
+    "cpp-ref-sstream-fstream"
+   ]
+  },
+  {
+   "id": "str-basic-caesar",
+   "title": "Szyfr Cezara i przesuwanie liter (ROT13, przesunięcie o k)",
+   "category": "Teksty",
+   "tags": [
+    "szyfr Cezara",
+    "przesunięcie",
+    "ROT13",
+    "modulo 26",
+    "szyfrowanie",
+    "litery"
+   ],
+   "aliases": [
+    "szyfr cezara c++",
+    "przesun litery o k",
+    "caesar cipher c++",
+    "rot13",
+    "szyfrowanie tekstu c++",
+    "odszyfruj szyfr cezara",
+    "przesuniecie liter modulo 26"
+   ],
+   "summary": "Każdą małą literę zamieniasz na `'a' + (c - 'a' + k) % 26` (wielkie analogicznie z `'A'`), inne znaki zostawiasz. Dla ujemnego lub dużego `k` użyj `((k % 26) + 26) % 26`. Odszyfrowanie to przesunięcie o `-k`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szyfrowanie i odszyfrowanie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstring cezar(const string& s, int k) {\n    k = ((k % 26) + 26) % 26;          // obsługa ujemnych i dużych k\n    string r = s;\n    for (char& c : r) {\n        if (c >= 'a' && c <= 'z') c = char('a' + (c - 'a' + k) % 26);\n        else if (c >= 'A' && c <= 'Z') c = char('A' + (c - 'A' + k) % 26);\n    }\n    return r;\n}\n\nint main() {\n    string zaszyfr = cezar(\"Ala ma kota, xyz!\", 3);\n    cout << zaszyfr << '\\n';            // Dod pd nrwd, abc!\n    cout << cezar(zaszyfr, -3) << '\\n'; // Ala ma kota, xyz!\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "szyfr cezara c++",
+      "caesar cipher c++",
+      "jak zrobic szyfr cezara",
+      "przesun litery o k"
+     ],
+     "a": "Dla małej litery: numer litery `c - 'a'`, dodaj `k`, weź modulo 26 i wróć do znaku: `'a' + (c - 'a' + k) % 26`. Wielkie\nlitery osobno z `'A'`. Spacje i interpunkcja bez zmian. Pełna funkcja w treści artykułu.",
+     "code": "string s = \"xyz\";\nint k = 3;\nfor (char& c : s) c = char('a' + (c - 'a' + k) % 26);\ncout << s << '\\n';   // abc"
+    },
+    {
+     "q": [
+      "odszyfruj szyfr cezara",
+      "deszyfrowanie cezar",
+      "przesuniecie w lewo litery"
+     ],
+     "a": "Odszyfrowanie to przesunięcie o `-k`, czyli o `26 - k`. Przy ujemnym przesunięciu pamiętaj o poprawnym modulo:\n`((c - 'a' - k) % 26 + 26) % 26`.",
+     "code": "string s = \"abc\";\nint k = 3;\nfor (char& c : s) c = char('a' + ((c - 'a' - k) % 26 + 26) % 26);\ncout << s << '\\n';   // xyz"
+    },
+    {
+     "q": [
+      "przesuniecie liter ujemne",
+      "cezar dla k ujemnego",
+      "modulo ujemne litery"
+     ],
+     "a": "`(c - 'a' + k) % 26` dla ujemnego wyniku daje w C++ resztę ujemną i znak spoza alfabetu. Znormalizuj `k = ((k % 26) + 26) % 26`\nprzed pętlą — wtedy `k ∈ [0, 25]`.",
+     "code": "int k = -29;\nk = ((k % 26) + 26) % 26;\ncout << k << '\\n';   // 23"
+    },
+    {
+     "q": [
+      "rot13",
+      "rot13 c++",
+      "przesuniecie o 13"
+     ],
+     "a": "ROT13 to szyfr Cezara z `k = 13` — dwukrotne zastosowanie przywraca tekst.",
+     "code": "string s = \"Hello\";\nfor (char& c : s) {\n    if (islower((unsigned char)c)) c = char('a' + (c - 'a' + 13) % 26);\n    else if (isupper((unsigned char)c)) c = char('A' + (c - 'A' + 13) % 26);\n}\ncout << s << '\\n';   // Uryyb"
+    },
+    {
+     "q": [
+      "zlamanie szyfru cezara",
+      "jak znalezc klucz cezara",
+      "brute force cezar"
+     ],
+     "a": "Kluczy jest tylko 26 — wypróbuj wszystkie i wybierz ten, dla którego tekst ma sens, albo dopasuj najczęstszą literę\nszyfrogramu do najczęstszej litery języka (w polskim i angielskim często `a`/`e`).",
+     "code": "string szyfr = \"dod\";\nfor (int k = 0; k < 26; k++) {\n    string t = szyfr;\n    for (char& c : t) c = char('a' + (c - 'a' - k + 26) % 26);\n    if (t == \"ala\") cout << \"klucz \" << k << '\\n';   // 3\n}"
+    },
+    {
+     "q": [
+      "szyfr vigenere",
+      "przesuniecie zalezne od pozycji",
+      "klucz slowny szyfr"
+     ],
+     "a": "W szyfrze Vigenère'a przesunięcie dla i-tej litery to litera klucza `klucz[i % klucz.size()] - 'a'`.",
+     "code": "string s = \"atak\", klucz = \"abc\";\nfor (size_t i = 0; i < s.size(); i++)\n    s[i] = char('a' + (s[i] - 'a' + (klucz[i % klucz.size()] - 'a')) % 26);\ncout << s << '\\n';   // auck"
+    },
+    {
+     "q": [
+      "przesuniecie cyfr",
+      "szyfr dla cyfr modulo 10",
+      "przesun cyfry o k"
+     ],
+     "a": "Analogicznie dla cyfr: `'0' + (c - '0' + k) % 10`.",
+     "code": "string s = \"0789\";\nint k = 4;\nfor (char& c : s) if (isdigit((unsigned char)c)) c = char('0' + (c - '0' + k) % 10);\ncout << s << '\\n';   // 4123"
+    },
+    {
+     "q": [
+      "cezar wypisuje liczby",
+      "szyfr cezara wypisuje cyfry zamiast liter",
+      "'a' + k bez char"
+     ],
+     "a": "`'a' + (c - 'a' + k) % 26` ma typ `int`. Jeśli wypisujesz go wprost przez `cout`, zobaczysz kod ASCII. Zapisz do zmiennej\n`char` albo rzutuj `char(...)`."
+    }
+   ],
+   "related": [
+    "str-basic-char-ops",
+    "num-negative-mod",
+    "num-conversions",
+    "str-char-arithmetic"
+   ]
+  },
+  {
+   "id": "str-basic-lex-compare",
+   "title": "Porównywanie napisów leksykograficznie (<, compare, sortowanie)",
+   "category": "Teksty",
+   "tags": [
+    "porównanie",
+    "leksykograficzny",
+    "compare",
+    "sort",
+    "strcmp",
+    "kolejność alfabetyczna"
+   ],
+   "aliases": [
+    "porownanie stringow c++",
+    "porzadek leksykograficzny",
+    "sortowanie alfabetyczne",
+    "compare string c++",
+    "czy string jest mniejszy",
+    "strcmp",
+    "sortowanie slow c++",
+    "\"10\" < \"9\""
+   ],
+   "summary": "Operatory `<`, `>`, `==` porównują `std::string` leksykograficznie (jak w słowniku, wg kodów ASCII): `\"abc\" < \"abd\"`, `\"ab\" < \"abc\"`, ale też `\"Z\" < \"a\"` i `\"10\" < \"9\"`. `sort` na `vector<string>` sortuje alfabetycznie.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Porównania i sortowania",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    cout << (string(\"abc\") < \"abd\") << (string(\"ab\") < \"abc\") << (string(\"Z\") < \"a\")\n         << (string(\"10\") < \"9\") << '\\n';                // 1111\n    vector<string> v = {\"kot\", \"Ala\", \"ala\", \"kos\", \"k\"};\n    sort(v.begin(), v.end());                           // Ala ala k kos kot\n    for (auto& s : v) cout << s << ' ';\n    cout << '\\n';\n    // bez rozróżniania wielkości liter\n    sort(v.begin(), v.end(), [](const string& a, const string& b) {\n        return lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(),\n            [](char x, char y) { return tolower((unsigned char)x) < tolower((unsigned char)y); });\n    });\n    // najpierw po długości, potem alfabetycznie\n    sort(v.begin(), v.end(), [](const string& a, const string& b) {\n        return a.size() != b.size() ? a.size() < b.size() : a < b;\n    });\n    for (auto& s : v) cout << s << ' ';\n    cout << '\\n';                                       // k Ala ala kos kot\n}"
+    },
+    {
+     "type": "tip",
+     "md": "W ASCII wielkie litery są przed małymi (`'A'` = 65, `'a'` = 97), a cyfry przed literami. Napisy z liczbami porównują się\nznak po znaku, więc `\"10\" < \"9\"` — do porównania liczb zapisanych napisami najpierw porównaj długość."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "porownanie stringow c++",
+      "jak porownac dwa stringi",
+      "compare string c++",
+      "czy string jest mniejszy",
+      "string < string"
+     ],
+     "a": "Dla `std::string` działają `==`, `!=`, `<`, `>`, `<=`, `>=` — porównanie leksykograficzne: pierwsza różniąca się pozycja\ndecyduje (wg kodów ASCII), a gdy jeden napis jest przedrostkiem drugiego, krótszy jest mniejszy. `s.compare(t)` zwraca\nliczbę ujemną/0/dodatnią.",
+     "code": "string a = \"olimp\", b = \"olimpiada\";\ncout << (a < b) << ' ' << (a.compare(b) < 0) << '\\n';   // 1 1"
+    },
+    {
+     "q": [
+      "porzadek leksykograficzny",
+      "co to znaczy leksykograficznie",
+      "lexicographical order"
+     ],
+     "a": "Jak w słowniku: porównujemy pierwszy znak; jeśli równy — drugi, itd. Napis będący przedrostkiem innego jest mniejszy\n(`\"ab\" < \"abc\"`). W C++ kolejność znaków to kody ASCII, więc `'A' < 'Z' < 'a' < 'z'`."
+    },
+    {
+     "q": [
+      "sortowanie alfabetyczne",
+      "sortowanie slow c++",
+      "sort vector string",
+      "posortuj napisy"
+     ],
+     "a": "`sort(v.begin(), v.end())` dla `vector<string>` sortuje leksykograficznie. Pamiętaj, że wielkie litery będą przed małymi.",
+     "code": "vector<string> v = {\"ola\", \"ala\", \"ela\"};\nsort(v.begin(), v.end());\nfor (auto& s : v) cout << s << ' ';   // ala ela ola\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "\"10\" < \"9\"",
+      "sortowanie liczb jako stringi",
+      "porownanie liczb w stringach",
+      "duze liczby porownanie string"
+     ],
+     "a": "Napisy porównują się znak po znaku, więc `\"10\" < \"9\"` (bo `'1' < '9'`). Dla liczb nieujemnych bez zer wiodących porównaj\nnajpierw długość, potem napisy.",
+     "code": "vector<string> liczby = {\"9\", \"100\", \"25\"};\nsort(liczby.begin(), liczby.end(), [](const string& a, const string& b) {\n    return a.size() != b.size() ? a.size() < b.size() : a < b;\n});\nfor (auto& s : liczby) cout << s << ' ';   // 9 25 100\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "porownanie bez wielkosci liter",
+      "case insensitive compare c++",
+      "porownaj ignorujac wielkosc liter"
+     ],
+     "a": "Porównaj kopie zamienione na małe litery albo użyj `lexicographical_compare` z komparatorem na `tolower`.",
+     "code": "string a = \"Kot\", b = \"kot\";\nstring x = a, y = b;\nfor (char& c : x) c = tolower((unsigned char)c);\nfor (char& c : y) c = tolower((unsigned char)c);\ncout << (x == y) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "strcmp",
+      "porownanie char*",
+      "porownanie tablic char",
+      "== dla char[]"
+     ],
+     "a": "Dla tablic `char` operator `==` porównuje adresy, nie treść. Użyj `strcmp(a, b)`: 0 gdy równe, < 0 gdy `a` mniejsze, > 0 gdy\nwiększe. Albo zamień na `string`.",
+     "code": "char a[] = \"abc\", b[] = \"abd\";\ncout << (strcmp(a, b) < 0) << ' ' << (string(a) < string(b)) << '\\n';   // 1 1"
+    },
+    {
+     "q": [
+      "najmniejszy leksykograficznie",
+      "min string",
+      "najmniejsze slowo alfabetycznie"
+     ],
+     "a": "`min_element` na wektorze napisów albo `min(a, b)` dla dwóch. Częste w zadaniach: „wypisz leksykograficznie najmniejsze\nrozwiązanie”.",
+     "code": "vector<string> v = {\"kot\", \"kos\", \"koza\"};\ncout << *min_element(v.begin(), v.end()) << '\\n';   // kos"
+    },
+    {
+     "q": [
+      "sortowanie po dlugosci",
+      "sort by length c++",
+      "najpierw krotsze slowa"
+     ],
+     "a": "Komparator: porównaj długości, przy równych — napisy. Komparator musi być ścisły (`<`, nie `<=`).",
+     "code": "vector<string> v = {\"ccc\", \"a\", \"bb\", \"aa\"};\nsort(v.begin(), v.end(), [](const string& a, const string& b) {\n    return a.size() != b.size() ? a.size() < b.size() : a < b;\n});\nfor (auto& s : v) cout << s << ' ';   // a aa bb ccc\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "porownanie char",
+      "czy litera jest przed inna",
+      "porownanie znakow c++"
+     ],
+     "a": "Znaki porównujesz jak liczby (kody ASCII): `'a' < 'b'`, `'Z' < 'a'`. Odległość w alfabecie: `c2 - c1`.",
+     "code": "char c1 = 'c', c2 = 'h';\ncout << (c1 < c2) << ' ' << c2 - c1 << '\\n';   // 1 5"
+    }
+   ],
+   "related": [
+    "pit-comparator",
+    "str-basic-char-ops",
+    "num-bigint-strings",
+    "cpp-ref-cstring-cstdlib",
+    "stl-ref-binary-search-minmax",
+    "str-case-tricks"
+   ]
+  },
+  {
+   "id": "str-basic-string-ops",
+   "title": "Podstawowe operacje na string: find, substr, replace, erase, insert",
+   "category": "Teksty",
+   "tags": [
+    "string",
+    "find",
+    "substr",
+    "replace",
+    "erase",
+    "insert",
+    "npos",
+    "podciąg",
+    "wyszukiwanie"
+   ],
+   "aliases": [
+    "find string c++",
+    "substr c++",
+    "jak znalezc podciag",
+    "czy string zawiera",
+    "zamien fragment stringa",
+    "usun znak ze stringa",
+    "string::npos",
+    "jak wyciac fragment napisu",
+    "replace all c++"
+   ],
+   "summary": "`s.find(t)` zwraca pozycję pierwszego wystąpienia `t` albo `string::npos`; `s.substr(pos, len)` wycina fragment (drugi argument to długość!); `s.replace(pos, len, t)`, `s.erase(pos, len)`, `s.insert(pos, t)` modyfikują napis.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Działanie",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "`s.find(t)` / `s.find(t, od)`",
+       "pozycja pierwszego wystąpienia lub `npos`",
+       "O(n·m) w najgorszym razie"
+      ],
+      [
+       "`s.rfind(t)`",
+       "ostatnie wystąpienie",
+       ""
+      ],
+      [
+       "`s.substr(pos, len)`",
+       "kopia fragmentu",
+       "O(len)"
+      ],
+      [
+       "`s.replace(pos, len, t)`",
+       "zamiana fragmentu na `t`",
+       "O(n)"
+      ],
+      [
+       "`s.erase(pos, len)`",
+       "usunięcie fragmentu",
+       "O(n)"
+      ],
+      [
+       "`s.insert(pos, t)`",
+       "wstawienie",
+       "O(n)"
+      ],
+      [
+       "`s.starts_with(t)`, `s.ends_with(t)`",
+       "C++20",
+       "O(m)"
+      ],
+      [
+       "`s.contains(t)`",
+       "C++23",
+       ""
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "find, substr, replace, erase, insert",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s = \"ala ma kota, kota ma ala\";\n    size_t p = s.find(\"kota\");\n    if (p != string::npos) cout << \"pierwsze na \" << p << '\\n';   // 7\n    int ile = 0;\n    for (size_t q = s.find(\"kota\"); q != string::npos; q = s.find(\"kota\", q + 1)) ile++;\n    cout << ile << '\\n';                                            // 2\n    string t = s.substr(4, 2);                                      // \"ma\"\n    s.replace(0, 3, \"Ola\");                                         // \"Ola ma kota...\"\n    s.erase(s.find(','), 1);                                        // usuń przecinek\n    s.insert(0, \">> \");\n    cout << t << '\\n' << s << '\\n';\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "czy string zawiera",
+      "jak znalezc podciag",
+      "find string c++",
+      "string contains c++",
+      "czy napis zawiera slowo"
+     ],
+     "a": "`s.find(t)` zwraca indeks pierwszego wystąpienia albo `string::npos`, gdy go nie ma. Sprawdzaj zawsze `!= string::npos`\n(nie `> 0` ani `!= -1` na `int`). W C++23 jest też `s.contains(t)`.",
+     "code": "string s = \"olimpiada informatyczna\";\nif (s.find(\"info\") != string::npos) cout << \"zawiera\\n\";"
+    },
+    {
+     "q": [
+      "substr c++",
+      "jak wyciac fragment napisu",
+      "substr od do",
+      "substring c++"
+     ],
+     "a": "`s.substr(pos, len)` zwraca `len` znaków od pozycji `pos` (bez drugiego argumentu — do końca). Fragment od `i` do `j` włącznie:\n`s.substr(i, j - i + 1)`. Gdy `pos > s.size()`, rzuca `out_of_range`.",
+     "code": "string s = \"programowanie\";\ncout << s.substr(0, 7) << ' ' << s.substr(7) << '\\n';   // program owanie"
+    },
+    {
+     "q": [
+      "string::npos",
+      "co to npos",
+      "find zwraca npos",
+      "find -1"
+     ],
+     "a": "`string::npos` to największa wartość `size_t` — oznacza „nie znaleziono”. Przypisanie wyniku `find` do `int` daje -1,\nale bezpieczniej trzymać go w `size_t`/`auto` i porównywać z `string::npos`.",
+     "code": "string s = \"abc\";\nauto p = s.find('z');\ncout << (p == string::npos ? \"brak\" : \"jest\") << '\\n';"
+    },
+    {
+     "q": [
+      "ile razy wystepuje podciag",
+      "zlicz wystapienia slowa",
+      "count substring occurrences"
+     ],
+     "a": "Szukaj w pętli od pozycji po poprzednim trafieniu: `q = s.find(t, q + 1)` (wystąpienia mogą się nakładać) albo\n`q + t.size()` (bez nakładania). Dla długich tekstów — KMP lub haszowanie.",
+     "code": "string s = \"aaaa\", t = \"aa\";\nint nak = 0;\nfor (size_t q = s.find(t); q != string::npos; q = s.find(t, q + 1)) nak++;\ncout << nak << '\\n';   // 3 (z nakładaniem)"
+    },
+    {
+     "q": [
+      "zamien fragment stringa",
+      "replace c++",
+      "replace all c++",
+      "zamien wszystkie wystapienia"
+     ],
+     "a": "`s.replace(pos, len, t)` zamienia fragment. Wszystkie wystąpienia: pętla z `find` i przesunięciem o długość wstawki.\nDla pojedynczych znaków: `replace(s.begin(), s.end(), 'a', 'b')` z `<algorithm>`.",
+     "code": "string s = \"kot i kot\", z = \"kot\", na = \"pies\";\nfor (size_t p = s.find(z); p != string::npos; p = s.find(z, p + na.size())) s.replace(p, z.size(), na);\nreplace(s.begin(), s.end(), ' ', '_');\ncout << s << '\\n';   // pies_i_pies"
+    },
+    {
+     "q": [
+      "usun znak ze stringa",
+      "erase string c++",
+      "usun wszystkie spacje",
+      "usun litere z napisu"
+     ],
+     "a": "`s.erase(pos, len)` usuwa fragment, `s.erase(pos, 1)` — jeden znak. Wszystkie wystąpienia znaku:\n`s.erase(remove(s.begin(), s.end(), ' '), s.end());` (C++20: `erase(s, ' ')`).",
+     "code": "string s = \"a l a\";\ns.erase(remove(s.begin(), s.end(), ' '), s.end());\ncout << s << '\\n';   // ala"
+    },
+    {
+     "q": [
+      "wstaw do stringa",
+      "insert string c++",
+      "dodaj znak na poczatek stringa"
+     ],
+     "a": "`s.insert(pos, t)` wstawia napis, `s.insert(pos, 1, c)` — znak. Na końcu szybciej `s += t` / `s.push_back(c)`\n(dodawanie na początku w pętli jest O(n²)).",
+     "code": "string s = \"ma kota\";\ns.insert(0, \"Ala \");\ns.insert(s.size(), 1, '!');\ncout << s << '\\n';   // Ala ma kota!"
+    },
+    {
+     "q": [
+      "starts_with",
+      "czy string zaczyna sie od",
+      "ends_with c++",
+      "prefiks sufiks stringa"
+     ],
+     "a": "C++20: `s.starts_with(\"ab\")`, `s.ends_with(\".txt\")`. Wcześniej: `s.rfind(p, 0) == 0` (prefiks) albo porównanie `substr`.",
+     "code": "string s = \"plik.cpp\";\ncout << s.ends_with(\".cpp\") << ' ' << s.starts_with(\"pl\") << ' ' << (s.rfind(\"pl\", 0) == 0) << '\\n';   // 1 1 1"
+    },
+    {
+     "q": [
+      "dlugosc stringa",
+      "size czy length",
+      "s.size() s.length()"
+     ],
+     "a": "`s.size()` i `s.length()` to to samo (liczba bajtów/znaków ASCII). Typ wyniku to `size_t` — przy odejmowaniu rzutuj na `int`.",
+     "code": "string s = \"olimpiada\";\ncout << s.size() << ' ' << s.length() << '\\n';   // 9 9"
+    },
+    {
+     "q": [
+      "dodawanie stringow",
+      "konkatenacja c++",
+      "laczenie napisow",
+      "string + int"
+     ],
+     "a": "`s + t` i `s += t` łączą napisy. Liczbę doklej przez `to_string(x)` — `s + 5` się nie skompiluje (lub zrobi coś innego dla\n`char*`). Nie łącz dwóch literałów `\"a\" + \"b\"` (to wskaźniki) — przynajmniej jeden argument musi być `string`.",
+     "code": "string s = \"wynik: \";\nint x = 42;\ns += to_string(x);\ns += '!';\ncout << s << '\\n';"
+    }
+   ],
+   "related": [
+    "str-basic-split",
+    "pit-off-by-one",
+    "num-conversions",
+    "str-basic-reverse",
+    "stl-ref-string-all"
+   ]
+  }
+ ]
+}

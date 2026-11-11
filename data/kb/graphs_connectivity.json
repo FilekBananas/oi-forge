@@ -1,0 +1,1364 @@
+{
+ "chunk": "graphs-connectivity",
+ "articles": [
+  {
+   "id": "graph-dsu",
+   "title": "DSU (Find & Union) — zbiory rozłączne",
+   "category": "Grafy",
+   "tags": [
+    "dsu",
+    "find union",
+    "find and union",
+    "union find",
+    "zbiory rozłączne",
+    "kompresja ścieżek",
+    "union by size",
+    "union by rank",
+    "disjoint set union",
+    "spójne składowe"
+   ],
+   "aliases": [
+    "dsu",
+    "find union",
+    "find & union",
+    "find and union",
+    "union find",
+    "union-find",
+    "zbiory rozłączne",
+    "disjoint set union",
+    "dsu c++",
+    "find union kod",
+    "struktura zbiorów rozłącznych",
+    "f&u",
+    "fu"
+   ],
+   "summary": "DSU trzyma podział elementów na rozłączne zbiory i w praktycznie stałym czasie odpowiada na „czy a i b są w tym samym zbiorze?” oraz łączy dwa zbiory. Podstawa Kruskala, składowych online i wielu zadań offline.",
+   "complexity": "find/unite: O(α(n)) zamortyzowane (α — odwrotność funkcji Ackermanna, ≤ 4 w praktyce); pamięć O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja:** każdy zbiór to drzewo, w którym każdy element wskazuje na swojego „szefa” (`p[x]`),\na korzeń jest reprezentantem całego zbioru. `find(x)` idzie po szefach aż do korzenia; `unite(a, b)`\npodpina korzeń jednego drzewa pod korzeń drugiego.\n\nDwie optymalizacje sprawiają, że drzewa są praktycznie płaskie:\n- **kompresja ścieżek** — po `find(x)` wszystkie odwiedzone elementy wskazują od razu na korzeń,\n- **łączenie według rozmiaru** (union by size/rank) — mniejsze drzewo podpinamy pod większe.\n\nRazem dają czas `O(α(n))` na operację — dla wszystkich realnych `n` to co najwyżej 4 kroki."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „łączymy grupy/państwa/wyspy”, „po każdym połączeniu wypisz liczbę grup”,\n„czy a i b są w tej samej grupie”, „drogi są dobudowywane”, „minimalny koszt połączenia wszystkich”\n(Kruskal), „krawędzie są usuwane” (odwróć kolejność i łącz), „sprzeczność warunków typu a = b / a ≠ b”,\nsiatka, na której pola stopniowo się „zalewają”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "DSU — pełny program (U/Q/S/C)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct DSU {\n    vector<int> p, sz;\n    int comps;                                  // liczba zbiorów\n    DSU(int n) : p(n + 1), sz(n + 1, 1), comps(n) { iota(p.begin(), p.end(), 0); }\n    int find(int x) {\n        while (p[x] != x) {\n            p[x] = p[p[x]];                     // kompresja (path halving), bez rekurencji\n            x = p[x];\n        }\n        return x;\n    }\n    bool unite(int a, int b) {\n        a = find(a);\n        b = find(b);\n        if (a == b) return false;               // już w jednym zbiorze\n        if (sz[a] < sz[b]) swap(a, b);          // mniejszy pod większy\n        p[b] = a;\n        sz[a] += sz[b];\n        comps--;\n        return true;\n    }\n    bool same(int a, int b) { return find(a) == find(b); }\n    int size(int x) { return sz[find(x)]; }\n};\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    DSU d(n);\n    while (q--) {\n        char op;\n        cin >> op;\n        if (op == 'U') {                        // U a b — połącz\n            int a, b;\n            cin >> a >> b;\n            d.unite(a, b);\n        } else if (op == 'Q') {                 // Q a b — czy w jednym zbiorze?\n            int a, b;\n            cin >> a >> b;\n            cout << (d.same(a, b) ? \"TAK\" : \"NIE\") << '\\n';\n        } else if (op == 'S') {                 // S a — rozmiar zbioru a\n            int a;\n            cin >> a;\n            cout << d.size(a) << '\\n';\n        } else {                                // C — liczba zbiorów\n            cout << d.comps << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersja „na tablicach” (najkrótsza, do wklejenia)",
+     "code": "const int MAXN = 1000005;\nint p[MAXN], sz[MAXN];\n\nvoid init(int n) { for (int i = 1; i <= n; i++) { p[i] = i; sz[i] = 1; } }\nint find(int x) { return p[x] == x ? x : p[x] = find(p[x]); }   // pełna kompresja\nbool unite(int a, int b) {\n    a = find(a); b = find(b);\n    if (a == b) return false;\n    if (sz[a] < sz[b]) swap(a, b);\n    p[b] = a;\n    sz[a] += sz[b];\n    return true;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Opis"
+     ],
+     "rows": [
+      [
+       "`find(x)`",
+       "O(α(n))",
+       "reprezentant (korzeń) zbioru x"
+      ],
+      [
+       "`unite(a, b)`",
+       "O(α(n))",
+       "łączy zbiory; `false`, gdy już razem"
+      ],
+      [
+       "`same(a, b)`",
+       "O(α(n))",
+       "czy w jednym zbiorze"
+      ],
+      [
+       "`sz[find(x)]`",
+       "O(α(n))",
+       "liczność zbioru x"
+      ],
+      [
+       "licznik `comps`",
+       "O(1)",
+       "liczba zbiorów (zmniejszany przy udanym `unite`)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Dane przypisane do całego zbioru (rozmiar, suma, minimum, liczba krawędzi…) trzymaj **w korzeniu**\ni aktualizuj w `unite`: `sum[a] += sum[b]`, `mn[a] = min(mn[a], mn[b])`."
+    },
+    {
+     "type": "warn",
+     "md": "DSU **nie umie rozdzielać** zbiorów (usuwać krawędzi). Jeśli krawędzie są usuwane, a wszystkie zapytania\nznasz z góry — przetwarzaj je od końca (usuwanie staje się dodawaniem)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "find(x)",
+     "desc": "zwraca reprezentanta zbioru zawierającego x (z kompresją ścieżek)",
+     "complexity": "O(α(n))",
+     "returns": "int",
+     "example": "if (find(a) == find(b)) cout << \"razem\";"
+    },
+    {
+     "sig": "unite(a, b)",
+     "desc": "łączy zbiory a i b (mniejszy pod większy); false, jeśli już były razem",
+     "complexity": "O(α(n))",
+     "returns": "bool",
+     "example": "if (unite(a, b)) koszt += w; // Kruskal"
+    },
+    {
+     "sig": "same(a, b)",
+     "desc": "czy a i b są w jednym zbiorze",
+     "complexity": "O(α(n))",
+     "returns": "bool"
+    },
+    {
+     "sig": "size(x)",
+     "desc": "liczba elementów w zbiorze x: `sz[find(x)]`",
+     "complexity": "O(α(n))",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Zapomniana inicjalizacja `p[i] = i` → `find` zwraca 0 lub krąży w nieskończoność.",
+    "`p[a] = b` zamiast `p[find(a)] = find(b)` — podpinasz element, a nie korzeń; zbiory się rozjeżdżają.",
+    "`sz[x]` czytany dla elementu, który nie jest korzeniem — rozmiar jest aktualny tylko w korzeniu: `sz[find(x)]`.",
+    "Rekurencyjny `find` BEZ łączenia według rozmiaru może mieć głębokość O(n) przy pierwszym wywołaniu (łańcuch) → przepełnienie stosu dla n = 10^6. Używaj union by size albo iteracyjnego `find`.",
+    "Numeracja: tablice rozmiaru `n + 1`, gdy elementy są od 1.",
+    "DSU nie obsługuje usuwania — szukaj przetwarzania offline od końca albo DSU z cofaniem (rollback)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "find union kod",
+      "dsu c++",
+      "union find c++",
+      "find and union jak napisać",
+      "zbiory rozłączne kod",
+      "fu kod"
+     ],
+     "a": "Tablica `p[x]` (szef elementu) i `sz[x]` (rozmiar, ważny w korzeniu). `find(x)` idzie do korzenia\ni spłaszcza ścieżkę, `unite(a, b)` podpina mniejszy korzeń pod większy. Dzięki kompresji ścieżek\ni łączeniu według rozmiaru każda operacja to **O(α(n))** — praktycznie stała. Na początku każdy\nelement jest sam: `p[i] = i`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 100005;\nint p[MAXN], sz[MAXN];\nint find(int x) { return p[x] == x ? x : p[x] = find(p[x]); }\nbool unite(int a, int b) {\n    a = find(a); b = find(b);\n    if (a == b) return false;\n    if (sz[a] < sz[b]) swap(a, b);\n    p[b] = a; sz[a] += sz[b];\n    return true;\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 1; i <= n; i++) { p[i] = i; sz[i] = 1; }\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        unite(a, b);\n    }\n    cout << (find(1) == find(n) ? \"TAK\" : \"NIE\") << '\\n';\n}"
+    },
+    {
+     "q": [
+      "kompresja ścieżek",
+      "path compression",
+      "dlaczego dsu jest szybkie",
+      "union by size rank",
+      "łączenie według rangi"
+     ],
+     "a": "Bez optymalizacji drzewo może zrobić się łańcuchem i `find` kosztuje O(n). **Union by size** (mniejsze\npod większe) gwarantuje głębokość ≤ log₂ n, bo element schodzi niżej tylko wtedy, gdy jego zbiór się\nco najmniej podwaja. **Kompresja ścieżek** po każdym `find` podpina odwiedzone wierzchołki bezpośrednio\npod korzeń. Razem dają O(α(n)) zamortyzowane. Sama kompresja (bez rozmiarów) daje O(log n)\nzamortyzowane — też zwykle wystarcza.",
+     "code": "vector<int> p(6), sz(6, 1);\niota(p.begin(), p.end(), 0);\nfunction<int(int)> find = [&](int x) { return p[x] == x ? x : p[x] = find(p[x]); };\nauto unite = [&](int a, int b) {\n    a = find(a); b = find(b);\n    if (a == b) return;\n    if (sz[a] < sz[b]) swap(a, b);    // union by size\n    p[b] = a; sz[a] += sz[b];\n};\nunite(1, 2); unite(3, 4); unite(1, 3); unite(5, 1);\ncout << find(4) << ' ' << sz[find(5)] << '\\n';   // 1 5"
+    },
+    {
+     "q": [
+      "find iteracyjny",
+      "dsu bez rekurencji",
+      "stack overflow find",
+      "find bez rekurencji dsu"
+     ],
+     "a": "Rekurencyjny `find` jest bezpieczny przy łączeniu według rozmiaru (głębokość ≤ log n). Bez niego\npierwsze wywołanie na łańcuchu 10^6 elementów może przepełnić stos. Wersja iteracyjna z „path\nhalving” (`p[x] = p[p[x]]`) jest tak samo szybka i nie używa stosu wywołań.",
+     "code": "vector<int> p = {0, 1, 1, 2, 3, 4};      // łańcuch 5 -> 4 -> 3 -> 2 -> 1\nauto find = [&](int x) {\n    while (p[x] != x) {\n        p[x] = p[p[x]];                  // przeskakujemy co drugi element\n        x = p[x];\n    }\n    return x;\n};\ncout << find(5) << '\\n';                 // 1"
+    },
+    {
+     "q": [
+      "rozmiar zbioru dsu",
+      "ile elementów w grupie dsu",
+      "size of set union find",
+      "wielkość składowej dsu"
+     ],
+     "a": "Trzymaj `sz[korzeń]` = liczba elementów zbioru i przy `unite` dodawaj `sz[a] += sz[b]` (gdzie `a` to\nnowy korzeń). Rozmiar zbioru `x` to `sz[find(x)]` — czytanie `sz[x]` dla nie-korzenia daje\nnieaktualną wartość. Tak samo możesz trzymać sumę, minimum, liczbę krawędzi itp.",
+     "code": "int n = 5;\nvector<int> p(n + 1), sz(n + 1, 1);\niota(p.begin(), p.end(), 0);\nauto find = [&](int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; };\nauto unite = [&](int a, int b) {\n    a = find(a); b = find(b);\n    if (a == b) return;\n    if (sz[a] < sz[b]) swap(a, b);\n    p[b] = a; sz[a] += sz[b];\n};\nunite(1, 2); unite(2, 3);\ncout << sz[find(3)] << ' ' << sz[find(4)] << '\\n';   // 3 1"
+    },
+    {
+     "q": [
+      "liczba składowych dsu",
+      "ile grup po połączeniach",
+      "number of components union find",
+      "po każdej krawędzi wypisz liczbę składowych"
+     ],
+     "a": "Zacznij od `comps = n` i zmniejszaj o 1 przy każdym **udanym** `unite` (gdy łączone elementy były\nw różnych zbiorach). Po każdej operacji masz od razu aktualną liczbę składowych — O(α(n)) na krawędź\nzamiast BFS-a od nowa.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> p;\nint find(int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; }\nint main() {\n    int n, m;\n    cin >> n >> m;\n    p.resize(n + 1);\n    iota(p.begin(), p.end(), 0);\n    int comps = n;\n    while (m--) {\n        int a, b;\n        cin >> a >> b;\n        a = find(a); b = find(b);\n        if (a != b) { p[a] = b; comps--; }\n        cout << comps << '\\n';\n    }\n}"
+    },
+    {
+     "q": [
+      "czy dwa elementy w tym samym zbiorze",
+      "same set dsu",
+      "czy a i b są połączone dsu",
+      "sprawdzenie czy w jednej grupie"
+     ],
+     "a": "`find(a) == find(b)` — dwa elementy są w jednym zbiorze dokładnie wtedy, gdy mają tego samego\nreprezentanta. Nie porównuj `p[a] == p[b]` — bezpośredni szef nie musi być korzeniem.",
+     "code": "vector<int> p = {0, 1, 1, 2, 4};          // 3 -> 2 -> 1, 4 osobno\nauto find = [&](int x) { while (p[x] != x) x = p[x]; return x; };\ncout << (find(3) == find(1)) << ' ' << (p[3] == p[1]) << ' ' << (find(3) == find(4)) << '\\n';   // 1 0 0"
+    },
+    {
+     "q": [
+      "dsu usuwanie krawędzi",
+      "usuwanie krawędzi offline od końca",
+      "dsu delete edge",
+      "krawędzie są usuwane ile składowych",
+      "odwrócone zapytania dsu"
+     ],
+     "a": "DSU nie umie rozłączać, ale jeśli znasz wszystkie usunięcia z góry, przetwarzaj je **od końca**:\nzacznij od grafu po wszystkich usunięciach, a potem „dodawaj” krawędzie w odwrotnej kolejności,\nzapisując odpowiedzi. Usuwanie zamienia się w łączenie. Złożoność O((n + m + q)·α(n)).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> p;\nint comps;\nint find(int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; }\nvoid unite(int a, int b) { a = find(a); b = find(b); if (a != b) { p[a] = b; comps--; } }\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<int> ea(m + 1), eb(m + 1);\n    for (int i = 1; i <= m; i++) cin >> ea[i] >> eb[i];\n    int q;\n    cin >> q;\n    vector<int> rem(q);\n    vector<bool> removed(m + 1, false);\n    for (auto& r : rem) { cin >> r; removed[r] = true; }\n    p.resize(n + 1);\n    iota(p.begin(), p.end(), 0);\n    comps = n;\n    for (int i = 1; i <= m; i++) if (!removed[i]) unite(ea[i], eb[i]);\n    vector<int> ans(q);\n    for (int i = q - 1; i >= 0; i--) {\n        ans[i] = comps;                     // stan po usunięciu rem[0..i]\n        unite(ea[rem[i]], eb[rem[i]]);      // cofamy usunięcie\n    }\n    for (int x : ans) cout << x << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dsu z wagami",
+      "weighted dsu",
+      "dsu z potencjałami",
+      "dsu różnice x_b - x_a",
+      "sprzeczne równania dsu"
+     ],
+     "a": "W ważonym DSU każdy element pamięta `d[x]` = wartość(x) − wartość(rodzica). `find` przy kompresji\nsumuje te różnice, więc po nim `d[x]` = wartość(x) − wartość(korzenia). Warunek `x_b − x_a = w`:\njeśli `a`, `b` w jednym zbiorze — sprawdź `d[b] − d[a] == w`; jeśli nie — podepnij korzeń `rb` pod\n`ra` z `d[rb] = w + d[a] − d[b]`. O(α(n)) na operację.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 100005;\nint p[MAXN], sz[MAXN];\nlong long d[MAXN];                      // d[x] = val(x) - val(p[x])\nint find(int x) {\n    if (p[x] == x) return x;\n    int r = find(p[x]);\n    d[x] += d[p[x]];                    // p[x] wskazuje już na r\n    p[x] = r;\n    return r;\n}\nint main() {\n    int n, q;\n    cin >> n >> q;\n    for (int i = 1; i <= n; i++) { p[i] = i; sz[i] = 1; d[i] = 0; }\n    while (q--) {\n        int a, b;\n        long long w;                    // x_b - x_a = w\n        cin >> a >> b >> w;\n        int ra = find(a), rb = find(b);\n        if (ra == rb) {\n            cout << (d[b] - d[a] == w ? \"OK\" : \"SPRZECZNE\") << '\\n';\n            continue;\n        }\n        long long dr = w + d[a] - d[b];   // val(rb) - val(ra)\n        if (sz[ra] < sz[rb]) { swap(ra, rb); dr = -dr; }\n        p[rb] = ra; d[rb] = dr; sz[ra] += sz[rb];\n        cout << \"OK\\n\";\n    }\n}"
+    },
+    {
+     "q": [
+      "dsu na siatce",
+      "łączenie pól planszy dsu",
+      "dsu grid",
+      "zalewanie pól dsu wyspy online"
+     ],
+     "a": "Pole `(x, y)` zamień na numer `x * m + y` i łącz z sąsiadami tak jak wierzchołki. Typowe zadanie:\npola po kolei zamieniają się w ląd — po każdej zmianie połącz nowe pole z sąsiadującymi polami\nlądu i wypisz liczbę wysp (licznik: +1 za nowe pole, −1 za każde udane `unite`). O(α(nm)) na pole.",
+     "code": "int n = 2, m = 3;\nvector<int> p(n * m);\niota(p.begin(), p.end(), 0);\nauto find = [&](int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; };\nvector<vector<bool>> land(n, vector<bool>(m, false));\nint wyspy = 0;\nint dx[] = {-1, 0, 1, 0}, dy[] = {0, 1, 0, -1};\nvector<pair<int,int>> nowe = {{0, 0}, {1, 2}, {0, 1}, {0, 2}};\nfor (auto [x, y] : nowe) {\n    land[x][y] = true; wyspy++;\n    for (int k = 0; k < 4; k++) {\n        int nx = x + dx[k], ny = y + dy[k];\n        if (nx < 0 || ny < 0 || nx >= n || ny >= m || !land[nx][ny]) continue;\n        int a = find(x * m + y), b = find(nx * m + ny);\n        if (a != b) { p[a] = b; wyspy--; }\n    }\n    cout << wyspy << ' ';\n}\ncout << '\\n';                               // 1 2 2 1"
+    },
+    {
+     "q": [
+      "dsu min max suma w zbiorze",
+      "dodatkowe dane w dsu",
+      "dsu przechowywanie sumy",
+      "najmniejszy element w grupie dsu"
+     ],
+     "a": "Każdą wartość „dla całego zbioru” trzymaj w korzeniu i scalaj w `unite`: `sum[a] += sum[b]`,\n`mn[a] = min(mn[a], mn[b])`, `kraw[a] += kraw[b] + 1` itd. Czytaj zawsze przez `find(x)`.\nKoszt dalej O(α(n)) na operację.",
+     "code": "int n = 4;\nvector<int> p(n + 1);\niota(p.begin(), p.end(), 0);\nvector<long long> sum = {0, 5, 1, 7, 3}, mn = sum;\nauto find = [&](int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; };\nauto unite = [&](int a, int b) {\n    a = find(a); b = find(b);\n    if (a == b) return;\n    p[b] = a;\n    sum[a] += sum[b];\n    mn[a] = min(mn[a], mn[b]);\n};\nunite(1, 2); unite(2, 4);\ncout << sum[find(4)] << ' ' << mn[find(1)] << '\\n';   // 9 1"
+    },
+    {
+     "q": [
+      "dsu złożoność",
+      "alfa odwrotna ackermanna",
+      "ile działa find union",
+      "dsu complexity"
+     ],
+     "a": "Z kompresją ścieżek **i** łączeniem według rozmiaru/rangi: O(α(n)) zamortyzowane na operację,\ngdzie α(n) ≤ 4 dla n mniejszego od liczby atomów we wszechświecie — praktycznie stała. Tylko\nz kompresją: O(log n) zamortyzowane. Bez obu optymalizacji: O(n) w najgorszym razie (łańcuch).\n10^6 operacji to kilkanaście milisekund.",
+     "code": "// union by size: wysokość drzewa nie przekracza log2(n), nawet bez kompresji ścieżek\nint n = 1024;\nvector<int> p(n), sz(n, 1), h(n, 0);\niota(p.begin(), p.end(), 0);\nauto find = [&](int x) { while (p[x] != x) x = p[x]; return x; };   // celowo bez kompresji\nfor (int step = 1; step < n; step *= 2)\n    for (int i = 0; i + step < n; i += 2 * step) {                  // łączymy równe zbiory (najgorszy przypadek)\n        int a = find(i), b = find(i + step);\n        if (sz[a] < sz[b]) swap(a, b);\n        p[b] = a;\n        sz[a] += sz[b];\n        h[a] = max(h[a], h[b] + 1);\n    }\ncout << h[find(0)] << '\\n';   // 10 = log2(1024)"
+    },
+    {
+     "q": [
+      "dsu z cofaniem",
+      "dsu rollback",
+      "cofanie operacji union find",
+      "dsu undo"
+     ],
+     "a": "Gdy trzeba cofać ostatnie połączenia (np. dzielenie zapytań offline, „dynamic connectivity”),\n**nie używaj kompresji ścieżek** — tylko union by size (głębokość ≤ log n, `find` w O(log n)).\nKażde udane `unite` zapisuj na stosie (który korzeń podpięto), a `rollback()` przywraca stan sprzed\nostatniej operacji w O(1).",
+     "code": "struct RollbackDSU {\n    vector<int> p, sz;\n    vector<int> hist;                       // podpięte korzenie (-1 = nieudane unite)\n    RollbackDSU(int n) : p(n + 1), sz(n + 1, 1) { iota(p.begin(), p.end(), 0); }\n    int find(int x) { while (p[x] != x) x = p[x]; return x; }   // bez kompresji!\n    bool unite(int a, int b) {\n        a = find(a); b = find(b);\n        if (a == b) { hist.push_back(-1); return false; }\n        if (sz[a] < sz[b]) swap(a, b);\n        p[b] = a; sz[a] += sz[b];\n        hist.push_back(b);\n        return true;\n    }\n    void rollback() {\n        int b = hist.back(); hist.pop_back();\n        if (b == -1) return;\n        int a = p[b];\n        sz[a] -= sz[b];\n        p[b] = b;\n    }\n};",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "graph-mst-kruskal",
+    "graph-connected-components",
+    "graph-bipartite",
+    "graph-cycle-detection",
+    "graph-mst-prim",
+    "graph-flood-fill",
+    "graph-mst-path-max",
+    "graph-weighted-dsu"
+   ]
+  },
+  {
+   "id": "graph-mst-kruskal",
+   "title": "Minimalne drzewo rozpinające — algorytm Kruskala",
+   "category": "Grafy",
+   "tags": [
+    "mst",
+    "minimalne drzewo rozpinające",
+    "kruskal",
+    "dsu",
+    "minimum spanning tree",
+    "las rozpinający",
+    "sortowanie krawędzi"
+   ],
+   "aliases": [
+    "kruskal",
+    "algorytm kruskala",
+    "kruskal c++",
+    "mst",
+    "mst kruskal",
+    "minimalne drzewo rozpinające",
+    "minimum spanning tree",
+    "minimalne drzewo rozpinajace",
+    "najtańsze połączenie wszystkich miast",
+    "drzewo rozpinające",
+    "mst kod"
+   ],
+   "summary": "Kruskal sortuje krawędzie rosnąco po wadze i dodaje kolejne, o ile nie tworzą cyklu (sprawdza to DSU). Wynik to drzewo łączące wszystkie wierzchołki o najmniejszej sumie wag. O(m log m).",
+   "complexity": "O(m log m) — dominuje sortowanie; DSU O(m·α(n))",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Minimalne drzewo rozpinające (MST)** to zbiór `n − 1` krawędzi łączący wszystkie wierzchołki\ngrafu spójnego o najmniejszej możliwej sumie wag. **Kruskal** działa zachłannie: bierze krawędzie od\nnajlżejszej; krawędź łączącą dwie *różne* składowe dodaje (to bezpieczne — tzw. własność przekroju),\na krawędź wewnątrz jednej składowej odrzuca (zamknęłaby cykl). Do sprawdzania „czy różne składowe”\nużywa DSU."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „połącz wszystkie miasta najmniejszym kosztem”, „zbuduj sieć tak, by każdy komputer był\npołączony, minimalizując koszt kabli”, „usuń krawędzie o maksymalnej sumie, zachowując spójność”\n(= suma wszystkich − MST), „minimalizuj największą wagę na ścieżce” (MST też ją minimalizuje),\n„koszt budowy studni albo podłączenia do sąsiada” (sztuczny wierzchołek)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Kruskal — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvector<int> p, sz;\nint find(int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; }\nbool unite(int a, int b) {\n    a = find(a); b = find(b);\n    if (a == b) return false;\n    if (sz[a] < sz[b]) swap(a, b);\n    p[b] = a; sz[a] += sz[b];\n    return true;\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<array<int, 3>> e(m);               // {waga, a, b} -> sortuje się po wadze\n    for (auto& [w, a, b] : e) cin >> a >> b >> w;\n    sort(e.begin(), e.end());\n    p.resize(n + 1);\n    sz.assign(n + 1, 1);\n    iota(p.begin(), p.end(), 0);\n    long long total = 0;                       // suma wag może przekroczyć int!\n    int used = 0;\n    for (auto [w, a, b] : e)\n        if (unite(a, b)) {\n            total += w;\n            used++;\n        }\n    if (used != n - 1) cout << \"NIE\\n\";        // graf niespójny — brak drzewa rozpinającego\n    else cout << total << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "W `array<int,3>` wagę wpisz na **pierwszym** miejscu — wtedy zwykłe `sort` sortuje po wadze. Przy\n`struct` podaj komparator lub `operator<`."
+    },
+    {
+     "type": "warn",
+     "md": "Suma wag MST łatwo przekracza 2^31: `n = 10^5` krawędzi po `10^9` to `10^14`. Sumę trzymaj\nw `long long`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "sort(e.begin(), e.end())",
+     "desc": "sortuje krawędzie {waga, a, b} rosnąco po wadze",
+     "complexity": "O(m log m)"
+    },
+    {
+     "sig": "unite(a, b)",
+     "desc": "dodaje krawędź do MST, jeśli łączy różne składowe (zwraca true)",
+     "complexity": "O(α(n))",
+     "returns": "bool"
+    }
+   ],
+   "pitfalls": [
+    "Suma wag w `int` → przepełnienie. Używaj `long long`.",
+    "Brak sprawdzenia spójności: jeśli dodano mniej niż `n − 1` krawędzi, drzewa rozpinającego nie ma.",
+    "Sortowanie `array {a, b, w}` sortuje po `a`, nie po wadze — waga musi być pierwsza (albo komparator).",
+    "`unite` bez sprawdzenia wyniku (dodawanie wagi zawsze) → liczysz też krawędzie tworzące cykl.",
+    "Graf nieskierowany: lista krawędzi ma każdą krawędź RAZ — nie dubluj jej jak w liście sąsiedztwa (zadziała, ale sortujesz 2× więcej).",
+    "MST nie daje najkrótszych ścieżek między wierzchołkami — to inny problem (Dijkstra)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "kruskal c++",
+      "algorytm kruskala kod",
+      "mst kruskal",
+      "minimalne drzewo rozpinające kod",
+      "minimum spanning tree c++",
+      "jak zrobić mst"
+     ],
+     "a": "Posortuj krawędzie rosnąco po wadze, przejdź po nich i dodaj krawędź do drzewa, jeśli `unite(a, b)`\nsię uda (końce były w różnych składowych). Po dodaniu `n − 1` krawędzi masz MST. Sortowanie\nO(m log m) dominuje; DSU kosztuje praktycznie O(1) na krawędź. Sumę wag trzymaj w `long long`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> p;\nint find(int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; }\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<array<int, 3>> e(m);\n    for (auto& [w, a, b] : e) cin >> a >> b >> w;\n    sort(e.begin(), e.end());\n    p.resize(n + 1);\n    iota(p.begin(), p.end(), 0);\n    long long total = 0;\n    for (auto [w, a, b] : e) {\n        a = find(a); b = find(b);\n        if (a != b) { p[a] = b; total += w; }\n    }\n    cout << total << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dlaczego kruskal działa",
+      "poprawność kruskala",
+      "własność przekroju mst",
+      "cut property"
+     ],
+     "a": "**Własność przekroju:** dla dowolnego podziału wierzchołków na dwie części najlżejsza krawędź\nprzechodząca między nimi należy do pewnego MST. Gdy Kruskal rozważa krawędź łączącą składowe `A`\ni `B`, wszystkie lżejsze krawędzie już przetworzył, więc to najlżejsza krawędź wychodząca z `A` —\nbezpieczna. Krawędź wewnątrz składowej zamknęłaby cykl, a w cyklu najcięższą krawędź zawsze można\npominąć.",
+     "code": "// przekrój S = {1}: krawędzie przez przekrój to 1-2 (waga 4) i 1-3 (waga 3); najlżejsza = 1-3\nvector<array<int, 3>> e = {{4, 1, 2}, {1, 2, 3}, {3, 1, 3}, {2, 3, 4}};   // {w, a, b}\nsort(e.begin(), e.end());\nvector<int> p(5);\niota(p.begin(), p.end(), 0);\nauto find = [&](int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; };\nbool najlzejszaWMst = false;\nfor (auto [w, a, b] : e) {\n    int x = find(a), y = find(b);\n    if (x == y) continue;               // zamknęłaby cykl -> pomijamy\n    p[x] = y;\n    if (a == 1 && b == 3) najlzejszaWMst = true;\n}\ncout << najlzejszaWMst << '\\n';   // 1: własność przekroju"
+    },
+    {
+     "q": [
+      "kruskal złożoność",
+      "ile działa kruskal",
+      "kruskal complexity",
+      "kruskal 10^6 krawędzi"
+     ],
+     "a": "O(m log m) na sortowanie + O(m·α(n)) na DSU, więc razem **O(m log m)**. Dla `m = 10^6` to ok.\n100–200 ms. Jeśli wagi są małymi liczbami całkowitymi, można sortować przez zliczanie (O(m + W)).\nDla grafów pełnych (`m ≈ n²/2`) szybszy jest Prim w O(n²).",
+     "code": "int n = 100000;\nmt19937 rng(123);\nvector<array<int, 3>> e;                                   // {w, a, b}\nfor (int i = 1; i < n; i++) e.push_back({int(rng() % 1000), i, i + 1});   // ścieżka: graf spójny\nfor (int i = 0; i < 200000; i++) e.push_back({int(rng() % 1000), int(rng() % n) + 1, int(rng() % n) + 1});\nsort(e.begin(), e.end());                                  // O(m log m) — to dominuje\nvector<int> p(n + 1);\niota(p.begin(), p.end(), 0);\nauto find = [&](int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; };\nint used = 0;\nfor (auto [w, a, b] : e) {                                 // O(m · α(n))\n    a = find(a); b = find(b);\n    if (a != b) { p[a] = b; used++; }\n}\ncout << used << '\\n';   // 99999 = n - 1"
+    },
+    {
+     "q": [
+      "maksymalne drzewo rozpinające",
+      "max spanning tree",
+      "największe drzewo rozpinające",
+      "mst z maksymalną sumą"
+     ],
+     "a": "Ten sam Kruskal, tylko sortujesz krawędzie **malejąco** (albo mnożysz wagi przez −1). Zachłanna\npoprawność działa symetrycznie. Przydaje się np. w zadaniu „usuń krawędzie o jak najmniejszej sumie,\nzachowując spójność” — zostaw maksymalne drzewo rozpinające.",
+     "code": "vector<array<int, 3>> e = {{4, 1, 2}, {1, 2, 3}, {2, 1, 3}};   // {w, a, b}\nsort(e.rbegin(), e.rend());                                   // malejąco\nvector<int> p = {0, 1, 2, 3};\nauto find = [&](int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; };\nlong long total = 0;\nfor (auto [w, a, b] : e) {\n    a = find(a); b = find(b);\n    if (a != b) { p[a] = b; total += w; }\n}\ncout << total << '\\n';   // 6"
+    },
+    {
+     "q": [
+      "mst graf niespójny",
+      "las rozpinający",
+      "minimum spanning forest",
+      "kruskal gdy graf niespójny"
+     ],
+     "a": "Kruskal na grafie niespójnym zbuduje **las rozpinający** — MST każdej składowej osobno — i doda\n`n − c` krawędzi (c = liczba składowych). Jeśli zadanie wymaga jednego drzewa, sprawdź `used == n − 1`;\nw przeciwnym razie odpowiedź „nie da się”. Liczba składowych po Kruskalu to `n − used`.",
+     "code": "int n = 5;\nvector<array<int, 3>> e = {{1, 1, 2}, {2, 3, 4}, {5, 2, 1}};\nsort(e.begin(), e.end());\nvector<int> p(n + 1);\niota(p.begin(), p.end(), 0);\nauto find = [&](int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; };\nint used = 0;\nfor (auto [w, a, b] : e) {\n    a = find(a); b = find(b);\n    if (a != b) { p[a] = b; used++; }\n}\ncout << (used == n - 1 ? \"drzewo\" : \"las\") << ' ' << n - used << '\\n';   // las 3"
+    },
+    {
+     "q": [
+      "wypisz krawędzie mst",
+      "które krawędzie są w mst",
+      "odtworzenie drzewa rozpinającego",
+      "lista krawędzi minimalnego drzewa"
+     ],
+     "a": "Zapamiętuj indeks krawędzi w trójce (albo czwórce `{w, a, b, id}`) i przy udanym `unite` dopisz go\ndo wyniku. Jeśli zadanie każe wypisać numery krawędzi w kolejności z wejścia, posortuj wynik\npo `id`. Kolejność sortowania przy równych wagach decyduje, które z równoważnych MST dostaniesz.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> p;\nint find(int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; }\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<array<int, 4>> e(m);                 // {w, a, b, id}\n    for (int i = 0; i < m; i++) { cin >> e[i][1] >> e[i][2] >> e[i][0]; e[i][3] = i + 1; }\n    sort(e.begin(), e.end());\n    p.resize(n + 1);\n    iota(p.begin(), p.end(), 0);\n    vector<int> wynik;\n    for (auto [w, a, b, id] : e) {\n        a = find(a); b = find(b);\n        if (a != b) { p[a] = b; wynik.push_back(id); }\n    }\n    sort(wynik.begin(), wynik.end());\n    for (int id : wynik) cout << id << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "kruskal czy prim",
+      "kiedy prim a kiedy kruskal",
+      "prim vs kruskal"
+     ],
+     "a": "**Kruskal** — gdy masz listę krawędzi, graf rzadki (`m ≈ n`), albo potrzebujesz DSU do czegoś więcej\n(zapytania offline). O(m log m), bardzo krótki kod. **Prim z kopcem** — O(m log n), podobnie szybki.\n**Prim O(n²)** — graf pełny/gęsty (np. wszystkie pary punktów, `n ≤ 5000`), bo nie trzeba generować\n`n²/2` krawędzi ani ich sortować.",
+     "code": "int n = 4;\nvector<array<int, 3>> e = {{1, 1, 2}, {2, 2, 3}, {3, 3, 4}, {4, 1, 4}, {5, 1, 3}};   // {w, a, b}\n// Kruskal: lista krawędzi + sortowanie + DSU\nauto kr = e;\nsort(kr.begin(), kr.end());\nvector<int> p(n + 1);\niota(p.begin(), p.end(), 0);\nauto find = [&](int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; };\nlong long kruskal = 0;\nfor (auto [w, a, b] : kr) { a = find(a); b = find(b); if (a != b) { p[a] = b; kruskal += w; } }\n// Prim: lista sąsiedztwa + kopiec\nvector<vector<pair<int,int>>> g(n + 1);\nfor (auto [w, a, b] : e) { g[a].push_back({b, w}); g[b].push_back({a, w}); }\nvector<bool> in(n + 1, false);\npriority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\npq.push({0, 1});\nlong long prim = 0;\nwhile (!pq.empty()) {\n    auto [w, v] = pq.top(); pq.pop();\n    if (in[v]) continue;\n    in[v] = true; prim += w;\n    for (auto [u, c] : g[v]) if (!in[u]) pq.push({c, u});\n}\ncout << kruskal << ' ' << prim << '\\n';   // 6 6 — ten sam koszt MST"
+    },
+    {
+     "q": [
+      "minimalizacja maksymalnej krawędzi na ścieżce",
+      "bottleneck path",
+      "minimax ścieżka",
+      "najmniejsza możliwa największa waga drogi",
+      "ścieżka o minimalnym maksimum"
+     ],
+     "a": "Ścieżka w MST między `a` i `b` minimalizuje **największą** wagę krawędzi spośród wszystkich ścieżek\na–b. Dla jednego zapytania wystarczy Kruskal przerwany w chwili, gdy `find(a) == find(b)` — waga\nostatnio dodanej krawędzi to odpowiedź. Dla wielu zapytań: MST + LCA z maksimum na ścieżce\nalbo przetwarzanie zapytań offline razem z krawędziami.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> p;\nint find(int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; }\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<array<int, 3>> e(m);\n    for (auto& [w, a, b] : e) cin >> a >> b >> w;\n    int s, t;\n    cin >> s >> t;\n    if (s == t) { cout << 0 << '\\n'; return 0; }\n    sort(e.begin(), e.end());\n    p.resize(n + 1);\n    iota(p.begin(), p.end(), 0);\n    int ans = -1;\n    for (auto [w, a, b] : e) {\n        a = find(a); b = find(b);\n        if (a != b) p[a] = b;\n        if (find(s) == find(t)) { ans = w; break; }\n    }\n    cout << ans << '\\n';\n}"
+    },
+    {
+     "q": [
+      "czy mst jest jednoznaczne",
+      "unikalność mst",
+      "czy jest jedno minimalne drzewo",
+      "unique mst"
+     ],
+     "a": "Jeśli wszystkie wagi są różne — MST jest jednoznaczne. W ogólności przetwarzaj krawędzie grupami\no równej wadze: najpierw policz, ile krawędzi z grupy łączy różne składowe (kandydaci), potem je\npołącz i policz udane `unite`. Jeśli w jakiejś grupie kandydatów jest więcej niż udanych połączeń,\nistnieje inne MST (krawędzie są wymienne). O(m log m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> p;\nint find(int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; }\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<array<int, 3>> e(m);\n    for (auto& [w, a, b] : e) cin >> a >> b >> w;\n    sort(e.begin(), e.end());\n    p.resize(n + 1);\n    iota(p.begin(), p.end(), 0);\n    bool unikalne = true;\n    for (int i = 0, j; i < m; i = j) {\n        j = i;\n        while (j < m && e[j][0] == e[i][0]) j++;\n        int kandydaci = 0, polaczone = 0;\n        for (int k = i; k < j; k++) if (find(e[k][1]) != find(e[k][2])) kandydaci++;\n        for (int k = i; k < j; k++) {\n            int a = find(e[k][1]), b = find(e[k][2]);\n            if (a != b) { p[a] = b; polaczone++; }\n        }\n        if (kandydaci > polaczone) unikalne = false;\n    }\n    cout << (unikalne ? \"TAK\" : \"NIE\") << '\\n';\n}"
+    },
+    {
+     "q": [
+      "mst z wymuszoną krawędzią",
+      "krawędź musi być w drzewie rozpinającym",
+      "mst zawierające krawędź"
+     ],
+     "a": "Najpierw połącz (`unite`) końce wymaganej krawędzi i dolicz jej wagę, potem puść zwykłego Kruskala\nna pozostałych krawędziach. Wynik to najtańsze drzewo zawierające tę krawędź. Analogicznie można\nwymusić cały zbiór krawędzi (o ile sam nie ma cyklu).",
+     "code": "int n = 3;\nvector<array<int, 3>> e = {{1, 1, 2}, {2, 2, 3}, {5, 1, 3}};\nvector<int> p(n + 1);\niota(p.begin(), p.end(), 0);\nauto find = [&](int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; };\nlong long total = 5;                      // wymuszona krawędź 1-3 o wadze 5\np[find(1)] = find(3);\nsort(e.begin(), e.end());\nfor (auto [w, a, b] : e) {\n    a = find(a); b = find(b);\n    if (a != b) { p[a] = b; total += w; }\n}\ncout << total << '\\n';   // 6"
+    },
+    {
+     "q": [
+      "studnie i rury mst",
+      "sztuczny wierzchołek mst",
+      "koszt w wierzchołku mst",
+      "albo zbuduj elektrownię albo podłącz do sąsiada"
+     ],
+     "a": "Gdy każdy wierzchołek może „sam się obsłużyć” kosztem `c_i` (studnia, elektrownia) albo połączyć się\nz innym krawędzią, dodaj sztuczny wierzchołek 0 z krawędziami `(0, i, c_i)` i policz MST na\n`n + 1` wierzchołkach. Krawędź do 0 w drzewie = „budujemy studnię w i”. O((n + m) log(n + m)).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> p;\nint find(int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; }\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<array<long long, 3>> e;\n    for (int i = 1; i <= n; i++) { long long c; cin >> c; e.push_back({c, 0, i}); }\n    for (int i = 0; i < m; i++) { long long a, b, w; cin >> a >> b >> w; e.push_back({w, a, b}); }\n    sort(e.begin(), e.end());\n    p.resize(n + 1);\n    iota(p.begin(), p.end(), 0);\n    long long total = 0;\n    for (auto [w, a, b] : e) {\n        int x = find(a), y = find(b);\n        if (x != y) { p[x] = y; total += w; }\n    }\n    cout << total << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "graph-dsu",
+    "graph-mst-prim",
+    "graph-representation",
+    "tree-lca",
+    "graph-connected-components",
+    "graph-mst-path-max",
+    "math-gauss"
+   ]
+  },
+  {
+   "id": "graph-mst-prim",
+   "title": "Minimalne drzewo rozpinające — algorytm Prima (kopiec i O(n²))",
+   "category": "Grafy",
+   "tags": [
+    "mst",
+    "prim",
+    "algorytm prima",
+    "priority_queue",
+    "minimalne drzewo rozpinające",
+    "graf gęsty",
+    "punkty na płaszczyźnie"
+   ],
+   "aliases": [
+    "prim",
+    "algorytm prima",
+    "prim c++",
+    "prim priority queue",
+    "mst prim",
+    "prim O(n^2)",
+    "prim graf gęsty",
+    "mst punkty na płaszczyźnie",
+    "minimalne drzewo rozpinające prim"
+   ],
+   "summary": "Prim rozbudowuje drzewo od jednego wierzchołka, za każdym razem dołączając najtańszą krawędź wychodzącą z drzewa. Z kopcem O(m log n); w wersji z tablicą O(n²) — najlepsza dla grafów pełnych.",
+   "complexity": "z priority_queue: O(m log n); wersja tablicowa: O(n²)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Prim przypomina Dijkstrę: trzymamy zbiór wierzchołków już w drzewie i dla każdego spoza drzewa\n`key[v]` = najtańsza krawędź łącząca `v` z drzewem. W każdym kroku dołączamy wierzchołek o najmniejszym\n`key` i poprawiamy klucze jego sąsiadów. Różnica względem Dijkstry: porównujemy **samą wagę krawędzi**\n`w`, a nie `dist[v] + w`."
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy Prim zamiast Kruskala:** graf pełny lub bardzo gęsty, np. „n punktów na płaszczyźnie, koszt\npołączenia to odległość” (`n ≤ 5000` → `~12,5·10^6` par). Wersja O(n²) nie generuje ani nie sortuje\nkrawędzi i zużywa O(n) pamięci."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Prim z priority_queue — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int, int>>> g(n + 1);   // (sąsiad, waga)\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n    vector<bool> inTree(n + 1, false);\n    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;   // (waga, wierzchołek)\n    pq.push({0, 1});\n    long long total = 0;\n    int cnt = 0;\n    while (!pq.empty()) {\n        auto [w, v] = pq.top();\n        pq.pop();\n        if (inTree[v]) continue;               // nieaktualny wpis (lazy deletion)\n        inTree[v] = true;\n        total += w;\n        cnt++;\n        for (auto [u, c] : g[v])\n            if (!inTree[u]) pq.push({c, u});   // sama waga krawędzi, nie dist + c\n    }\n    if (cnt != n) cout << \"NIE\\n\";\n    else cout << total << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Prim O(n²) dla grafu pełnego (punkty na płaszczyźnie)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// n punktów, koszt połączenia = odległość euklidesowa; graf pełny -> Prim O(n^2)\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> x(n), y(n);\n    for (int i = 0; i < n; i++) cin >> x[i] >> y[i];\n    vector<long long> key(n, LLONG_MAX);       // kwadrat odległości do drzewa\n    vector<bool> inTree(n, false);\n    key[0] = 0;\n    double total = 0;\n    for (int it = 0; it < n; it++) {\n        int v = -1;\n        for (int i = 0; i < n; i++)            // najbliższy wierzchołek spoza drzewa\n            if (!inTree[i] && (v == -1 || key[i] < key[v])) v = i;\n        inTree[v] = true;\n        total += sqrt((double)key[v]);\n        for (int u = 0; u < n; u++)\n            if (!inTree[u]) {\n                long long dx = x[u] - x[v], dy = y[u] - y[v];\n                key[u] = min(key[u], dx * dx + dy * dy);\n            }\n    }\n    cout << fixed << setprecision(3) << total << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "W wersji O(n²) porównuj **kwadraty** odległości w `long long` i pierwiastek licz dopiero przy dodawaniu\ndo wyniku — unikasz błędów zaokrągleń w porównaniach i jest szybciej."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "pq.push({w, u})",
+     "desc": "dodaje kandydata: wierzchołek u osiągalny krawędzią wagi w",
+     "complexity": "O(log m)"
+    },
+    {
+     "sig": "if (inTree[v]) continue;",
+     "desc": "pomija nieaktualne wpisy kopca (lazy deletion)",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Wrzucanie `dist[v] + w` zamiast `w` — to już Dijkstra (drzewo najkrótszych ścieżek), nie MST.",
+    "Brak `if (inTree[v]) continue;` → wierzchołek dodany wielokrotnie, zła suma.",
+    "`priority_queue` w C++ jest domyślnie MAX-kopcem — potrzebujesz `greater<>` albo ujemnych wag.",
+    "Graf niespójny: Prim od wierzchołka 1 obejmie tylko jego składową — sprawdź `cnt == n`.",
+    "Wersja O(n²) z `double` w porównaniach: używaj kwadratów odległości w `long long` (dokładnie).",
+    "Suma wag w `long long`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "prim c++",
+      "algorytm prima kod",
+      "prim priority queue",
+      "prim kopiec",
+      "mst prim kod"
+     ],
+     "a": "Zacznij od dowolnego wierzchołka. Kopiec trzyma pary `(waga krawędzi, wierzchołek)`. Zdejmuj\nnajlżejszą; jeśli wierzchołek już jest w drzewie — pomiń; inaczej dodaj go, dolicz wagę i wrzuć\nkrawędzie do jego sąsiadów spoza drzewa. Każda krawędź trafia do kopca co najwyżej dwa razy →\n**O(m log m) = O(m log n)**.",
+     "code": "long long prim(const vector<vector<pair<int,int>>>& g, int n) {\n    vector<bool> in(n + 1, false);\n    priority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\n    pq.push({0, 1});\n    long long total = 0;\n    while (!pq.empty()) {\n        auto [w, v] = pq.top(); pq.pop();\n        if (in[v]) continue;\n        in[v] = true;\n        total += w;\n        for (auto [u, c] : g[v]) if (!in[u]) pq.push({c, u});\n    }\n    return total;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "prim O(n^2)",
+      "prim dla grafu gęstego",
+      "mst pełny graf",
+      "prim bez kopca",
+      "prim tablica"
+     ],
+     "a": "Dla grafu pełnego (`m ≈ n²/2`) kopiec nic nie daje. Trzymaj `key[v]` (najtańsza krawędź do drzewa)\ni w każdym z `n` kroków liniowo wybierz minimum spośród wierzchołków spoza drzewa, a potem popraw\nklucze wszystkich pozostałych. Razem **O(n²)** czasu i O(n) pamięci — dla `n = 5000` to 25 mln\noperacji, ok. 50 ms.",
+     "code": "int n = 3;\nvector<vector<int>> w = {{0, 4, 1}, {4, 0, 2}, {1, 2, 0}};   // macierz wag\nvector<int> key(n, INT_MAX);\nvector<bool> in(n, false);\nkey[0] = 0;\nlong long total = 0;\nfor (int it = 0; it < n; it++) {\n    int v = -1;\n    for (int i = 0; i < n; i++) if (!in[i] && (v == -1 || key[i] < key[v])) v = i;\n    in[v] = true;\n    total += key[v];\n    for (int u = 0; u < n; u++) if (!in[u]) key[u] = min(key[u], w[v][u]);\n}\ncout << total << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "prim a dijkstra różnica",
+      "czym prim różni się od dijkstry",
+      "prim dijkstra podobieństwo"
+     ],
+     "a": "Kod jest prawie identyczny, różni się klucz w kopcu: Dijkstra wrzuca `dist[v] + w` (długość całej\nścieżki od źródła), Prim — samo `w` (koszt podłączenia `u` do drzewa). Dijkstra buduje drzewo\nnajkrótszych ścieżek z jednego źródła, Prim — drzewo o minimalnej sumie wag. To zwykle różne drzewa.",
+     "code": "vector<vector<pair<int,int>>> g(4);\nauto add = [&](int a, int b, int w) { g[a].push_back({b, w}); g[b].push_back({a, w}); };\nadd(1, 2, 2); add(2, 3, 2); add(1, 3, 3);\nfor (int tryb = 0; tryb < 2; tryb++) {                    // 0 = Prim, 1 = Dijkstra\n    vector<bool> done(4, false);\n    priority_queue<array<long long, 3>, vector<array<long long, 3>>, greater<>> pq;   // {klucz, v, waga krawędzi}\n    pq.push({0, 1, 0});\n    long long suma = 0;                                    // suma wag krawędzi wybranego drzewa\n    while (!pq.empty()) {\n        auto [k, v, w] = pq.top(); pq.pop();\n        if (done[v]) continue;\n        done[v] = true;\n        suma += w;\n        for (auto [u, c] : g[v])\n            if (!done[u]) pq.push({tryb == 0 ? c : k + c, u, c});   // JEDYNA różnica: c albo dist + c\n    }\n    cout << (tryb == 0 ? \"Prim \" : \"Dijkstra \") << suma << '\\n';\n}\n// Prim 4 (MST: 1-2, 2-3), Dijkstra 5 (drzewo najkrótszych ścieżek: 1-2, 1-3)"
+    },
+    {
+     "q": [
+      "prim złożoność",
+      "ile działa prim",
+      "prim complexity"
+     ],
+     "a": "Z `priority_queue` i leniwym usuwaniem: **O(m log m)**, czyli O(m log n). Wersja tablicowa:\n**O(n²)** niezależnie od `m`. Wybór: dla rzadkich grafów kopiec (albo Kruskal), dla pełnych —\nO(n²). Pamięć: kopiec do O(m) wpisów, wersja tablicowa O(n).",
+     "code": "int n = 50;                                                // graf pełny: m = n(n-1)/2\nvector<vector<pair<int,int>>> g(n + 1);\nlong long m = 0;\nfor (int a = 1; a <= n; a++)\n    for (int b = a + 1; b <= n; b++) { int w = (a * 31 + b * 17) % 100; g[a].push_back({b, w}); g[b].push_back({a, w}); m++; }\nvector<bool> in(n + 1, false);\npriority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\npq.push({0, 1});\nlong long wrzucenia = 1;\nwhile (!pq.empty()) {\n    auto [w, v] = pq.top(); pq.pop();                      // każde pop: O(log m)\n    if (in[v]) continue;\n    in[v] = true;\n    for (auto [u, c] : g[v]) if (!in[u]) { pq.push({c, u}); wrzucenia++; }\n}\ncout << (wrzucenia <= 2 * m + 1) << '\\n';   // 1: co najwyżej 2m wpisów -> O(m log m)"
+    },
+    {
+     "q": [
+      "mst punkty na płaszczyźnie",
+      "połączyć punkty minimalną długością kabla",
+      "euclidean mst",
+      "minimalne drzewo rozpinające odległość euklidesowa"
+     ],
+     "a": "Graf jest pełny (każda para punktów), więc użyj Prima O(n²) liczącego odległości w locie — bez\ntworzenia `n²/2` krawędzi (dla `n = 5000` to 12,5 mln krawędzi, Kruskal by je jeszcze sortował).\nPorównuj kwadraty odległości w `long long`, a pierwiastek dodawaj do wyniku `double`.",
+     "code": "int n = 3;\nvector<long long> x = {0, 3, 6}, y = {0, 4, 8};\nvector<long long> key(n, LLONG_MAX);\nvector<bool> in(n, false);\nkey[0] = 0;\ndouble total = 0;\nfor (int it = 0; it < n; it++) {\n    int v = -1;\n    for (int i = 0; i < n; i++) if (!in[i] && (v == -1 || key[i] < key[v])) v = i;\n    in[v] = true;\n    total += sqrt((double)key[v]);\n    for (int u = 0; u < n; u++) {\n        long long dx = x[u] - x[v], dy = y[u] - y[v];\n        if (!in[u]) key[u] = min(key[u], dx * dx + dy * dy);\n    }\n}\nprintf(\"%.2f\\n\", total);   // 10.00"
+    },
+    {
+     "q": [
+      "prim lazy deletion",
+      "prim visited continue",
+      "dlaczego prim pomija wierzchołki z kopca"
+     ],
+     "a": "W `priority_queue` nie da się zmniejszyć klucza, więc wrzucamy nowy wpis, a stare zostają. Po zdjęciu\nwpisu sprawdzamy `if (inTree[v]) continue;` — jeśli wierzchołek jest już w drzewie, ten wpis jest\nnieaktualny. Bez tego wierzchołek zostałby „dodany” kilka razy i suma byłaby za duża.",
+     "code": "vector<vector<pair<int,int>>> g = {{}, {{2, 5}, {3, 1}}, {{1, 5}, {3, 1}}, {{1, 1}, {2, 1}}};\nvector<bool> in(4, false);\npriority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\npq.push({0, 1});\nlong long total = 0;\nwhile (!pq.empty()) {\n    auto [w, v] = pq.top(); pq.pop();\n    if (in[v]) continue;           // stary wpis (np. {5, 2})\n    in[v] = true; total += w;\n    for (auto [u, c] : g[v]) if (!in[u]) pq.push({c, u});\n}\ncout << total << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "prim krawędzie drzewa",
+      "jak wypisać krawędzie mst w primie",
+      "prim parent",
+      "prim odtworzenie drzewa"
+     ],
+     "a": "Wrzucaj do kopca trójki `{waga, wierzchołek, skąd}`. Gdy zdejmujesz wierzchołek po raz pierwszy\n(nie był w drzewie), krawędź `skąd – wierzchołek` należy do MST. Koszt i złożoność bez zmian:\nO(m log n). W wersji O(n²) trzymaj `parent[v]` aktualizowany razem z `key[v]`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int,int>>> g(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n    vector<bool> in(n + 1, false);\n    priority_queue<array<int, 3>, vector<array<int, 3>>, greater<>> pq;   // {waga, v, skąd}\n    pq.push({0, 1, 0});\n    vector<pair<int,int>> drzewo;\n    while (!pq.empty()) {\n        auto [w, v, from] = pq.top(); pq.pop();\n        if (in[v]) continue;\n        in[v] = true;\n        if (from) drzewo.push_back({min(from, v), max(from, v)});\n        for (auto [u, c] : g[v]) if (!in[u]) pq.push({c, u, v});\n    }\n    sort(drzewo.begin(), drzewo.end());\n    for (auto [a, b] : drzewo) cout << a << ' ' << b << '\\n';\n}"
+    },
+    {
+     "q": [
+      "prim graf niespójny",
+      "prim las rozpinający",
+      "prim kilka składowych"
+     ],
+     "a": "Prim z jednego wierzchołka obejmie tylko jego składową. Jeśli potrzebujesz lasu rozpinającego\n(MST każdej składowej), uruchamiaj Prima z każdego wierzchołka, który jeszcze nie jest w drzewie —\nliczba uruchomień to liczba składowych. Jeśli zadanie wymaga jednego drzewa, a składowych jest więcej\nniż jedna — odpowiedź „nie da się”.",
+     "code": "int n = 4;\nvector<vector<pair<int,int>>> g(n + 1);\ng[1].push_back({2, 3}); g[2].push_back({1, 3});\ng[3].push_back({4, 1}); g[4].push_back({3, 1});\nvector<bool> in(n + 1, false);\nlong long las = 0;\nint drzewa = 0;\nfor (int s = 1; s <= n; s++) {\n    if (in[s]) continue;\n    drzewa++;\n    priority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\n    pq.push({0, s});\n    while (!pq.empty()) {\n        auto [w, v] = pq.top(); pq.pop();\n        if (in[v]) continue;\n        in[v] = true;\n        las += w;\n        for (auto [u, c] : g[v]) if (!in[u]) pq.push({c, u});\n    }\n}\ncout << drzewa << ' ' << las << '\\n';   // 2 4"
+    }
+   ],
+   "related": [
+    "graph-mst-kruskal",
+    "graph-dijkstra",
+    "graph-dsu",
+    "graph-representation",
+    "graph-mst-path-max"
+   ]
+  },
+  {
+   "id": "graph-scc",
+   "title": "Silnie spójne składowe (SCC) — Tarjan i Kosaraju, graf kondensacji",
+   "category": "Grafy",
+   "tags": [
+    "scc",
+    "silnie spójne składowe",
+    "tarjan",
+    "kosaraju",
+    "graf kondensacji",
+    "low-link",
+    "dag",
+    "strongly connected components",
+    "graf skierowany"
+   ],
+   "aliases": [
+    "scc",
+    "silnie spójne składowe",
+    "silnie spojne skladowe",
+    "tarjan",
+    "algorytm tarjana",
+    "kosaraju",
+    "algorytm kosaraju",
+    "strongly connected components",
+    "graf kondensacji",
+    "condensation graph",
+    "scc c++",
+    "tarjan scc"
+   ],
+   "summary": "Silnie spójna składowa to maksymalny zbiór wierzchołków grafu skierowanego, w którym z każdego da się dojść do każdego. Tarjan (jeden DFS z low-link) lub Kosaraju (dwa DFS-y) znajdują je w O(n + m); po ściągnięciu składowych dostajemy DAG (graf kondensacji).",
+   "complexity": "O(n + m) czasu i pamięci (oba algorytmy)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "W grafie skierowanym „spójność” jest kierunkowa. Wierzchołki `u` i `v` są w jednej **SCC**, gdy istnieje\ndroga `u → v` **i** droga `v → u`. Każdy cykl leży w całości w jednej SCC. Jeśli każdą SCC zastąpimy\njednym wierzchołkiem, dostaniemy **graf kondensacji** — zawsze acykliczny (DAG). Na nim działają\ntoposort i DP, nawet gdy oryginalny graf miał cykle."
+    },
+    {
+     "type": "text",
+     "md": "**Tarjan:** jeden DFS. `tin[v]` — czas wejścia, `low[v]` — najmniejszy `tin` osiągalny z poddrzewa `v`\nkrawędzią do wierzchołka **wciąż na stosie**. Wierzchołki trafiają na stos przy wejściu; gdy po\nprzetworzeniu `v` zachodzi `low[v] == tin[v]`, `v` jest „korzeniem” SCC — zdejmujemy ze stosu wszystko\ndo `v` włącznie. Składowe powstają w **odwrotnej kolejności topologicznej** (pierwsza to „ujście”).\n\n**Kosaraju:** (1) DFS po grafie, zapisując wierzchołki w kolejności wyjścia; (2) po **grafie odwróconym**\nprzechodzimy wierzchołki od największego czasu wyjścia — każde przejście z nowego wierzchołka zbiera\ndokładnie jedną SCC. Składowe powstają w kolejności topologicznej. Łatwo go napisać iteracyjnie."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „ulice jednokierunkowe, czy z każdego skrzyżowania da się dojechać do każdego”, „grupy\nwzajemnie osiągalnych”, „ile minimum krawędzi dodać, by graf był silnie spójny”, „zbierz jak najwięcej\nmonet, wierzchołki można odwiedzać wielokrotnie” (DP na kondensacji), 2-SAT, „łańcuch zależności\nz cyklami”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Tarjan — pełny program (liczba SCC + etykiety)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 200005;\nvector<int> g[MAXN];\nint tin[MAXN], low[MAXN], comp[MAXN], timer_ = 0, ncomp = 0;\nbool onStack[MAXN];\nvector<int> st;\n\nvoid tarjan(int v) {\n    tin[v] = low[v] = ++timer_;\n    st.push_back(v);\n    onStack[v] = true;\n    for (int u : g[v]) {\n        if (!tin[u]) {                         // krawędź drzewowa\n            tarjan(u);\n            low[v] = min(low[v], low[u]);\n        } else if (onStack[u]) {               // krawędź do wierzchołka bieżącej SCC\n            low[v] = min(low[v], tin[u]);\n        }\n    }\n    if (low[v] == tin[v]) {                    // v jest korzeniem SCC\n        ncomp++;\n        while (true) {\n            int x = st.back();\n            st.pop_back();\n            onStack[x] = false;\n            comp[x] = ncomp;\n            if (x == v) break;\n        }\n    }\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n    }\n    for (int v = 1; v <= n; v++)\n        if (!tin[v]) tarjan(v);\n    vector<int> mn(ncomp + 1, INT_MAX);        // najmniejszy wierzchołek każdej SCC\n    for (int v = 1; v <= n; v++) mn[comp[v]] = min(mn[comp[v]], v);\n    cout << ncomp << '\\n';\n    for (int v = 1; v <= n; v++) cout << mn[comp[v]] << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Kosaraju iteracyjny — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Kosaraju bez rekurencji — bezpieczny dla n = 10^6\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1), rg(n + 1);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        rg[b].push_back(a);                    // graf odwrócony\n    }\n    // 1) kolejność wyjścia (postorder) na g\n    vector<int> order, it(n + 1, 0);\n    vector<bool> vis(n + 1, false);\n    for (int s = 1; s <= n; s++) {\n        if (vis[s]) continue;\n        vector<int> st = {s};\n        vis[s] = true;\n        while (!st.empty()) {\n            int v = st.back();\n            if (it[v] < (int)g[v].size()) {\n                int u = g[v][it[v]++];\n                if (!vis[u]) { vis[u] = true; st.push_back(u); }\n            } else {\n                order.push_back(v);\n                st.pop_back();\n            }\n        }\n    }\n    // 2) na grafie odwróconym, od największego czasu wyjścia\n    vector<int> comp(n + 1, 0);\n    int c = 0;\n    for (int i = n - 1; i >= 0; i--) {\n        int s = order[i];\n        if (comp[s]) continue;\n        c++;\n        vector<int> st = {s};\n        comp[s] = c;\n        while (!st.empty()) {\n            int v = st.back(); st.pop_back();\n            for (int u : rg[v]) if (!comp[u]) { comp[u] = c; st.push_back(u); }\n        }\n    }\n    vector<int> mn(c + 1, INT_MAX);\n    for (int v = 1; v <= n; v++) mn[comp[v]] = min(mn[comp[v]], v);\n    cout << c << '\\n';\n    for (int v = 1; v <= n; v++) cout << mn[comp[v]] << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Budowa grafu kondensacji (DAG)",
+     "code": "// Graf kondensacji: wierzchołki = SCC (comp[v] w 1..ncomp), krawędzie między różnymi SCC.\nvector<vector<int>> kondensacja(int n, int ncomp, const vector<vector<int>>& g, const vector<int>& comp) {\n    vector<vector<int>> dag(ncomp + 1);\n    for (int v = 1; v <= n; v++)\n        for (int u : g[v])\n            if (comp[v] != comp[u]) dag[comp[v]].push_back(comp[u]);\n    for (auto& lista : dag) {                  // usuwamy duplikaty krawędzi\n        sort(lista.begin(), lista.end());\n        lista.erase(unique(lista.begin(), lista.end()), lista.end());\n    }\n    return dag;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Numeracja Tarjana: jeśli istnieje krawędź z SCC `A` do SCC `B ≠ A`, to `comp[B] < comp[A]`. Dlatego DP\n„od ujść” liczysz pętlą `for (c = 1; c <= ncomp; c++)` — następniki są już policzone. W Kosaraju\njest odwrotnie (`comp[A] < comp[B]`)."
+    },
+    {
+     "type": "warn",
+     "md": "Rekurencyjny Tarjan na ścieżce długości 10^6 ma głębokość rekurencji 10^6 — przy małym stosie to\nsegfault. Na dużych danych użyj iteracyjnego Kosaraju (powyżej) albo zadbaj o stos."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "tarjan(v)",
+     "desc": "DFS Tarjana; ustawia comp[] dla wszystkich wierzchołków osiągalnych z v",
+     "complexity": "O(n + m) łącznie"
+    },
+    {
+     "sig": "kondensacja(n, ncomp, g, comp)",
+     "desc": "buduje DAG składowych bez duplikatów krawędzi",
+     "complexity": "O(n + m log m)",
+     "returns": "vector<vector<int>>"
+    }
+   ],
+   "pitfalls": [
+    "W Tarjanie `low[v] = min(low[v], tin[u])` tylko dla `u` NA STOSIE (`onStack[u]`) — krawędzie do zakończonych SCC trzeba ignorować, inaczej składowe się sklejają.",
+    "Zapomniane uruchomienie z każdego nieodwiedzonego wierzchołka — graf nie musi być osiągalny z 1.",
+    "W Kosaraju drugi przebieg musi iść po grafie ODWRÓCONYM i w kolejności malejących czasów wyjścia.",
+    "Kolejność składowych: Tarjan — odwrotna topologiczna, Kosaraju — topologiczna. Pomylenie psuje DP.",
+    "Graf kondensacji może mieć wiele równoległych krawędzi między tymi samymi SCC — usuń duplikaty, jeśli liczysz stopnie lub ścieżki.",
+    "Rekurencja głębokości n przy n ≥ 10^5 — ryzyko przepełnienia stosu."
+   ],
+   "qa": [
+    {
+     "q": [
+      "silnie spójne składowe",
+      "scc c++",
+      "strongly connected components c++",
+      "tarjan scc kod",
+      "jak znaleźć silnie spójne składowe"
+     ],
+     "a": "Algorytm Tarjana: DFS z `tin`/`low` i stosem wierzchołków. `low[v]` = najmniejszy `tin` osiągalny\nz poddrzewa `v` krawędzią do wierzchołka wciąż na stosie. Gdy `low[v] == tin[v]`, zdejmij ze stosu\nwszystko do `v` — to jedna SCC. Każdy wierzchołek i krawędź raz → **O(n + m)**.",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint tin[MAXN], low[MAXN], comp[MAXN], timer_ = 0, ncomp = 0;\nbool onSt[MAXN];\nvector<int> st;\nvoid tarjan(int v) {\n    tin[v] = low[v] = ++timer_;\n    st.push_back(v); onSt[v] = true;\n    for (int u : g[v]) {\n        if (!tin[u]) { tarjan(u); low[v] = min(low[v], low[u]); }\n        else if (onSt[u]) low[v] = min(low[v], tin[u]);\n    }\n    if (low[v] == tin[v]) {\n        ncomp++;\n        int x;\n        do { x = st.back(); st.pop_back(); onSt[x] = false; comp[x] = ncomp; } while (x != v);\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kosaraju",
+      "algorytm kosaraju",
+      "scc dwa dfs",
+      "kosaraju c++",
+      "scc graf odwrócony"
+     ],
+     "a": "(1) DFS-em po grafie zapisz wierzchołki w kolejności **wyjścia**. (2) Przejdź wierzchołki od\nostatniego wyjścia i z każdego jeszcze nieprzypisanego puść DFS/BFS po **grafie odwróconym** —\nodwiedzone wierzchołki to jedna SCC. Działa, bo wierzchołek o największym czasie wyjścia leży\nw składowej-źródle, a w grafie odwróconym ze źródła nie da się „uciec” do innych składowych.\nO(n + m), drugi krok może być zwykłym BFS-em.",
+     "code": "int n = 4;\nvector<vector<int>> g = {{}, {2}, {1, 3}, {4}, {3}}, rg(n + 1);\nfor (int v = 1; v <= n; v++) for (int u : g[v]) rg[u].push_back(v);\nvector<int> order, it(n + 1, 0);\nvector<bool> vis(n + 1, false);\nfor (int s = 1; s <= n; s++) {\n    if (vis[s]) continue;\n    vector<int> st = {s}; vis[s] = true;\n    while (!st.empty()) {\n        int v = st.back();\n        if (it[v] < (int)g[v].size()) { int u = g[v][it[v]++]; if (!vis[u]) { vis[u] = true; st.push_back(u); } }\n        else { order.push_back(v); st.pop_back(); }\n    }\n}\nvector<int> comp(n + 1, 0);\nint c = 0;\nfor (int i = n - 1; i >= 0; i--) {\n    if (comp[order[i]]) continue;\n    c++;\n    vector<int> st = {order[i]}; comp[order[i]] = c;\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        for (int u : rg[v]) if (!comp[u]) { comp[u] = c; st.push_back(u); }\n    }\n}\ncout << c << ' ' << comp[1] << comp[2] << comp[3] << comp[4] << '\\n';   // 2 1122"
+    },
+    {
+     "q": [
+      "graf kondensacji",
+      "condensation graph",
+      "skurczyć scc do dag",
+      "scc jako jeden wierzchołek"
+     ],
+     "a": "Każdą SCC zastąp jednym wierzchołkiem `comp[v]`; dla każdej krawędzi `v → u` z `comp[v] ≠ comp[u]`\ndodaj krawędź `comp[v] → comp[u]` (najlepiej bez duplikatów). Wynik jest zawsze **DAG-iem** — cykl\nmiędzy składowymi oznaczałby, że to jedna składowa. Na kondensacji robisz toposort, DP po ścieżkach,\nliczenie źródeł/ujść. Budowa O(n + m).",
+     "code": "int n = 4, ncomp = 2;\nvector<vector<int>> g = {{}, {2}, {1, 3}, {4}, {3}};\nvector<int> comp = {0, 2, 2, 1, 1};          // np. z Tarjana\nvector<set<int>> dag(ncomp + 1);\nfor (int v = 1; v <= n; v++)\n    for (int u : g[v]) if (comp[v] != comp[u]) dag[comp[v]].insert(comp[u]);\ncout << dag[2].size() << ' ' << dag[1].size() << '\\n';   // 1 0"
+    },
+    {
+     "q": [
+      "tarjan low link co to",
+      "low[v] w tarjanie",
+      "co oznacza low tarjan",
+      "low link scc"
+     ],
+     "a": "`tin[v]` to kolejność wejścia DFS-a, a `low[v]` — najmniejszy `tin` wierzchołka, do którego da się\ndojść z poddrzewa `v` (krawędziami drzewowymi, a na końcu jedną krawędzią do wierzchołka **na stosie**).\nJeśli `low[v] == tin[v]`, z poddrzewa `v` nie da się wrócić wyżej, więc `v` i wszystko nad nim na\nstosie tworzy zamkniętą SCC. To samo pojęcie (bez stosu) służy do mostów i punktów artykulacji.",
+     "code": "int n = 4;\nvector<vector<int>> g = {{}, {2}, {3}, {1, 4}, {}};       // cykl 1->2->3->1 oraz 3->4\nvector<int> tin(n + 1, 0), low(n + 1, 0), st;\nvector<bool> onSt(n + 1, false);\nint timer_ = 0;\nauto dfs = [&](auto&& self, int v) -> void {\n    tin[v] = low[v] = ++timer_;\n    st.push_back(v); onSt[v] = true;\n    for (int u : g[v]) {\n        if (!tin[u]) { self(self, u); low[v] = min(low[v], low[u]); }   // z poddrzewa\n        else if (onSt[u]) low[v] = min(low[v], tin[u]);                 // krawędź do wierzchołka na stosie\n    }\n    if (low[v] == tin[v]) {                                             // v = korzeń SCC\n        int x;\n        do { x = st.back(); st.pop_back(); onSt[x] = false; } while (x != v);\n    }\n};\ndfs(dfs, 1);\nfor (int v = 1; v <= n; v++) cout << low[v] << ' ';\ncout << '\\n';   // 1 1 1 4: {1,2,3} sięga do tin=1, wierzchołek 4 to osobna SCC"
+    },
+    {
+     "q": [
+      "czy graf skierowany jest silnie spójny",
+      "z każdego do każdego da się dojść",
+      "graf silnie spójny sprawdzenie",
+      "is strongly connected"
+     ],
+     "a": "Nie trzeba pełnego Tarjana: puść BFS z wierzchołka 1 po grafie i BFS z 1 po grafie **odwróconym**.\nGraf jest silnie spójny ⇔ oba odwiedziły wszystkie `n` wierzchołków (z 1 dojdziesz wszędzie\ni z każdego dojdziesz do 1). O(n + m).",
+     "code": "int n = 3;\nvector<vector<int>> g = {{}, {2}, {3}, {1}}, rg(n + 1);\nfor (int v = 1; v <= n; v++) for (int u : g[v]) rg[u].push_back(v);\nauto ileOdwiedzi = [&](const vector<vector<int>>& h) {\n    vector<bool> vis(n + 1, false);\n    queue<int> q; q.push(1); vis[1] = true;\n    int ile = 0;\n    while (!q.empty()) {\n        int v = q.front(); q.pop(); ile++;\n        for (int u : h[v]) if (!vis[u]) { vis[u] = true; q.push(u); }\n    }\n    return ile;\n};\ncout << (ileOdwiedzi(g) == n && ileOdwiedzi(rg) == n ? \"TAK\" : \"NIE\") << '\\n';   // TAK"
+    },
+    {
+     "q": [
+      "scc iteracyjnie",
+      "tarjan bez rekurencji",
+      "stack overflow tarjan",
+      "scc dla miliona wierzchołków"
+     ],
+     "a": "Najprościej: **Kosaraju iteracyjny** — pierwszy przebieg to DFS z indeksem `it[v]` (moment `pop` =\nwyjście), drugi to zwykły BFS/stos po grafie odwróconym, gdzie kolejność nie ma znaczenia. Tarjana też\nda się przepisać iteracyjnie (stos par `(v, indeks)` i aktualizacja `low` rodzica przy powrocie),\nale łatwiej o błąd. Złożoność bez zmian: O(n + m).",
+     "code": "// pierwszy przebieg Kosaraju bez rekurencji: kolejność wyjścia\nvector<int> postorder(const vector<vector<int>>& g, int n) {\n    vector<int> order, it(n + 1, 0);\n    vector<bool> vis(n + 1, false);\n    for (int s = 1; s <= n; s++) {\n        if (vis[s]) continue;\n        vector<int> st = {s};\n        vis[s] = true;\n        while (!st.empty()) {\n            int v = st.back();\n            if (it[v] < (int)g[v].size()) {\n                int u = g[v][it[v]++];\n                if (!vis[u]) { vis[u] = true; st.push_back(u); }\n            } else { order.push_back(v); st.pop_back(); }\n        }\n    }\n    return order;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kolejność scc tarjan",
+      "scc w kolejności topologicznej",
+      "numeracja składowych tarjan kosaraju"
+     ],
+     "a": "Tarjan zamyka składowe w **odwrotnej** kolejności topologicznej: SCC bez wyjść (ujście) dostaje numer\n1. Jeśli jest krawędź `A → B` między różnymi SCC, to `comp[B] < comp[A]`. Kosaraju numeruje\nw kolejności topologicznej (`comp[A] < comp[B]`). Dzięki temu DP na kondensacji nie wymaga osobnego\ntoposortu — wystarczy pętla po numerach w odpowiednią stronę.",
+     "code": "int n = 3;\nvector<vector<int>> g = {{}, {2}, {3}, {}};                // łańcuch SCC: 1 -> 2 -> 3\nvector<int> tin(n + 1, 0), low(n + 1, 0), comp(n + 1, 0), st;\nvector<bool> onSt(n + 1, false);\nint timer_ = 0, ncomp = 0;\nauto dfs = [&](auto&& self, int v) -> void {\n    tin[v] = low[v] = ++timer_;\n    st.push_back(v); onSt[v] = true;\n    for (int u : g[v]) {\n        if (!tin[u]) { self(self, u); low[v] = min(low[v], low[u]); }\n        else if (onSt[u]) low[v] = min(low[v], tin[u]);\n    }\n    if (low[v] == tin[v]) {\n        ncomp++;\n        int x;\n        do { x = st.back(); st.pop_back(); onSt[x] = false; comp[x] = ncomp; } while (x != v);\n    }\n};\ndfs(dfs, 1);\ncout << comp[1] << ' ' << comp[2] << ' ' << comp[3] << '\\n';   // 3 2 1: ujście dostaje numer 1"
+    },
+    {
+     "q": [
+      "minimalna liczba krawędzi aby graf był silnie spójny",
+      "ile dróg dodać żeby z każdego do każdego",
+      "make graph strongly connected",
+      "źródła i ujścia kondensacji"
+     ],
+     "a": "W grafie kondensacji policz SCC o stopniu wejściowym 0 (źródła, `s`) i wyjściowym 0 (ujścia, `t`).\nOdpowiedź to `max(s, t)`, a gdy cały graf jest jedną SCC — 0. Mniej się nie da, bo każda nowa\nkrawędź usuwa co najwyżej jedno źródło i jedno ujście; konstrukcja łączy ujścia ze źródłami w cykl.\nO(n + m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 100005;\nvector<int> g[MAXN];\nint tin[MAXN], low[MAXN], comp[MAXN], timer_ = 0, ncomp = 0;\nbool onSt[MAXN];\nvector<int> st;\nvoid tarjan(int v) {\n    tin[v] = low[v] = ++timer_;\n    st.push_back(v); onSt[v] = true;\n    for (int u : g[v]) {\n        if (!tin[u]) { tarjan(u); low[v] = min(low[v], low[u]); }\n        else if (onSt[u]) low[v] = min(low[v], tin[u]);\n    }\n    if (low[v] == tin[v]) {\n        ncomp++;\n        int x;\n        do { x = st.back(); st.pop_back(); onSt[x] = false; comp[x] = ncomp; } while (x != v);\n    }\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < m; i++) { int a, b; cin >> a >> b; g[a].push_back(b); }\n    for (int v = 1; v <= n; v++) if (!tin[v]) tarjan(v);\n    if (ncomp == 1) { cout << 0 << '\\n'; return 0; }\n    vector<int> in(ncomp + 1, 0), out(ncomp + 1, 0);\n    for (int v = 1; v <= n; v++)\n        for (int u : g[v]) if (comp[v] != comp[u]) { out[comp[v]]++; in[comp[u]]++; }\n    int s = 0, t = 0;\n    for (int c = 1; c <= ncomp; c++) { s += (in[c] == 0); t += (out[c] == 0); }\n    cout << max(s, t) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dp na grafie kondensacji",
+      "najwięcej monet w grafie z cyklami",
+      "maksymalna suma na ścieżce graf skierowany z cyklami",
+      "scc dp"
+     ],
+     "a": "Gdy wierzchołki można odwiedzać wielokrotnie, wewnątrz SCC zbierzesz wszystko (krążysz po cyklu).\nSklej SCC w kondensację z wagą = suma wartości składowej i policz najdłuższą (najcięższą) ścieżkę\nw DAG-u DP-em. Z numeracją Tarjana: `dp[c] = suma[c] + max(dp[następniki])` dla `c = 1..ncomp`\nrosnąco. O(n + m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 100005;\nvector<int> g[MAXN];\nint tin[MAXN], low[MAXN], comp[MAXN], timer_ = 0, ncomp = 0;\nbool onSt[MAXN];\nvector<int> st;\nvoid tarjan(int v) {\n    tin[v] = low[v] = ++timer_;\n    st.push_back(v); onSt[v] = true;\n    for (int u : g[v]) {\n        if (!tin[u]) { tarjan(u); low[v] = min(low[v], low[u]); }\n        else if (onSt[u]) low[v] = min(low[v], tin[u]);\n    }\n    if (low[v] == tin[v]) {\n        ncomp++;\n        int x;\n        do { x = st.back(); st.pop_back(); onSt[x] = false; comp[x] = ncomp; } while (x != v);\n    }\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<long long> val(n + 1);\n    for (int v = 1; v <= n; v++) cin >> val[v];\n    for (int i = 0; i < m; i++) { int a, b; cin >> a >> b; g[a].push_back(b); }\n    for (int v = 1; v <= n; v++) if (!tin[v]) tarjan(v);\n    vector<long long> sum(ncomp + 1, 0), dp(ncomp + 1, 0);\n    vector<vector<int>> dag(ncomp + 1);\n    for (int v = 1; v <= n; v++) {\n        sum[comp[v]] += val[v];\n        for (int u : g[v]) if (comp[u] != comp[v]) dag[comp[v]].push_back(comp[u]);\n    }\n    long long best = 0;\n    for (int c = 1; c <= ncomp; c++) {         // następniki mają mniejsze numery\n        long long mx = 0;\n        for (int d : dag[c]) mx = max(mx, dp[d]);\n        dp[c] = sum[c] + mx;\n        best = max(best, dp[c]);\n    }\n    cout << best << '\\n';\n}"
+    },
+    {
+     "q": [
+      "minimalna liczba wierzchołków startowych",
+      "z ilu miejsc zacząć żeby dojść wszędzie",
+      "źródła w grafie kondensacji",
+      "ile plotek rozpuścić żeby wszyscy wiedzieli"
+     ],
+     "a": "Startując z wierzchołka, dochodzisz do całej jego SCC i wszystkiego „niżej” w kondensacji. Minimalna\nliczba startów to liczba SCC o stopniu wejściowym 0 w kondensacji (źródeł) — z każdego źródła trzeba\nwystartować, bo nikt do niego nie dojdzie, a ze źródeł osiągniesz wszystko. O(n + m).",
+     "code": "int n = 5, ncomp = 3;\nvector<vector<int>> g = {{}, {2}, {1}, {2}, {5}, {4}};\nvector<int> comp = {0, 1, 1, 2, 3, 3};            // SCC: {1,2}, {3}, {4,5} (np. z Tarjana)\nvector<int> in(ncomp + 1, 0);\nfor (int v = 1; v <= n; v++)\n    for (int u : g[v]) if (comp[v] != comp[u]) in[comp[u]]++;\nint starty = 0;\nfor (int c = 1; c <= ncomp; c++) if (in[c] == 0) starty++;\ncout << starty << '\\n';   // 2: SCC {3} i SCC {4,5}"
+    },
+    {
+     "q": [
+      "scc złożoność",
+      "ile działa tarjan",
+      "tarjan kosaraju complexity",
+      "który szybszy tarjan czy kosaraju"
+     ],
+     "a": "Oba działają w **O(n + m)**. Tarjan robi jeden DFS i zwykle jest nieco szybszy, ale jest rekurencyjny.\nKosaraju robi dwa przejścia i potrzebuje grafu odwróconego (2× pamięci na krawędzie), za to łatwo go\nnapisać bez rekurencji. Dla `n, m ≤ 10^6` oba mieszczą się w ułamku sekundy.",
+     "code": "int n = 1000, m = 5000;\nmt19937 rng(7);\nvector<vector<int>> g(n + 1);\nfor (int i = 0; i < m; i++) g[rng() % n + 1].push_back(rng() % n + 1);\n// pierwszy przebieg Kosaraju: każda krawędź oglądana dokładnie raz\nvector<int> it(n + 1, 0), order;\nvector<bool> vis(n + 1, false);\nlong long ogladane = 0;\nfor (int s = 1; s <= n; s++) {\n    if (vis[s]) continue;\n    vector<int> st = {s};\n    vis[s] = true;\n    while (!st.empty()) {\n        int v = st.back();\n        if (it[v] < (int)g[v].size()) {\n            int u = g[v][it[v]++];\n            ogladane++;\n            if (!vis[u]) { vis[u] = true; st.push_back(u); }\n        } else { order.push_back(v); st.pop_back(); }\n    }\n}\ncout << (ogladane == m) << ' ' << order.size() << '\\n';   // 1 1000 -> O(n + m)"
+    },
+    {
+     "q": [
+      "do czego scc",
+      "zastosowania silnie spójnych składowych",
+      "scc zastosowanie olimpiada"
+     ],
+     "a": "Najczęstsze: (1) **2-SAT** — sprzeczność, gdy `x` i `¬x` są w jednej SCC; (2) **DP na kondensacji**\n— zadania z cyklami, gdzie wierzchołki można odwiedzać wielokrotnie; (3) liczba krawędzi do dodania,\nby graf był silnie spójny; (4) minimalna liczba punktów startowych; (5) wykrywanie, które wierzchołki\nleżą na jakimkolwiek cyklu (SCC rozmiaru ≥ 2 albo z pętlą).",
+     "code": "// wierzchołek leży na cyklu <=> jego SCC ma >= 2 wierzchołki albo ma pętlę v -> v\nint n = 4;\nvector<vector<int>> g = {{}, {2}, {1}, {3}, {}};\nvector<int> comp = {0, 1, 1, 2, 3}, rozmiar = {0, 2, 1, 1};\nfor (int v = 1; v <= n; v++) {\n    bool petla = find(g[v].begin(), g[v].end(), v) != g[v].end();\n    cout << (rozmiar[comp[v]] >= 2 || petla);\n}\ncout << '\\n';   // 1110"
+    }
+   ],
+   "related": [
+    "graph-2sat",
+    "graph-toposort",
+    "graph-dag-dp",
+    "graph-dfs",
+    "graph-bridges-articulation",
+    "graph-cycle-detection"
+   ]
+  },
+  {
+   "id": "graph-bridges-articulation",
+   "title": "Mosty i punkty artykulacji (low-link)",
+   "category": "Grafy",
+   "tags": [
+    "mosty",
+    "punkty artykulacji",
+    "low-link",
+    "low",
+    "tin",
+    "dwuspójne składowe",
+    "cut vertex",
+    "bridge",
+    "wierzchołek rozspajający",
+    "krawędź rozspajająca"
+   ],
+   "aliases": [
+    "mosty w grafie",
+    "mosty",
+    "punkty artykulacji",
+    "punkt artykulacji",
+    "bridges",
+    "articulation points",
+    "cut vertex",
+    "krawędź rozspajająca",
+    "wierzchołek rozspajający",
+    "low link",
+    "dwuspójne składowe",
+    "2-edge-connected components"
+   ],
+   "summary": "Most to krawędź, której usunięcie zwiększa liczbę spójnych składowych; punkt artykulacji — taki wierzchołek. Oba znajduje jeden DFS z tablicami `tin` i `low` w O(n + m).",
+   "complexity": "O(n + m)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "DFS buduje drzewo przeszukiwania; pozostałe krawędzie grafu nieskierowanego to **krawędzie powrotne**\n(do przodka). `tin[v]` — czas wejścia, `low[v]` — najmniejszy `tin` osiągalny z poddrzewa `v` przy\nużyciu co najwyżej jednej krawędzi powrotnej.\n\n- Krawędź drzewowa `v – u` (u dzieckiem) jest **mostem** ⇔ `low[u] > tin[v]` — z poddrzewa `u` nie da\n  się wrócić do `v` ani wyżej inną drogą.\n- Wierzchołek `v` (nie korzeń) jest **punktem artykulacji** ⇔ ma dziecko `u` z `low[u] >= tin[v]` —\n  poddrzewo `u` po usunięciu `v` odpada.\n- **Korzeń** DFS-a jest punktem artykulacji ⇔ ma co najmniej dwoje dzieci w drzewie DFS."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „krytyczne połączenia/drogi”, „awaria której drogi rozspójni sieć”, „które skrzyżowanie\nzamknięcie odetnie część miasta”, „ile par miast straci połączenie po zablokowaniu wierzchołka”,\n„podział na części odporne na awarię jednej krawędzi” (2-spójne krawędziowo składowe)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Mosty i punkty artykulacji — pełny program",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 200005;\nvector<pair<int, int>> g[MAXN];   // (sąsiad, id krawędzi)\nint tin[MAXN], low[MAXN], timer_ = 0;\nbool isArt[MAXN];\nvector<int> bridges;              // id krawędzi będących mostami\n\nvoid dfs(int v, int pe) {         // pe = id krawędzi, którą weszliśmy (-1 w korzeniu)\n    tin[v] = low[v] = ++timer_;\n    int children = 0;\n    for (auto [u, id] : g[v]) {\n        if (id == pe) continue;                    // nie wracamy TĄ SAMĄ krawędzią\n        if (tin[u]) {\n            low[v] = min(low[v], tin[u]);          // krawędź powrotna\n        } else {\n            dfs(u, id);\n            low[v] = min(low[v], low[u]);\n            if (low[u] > tin[v]) bridges.push_back(id);\n            if (pe != -1 && low[u] >= tin[v]) isArt[v] = true;\n            children++;\n        }\n    }\n    if (pe == -1 && children > 1) isArt[v] = true;  // korzeń\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<pair<int, int>> e(m);\n    for (int i = 0; i < m; i++) {\n        auto& [a, b] = e[i];\n        cin >> a >> b;\n        g[a].push_back({b, i});\n        g[b].push_back({a, i});\n    }\n    for (int v = 1; v <= n; v++)\n        if (!tin[v]) dfs(v, -1);\n    vector<pair<int, int>> br;\n    for (int id : bridges) br.push_back({min(e[id].first, e[id].second), max(e[id].first, e[id].second)});\n    sort(br.begin(), br.end());\n    cout << br.size() << '\\n';\n    for (auto [a, b] : br) cout << a << ' ' << b << '\\n';\n    vector<int> art;\n    for (int v = 1; v <= n; v++) if (isArt[v]) art.push_back(v);\n    cout << art.size() << '\\n';\n    for (int v : art) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Identyfikuj krawędź po **numerze**, a nie po wierzchołku-rodzicu. Przy dwóch równoległych krawędziach\n`a – b` druga z nich jest krawędzią powrotną i poprawnie sprawi, że `a – b` nie jest mostem. Warunek\n`u != parent` by to przegapił."
+    },
+    {
+     "type": "warn",
+     "md": "Rekurencyjny DFS na grafie-ścieżce o 10^6 wierzchołkach ma głębokość 10^6. Na sprawdzarce z małym\nstosem użyj wersji iteracyjnej (w pytaniach poniżej)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dfs(v, pe)",
+     "desc": "liczy tin/low, zbiera mosty (id krawędzi) i oznacza punkty artykulacji",
+     "complexity": "O(n + m)"
+    }
+   ],
+   "pitfalls": [
+    "Pomijanie krawędzi do rodzica (`u == parent`) zamiast tej samej krawędzi (`id == pe`) — psuje wynik przy krawędziach wielokrotnych (równoległa krawędź nigdy nie jest mostem).",
+    "Most: `low[u] > tin[v]` (ostra nierówność); punkt artykulacji: `low[u] >= tin[v]` (nieostra). Zamiana daje błędne wyniki.",
+    "Korzeń DFS-a ma osobny warunek (≥ 2 dzieci w drzewie DFS) — warunek z `low` zawsze by go oznaczył.",
+    "Liczenie `children` jako liczby sąsiadów zamiast liczby dzieci w drzewie DFS.",
+    "Graf niespójny: uruchom DFS z każdego nieodwiedzonego wierzchołka.",
+    "Rekurencja głębokości n — ryzyko przepełnienia stosu przy n ≥ 10^5."
+   ],
+   "qa": [
+    {
+     "q": [
+      "mosty w grafie",
+      "jak znaleźć mosty",
+      "bridges graph c++",
+      "krawędź której usunięcie rozspójnia graf",
+      "most w grafie kod"
+     ],
+     "a": "DFS z `tin` (czas wejścia) i `low` (najniższy `tin` osiągalny z poddrzewa jedną krawędzią powrotną).\nKrawędź drzewowa `v – u` jest mostem ⇔ `low[u] > tin[v]`: poddrzewo `u` nie ma żadnego „objazdu”\ndo `v` ani wyżej. Jeden DFS → **O(n + m)**. Krawędzi nie identyfikuj po rodzicu, tylko po numerze.",
+     "code": "const int MAXN = 100005;\nvector<pair<int, int>> g[MAXN];\nint tin[MAXN], low[MAXN], timer_ = 0;\nvector<int> mosty;\nvoid dfs(int v, int pe) {\n    tin[v] = low[v] = ++timer_;\n    for (auto [u, id] : g[v]) {\n        if (id == pe) continue;\n        if (tin[u]) low[v] = min(low[v], tin[u]);\n        else {\n            dfs(u, id);\n            low[v] = min(low[v], low[u]);\n            if (low[u] > tin[v]) mosty.push_back(id);\n        }\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "punkty artykulacji",
+      "articulation points c++",
+      "wierzchołek rozspajający",
+      "cut vertex",
+      "który wierzchołek rozspójnia graf"
+     ],
+     "a": "W tym samym DFS-ie: wierzchołek `v` (nie korzeń) jest punktem artykulacji, jeśli ma dziecko `u`\nz `low[u] >= tin[v]` — poddrzewo `u` jest połączone z resztą tylko przez `v`. Korzeń jest punktem\nartykulacji, gdy ma ≥ 2 dzieci w drzewie DFS. O(n + m). Uwaga: nierówność nieostra (≥), w mostach ostra (>).",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint tin[MAXN], low[MAXN], timer_ = 0;\nbool art[MAXN];\nvoid dfs(int v, int p) {\n    tin[v] = low[v] = ++timer_;\n    int dzieci = 0;\n    for (int u : g[v]) {\n        if (u == p) continue;           // dla wierzchołków krawędzie wielokrotne nie szkodzą\n        if (tin[u]) low[v] = min(low[v], tin[u]);\n        else {\n            dfs(u, v);\n            low[v] = min(low[v], low[u]);\n            if (p != 0 && low[u] >= tin[v]) art[v] = true;\n            dzieci++;\n        }\n    }\n    if (p == 0 && dzieci > 1) art[v] = true;   // korzeń (wywołanie dfs(v, 0))\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "low link co to",
+      "low[v] tin[v] mosty",
+      "co to jest low w dfs",
+      "funkcja low"
+     ],
+     "a": "`tin[v]` to numer wejścia DFS-a do `v`. `low[v]` = minimum z `tin[v]`, `tin[w]` po krawędziach\npowrotnych `v – w` oraz `low[u]` po dzieciach `u`. Mówi, jak „wysoko” w drzewie DFS da się dojść\nz poddrzewa `v`, nie używając krawędzi do rodzica. Jeśli `low[u]` dziecka nie sięga powyżej `v`,\nto `v` (lub krawędź `v – u`) jest wąskim gardłem.",
+     "code": "int n = 4;\nvector<vector<int>> g = {{}, {2, 3}, {1, 3}, {2, 1, 4}, {3}};   // trójkąt 1-2-3 i krawędź 3-4\nvector<int> tin(n + 1, 0), low(n + 1, 0);\nint timer_ = 0;\nauto dfs = [&](auto&& self, int v, int p) -> void {\n    tin[v] = low[v] = ++timer_;\n    for (int u : g[v]) {\n        if (u == p) continue;\n        if (tin[u]) low[v] = min(low[v], tin[u]);            // krawędź powrotna\n        else {\n            self(self, u, v);\n            low[v] = min(low[v], low[u]);                     // to, co osiąga poddrzewo\n            if (low[u] > tin[v]) cout << \"most \" << v << \"-\" << u << '\\n';\n        }\n    }\n};\ndfs(dfs, 1, 0);\nfor (int v = 1; v <= n; v++) cout << low[v] << ' ';\ncout << '\\n';   // most 3-4, potem: 1 1 1 4"
+    },
+    {
+     "q": [
+      "mosty krawędzie wielokrotne",
+      "multigraf mosty",
+      "dwie krawędzie między wierzchołkami most",
+      "mosty parent czy id krawędzi"
+     ],
+     "a": "Dwie równoległe krawędzie `a – b` nigdy nie są mostami (usunięcie jednej zostawia drugą). Jeśli w DFS-ie\npomijasz wszystkie krawędzie do rodzica, druga krawędź też zostanie pominięta i `a – b` błędnie wyjdzie\nmostem. Pomijaj tylko **tę jedną** krawędź, którą wszedłeś — porównując jej numer (`id == pe`).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<vector<pair<int,int>>> g;\nvector<int> tin, low;\nint timer_ = 0, mosty = 0;\nvoid dfs(int v, int pe) {\n    tin[v] = low[v] = ++timer_;\n    for (auto [u, id] : g[v]) {\n        if (id == pe) continue;\n        if (tin[u]) low[v] = min(low[v], tin[u]);\n        else { dfs(u, id); low[v] = min(low[v], low[u]); if (low[u] > tin[v]) mosty++; }\n    }\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    g.resize(n + 1); tin.assign(n + 1, 0); low.assign(n + 1, 0);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back({b, i});\n        g[b].push_back({a, i});\n    }\n    for (int v = 1; v <= n; v++) if (!tin[v]) dfs(v, -1);\n    cout << mosty << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dwuspójne składowe",
+      "2-edge-connected components",
+      "składowe po usunięciu mostów",
+      "dwuspójne krawędziowo",
+      "biconnected components"
+     ],
+     "a": "**Dwuspójne krawędziowo** składowe: znajdź mosty, usuń je i policz zwykłe spójne składowe — wewnątrz\nkażdej usunięcie dowolnej jednej krawędzi nie rozspójnia. Po ściągnięciu ich w wierzchołki, a mostów\nw krawędzie, dostajesz **drzewo (las) mostów**. **Dwuspójne wierzchołkowo** składowe (bloki) liczy się\nw tym samym DFS-ie stosem krawędzi: przy `low[u] >= tin[v]` zdejmujesz krawędzie do `v – u` włącznie.\nO(n + m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 100005;\nvector<pair<int,int>> g[MAXN];\nint tin[MAXN], low[MAXN], timer_ = 0, comp[MAXN];\nvector<bool> isBridge;\nvoid dfs(int v, int pe) {\n    tin[v] = low[v] = ++timer_;\n    for (auto [u, id] : g[v]) {\n        if (id == pe) continue;\n        if (tin[u]) low[v] = min(low[v], tin[u]);\n        else { dfs(u, id); low[v] = min(low[v], low[u]); if (low[u] > tin[v]) isBridge[id] = true; }\n    }\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    isBridge.assign(m, false);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back({b, i});\n        g[b].push_back({a, i});\n    }\n    for (int v = 1; v <= n; v++) if (!tin[v]) dfs(v, -1);\n    int c = 0;\n    for (int s = 1; s <= n; s++) {\n        if (comp[s]) continue;\n        comp[s] = ++c;\n        vector<int> st = {s};\n        while (!st.empty()) {\n            int v = st.back(); st.pop_back();\n            for (auto [u, id] : g[v])\n                if (!isBridge[id] && !comp[u]) { comp[u] = c; st.push_back(u); }\n        }\n    }\n    cout << c << '\\n';\n}"
+    },
+    {
+     "q": [
+      "mosty iteracyjnie",
+      "mosty bez rekurencji",
+      "stack overflow mosty",
+      "low link iteracyjny"
+     ],
+     "a": "Symuluj rekurencję stosem z indeksem następnej krawędzi `it[v]`. Przy wejściu do `u` ustaw\n`tin[u] = low[u]`, zapamiętaj krawędź wejścia `pe[u]` i rodzica. Gdy wierzchołek `v` nie ma już\nkrawędzi (pop), zaktualizuj rodzica: `low[p] = min(low[p], low[v])` i sprawdź `low[v] > tin[p]`.\nDziała dla n = 10^6 bez ryzyka przepełnienia stosu, O(n + m).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int,int>>> g(n + 1);\n    vector<pair<int,int>> e(m);\n    for (int i = 0; i < m; i++) {\n        cin >> e[i].first >> e[i].second;\n        g[e[i].first].push_back({e[i].second, i});\n        g[e[i].second].push_back({e[i].first, i});\n    }\n    vector<int> tin(n + 1, 0), low(n + 1, 0), pe(n + 1, -1), par(n + 1, 0), it(n + 1, 0);\n    int timer_ = 0;\n    vector<pair<int,int>> mosty;\n    for (int s = 1; s <= n; s++) {\n        if (tin[s]) continue;\n        tin[s] = low[s] = ++timer_;\n        vector<int> st = {s};\n        while (!st.empty()) {\n            int v = st.back();\n            if (it[v] < (int)g[v].size()) {\n                auto [u, id] = g[v][it[v]++];\n                if (id == pe[v]) continue;\n                if (tin[u]) low[v] = min(low[v], tin[u]);\n                else { tin[u] = low[u] = ++timer_; pe[u] = id; par[u] = v; st.push_back(u); }\n            } else {\n                st.pop_back();\n                if (pe[v] != -1) {\n                    int p = par[v];\n                    low[p] = min(low[p], low[v]);\n                    if (low[v] > tin[p]) mosty.push_back({min(p, v), max(p, v)});\n                }\n            }\n        }\n    }\n    sort(mosty.begin(), mosty.end());\n    cout << mosty.size() << '\\n';\n    for (auto [a, b] : mosty) cout << a << ' ' << b << '\\n';\n}"
+    },
+    {
+     "q": [
+      "ile składowych po usunięciu wierzchołka",
+      "na ile części rozpadnie się graf po usunięciu wierzchołka",
+      "components after removing vertex",
+      "blokada skrzyżowania ile części"
+     ],
+     "a": "W DFS-ie licz dla `v` liczbę dzieci `u` z `low[u] >= tin[v]` — każde takie poddrzewo staje się osobną\nczęścią. Do tego dochodzi część „nad” `v`, jeśli `v` nie jest korzeniem. Wynik dla całego grafu:\n`C − 1 + części(v)`, gdzie `C` to liczba składowych przed usunięciem (dla wierzchołka izolowanego\nczęści = 0). O(n + m) dla wszystkich wierzchołków naraz.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst int MAXN = 100005;\nvector<int> g[MAXN];\nint tin[MAXN], low[MAXN], timer_ = 0, czesci[MAXN];\nvoid dfs(int v, int p) {\n    tin[v] = low[v] = ++timer_;\n    czesci[v] = (p != 0);                     // część „nad” v (jeśli nie korzeń)\n    for (int u : g[v]) {\n        if (u == p) continue;\n        if (tin[u]) low[v] = min(low[v], tin[u]);\n        else {\n            dfs(u, v);\n            low[v] = min(low[v], low[u]);\n            if (low[u] >= tin[v]) czesci[v]++;\n        }\n    }\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < m; i++) { int a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }\n    int C = 0;\n    for (int v = 1; v <= n; v++) if (!tin[v]) { C++; dfs(v, 0); }\n    for (int v = 1; v <= n; v++) cout << C - 1 + czesci[v] << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "mosty złożoność",
+      "ile działa szukanie mostów",
+      "tarjan mosty complexity"
+     ],
+     "a": "Jeden DFS: **O(n + m)** czasu i O(n + m) pamięci. Naiwne podejście „usuń każdą krawędź i sprawdź\nspójność” kosztuje O(m·(n + m)) — dla `m = 10^5` to już za wolno. Ten sam DFS daje naraz mosty,\npunkty artykulacji i (ze stosem) składowe dwuspójne.",
+     "code": "// Naiwnie: usuń każdą krawędź i policz składowe -> O(m · (n + m)). Tylko dla małych grafów.\nint n = 4;\nvector<pair<int,int>> e = {{1, 2}, {2, 3}, {3, 1}, {3, 4}};\nauto skladowe = [&](int pomin) {\n    vector<int> p(n + 1);\n    iota(p.begin(), p.end(), 0);\n    auto find = [&](int x) { while (p[x] != x) x = p[x] = p[p[x]]; return x; };\n    int c = n;\n    for (int i = 0; i < (int)e.size(); i++) {\n        if (i == pomin) continue;\n        int a = find(e[i].first), b = find(e[i].second);\n        if (a != b) { p[a] = b; c--; }\n    }\n    return c;\n};\nint bazowo = skladowe(-1), mosty = 0;\nfor (int i = 0; i < (int)e.size(); i++) if (skladowe(i) > bazowo) mosty++;\ncout << mosty << '\\n';   // 1 (krawędź 3-4); DFS z low-link robi to samo w O(n + m)"
+    }
+   ],
+   "related": [
+    "graph-dfs",
+    "graph-scc",
+    "graph-connected-components",
+    "graph-cycle-detection",
+    "tree-basics",
+    "graph-mst-path-max"
+   ]
+  },
+  {
+   "id": "graph-2sat",
+   "title": "2-SAT — spełnialność formuł z klauzulami dwuelementowymi",
+   "category": "Grafy",
+   "tags": [
+    "2-sat",
+    "2sat",
+    "spełnialność",
+    "implikacje",
+    "graf implikacji",
+    "scc",
+    "logika",
+    "klauzule"
+   ],
+   "aliases": [
+    "2-sat",
+    "2sat",
+    "2 sat",
+    "problem 2-sat",
+    "2-sat c++",
+    "graf implikacji",
+    "spełnialność 2-cnf",
+    "2-satisfiability",
+    "każdy wybiera jedną z dwóch opcji"
+   ],
+   "summary": "2-SAT rozstrzyga, czy zmiennym logicznym da się przypisać wartości tak, by spełnić wszystkie warunki postaci `(a ∨ b)`. Każdą klauzulę zamieniamy na dwie implikacje, liczymy SCC; sprzeczność ⇔ `x` i `¬x` w jednej SCC. O(n + m).",
+   "complexity": "O(n + m) — n zmiennych (2n wierzchołków), m klauzul (2m krawędzi)",
+   "level": 5,
+   "body": [
+    {
+     "type": "text",
+     "md": "Każda zmienna `x` daje dwa wierzchołki: `x` (prawda) i `¬x` (fałsz). Klauzula `(a ∨ b)` znaczy: „jeśli\nnie `a`, to `b`” oraz „jeśli nie `b`, to `a`”, czyli krawędzie `¬a → b` i `¬b → a`. Ścieżka `x → … → y`\noznacza: jeśli `x` jest prawdą, `y` też musi być.\n\nFormuła jest sprzeczna ⇔ dla pewnej zmiennej `x` i `¬x` leżą w **jednej SCC** (wtedy `x ⇒ ¬x` i `¬x ⇒ x`).\nW przeciwnym razie wartościowanie odczytujemy z kolejności topologicznej SCC: wybieramy ten literał,\nktórego składowa leży **później** w porządku topologicznym. Przy numeracji Tarjana (odwrotnie\ntopologicznej): `x = true` ⇔ `comp[x] < comp[¬x]`."
+    },
+    {
+     "type": "text",
+     "md": "**Kodowanie:** zmienna `i` (od 0) → wierzchołek `2i` = „i prawdziwe”, `2i + 1` = „i fałszywe”. Negacja\nto `x ^ 1`. Typowe warunki: `a ∨ b`; „co najwyżej jedno z a, b” = `¬a ∨ ¬b`; „dokładnie jedno” =\n`(a ∨ b) ∧ (¬a ∨ ¬b)`; „a musi być prawdą” = `(a ∨ a)`, czyli krawędź `¬a → a`; „a ⇒ b” = `¬a ∨ b`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „każdy element ma dwie możliwości (lewo/prawo, góra/dół, dzień/noc, kolor A/B)” i warunki\ndotyczą **par** elementów („te dwa nie mogą być jednocześnie…”). Warunki na trójki → to już 3-SAT\n(NP-trudny) — szukaj innej struktury."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "2-SAT — pełny program (Tarjan)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TwoSat {\n    int n;                                     // liczba zmiennych\n    vector<vector<int>> g;\n    vector<int> tin, low, comp, st;\n    vector<bool> onSt;\n    int timer_ = 0, ncomp = 0;\n    TwoSat(int n) : n(n), g(2 * n), tin(2 * n, 0), low(2 * n), comp(2 * n), onSt(2 * n, false) {}\n    // literał: zmienna i (0..n-1), val = true -> 2i, false -> 2i+1\n    static int lit(int i, bool val) { return 2 * i + (val ? 0 : 1); }\n    void addClause(int a, int b) {             // (a OR b) na literałach\n        g[a ^ 1].push_back(b);                 // ¬a -> b\n        g[b ^ 1].push_back(a);                 // ¬b -> a\n    }\n    void tarjan(int v) {\n        tin[v] = low[v] = ++timer_;\n        st.push_back(v); onSt[v] = true;\n        for (int u : g[v]) {\n            if (!tin[u]) { tarjan(u); low[v] = min(low[v], low[u]); }\n            else if (onSt[u]) low[v] = min(low[v], tin[u]);\n        }\n        if (low[v] == tin[v]) {\n            ncomp++;\n            int x;\n            do { x = st.back(); st.pop_back(); onSt[x] = false; comp[x] = ncomp; } while (x != v);\n        }\n    }\n    bool solve(vector<int>& val) {\n        for (int v = 0; v < 2 * n; v++) if (!tin[v]) tarjan(v);\n        val.assign(n, 0);\n        for (int i = 0; i < n; i++) {\n            if (comp[2 * i] == comp[2 * i + 1]) return false;   // x i ¬x w jednej SCC\n            val[i] = comp[2 * i] < comp[2 * i + 1];             // Tarjan: odwrotny porządek topologiczny\n        }\n        return true;\n    }\n};\n\nint main() {\n    int n, m;\n    cin >> n >> m;                             // zmienne 1..n, klauzule \"a b\": +x = x, -x = NOT x\n    TwoSat ts(n);\n    auto conv = [](int x) { return x > 0 ? TwoSat::lit(x - 1, true) : TwoSat::lit(-x - 1, false); };\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        ts.addClause(conv(a), conv(b));\n    }\n    vector<int> val;\n    if (!ts.solve(val)) { cout << \"NIE\\n\"; return 0; }\n    cout << \"TAK\\n\";\n    for (int i = 0; i < n; i++) cout << val[i] << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Zapisz pomocnicze funkcje: `implies(a, b)` = `addClause(a ^ 1, b)`, `atMostOne(a, b)` =\n`addClause(a ^ 1, b ^ 1)`, `force(a)` = `addClause(a, a)`. Mniej pomyłek przy modelowaniu."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "addClause(a, b)",
+     "desc": "dodaje warunek (a ∨ b): krawędzie ¬a→b i ¬b→a",
+     "complexity": "O(1)",
+     "example": "ts.addClause(TwoSat::lit(0, true), TwoSat::lit(1, false)); // x0 ∨ ¬x1"
+    },
+    {
+     "sig": "lit(i, val)",
+     "desc": "numer wierzchołka literału: 2i (prawda) lub 2i+1 (fałsz); negacja = ^1",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "solve(val)",
+     "desc": "SCC + sprawdzenie sprzeczności; wypełnia val[i] ∈ {0,1}",
+     "complexity": "O(n + m)",
+     "returns": "bool"
+    }
+   ],
+   "pitfalls": [
+    "Dodanie tylko jednej implikacji z klauzuli (`¬a → b` bez `¬b → a`) — graf musi być „symetryczny”, inaczej wynik jest błędny.",
+    "Pomylony kierunek odczytu wartościowania: przy Tarjanie `x = (comp[x] < comp[¬x])`, przy Kosaraju (porządek topologiczny) odwrotnie: `x = (comp[x] > comp[¬x])`.",
+    "Mieszanie numeracji zmiennych od 1 (wejście) i od 0 (kodowanie 2i/2i+1).",
+    "Wymuszenie wartości `x = true` to klauzula `(x ∨ x)` = jedna krawędź `¬x → x` — nie `x → x`.",
+    "Rekurencyjny Tarjan na 2n = 2·10^6 wierzchołkach — uważaj na stos; w razie czego Kosaraju iteracyjny."
+   ],
+   "qa": [
+    {
+     "q": [
+      "2-sat",
+      "2sat c++",
+      "problem 2-sat",
+      "jak rozwiązać 2-sat",
+      "2 sat algorytm"
+     ],
+     "a": "Zbuduj graf implikacji na `2n` literałach: klauzula `(a ∨ b)` daje krawędzie `¬a → b` i `¬b → a`.\nPolicz SCC (Tarjan/Kosaraju). Jeśli `x` i `¬x` są w tej samej SCC — brak rozwiązania; inaczej\n`x = true` ⇔ składowa `x` jest później w porządku topologicznym niż składowa `¬x`. Całość **O(n + m)**.",
+     "code": "// zmienne 0..n-1: literał \"i prawda\" = 2i, \"i fałsz\" = 2i+1, negacja = x ^ 1\nint n = 2;\nvector<vector<int>> g(2 * n);\nauto clause = [&](int a, int b) { g[a ^ 1].push_back(b); g[b ^ 1].push_back(a); };\nclause(0, 2);        // x0 ∨ x1\nclause(1, 3);        // ¬x0 ∨ ¬x1  (co najwyżej jedno)\ncout << g[1].size() << g[3].size() << '\\n';   // 11"
+    },
+    {
+     "q": [
+      "jak zakodować zmienne 2-sat",
+      "negacja w 2-sat",
+      "x^1 2sat",
+      "numeracja literałów 2-sat"
+     ],
+     "a": "Zmienna `i` (od 0) → wierzchołki `2i` (prawda) i `2i + 1` (fałsz). Wtedy negacja literału `x` to\n`x ^ 1` (XOR zamienia ostatni bit), bez żadnych warunków. Gdy wejście podaje `+k`/`-k` dla zmiennych\nod 1: `k > 0 → 2(k−1)`, `k < 0 → 2(−k−1) + 1`.",
+     "code": "auto conv = [](int x) { return x > 0 ? 2 * (x - 1) : 2 * (-x - 1) + 1; };\nint a = conv(3), na = conv(-3);\ncout << a << ' ' << na << ' ' << (a ^ 1) << '\\n';   // 4 5 5"
+    },
+    {
+     "q": [
+      "implikacje 2-sat",
+      "dlaczego a lub b to dwie krawędzie",
+      "graf implikacji jak zbudować",
+      "a or b implication"
+     ],
+     "a": "`(a ∨ b)` jest fałszywe tylko, gdy oba są fałszywe. Więc jeśli `a` jest fałszywe, `b` musi być\nprawdziwe (`¬a → b`), i symetrycznie `¬b → a`. Obie implikacje są potrzebne — razem kodują dokładnie\ntę klauzulę, a dzięki symetrii graf ma własność: ścieżka `x → y` istnieje ⇔ istnieje `¬y → ¬x`.",
+     "code": "vector<vector<int>> g(4);\nauto clause = [&](int a, int b) { g[a ^ 1].push_back(b); g[b ^ 1].push_back(a); };\nauto implies = [&](int a, int b) { clause(a ^ 1, b); };     // a => b  ==  ¬a ∨ b\nimplies(0, 2);                                             // x0 => x1\ncout << g[0][0] << ' ' << g[3][0] << '\\n';                 // 2 1  (x0->x1, ¬x1->¬x0)"
+    },
+    {
+     "q": [
+      "odczyt wartościowania 2-sat",
+      "jak wybrać wartości zmiennych 2-sat",
+      "2-sat assignment",
+      "przypisanie wartości po scc"
+     ],
+     "a": "Dla każdej zmiennej wybierz literał, którego SCC jest **później** w porządku topologicznym kondensacji\n(bliżej ujść). Wtedy nie wymusisz niczego sprzecznego — implikacje prowadzą „w dół”. Przy Tarjanie\n(numery w odwrotnej kolejności topologicznej): `val[i] = comp[2i] < comp[2i+1]`. Przy Kosaraju:\n`val[i] = comp[2i] > comp[2i+1]`.",
+     "code": "// comp[] z Tarjana dla 2 zmiennych (4 literały)\nvector<int> comp = {1, 3, 2, 4};\nfor (int i = 0; i < 2; i++) cout << (comp[2 * i] < comp[2 * i + 1]) << ' ';\ncout << '\\n';   // 1 1"
+    },
+    {
+     "q": [
+      "2-sat wymuszenie zmiennej",
+      "zmienna musi być prawdą 2-sat",
+      "force value 2sat"
+     ],
+     "a": "Warunek „`x` musi być prawdą” to klauzula `(x ∨ x)`, która daje krawędź `¬x → x` (dwukrotnie — to nie\nszkodzi). Jeśli kiedykolwiek wybierzesz `¬x`, implikacja wymusi `x` — sprzeczność, więc solver\nwybierze `x`. „`x` musi być fałszem” = `(¬x ∨ ¬x)`.",
+     "code": "vector<vector<int>> g(2);\nauto clause = [&](int a, int b) { g[a ^ 1].push_back(b); g[b ^ 1].push_back(a); };\nclause(0, 0);                      // x0 musi być prawdą\ncout << g[1].size() << ' ' << g[1][0] << '\\n';   // 2 0  (¬x0 -> x0)"
+    },
+    {
+     "q": [
+      "dokładnie jedno z dwóch 2-sat",
+      "xor w 2-sat",
+      "równoważność 2-sat",
+      "co najwyżej jedno 2sat"
+     ],
+     "a": "„Co najwyżej jedno z a, b” = `(¬a ∨ ¬b)`. „Co najmniej jedno” = `(a ∨ b)`. „Dokładnie jedno” (XOR) =\nobie klauzule. „a ⇔ b” (równe) = `(¬a ∨ b) ∧ (a ∨ ¬b)`. Każdy z tych warunków to stała liczba\nkrawędzi, więc 2-SAT dalej działa w O(n + m).",
+     "code": "vector<vector<int>> g(4);\nauto clause = [&](int a, int b) { g[a ^ 1].push_back(b); g[b ^ 1].push_back(a); };\nauto exactlyOne = [&](int a, int b) { clause(a, b); clause(a ^ 1, b ^ 1); };\nauto equal = [&](int a, int b) { clause(a ^ 1, b); clause(a, b ^ 1); };\nexactlyOne(0, 2);\nequal(0, 2);                       // razem sprzeczne: x0 xor x1 oraz x0 == x1\nint kraw = 0;\nfor (auto& l : g) kraw += l.size();\ncout << kraw << '\\n';   // 8"
+    },
+    {
+     "q": [
+      "kiedy 2-sat",
+      "jak rozpoznać 2-sat w zadaniu",
+      "dwie opcje dla każdego elementu warunki na pary",
+      "2-sat sygnały"
+     ],
+     "a": "Szukaj: każdy obiekt ma **dokładnie dwie** możliwości (orientacja, strona, kolor, jedna z dwóch pozycji),\na ograniczenia dotyczą **par** obiektów („jeśli A w lewo, to B nie może w lewo”). Wtedy każdy obiekt\nto zmienna boolowska, a każde ograniczenie — klauzula. Gdy warunek obejmuje trzy obiekty naraz, 2-SAT\nnie wystarcza (3-SAT jest NP-trudny).",
+     "code": "// Modelowanie: flaga i stoi w A[i] albo B[i]; dowolne dwie flagi muszą być w odległości >= D.\nint n = 2, D = 3;\nvector<int> A = {1, 2}, B = {5, 9};\nvector<vector<int>> g(2 * n);                     // literał 2i = „i stoi w A”, 2i+1 = „i stoi w B”\nauto clause = [&](int a, int b) { g[a ^ 1].push_back(b); g[b ^ 1].push_back(a); };\nint klauzule = 0;\nfor (int i = 0; i < n; i++)\n    for (int j = i + 1; j < n; j++)\n        for (int ci = 0; ci < 2; ci++)\n            for (int cj = 0; cj < 2; cj++) {\n                int pi = ci ? B[i] : A[i], pj = cj ? B[j] : A[j];\n                if (abs(pi - pj) < D) {               // nie mogą jednocześnie: ¬(i=ci) ∨ ¬(j=cj)\n                    clause((2 * i + ci) ^ 1, (2 * j + cj) ^ 1);\n                    klauzule++;\n                }\n            }\ncout << \"klauzule: \" << klauzule << '\\n';   // 1 (pozycje 1 i 2 są za blisko)"
+    },
+    {
+     "q": [
+      "2-sat złożoność",
+      "ile działa 2-sat",
+      "2-sat 10^5 zmiennych"
+     ],
+     "a": "Graf ma `2n` wierzchołków i `2m` krawędzi, SCC liczysz w liniowym czasie → **O(n + m)**. Dla\n`n, m ≤ 10^6` to szybko, ale rekurencyjny Tarjan na 2·10^6 wierzchołkach może przepełnić stos —\nwtedy Kosaraju iteracyjny (pamiętaj o odwrotnym odczycie wartościowania).",
+     "code": "int n = 3;                                        // zmienne\nvector<pair<int,int>> klauzule = {{0, 2}, {1, 4}, {3, 5}, {2, 5}};   // literały 2i / 2i+1\nvector<vector<int>> g(2 * n);                     // 2n wierzchołków\nfor (auto [a, b] : klauzule) { g[a ^ 1].push_back(b); g[b ^ 1].push_back(a); }\nint kraw = 0;\nfor (auto& l : g) kraw += l.size();\ncout << g.size() << ' ' << kraw << '\\n';         // 6 8: graf 2n x 2m, SCC w O(n + m)"
+    }
+   ],
+   "related": [
+    "graph-scc",
+    "graph-bipartite",
+    "graph-toposort",
+    "graph-dfs",
+    "graph-weighted-dsu"
+   ]
+  },
+  {
+   "id": "graph-euler",
+   "title": "Ścieżka i cykl Eulera — algorytm Hierholzera",
+   "category": "Grafy",
+   "tags": [
+    "euler",
+    "ścieżka eulera",
+    "cykl eulera",
+    "hierholzer",
+    "każda krawędź raz",
+    "stopnie wierzchołków",
+    "de bruijn"
+   ],
+   "aliases": [
+    "ścieżka eulera",
+    "sciezka eulera",
+    "cykl eulera",
+    "euler path",
+    "euler cycle",
+    "eulerian path",
+    "hierholzer",
+    "algorytm hierholzera",
+    "narysuj bez odrywania ołówka",
+    "przejść każdą krawędź raz",
+    "graf eulerowski"
+   ],
+   "summary": "Ścieżka Eulera przechodzi każdą krawędź dokładnie raz (cykl — wraca do startu). Istnienie zależy tylko od stopni i spójności; samą ścieżkę buduje algorytm Hierholzera w O(n + m).",
+   "complexity": "O(n + m)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Warunki (graf nieskierowany):** wszystkie krawędzie w jednej spójnej składowej oraz\n- **cykl Eulera** ⇔ każdy wierzchołek ma parzysty stopień,\n- **ścieżka Eulera** ⇔ dokładnie 0 lub 2 wierzchołki mają stopień nieparzysty (start w jednym z nich).\n\n**Graf skierowany:** wszystkie krawędzie w jednej składowej (słabej) oraz\n- cykl ⇔ `in[v] == out[v]` dla każdego `v`,\n- ścieżka ⇔ jeden wierzchołek ma `out − in = 1` (start), jeden `in − out = 1` (koniec), reszta równe."
+    },
+    {
+     "type": "text",
+     "md": "**Hierholzer:** idź z wierzchołka startowego po nieużywanych krawędziach, aż utkniesz (to zawsze jest\nkoniec ścieżki); cofając się, dopisuj wierzchołki do wyniku i z każdego, który ma jeszcze wolne\nkrawędzie, rozpocznij nowy „objazd”. Wynik (odwrócony) to ścieżka Eulera. Wskaźnik `ptr[v]` na\nnastępną nieprzejrzaną krawędź gwarantuje O(n + m).\n\n**Sygnały:** „przejdź każdą drogę dokładnie raz”, „narysuj figurę bez odrywania ołówka”, „ułóż domino\nw łańcuch”, „najkrótszy napis zawierający wszystkie słowa długości k” (ciąg de Bruijna), „ułóż słowa tak,\nby ostatnia litera = pierwsza litera następnego”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Ścieżka/cykl Eulera w grafie nieskierowanym — Hierholzer iteracyjny",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, m;\n    cin >> n >> m;\n    vector<vector<pair<int, int>>> g(n + 1);   // (sąsiad, id krawędzi)\n    vector<int> deg(n + 1, 0);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back({b, i});\n        g[b].push_back({a, i});\n        deg[a]++; deg[b]++;\n    }\n    int odd = 0, start = 1;\n    for (int v = 1; v <= n; v++) if (deg[v] % 2) odd++;\n    if (odd != 0 && odd != 2) { cout << \"NIE\\n\"; return 0; }\n    for (int v = 1; v <= n; v++) if (deg[v] > 0) { start = v; break; }\n    for (int v = 1; v <= n; v++) if (deg[v] % 2) { start = v; break; }   // ścieżka: start w nieparzystym\n\n    vector<bool> used(m, false);\n    vector<int> ptr(n + 1, 0), st = {start}, path;\n    while (!st.empty()) {\n        int v = st.back();\n        while (ptr[v] < (int)g[v].size() && used[g[v][ptr[v]].second]) ptr[v]++;\n        if (ptr[v] == (int)g[v].size()) {      // brak wolnych krawędzi: dopisz do wyniku\n            path.push_back(v);\n            st.pop_back();\n        } else {\n            auto [u, id] = g[v][ptr[v]];\n            used[id] = true;                   // krawędź nieskierowana: blokujemy obie strony\n            st.push_back(u);\n        }\n    }\n    if ((int)path.size() != m + 1) { cout << \"NIE\\n\"; return 0; }   // krawędzie niespójne\n    reverse(path.begin(), path.end());\n    for (int v : path) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Iteracyjny Hierholzer nie ma problemu z głębokością rekurencji (ścieżka Eulera ma `m + 1` wierzchołków,\nrekurencyjna wersja dla `m = 10^6` łatwo przepełnia stos)."
+    },
+    {
+     "type": "warn",
+     "md": "Bez wskaźnika `ptr[v]` (np. przeszukując listę od początku przy każdym kroku albo usuwając krawędzie\nz `vector` przez `erase`) algorytm robi się O(m²)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "ptr[v]",
+     "desc": "indeks pierwszej nieprzejrzanej krawędzi z v — każda krawędź oglądana raz",
+     "complexity": "O(1) zamortyzowane"
+    },
+    {
+     "sig": "used[id]",
+     "desc": "czy krawędź nieskierowana o numerze id została już przejechana",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Brak sprawdzenia spójności: stopnie mogą być dobre, a krawędzie w dwóch kawałkach — sprawdź, czy ścieżka ma `m + 1` wierzchołków.",
+    "W grafie nieskierowanym krawędź jest na dwóch listach — trzeba ją oznaczyć jako użytą (`used[id]`), inaczej przejdziesz ją dwa razy.",
+    "Start ścieżki: wierzchołek o nieparzystym stopniu (nieskierowany) / `out − in = 1` (skierowany). Start w złym miejscu daje ścieżkę niepełną.",
+    "Start w wierzchołku izolowanym (stopień 0), gdy wierzchołek 1 nie ma krawędzi — wybierz wierzchołek z `deg > 0`.",
+    "Wynik Hierholzera jest w odwrotnej kolejności — dla grafu skierowanego `reverse` jest obowiązkowy.",
+    "Pętla `v – v` dodaje 2 do stopnia i jest na liście `v` dwukrotnie — z `used[id]` działa poprawnie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "ścieżka eulera",
+      "cykl eulera",
+      "euler path c++",
+      "jak znaleźć ścieżkę eulera",
+      "przejść każdą krawędź dokładnie raz"
+     ],
+     "a": "Sprawdź warunki na stopnie (0 lub 2 wierzchołki nieparzyste), wybierz start (nieparzysty, jeśli\njest) i uruchom Hierholzera: stos wierzchołków, `ptr[v]` do następnej krawędzi, `used[id]` dla\nkrawędzi. Gdy `v` nie ma wolnych krawędzi — dopisz go do wyniku. Na końcu sprawdź, czy wynik ma\n`m + 1` wierzchołków (spójność). **O(n + m)**.",
+     "code": "vector<int> euler(int n, const vector<vector<pair<int,int>>>& g, int m, int start) {\n    vector<bool> used(m, false);\n    vector<int> ptr(n + 1, 0), st = {start}, path;\n    while (!st.empty()) {\n        int v = st.back();\n        while (ptr[v] < (int)g[v].size() && used[g[v][ptr[v]].second]) ptr[v]++;\n        if (ptr[v] == (int)g[v].size()) { path.push_back(v); st.pop_back(); }\n        else { auto [u, id] = g[v][ptr[v]]; used[id] = true; st.push_back(u); }\n    }\n    reverse(path.begin(), path.end());\n    return path;              // jeśli path.size() != m + 1 -> brak ścieżki\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "warunki istnienia cyklu eulera",
+      "kiedy istnieje ścieżka eulera",
+      "graf eulerowski warunek",
+      "euler stopnie parzyste"
+     ],
+     "a": "Nieskierowany: krawędzie tworzą jedną spójną całość, a liczba wierzchołków o nieparzystym stopniu\nwynosi 0 (cykl) albo 2 (ścieżka między nimi). Dlaczego: każde przejście przez wierzchołek zużywa\ndwie krawędzie (wejście + wyjście), więc tylko start i koniec mogą mieć stopień nieparzysty.\nSkierowany: `in = out` wszędzie (cykl) albo jeden start z `out = in + 1` i jeden koniec z `in = out + 1`.",
+     "code": "int n = 4;\nvector<pair<int,int>> e = {{1, 2}, {2, 3}, {3, 1}, {3, 4}};\nvector<int> deg(n + 1, 0);\nfor (auto [a, b] : e) { deg[a]++; deg[b]++; }\nint odd = 0;\nfor (int v = 1; v <= n; v++) odd += deg[v] % 2;\ncout << (odd == 0 ? \"cykl\" : odd == 2 ? \"sciezka\" : \"brak\") << '\\n';   // sciezka (3 i 4)"
+    },
+    {
+     "q": [
+      "hierholzer",
+      "algorytm hierholzera",
+      "hierholzer c++",
+      "jak działa hierholzer"
+     ],
+     "a": "Idziesz z wierzchołka startowego po wolnych krawędziach, odkładając wierzchołki na stos. Gdy utkniesz,\nzdejmujesz wierzchołek do wyniku i wracasz — jeśli po drodze jakiś wierzchołek ma jeszcze wolne\nkrawędzie, „wklejasz” w tym miejscu nowy cykl, idąc dalej od niego. Każda krawędź jest użyta raz,\na dzięki `ptr[v]` każda pozycja listy sąsiedztwa oglądana raz → O(n + m).",
+     "code": "// „Ósemka”: dwa trójkąty sklejone w wierzchołku 1. Pierwszy obchód 1-2-3-1 utyka,\n// a wracając, algorytm wkleja drugi cykl 1-4-5-1.\nint n = 5;\nvector<pair<int,int>> e = {{1, 2}, {2, 3}, {3, 1}, {1, 4}, {4, 5}, {5, 1}};\nint m = e.size();\nvector<vector<pair<int,int>>> g(n + 1);\nfor (int i = 0; i < m; i++) { g[e[i].first].push_back({e[i].second, i}); g[e[i].second].push_back({e[i].first, i}); }\nvector<bool> used(m, false);\nvector<int> ptr(n + 1, 0), st = {1}, path;\nwhile (!st.empty()) {\n    int v = st.back();\n    while (ptr[v] < (int)g[v].size() && used[g[v][ptr[v]].second]) ptr[v]++;\n    if (ptr[v] == (int)g[v].size()) { path.push_back(v); st.pop_back(); }   // utknęliśmy: do wyniku\n    else { auto [u, id] = g[v][ptr[v]]; used[id] = true; st.push_back(u); }\n}\nreverse(path.begin(), path.end());\nfor (int v : path) cout << v << ' ';\ncout << '\\n';   // 1 2 3 1 4 5 1"
+    },
+    {
+     "q": [
+      "euler graf skierowany",
+      "ścieżka eulera skierowany",
+      "directed euler path",
+      "cykl eulera in out"
+     ],
+     "a": "Policz `in[v]` i `out[v]`. Ścieżka istnieje, gdy co najwyżej jeden wierzchołek ma `out − in = 1`\n(start), co najwyżej jeden `in − out = 1` (koniec), reszta `in = out`, i wszystkie krawędzie są\nosiągalne. Hierholzer jest prostszy niż w nieskierowanym — każda krawędź jest na jednej liście, więc\nwystarczy `ptr[v]` bez `used[]`. Wynik trzeba odwrócić.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> g(n + 1);\n    vector<int> in(n + 1, 0), out(n + 1, 0);\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        out[a]++; in[b]++;\n    }\n    int start = -1, plus = 0, minus = 0;\n    for (int v = 1; v <= n; v++) {\n        if (out[v] - in[v] == 1) { plus++; start = v; }\n        else if (in[v] - out[v] == 1) minus++;\n        else if (in[v] != out[v]) { cout << \"NIE\\n\"; return 0; }\n    }\n    if (plus > 1 || minus > 1 || plus != minus) { cout << \"NIE\\n\"; return 0; }\n    if (start == -1) for (int v = 1; v <= n; v++) if (out[v] > 0) { start = v; break; }\n    if (start == -1) start = 1;\n    vector<int> ptr(n + 1, 0), st = {start}, path;\n    while (!st.empty()) {\n        int v = st.back();\n        if (ptr[v] < (int)g[v].size()) st.push_back(g[v][ptr[v]++]);\n        else { path.push_back(v); st.pop_back(); }\n    }\n    if ((int)path.size() != m + 1) { cout << \"NIE\\n\"; return 0; }\n    reverse(path.begin(), path.end());\n    for (int v : path) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "euler sprawdzenie spójności",
+      "euler niespójny graf",
+      "stopnie parzyste ale brak cyklu eulera"
+     ],
+     "a": "Same stopnie nie wystarczą: dwa rozłączne trójkąty mają wszystkie stopnie parzyste, a cyklu Eulera\nnie ma. Najprościej sprawdzić to po Hierholzerze — jeśli wynik ma mniej niż `m + 1` wierzchołków,\nczęść krawędzi była nieosiągalna ze startu. Wierzchołki izolowane (stopień 0) nie przeszkadzają.",
+     "code": "int m = 6;\nvector<int> path = {1, 2, 3, 1};          // Hierholzer z 1 na dwóch trójkątach\ncout << ((int)path.size() == m + 1 ? \"OK\" : \"NIE\") << '\\n';   // NIE"
+    },
+    {
+     "q": [
+      "euler a hamilton",
+      "różnica cykl eulera hamiltona",
+      "ścieżka hamiltona czy eulera"
+     ],
+     "a": "**Euler** — każda **krawędź** dokładnie raz; istnienie sprawdza się w O(n + m) po stopniach,\na ścieżkę buduje Hierholzer. **Hamilton** — każdy **wierzchołek** dokładnie raz; problem NP-trudny,\nna OI tylko dla małych `n` (DP po maskach O(2^n · n²), `n ≤ ~20`). Jeśli w zadaniu „odwiedź każde\nmiasto raz” — to Hamilton; „przejedź każdą drogę raz” — Euler.",
+     "code": "// Hamilton dla małego n: dp[maska][v] = czy da się odwiedzić maskę kończąc w v\nint n = 3;\nvector<vector<int>> adj = {{0, 1, 0}, {1, 0, 1}, {0, 1, 0}};   // ścieżka 0-1-2\nvector<vector<bool>> dp(1 << n, vector<bool>(n, false));\nfor (int v = 0; v < n; v++) dp[1 << v][v] = true;\nfor (int mask = 1; mask < (1 << n); mask++)\n    for (int v = 0; v < n; v++) if (dp[mask][v])\n        for (int u = 0; u < n; u++)\n            if (adj[v][u] && !(mask >> u & 1)) dp[mask | 1 << u][u] = true;\nbool jest = false;\nfor (int v = 0; v < n; v++) jest = jest || dp[(1 << n) - 1][v];\ncout << jest << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "ciąg de bruijna",
+      "najkrótszy napis zawierający wszystkie słowa długości k",
+      "de bruijn sequence",
+      "euler de bruijn"
+     ],
+     "a": "Wierzchołki to napisy długości `k − 1`, a każde słowo długości `k` to krawędź z prefiksu do sufiksu.\nKażdy wierzchołek ma tyle samo wejść co wyjść, więc istnieje cykl Eulera; przejście go i dopisywanie\nostatniego znaku każdej krawędzi daje napis długości `2^k + k − 1` (alfabet binarny) zawierający każde\nsłowo długości `k` dokładnie raz. O(2^k).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int k;\n    cin >> k;\n    if (k == 1) { cout << \"01\\n\"; return 0; }\n    int V = 1 << (k - 1), mask = V - 1;\n    vector<int> ptr(V, 0);\n    vector<pair<int,int>> st = {{0, -1}};     // (wierzchołek, bit krawędzi wejścia)\n    string res;\n    while (!st.empty()) {\n        auto [v, b] = st.back();\n        if (ptr[v] < 2) {\n            int bit = ptr[v]++;\n            st.push_back({((v << 1) | bit) & mask, bit});\n        } else {\n            if (b != -1) res += char('0' + b);\n            st.pop_back();\n        }\n    }\n    reverse(res.begin(), res.end());\n    cout << string(k - 1, '0') + res << '\\n';\n}"
+    },
+    {
+     "q": [
+      "domino w łańcuch",
+      "ułożyć słowa w łańcuch ostatnia litera pierwsza",
+      "kostki domina euler",
+      "łańcuch słów euler"
+     ],
+     "a": "Każde domino `[a|b]` to krawędź nieskierowana `a – b` między wartościami oczek; ułożenie wszystkich\nkostek w łańcuch = ścieżka Eulera w tym grafie (wierzchołki to liczby 0..6). Dla słów: wierzchołki to\nlitery, słowo to krawędź skierowana `pierwsza → ostatnia` litera. Rozmiar grafu jest mały, a krawędzi\ntyle, ile kostek/słów — O(n + m).",
+     "code": "vector<string> slowa = {\"ala\", \"ada\", \"arbuz\"};\nvector<int> in(26, 0), out(26, 0);\nfor (auto& s : slowa) { out[s.front() - 'a']++; in[s.back() - 'a']++; }\nint plus = 0, minus = 0, zle = 0;\nfor (int c = 0; c < 26; c++) {\n    if (out[c] - in[c] == 1) plus++;\n    else if (in[c] - out[c] == 1) minus++;\n    else if (in[c] != out[c]) zle++;\n}\ncout << (zle == 0 && plus <= 1 && minus <= 1 ? \"stopnie OK\" : \"nie da sie\") << '\\n';   // stopnie OK"
+    }
+   ],
+   "related": [
+    "graph-dfs",
+    "graph-connected-components",
+    "graph-representation",
+    "graph-scc",
+    "graph-hamiltonian"
+   ]
+  }
+ ]
+}

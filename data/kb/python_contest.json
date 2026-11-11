@@ -1,0 +1,2112 @@
+{
+ "chunk": "python_contest",
+ "articles": [
+  {
+   "id": "oi-py-fast-io",
+   "title": "Python: szybkie wczytywanie i wypisywanie (sys.stdin.readline, sys.stdin.buffer, sys.stdout.write)",
+   "category": "OI praktyka",
+   "tags": [
+    "python",
+    "szybkie io python",
+    "sys.stdin",
+    "sys.stdin.readline",
+    "sys.stdout.write",
+    "input python",
+    "print python",
+    "TLE python",
+    "pypy"
+   ],
+   "aliases": [
+    "szybkie wczytywanie python",
+    "fast io python",
+    "python input wolny",
+    "sys.stdin.readline",
+    "sys.stdin.buffer.read().split()",
+    "szybkie wejście w pythonie",
+    "python print wolny",
+    "wczytywanie danych python",
+    "sys.stdout.write",
+    "input = sys.stdin.readline"
+   ],
+   "summary": "W Pythonie `input()` i `print()` wywoływane w pętli 10^5–10^6 razy są wolne. Wczytaj całe wejście naraz przez `sys.stdin.buffer.read().split()` (albo podmień `input = sys.stdin.readline`), a wyniki zbierz w listę i wypisz jednym `sys.stdout.write('\\n'.join(...))`.",
+   "complexity": "wczytanie całego wejścia: O(rozmiar danych); każde wywołanie input()/print() ma duży stały narzut",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Limity czasu w SIO2/OI są dobierane pod rozwiązania w **C++**, więc w Pythonie liczy się każde 0,1 s. Najwięcej czasu\nmarnuje się na wejściu i wyjściu: `input()` wywołany 10^6 razy potrafi zająć **kilka sekund**, a `print()` w pętli też\nkosztuje. Trzy poziomy przyspieszenia:\n\n1. `input = sys.stdin.readline` — jedna linijka na górze, dalej piszesz `input()`; kilka razy szybsze.\n2. `sys.stdin.buffer.read().split()` — całe wejście naraz jako lista tokenów (`bytes`); najszybsze i nie obchodzi go\n   podział na wiersze.\n3. Wyjście: zbierz wyniki w listę i wypisz **raz**: `sys.stdout.write('\\n'.join(map(str, wyniki)) + '\\n')`."
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Szablon: całe wejście naraz (najszybsze)",
+     "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()   # lista tokenów typu bytes\n    n = int(data[0])\n    a = list(map(int, data[1:1 + n]))        # int(b'42') działa\n    wyniki = []\n    pref = 0\n    for x in a:\n        pref += x\n        wyniki.append(pref)\n    sys.stdout.write('\\n'.join(map(str, wyniki)) + '\\n')\n\nmain()"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Wiersz po wierszu: input = sys.stdin.readline",
+     "code": "import sys\ninput = sys.stdin.readline           # podmiana: dalej piszesz input()\n\nn, m = map(int, input().split())\nkrawedzie = []\nfor _ in range(m):\n    u, v = map(int, input().split())\n    krawedzie.append((u, v))\ns = input().strip()                  # .strip() usuwa '\\n' z końca!\nprint(n, m, krawedzie, s)"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Wiele testów: wskaźnik po tokenach",
+     "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    pos = 0\n    t = int(data[pos]); pos += 1\n    out = []\n    for _ in range(t):\n        n = int(data[pos]); pos += 1\n        a = data[pos:pos + n]; pos += n\n        out.append(str(sum(map(int, a))))\n    print('\\n'.join(out))\n\nmain()"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Metoda",
+      "Szybkość",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`input()`",
+       "wolne przy 10^5+ wierszy",
+       "wygodne przy małych danych"
+      ],
+      [
+       "`sys.stdin.readline()`",
+       "kilka razy szybsze",
+       "zostawia `'\\n'` na końcu — używaj `.split()` / `.strip()`"
+      ],
+      [
+       "`sys.stdin.buffer.read().split()`",
+       "najszybsze",
+       "tokeny to `bytes`; napis: `.decode()`"
+      ],
+      [
+       "`print()` w pętli",
+       "wolne",
+       "każde wywołanie osobno formatuje i zapisuje"
+      ],
+      [
+       "`sys.stdout.write('\\n'.join(...))`",
+       "najszybsze",
+       "przyjmuje tylko `str`, sam nie dodaje `'\\n'`"
+      ],
+      [
+       "`print(*a)`",
+       "dobre dla jednego wiersza",
+       "elementy rozdzielone spacją"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "To samo w C++ (dla porównania)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    long long pref = 0;\n    for (int i = 0; i < n; i++) {\n        long long x;\n        cin >> x;\n        pref += x;\n        cout << pref << '\\n';\n    }\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`sys.stdin.readline()` **zostawia `'\\n'`** na końcu wiersza: `s = input()` ma wtedy długość o 1 większą,\na `s == 'TAK'` jest fałszem. Używaj `input().split()` albo `input().strip()` (`.rstrip('\\n')`, gdy spacje na brzegach\nmają znaczenie). Tokeny z `sys.stdin.buffer` to `bytes`: `b'abc' != 'abc'` — porównuj z `b'abc'` albo zrób `.decode()`."
+    },
+    {
+     "type": "tip",
+     "md": "Działa tak samo w **PyPy** (tam też `sys.stdin.buffer.read()` jest najszybsze). W zadaniach **interaktywnych** nie\nwczytuj wszystkiego naraz (program czekałby na koniec wejścia) — czytaj `readline()` i po każdym pytaniu rób\n`print(x, flush=True)`."
+    }
+   ],
+   "pitfalls": [
+    "`sys.stdin.readline()` zostawia `'\\n'` — bez `.strip()` porównanie `s == 'TAK'` daje `False`, a `len(s)` jest o 1 za duże.",
+    "Tokeny z `sys.stdin.buffer.read().split()` to `bytes`: `data[0] == 'abc'` jest zawsze `False`; napisy dekoduj `.decode()`.",
+    "`print()` w pętli 10^5+ razy — zbierz wyniki w listę i wypisz jednym `'\\n'.join(...)`.",
+    "`sys.stdout.write(5)` to `TypeError` — `write` przyjmuje tylko `str` i nie dodaje końca linii.",
+    "Wczytywanie całego wejścia naraz w zadaniu interaktywnym — program czeka na EOF, który nie nadejdzie.",
+    "Z `input = sys.stdin.readline` koniec pliku nie rzuca `EOFError`, tylko zwraca `''` — pętla `while True` musi to sprawdzać."
+   ],
+   "qa": [
+    {
+     "q": [
+      "szybkie wczytywanie python",
+      "jak szybko wczytać dane w pythonie",
+      "python input za wolny",
+      "fast input python",
+      "szybkie wejscie python",
+      "pyton wczytywanie TLE",
+      "how to read input fast in python"
+     ],
+     "a": "Nie wołaj `input()` w pętli. Wczytaj całe wejście naraz: `data = sys.stdin.buffer.read().split()` daje listę tokenów\n(`bytes`), które zamieniasz `int(...)`. To kilka razy szybsze od `input()` przy 10^5–10^6 liczb. Kod umieść w funkcji\n`main()` (zmienne lokalne są szybsze).",
+     "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    a = list(map(int, data[1:n + 1]))\n    print(sum(a))\n\nmain()",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "sys.stdin.readline python",
+      "co to sys.stdin.readline",
+      "input = sys.stdin.readline",
+      "readline zamiast input python",
+      "python readline enter na koncu",
+      "python readline vs input"
+     ],
+     "a": "`sys.stdin.readline()` czyta jeden wiersz **razem ze znakiem `'\\n'`** i jest kilka razy szybsze od `input()`.\nNajwygodniej podmienić `input = sys.stdin.readline` na początku programu. Liczby: `map(int, input().split())` —\n`split()` sam zjada `'\\n'`. Napisy: `input().strip()` (albo `.rstrip('\\n')`).",
+     "code": "import sys\ninput = sys.stdin.readline\n\nn = int(input())\nslowo = input().strip()        # bez strip() byłoby 'kot\\n'\nprint(n, slowo, len(slowo))",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "sys.stdin.buffer.read().split() python",
+      "wczytanie całego wejścia naraz python",
+      "wczytac wszystko naraz pythonie",
+      "python read all input at once",
+      "python bytes zamiast str przy wczytywaniu",
+      "dlaczego mam b przed napisem python"
+     ],
+     "a": "`sys.stdin.buffer.read()` czyta całe wejście jako `bytes`, a `.split()` dzieli je po białych znakach (spacje, entery).\nLiczby: `int(tok)` działa bezpośrednio na `bytes`. Napisy są jednak typu `bytes` (`b'abc'`) — do porównań i wypisywania\nzamień je `.decode()`. Iterator `it = iter(data)` i `next(it)` to wygodna alternatywa dla ręcznego wskaźnika.",
+     "code": "import sys\n\ndata = sys.stdin.buffer.read().split()\nit = iter(data)\nn = int(next(it))\nimiona = [next(it).decode() for _ in range(n)]\nprint(imiona)                  # ['ala', 'ola'] — bez decode: [b'ala', b'ola']",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python print za wolny",
+      "jak szybko wypisać wyniki w pythonie",
+      "jak wypisać dużo liczb w pythonie",
+      "sys.stdout.write python",
+      "python join wypisywanie",
+      "fast output python",
+      "print w petli python TLE"
+     ],
+     "a": "Zbierz wyniki w listę i wypisz je **jednym** wywołaniem: `sys.stdout.write('\\n'.join(map(str, wyniki)) + '\\n')`\n(albo `print('\\n'.join(...))`). `print()` w pętli 10^6 razy jest kilka razy wolniejsze. `write` przyjmuje tylko\n`str` — liczby zamień przez `map(str, ...)`.",
+     "code": "import sys\n\nwyniki = [i * i for i in range(10)]\nsys.stdout.write('\\n'.join(map(str, wyniki)) + '\\n')",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "jak wczytać listę liczb w pythonie",
+      "python map int split",
+      "list(map(int, input().split()))",
+      "wczytywanie tablicy python",
+      "python read list of ints",
+      "wczytaj n liczb pyton"
+     ],
+     "a": "Gdy liczby są w jednym wierszu: `a = list(map(int, input().split()))`. Gdy każda jest w osobnym wierszu albo nie wiesz,\njak są rozłożone — wczytaj wszystkie tokeny `sys.stdin.buffer.read().split()` i weź odpowiedni wycinek.",
+     "code": "import sys\ninput = sys.stdin.readline\n\nn = int(input())\na = list(map(int, input().split()))\nprint(n, a, max(a))",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python wczytywanie do końca pliku",
+      "python eof",
+      "czytanie do eof w pythonie",
+      "python read until eof",
+      "for line in sys.stdin python",
+      "python nie wiem ile jest danych"
+     ],
+     "a": "Najprościej: `data = sys.stdin.buffer.read().split()` — dostajesz wszystkie tokeny, ile by ich nie było. Wiersz po\nwierszu: `for line in sys.stdin:`. Uwaga: `sys.stdin.readline()` na końcu pliku zwraca `''` (nie rzuca wyjątku),\na zwykłe `input()` rzuca `EOFError`.",
+     "code": "import sys\n\nsuma = 0\nfor line in sys.stdin:         # kończy się samo na EOF\n    for tok in line.split():\n        suma += int(tok)\nprint(suma)",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python wypisanie listy w jednej linii",
+      "print(*a) python",
+      "python wypisz liste bez nawiasow",
+      "python print list without brackets",
+      "wypisywanie tablicy python spacje"
+     ],
+     "a": "`print(*a)` wypisuje elementy rozdzielone spacją (bez nawiasów i przecinków). Szybsza i elastyczna wersja:\n`print(' '.join(map(str, a)))`. Separator zmienisz parametrem `sep`: `print(*a, sep=',')`.",
+     "code": "a = [3, 1, 4, 1, 5]\nprint(*a)                      # 3 1 4 1 5\nprint(' '.join(map(str, a)))   # 3 1 4 1 5\nprint(*a, sep=',')             # 3,1,4,1,5",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python wczytaj siatke znakow",
+      "wczytywanie planszy python",
+      "python grid input",
+      "mapa znakow pythonie wczytywanie",
+      "python lista napisów z wejścia"
+     ],
+     "a": "Wczytaj `n` wierszy z `.strip()` — dostajesz listę napisów, `g[i][j]` to znak. Napis w Pythonie jest niezmienny, więc\njeśli będziesz zmieniać pola, zrób listę list: `[list(row) for row in g]`.",
+     "code": "import sys\ninput = sys.stdin.readline\n\nn, m = map(int, input().split())\ng = [input().strip() for _ in range(n)]\nsciany = sum(row.count('#') for row in g)\nplansza = [list(row) for row in g]   # do modyfikacji\nplansza[0][0] = 'X'\nprint(sciany, ''.join(plansza[0]))",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python zadanie interaktywne flush",
+      "flush w pythonie",
+      "python interaktywne print flush",
+      "python interactive problem flush",
+      "pyton interaktywne zawiesza sie"
+     ],
+     "a": "W zadaniu interaktywnym po każdym pytaniu opróżnij bufor: `print(x, flush=True)` (albo `sys.stdout.flush()`).\nOdpowiedzi czytaj `sys.stdin.readline()` — **nie** czytaj całego wejścia naraz, bo program czekałby na EOF.",
+     "code": "import sys\n\ndef zapytaj(x):\n    print('?', x, flush=True)\n    return sys.stdin.readline().strip()",
+     "lang": "python"
+    }
+   ],
+   "related": [
+    "io-fast-io",
+    "io-read-until-eof",
+    "pit-endl-tle",
+    "io-read-grid",
+    "oi-py-performance",
+    "oi-py-cpp-equivalents"
+   ]
+  },
+  {
+   "id": "oi-py-recursion",
+   "title": "Python: RecursionError i sys.setrecursionlimit (wątek z większym stosem, DFS na własnym stosie)",
+   "category": "OI praktyka",
+   "tags": [
+    "python",
+    "rekurencja python",
+    "sys.setrecursionlimit",
+    "RecursionError",
+    "stos python",
+    "threading.stack_size",
+    "dfs iteracyjny python",
+    "pypy"
+   ],
+   "aliases": [
+    "rekurencja python",
+    "RecursionError python",
+    "maximum recursion depth exceeded",
+    "sys.setrecursionlimit",
+    "python recursionlimit",
+    "python dfs rekurencyjny",
+    "python głęboka rekurencja",
+    "dfs bez rekurencji python",
+    "python recursion limit"
+   ],
+   "summary": "Python domyślnie pozwala tylko na głębokość wywołań 1000 — DFS po ścieżce z 10^5 wierzchołków kończy się `RecursionError` (na SIO2: błąd wykonania). Pomaga `sys.setrecursionlimit`, a w PyPy i starszym CPythonie dodatkowo wątek z większym stosem, ale najpewniejsze i najszybsze jest przepisanie rekurencji na pętlę z własnym stosem.",
+   "complexity": "DFS iteracyjny: O(n + m) czasu i O(n) pamięci na stos",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Każde wywołanie funkcji w Pythonie jest drogie, a głębokość rekurencji jest **ograniczona**: `sys.getrecursionlimit()`\nzwraca domyślnie 1000. Przekroczenie kończy się `RecursionError: maximum recursion depth exceeded` — na SIO2 to status\nRE. Drzewo-ścieżka z 10^5 wierzchołków to dokładnie taki test (autorzy zadań je dają!).\n\nSamo `sys.setrecursionlimit(...)` usuwa tylko pythonowy bezpiecznik, ale **nie powiększa stosu**:\n- **CPython 3.11+**: wywołania między funkcjami Pythona nie zużywają stosu C, więc podniesienie limitu zwykle wystarcza\n  (głębokość 10^5–10^6 działa).\n- **PyPy i CPython ≤ 3.10**: przy głębokości ~10^5 interpreter pada z *segmentation fault* (też RE, bez komunikatu).\n  Pomaga uruchomienie kodu w **wątku z większym stosem** albo — najlepiej — DFS na pętli.\n\nWersję Pythona na sprawdzarce zobaczysz na liście języków w SIO2; nie zakładaj, że jest najnowsza."
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Podniesienie limitu (CPython 3.11+, głębokość ~10^5)",
+     "code": "import sys\nsys.setrecursionlimit(1 << 20)\n\ndef glebokosc(v, g, ojciec):\n    best = 0\n    for u in g[v]:\n        if u != ojciec:\n            best = max(best, 1 + glebokosc(u, g, v))\n    return best\n\nn = 100000\ng = [[] for _ in range(n)]\nfor i in range(n - 1):          # ścieżka 0-1-2-...-(n-1)\n    g[i].append(i + 1)\n    g[i + 1].append(i)\nprint(glebokosc(0, g, -1))      # 99999"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Wątek z większym stosem (PyPy, starszy CPython)",
+     "code": "import sys\nimport threading\n\ndef main():\n    n = 200000\n    g = [[] for _ in range(n)]\n    for i in range(n - 1):\n        g[i].append(i + 1)\n        g[i + 1].append(i)\n\n    def dfs(v, p):\n        best = 0\n        for u in g[v]:\n            if u != p:\n                best = max(best, 1 + dfs(u, v))\n        return best\n\n    print(dfs(0, -1))           # 199999\n\nsys.setrecursionlimit(1 << 25)\nthreading.stack_size(1 << 27)   # 128 MB stosu dla NOWEGO wątku — przed jego utworzeniem\nt = threading.Thread(target=main)\nt.start()\nt.join()"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "DFS iteracyjny: kolejność odwiedzin + przetwarzanie od liści (rozmiary poddrzew)",
+     "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    g = [[] for _ in range(n + 1)]\n    for i in range(n - 1):\n        a = int(data[1 + 2 * i]); b = int(data[2 + 2 * i])\n        g[a].append(b)\n        g[b].append(a)\n    parent = [0] * (n + 1)\n    parent[1] = -1\n    order = []                  # kolejność wejścia (preorder)\n    stack = [1]\n    while stack:\n        v = stack.pop()\n        order.append(v)\n        for u in g[v]:\n            if u != parent[v]:\n                parent[u] = v\n                stack.append(u)\n    size = [1] * (n + 1)\n    for v in reversed(order):   # dzieci przed rodzicem = \"powrót z rekurencji\"\n        if parent[v] > 0:\n            size[parent[v]] += size[v]\n    print(' '.join(map(str, size[1:])))\n\nmain()"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "DFS iteracyjny z wejściem i wyjściem z wierzchołka (tin/tout)",
+     "code": "n = 6\ng = [[1, 2], [0, 3], [0, 4, 5], [1], [2], [2]]\ntin = [0] * n\ntout = [0] * n\ntimer = 0\nstack = [(0, -1, False)]\nwhile stack:\n    v, p, wyjscie = stack.pop()\n    if wyjscie:                         # wszystkie dzieci v już przetworzone\n        tout[v] = timer\n        continue\n    tin[v] = timer\n    timer += 1\n    stack.append((v, p, True))          # wrócimy do v po dzieciach\n    for u in reversed(g[v]):            # reversed: dzieci w tej samej kolejności co w rekurencji\n        if u != p:\n            stack.append((u, v, False))\nprint(tin)                              # poddrzewo v = wierzchołki z tin w [tin[v], tout[v])\nprint(tout)"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sposób",
+      "Kiedy",
+      "Ryzyko"
+     ],
+     "rows": [
+      [
+       "`sys.setrecursionlimit(1 << 20)`",
+       "CPython 3.11+, głębokość do ~10^5–10^6",
+       "w PyPy i CPython ≤ 3.10 segfault (RE) przy ~10^5"
+      ],
+      [
+       "wątek + `threading.stack_size(1 << 27)`",
+       "PyPy / starszy CPython, głębokość ~10^5",
+       "stos liczy się do pamięci; przy 10^6 w PyPy i tak może paść"
+      ],
+      [
+       "pętla z własnym stosem",
+       "zawsze",
+       "trzeba przerobić logikę (lista `order`, flaga wyjścia)"
+      ],
+      [
+       "`functools.lru_cache` na rekurencji",
+       "szybki prototyp DP ze spamiętywaniem",
+       "ta sama głębokość + duży narzut; na pełne punkty DP pętlą"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Iteracyjny DFS w **grafie** (nie drzewie) musi mieć tablicę `vis`. Zaznaczanie przy wkładaniu na stos wystarcza do\nspójnych składowych i osiągalności; gdy potrzebujesz prawdziwej kolejności DFS (np. tin/tout, mosty), zaznaczaj przy\nzdjęciu ze stosu i pomijaj już odwiedzone."
+    },
+    {
+     "type": "tip",
+     "md": "W C++ problem jest podobny, tylko dopuszczalna głębokość jest dużo większa (patrz przepełnienie stosu w C++). Rekurencyjny DFS na\n10^6 wierzchołków to w Pythonie zły pomysł nawet, gdy nie padnie — każde wywołanie kosztuje. Pętla z listą jako stosem\njest kilka razy szybsza."
+    }
+   ],
+   "pitfalls": [
+    "Brak `sys.setrecursionlimit` — DFS głębszy niż ~1000 kończy się `RecursionError` (RE).",
+    "Samo `setrecursionlimit` w PyPy lub CPython ≤ 3.10 przy głębokości ~10^5 — segfault zamiast błędu Pythona.",
+    "`threading.stack_size` wywołane po utworzeniu wątku albo kod uruchomiony w głównym wątku — nic nie zmienia.",
+    "W iteracyjnym DFS `stack.pop()` odwiedza sąsiadów w odwrotnej kolejności — jeśli kolejność ma znaczenie, wkładaj `reversed(g[v])`.",
+    "Iteracyjny DFS w grafie z cyklami bez tablicy odwiedzonych — nieskończona pętla albo wykładniczo wiele wpisów na stosie.",
+    "`lru_cache` przy 10^6 stanach — narzut czasu i pamięci; napisz DP pętlą po tablicy."
+   ],
+   "qa": [
+    {
+     "q": [
+      "RecursionError python",
+      "maximum recursion depth exceeded python",
+      "python rekurencja błąd",
+      "recursion error w pythonie co zrobic",
+      "pyton przekroczona glebokosc rekurencji",
+      "python RecursionError dfs"
+     ],
+     "a": "Python pozwala domyślnie na głębokość rekurencji 1000. Na górze programu dodaj `sys.setrecursionlimit(1 << 20)`.\nW CPythonie 3.11+ to zwykle wystarcza; w PyPy i starszym CPythonie przy głębokości ~10^5 program i tak padnie —\nwtedy uruchom kod w wątku z większym stosem albo przepisz DFS na pętlę ze stosem.",
+     "code": "import sys\nsys.setrecursionlimit(1 << 20)\n\ndef suma(n):\n    return 0 if n == 0 else n + suma(n - 1)\n\nprint(suma(5000))               # 12502500; bez podniesienia limitu: RecursionError",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "sys.setrecursionlimit python",
+      "jak zwiększyć głębokość rekurencji w pythonie",
+      "python zwiekszyc recursion limit",
+      "python recursion limit increase",
+      "setrecursionlimit ile ustawic",
+      "python getrecursionlimit"
+     ],
+     "a": "`sys.setrecursionlimit(n)` ustawia maksymalną głębokość wywołań. Na zawodach ustaw z zapasem, np. `1 << 20`\n(≈ 10^6). To tylko bezpiecznik Pythona — nie powiększa stosu, więc w PyPy/starszym CPythonie głęboka rekurencja\nmoże skończyć się segfaultem.",
+     "code": "import sys\nprint(sys.getrecursionlimit())  # 1000\nsys.setrecursionlimit(1 << 20)\nprint(sys.getrecursionlimit())  # 1048576",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python segmentation fault rekurencja",
+      "python segfault po setrecursionlimit",
+      "python rekurencja RE mimo setrecursionlimit",
+      "python crash deep recursion",
+      "wątek większy stos python",
+      "threading stack_size python",
+      "pypy rekurencja segfault"
+     ],
+     "a": "`setrecursionlimit` nie daje więcej pamięci na stos. W PyPy i CPython ≤ 3.10 przy głębokości ~10^5 interpreter\nprzepełnia stos i pada (RE bez komunikatu). Rozwiązanie: uruchom `main` w nowym wątku z `threading.stack_size(1 << 27)`\n(wywołanym **przed** utworzeniem wątku) — albo przepisz rekurencję na pętlę.",
+     "code": "import sys\nimport threading\n\ndef main():\n    def f(n):\n        return 0 if n == 0 else 1 + f(n - 1)\n    print(f(100000))\n\nsys.setrecursionlimit(1 << 25)\nthreading.stack_size(1 << 27)\nt = threading.Thread(target=main)\nt.start()\nt.join()",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "dfs iteracyjny python",
+      "dfs bez rekurencji python",
+      "python dfs stos zamiast rekurencji",
+      "iterative dfs python",
+      "jak przerobic rekurencje na petle python",
+      "python dfs na liscie jako stos"
+     ],
+     "a": "Zamiast wywołań trzymaj własny stos (zwykła lista: `append` / `pop`). Dla spójności i osiągalności wystarczy\nzaznaczać wierzchołek przy wkładaniu na stos. Taki DFS nie ma ograniczenia głębokości i jest szybszy od rekurencji.",
+     "code": "n = 5\ng = [[1], [0, 2], [1], [4], [3]]\nvis = [False] * n\nskladowe = 0\nfor s in range(n):\n    if vis[s]:\n        continue\n    skladowe += 1\n    vis[s] = True\n    stack = [s]\n    while stack:\n        v = stack.pop()\n        for u in g[v]:\n            if not vis[u]:\n                vis[u] = True\n                stack.append(u)\nprint(skladowe)                 # 2",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "rozmiar poddrzewa python bez rekurencji",
+      "python dp na drzewie iteracyjnie",
+      "python postorder bez rekurencji",
+      "python tree dp iterative",
+      "kolejnosc odwrotna dfs python"
+     ],
+     "a": "Zrób iteracyjny DFS, zapisując kolejność odwiedzin `order` i ojców `parent`. Potem przejdź `reversed(order)` —\nkażdy wierzchołek jest przetwarzany po wszystkich swoich dzieciach, czyli dokładnie jak „po powrocie z rekurencji”.",
+     "code": "g = [[1, 2], [0, 3], [0], [1]]\nparent = [-1] * 4\norder = []\nstack = [0]\nwhile stack:\n    v = stack.pop()\n    order.append(v)\n    for u in g[v]:\n        if u != parent[v]:\n            parent[u] = v\n            stack.append(u)\nsize = [1] * 4\nfor v in reversed(order):\n    if parent[v] >= 0:\n        size[parent[v]] += size[v]\nprint(size)                     # [4, 2, 1, 1]",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "lru_cache python",
+      "memoizacja python",
+      "functools cache python",
+      "python spamiętywanie",
+      "python memoization decorator",
+      "python @cache rekurencja"
+     ],
+     "a": "`@lru_cache(maxsize=None)` (albo `@cache` od Pythona 3.9) zapamiętuje wyniki funkcji dla danych argumentów —\nszybki sposób na DP „z góry”. Argumenty muszą być haszowalne (krotki, nie listy). Przy wielu testach czyść pamięć\n`f.cache_clear()`. Głębokość rekurencji nadal obowiązuje, a narzut jest duży — na pełne punkty zwykle DP pętlą.",
+     "code": "import sys\nfrom functools import lru_cache\nsys.setrecursionlimit(10000)\n\n@lru_cache(maxsize=None)\ndef drogi(i, j):                # liczba ścieżek w siatce w prawo/w dół\n    if i == 0 or j == 0:\n        return 1\n    return drogi(i - 1, j) + drogi(i, j - 1)\n\nprint(drogi(16, 16))            # 601080390",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "czy rekurencja w pythonie jest wolna",
+      "python rekurencja wolna",
+      "python recursion slow",
+      "pypy rekurencja wolna",
+      "rekurencja python czy petla szybciej"
+     ],
+     "a": "Tak — wywołanie funkcji w Pythonie jest kilkadziesiąt razy droższe niż w C++, a w PyPy głęboka rekurencja dodatkowo\ngrozi przepełnieniem stosu. Rekurencję zostaw dla płytkich wywołań (np. backtracking na n ≤ 20, dziel i zwyciężaj\nz głębokością log n). Przechodzenie grafów i DP na 10^5+ stanów pisz pętlami."
+    }
+   ],
+   "related": [
+    "cpp-stack-overflow",
+    "pit-stack-overflow",
+    "graph-dfs",
+    "tree-dfs-order",
+    "dp-tree",
+    "oi-py-performance",
+    "oi-py-collections"
+   ]
+  },
+  {
+   "id": "oi-py-collections",
+   "title": "Python: collections i heapq — deque, heapq (min/max), Counter, defaultdict",
+   "category": "OI praktyka",
+   "tags": [
+    "python",
+    "collections.deque",
+    "heapq",
+    "Counter python",
+    "defaultdict",
+    "kopiec python",
+    "kolejka python",
+    "pypy"
+   ],
+   "aliases": [
+    "heapq python",
+    "kolejka priorytetowa python",
+    "max heap python",
+    "deque python",
+    "collections.deque",
+    "Counter python",
+    "defaultdict python",
+    "kopiec w pythonie",
+    "python słownik z domyślną wartością",
+    "kolejka w pythonie"
+   ],
+   "summary": "`collections.deque` to kolejka dwustronna (BFS, O(1) na obu końcach), `heapq` to kopiec MIN na zwykłej liście (max-heap przez wkładanie `-x`), `Counter` zlicza wystąpienia, a `defaultdict` daje wartość domyślną dla brakującego klucza. To odpowiedniki `deque`, `priority_queue` i `map<T, int>` z C++.",
+   "complexity": "deque append/popleft: O(1); heappush/heappop: O(log n); heapify: O(n); dict/Counter: O(1) średnio",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "W Pythonie nie używaj listy jako kolejki: `lista.pop(0)` i `lista.insert(0, x)` przesuwają wszystkie elementy (O(n)),\nwięc BFS na 10^5 wierzchołków robi się kwadratowy. Do kolejki służy `collections.deque`, do kolejki priorytetowej\nmoduł `heapq` (funkcje działające na zwykłej liście), do zliczania `Counter` i `defaultdict(int)`."
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "BFS z deque",
+     "code": "from collections import deque\n\nn = 6\ng = [[1, 2], [0, 3], [0, 3], [1, 2, 4], [3], []]\ndist = [-1] * n\ndist[0] = 0\nq = deque([0])\nwhile q:\n    v = q.popleft()                  # O(1); lista.pop(0) byłoby O(n)\n    for u in g[v]:\n        if dist[u] == -1:\n            dist[u] = dist[v] + 1\n            q.append(u)\nprint(dist)                          # [0, 1, 1, 2, 3, -1]"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "heapq: min-heap, max-heap przez minus, krotki",
+     "code": "import heapq\n\nh = []\nfor x in [5, 1, 8, 3]:\n    heapq.heappush(h, x)\nprint(h[0], heapq.heappop(h), h[0])  # 1 1 3 — h[0] to minimum (jak top())\n\nmx = []\nfor x in [5, 1, 8, 3]:\n    heapq.heappush(mx, -x)           # max-heap: wkładaj -x ...\nprint(-heapq.heappop(mx))            # 8  ... i odwracaj znak przy zdejmowaniu\n\na = [7, 2, 9, 4]\nheapq.heapify(a)                     # O(n): lista staje się kopcem w miejscu\npq = [(0, 's')]\nheapq.heappush(pq, (3, 'b'))\nheapq.heappush(pq, (1, 'a'))         # krotki porównują się po kolei: najpierw koszt\nprint(heapq.heappop(pq), heapq.heappop(pq))   # (0, 's') (1, 'a')\nprint(heapq.nsmallest(2, [5, 1, 8, 3]), heapq.nlargest(2, [5, 1, 8, 3]))   # [1, 3] [8, 5]"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Dijkstra z heapq (leniwe pomijanie przestarzałych wpisów)",
+     "code": "import heapq\n\ndef dijkstra(g, s):\n    INF = float('inf')\n    dist = [INF] * len(g)\n    dist[s] = 0\n    pq = [(0, s)]\n    while pq:\n        d, v = heapq.heappop(pq)\n        if d > dist[v]:              # przestarzały wpis — pomiń\n            continue\n        for u, w in g[v]:\n            nd = d + w\n            if nd < dist[u]:\n                dist[u] = nd\n                heapq.heappush(pq, (nd, u))\n    return dist\n\ng = [[(1, 4), (2, 1)], [(3, 1)], [(1, 2), (3, 5)], []]\nprint(dijkstra(g, 0))                # [0, 3, 1, 4]"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Counter i defaultdict",
+     "code": "from collections import Counter, defaultdict\n\ncnt = Counter(\"abracadabra\")\nprint(cnt['a'], cnt['z'])            # 5 0 — brakujący klucz daje 0 i NIE jest dodawany\nprint(cnt.most_common(2))            # [('a', 5), ('b', 2)]\n\ng = defaultdict(list)                # lista sąsiedztwa dla dowolnych etykiet\nfor u, v in [('x', 'y'), ('x', 'z')]:\n    g[u].append(v)\n    g[v].append(u)\nprint(dict(g))                       # {'x': ['y', 'z'], 'y': ['x'], 'z': ['x']}\n\nile = defaultdict(int)\nfor w in \"ala ma kota ala\".split():\n    ile[w] += 1\nprint(ile['ala'], len(ile))          # 2 3"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "C++",
+      "Python",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`queue<int>` / `deque<int>`",
+       "`deque()`: `append`, `popleft`",
+       "`appendleft` i `pop` też O(1); `q[0]` to front"
+      ],
+      [
+       "`stack<int>`",
+       "lista: `append`, `pop()`",
+       "`pop()` z końca to O(1); `st[-1]` to top"
+      ],
+      [
+       "`priority_queue<int>` (MAX)",
+       "`heapq` na `-x`",
+       "heapq jest zawsze MIN-heapem"
+      ],
+      [
+       "`priority_queue<int, vector<int>, greater<int>>`",
+       "`heapq` wprost",
+       "`h[0]` = `top()`"
+      ],
+      [
+       "`pq.push(x)` / `pq.pop()`",
+       "`heappush(h, x)` / `heappop(h)`",
+       "`heappop` zwraca zdjęty element"
+      ],
+      [
+       "`map<string, int>` do zliczania",
+       "`Counter` / `defaultdict(int)`",
+       "dict to tablica haszująca — kolejność wstawiania, nie sortowania"
+      ],
+      [
+       "`vector<vector<int>> g(n)`",
+       "`[[] for _ in range(n)]`",
+       "nie `[[]] * n` — to n razy ta sama lista!"
+      ],
+      [
+       "`multiset` (min/max + usuwanie)",
+       "`heapq` + leniwe usuwanie",
+       "w bibliotece standardowej brak drzewa zbalansowanego"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Python **nie ma** odpowiednika `std::set`/`std::map` z porządkiem i `lower_bound`. `set` i `dict` to tablice\nhaszujące. Zamienniki: posortowana lista + `bisect` (wstawianie O(n), ale szybkie — do ~10^5 operacji), kopiec\nz leniwym usuwaniem (min/max), przetwarzanie offline + drzewo Fenwicka. Moduł `sortedcontainers` nie jest dostępny\nna sprawdzarce."
+    },
+    {
+     "type": "tip",
+     "md": "`defaultdict` przy samym **odczycie** `d[k]` tworzy brakujący klucz (jak `map[k]` w C++). Do sprawdzania używaj\n`k in d` albo `d.get(k, 0)`. `Counter` przy odczycie brakującego klucza zwraca 0 bez dodawania go."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "heapq.heappush(h, x)",
+     "desc": "wkłada x do kopca (listy) h",
+     "complexity": "O(log n)",
+     "example": "heapq.heappush(h, (dist, v))"
+    },
+    {
+     "sig": "heapq.heappop(h)",
+     "desc": "zdejmuje i zwraca najmniejszy element",
+     "complexity": "O(log n)",
+     "returns": "najmniejszy element",
+     "example": "d, v = heapq.heappop(h)"
+    },
+    {
+     "sig": "heapq.heapify(a)",
+     "desc": "zamienia listę w kopiec w miejscu",
+     "complexity": "O(n)",
+     "example": "heapq.heapify(a)"
+    },
+    {
+     "sig": "heapq.heappushpop(h, x)",
+     "desc": "wkłada x, potem zdejmuje minimum (szybciej niż osobno)",
+     "complexity": "O(log n)",
+     "example": "m = heapq.heappushpop(h, x)"
+    },
+    {
+     "sig": "heapq.nsmallest(k, a) / heapq.nlargest(k, a)",
+     "desc": "k najmniejszych / największych elementów",
+     "complexity": "O(n log k)",
+     "example": "heapq.nlargest(3, a)"
+    },
+    {
+     "sig": "dq.append(x) / dq.appendleft(x)",
+     "desc": "dodanie na koniec / początek deque",
+     "complexity": "O(1)",
+     "example": "q.append(v)"
+    },
+    {
+     "sig": "dq.pop() / dq.popleft()",
+     "desc": "zdjęcie z końca / początku deque",
+     "complexity": "O(1)",
+     "example": "v = q.popleft()"
+    },
+    {
+     "sig": "Counter(it).most_common(k)",
+     "desc": "k najczęstszych elementów z licznościami",
+     "complexity": "O(n log k)",
+     "example": "Counter(s).most_common(1)[0]"
+    },
+    {
+     "sig": "defaultdict(fabryka)",
+     "desc": "słownik tworzący brakujący klucz wartością fabryka()",
+     "complexity": "O(1) średnio",
+     "example": "g = defaultdict(list)"
+    }
+   ],
+   "pitfalls": [
+    "`lista.pop(0)` jako kolejka w BFS — O(n) na operację, przy 10^5 elementów TLE; użyj `deque.popleft()`.",
+    "heapq to MIN-heap — przepisując `priority_queue` z C++ (MAX) wkładaj `-x`.",
+    "Krotki w kopcu z remisem porównują kolejne pola — jeśli to obiekty bez porównania (np. dict), dostaniesz `TypeError`; dodaj licznik `(koszt, i, obj)`.",
+    "`heapq.heappush` na liście, która nie jest kopcem (np. po ręcznym `append`) — psuje porządek; najpierw `heapify`.",
+    "Odczyt `d[k]` z `defaultdict` tworzy klucz — `len(d)` rośnie, a pętla po `d` w trakcie zmiany rzuca błąd.",
+    "`[[]] * n` zamiast `[[] for _ in range(n)]` — wszystkie wiersze to ta sama lista."
+   ],
+   "qa": [
+    {
+     "q": [
+      "kolejka priorytetowa python",
+      "heapq python",
+      "priority queue python",
+      "kopiec w pythonie",
+      "jak zrobić priority_queue w pythonie",
+      "heap pyton",
+      "jak uzywac heapq"
+     ],
+     "a": "W Pythonie kolejkę priorytetową robisz modułem `heapq` na zwykłej liście: `heappush(h, x)` wkłada, `heappop(h)`\nzdejmuje **najmniejszy**, `h[0]` podgląda minimum. Obie operacje O(log n). Uwaga: to MIN-heap, odwrotnie niż\n`priority_queue` w C++.",
+     "code": "import heapq\n\nh = []\nfor x in [5, 1, 8, 3]:\n    heapq.heappush(h, x)\nwhile h:\n    print(heapq.heappop(h), end=' ')   # 1 3 5 8\nprint()",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "max heap python",
+      "python heapq max",
+      "jak zrobic kopiec maksymalny w pythonie",
+      "heapq odwrotnie python",
+      "python priority queue largest first",
+      "heapq malejąco python"
+     ],
+     "a": "`heapq` umie tylko min-heap. Max-heap: wkładaj `-x` i odwracaj znak przy zdejmowaniu. Przy krotkach neguj tylko\nklucz: `(-wartosc, indeks)`.",
+     "code": "import heapq\n\nh = []\nfor x in [5, 1, 8, 3]:\n    heapq.heappush(h, -x)\nprint(-h[0])                    # 8 — maksimum\nprint(-heapq.heappop(h))        # 8\nprint(-heapq.heappop(h))        # 5",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "deque python",
+      "kolejka w pythonie",
+      "python queue bfs",
+      "collections.deque",
+      "python list pop(0) wolne",
+      "kolejka fifo python",
+      "bfs python kolejka"
+     ],
+     "a": "Użyj `collections.deque`: `append` dodaje na koniec, `popleft` zdejmuje z początku — obie O(1). Lista z `pop(0)`\njest O(n) na operację i w BFS daje TLE. `queue.Queue` jest do wątków i jest wolna — nie używaj jej na zawodach.",
+     "code": "from collections import deque\n\nq = deque()\nq.append(1)\nq.append(2)\nq.appendleft(0)\nprint(q.popleft(), q.pop(), len(q))   # 0 2 1",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "Counter python",
+      "zliczanie wystąpień python",
+      "python policz ile razy wystepuje",
+      "python count occurrences",
+      "most_common python",
+      "zliczanie liter w pythonie"
+     ],
+     "a": "`collections.Counter` zlicza elementy dowolnego iterowalnego obiektu. Brakujący klucz zwraca 0 (bez dodawania),\n`most_common(k)` daje k najczęstszych. Uwaga: `lista.count(x)` w pętli to O(n) za każdym razem — policz raz Counterem.",
+     "code": "from collections import Counter\n\na = [3, 1, 3, 2, 3, 1]\nc = Counter(a)\nprint(c[3], c[7])               # 3 0\nprint(c.most_common(1))         # [(3, 3)]\nprint(sorted(c.items()))        # [(1, 2), (2, 1), (3, 3)]",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "defaultdict python",
+      "python słownik z domyślną wartością",
+      "python KeyError słownik",
+      "defaultdict(list)",
+      "python dict default value",
+      "slownik list python"
+     ],
+     "a": "`defaultdict(fabryka)` przy odwołaniu do brakującego klucza tworzy go z wartością `fabryka()`: `defaultdict(int)` → 0,\n`defaultdict(list)` → `[]`. Zamiast `KeyError` dostajesz wartość domyślną. Do samego sprawdzenia użyj `k in d` albo\n`d.get(k, domyslna)` na zwykłym dict.",
+     "code": "from collections import defaultdict\n\ngrupy = defaultdict(list)\nfor slowo in [\"kot\", \"koc\", \"pies\", \"pas\"]:\n    grupy[slowo[0]].append(slowo)\nprint(grupy['k'], grupy['p'])   # ['kot', 'koc'] ['pies', 'pas']\nd = {}\nprint(d.get('x', 0))            # 0 — zwykły dict bez KeyError",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "dijkstra python heapq",
+      "dijkstra w pythonie",
+      "python najkrótsza ścieżka heapq",
+      "dijkstra pyton",
+      "python dijkstra priority queue"
+     ],
+     "a": "Trzymaj w kopcu pary `(odległość, wierzchołek)`. Po zdjęciu pomiń wpis, jeśli `d > dist[v]` (przestarzały) —\nto zastępuje `decrease-key`. Złożoność O((n + m) log m).",
+     "code": "import heapq\n\ng = [[(1, 2), (2, 5)], [(2, 1)], []]\ndist = [float('inf')] * 3\ndist[0] = 0\npq = [(0, 0)]\nwhile pq:\n    d, v = heapq.heappop(pq)\n    if d > dist[v]:\n        continue\n    for u, w in g[v]:\n        if d + w < dist[u]:\n            dist[u] = d + w\n            heapq.heappush(pq, (dist[u], u))\nprint(dist)                     # [0, 2, 3]",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "heapq z parami python",
+      "heapq krotki python",
+      "python heap tuple",
+      "heapq sortowanie po drugim elemencie",
+      "python heapq key",
+      "heapq własny komparator python"
+     ],
+     "a": "`heapq` nie ma parametru `key` — wkładaj krotki, w których **pierwsze pole** jest kluczem. Krotki porównują się\nleksykograficznie. Jeśli dalsze pola mogą być nieporównywalne (np. słowniki), wstaw licznik jako drugie pole.",
+     "code": "import heapq\n\nzadania = [(\"pisz\", 3), (\"czytaj\", 1), (\"licz\", 2)]\nh = []\nfor i, (nazwa, prio) in enumerate(zadania):\n    heapq.heappush(h, (prio, i, nazwa))   # i rozstrzyga remisy\nwhile h:\n    print(heapq.heappop(h)[2], end=' ')   # czytaj licz pisz\nprint()",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "usuwanie z heapq python",
+      "python heap remove element",
+      "leniwe usuwanie heapq",
+      "python multiset odpowiednik",
+      "python brak set z lower_bound",
+      "python sorted set"
+     ],
+     "a": "Z `heapq` nie usuniesz dowolnego elementu szybko. Stosuj **leniwe usuwanie**: zapisz w `Counter`, co jest do\nusunięcia, a przy odczycie minimum zdejmuj wierzchołek, dopóki jest „usunięty”. Uporządkowanego zbioru z\n`lower_bound` (jak `std::set`) w bibliotece standardowej nie ma — patrz posortowana lista + `bisect`.",
+     "code": "import heapq\nfrom collections import Counter\n\nh = [5, 1, 8, 3]\nheapq.heapify(h)\nusun = Counter()\n\ndef minimum():\n    while usun[h[0]]:\n        usun[heapq.heappop(h)] -= 1\n    return h[0]\n\nusun[1] += 1                    # \"usuń\" 1\nprint(minimum())                # 3",
+     "lang": "python"
+    }
+   ],
+   "related": [
+    "stl-priority-queue",
+    "stl-deque",
+    "stl-queue",
+    "stl-stack",
+    "stl-map",
+    "stl-unordered-map",
+    "ds-heap",
+    "graph-bfs",
+    "graph-dijkstra",
+    "oi-py-cpp-equivalents",
+    "oi-py-sorting-bisect"
+   ]
+  },
+  {
+   "id": "oi-py-sorting-bisect",
+   "title": "Python: sort, sorted, key, cmp_to_key i bisect (lower_bound / upper_bound)",
+   "category": "OI praktyka",
+   "tags": [
+    "python",
+    "sort python",
+    "sorted",
+    "sort key python",
+    "cmp_to_key",
+    "bisect",
+    "bisect_left",
+    "bisect_right",
+    "pypy"
+   ],
+   "aliases": [
+    "sortowanie python",
+    "sorted python",
+    "python sort key",
+    "sortowanie malejąco python",
+    "python sortowanie po drugim elemencie",
+    "bisect python",
+    "lower_bound python",
+    "upper_bound python",
+    "cmp_to_key",
+    "python własny komparator"
+   ],
+   "summary": "`a.sort()` sortuje listę w miejscu (zwraca `None`), `sorted(x)` zwraca nową listę; oba przyjmują `key=` i `reverse=True`, są stabilne i działają w O(n log n). Krotki sortują się leksykograficznie. `bisect_left` / `bisect_right` to `lower_bound` / `upper_bound` z C++.",
+   "complexity": "sort/sorted: O(n log n), stabilne (Timsort); bisect_left/right: O(log n); insort: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Zamiast komparatora jak w C++ Python używa **klucza**: `key=f` liczy `f(x)` raz dla każdego elementu i sortuje po tych\nwartościach. Kilka kryteriów = klucz-krotka, kolejność malejąca liczb = minus w kluczu. Sortowanie jest **stabilne**\n(jak `stable_sort`), więc remisy zachowują poprzednią kolejność."
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Podstawy: sort, sorted, reverse, key",
+     "code": "a = [5, 2, 9, 1]\na.sort()                                             # w miejscu, zwraca None!\nprint(a)                                             # [1, 2, 5, 9]\nprint(sorted([5, 2, 9, 1], reverse=True))            # [9, 5, 2, 1]\n\nludzie = [(\"Ola\", 17), (\"Jan\", 15), (\"Ewa\", 17)]\nprint(sorted(ludzie, key=lambda p: p[1]))            # po wieku, remisy w kolejności wejścia\nprint(sorted(ludzie, key=lambda p: (-p[1], p[0])))   # wiek malejąco, potem imię rosnąco\nslowa = [\"kot\", \"a\", \"ala\", \"be\"]\nprint(sorted(slowa, key=len))                        # ['a', 'be', 'kot', 'ala']\nprint(sorted(slowa, key=lambda s: (len(s), s)))      # ['a', 'be', 'ala', 'kot']"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Sortowanie indeksów (argsort) i par (wartość, indeks)",
+     "code": "a = [30, 10, 20]\nidx = sorted(range(len(a)), key=lambda i: a[i])\nprint(idx)                                           # [1, 2, 0]\npary = sorted(zip(a, range(len(a))))\nprint(pary)                                          # [(10, 1), (20, 2), (30, 0)]"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "cmp_to_key — komparator jak w C++ (największa liczba ze sklejenia)",
+     "code": "from functools import cmp_to_key\n\ndef cmp(x, y):          # ujemne: x przed y, 0: remis, dodatnie: y przed x\n    if x + y > y + x:\n        return -1\n    if x + y < y + x:\n        return 1\n    return 0\n\nliczby = [\"3\", \"30\", \"34\", \"5\", \"9\"]\nliczby.sort(key=cmp_to_key(cmp))\nprint(\"\".join(liczby))                               # 9534330"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "bisect: lower_bound i upper_bound",
+     "code": "from bisect import bisect_left, bisect_right, insort\n\na = [1, 3, 3, 3, 7, 9]\nprint(bisect_left(a, 3))                             # 1 — pierwszy i z a[i] >= 3 (lower_bound)\nprint(bisect_right(a, 3))                            # 4 — pierwszy i z a[i] > 3 (upper_bound)\nprint(bisect_right(a, 3) - bisect_left(a, 3))        # 3 — ile jest trójek\ni = bisect_left(a, 4)\nprint(i < len(a) and a[i] == 4)                      # False — czy 4 występuje\nprint(bisect_left(a, 8) - 1)                         # 4 — indeks ostatniego elementu < 8\nprint(bisect_right(a, 3, 0, 2))                      # 2 — szukanie tylko w a[0:2]\ninsort(a, 5)                                         # wstawienie z zachowaniem porządku: O(n)\nprint(a)                                             # [1, 3, 3, 3, 5, 7, 9]"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Wyszukiwanie binarne po wyniku (szablon)",
+     "code": "def ok(x):              # monotoniczne: False ... False True ... True\n    return x * x >= 2_000_000\n\nlo, hi = 0, 10**6       # ok(hi) == True\nwhile lo < hi:\n    mid = (lo + hi) // 2\n    if ok(mid):\n        hi = mid\n    else:\n        lo = mid + 1\nprint(lo)               # 1415 — najmniejsze x z ok(x)"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "C++",
+      "Python"
+     ],
+     "rows": [
+      [
+       "`sort(a.begin(), a.end())`",
+       "`a.sort()`"
+      ],
+      [
+       "`sort(a.begin(), a.end(), greater<>())`",
+       "`a.sort(reverse=True)`"
+      ],
+      [
+       "`sort` z lambdą po `.second`",
+       "`a.sort(key=lambda p: p[1])`"
+      ],
+      [
+       "`stable_sort`",
+       "`sort` (zawsze stabilny)"
+      ],
+      [
+       "komparator `bool cmp(a, b)`",
+       "`key=cmp_to_key(f)`, `f` zwraca liczbę < 0, 0, > 0"
+      ],
+      [
+       "`lower_bound(a.begin(), a.end(), x) - a.begin()`",
+       "`bisect_left(a, x)`"
+      ],
+      [
+       "`upper_bound(a.begin(), a.end(), x) - a.begin()`",
+       "`bisect_right(a, x)`"
+      ],
+      [
+       "`binary_search(a.begin(), a.end(), x)`",
+       "`i = bisect_left(a, x); i < len(a) and a[i] == x`"
+      ],
+      [
+       "`sort` + `unique` + `erase`",
+       "`sorted(set(a))`"
+      ],
+      [
+       "`nth_element`",
+       "brak; `heapq.nsmallest(k, a)` albo `sorted(a)[k]`"
+      ],
+      [
+       "`reverse(a.begin(), a.end())`",
+       "`a.reverse()` / `a[::-1]`"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`a = a.sort()` zostawia w `a` wartość `None`. `key` jest szybszy od `cmp_to_key` (klucz liczony raz na element,\nkomparator wołany O(n log n) razy) — używaj komparatora tylko, gdy porządku nie da się wyrazić kluczem.\nKomparator musi zwracać **liczbę**, nie `True/False`."
+    },
+    {
+     "type": "tip",
+     "md": "Malejąco po napisie i rosnąco po liczbie? Minus na napisie nie działa — zrób dwa stabilne sortowania: najpierw po\nkryterium drugorzędnym, potem po głównym: `a.sort(key=lambda p: p[1]); a.sort(key=lambda p: p[0], reverse=True)`.\n`bisect` z parametrem `key=` działa od Pythona 3.10."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "a.sort(key=None, reverse=False)",
+     "desc": "sortuje listę w miejscu (stabilnie), zwraca None",
+     "complexity": "O(n log n)",
+     "example": "a.sort(key=lambda p: (-p[1], p[0]))"
+    },
+    {
+     "sig": "sorted(iterable, key=None, reverse=False)",
+     "desc": "zwraca nową posortowaną listę",
+     "complexity": "O(n log n)",
+     "returns": "list",
+     "example": "b = sorted(d.items())"
+    },
+    {
+     "sig": "bisect_left(a, x, lo=0, hi=len(a))",
+     "desc": "pierwszy indeks i z a[i] >= x (lower_bound)",
+     "complexity": "O(log n)",
+     "returns": "int",
+     "example": "i = bisect_left(a, x)"
+    },
+    {
+     "sig": "bisect_right(a, x, lo=0, hi=len(a))",
+     "desc": "pierwszy indeks i z a[i] > x (upper_bound)",
+     "complexity": "O(log n)",
+     "returns": "int",
+     "example": "ile = bisect_right(a, r) - bisect_left(a, l)"
+    },
+    {
+     "sig": "insort(a, x)",
+     "desc": "wstawia x, zachowując posortowanie",
+     "complexity": "O(n) (przesunięcie)",
+     "example": "insort(a, 5)"
+    },
+    {
+     "sig": "functools.cmp_to_key(cmp)",
+     "desc": "zamienia komparator (wynik < 0, 0, > 0) na klucz",
+     "complexity": "O(n log n) wywołań cmp",
+     "example": "a.sort(key=cmp_to_key(cmp))"
+    }
+   ],
+   "pitfalls": [
+    "`a = a.sort()` — `sort()` zwraca `None`, lista ginie.",
+    "`sorted(slownik)` sortuje same klucze; pary (klucz, wartość): `sorted(d.items())`.",
+    "Komparator dla `cmp_to_key` zwracający `True/False` zamiast liczby ujemnej/0/dodatniej — złe sortowanie bez błędu.",
+    "`bisect` na nieposortowanej liście — zwraca bzdury bez żadnego błędu.",
+    "`insort` w pętli 10^5–10^6 razy — każde wstawienie przesuwa elementy, łącznie O(n²).",
+    "Liczby wczytane jako napisy sortują się leksykograficznie: `sorted(['10', '9'])` → `['10', '9']` — zamień na `int`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sortowanie python",
+      "jak posortować listę w pythonie",
+      "python sort list",
+      "sorted czy sort python",
+      "posortuj tablice pyton",
+      "python sortowanie listy"
+     ],
+     "a": "`a.sort()` sortuje listę w miejscu i zwraca `None`; `sorted(a)` zwraca **nową** posortowaną listę (działa też dla\nnapisów, krotek, słowników). Oba O(n log n), stabilne.",
+     "code": "a = [4, 2, 7, 1]\nb = sorted(a)\na.sort()\nprint(a, b)                     # [1, 2, 4, 7] [1, 2, 4, 7]\nprint(sorted(\"kot\"))            # ['k', 'o', 't']",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "sortowanie malejąco python",
+      "python sort reverse",
+      "python sortowanie od największego",
+      "sortowanie malejaco pythonie",
+      "python sort descending",
+      "python sorted reverse=True"
+     ],
+     "a": "Dodaj `reverse=True`: `a.sort(reverse=True)` albo `sorted(a, reverse=True)`. Przy kilku kryteriach z różnymi\nkierunkami użyj minusa w kluczu dla liczb: `key=lambda p: (-p[0], p[1])`.",
+     "code": "a = [3, 1, 2]\na.sort(reverse=True)\nprint(a)                        # [3, 2, 1]\npary = [(2, 'b'), (3, 'a'), (2, 'a')]\nprint(sorted(pary, key=lambda p: (-p[0], p[1])))   # [(3, 'a'), (2, 'a'), (2, 'b')]",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python sortowanie po drugim elemencie",
+      "python sort key lambda",
+      "sortowanie par python",
+      "python sort by second element",
+      "sortowanie krotek python",
+      "python sort po kilku kluczach"
+     ],
+     "a": "Krotki sortują się domyślnie leksykograficznie (najpierw pierwszy element, potem drugi…). Po innym polu: `key=lambda p: p[1]`.\nPo kilku: klucz-krotka `key=lambda p: (p[1], p[0])`. Szybciej niż lambda: `operator.itemgetter(1)`.",
+     "code": "from operator import itemgetter\n\npary = [(1, 'c'), (2, 'a'), (3, 'b')]\nprint(sorted(pary, key=lambda p: p[1]))       # [(2, 'a'), (3, 'b'), (1, 'c')]\nprint(sorted(pary, key=itemgetter(1)))        # to samo",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "cmp_to_key python",
+      "własny komparator python",
+      "python komparator jak w c++",
+      "python custom comparator",
+      "python sort cmp",
+      "comparator pythonie"
+     ],
+     "a": "Gdy porządku nie da się wyrazić kluczem, napisz funkcję `cmp(x, y)` zwracającą liczbę ujemną (x przed y), 0 (remis)\nalbo dodatnią i podaj `key=functools.cmp_to_key(cmp)`. Jest wolniejsze od `key`, więc używaj tylko gdy trzeba.",
+     "code": "from functools import cmp_to_key\n\ndef cmp(a, b):                  # ułamki (licznik, mianownik) bez floatów: a0/a1 < b0/b1\n    return a[0] * b[1] - b[0] * a[1]\n\nul = [(1, 2), (1, 3), (3, 4)]\nul.sort(key=cmp_to_key(cmp))\nprint(ul)                       # [(1, 3), (1, 2), (3, 4)]",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "lower_bound python",
+      "bisect_left python",
+      "odpowiednik lower_bound w pythonie",
+      "python binary search bisect",
+      "bisect python jak dziala",
+      "python lower bound"
+     ],
+     "a": "`bisect.bisect_left(a, x)` zwraca pierwszy indeks `i` z `a[i] >= x` (jak `lower_bound(...) - a.begin()` w C++),\nczyli też liczbę elementów `< x`. Lista musi być posortowana. Czy `x` występuje: `i < len(a) and a[i] == x`.",
+     "code": "from bisect import bisect_left\n\na = [2, 4, 4, 8]\ni = bisect_left(a, 4)\nprint(i, i < len(a) and a[i] == 4)   # 1 True\nprint(bisect_left(a, 5))             # 3 — tyle elementów jest < 5",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "upper_bound python",
+      "bisect_right python",
+      "ile elementów mniejszych od x python",
+      "python count in range sorted",
+      "python ile liczb w przedziale bisect",
+      "liczba elementów w zakresie python"
+     ],
+     "a": "`bisect_right(a, x)` zwraca pierwszy indeks z `a[i] > x` (`upper_bound`), czyli liczbę elementów `<= x`. Liczba\nelementów w przedziale `[l, r]`: `bisect_right(a, r) - bisect_left(a, l)`.",
+     "code": "from bisect import bisect_left, bisect_right\n\na = sorted([5, 1, 9, 3, 7, 3])  # [1, 3, 3, 5, 7, 9]\nprint(bisect_right(a, 3))       # 3 — elementy <= 3\nprint(bisect_right(a, 7) - bisect_left(a, 3))   # 4 — elementy z [3, 7]",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python sortowanie indeksów",
+      "argsort python",
+      "python posortuj indeksy po wartosciach",
+      "python sort indices by value",
+      "python sortowanie z zapamiętaniem pozycji"
+     ],
+     "a": "Posortuj `range(n)` kluczem `a[i]`: `sorted(range(n), key=lambda i: a[i])`. Albo sortuj pary `(wartość, indeks)` —\nremisy rozstrzygną się wtedy po indeksie.",
+     "code": "a = [40, 10, 30, 10]\nprint(sorted(range(len(a)), key=lambda i: a[i]))   # [1, 3, 2, 0]\nprint(sorted((x, i) for i, x in enumerate(a)))     # [(10, 1), (10, 3), (30, 2), (40, 0)]",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "binsearch po wyniku python",
+      "wyszukiwanie binarne python while",
+      "python binary search answer",
+      "python binsearch szablon",
+      "python wyszukiwanie binarne po odpowiedzi"
+     ],
+     "a": "Szablon: szukasz najmniejszego `x`, dla którego monotoniczny warunek `ok(x)` jest prawdziwy. Pilnuj, by `ok(hi)` było\nprawdą, i dziel `(lo + hi) // 2` — w Pythonie bez ryzyka przepełnienia.",
+     "code": "def ok(t):                      # czy w czasie t maszyny o czasach 2, 3, 7 zrobią >= 10 sztuk\n    return t // 2 + t // 3 + t // 7 >= 10\n\nlo, hi = 0, 10**18\nwhile lo < hi:\n    mid = (lo + hi) // 2\n    if ok(mid):\n        hi = mid\n    else:\n        lo = mid + 1\nprint(lo)                       # 12",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python unikalne posortowane",
+      "python usuń duplikaty i posortuj",
+      "sorted(set()) python",
+      "python unique sort",
+      "kompresja współrzędnych python",
+      "python przenumerowanie wartości"
+     ],
+     "a": "`sorted(set(a))` daje posortowane wartości bez powtórzeń (jak `sort` + `unique` w C++). Kompresja współrzędnych:\nsłownik `{wartość: numer}` zbudowany z tej listy.",
+     "code": "a = [100, 5, 100, 42, 5]\nvals = sorted(set(a))           # [5, 42, 100]\nnr = {v: i for i, v in enumerate(vals)}\nprint([nr[x] for x in a])       # [2, 0, 2, 1, 0]",
+     "lang": "python"
+    }
+   ],
+   "related": [
+    "stl-sort",
+    "stl-binary-search",
+    "tech-binary-search",
+    "tech-binary-search-answer",
+    "tech-coordinate-compression",
+    "pit-comparator",
+    "oi-py-cpp-equivalents",
+    "oi-py-collections"
+   ]
+  },
+  {
+   "id": "oi-py-performance",
+   "title": "Python: wydajność na zawodach (pętle, list comprehension, tablice 2D, PyPy, czego unikać)",
+   "category": "OI praktyka",
+   "tags": [
+    "python",
+    "wydajność python",
+    "TLE python",
+    "pypy",
+    "list comprehension",
+    "tablica 2d python",
+    "optymalizacja python"
+   ],
+   "aliases": [
+    "python za wolny",
+    "python TLE",
+    "python przyspieszenie kodu",
+    "optymalizacja python",
+    "pypy",
+    "pypy czy cpython",
+    "tablica 2d python",
+    "lista dwuwymiarowa python",
+    "python wolny kod",
+    "python szybki kod"
+   ],
+   "summary": "CPython wykonuje rzędu 10^7 prostych operacji na sekundę (C++ 10^8–10^9), a limity w SIO2/OI są ustawiane pod C++. Pisz kod w funkcji `main()`, korzystaj z funkcji wbudowanych i list comprehension, unikaj `pop(0)`, `x in lista` i rekurencji; jeśli możesz, wybierz PyPy. Tablicę 2D twórz `[[0] * m for _ in range(n)]`, nigdy `[[0] * m] * n`.",
+   "complexity": "CPython: ~10^6–10^7 prostych operacji/s; PyPy: zwykle 5–50× szybciej w pętlach; C++: ~10^8–10^9",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Rozwiązania wzorcowe na OI są w C++, a limity czasu dobiera się do nich (z zapasem rzędu 2–3×, nie 30×). Dobra\nzłożoność w Pythonie **nie gwarantuje** zmieszczenia się w limicie. Orientacyjnie, co przejdzie w ~1 s:"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Złożoność",
+      "C++",
+      "CPython",
+      "PyPy"
+     ],
+     "rows": [
+      [
+       "O(n)",
+       "n ≈ 10^8",
+       "n ≈ 10^6–10^7",
+       "n ≈ 10^7–10^8"
+      ],
+      [
+       "O(n log n)",
+       "n ≈ 10^6–10^7",
+       "n ≈ 10^5–5·10^5",
+       "n ≈ 10^6"
+      ],
+      [
+       "O(n²)",
+       "n ≈ 10^4",
+       "n ≈ 2000–3000",
+       "n ≈ 10^4"
+      ],
+      [
+       "O(n³)",
+       "n ≈ 500",
+       "n ≈ 100–200",
+       "n ≈ 300–400"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Kod w funkcji main() — zmienne lokalne są szybsze od globalnych",
+     "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    a = list(map(int, data[1:n + 1]))\n    s = best = 0\n    for x in a:                       # po elementach, nie po range(len(a))\n        s += x\n        if s < 0:                     # if jest szybszy niż s = max(0, s)\n            s = 0\n        elif s > best:\n            best = s\n    print(best)                       # największa suma spójnego fragmentu\n\nmain()"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Tablice 2D: dobrze i źle",
+     "code": "n, m = 3, 4\ndobrze = [[0] * m for _ in range(n)]  # n niezależnych wierszy\nzle = [[0] * m] * n                   # n referencji do TEGO SAMEGO wiersza!\ndobrze[0][0] = 1\nzle[0][0] = 1\nprint(dobrze[1][0], zle[1][0])        # 0 1 — w \"zle\" zmieniły się wszystkie wiersze\n\nflat = [0] * (n * m)                  # szybciej przy dużych tablicach: płaska lista\ni, j = 2, 3\nflat[i * m + j] = 7                   # element (i, j)\nprint(flat[2 * m + 3])                # 7\nkopia = [row[:] for row in dobrze]    # kopia 2D (copy.deepcopy jest dużo wolniejsze)\nprint(kopia == dobrze, kopia is dobrze)   # True False"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Szybkie idiomy",
+     "code": "from itertools import accumulate\n\nn = 10\na = [i * i for i in range(n)]         # comprehension zamiast pętli z append\ns = sum(a)                            # wbudowane: sum, min, max, sorted, any, all\npref = [0, *accumulate(a)]            # sumy prefiksowe: pref[i] = a[0] + ... + a[i-1]\nprint(s, pref[3])                     # 285 5\nwidziane = set(a)                     # `x in set`: O(1), `x in list`: O(n)!\nprint(81 in widziane)                 # True\nnapis = ''.join(str(x) for x in a)    # sklejanie przez join, nie += w pętli\nprint(len(napis))                     # 16"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wolno",
+      "Szybko",
+      "Dlaczego"
+     ],
+     "rows": [
+      [
+       "`lista.pop(0)`, `lista.insert(0, x)`",
+       "`deque.popleft()`, `appendleft`",
+       "O(n) vs O(1)"
+      ],
+      [
+       "`x in lista` w pętli",
+       "`x in zbior` (`set`)",
+       "O(n) vs O(1) średnio"
+      ],
+      [
+       "`s += c` na napisach w pętli",
+       "lista kawałków + `''.join(...)`",
+       "w PyPy `+=` na `str` bywa O(n²)"
+      ],
+      [
+       "`print` w pętli",
+       "`'\\n'.join(...)` i jeden zapis",
+       "narzut każdego wywołania"
+      ],
+      [
+       "kod na poziomie modułu",
+       "kod w `def main()`",
+       "zmienne lokalne są szybsze od globalnych"
+      ],
+      [
+       "`for i in range(len(a)): ... a[i]`",
+       "`for x in a` / `enumerate(a)`",
+       "mniej indeksowania"
+      ],
+      [
+       "wycinki `a[1:]` w pętli/rekurencji",
+       "indeksy `lo`, `hi`",
+       "wycinek kopiuje O(k)"
+      ],
+      [
+       "`copy.deepcopy(g)`",
+       "`[row[:] for row in g]`",
+       "deepcopy jest bardzo wolne"
+      ],
+      [
+       "rekurencja (DFS, DP)",
+       "pętla z własnym stosem / DP po tablicy",
+       "narzut wywołań i limit głębokości"
+      ],
+      [
+       "`max(a, b)` w gorącej pętli",
+       "`if b > a: a = b`",
+       "wywołanie funkcji kosztuje (w CPythonie)"
+      ],
+      [
+       "miliony małych obiektów (klasy)",
+       "osobne listy na każde pole",
+       "pamięć i dostęp do atrybutów"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "### PyPy\nPyPy to inny interpreter Pythona z kompilatorem **JIT** — pętle na liczbach przyspieszają zwykle 5–50×. Jeśli przy\nwysyłaniu w SIO2 możesz wybrać PyPy, wybierz go dla rozwiązań z dużymi pętlami. PyPy bywa za to gorszy przy:\ngłębokiej rekurencji (szybciej przepełnia stos), operacjach na bardzo dużych liczbach, sklejaniu napisów `+=` i krótkich\nprogramach (JIT nie zdąży się rozgrzać). Lista zawierająca same `int` jest w PyPy przechowywana zwarto — nie mieszaj\nw niej typów (np. `None` jako „brak”, użyj `-1`)."
+    },
+    {
+     "type": "warn",
+     "md": "Na sprawdzarce nie ma zwykle `numpy` ani innych bibliotek spoza standardowej — nie licz na nie. Jeśli zadanie ma\nduże ograniczenia (n ≥ 10^6 albo O(n log n) przy n ≈ 10^6), napisz rozwiązanie w C++ — pomoże **Tłumacz Python → C++**\nw OI Forge."
+    },
+    {
+     "type": "tip",
+     "md": "Mierz zamiast zgadywać: `time python3 rozw.py < duzy.in`, a gdzie ucieka czas — `python3 -m cProfile -s cumtime rozw.py < duzy.in`.\nWygeneruj test maksymalnego rozmiaru, zanim wyślesz rozwiązanie."
+    }
+   ],
+   "pitfalls": [
+    "`[[0] * m] * n` — wszystkie wiersze to ten sam obiekt; zmiana jednego zmienia wszystkie.",
+    "`x in lista` w pętli — O(n) na sprawdzenie, łącznie O(n²); użyj `set`.",
+    "`lista.pop(0)` jako kolejka — O(n) na operację; użyj `collections.deque`.",
+    "Cały kod na poziomie modułu — zmienne globalne są wolniejsze niż lokalne w funkcji.",
+    "Sklejanie wyniku `wynik += str(x) + ' '` w pętli — w PyPy kwadratowe; zbieraj w listę i `join`.",
+    "Złożoność O(n log n) przy n = 10^6 w CPythonie — prawie na pewno TLE; PyPy albo C++."
+   ],
+   "qa": [
+    {
+     "q": [
+      "python za wolny TLE",
+      "python TLE co zrobić",
+      "python jak przyspieszyć",
+      "python przekroczony limit czasu",
+      "python time limit exceeded",
+      "pyton za wolno sio2",
+      "optymalizacja kodu python"
+     ],
+     "a": "Kolejność działań: (1) szybkie I/O — `sys.stdin.buffer.read().split()` i jeden zapis wyniku; (2) cały kod w `def main()`;\n(3) zamień `pop(0)` na `deque`, `x in lista` na `set`, rekurencję na pętlę; (4) funkcje wbudowane i comprehension\nzamiast ręcznych pętli; (5) wyślij pod **PyPy**, jeśli jest dostępny. Jeśli złożoność jest na granicy (np. 10^6 log n),\nprzepisz na C++.",
+     "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    a = list(map(int, data[1:n + 1]))\n    print(sum(x * x for x in a))\n\nmain()",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "pypy czy python",
+      "co to pypy",
+      "pypy vs cpython",
+      "czy używać pypy na oi",
+      "pypy szybszy",
+      "python3 czy pypy3 sio2"
+     ],
+     "a": "PyPy to interpreter Pythona z kompilacją JIT: ten sam kod, ale pętle na liczbach działają zwykle 5–50× szybciej niż\nw zwykłym CPythonie. Jeśli SIO2 oferuje PyPy, wybieraj go dla rozwiązań z dużymi pętlami. Uważaj na głęboką rekurencję\n(w PyPy szybciej pada) i bardzo duże liczby (tam CPython bywa szybszy). Nawet PyPy jest zwykle wolniejszy od C++."
+    },
+    {
+     "q": [
+      "tablica 2d python",
+      "lista dwuwymiarowa python",
+      "python 2d array",
+      "[[0]*m]*n python błąd",
+      "python zmiana jednego wiersza zmienia wszystkie",
+      "macierz w pythonie",
+      "python tablica dwuwymiarowa zera"
+     ],
+     "a": "Twórz `[[0] * m for _ in range(n)]` — każdy wiersz to osobna lista. `[[0] * m] * n` tworzy n odwołań do **jednego**\nwiersza, więc `t[0][0] = 1` zmienia pierwszą kolumnę we wszystkich wierszach. Przy bardzo dużych tablicach szybsza\nbywa płaska lista `[0] * (n * m)` z indeksem `i * m + j`.",
+     "code": "n, m = 2, 3\nt = [[0] * m for _ in range(n)]\nt[0][0] = 5\nprint(t)                        # [[5, 0, 0], [0, 0, 0]]",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "ile operacji na sekunde python",
+      "python ile operacji w sekundzie",
+      "jaka złożoność przejdzie w pythonie",
+      "python operations per second",
+      "python czy n^2 przejdzie",
+      "python 10^6 przejdzie"
+     ],
+     "a": "Orientacyjnie CPython robi ~10^6–10^7 prostych operacji na sekundę (C++ ~10^8–10^9, PyPy ~10^7–10^8). W ~1 s\nw CPythonie zmieści się: O(n) dla n ≈ 10^6, O(n log n) dla n ≈ 10^5–5·10^5, O(n²) dla n ≈ 2000–3000. Limity na OI\nsą dobierane pod C++, więc w Pythonie licz z dużym zapasem."
+    },
+    {
+     "q": [
+      "list comprehension python",
+      "python lista składana",
+      "comprehension czy append python",
+      "python list comprehension szybsze",
+      "python generator expression"
+     ],
+     "a": "`[f(x) for x in a if warunek]` buduje listę szybciej niż pętla z `append` (mniej wywołań w interpreterze). Gdy wynik\nidzie od razu do `sum`/`max`/`any`/`join`, użyj wyrażenia generatorowego bez nawiasów kwadratowych — nie tworzy listy\nw pamięci.",
+     "code": "a = list(range(10))\nkw = [x * x for x in a if x % 2 == 0]     # [0, 4, 16, 36, 64]\nprint(kw, sum(x * x for x in a))          # suma bez tworzenia listy: 285",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python zmienne globalne wolne",
+      "python def main dlaczego",
+      "python funkcja main szybciej",
+      "python local variables faster",
+      "po co main w pythonie"
+     ],
+     "a": "W CPythonie odczyt zmiennej lokalnej to szybki dostęp do tablicy, a globalnej — wyszukiwanie w słowniku. Pętla na\npoziomie modułu jest przez to zauważalnie wolniejsza (często 1,5–2×). Zamknij cały program w `def main():` i wywołaj\n`main()` na końcu.",
+     "code": "def main():\n    s = 0\n    for i in range(10**6):      # i, s są lokalne — szybko\n        s += i\n    print(s)\n\nmain()",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python sklejanie stringów wolne",
+      "python += string w pętli",
+      "python join zamiast plus",
+      "python string concatenation slow",
+      "pypy string += wolne"
+     ],
+     "a": "Napisy w Pythonie są niezmienne: `s += c` tworzy nowy napis. CPython czasem to optymalizuje, PyPy nie — wtedy pętla\nrobi się O(n²). Zbieraj kawałki w listę i na końcu zrób `''.join(kawalki)`.",
+     "code": "kawalki = []\nfor i in range(5):\n    kawalki.append(str(i))\nprint(''.join(kawalki))         # 01234\nprint('-'.join(kawalki))        # 0-1-2-3-4",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python profilowanie",
+      "cProfile python",
+      "python zmierz czas programu",
+      "python profile code",
+      "python gdzie ucieka czas"
+     ],
+     "a": "Czas całego programu: `time python3 rozw.py < test.in` (w terminalu). Które funkcje są wolne:\n`python3 -m cProfile -s cumtime rozw.py < test.in`. Fragment w kodzie: `time.perf_counter()` przed i po\n(wypisuj na `stderr`, żeby nie zepsuć odpowiedzi).",
+     "code": "import sys\nimport time\n\nt0 = time.perf_counter()\ns = sum(i * i for i in range(10**5))\nprint(s)\nprint(f\"czas: {time.perf_counter() - t0:.3f} s\", file=sys.stderr)",
+     "lang": "python"
+    }
+   ],
+   "related": [
+    "oi-complexity-limits",
+    "oi-py-fast-io",
+    "oi-py-recursion",
+    "oi-py-collections",
+    "oi-py-cpp-equivalents",
+    "stl-vector-2d",
+    "oi-about",
+    "tool-measure-time"
+   ]
+  },
+  {
+   "id": "oi-py-cpp-equivalents",
+   "title": "Python ↔ C++: tabela odpowiedników (list/vector, dict/map, heapq/priority_queue, tuple/pair, int/long long)",
+   "category": "OI praktyka",
+   "tags": [
+    "python",
+    "python c++",
+    "odpowiedniki python c++",
+    "przepisywanie z pythona",
+    "py2cpp",
+    "tłumaczenie kodu"
+   ],
+   "aliases": [
+    "python na c++",
+    "odpowiedniki python c++",
+    "przepisanie z pythona na c++",
+    "python vs c++",
+    "c++ dla pythonowca",
+    "python c++ porównanie",
+    "python to c++ cheat sheet",
+    "jak przepisać kod z pythona do c++",
+    "tłumacz python c++",
+    "z pythona na c++"
+   ],
+   "summary": "Ściąga dla kogoś, kto myśli w Pythonie, a wysyła w C++ (albo odwrotnie): `list` ↔ `vector`, `dict` ↔ `unordered_map`/`map`, `set` ↔ `unordered_set`/`set`, `heapq` (MIN) ↔ `priority_queue` (MAX!), `tuple` ↔ `pair`/`tuple`, `int` ↔ `long long` (przepełnienie tylko w C++), a `//` i `%` działają inaczej dla liczb ujemnych.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Limity czasu na OI są ustawiane pod C++, więc często opłaca się wymyślić rozwiązanie „po pythonowemu”, a wysłać w C++.\nNajwięcej błędów przy przepisywaniu biorą się z: **przepełnienia** (`int` w Pythonie nie ma limitu), **dzielenia\nujemnych** (`//` i `%`), **kopca** (heapq to min, priority_queue to max) i tego, że `map[k]` w C++ tworzy brakujący klucz."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Python",
+      "C++",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`a = []`, `a.append(x)`",
+       "`vector<int> a; a.push_back(x);`",
+       ""
+      ],
+      [
+       "`a = [0] * n`",
+       "`vector<int> a(n, 0);`",
+       "lokalna tablica w C++ bez inicjalizacji ma śmieci"
+      ],
+      [
+       "`[[0] * m for _ in range(n)]`",
+       "`vector<vector<int>> a(n, vector<int>(m));`",
+       ""
+      ],
+      [
+       "`len(a)`",
+       "`a.size()`",
+       "w C++ unsigned: `a.size() - 1` dla pustego to ogromna liczba"
+      ],
+      [
+       "`a[-1]`",
+       "`a.back()`",
+       "ujemny indeks w C++ to UB, nie ostatni element"
+      ],
+      [
+       "`x = a.pop()`",
+       "`x = a.back(); a.pop_back();`",
+       "`pop_back` nic nie zwraca"
+      ],
+      [
+       "`a[l:r]`",
+       "`vector<int>(a.begin() + l, a.begin() + r)`",
+       "oba kopiują O(r − l)"
+      ],
+      [
+       "`dict`",
+       "`unordered_map<K, V>` / `map<K, V>`",
+       "`map` jest posortowany po kluczu"
+      ],
+      [
+       "`d.get(k, 0)`",
+       "`auto it = m.find(k); it == m.end() ? 0 : it->second`",
+       "`m[k]` w C++ tworzy klucz!"
+      ],
+      [
+       "`k in d`",
+       "`m.count(k)` / `m.contains(k)` (C++20)",
+       ""
+      ],
+      [
+       "`set`",
+       "`unordered_set<T>` / `set<T>`",
+       "tylko `std::set` ma kolejność i `lower_bound`"
+      ],
+      [
+       "`Counter(a)`",
+       "`map<T, int>` / `unordered_map<T, int>`",
+       ""
+      ],
+      [
+       "`deque`: `append`, `popleft`",
+       "`queue`: `push`, `front` + `pop`",
+       "`deque` w C++: `push_front`, `pop_front`"
+      ],
+      [
+       "`heapq` (MIN)",
+       "`priority_queue<T>` (MAX!)",
+       "min w C++: `priority_queue<T, vector<T>, greater<T>>`"
+      ],
+      [
+       "`(a, b)` krotka",
+       "`pair<int, int>` / `tuple<...>`",
+       "porównanie leksykograficzne w obu"
+      ],
+      [
+       "`str` (niezmienny)",
+       "`string` (zmienny)",
+       "w C++ `s[i] = 'x'` działa"
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Python",
+      "C++",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`for i in range(n):`",
+       "`for (int i = 0; i < n; i++)`",
+       ""
+      ],
+      [
+       "`for i in range(n - 1, -1, -1):`",
+       "`for (int i = n - 1; i >= 0; i--)`",
+       ""
+      ],
+      [
+       "`for x in a:`",
+       "`for (int x : a)`",
+       "żeby zmieniać elementy: `for (int& x : a)`"
+      ],
+      [
+       "`and`, `or`, `not`",
+       "`&&`, `||`, `!`",
+       ""
+      ],
+      [
+       "`x if c else y`",
+       "`c ? x : y`",
+       ""
+      ],
+      [
+       "`a, b = b, a`",
+       "`swap(a, b);`",
+       ""
+      ],
+      [
+       "`a // b`",
+       "`a / b`",
+       "Python zaokrągla w dół, C++ do zera: `-7 // 2 == -4`, `-7 / 2 == -3`"
+      ],
+      [
+       "`a % b`",
+       "`a % b`",
+       "`-7 % 3`: Python 2, C++ −1"
+      ],
+      [
+       "`a ** b`",
+       "pętla / szybkie potęgowanie",
+       "`pow` w C++ liczy na double!"
+      ],
+      [
+       "`pow(a, b, m)`",
+       "własna funkcja `power(a, b, m)`",
+       ""
+      ],
+      [
+       "`int` (bez limitu)",
+       "`int` (~2,1·10^9) / `long long` (~9,2·10^18)",
+       "przepełnienie w C++ bez ostrzeżenia"
+      ],
+      [
+       "`float`",
+       "`double`",
+       "ta sama precyzja (53 bity mantysy)"
+      ],
+      [
+       "`float('inf')`",
+       "`const long long INF = 1e18;`",
+       ""
+      ],
+      [
+       "`1 << k`",
+       "`1LL << k`",
+       "`1 << 40` w C++ przepełnia int"
+      ],
+      [
+       "`x.bit_count()`",
+       "`__builtin_popcountll(x)` / `popcount`",
+       ""
+      ],
+      [
+       "`math.gcd(a, b)`",
+       "`gcd(a, b)`",
+       ""
+      ],
+      [
+       "`print(a, b)`",
+       "`cout << a << ' ' << b << '\\n';`",
+       "nie `endl` w pętli"
+      ],
+      [
+       "`a, b = map(int, input().split())`",
+       "`cin >> a >> b;`",
+       "cin czyta po białych znakach"
+      ],
+      [
+       "`def f(a):` (lista przez referencję)",
+       "`void f(vector<int>& a)`",
+       "bez `&` C++ kopiuje cały wektor"
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Python",
+      "C++"
+     ],
+     "rows": [
+      [
+       "`a.sort()` / `sorted(a)`",
+       "`sort(a.begin(), a.end())`"
+      ],
+      [
+       "`a.sort(key=lambda p: p[1])`",
+       "`sort(a.begin(), a.end(), [](auto& x, auto& y) { return x.second < y.second; })`"
+      ],
+      [
+       "`a.sort(reverse=True)`",
+       "`sort(a.rbegin(), a.rend())`"
+      ],
+      [
+       "`bisect_left(a, x)`",
+       "`lower_bound(a.begin(), a.end(), x) - a.begin()`"
+      ],
+      [
+       "`bisect_right(a, x)`",
+       "`upper_bound(a.begin(), a.end(), x) - a.begin()`"
+      ],
+      [
+       "`sum(a)`",
+       "`accumulate(a.begin(), a.end(), 0LL)` (koniecznie `0LL`)"
+      ],
+      [
+       "`max(a)`",
+       "`*max_element(a.begin(), a.end())`"
+      ],
+      [
+       "`a.reverse()`",
+       "`reverse(a.begin(), a.end())`"
+      ],
+      [
+       "`sorted(set(a))`",
+       "`sort` + `a.erase(unique(a.begin(), a.end()), a.end())`"
+      ],
+      [
+       "`itertools.permutations(a)`",
+       "`sort` + `do { ... } while (next_permutation(...))`"
+      ],
+      [
+       "`itertools.accumulate(a)`",
+       "`partial_sum`"
+      ],
+      [
+       "`a.count(x)`",
+       "`count(a.begin(), a.end(), x)`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Przykład w Pythonie: liczba różnych i suma 3 największych",
+     "code": "import sys\nimport heapq\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    a = list(map(int, data[1:n + 1]))\n    h = []\n    for x in a:\n        heapq.heappush(h, x)\n        if len(h) > 3:\n            heapq.heappop(h)          # wyrzuć najmniejszy — zostają 3 największe\n    print(len(set(a)), sum(h))\n\nmain()"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Ten sam program w C++",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    set<long long> rozne(a.begin(), a.end());\n    priority_queue<long long, vector<long long>, greater<long long>> h;  // min-heap jak heapq\n    for (long long x : a) {\n        h.push(x);\n        if (h.size() > 3) h.pop();\n    }\n    long long suma = 0;\n    while (!h.empty()) {\n        suma += h.top();\n        h.pop();\n    }\n    cout << rozne.size() << ' ' << suma << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Najczęstsze błędy po przepisaniu z Pythona: `int` zamiast `long long` (przepełnienie), `/` i `%` dla ujemnych,\n`priority_queue` bez `greater` (dostajesz maksimum zamiast minimum), `m[k]` przy sprawdzaniu (tworzy klucz),\nprzekazanie `vector` bez `&` (kopia w każdym wywołaniu), niezainicjalizowane zmienne lokalne, `pow` na liczbach całkowitych."
+    },
+    {
+     "type": "tip",
+     "md": "W OI Forge jest **Tłumacz Python → C++**: przepisuje kod automatycznie (z inferencją typów, `//` i `%` jak w Pythonie,\n`heapq` → `priority_queue`, `bisect` → `lower_bound`) i sprawdza, czy obie wersje dają ten sam wynik."
+    }
+   ],
+   "pitfalls": [
+    "`int` w C++ tam, gdzie Python liczył bez limitu — przepełnienie bez żadnego błędu; użyj `long long`.",
+    "`-7 // 2 == -4` w Pythonie, ale `-7 / 2 == -3` w C++; `-7 % 3` to 2 w Pythonie i −1 w C++.",
+    "`heapq` to MIN, `priority_queue` to MAX — przepisanie 1:1 odwraca kolejność.",
+    "`if (m[k])` w C++ dodaje klucz `k` do mapy — używaj `m.count(k)` / `m.find(k)`.",
+    "`a[-1]` w C++ to wyjście poza tablicę, a nie ostatni element.",
+    "`void f(vector<int> a)` kopiuje wektor przy każdym wywołaniu — w Pythonie listy przekazuje się przez referencję."
+   ],
+   "qa": [
+    {
+     "q": [
+      "python na c++",
+      "jak przepisać kod z pythona na c++",
+      "przepisanie z pythona do c++",
+      "python to c++",
+      "tlumaczenie pythona na c++",
+      "konwersja python c++"
+     ],
+     "a": "Przepisuj linijka po linijce według tabeli: `list` → `vector`, `dict` → `unordered_map`/`map`, `heapq` →\n`priority_queue` z `greater`, `int` → `long long`. Sprawdź każde `//` i `%` na liczbach mogących być ujemnymi. Na koniec\nporównaj wyniki obu wersji na losowych testach. Automatycznie zrobi to Tłumacz Python → C++ w OI Forge.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    // Python: a = list(map(int, input().split())); print(sum(a))\n    vector<long long> a;\n    long long x;\n    while (cin >> x) a.push_back(x);\n    cout << accumulate(a.begin(), a.end(), 0LL) << '\\n';\n}"
+    },
+    {
+     "q": [
+      "lista python w c++",
+      "odpowiednik listy pythona w c++",
+      "python list c++ vector",
+      "co zamiast listy w c++",
+      "python append c++ odpowiednik"
+     ],
+     "a": "Lista Pythona to `vector`: `append` → `push_back`, `pop()` → `back()` + `pop_back()`, `len(a)` → `a.size()`,\n`a[-1]` → `a.back()`, `[0] * n` → `vector<int>(n, 0)`.",
+     "code": "vector<int> a;          // a = []\na.push_back(5);         // a.append(5)\na.push_back(7);\nint ost = a.back();     // a[-1]\na.pop_back();           // a.pop()\ncout << ost << ' ' << a.size() << '\\n';   // 7 1"
+    },
+    {
+     "q": [
+      "słownik python w c++",
+      "dict python odpowiednik c++",
+      "python dict c++ map",
+      "co zamiast dict w c++",
+      "python slownik c++ unordered_map"
+     ],
+     "a": "`dict` to tablica haszująca jak `unordered_map`. Gdy potrzebujesz kluczy po kolei (albo `lower_bound`) — `map`\n(drzewo, O(log n)). Uwaga: `m[k]` przy odczycie **tworzy** klucz z wartością 0; odpowiednik `k in d` to `m.count(k)`.",
+     "code": "unordered_map<string, int> d;      // d = {}\nd[\"ala\"] += 1;                      // d['ala'] = d.get('ala', 0) + 1\nif (d.count(\"ola\")) cout << \"jest\\n\";   // 'ola' in d\ncout << d[\"ala\"] << ' ' << d.size() << '\\n';   // 1 1"
+    },
+    {
+     "q": [
+      "heapq w c++",
+      "python heapq c++ priority_queue",
+      "heapq a priority_queue różnica",
+      "python heap c++ odpowiednik",
+      "heapq min c++ max"
+     ],
+     "a": "`heapq` to MIN-heap, a `priority_queue<T>` w C++ to MAX-heap. Odpowiednik `heapq` 1:1:\n`priority_queue<T, vector<T>, greater<T>>`. `heappush` → `push`, `h[0]` → `top()`, `heappop` → `top()` + `pop()`.",
+     "code": "priority_queue<int, vector<int>, greater<int>> h;   // jak heapq\nfor (int x : {5, 1, 8}) h.push(x);                 // heappush\ncout << h.top() << '\\n';                            // h[0] -> 1\nh.pop();                                            // heappop (nic nie zwraca)\ncout << h.top() << '\\n';                            // 5"
+    },
+    {
+     "q": [
+      "python int a long long",
+      "python int w c++ jaki typ",
+      "dlaczego w c++ wynik ujemny a w pythonie dobry",
+      "python bez przepełnienia c++ przepełnienie",
+      "python int overflow c++"
+     ],
+     "a": "`int` w Pythonie nie ma limitu, w C++ `int` mieści ~2,1·10^9, a `long long` ~9,2·10^18. Wynik „nagle ujemny” po\nprzepisaniu to przepełnienie: zmień typy na `long long`, stałe pisz `1LL`, a przy mnożeniu modulo rzutuj przed mnożeniem.\nLiczby większe niż 10^18 wymagają `__int128` albo arytmetyki na napisach.",
+     "code": "int a = 100000, b = 100000;\nlong long zle = a * b;          // przepełnienie int, zanim wynik trafi do long long\nlong long dobrze = 1LL * a * b; // 10000000000\ncout << zle << ' ' << dobrze << '\\n';"
+    },
+    {
+     "q": [
+      "python range w c++",
+      "for i in range(n) c++",
+      "pętla for python c++",
+      "python for loop c++ equivalent",
+      "range(n-1, -1, -1) w c++"
+     ],
+     "a": "`range(a, b, k)` to `for (int i = a; i < b; i += k)`. Wstecz: `range(n - 1, -1, -1)` → `for (int i = n - 1; i >= 0; i--)`.\nPo elementach: `for x in a` → `for (auto x : a)`, a gdy chcesz je zmieniać — `for (auto& x : a)`.",
+     "code": "int n = 5;\nfor (int i = 0; i < n; i++) cout << i << ' ';          // range(n)\ncout << '\\n';\nfor (int i = n - 1; i >= 0; i--) cout << i << ' ';     // range(n - 1, -1, -1)\ncout << '\\n';\nfor (int i = 1; i < 10; i += 3) cout << i << ' ';      // range(1, 10, 3)\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "python tuple c++ pair",
+      "krotka python w c++",
+      "python tuple c++ odpowiednik",
+      "pair zamiast tuple python",
+      "python krotki porównywanie c++"
+     ],
+     "a": "Para → `pair<int, int>` (`.first`, `.second`), więcej pól → `tuple` (`get<0>(t)` albo `auto [a, b, c] = t;`)\nlub własny `struct`. Porównanie jest leksykograficzne jak w Pythonie, więc `sort` par działa tak samo.",
+     "code": "vector<pair<int, string>> v = {{2, \"b\"}, {1, \"z\"}, {2, \"a\"}};\nsort(v.begin(), v.end());                  // jak sorted(lista_krotek)\nfor (auto& [x, s] : v) cout << x << s << ' ';   // 1z 2a 2b\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "python set w c++",
+      "zbiór python c++",
+      "python set c++ unordered_set",
+      "python set lower_bound",
+      "czy python ma std::set"
+     ],
+     "a": "`set` w Pythonie to tablica haszująca = `unordered_set` w C++ (bez kolejności). `std::set` (posortowany, z\n`lower_bound`) w Pythonie **nie ma** odpowiednika w bibliotece standardowej — zastępuje się go posortowaną listą z\n`bisect`, kopcem albo przetwarzaniem offline. To jeden z powodów, by takie zadania pisać w C++.",
+     "code": "from bisect import bisect_left, insort\n\ns = []                          # \"set\" posortowany na liście\nfor x in [5, 1, 9]:\n    insort(s, x)                # O(n), ale szybkie dla ~10^5\ni = bisect_left(s, 4)           # lower_bound(4)\nprint(s[i] if i < len(s) else None)   # 5",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python czy c++ na olimpiadę",
+      "czy pisać na oi w pythonie",
+      "python vs c++ oi",
+      "czy python wystarczy na oi",
+      "python na olimpiadzie informatycznej",
+      "czy warto przejsc z pythona na c++"
+     ],
+     "a": "Sprawdź listę języków w regulaminie danej edycji. Nawet jeśli Python jest dopuszczony, limity czasu są ustawiane pod\nrozwiązania wzorcowe w C++, a Python bywa 10–50× wolniejszy — przy dużych n trudno w nim o pełne punkty. Python świetnie\nnadaje się do brute force'ów, generatorów testów i prototypów; główne rozwiązanie najlepiej wysyłać w C++."
+    }
+   ],
+   "related": [
+    "stl-vector",
+    "stl-map",
+    "stl-unordered-map",
+    "stl-set",
+    "stl-priority-queue",
+    "stl-pair",
+    "stl-tuple",
+    "num-int-types",
+    "num-negative-mod",
+    "io-fast-io",
+    "oi-about",
+    "oi-py-numbers",
+    "oi-py-collections",
+    "oi-py-sorting-bisect"
+   ]
+  },
+  {
+   "id": "oi-py-numbers",
+   "title": "Python: liczby — duże inty, // i % dla ujemnych, pow(a, b, m), math (gcd, isqrt, comb), float i Fraction",
+   "category": "OI praktyka",
+   "tags": [
+    "python",
+    "int python",
+    "duże liczby python",
+    "pow python",
+    "math.gcd",
+    "math.isqrt",
+    "math.comb",
+    "Fraction",
+    "Decimal",
+    "float python"
+   ],
+   "aliases": [
+    "duże liczby python",
+    "python big int",
+    "pow(a, b, m)",
+    "python modulo ujemne",
+    "python floor division",
+    "math.isqrt",
+    "math.comb",
+    "python ułamki Fraction",
+    "python Decimal",
+    "python float precyzja",
+    "python nwd"
+   ],
+   "summary": "`int` w Pythonie nie ma limitu (brak przepełnienia), ale działania na ogromnych liczbach są wolne — modulo bierz na bieżąco. `//` zaokrągla w dół, a `%` ma znak dzielnika (inaczej niż w C++). `pow(a, b, m)` liczy potęgę modulo w O(log b), `pow(a, -1, m)` odwrotność. Moduł `math` ma `gcd`, `lcm`, `isqrt`, `comb`, `factorial`; `float` to zwykły double — do dokładnych obliczeń `Fraction` albo liczby całkowite.",
+   "complexity": "dodawanie intów: O(liczba cyfr); mnożenie: ok. O(d^1,58); pow(a, b, m): O(log b) mnożeń",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "W Pythonie nie trzeba `long long` ani `__int128` — `2**100` czy `math.factorial(1000)` działają od razu. Koszt: każde\ndziałanie trwa tym dłużej, im więcej cyfr ma liczba. Jeśli zadanie każe podać wynik modulo 10^9+7, bierz `% MOD`\n**po każdym kroku** (jak w C++), zamiast liczyć gigantyczną liczbę i brać modulo na końcu."
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "// i % dla ujemnych (Python vs C++)",
+     "code": "print(7 // 2, -7 // 2)                # 3 -4  (w dół; C++: 3 -3)\nprint(7 % 3, -7 % 3, 7 % -3)          # 1 2 -2 (znak dzielnika; C++: 1 -1 1)\na, b = -7, 2\nprint(-(-a // b))                     # -3 — sufit z a/b\nq = abs(a) // abs(b) * (1 if (a < 0) == (b < 0) else -1)\nprint(q, a - q * b)                   # -3 -1 — dzielenie i reszta jak w C++ (do zera)\nprint(10**18 // 3)                    # 333333333333333333\nprint(int(10**18 / 3))                # 333333333333333312 — '/' daje float, traci cyfry!"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Potęgowanie modulo, odwrotność, gcd, isqrt, comb",
+     "code": "import math\n\nMOD = 10**9 + 7\nprint(pow(2, 10**18, MOD))            # szybkie potęgowanie modulo, O(log b)\ninv3 = pow(3, -1, MOD)                # odwrotność modularna (Python 3.8+)\nprint(3 * inv3 % MOD)                 # 1\nprint(pow(3, MOD - 2, MOD) == inv3)   # True — małe twierdzenie Fermata\nprint(math.gcd(12, 18), math.lcm(4, 6))   # 6 12 (lcm: Python 3.9+)\nprint(math.isqrt(10**18 + 5))         # 1000000000 — dokładny pierwiastek całkowity\nprint(math.comb(50, 25), math.perm(5, 2), math.factorial(20))\nprint(len(str(math.factorial(1000)))) # 2568 cyfr — bez przepełnienia"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Silnie i dwumiany modulo (wiele zapytań)",
+     "code": "MOD = 10**9 + 7\nN = 10**5\nfact = [1] * (N + 1)\nfor i in range(1, N + 1):\n    fact[i] = fact[i - 1] * i % MOD\ninv = [1] * (N + 1)\ninv[N] = pow(fact[N], MOD - 2, MOD)\nfor i in range(N, 0, -1):\n    inv[i - 1] = inv[i] * i % MOD\n\ndef C(n, k):\n    if k < 0 or k > n:\n        return 0\n    return fact[n] * inv[k] % MOD * inv[n - k] % MOD\n\nprint(C(10, 3), C(100000, 50000))     # 120 149033233"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "float, Fraction, Decimal",
+     "code": "import math\nfrom fractions import Fraction\nfrom decimal import Decimal, getcontext\n\nprint(0.1 + 0.2 == 0.3)               # False — float to double (53 bity mantysy)\nprint(math.isclose(0.1 + 0.2, 0.3))   # True\nprint(Fraction(1, 3) + Fraction(1, 6))   # 1/2 — dokładnie\ngetcontext().prec = 30\nprint(Decimal(1) / Decimal(7))        # 0.142857142857142857142857142857\nprint(f\"{2 / 3:.6f}\")                 # 0.666667 — wypisanie z 6 miejscami\nprint(round(2.5), round(3.5))         # 2 4 — zaokrąglanie \"bankierskie\"!"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Bity i symulacja liczb 64-bitowych",
+     "code": "x = 0b1011\nprint(x.bit_length(), bin(x).count('1'))   # 4 3  (x.bit_count() od Pythona 3.10)\nprint(-1 >> 5, ~5, 2 ^ 10, 2 ** 10)   # -1 -6 8 1024 — ^ to XOR, potęga to **\nM64 = (1 << 64) - 1\nh = 0\nfor c in b\"abc\":\n    h = (h * 131 + c) & M64           # jak unsigned long long z przepełnieniem w C++\nprint(h)                              # 1677554\nmaska = 0\nfor w in [1, 3, 4]:\n    maska |= 1 << w                   # int jako bitset dowolnej długości\nprint(bin(maska), maska >> 3 & 1)     # 0b11010 1"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Bardzo długie liczby z wejścia (Python 3.11+: limit 4300 cyfr)",
+     "code": "import sys\nif hasattr(sys, \"set_int_max_str_digits\"):\n    sys.set_int_max_str_digits(0)     # wyłącz limit konwersji str <-> int\nx = int(\"9\" * 10000)\nprint(len(str(x * x)))                # 20000"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Python",
+      "C++"
+     ],
+     "rows": [
+      [
+       "zakres liczb całkowitych",
+       "bez limitu",
+       "`int` ~2,1·10^9, `long long` ~9,2·10^18"
+      ],
+      [
+       "`-7` podzielone przez `2`",
+       "`-7 // 2 == -4`",
+       "`-7 / 2 == -3`"
+      ],
+      [
+       "reszta `-7` mod `3`",
+       "`-7 % 3 == 2`",
+       "`-7 % 3 == -1`"
+      ],
+      [
+       "`7 / 2`",
+       "`3.5` (zawsze float)",
+       "`3` (dla intów)"
+      ],
+      [
+       "a^b mod m",
+       "`pow(a, b, m)`",
+       "własna funkcja szybkiego potęgowania"
+      ],
+      [
+       "odwrotność mod p",
+       "`pow(a, -1, p)` / `pow(a, p - 2, p)`",
+       "potęgowanie / rozszerzony Euklides"
+      ],
+      [
+       "pierwiastek całkowity",
+       "`math.isqrt(n)`",
+       "`sqrtl` + korekta"
+      ],
+      [
+       "NWD / NWW",
+       "`math.gcd`, `math.lcm`",
+       "`gcd`, `lcm`"
+      ],
+      [
+       "C(n, k)",
+       "`math.comb(n, k)` (dokładnie)",
+       "silnie modulo albo trójkąt Pascala"
+      ],
+      [
+       "`^`",
+       "XOR",
+       "XOR"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`a / b` zawsze daje `float` (`4 / 2 == 2.0`), a `int(a / b)` dla liczb > 2^53 ≈ 9·10^15 jest **niedokładne** — do\ndzielenia całkowitego używaj `//`. Tak samo `int(math.sqrt(n))` dla dużych `n` bywa o 1 za mały lub za duży — używaj\n`math.isqrt(n)`. `round()` zaokrągla połówki do parzystej (`round(2.5) == 2`)."
+    },
+    {
+     "type": "tip",
+     "md": "Dzielenie z zaokrągleniem w górę dla dodatnich: `(a + b - 1) // b` albo `-(-a // b)` (działa też dla ujemnych).\nPrzepisując na C++ pamiętaj, że `//` i `%` dla ujemnych zachowują się tam inaczej."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "pow(a, b, m)",
+     "desc": "a^b mod m szybkim potęgowaniem; b = -1 daje odwrotność (3.8+)",
+     "complexity": "O(log b)",
+     "returns": "int",
+     "example": "pow(2, 10**18, 10**9 + 7)"
+    },
+    {
+     "sig": "math.gcd(*a) / math.lcm(*a)",
+     "desc": "NWD / NWW (wiele argumentów od 3.9)",
+     "complexity": "O(log)",
+     "example": "math.gcd(12, 18, 30)"
+    },
+    {
+     "sig": "math.isqrt(n)",
+     "desc": "dokładny ⌊√n⌋ dla dowolnie dużego n",
+     "complexity": "O(d²) dla d cyfr",
+     "example": "r = math.isqrt(n); r * r == n"
+    },
+    {
+     "sig": "math.comb(n, k) / math.perm(n, k)",
+     "desc": "dokładne C(n, k) i n!/(n−k)!",
+     "example": "math.comb(50, 25)"
+    },
+    {
+     "sig": "divmod(a, b)",
+     "desc": "para (a // b, a % b)",
+     "complexity": "O(1) dla małych",
+     "example": "q, r = divmod(17, 5)"
+    },
+    {
+     "sig": "x.bit_length()",
+     "desc": "liczba bitów potrzebna do zapisu |x|",
+     "example": "(255).bit_length()  # 8"
+    },
+    {
+     "sig": "Fraction(p, q)",
+     "desc": "dokładny ułamek (moduł fractions)",
+     "example": "Fraction(1, 3) * 3 == 1"
+    }
+   ],
+   "pitfalls": [
+    "`a / b` zawsze daje `float` — do liczb całkowitych `//`; `int(a / b)` dla dużych liczb gubi cyfry.",
+    "`int(math.sqrt(n))` dla n ~10^18 bywa błędne o 1 — używaj `math.isqrt`.",
+    "`-7 // 2 == -4` i `-7 % 2 == 1` — kod przepisany 1:1 do C++ da inne wyniki dla ujemnych.",
+    "Liczenie bez bieżącego `% MOD` i branie modulo na końcu — wynik poprawny, ale ogromne liczby są bardzo wolne (TLE).",
+    "`2 ^ 10` to XOR (8), a nie potęga — potęga to `2 ** 10`.",
+    "Python 3.11+: `int(s)` / `str(x)` dla liczb > 4300 cyfr rzuca `ValueError` — `sys.set_int_max_str_digits(0)`.",
+    "`round(2.5) == 2` — zaokrąglanie bankierskie; „połówka w górę” dla x ≥ 0: `int(x + 0.5)` albo `Decimal`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "duże liczby python",
+      "python big int",
+      "czy python ma limit liczb",
+      "python int bez przepełnienia",
+      "python liczby wieksze niz long long",
+      "python bignum zawody"
+     ],
+     "a": "`int` w Pythonie ma dowolną precyzję — nie ma przepełnienia, `2**1000` działa. Koszt działań rośnie z liczbą cyfr,\nwięc przy wyniku modulo bierz `% MOD` na bieżąco. Dla liczb > 4300 cyfr w Pythonie 3.11+ wywołaj\n`sys.set_int_max_str_digits(0)` przed `int()`/`str()`.",
+     "code": "import math\n\nprint(2 ** 100)                         # 1267650600228229401496703205376\nprint(len(str(math.factorial(100))))    # 158\nprint(10**30 + 1 - 10**30)              # 1 — bez utraty dokładności",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "pow(a, b, m) python",
+      "potęgowanie modulo python",
+      "szybkie potegowanie python",
+      "python modular exponentiation",
+      "python pow trzy argumenty",
+      "python a^b mod m"
+     ],
+     "a": "Wbudowane `pow(a, b, m)` liczy a^b mod m szybkim potęgowaniem w O(log b) — działa nawet dla `b = 10^18`. Nie pisz\n`a ** b % m` (najpierw liczy gigantyczną potęgę).",
+     "code": "MOD = 10**9 + 7\nprint(pow(2, 10**18, MOD))\nprint(pow(2, 100, 1000))        # 376 — trzy ostatnie cyfry 2^100",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "odwrotność modulo python",
+      "pow(a, -1, m) python",
+      "python modular inverse",
+      "dzielenie modulo w pythonie",
+      "python odwrotnosc modularna"
+     ],
+     "a": "Od Pythona 3.8: `pow(a, -1, m)` zwraca odwrotność `a` modulo `m` (rzuca `ValueError`, gdy nie istnieje). Dla\npierwszego `p` działa też `pow(a, p - 2, p)` (małe twierdzenie Fermata). Dzielenie modulo: `x * pow(y, -1, p) % p`.",
+     "code": "P = 10**9 + 7\ninv = pow(4, -1, P)\nprint(inv, 4 * inv % P)         # 250000002 1\nprint(10 * pow(4, P - 2, P) % P == 10 * inv % P)   # True",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python // dla ujemnych",
+      "python // ujemne",
+      "python modulo ujemnej liczby",
+      "python -7 // 2",
+      "python floor division negative",
+      "python dzielenie jak w c++"
+     ],
+     "a": "`//` zaokrągla **w dół** (`-7 // 2 == -4`), a `%` ma znak dzielnika (`-7 % 3 == 2`), więc reszta jest zawsze w\n`[0, m)` dla dodatniego `m` — wygodne, ale inne niż w C++ (`-3` i `-1`). Dzielenie jak w C++ (do zera): licz na\nwartościach bezwzględnych i dodaj znak. `divmod(a, b)` zwraca obie wartości.",
+     "code": "a, b = -7, 2\nprint(a // b, a % b, divmod(a, b))       # -4 1 (-4, 1)\nq = abs(a) // abs(b)\nif (a < 0) != (b < 0):\n    q = -q\nprint(q, a - q * b)                      # -3 -1 — jak w C++",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "math.isqrt python",
+      "pierwiastek całkowity python",
+      "python sqrt dokładny",
+      "python integer square root",
+      "python sqrt duza liczba blad",
+      "python czy liczba jest kwadratem"
+     ],
+     "a": "`math.isqrt(n)` zwraca dokładne ⌊√n⌋ dla dowolnie dużego `n` (Python 3.8+). `int(math.sqrt(n))` liczy na float i dla\nn ≈ 10^18 potrafi się pomylić o 1. Kwadrat: `r = math.isqrt(n); r * r == n`.",
+     "code": "import math\n\nn = 10**18 - 1\nprint(int(math.sqrt(n)), math.isqrt(n))  # 1000000000 999999999 — float się myli\nr = math.isqrt(144)\nprint(r * r == 144)                      # True",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "math.comb python",
+      "dwumian newtona python",
+      "python symbol newtona",
+      "python n choose k",
+      "python kombinacje liczba",
+      "python silnia modulo"
+     ],
+     "a": "`math.comb(n, k)` liczy dokładne C(n, k) (Python 3.8+), `math.factorial(n)` silnię. Przy wielu zapytaniach modulo p\npolicz raz tablice silni i odwrotności silni (`pow(fact[N], p - 2, p)`), wtedy każde C(n, k) jest w O(1).",
+     "code": "import math\n\nprint(math.comb(5, 2), math.comb(100, 50) % (10**9 + 7))\nMOD = 10**9 + 7\nfact = [1] * 11\nfor i in range(1, 11):\n    fact[i] = fact[i - 1] * i % MOD\nC = lambda n, k: fact[n] * pow(fact[k] * fact[n - k] % MOD, MOD - 2, MOD) % MOD\nprint(C(10, 3))                          # 120",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python float precyzja",
+      "python 0.1 + 0.2",
+      "Fraction python",
+      "python ułamki dokładne",
+      "Decimal python",
+      "python porównywanie floatów"
+     ],
+     "a": "`float` w Pythonie to double (jak w C++), więc `0.1 + 0.2 != 0.3`. Porównuj z tolerancją (`math.isclose` albo\n`abs(a - b) < 1e-9`). Dokładne ułamki: `fractions.Fraction` (wolne, ale bez błędów). Gdy się da, licz na liczbach\ncałkowitych (np. porównuj `a * d < c * b` zamiast `a / b < c / d`).",
+     "code": "import math\nfrom fractions import Fraction\n\nprint(0.1 + 0.2, math.isclose(0.1 + 0.2, 0.3))   # 0.30000000000000004 True\nprint(Fraction(1, 10) + Fraction(2, 10) == Fraction(3, 10))   # True\nprint(f\"{1 / 3:.4f}\")                            # 0.3333",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python nwd nww",
+      "math.gcd python",
+      "python gcd lcm",
+      "nwd w pythonie",
+      "python najwiekszy wspolny dzielnik"
+     ],
+     "a": "`math.gcd(a, b)` i `math.lcm(a, b)` (lcm od Pythona 3.9; od 3.9 obie przyjmują wiele argumentów). NWD całej listy:\n`math.gcd(*a)` albo `functools.reduce(math.gcd, a)`. Wynik `gcd` jest zawsze nieujemny.",
+     "code": "import math\nfrom functools import reduce\n\nprint(math.gcd(12, 18), math.lcm(4, 6))      # 6 12\na = [24, 36, 60]\nprint(math.gcd(*a), reduce(math.gcd, a))     # 12 12",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python ValueError 4300 digits",
+      "python exceeds the limit for integer string conversion",
+      "set_int_max_str_digits python",
+      "python bardzo dluga liczba int blad",
+      "python limit cyfr int str"
+     ],
+     "a": "Od Pythona 3.11 (i w poprawkach starszych wersji) zamiana `str` ↔ `int` dla liczb dłuższych niż 4300 cyfr rzuca\n`ValueError` (ochrona przed atakami). Na zawodach wyłącz limit na początku programu: `sys.set_int_max_str_digits(0)`.",
+     "code": "import sys\nif hasattr(sys, \"set_int_max_str_digits\"):\n    sys.set_int_max_str_digits(0)\nprint(len(str(10 ** 5000)))     # 5001",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "python bity",
+      "python popcount",
+      "python bit_count",
+      "python xor czy potęga",
+      "python maska bitowa",
+      "python unsigned long long symulacja"
+     ],
+     "a": "`bin(x).count('1')` albo `x.bit_count()` (3.10+) to popcount, `x.bit_length()` — liczba bitów. `^` to XOR, potęga to\n`**`. Int nie ma stałej szerokości: przepełnienie jak w `unsigned long long` symulujesz maską `& ((1 << 64) - 1)`.\nDuży int działa jak bitset dowolnej długości (`b |= b << w` w problemie plecakowym).",
+     "code": "x = 13                           # 0b1101\nprint(bin(x).count('1'), x.bit_length(), x ^ 1, x & -x)   # 3 4 12 1\nb = 1                            # sumy osiągalne z wag [2, 3]: bitset na int\nfor w in [2, 3]:\n    b |= b << w\nprint([s for s in range(6) if b >> s & 1])   # [0, 2, 3, 5]",
+     "lang": "python"
+    }
+   ],
+   "related": [
+    "num-negative-mod",
+    "num-overflow",
+    "num-int-types",
+    "math-fast-pow",
+    "math-mod-inverse",
+    "math-binomial",
+    "math-gcd-lcm",
+    "num-floating",
+    "num-rounding",
+    "math-bignum",
+    "num-sqrt-pow",
+    "tech-bit-tricks",
+    "oi-py-cpp-equivalents"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,2448 @@
+{
+ "chunk": "stl-containers-1",
+ "articles": [
+  {
+   "id": "stl-vector",
+   "title": "std::vector — tablica dynamiczna",
+   "category": "STL kontenery",
+   "tags": [
+    "vector",
+    "tablica dynamiczna",
+    "push_back",
+    "emplace_back",
+    "resize",
+    "reserve",
+    "erase",
+    "kontener"
+   ],
+   "aliases": [
+    "vector",
+    "std::vector",
+    "vector cpp",
+    "wektor",
+    "wektory",
+    "vektor",
+    "tablica dynamiczna c++",
+    "jak używać vectora",
+    "jak uzywac vectora",
+    "vector c++",
+    "push_back"
+   ],
+   "summary": "Tablica o zmiennym rozmiarze z dostępem po indeksie w O(1) i dopisywaniem na końcu w zamortyzowanym O(1). Domyślny kontener w zadaniach OI — używaj go zamiast gołych tablic, gdy rozmiar zależy od wejścia.",
+   "complexity": "v[i], push_back, pop_back, back: O(1) (push_back zamortyzowane); insert/erase w środku: O(n); find: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`std::vector<T>` przechowuje elementy **w jednym ciągłym bloku pamięci** (jak zwykła tablica), ale sam pilnuje rozmiaru i powiększa się, gdy brakuje miejsca. Gdy pojemność (`capacity()`) się skończy, vector alokuje nowy blok (zwykle 2× większy w libstdc++) i przenosi elementy — dlatego pojedynczy `push_back` może kosztować O(n), ale **średnio** (zamortyzowane) kosztuje O(1)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: wczytaj, przefiltruj, posortuj",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n = 0;\n    cin >> n;\n    vector<int> a(n);              // n zer\n    for (int& x : a) cin >> x;     // wczytanie n liczb\n\n    vector<int> parzyste;\n    for (int x : a)\n        if (x % 2 == 0) parzyste.push_back(x);\n\n    sort(parzyste.begin(), parzyste.end());\n    cout << \"Parzystych: \" << parzyste.size() << \"\\n\";\n    for (int x : parzyste) cout << x << ' ';\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`v[i]`, `v.at(i)`",
+       "O(1)",
+       "`[]` bez sprawdzania zakresu, `at` rzuca `out_of_range`"
+      ],
+      [
+       "`v.push_back(x)`, `v.emplace_back(...)`",
+       "O(1) zamortyzowane",
+       "realokacja unieważnia iteratory"
+      ],
+      [
+       "`v.pop_back()`",
+       "O(1)",
+       "UB na pustym vectorze"
+      ],
+      [
+       "`v.insert(it, x)`",
+       "O(n)",
+       "przesuwa elementy za `it`"
+      ],
+      [
+       "`v.erase(it)`",
+       "O(n)",
+       "przesuwa elementy za `it`; usunięcie ostatniego O(1)"
+      ],
+      [
+       "`v.resize(k)`",
+       "O(|k − size|) (+ ewentualna realokacja)",
+       "nowe elementy = 0 / domyślne"
+      ],
+      [
+       "`v.reserve(k)`",
+       "O(n) przy realokacji",
+       "zmienia tylko pojemność, nie rozmiar"
+      ],
+      [
+       "`v.clear()`",
+       "O(n)",
+       "rozmiar 0, pojemność bez zmian"
+      ],
+      [
+       "`find(v.begin(), v.end(), x)`",
+       "O(n)",
+       "liniowe szukanie"
+      ],
+      [
+       "kopiowanie `w = v`",
+       "O(n)",
+       "uważaj przy przekazywaniu do funkcji"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Tworzenie vectora** — najczęstsze formy:"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Konstruktory",
+     "code": "vector<int> a;                    // pusty\nvector<int> b(5);                 // {0, 0, 0, 0, 0}\nvector<int> c(5, -1);             // {-1, -1, -1, -1, -1}\nvector<int> d = {3, 1, 4, 1, 5};  // lista inicjalizacyjna\nvector<int> e(d.begin(), d.begin() + 3); // {3, 1, 4} — kopia fragmentu\nvector<long long> f(10, 1LL << 40);"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wstawianie i usuwanie",
+     "code": "vector<int> v = {5, 7, 9, 11};\nv.erase(v.begin() + 1);                 // usuń element o indeksie 1 -> {5, 9, 11}\nv.erase(v.begin(), v.begin() + 2);      // usuń przedział [0, 2) -> {11}\nv.insert(v.begin(), 42);                // wstaw na początek -> {42, 11}\nv.insert(v.begin() + 1, 3, 0);          // wstaw 3 zera na pozycję 1 -> {42, 0, 0, 0, 11}"
+    },
+    {
+     "type": "tip",
+     "md": "Do debugowania kompiluj z `-D_GLIBCXX_DEBUG` — wtedy `v[i]` poza zakresem kończy program czytelnym komunikatem zamiast cichego UB. Na zawodach usuń tę flagę (spowalnia program)."
+    },
+    {
+     "type": "warn",
+     "md": "`v.size()` zwraca typ **bez znaku** (`size_t`). Wyrażenie `v.size() - 1` dla pustego vectora daje ogromną liczbę (≈1.8·10^19), a nie −1. Rzutuj: `(int)v.size() - 1`."
+    },
+    {
+     "type": "text",
+     "md": "**`vector<bool>`** jest specjalizacją pakującą bity (8 wartości w bajcie). Oszczędza pamięć, ale `v[i]` zwraca obiekt-pośrednik, a nie `bool&` — `for (auto& b : vb)` się nie skompiluje (użyj `for (auto b : vb)` albo `vector<char>`). Dostęp jest też odrobinę wolniejszy."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "vector<T> v;",
+     "desc": "pusty vector",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "vector<T> v(n);",
+     "desc": "n elementów zainicjalizowanych wartością domyślną (0 dla liczb)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "vector<T> v(n, x);",
+     "desc": "n kopii wartości x",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "vector<T> v = {a, b, c};",
+     "desc": "z listy inicjalizacyjnej",
+     "complexity": "O(k)"
+    },
+    {
+     "sig": "vector<T> v(first, last);",
+     "desc": "kopia zakresu iteratorów",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "v.size()",
+     "desc": "liczba elementów (typ size_t — bez znaku!)",
+     "complexity": "O(1)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "v.empty()",
+     "desc": "czy pusty",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "v[i]",
+     "desc": "dostęp do i-tego elementu bez sprawdzania zakresu",
+     "complexity": "O(1)",
+     "returns": "T&"
+    },
+    {
+     "sig": "v.at(i)",
+     "desc": "dostęp ze sprawdzaniem zakresu (wyjątek out_of_range)",
+     "complexity": "O(1)",
+     "returns": "T&"
+    },
+    {
+     "sig": "v.front() / v.back()",
+     "desc": "pierwszy / ostatni element (UB na pustym)",
+     "complexity": "O(1)",
+     "returns": "T&"
+    },
+    {
+     "sig": "v.push_back(x)",
+     "desc": "dopisuje kopię x na koniec",
+     "complexity": "O(1) zamortyzowane"
+    },
+    {
+     "sig": "v.emplace_back(args...)",
+     "desc": "konstruuje element na końcu z argumentów konstruktora",
+     "complexity": "O(1) zamortyzowane",
+     "returns": "T& (od C++17)",
+     "example": "vector<pair<int,int>> e; e.emplace_back(1, 2);"
+    },
+    {
+     "sig": "v.pop_back()",
+     "desc": "usuwa ostatni element (UB na pustym)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "v.insert(it, x)",
+     "desc": "wstawia x przed it",
+     "complexity": "O(n)",
+     "returns": "iterator na wstawiony"
+    },
+    {
+     "sig": "v.insert(it, k, x)",
+     "desc": "wstawia k kopii x przed it",
+     "complexity": "O(n + k)"
+    },
+    {
+     "sig": "v.insert(it, first, last)",
+     "desc": "wstawia zakres przed it",
+     "complexity": "O(n + długość zakresu)",
+     "example": "a.insert(a.end(), b.begin(), b.end()); // doklej b na koniec a"
+    },
+    {
+     "sig": "v.erase(it)",
+     "desc": "usuwa element wskazywany przez it",
+     "complexity": "O(n)",
+     "returns": "iterator na następny element"
+    },
+    {
+     "sig": "v.erase(first, last)",
+     "desc": "usuwa zakres [first, last)",
+     "complexity": "O(n)",
+     "returns": "iterator za usuniętymi"
+    },
+    {
+     "sig": "v.clear()",
+     "desc": "usuwa wszystkie elementy (pojemność bez zmian)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "v.resize(k) / v.resize(k, x)",
+     "desc": "zmienia rozmiar; nowe elementy = domyślne / x",
+     "complexity": "O(|k − size|) + realokacja"
+    },
+    {
+     "sig": "v.assign(k, x)",
+     "desc": "zastępuje zawartość k kopiami x",
+     "complexity": "O(k)"
+    },
+    {
+     "sig": "v.reserve(k)",
+     "desc": "rezerwuje pojemność ≥ k (rozmiar bez zmian)",
+     "complexity": "O(n) jeśli realokuje"
+    },
+    {
+     "sig": "v.capacity()",
+     "desc": "aktualna pojemność",
+     "complexity": "O(1)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "v.shrink_to_fit()",
+     "desc": "prośba o zwolnienie nadmiarowej pamięci (niewiążąca)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "v.swap(w) / swap(v, w)",
+     "desc": "zamiana zawartości (bez kopiowania elementów)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "v.data()",
+     "desc": "wskaźnik na pierwszy element",
+     "complexity": "O(1)",
+     "returns": "T*"
+    },
+    {
+     "sig": "v.begin(), v.end(), v.rbegin(), v.rend()",
+     "desc": "iteratory (random access)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "v == w, v < w",
+     "desc": "porównanie leksykograficzne",
+     "complexity": "O(n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "erase(v, x) / erase_if(v, pred)",
+     "desc": "C++20: usuwa wszystkie elementy równe x / spełniające pred",
+     "complexity": "O(n)",
+     "returns": "liczba usuniętych",
+     "example": "erase_if(v, [](int x){ return x < 0; });"
+    }
+   ],
+   "pitfalls": [
+    "`v.size() - 1` przy pustym vectorze to ogromna liczba bez znaku — pętla `for (int i = 0; i < v.size() - 1; i++)` wyjdzie poza tablicę. Pisz `i + 1 < (int)v.size()`.",
+    "`vector<int> v(n);` a potem `v.push_back(x)` dopisuje ZA n zerami — rozmiar będzie 2n. Albo `v(n)` + `v[i] = x`, albo pusty vector + `push_back`.",
+    "`v[i]` nie sprawdza zakresu — wyjście poza vector to UB (losowe wyniki, RE). Testuj z `-D_GLIBCXX_DEBUG` albo `v.at(i)`.",
+    "Po `push_back` / `insert` może nastąpić realokacja: wszystkie iteratory, wskaźniki i referencje do elementów stają się nieważne (np. `int& r = v[0]; v.push_back(1); r = 5;` to UB).",
+    "Usuwanie w pętli: `v.erase(it)` unieważnia `it` — pisz `it = v.erase(it);` albo użyj erase–remove / `erase_if`.",
+    "Wielokrotne `v.erase(v.begin())` (usuwanie z przodu) to O(n) za każdym razem → O(n²). Użyj `deque`, `queue` albo indeksu „głowy”.",
+    "Przekazanie vectora do funkcji przez wartość (`void f(vector<int> v)`) kopiuje go za każdym wywołaniem — w rekurencji to TLE. Używaj `const vector<int>&` albo `vector<int>&`.",
+    "`v.front()`, `v.back()`, `v.pop_back()` na pustym vectorze to UB.",
+    "`vector<bool>` nie zwraca prawdziwych referencji: `for (auto& b : vb)` i `bool* p = &vb[0]` się nie kompilują.",
+    "`v.clear()` nie zwalnia pamięci; jeśli trzeba ją oddać, użyj `vector<int>().swap(v);`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak dodać element do vectora",
+      "vector dodaj element",
+      "push_back c++",
+      "jak dopisac do wektora",
+      "vector add element"
+     ],
+     "a": "Użyj `v.push_back(x)` — dopisuje element na koniec w zamortyzowanym O(1). Gdy element jest strukturą/parą konstruowaną z kilku argumentów, wygodniej `v.emplace_back(a, b)`. Wstawianie w środek (`v.insert`) kosztuje O(n), bo przesuwa wszystkie dalsze elementy.",
+     "code": "vector<int> v;\nv.push_back(4);\nv.push_back(7);            // v = {4, 7}\nvector<pair<int,int>> e;\ne.emplace_back(1, 2);      // tworzy pair(1, 2) bez tymczasowej kopii\ne.push_back({3, 4});       // też działa"
+    },
+    {
+     "q": [
+      "vector usuń element",
+      "jak usunąć element z vectora",
+      "vector erase indeks",
+      "usuwanie z wektora po indeksie",
+      "vector remove element at index"
+     ],
+     "a": "`v.erase(v.begin() + i)` usuwa element o indeksie `i` i przesuwa resztę w lewo — O(n). Usunięcie ostatniego to `v.pop_back()` w O(1). Jeśli kolejność nie ma znaczenia, możesz usunąć w O(1): zamień element z ostatnim i zrób `pop_back()`.",
+     "code": "vector<int> v = {10, 20, 30, 40};\nint i = 1;\nv.erase(v.begin() + i);        // {10, 30, 40}\n// O(1), gdy kolejność nieważna:\nswap(v[0], v.back());\nv.pop_back();                  // {40, 30}"
+    },
+    {
+     "q": [
+      "usuń wszystkie wystąpienia wartości z vectora",
+      "vector usun wszystkie x",
+      "erase remove idiom",
+      "jak usunac z vectora wszystkie zera",
+      "vector erase_if"
+     ],
+     "a": "Najprościej w C++20: `erase(v, x)` albo `erase_if(v, warunek)` — O(n). W starszym C++ używa się idiomu erase–remove: `remove` przesuwa elementy do zostawienia na początek i zwraca nowy koniec, a `erase` odcina ogon. Samo `remove` NIE zmienia rozmiaru vectora!",
+     "code": "vector<int> v = {0, 1, 0, 2, 0, 3};\nv.erase(remove(v.begin(), v.end(), 0), v.end());   // {1, 2, 3}\nvector<int> w = {5, -1, 7, -3};\nerase_if(w, [](int x) { return x < 0; });          // C++20: {5, 7}"
+    },
+    {
+     "q": [
+      "vector o rozmiarze n wypełniony zerami",
+      "inicjalizacja vectora",
+      "vector n elementów",
+      "jak stworzyć vector z wartością",
+      "vector init with value"
+     ],
+     "a": "`vector<int> v(n);` tworzy n zer, `vector<int> v(n, x);` — n kopii x. Obie formy działają w O(n). Uwaga na nawiasy: `vector<int> v{n, x}` (klamry) to lista dwóch elementów `{n, x}`, a nie n kopii!",
+     "code": "int n = 5;\nvector<int> zera(n);             // {0,0,0,0,0}\nvector<int> minusy(n, -1);       // {-1,-1,-1,-1,-1}\nvector<int> dwa{n, -1};          // UWAGA: {5, -1} — tylko dwa elementy\nvector<long long> dist(n, LLONG_MAX);"
+    },
+    {
+     "q": [
+      "push_back vs emplace_back",
+      "czym się różni emplace_back od push_back",
+      "emplace_back co to",
+      "emplace back czy push back"
+     ],
+     "a": "`push_back(x)` kopiuje (lub przenosi) gotowy obiekt, a `emplace_back(args...)` buduje obiekt bezpośrednio w pamięci vectora z argumentów konstruktora. Dla `int` nie ma różnicy; dla par i struktur `emplace_back(a, b)` jest krótszy w zapisie i czasem minimalnie szybszy. Obie operacje: O(1) zamortyzowane. Pułapka: `emplace_back` potrafi wywołać konstruktor explicit, np. `vector<vector<int>> g; g.emplace_back(5)` dopisze vector 5 zer.",
+     "code": "vector<pair<int,int>> kr;\nkr.push_back({1, 2});\nkr.push_back(make_pair(3, 4));\nkr.emplace_back(5, 6);         // bez nawiasów klamrowych\nvector<vector<int>> g;\ng.emplace_back(3);             // dopisuje {0, 0, 0}"
+    },
+    {
+     "q": [
+      "resize vs reserve",
+      "czym się różni resize od reserve",
+      "vector reserve co robi",
+      "vector resize",
+      "reserve czy resize"
+     ],
+     "a": "`resize(k)` zmienia **rozmiar** — po nim `v.size() == k` i można używać `v[0..k-1]` (nowe elementy = 0). `reserve(k)` zmienia tylko **pojemność** (rezerwuje pamięć, żeby uniknąć realokacji przy `push_back`), rozmiar zostaje taki sam i `v[i]` dla i ≥ size to nadal UB. `reserve` przydaje się, gdy znasz docelowy rozmiar i dopisujesz `push_back` — oszczędza kilka realokacji (zwykle mały zysk).",
+     "code": "vector<int> a;\na.reserve(100);      // a.size() == 0, a.capacity() >= 100\na.push_back(1);      // bez realokacji\nvector<int> b;\nb.resize(100);       // b.size() == 100, same zera\nb[99] = 7;           // OK\nb.resize(3);         // obcina do 3 elementów"
+    },
+    {
+     "q": [
+      "v.size()-1 błąd",
+      "vector size unsigned",
+      "pętla po vectorze size minus 1 wywala",
+      "dlaczego v.size() - 1 daje dużą liczbę",
+      "warning comparison of integer expressions of different signedness"
+     ],
+     "a": "`v.size()` ma typ `size_t` (bez znaku). Dla pustego vectora `v.size() - 1` „zawija się” do 2^64 − 1, więc pętla `for (int i = 0; i < v.size() - 1; i++)` wyjdzie poza tablicę. Rzutuj rozmiar na `int` albo przenieś odejmowanie na drugą stronę nierówności. Ostrzeżenie *different signedness* to sygnał właśnie tego problemu.",
+     "code": "vector<int> v;   // pusty\nfor (int i = 0; i + 1 < (int)v.size(); i++) {   // bezpieczne\n    cout << v[i] << ' ' << v[i + 1] << '\\n';\n}\nint n = (int)v.size();   // albo raz zapisz rozmiar w int"
+    },
+    {
+     "q": [
+      "jak wczytać vector",
+      "wczytywanie n liczb do vectora",
+      "cin do vectora",
+      "jak wczytac tablice c++",
+      "read vector from input"
+     ],
+     "a": "Najpierw wczytaj `n`, utwórz `vector<int> a(n)` i wczytaj elementy przez referencję w pętli zakresowej. To O(n). Przy dużych danych (≥10^5 liczb) dodaj szybkie I/O: `ios::sync_with_stdio(false); cin.tie(nullptr);`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n = 0;\n    cin >> n;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;       // & — wczytujemy DO elementów\n    cout << accumulate(a.begin(), a.end(), 0LL) << \"\\n\";\n}"
+    },
+    {
+     "q": [
+      "jak wypisać vector",
+      "wypisanie wektora",
+      "cout vector",
+      "print vector c++",
+      "wypisz elementy vectora po spacji"
+     ],
+     "a": "Vectora nie da się wypisać jednym `cout << v` — trzeba przejść pętlą. Pętla zakresowa jest najkrótsza; używaj `'\\n'` zamiast `endl` (endl opróżnia bufor i przy dużym wyjściu jest wolny).",
+     "code": "vector<int> v = {1, 2, 3};\nfor (int x : v) cout << x << ' ';\ncout << '\\n';\nfor (size_t i = 0; i < v.size(); i++)          // bez spacji na końcu\n    cout << v[i] << (i + 1 == v.size() ? '\\n' : ' ');"
+    },
+    {
+     "q": [
+      "ostatni element vectora",
+      "vector back",
+      "jak dostać ostatni element",
+      "vector last element",
+      "usuń ostatni element vectora"
+     ],
+     "a": "`v.back()` zwraca referencję do ostatniego elementu, `v.front()` do pierwszego, `v.pop_back()` usuwa ostatni — wszystko O(1). Na pustym vectorze każda z tych operacji to UB, więc najpierw sprawdź `!v.empty()`.",
+     "code": "vector<int> v = {3, 8, 5};\nif (!v.empty()) {\n    cout << v.back() << '\\n';   // 5\n    v.back() = 9;               // można modyfikować: {3, 8, 9}\n    v.pop_back();               // {3, 8}\n}"
+    },
+    {
+     "q": [
+      "czy vector zawiera element",
+      "vector contains",
+      "sprawdź czy element jest w vectorze",
+      "find w vectorze",
+      "vector szukanie elementu"
+     ],
+     "a": "`find(v.begin(), v.end(), x) != v.end()` albo `count(...)` — oba O(n). Jeśli pytań jest dużo (np. 10^5), to razem O(n·q) i dostaniesz TLE: posortuj vector raz i używaj `binary_search` (O(log n)) albo trzymaj elementy w `set`/`unordered_set`. Vector w C++20 nie ma metody `contains`.",
+     "code": "vector<int> v = {4, 1, 7};\nint x = 7;\nbool jest = find(v.begin(), v.end(), x) != v.end();     // O(n)\nsort(v.begin(), v.end());\nbool jest2 = binary_search(v.begin(), v.end(), x);      // O(log n) po sortowaniu\ncout << jest << ' ' << jest2 << '\\n';"
+    },
+    {
+     "q": [
+      "vector clear nie zwalnia pamięci",
+      "jak zwolnić pamięć vectora",
+      "vector shrink_to_fit",
+      "clear a capacity"
+     ],
+     "a": "`v.clear()` ustawia rozmiar na 0, ale pojemność (zaalokowana pamięć) zostaje. Zwykle to zaleta — kolejne `push_back` nie alokują ponownie. Żeby naprawdę oddać pamięć (np. przy MLE z wieloma dużymi vectorami), zamień vector z pustym: `vector<int>().swap(v);` (`shrink_to_fit` to tylko niewiążąca prośba).",
+     "code": "vector<int> v(1000000, 1);\nv.clear();                 // size 0, capacity nadal ~10^6\nvector<int>().swap(v);     // capacity 0 — pamięć zwolniona\ncout << v.capacity() << '\\n';"
+    },
+    {
+     "q": [
+      "vector w funkcji wolno",
+      "przekazywanie vectora do funkcji",
+      "vector jako argument funkcji",
+      "dlaczego rekurencja z vectorem dostaje TLE",
+      "pass vector by reference"
+     ],
+     "a": "Parametr `vector<int> v` oznacza **kopię** całego vectora przy każdym wywołaniu (O(n) czasu i pamięci). W rekurencji/DFS to łatwo daje TLE albo MLE. Przekazuj przez referencję: `const vector<int>& v` (tylko odczyt) lub `vector<int>& v` (modyfikacja). Zwracanie vectora z funkcji (`return v;`) jest tanie — działa przeniesienie/RVO.",
+     "code": "long long suma(const vector<int>& v) {   // bez kopiowania\n    long long s = 0;\n    for (int x : v) s += x;\n    return s;\n}\nvoid dopisz(vector<int>& v, int x) {     // modyfikuje oryginał\n    v.push_back(x);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "vector odwróć",
+      "jak odwrócić vector",
+      "reverse vector c++",
+      "odwracanie wektora"
+     ],
+     "a": "`reverse(v.begin(), v.end())` odwraca w miejscu w O(n). Jeśli potrzebujesz kopii odwróconej, użyj konstruktora z iteratorami odwrotnymi: `vector<int> r(v.rbegin(), v.rend());`.",
+     "code": "vector<int> v = {1, 2, 3, 4};\nreverse(v.begin(), v.end());           // {4, 3, 2, 1}\nvector<int> r(v.rbegin(), v.rend());   // kopia odwrócona: {1, 2, 3, 4}"
+    },
+    {
+     "q": [
+      "vector bool",
+      "vector<bool> problem",
+      "vector<bool> auto& nie działa",
+      "vector bool czy bitset"
+     ],
+     "a": "`vector<bool>` to specjalna wersja pakująca 8 wartości w bajcie. Działa jak tablica bool, ale `vb[i]` zwraca obiekt-pośrednik, więc `auto& b : vb` i `&vb[i]` się nie kompilują, a dostęp jest wolniejszy niż do `vector<char>`. Gdy rozmiar jest stały i chcesz operacji na bitach (`&`, `|`, `count`) — użyj `bitset`.",
+     "code": "vector<bool> odw(10, false);\nodw[3] = true;\nfor (auto b : odw) cout << b;    // OK (kopia), \"auto&\" by się nie skompilowało\ncout << '\\n';\nvector<char> odw2(10, 0);        // alternatywa z prawdziwymi referencjami"
+    },
+    {
+     "q": [
+      "jak skopiować vector",
+      "vector copy",
+      "kopiowanie fragmentu vectora",
+      "podvector c++",
+      "slice vector"
+     ],
+     "a": "Przypisanie `w = v` kopiuje cały vector w O(n). Fragment `[l, r)` skopiujesz konstruktorem z iteratorami. Doklejenie jednego vectora do drugiego: `a.insert(a.end(), b.begin(), b.end())`.",
+     "code": "vector<int> v = {1, 2, 3, 4, 5};\nvector<int> w = v;                              // pełna kopia\nvector<int> fragment(v.begin() + 1, v.begin() + 4);  // {2, 3, 4}\nvector<int> a = {9};\na.insert(a.end(), fragment.begin(), fragment.end()); // {9, 2, 3, 4}"
+    }
+   ],
+   "related": [
+    "stl-vector-2d",
+    "stl-array",
+    "stl-iterators",
+    "stl-sort",
+    "stl-remove-erase",
+    "stl-deque",
+    "cpp-references",
+    "pit-int-overflow",
+    "pit-unsigned-size",
+    "pit-vector-bool",
+    "pit-out-of-bounds",
+    "cpp-c-arrays"
+   ]
+  },
+  {
+   "id": "stl-vector-2d",
+   "title": "Vector dwuwymiarowy, lista sąsiedztwa i tablice wielowymiarowe",
+   "category": "STL kontenery",
+   "tags": [
+    "vector",
+    "2d",
+    "macierz",
+    "plansza",
+    "lista sąsiedztwa",
+    "graf",
+    "tablica dwuwymiarowa"
+   ],
+   "aliases": [
+    "vector 2d",
+    "vector<vector<int>>",
+    "dwuwymiarowy vector",
+    "tablica 2d c++",
+    "macierz vector",
+    "vector vectorow",
+    "lista sasiedztwa vector",
+    "2d vector cpp"
+   ],
+   "summary": "Jak tworzyć i używać `vector<vector<T>>` (macierze, plansze, listy sąsiedztwa grafów), jak go zerować między testami i kiedy lepiej użyć spłaszczonej tablicy.",
+   "complexity": "dostęp g[i][j]: O(1); utworzenie n×m: O(n·m); dodanie krawędzi: O(1) zamortyzowane",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Vector vectorów to „tablica wierszy”: każdy wiersz jest osobnym vectorem i może mieć inną długość. Idealny na **listę sąsiedztwa** grafu (`adj[v]` = sąsiedzi wierzchołka `v`) i na plansze, których rozmiar poznajemy dopiero z wejścia."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Lista sąsiedztwa grafu",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n = 0, m = 0;              // n wierzchołków, m krawędzi\n    cin >> n >> m;\n    vector<vector<int>> adj(n + 1);          // wierzchołki 1..n\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        adj[a].push_back(b);\n        adj[b].push_back(a);                 // graf nieskierowany\n    }\n    for (int v = 1; v <= n; v++) {\n        cout << v << \":\";\n        for (int u : adj[v]) cout << ' ' << u;\n        cout << '\\n';\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Macierze 2D/3D",
+     "code": "int n = 3, m = 4;\nvector<vector<int>> g(n, vector<int>(m, 0));   // n wierszy po m zer\ng[1][2] = 5;\nvector<vector<long long>> dp(n + 1, vector<long long>(m + 1, -1));\nvector<string> plansza(n, string(m, '.'));     // plansza znaków\nplansza[0][0] = '#';\n// 3D: n × m × k\nint k = 2;\nvector<vector<vector<int>>> t(n, vector<vector<int>>(m, vector<int>(k, 0)));"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sposób",
+      "Zalety",
+      "Wady"
+     ],
+     "rows": [
+      [
+       "`vector<vector<int>> g(n, vector<int>(m))`",
+       "rozmiar z wejścia, łatwe zerowanie",
+       "każdy wiersz to osobna alokacja (~24 B narzutu), gorsza lokalność pamięci"
+      ],
+      [
+       "`vector<int> g(n * m)`, `g[i * m + j]`",
+       "jedna alokacja, najszybsze",
+       "mniej czytelne indeksowanie"
+      ],
+      [
+       "globalne `int g[1005][1005]`",
+       "szybkie, zerowane automatycznie",
+       "rozmiar stały, ogranicza pamięć"
+      ],
+      [
+       "`vector<array<int, 3>>`",
+       "krotki o stałej długości bez alokacji na wiersz",
+       "długość wiersza znana w czasie kompilacji"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Plansza z wejścia (np. `#` i `.`): najwygodniej `vector<string> s(n); for (auto& w : s) cin >> w;` — wtedy `s[i][j]` to znak w wierszu i, kolumnie j."
+    },
+    {
+     "type": "warn",
+     "md": "Kolejność wymiarów: `vector<vector<int>> g(n, vector<int>(m))` ma **n wierszy i m kolumn**, więc poprawny indeks to `g[i][j]` z `i < n`, `j < m`. Pomylenie wymiarów to częsty powód RE przy n ≠ m."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "vector<vector<T>> g(n, vector<T>(m, x));",
+     "desc": "macierz n×m wypełniona x",
+     "complexity": "O(n·m)"
+    },
+    {
+     "sig": "vector<vector<int>> adj(n);",
+     "desc": "n pustych list (lista sąsiedztwa)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "adj[a].push_back(b);",
+     "desc": "dodanie krawędzi a→b",
+     "complexity": "O(1) zamortyzowane"
+    },
+    {
+     "sig": "g.assign(n, vector<T>(m, x));",
+     "desc": "ponowne wypełnienie (np. między testami)",
+     "complexity": "O(n·m)"
+    },
+    {
+     "sig": "g.resize(n, vector<T>(m));",
+     "desc": "zmiana liczby wierszy (nowe wiersze = podany wzór)",
+     "complexity": "O(n·m) dla nowych"
+    },
+    {
+     "sig": "g[i].size()",
+     "desc": "długość wiersza i (może się różnić między wierszami)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "for (auto& w : adj) w.clear();",
+     "desc": "wyczyszczenie list przy zachowaniu liczby wierszy",
+     "complexity": "O(suma długości)"
+    }
+   ],
+   "pitfalls": [
+    "`vector<vector<int>> g(n, vector<int>(m))` — pierwszy wymiar to wiersze (n), drugi kolumny (m); pomyłka daje wyjście poza zakres.",
+    "Dla wielu testów w jednym pliku pamiętaj o wyczyszczeniu `adj` (np. `adj.assign(n + 1, {})`) — inaczej krawędzie z poprzedniego testu zostają.",
+    "Indeksy wierzchołków od 1: twórz `adj(n + 1)`, bo `adj(n)` ma indeksy tylko 0..n−1.",
+    "Przekazanie `vector<vector<int>>` przez wartość kopiuje całą macierz — używaj `const auto&`/`auto&`.",
+    "Wiele małych wierszy (np. 10^6 × 2) jest pamięciożerne i wolne — rozważ `vector<array<int,2>>` lub spłaszczoną tablicę.",
+    "`vector<vector<int>> g(n, vector<int>(m))` z n·m = 10^8 to 400 MB — sprawdź limit pamięci przed alokacją."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak zrobić vector 2d",
+      "vector dwuwymiarowy",
+      "tablica dwuwymiarowa vector",
+      "2d vector c++",
+      "vector<vector<int>> jak zadeklarowac",
+      "macierz w c++"
+     ],
+     "a": "`vector<vector<int>> g(n, vector<int>(m, 0));` tworzy n wierszy po m zer (O(n·m)). Dostęp: `g[i][j]`, gdzie i to wiersz (0..n−1), j kolumna (0..m−1). Wartość początkową podajesz w wewnętrznym konstruktorze.",
+     "code": "int n = 3, m = 5;\nvector<vector<int>> g(n, vector<int>(m, 0));\ng[2][4] = 7;\ncout << g.size() << ' ' << g[0].size() << '\\n';   // 3 5"
+    },
+    {
+     "q": [
+      "lista sąsiedztwa vector",
+      "jak zapisać graf w c++",
+      "adjacency list c++",
+      "graf vector<vector<int>>",
+      "lista sasiedztwa jak zrobic"
+     ],
+     "a": "Graf o n wierzchołkach to `vector<vector<int>> adj(n + 1)` (dla numeracji od 1). Krawędź nieskierowaną a–b dodajesz dwoma `push_back`. Pamięć O(n + m), przejście po sąsiadach v — O(deg v). Dla grafu ważonego użyj `vector<vector<pair<int,int>>>` (sąsiad, waga).",
+     "code": "int n = 4;\nvector<vector<pair<int,int>>> adj(n + 1);   // (sąsiad, waga)\nauto dodaj = [&](int a, int b, int w) {\n    adj[a].push_back({b, w});\n    adj[b].push_back({a, w});\n};\ndodaj(1, 2, 5);\ndodaj(2, 3, 1);\nfor (auto [u, w] : adj[2]) cout << u << ' ' << w << '\\n';"
+    },
+    {
+     "q": [
+      "jak wyzerować vector 2d",
+      "zerowanie macierzy vector",
+      "reset vector<vector<int>> między testami",
+      "clear lista sasiedztwa wiele testow"
+     ],
+     "a": "Najprościej przypisać na nowo: `g.assign(n, vector<int>(m, 0));` — O(n·m). Dla listy sąsiedztwa: `adj.assign(n + 1, {});` albo `for (auto& w : adj) w.clear();`. Zerowanie całej dużej macierzy w każdym z wielu testów może dać TLE — zeruj tylko używany fragment.",
+     "code": "int n = 3, m = 3;\nvector<vector<int>> g(n, vector<int>(m, 5));\ng.assign(n, vector<int>(m, 0));          // wszystko 0\nvector<vector<int>> adj(n + 1);\nadj[1].push_back(2);\nadj.assign(n + 1, {});                   // puste listy"
+    },
+    {
+     "q": [
+      "jak wczytać planszę",
+      "wczytywanie mapy z # i .",
+      "plansza znaków c++",
+      "grid input c++",
+      "wczytac macierz znakow"
+     ],
+     "a": "Wczytaj n napisów do `vector<string>` — każdy `cin >> s[i]` czyta cały wiersz bez spacji. Potem `s[i][j]` to znak. Jeśli wiersze zawierają spacje, użyj `getline` (i pamiętaj o pominięciu końca linii po `cin >> n`).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n = 0, m = 0;\n    cin >> n >> m;\n    vector<string> s(n);\n    for (auto& w : s) cin >> w;\n    int krzyzyki = 0;\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < m; j++)\n            if (s[i][j] == '#') krzyzyki++;\n    cout << krzyzyki << '\\n';\n}"
+    },
+    {
+     "q": [
+      "vector 3d",
+      "trójwymiarowy vector",
+      "tablica 3d c++ vector",
+      "dp trzy wymiary vector"
+     ],
+     "a": "Zagnieżdżaj konstruktory: `vector<vector<vector<int>>> t(a, vector<vector<int>>(b, vector<int>(c, x)));`. Działa, ale jest wolny przy dużych rozmiarach (wiele alokacji, rozproszona pamięć). Dla DP z dużym stanem lepsza jest globalna tablica `static int t[A][B][C]` albo spłaszczony `vector<int>(a*b*c)`.",
+     "code": "int a = 2, b = 3, c = 4;\nvector<vector<vector<int>>> t(a, vector<vector<int>>(b, vector<int>(c, -1)));\nt[1][2][3] = 0;\nvector<int> plaski(a * b * c, -1);\nauto id = [&](int i, int j, int k) { return (i * b + j) * c + k; };\nplaski[id(1, 2, 3)] = 0;"
+    },
+    {
+     "q": [
+      "vector 2d wolny",
+      "vector<vector<int>> vs tablica",
+      "czy vector 2d jest wolniejszy od tablicy",
+      "spłaszczona tablica i*m+j"
+     ],
+     "a": "Dostęp `g[i][j]` jest O(1), ale każdy wiersz leży w innym miejscu pamięci, a przy tworzeniu wykonuje się n alokacji. Przy n·m rzędu 10^7 i częstym dostępie spłaszczony `vector<int> g(n*m)` z indeksem `i*m+j` bywa wyraźnie szybszy (jedna alokacja, lepszy cache). Dla typowych rozmiarów (≤10^6 komórek) różnica zwykle nie ma znaczenia.",
+     "code": "int n = 1000, m = 1000;\nvector<int> g(n * m, 0);\nauto at = [&](int i, int j) -> int& { return g[i * m + j]; };\nat(5, 7) = 3;\ncout << at(5, 7) << '\\n';"
+    },
+    {
+     "q": [
+      "vector par",
+      "vector<pair<int,int>>",
+      "vector tablic",
+      "vector<array<int,3>>",
+      "lista krawedzi c++"
+     ],
+     "a": "Listę krawędzi trzymaj w `vector<array<int,3>>` (a, b, waga) lub w `vector<tuple<...>>` — bez osobnej alokacji na każdy element. Sortowanie takiego vectora porównuje leksykograficznie: najpierw [0], potem [1]… — więc jeśli chcesz sortować po wadze (Kruskal), daj wagę na pierwsze miejsce.",
+     "code": "vector<array<int,3>> kraw;          // {waga, a, b}\nkraw.push_back({5, 1, 2});\nkraw.push_back({1, 2, 3});\nsort(kraw.begin(), kraw.end());     // po wadze rosnąco\nfor (auto [w, a, b] : kraw) cout << a << '-' << b << \" w=\" << w << '\\n';"
+    }
+   ],
+   "related": [
+    "stl-vector",
+    "stl-array",
+    "graph-representation",
+    "cpp-global-vs-local",
+    "cpp-stack-overflow",
+    "cpp-c-arrays",
+    "oi-py-performance",
+    "stl-ref-vector-all"
+   ]
+  },
+  {
+   "id": "stl-array",
+   "title": "std::array — tablica o stałym rozmiarze",
+   "category": "STL kontenery",
+   "tags": [
+    "array",
+    "std::array",
+    "tablica stała",
+    "krotka",
+    "kontener"
+   ],
+   "aliases": [
+    "array",
+    "std::array",
+    "array cpp",
+    "array<int, 3>",
+    "tablica stalego rozmiaru",
+    "array vs vector",
+    "std array c++"
+   ],
+   "summary": "Opakowanie zwykłej tablicy C o rozmiarze znanym w czasie kompilacji: ma `size()`, porównania, przypisanie i da się go wstawić do `set`/`map` lub `vector`. Świetne na krotki typu `{waga, a, b}`.",
+   "complexity": "dostęp a[i]: O(1); fill, porównanie, kopia: O(N)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`array<T, N>` ma dokładnie N elementów, a N musi być **stałą czasu kompilacji**. Nie alokuje pamięci dynamicznie — elementy leżą tam, gdzie sam obiekt (na stosie, w vectorze, w strukturze). W odróżnieniu od gołej tablicy `int t[3]` można go kopiować `=`, porównywać `<`, `==`, zwracać z funkcji i używać jako klucza w `map`/`set`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Podstawy std::array",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    array<int, 3> a = {3, 1, 2};\n    sort(a.begin(), a.end());              // {1, 2, 3}\n    array<int, 3> b{};                     // {0, 0, 0} — klamry zerują\n    b.fill(7);                             // {7, 7, 7}\n    cout << (a < b) << ' ' << a.size() << '\\n';   // 1 3\n\n    set<array<int, 2>> odwiedzone;         // pary współrzędnych\n    odwiedzone.insert({1, 2});\n    cout << odwiedzone.count({1, 2}) << '\\n';     // 1\n\n    auto [x, y, z] = a;                    // structured bindings\n    cout << x + y + z << '\\n';             // 6\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Cecha",
+      "int t[N]",
+      "array<int, N>",
+      "vector<int>"
+     ],
+     "rows": [
+      [
+       "rozmiar",
+       "stały",
+       "stały (szablon)",
+       "zmienny"
+      ],
+      [
+       "kopiowanie `=`",
+       "nie",
+       "tak, O(N)",
+       "tak, O(n)"
+      ],
+      [
+       "porównania `<`, `==`",
+       "nie (porównuje adresy)",
+       "tak, leksykograficznie",
+       "tak"
+      ],
+      [
+       "klucz w `set`/`map`",
+       "nie",
+       "tak",
+       "tak (wolniej, alokacje)"
+      ],
+      [
+       "`size()`",
+       "brak (`sizeof`)",
+       "tak",
+       "tak"
+      ],
+      [
+       "pamięć",
+       "w miejscu",
+       "w miejscu",
+       "sterta + 24 B nagłówka"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`array<int, 1000000>` jako zmienna lokalna leży na **stosie** (4 MB) — przy domyślnym stosie może wywołać segfault. Duże tablice deklaruj globalnie albo używaj `vector`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "array<T, N> a;",
+     "desc": "N elementów — lokalnie NIEzainicjalizowanych (śmieci) dla typów prostych",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "array<T, N> a{};",
+     "desc": "N elementów wyzerowanych",
+     "complexity": "O(N)"
+    },
+    {
+     "sig": "array<T, N> a = {x, y, ...};",
+     "desc": "z listy (brakujące = 0)",
+     "complexity": "O(N)"
+    },
+    {
+     "sig": "a[i] / a.at(i)",
+     "desc": "dostęp bez / ze sprawdzaniem zakresu",
+     "complexity": "O(1)",
+     "returns": "T&"
+    },
+    {
+     "sig": "a.size()",
+     "desc": "N (stała)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "a.fill(x)",
+     "desc": "wypełnia wszystkie elementy wartością x",
+     "complexity": "O(N)"
+    },
+    {
+     "sig": "a.front() / a.back()",
+     "desc": "pierwszy / ostatni element",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "a.begin(), a.end()",
+     "desc": "iteratory (random access) — działa sort, reverse itd.",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "a == b, a < b",
+     "desc": "porównanie leksykograficzne",
+     "complexity": "O(N)",
+     "returns": "bool"
+    },
+    {
+     "sig": "a.data()",
+     "desc": "wskaźnik na pierwszy element",
+     "complexity": "O(1)",
+     "returns": "T*"
+    },
+    {
+     "sig": "swap(a, b)",
+     "desc": "zamiana zawartości (kopiuje elementy!)",
+     "complexity": "O(N)"
+    }
+   ],
+   "pitfalls": [
+    "Rozmiar musi być stałą: `array<int, n>` z `n` wczytanym z wejścia się nie skompiluje — użyj `vector`.",
+    "`array<int, 5> a;` jako zmienna lokalna zawiera śmieci; pisz `array<int, 5> a{};`, żeby wyzerować.",
+    "Duży `array` lokalnie = przepełnienie stosu. Deklaruj globalnie lub używaj `vector`.",
+    "`swap` dwóch array kosztuje O(N) (kopiuje elementy), w odróżnieniu od O(1) dla vectora."
+   ],
+   "qa": [
+    {
+     "q": [
+      "array vs vector",
+      "kiedy array a kiedy vector",
+      "czym się różni array od vectora",
+      "std::array czy vector"
+     ],
+     "a": "`array<T, N>` ma rozmiar ustalony w czasie kompilacji i nie alokuje pamięci na stercie, więc jest odrobinę szybszy i lżejszy. `vector` ma zmienny rozmiar. Używaj `array` na małe krotki (`array<int,3>` jako krawędź, stan BFS) i tablice o stałym rozmiarze, a `vector` wszędzie, gdzie rozmiar zależy od wejścia.",
+     "code": "vector<array<int, 3>> kraw = {{4, 1, 2}, {2, 2, 3}};   // {waga, a, b}\nsort(kraw.begin(), kraw.end());\ncout << kraw[0][0] << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "array jako klucz w mapie",
+      "set tablic",
+      "set<array<int,2>>",
+      "map z kluczem array",
+      "tablica jako klucz map"
+     ],
+     "a": "Goła tablica `int[2]` nie może być kluczem `set`/`map`, ale `array<int, 2>` tak — ma wbudowany `operator<` (porównanie leksykograficzne). Operacje na secie to O(log n · N). Do `unordered_map` trzeba by dopisać własny hash.",
+     "code": "map<array<int, 2>, int> odl;\nodl[{0, 0}] = 0;\nodl[{1, 2}] = 3;\ncout << odl[{1, 2}] << ' ' << odl.count({5, 5}) << '\\n';   // 3 0"
+    },
+    {
+     "q": [
+      "jak wyzerować array",
+      "array fill",
+      "std::array zera",
+      "array inicjalizacja zerami"
+     ],
+     "a": "Przy deklaracji użyj pustych klamer: `array<int, N> a{};`. Później: `a.fill(0)` w O(N). Bez klamer lokalny `array` ma nieokreślone wartości (globalny jest zerowany automatycznie).",
+     "code": "array<int, 5> a{};       // {0,0,0,0,0}\na.fill(-1);              // {-1,-1,-1,-1,-1}\narray<long long, 3> b = {1};   // {1, 0, 0}"
+    },
+    {
+     "q": [
+      "array structured bindings",
+      "rozpakowanie array auto [a,b,c]",
+      "auto [x,y] array"
+     ],
+     "a": "`std::array` obsługuje structured bindings: `auto [a, b, c] = arr;` (kopia) albo `auto& [a, b, c] = arr;` (referencje). Liczba nazw musi równać się N. Wygodne w pętli po `vector<array<int,3>>`.",
+     "code": "vector<array<int, 3>> v = {{1, 2, 3}, {4, 5, 6}};\nfor (auto& [a, b, c] : v) c = a + b;     // modyfikacja przez referencję\ncout << v[1][2] << '\\n';                 // 9"
+    },
+    {
+     "q": [
+      "array<int,n> nie kompiluje",
+      "array rozmiar ze zmiennej",
+      "non-type template argument is not a constant expression",
+      "array z n z wejscia"
+     ],
+     "a": "Rozmiar `std::array` jest parametrem szablonu, więc musi być znany w czasie kompilacji (`const`/`constexpr` z wartością stałą). Rozmiar wczytany z wejścia wymaga `vector`. Możesz też zadeklarować `array` o maksymalnym rozmiarze z treści zadania jako zmienną globalną.",
+     "code": "constexpr int MAXN = 200005;\narray<int, MAXN> t;            // globalnie — OK, zera\nint main() {\n    int n = 10;\n    vector<int> v(n);          // rozmiar z wejścia -> vector\n    t[n] = 1;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sortowanie array",
+      "sort std::array",
+      "jak posortować array",
+      "reverse array c++"
+     ],
+     "a": "`array` ma iteratory random access, więc działają wszystkie algorytmy: `sort(a.begin(), a.end())`, `reverse`, `max_element` itd. Złożoność jak dla vectora, np. sort O(N log N).",
+     "code": "array<int, 4> a = {4, 2, 9, 1};\nsort(a.begin(), a.end(), greater<int>());   // {9, 4, 2, 1}\ncout << *max_element(a.begin(), a.end()) << '\\n';   // 9"
+    }
+   ],
+   "related": [
+    "stl-vector",
+    "stl-vector-2d",
+    "stl-tuple",
+    "stl-pair",
+    "cpp-stack-overflow",
+    "cpp-c-arrays",
+    "stl-ref-vector-all"
+   ]
+  },
+  {
+   "id": "stl-string",
+   "title": "std::string — napisy w C++ (podstawy)",
+   "category": "STL kontenery",
+   "tags": [
+    "string",
+    "napis",
+    "tekst",
+    "char",
+    "getline",
+    "to_string",
+    "stoi",
+    "znaki"
+   ],
+   "aliases": [
+    "string",
+    "std::string",
+    "string cpp",
+    "napis c++",
+    "stringi",
+    "jak używać stringa",
+    "string c++ podstawy",
+    "tekst w c++",
+    "char na int"
+   ],
+   "summary": "Napis o zmiennej długości z dostępem do znaków po indeksie. Podstawy: wczytywanie (słowo / cała linia), długość, sklejanie, porównywanie, konwersje liczba↔napis i znak↔cyfra.",
+   "complexity": "s[i], size, push_back, +=: O(1) (zamortyzowane dla dopisywania); s + t, porównanie, kopia: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`std::string` to w praktyce `vector<char>` z dodatkami dla tekstu. Indeksy od 0, `s[i]` to `char`, `s.size()` (= `s.length()`) to długość. `cin >> s` czyta **jedno słowo** (do białego znaku), a `getline(cin, s)` całą linię."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Podstawowe operacje",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s;\n    cin >> s;                         // np. \"Ala\"\n    cout << s.size() << '\\n';         // długość\n    for (char c : s) cout << c << ' ';\n    cout << '\\n';\n\n    string t = s + \"123\";             // sklejanie\n    t += '!';                         // dopisanie znaku\n    reverse(t.begin(), t.end());\n    cout << t << '\\n';\n\n    int ile_a = count(s.begin(), s.end(), 'a');\n    cout << ile_a << '\\n';\n\n    string liczba = to_string(2024);  // int -> string\n    int x = stoi(\"456\");              // string -> int\n    cout << liczba << ' ' << x + 1 << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`s[i]`, `s.size()`, `s.back()`",
+       "O(1)",
+       "`size()` jest bez znaku"
+      ],
+      [
+       "`s += c`, `s.push_back(c)`, `s.pop_back()`",
+       "O(1) zamortyzowane",
+       "najszybsze budowanie napisu"
+      ],
+      [
+       "`s += t`",
+       "O(|t|) zamortyzowane",
+       ""
+      ],
+      [
+       "`s = s + c`",
+       "O(|s|)",
+       "tworzy kopię! w pętli daje O(n²)"
+      ],
+      [
+       "`s == t`, `s < t`",
+       "O(min(|s|,|t|))",
+       "porównanie leksykograficzne"
+      ],
+      [
+       "`s.substr(pos, len)`",
+       "O(len)",
+       "tworzy nowy napis"
+      ],
+      [
+       "`s.find(t)`",
+       "O(|s|·|t|) pesymistycznie",
+       "zwraca `string::npos`, gdy brak"
+      ],
+      [
+       "`sort(s.begin(), s.end())`",
+       "O(n log n)",
+       "sortuje znaki"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Znaki i cyfry.** `char` to mała liczba (kod ASCII). Cyfrę-znak zamieniasz na wartość przez `c - '0'`, literę na numer w alfabecie przez `c - 'a'`. Odwrotnie: `char('0' + d)`, `char('a' + k)`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Konwersje znak ↔ liczba",
+     "code": "string s = \"a7Z\";\nint cyfra = s[1] - '0';            // 7\nint nr = s[0] - 'a';               // 0\nchar duza = toupper(s[0]);         // 'A'\nbool czy_litera = isalpha(s[2]);   // true\nbool czy_cyfra = isdigit(s[1]);    // true\nchar z = 'a' + 25;                 // 'z'\ncout << cyfra << ' ' << nr << ' ' << duza << ' ' << czy_litera << czy_cyfra << ' ' << z << '\\n';"
+    },
+    {
+     "type": "warn",
+     "md": "Mieszanie `cin >> n` z `getline(cin, s)`: po `cin >> n` w buforze zostaje znak końca linii, więc pierwsze `getline` zwróci pusty napis. Przed `getline` wywołaj `cin >> ws;` albo `cin.ignore();`."
+    },
+    {
+     "type": "tip",
+     "md": "Budując długi napis znak po znaku, używaj `s += c` (O(1)), a nie `s = s + c` (O(n) — kopiuje cały napis). Przy 10^5 znaków różnica to ułamek sekundy vs TLE."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "string s; / string s = \"abc\"; / string s(n, c);",
+     "desc": "pusty / z literału / n kopii znaku c",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "cin >> s",
+     "desc": "wczytuje jedno słowo (do spacji/końca linii)",
+     "complexity": "O(|s|)"
+    },
+    {
+     "sig": "getline(cin, s)",
+     "desc": "wczytuje całą linię (bez znaku '\\n')",
+     "complexity": "O(|s|)",
+     "returns": "istream&"
+    },
+    {
+     "sig": "s.size() / s.length()",
+     "desc": "długość (size_t)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "s.empty()",
+     "desc": "czy pusty",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "s[i] / s.at(i)",
+     "desc": "znak na pozycji i",
+     "complexity": "O(1)",
+     "returns": "char&"
+    },
+    {
+     "sig": "s.front() / s.back()",
+     "desc": "pierwszy / ostatni znak",
+     "complexity": "O(1)",
+     "returns": "char&"
+    },
+    {
+     "sig": "s.push_back(c) / s += c",
+     "desc": "dopisuje znak",
+     "complexity": "O(1) zamortyzowane"
+    },
+    {
+     "sig": "s.pop_back()",
+     "desc": "usuwa ostatni znak",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "s + t",
+     "desc": "nowy napis (sklejenie)",
+     "complexity": "O(|s| + |t|)",
+     "returns": "string"
+    },
+    {
+     "sig": "s == t, s < t, s.compare(t)",
+     "desc": "porównania leksykograficzne",
+     "complexity": "O(min(|s|,|t|))"
+    },
+    {
+     "sig": "to_string(x)",
+     "desc": "liczba → napis",
+     "complexity": "O(liczba cyfr)",
+     "returns": "string"
+    },
+    {
+     "sig": "stoi(s), stoll(s), stod(s)",
+     "desc": "napis → int / long long / double (wyjątek przy złym formacie)",
+     "complexity": "O(|s|)"
+    },
+    {
+     "sig": "s.clear()",
+     "desc": "czyści napis",
+     "complexity": "O(1) dla char"
+    },
+    {
+     "sig": "s.resize(k, c)",
+     "desc": "zmienia długość (dopełnia znakiem c)",
+     "complexity": "O(k)"
+    },
+    {
+     "sig": "tolower(c), toupper(c), isdigit(c), isalpha(c), isspace(c)",
+     "desc": "funkcje znakowe z <cctype>",
+     "complexity": "O(1)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "`cin >> s` czyta tylko do pierwszej spacji — do całej linii użyj `getline(cin, s)`.",
+    "Po `cin >> n` pierwsze `getline` zwraca pusty napis (zostaje '\\n'). Wywołaj `cin >> ws;` przed `getline`.",
+    "`s = s + c` w pętli to O(n²) — używaj `s += c` lub `push_back`.",
+    "`\"abc\" + \"def\"` się nie kompiluje (dwa wskaźniki), a `\"abc\" + 1` to wskaźnik przesunięty o 1 (\"bc\"). Przynajmniej jeden argument musi być `string`.",
+    "`s.size() - 1` dla pustego napisu to ogromna liczba (size_t) — rzutuj na `int`.",
+    "Porównanie napisów-liczb `\"10\" < \"9\"` jest prawdziwe (leksykograficznie) — porównuj długości albo konwertuj na liczbę.",
+    "`stoi` dla liczby spoza zakresu int rzuca wyjątek `out_of_range` (RE) — dla dużych używaj `stoll`.",
+    "`toupper(c)` zwraca `int` — `cout << toupper('a')` wypisze 65. Rzutuj: `char(toupper(c))`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wczytać całą linię",
+      "getline c++",
+      "wczytanie linii ze spacjami",
+      "cin string ze spacjami",
+      "read whole line c++"
+     ],
+     "a": "`getline(cin, s)` wczytuje wszystko do końca linii (łącznie ze spacjami, bez `'\\n'`). `cin >> s` czyta tylko jedno słowo. Jeśli wcześniej było `cin >> n`, w buforze został koniec linii — pomiń go przez `cin >> ws`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n = 0;\n    cin >> n >> ws;            // ws zjada '\\n' po liczbie\n    for (int i = 0; i < n; i++) {\n        string linia;\n        getline(cin, linia);\n        cout << linia.size() << '\\n';\n    }\n}"
+    },
+    {
+     "q": [
+      "getline pusty string",
+      "getline nie działa po cin",
+      "getline pomija linię",
+      "getline zwraca pusty napis",
+      "cin.ignore getline"
+     ],
+     "a": "`cin >> x` zostawia w buforze znak nowej linii. Następne `getline` od razu go napotyka i zwraca pusty napis. Rozwiązania: `cin >> ws;` (pomija wszystkie białe znaki) albo `cin.ignore();` (pomija jeden znak) przed `getline`.",
+     "code": "int n;\nstring s;\ncin >> n;\ncin.ignore(numeric_limits<streamsize>::max(), '\\n');   // pomiń resztę linii\ngetline(cin, s);"
+    },
+    {
+     "q": [
+      "string na int",
+      "jak zamienić string na liczbę",
+      "stoi",
+      "konwersja napisu na int",
+      "string to int c++",
+      "stoll"
+     ],
+     "a": "`stoi(s)` zamienia napis na `int`, `stoll(s)` na `long long`, `stod(s)` na `double` — O(długość). Przy złym formacie lub przepełnieniu rzucają wyjątek (program kończy się RE). Jeśli liczba pochodzi z wejścia, prościej wczytać ją od razu do zmiennej liczbowej przez `cin`.",
+     "code": "string a = \"12345\", b = \"9000000000\";\nint x = stoi(a);\nlong long y = stoll(b);     // stoi(b) rzuciłoby out_of_range\ncout << x + 1 << ' ' << y / 2 << '\\n';"
+    },
+    {
+     "q": [
+      "int na string",
+      "to_string",
+      "liczba na napis c++",
+      "int to string c++",
+      "zamiana liczby na string"
+     ],
+     "a": "`to_string(x)` działa dla `int`, `long long`, `double` itd. (dla double daje 6 miejsc po przecinku, np. `\"3.500000\"`). Przydaje się np. do liczenia cyfr albo sprawdzania palindromów liczbowych.",
+     "code": "long long x = 1234567;\nstring s = to_string(x);\ncout << s.size() << '\\n';                               // 7 cyfr\nbool palindrom = string(s.rbegin(), s.rend()) == s;\ncout << palindrom << '\\n';                              // 0"
+    },
+    {
+     "q": [
+      "char na int",
+      "cyfra z chara",
+      "jak zamienić znak na cyfrę",
+      "c - '0'",
+      "char to digit"
+     ],
+     "a": "Znaki cyfr mają kolejne kody ASCII, więc `c - '0'` daje wartość cyfry (0–9). Analogicznie `c - 'a'` to numer małej litery (0–25). Odwrotnie: `char('0' + d)`. Uwaga: `int(c)` daje kod ASCII (np. 55 dla '7'), nie cyfrę!",
+     "code": "string s = \"4096\";\nint suma = 0;\nfor (char c : s) suma += c - '0';\ncout << suma << '\\n';           // 19\nchar c = '0' + 7;               // '7'\ncout << c << ' ' << int('7') << '\\n';   // 7 55"
+    },
+    {
+     "q": [
+      "sklejanie stringów",
+      "łączenie napisów",
+      "konkatenacja string c++",
+      "string plus string",
+      "jak dodać znak do stringa"
+     ],
+     "a": "`s + t` tworzy nowy napis O(|s|+|t|), `s += t` dopisuje na miejscu (zamortyzowane O(|t|)), `s += c` lub `s.push_back(c)` dopisuje znak w O(1). W pętli używaj `+=` — `s = s + c` kopiuje cały napis za każdym razem (O(n²)).",
+     "code": "string s = \"Ala\";\ns += \" ma\";\ns += ' ';\ns.push_back('k');\ns += string(3, 'o');     // \"ooo\"\ncout << s << '\\n';       // Ala ma kooo"
+    },
+    {
+     "q": [
+      "porównywanie stringów",
+      "string compare",
+      "jak porównać dwa napisy",
+      "string == c++",
+      "leksykograficzne porownanie"
+     ],
+     "a": "Operatory `==`, `!=`, `<`, `>` działają na `string` i porównują leksykograficznie (jak w słowniku, wg kodów ASCII: wielkie litery < małe). Koszt O(długość wspólnego prefiksu). Uwaga: \"10\" < \"9\", bo porównuje się znaki, nie liczby.",
+     "code": "string a = \"kot\", b = \"koza\", c = \"Kot\";\ncout << (a < b) << ' ' << (a == c) << ' ' << (c < a) << '\\n';   // 1 0 1\nstring x = \"10\", y = \"9\";\ncout << (x < y) << '\\n';   // 1 — porównanie znaków, nie liczb!"
+    },
+    {
+     "q": [
+      "porównanie dużych liczb jako string",
+      "liczby jako napisy porównanie",
+      "jak porównać liczby w stringach",
+      "big number compare string"
+     ],
+     "a": "Dla liczb bez zer wiodących zapisanych jako napisy: najpierw porównaj długości (dłuższa jest większa), a przy równych długościach — leksykograficznie. To O(n) i działa dla dowolnie dużych liczb.",
+     "code": "auto mniejsza = [](const string& a, const string& b) {\n    if (a.size() != b.size()) return a.size() < b.size();\n    return a < b;\n};\ncout << mniejsza(\"9\", \"10\") << ' ' << mniejsza(\"123\", \"122\") << '\\n';   // 1 0"
+    },
+    {
+     "q": [
+      "małe na duże litery",
+      "toupper string",
+      "zamiana na wielkie litery c++",
+      "tolower cały string",
+      "uppercase string c++"
+     ],
+     "a": "`toupper(c)` / `tolower(c)` działają na pojedynczym znaku i zwracają `int`. Dla całego napisu przejdź pętlą przez referencję albo użyj `transform`. O(n).",
+     "code": "string s = \"Olimpiada\";\nfor (char& c : s) c = toupper(c);\ncout << s << '\\n';                                   // OLIMPIADA\ntransform(s.begin(), s.end(), s.begin(), ::tolower);\ncout << s << '\\n';                                   // olimpiada"
+    },
+    {
+     "q": [
+      "sortowanie znaków w stringu",
+      "sort string",
+      "posortuj litery",
+      "anagram c++",
+      "czy dwa słowa są anagramami"
+     ],
+     "a": "`sort(s.begin(), s.end())` sortuje znaki w O(n log n). Dwa napisy są anagramami, gdy po posortowaniu są równe. Szybciej (O(n)) — porównaj tablice zliczeń liter `int cnt[26]`.",
+     "code": "string a = \"kajak\", b = \"jakak\";\nstring sa = a, sb = b;\nsort(sa.begin(), sa.end());\nsort(sb.begin(), sb.end());\ncout << (sa == sb) << '\\n';      // 1\narray<int, 26> cnt{};\nfor (char c : a) cnt[c - 'a']++;"
+    },
+    {
+     "q": [
+      "palindrom c++",
+      "sprawdź czy string jest palindromem",
+      "czy napis jest palindromem",
+      "palindrome check"
+     ],
+     "a": "Porównaj napis z odwróconym: `s == string(s.rbegin(), s.rend())` — O(n) czasu i pamięci. Bez dodatkowej pamięci: dwa wskaźniki od końców do środka.",
+     "code": "string s = \"kajak\";\nbool p1 = s == string(s.rbegin(), s.rend());\nbool p2 = true;\nfor (int i = 0, j = (int)s.size() - 1; i < j; i++, j--)\n    if (s[i] != s[j]) { p2 = false; break; }\ncout << p1 << p2 << '\\n';   // 11"
+    },
+    {
+     "q": [
+      "string z n znaków",
+      "string(n, c)",
+      "napis z powtórzonym znakiem",
+      "repeat char string c++"
+     ],
+     "a": "Konstruktor `string(n, c)` tworzy napis z n kopii znaku c w O(n). Kolejność argumentów: najpierw liczba, potem znak.",
+     "code": "int n = 5;\nstring kreski(n, '-');      // \"-----\"\nstring pl(3, '.');\ncout << kreski << pl << '\\n';"
+    },
+    {
+     "q": [
+      "\"abc\" + \"def\" błąd",
+      "invalid operands to binary expression const char",
+      "dodawanie literałów string nie działa",
+      "string literal plus"
+     ],
+     "a": "Literały w cudzysłowie to tablice `const char`, a nie `string` — dodanie dwóch to błąd kompilacji, a `\"abc\" + 1` to arytmetyka wskaźników. Zamień przynajmniej jeden składnik na `string`: `string(\"abc\") + \"def\"` albo użyj sufiksu `\"abc\"s` (wymaga `using namespace std`).",
+     "code": "string a = string(\"abc\") + \"def\";\nstring b = \"abc\"s + \"def\";        // sufiks s -> std::string\nstring c = \"x\";\nc = c + \"y\" + \"z\";                // OK: lewa strona to string\ncout << a << ' ' << b << ' ' << c << '\\n';"
+    }
+   ],
+   "related": [
+    "stl-string-methods",
+    "io-fast-io",
+    "io-getline",
+    "str-basic-string-ops",
+    "stl-sort",
+    "cpp-ref-cstring-cstdlib",
+    "cpp-variables-types-intro",
+    "stl-ref-string-all"
+   ]
+  },
+  {
+   "id": "stl-string-methods",
+   "title": "Metody std::string: substr, find, replace, insert, erase, compare",
+   "category": "STL kontenery",
+   "tags": [
+    "string",
+    "substr",
+    "find",
+    "rfind",
+    "replace",
+    "insert",
+    "erase",
+    "npos",
+    "split",
+    "stringstream"
+   ],
+   "aliases": [
+    "substr",
+    "string find",
+    "string replace",
+    "string erase",
+    "string insert",
+    "npos",
+    "split string c++",
+    "podciąg c++",
+    "metody stringa",
+    "string::npos",
+    "find w stringu"
+   ],
+   "summary": "Szczegółowy opis metod `std::string` z ich złożonościami: wycinanie (`substr`), szukanie (`find`, `rfind`, `find_first_of`), modyfikacje (`replace`, `insert`, `erase`), porównania (`compare`, `starts_with`) i dzielenie napisu.",
+   "complexity": "substr: O(len); find: O(n·m) pesymistycznie; insert/erase/replace: O(n); c_str/size: O(1)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Wszystkie pozycje w metodach `string` to indeksy od 0. Metody szukające zwracają pozycję albo stałą `string::npos` (największa wartość `size_t`), gdy nic nie znaleziono — **zawsze porównuj z `npos`**, a nie z −1 czy 0."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "substr, find, rfind, replace, insert, erase",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s = \"ala ma kota, kot ma ale\";\n    cout << s.substr(4, 2) << '\\n';          // \"ma\"\n    cout << s.substr(17) << '\\n';            // od pozycji 17 do końca: \"ma ale\"\n\n    size_t p = s.find(\"kot\");\n    if (p != string::npos) cout << \"pierwszy kot na \" << p << '\\n';   // 7\n    cout << \"ostatni kot na \" << s.rfind(\"kot\") << '\\n';            // 13\n\n    int ile = 0;                                 // zliczanie wystąpień\n    for (size_t q = s.find(\"ma\"); q != string::npos; q = s.find(\"ma\", q + 1)) ile++;\n    cout << \"ma wystepuje \" << ile << \" razy\\n\";  // 2\n\n    s.replace(0, 3, \"Ola\");                      // \"Ola ma kota, ...\"\n    s.insert(0, \">> \");                          // \">> Ola ma kota, ...\"\n    s.erase(0, 3);                               // usuń 3 znaki od 0\n    cout << s << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Metoda",
+      "Złożoność",
+      "Zwraca / uwagi"
+     ],
+     "rows": [
+      [
+       "`s.substr(pos, len)`",
+       "O(len)",
+       "nowy napis; `len` domyślnie do końca; `pos > size` → wyjątek"
+      ],
+      [
+       "`s.find(t, pos)`",
+       "O(n·m) pesymistycznie",
+       "pozycja pierwszego wystąpienia ≥ pos albo `npos`"
+      ],
+      [
+       "`s.rfind(t)`",
+       "O(n·m) pesymistycznie",
+       "pozycja ostatniego wystąpienia albo `npos`"
+      ],
+      [
+       "`s.find_first_of(\"abc\")`",
+       "O(n·k)",
+       "pierwszy znak należący do zbioru"
+      ],
+      [
+       "`s.find_first_not_of(\" \")`",
+       "O(n·k)",
+       "pierwszy znak spoza zbioru (np. pominięcie spacji)"
+      ],
+      [
+       "`s.replace(pos, len, t)`",
+       "O(n + |t|)",
+       "zastępuje fragment"
+      ],
+      [
+       "`s.insert(pos, t)`",
+       "O(n + |t|)",
+       "przesuwa resztę w prawo"
+      ],
+      [
+       "`s.erase(pos, len)`",
+       "O(n)",
+       "przesuwa resztę w lewo; `s.erase(pos)` usuwa do końca"
+      ],
+      [
+       "`s.compare(t)`",
+       "O(min)",
+       "<0, 0, >0"
+      ],
+      [
+       "`s.starts_with(t)`, `s.ends_with(t)`",
+       "O(|t|)",
+       "C++20"
+      ],
+      [
+       "`s.c_str()`",
+       "O(1)",
+       "`const char*` zakończony zerem (dla printf/scanf)"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Dzielenie napisu (split).** C++ nie ma gotowego `split`. Po białych znakach dzieli `stringstream` + `>>`, po dowolnym separatorze — `getline(ss, token, separator)`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Split po spacjach i po przecinku",
+     "code": "string linia = \"3 14 15 92\";\nstringstream ss(linia);\nvector<int> liczby;\nint x;\nwhile (ss >> x) liczby.push_back(x);      // {3, 14, 15, 92}\n\nstring csv = \"ala,ola,,ela\";\nstringstream ss2(csv);\nstring tok;\nvector<string> czesci;\nwhile (getline(ss2, tok, ',')) czesci.push_back(tok);   // {\"ala\",\"ola\",\"\",\"ela\"}\ncout << liczby.size() << ' ' << czesci.size() << '\\n';   // 4 4"
+    },
+    {
+     "type": "warn",
+     "md": "`find` w napisie to naiwne wyszukiwanie — pesymistycznie O(n·m). Dla tekstu 10^6 i wzorca 10^3 w złośliwym przypadku to za wolno. Do wyszukiwania wzorca w dużych tekstach użyj KMP, funkcji Z albo haszowania."
+    },
+    {
+     "type": "tip",
+     "md": "`substr` tworzy kopię — w pętli po wszystkich podnapisach daje O(n²) pamięci/czasu. Gdy tylko porównujesz fragmenty, użyj `string_view` albo porównuj indeksami (`s.compare(pos, len, t)`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "s.substr(pos, len = npos)",
+     "desc": "podnapis od pos o długości len (lub do końca)",
+     "complexity": "O(len)",
+     "returns": "string",
+     "example": "string t = s.substr(2, 3);"
+    },
+    {
+     "sig": "s.find(t, pos = 0)",
+     "desc": "pierwsze wystąpienie t (napis lub znak) od pozycji pos",
+     "complexity": "O(n·m) pesymistycznie",
+     "returns": "size_t albo string::npos",
+     "example": "if (s.find(\"ab\") != string::npos) ..."
+    },
+    {
+     "sig": "s.rfind(t, pos = npos)",
+     "desc": "ostatnie wystąpienie t zaczynające się ≤ pos",
+     "complexity": "O(n·m) pesymistycznie",
+     "returns": "size_t albo npos"
+    },
+    {
+     "sig": "s.find_first_of(chars, pos = 0)",
+     "desc": "pierwszy znak należący do zbioru chars",
+     "complexity": "O(n·k)",
+     "returns": "size_t albo npos"
+    },
+    {
+     "sig": "s.find_last_of(chars)",
+     "desc": "ostatni znak należący do zbioru chars",
+     "complexity": "O(n·k)",
+     "returns": "size_t albo npos"
+    },
+    {
+     "sig": "s.find_first_not_of(chars) / s.find_last_not_of(chars)",
+     "desc": "pierwszy/ostatni znak spoza zbioru (trim)",
+     "complexity": "O(n·k)",
+     "returns": "size_t albo npos"
+    },
+    {
+     "sig": "s.replace(pos, len, t)",
+     "desc": "zastępuje s[pos, pos+len) napisem t",
+     "complexity": "O(n + |t|)",
+     "returns": "string&"
+    },
+    {
+     "sig": "s.insert(pos, t) / s.insert(pos, k, c)",
+     "desc": "wstawia napis / k znaków c przed pozycją pos",
+     "complexity": "O(n + |t|)",
+     "returns": "string&"
+    },
+    {
+     "sig": "s.erase(pos, len = npos)",
+     "desc": "usuwa len znaków od pos (domyślnie do końca)",
+     "complexity": "O(n)",
+     "returns": "string&"
+    },
+    {
+     "sig": "s.erase(it) / s.erase(first, last)",
+     "desc": "usuwa znak / zakres wskazany iteratorami",
+     "complexity": "O(n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "s.append(t) / s += t",
+     "desc": "dopisuje na końcu",
+     "complexity": "O(|t|) zamortyzowane",
+     "returns": "string&"
+    },
+    {
+     "sig": "s.compare(t)",
+     "desc": "porównanie: <0 gdy s<t, 0 gdy równe, >0 gdy s>t",
+     "complexity": "O(min(|s|,|t|))",
+     "returns": "int"
+    },
+    {
+     "sig": "s.compare(pos, len, t)",
+     "desc": "porównuje fragment s[pos, pos+len) z t bez kopiowania",
+     "complexity": "O(len)",
+     "returns": "int"
+    },
+    {
+     "sig": "s.starts_with(t) / s.ends_with(t)",
+     "desc": "C++20: czy zaczyna / kończy się t",
+     "complexity": "O(|t|)",
+     "returns": "bool"
+    },
+    {
+     "sig": "s.c_str() / s.data()",
+     "desc": "wskaźnik const char* na napis zakończony '\\0'",
+     "complexity": "O(1)",
+     "returns": "const char*"
+    },
+    {
+     "sig": "getline(cin, s, delim = '\\n')",
+     "desc": "wczytuje do separatora (domyślnie końca linii)",
+     "complexity": "O(długość)",
+     "returns": "istream&"
+    },
+    {
+     "sig": "stringstream ss(s); ss >> x",
+     "desc": "czytanie z napisu jak z cin (split po białych znakach)",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Wynik `find` porównuj z `string::npos`, nie z −1 ani 0: `if (s.find(t))` jest prawdziwe, gdy t NIE jest na pozycji 0 (także gdy go nie ma!).",
+    "Zapis wyniku `find` do `int` działa przypadkiem (npos → −1), ale to niejawna konwersja — trzymaj go w `size_t` albo `auto`.",
+    "`s.substr(pos, len)` przyjmuje DŁUGOŚĆ, a nie indeks końca (inaczej niż w Pythonie `s[a:b]`). Fragment [a, b) to `s.substr(a, b - a)`.",
+    "`s.substr(pos)` z `pos > s.size()` rzuca wyjątek `out_of_range` (RE); `pos == s.size()` daje pusty napis.",
+    "`s.erase(i)` z jednym liczbowym argumentem usuwa WSZYSTKO od pozycji i do końca. Jeden znak: `s.erase(i, 1)` albo `s.erase(s.begin() + i)`.",
+    "`insert`, `erase`, `replace` w środku napisu kosztują O(n) — wiele takich operacji w pętli daje O(n²).",
+    "`find` jest naiwne (O(n·m) pesymistycznie) — do dużych tekstów użyj KMP/Z/haszowania.",
+    "`starts_with`/`ends_with` są od C++20; `contains` dla string dopiero w C++23."
+   ],
+   "qa": [
+    {
+     "q": [
+      "substr c++",
+      "jak wyciąć fragment stringa",
+      "podciąg string",
+      "substring c++",
+      "substr jak dziala"
+     ],
+     "a": "`s.substr(pos, len)` zwraca kopię `len` znaków od pozycji `pos` (O(len)). Drugi argument to **długość**, nie indeks końca: fragment [a, b) to `s.substr(a, b - a)`. Pominięcie `len` daje resztę napisu do końca. `pos > s.size()` → wyjątek.",
+     "code": "string s = \"informatyka\";\ncout << s.substr(2, 5) << '\\n';     // \"forma\"\ncout << s.substr(7) << '\\n';        // \"tyka\"\nint a = 2, b = 7;\ncout << s.substr(a, b - a) << '\\n'; // [2, 7) -> \"forma\""
+    },
+    {
+     "q": [
+      "find w stringu",
+      "jak znaleźć podciąg w stringu",
+      "string find npos",
+      "czy string zawiera",
+      "string contains c++"
+     ],
+     "a": "`s.find(t)` zwraca pozycję pierwszego wystąpienia `t` albo `string::npos`, gdy go nie ma. Sprawdzenie „czy zawiera”: `s.find(t) != string::npos`. Złożoność pesymistyczna O(|s|·|t|). Metoda `contains` jest dopiero w C++23.",
+     "code": "string s = \"abrakadabra\";\nsize_t p = s.find(\"kad\");\nif (p != string::npos) cout << \"jest na pozycji \" << p << '\\n';   // 4\ncout << (s.find(\"xyz\") == string::npos) << '\\n';                  // 1\ncout << s.find('a', 1) << '\\n';                                   // 3 — szukaj od pozycji 1"
+    },
+    {
+     "q": [
+      "string npos",
+      "co to jest npos",
+      "string::npos",
+      "find zwraca dziwną liczbę",
+      "find returns 18446744073709551615"
+     ],
+     "a": "`string::npos` to największa wartość typu `size_t` (2^64 − 1). Metody `find`, `rfind`, `find_first_of` zwracają ją, gdy nic nie znalazły — stąd „dziwna” liczba przy wypisaniu. Zawsze porównuj wynik z `string::npos`.",
+     "code": "string s = \"abc\";\nauto p = s.find('z');\nif (p == string::npos) cout << \"brak\\n\";\ncout << (string::npos == size_t(-1)) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "wszystkie wystąpienia w stringu",
+      "zlicz wystąpienia podciągu",
+      "find w pętli",
+      "count substring occurrences c++"
+     ],
+     "a": "Szukaj w pętli od pozycji po poprzednim trafieniu: `p = s.find(t, p + 1)` (z nakładaniem) albo `p + t.size()` (bez nakładania). Pesymistycznie O(|s|·|t|); dla dużych danych użyj KMP.",
+     "code": "string s = \"aaaa\", t = \"aa\";\nint nakl = 0, bez = 0;\nfor (size_t p = s.find(t); p != string::npos; p = s.find(t, p + 1)) nakl++;\nfor (size_t p = s.find(t); p != string::npos; p = s.find(t, p + t.size())) bez++;\ncout << nakl << ' ' << bez << '\\n';   // 3 2"
+    },
+    {
+     "q": [
+      "string replace",
+      "zamień fragment stringa",
+      "jak zamienić wszystkie wystąpienia w stringu",
+      "replace all c++ string"
+     ],
+     "a": "`s.replace(pos, len, t)` zastępuje `len` znaków od `pos` napisem `t` (O(n)). Nie ma wbudowanego „replace all” — trzeba szukać w pętli. Szybciej (O(n)) jest zbudować nowy napis jednym przejściem. Zamiana pojedynczych znaków: `replace(s.begin(), s.end(), 'a', 'b')` z `<algorithm>`.",
+     "code": "string s = \"kot i kot\";\nstring z = \"kot\", na = \"pies\";\nfor (size_t p = s.find(z); p != string::npos; p = s.find(z, p + na.size()))\n    s.replace(p, z.size(), na);\ncout << s << '\\n';                              // pies i pies\nreplace(s.begin(), s.end(), ' ', '_');          // znak na znak\ncout << s << '\\n';                              // pies_i_pies"
+    },
+    {
+     "q": [
+      "string erase",
+      "usuń znak ze stringa",
+      "jak usunąć znak z napisu",
+      "string remove character",
+      "usuń spacje ze stringa"
+     ],
+     "a": "`s.erase(pos, len)` usuwa `len` znaków od `pos` (O(n)); **`s.erase(pos)` bez długości usuwa wszystko do końca**. Jeden znak: `s.erase(i, 1)`. Wszystkie wystąpienia znaku: erase–remove albo C++20 `erase(s, c)`.",
+     "code": "string s = \"a b c d\";\nstring t = s;\nt.erase(1, 1);                                   // \"ab c d\"\nerase(s, ' ');                                   // C++20: \"abcd\"\nstring u = \"x-y-z\";\nu.erase(remove(u.begin(), u.end(), '-'), u.end());   // \"xyz\"\ncout << t << ' ' << s << ' ' << u << '\\n';"
+    },
+    {
+     "q": [
+      "string insert",
+      "wstaw znak do stringa",
+      "jak wstawić tekst w środek napisu",
+      "string insert at position"
+     ],
+     "a": "`s.insert(pos, t)` wstawia napis `t` przed pozycją `pos`; `s.insert(pos, k, c)` — k kopii znaku. Koszt O(n), bo reszta napisu się przesuwa. Dopisywanie na końcu (`+=`) jest O(1) zamortyzowane, więc gdy się da, buduj napis od początku do końca.",
+     "code": "string s = \"Olimpiada\";\ns.insert(0, \"XXXII \");      // \"XXXII Olimpiada\"\ns.insert(s.size(), 1, '!'); // dopisz '!' na końcu\ncout << s << '\\n';"
+    },
+    {
+     "q": [
+      "split string c++",
+      "jak podzielić string na słowa",
+      "rozdziel napis po spacji",
+      "stringstream split",
+      "podziel string po przecinku"
+     ],
+     "a": "C++ nie ma `split`. Po białych znakach: `stringstream ss(s); while (ss >> slowo) ...`. Po dowolnym znaku: `while (getline(ss, tok, ','))`. Oba O(n). Uwaga: `stringstream` jest dość wolny — przy milionach tokenów lepiej przejść napis ręcznie.",
+     "code": "string s = \"ala ma  kota\";\nstringstream ss(s);\nvector<string> slowa;\nstring w;\nwhile (ss >> w) slowa.push_back(w);        // {\"ala\",\"ma\",\"kota\"} — wiele spacji OK\nstring data = \"2024-11-09\";\nstringstream ds(data);\nvector<int> czesci;\nstring t;\nwhile (getline(ds, t, '-')) czesci.push_back(stoi(t));   // {2024, 11, 9}\ncout << slowa.size() << ' ' << czesci[1] << '\\n';"
+    },
+    {
+     "q": [
+      "string compare",
+      "compare zwraca",
+      "s.compare(t)",
+      "porównanie fragmentu stringa bez kopiowania"
+     ],
+     "a": "`s.compare(t)` zwraca liczbę ujemną, 0 albo dodatnią (jak `strcmp`). Wersja `s.compare(pos, len, t)` porównuje fragment `s` z `t` **bez tworzenia kopii** (w odróżnieniu od `s.substr(pos, len) == t`). Złożoność O(len).",
+     "code": "string s = \"abcdef\", t = \"cde\";\ncout << (s.compare(2, 3, t) == 0) << '\\n';   // 1 — s[2..4] == \"cde\"\ncout << (string(\"ab\").compare(\"ac\") < 0) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "starts_with c++",
+      "czy string zaczyna się od",
+      "ends_with",
+      "string prefix check",
+      "sprawdź prefiks napisu"
+     ],
+     "a": "W C++20 są metody `s.starts_with(t)` i `s.ends_with(t)` (O(|t|)). W starszych standardach: `s.rfind(t, 0) == 0` (prefiks) albo `s.compare(0, t.size(), t) == 0` przy `s.size() >= t.size()`.",
+     "code": "string s = \"olimpiada.cpp\";\ncout << s.starts_with(\"olim\") << s.ends_with(\".cpp\") << '\\n';   // 11\nbool pref = s.rfind(\"oli\", 0) == 0;                             // sposób sprzed C++20\ncout << pref << '\\n';"
+    },
+    {
+     "q": [
+      "c_str",
+      "string do printf",
+      "printf string c++",
+      "jak wypisać string printfem",
+      "scanf string"
+     ],
+     "a": "`printf(\"%s\", s)` z obiektem `string` to UB — `printf` oczekuje `const char*`. Użyj `s.c_str()` (O(1)). `scanf` nie wczyta bezpośrednio do `string`: wczytaj do tablicy `char buf[N]` i zrób `string s = buf;`.",
+     "code": "string s = \"wynik\";\nprintf(\"%s %d\\n\", s.c_str(), 42);\nchar buf[105];\nif (scanf(\"%104s\", buf) == 1) {\n    string t = buf;\n    printf(\"%zu\\n\", t.size());\n}"
+    },
+    {
+     "q": [
+      "trim string c++",
+      "usuń spacje z początku i końca",
+      "obetnij białe znaki",
+      "strip string c++"
+     ],
+     "a": "Znajdź pierwszy i ostatni znak niebędący spacją przez `find_first_not_of` / `find_last_not_of`, potem `substr`. Sprawdź `npos` — napis może składać się z samych spacji. O(n).",
+     "code": "string s = \"   ala ma kota  \";\nsize_t a = s.find_first_not_of(\" \\t\\r\\n\");\nsize_t b = s.find_last_not_of(\" \\t\\r\\n\");\nstring t = (a == string::npos) ? \"\" : s.substr(a, b - a + 1);\ncout << '[' << t << \"]\\n\";   // [ala ma kota]"
+    }
+   ],
+   "related": [
+    "stl-string",
+    "str-kmp",
+    "str-hashing",
+    "io-getline",
+    "io-fast-io",
+    "io-read-separated",
+    "cpp-ref-cstring-cstdlib",
+    "stl-ref-string-all"
+   ]
+  },
+  {
+   "id": "stl-pair",
+   "title": "std::pair — para wartości",
+   "category": "STL kontenery",
+   "tags": [
+    "pair",
+    "para",
+    "make_pair",
+    "first",
+    "second",
+    "sortowanie par"
+   ],
+   "aliases": [
+    "pair",
+    "std::pair",
+    "pair cpp",
+    "para c++",
+    "make_pair",
+    "pary",
+    "pair<int,int>",
+    "first second"
+   ],
+   "summary": "Para dwóch wartości (`first`, `second`) z wbudowanym porównaniem leksykograficznym. Używana do krawędzi, punktów, par (wartość, indeks) i w kolejkach priorytetowych (Dijkstra).",
+   "complexity": "tworzenie, dostęp: O(1); porównanie: O(1) dla typów prostych",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`pair<A, B>` przechowuje `first` typu A i `second` typu B. Porównanie `<` jest **leksykograficzne**: najpierw `first`, przy remisie `second`. Dzięki temu `sort` na `vector<pair<...>>` sortuje po pierwszym elemencie, a remisy po drugim — bez pisania komparatora."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Sortowanie par (wartość, indeks)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n = 5;\n    vector<int> a = {40, 10, 30, 10, 20};\n    vector<pair<int, int>> p;               // (wartość, indeks)\n    for (int i = 0; i < n; i++) p.push_back({a[i], i});\n    sort(p.begin(), p.end());               // po wartości, remis -> po indeksie\n    for (auto [val, idx] : p) cout << val << \"@\" << idx << ' ';\n    cout << '\\n';                           // 10@1 10@3 20@4 30@2 40@0\n\n    pair<string, int> osoba = make_pair(\"Ala\", 17);\n    cout << osoba.first << ' ' << osoba.second << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zapis",
+      "Znaczenie"
+     ],
+     "rows": [
+      [
+       "`pair<int,int> p = {1, 2};`",
+       "utworzenie"
+      ],
+      [
+       "`make_pair(a, b)`",
+       "utworzenie z dedukcją typów"
+      ],
+      [
+       "`p.first`, `p.second`",
+       "dostęp do elementów"
+      ],
+      [
+       "`auto [x, y] = p;`",
+       "rozpakowanie (C++17)"
+      ],
+      [
+       "`p < q`",
+       "porównanie leksykograficzne"
+      ],
+      [
+       "`swap(p.first, p.second)`",
+       "zamiana elementów"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Do sortowania malejąco po jednym kluczu, a rosnąco po drugim, nie musisz pisać komparatora: wstaw do pary wartość ujemną, np. `{-punkty, imie}`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "pair<A, B> p;",
+     "desc": "para wartości domyślnych (0, 0)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "pair<A, B> p = {a, b}; / pair<A, B> p(a, b);",
+     "desc": "utworzenie z wartościami",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "make_pair(a, b)",
+     "desc": "tworzy parę, typy dedukowane z argumentów",
+     "complexity": "O(1)",
+     "returns": "pair<A, B>"
+    },
+    {
+     "sig": "p.first / p.second",
+     "desc": "pierwszy / drugi element",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "p == q, p != q, p < q, p > q, p <= q, p >= q",
+     "desc": "porównania leksykograficzne",
+     "complexity": "O(1) dla prostych typów",
+     "returns": "bool"
+    },
+    {
+     "sig": "auto [x, y] = p;",
+     "desc": "structured bindings (C++17)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "tie(x, y) = p;",
+     "desc": "rozpakowanie do istniejących zmiennych",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "swap(p, q)",
+     "desc": "zamiana par",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`pair<int,int>` nie ma domyślnego haszowania — `unordered_map<pair<int,int>, int>` się nie skompiluje bez własnego hasha (albo zakoduj parę jako `long long`).",
+    "Sortowanie par sortuje najpierw po `first` — jeśli chcesz po `second`, napisz komparator albo zamień kolejność w parze.",
+    "`make_pair(1, 2LL)` daje `pair<int, long long>`; przy mieszaniu typów (np. `pair<int,int>` z `long long`) może dojść do niejawnego obcięcia.",
+    "W `priority_queue<pair<int,int>>` największa jest para o największym `first` — w Dijkstrze trzeba min-kopca albo ujemnych odległości."
+   ],
+   "qa": [
+    {
+     "q": [
+      "pair c++ jak używać",
+      "pair cpp",
+      "co to jest pair",
+      "para w c++",
+      "how to use pair c++"
+     ],
+     "a": "`pair<A, B>` to struktura z polami `first` i `second`. Tworzysz ją przez `{a, b}` albo `make_pair(a, b)`. Wszystkie operacje są O(1). Pary mają wbudowane porównania leksykograficzne, więc działają w `sort`, `set`, `map` i `priority_queue` bez dodatkowego kodu.",
+     "code": "pair<int, int> p = {3, 7};\nauto q = make_pair(3, 5);\ncout << p.first + p.second << '\\n';   // 10\ncout << (q < p) << '\\n';              // 1 (3 == 3, 5 < 7)"
+    },
+    {
+     "q": [
+      "sortowanie par",
+      "sort vector par",
+      "jak posortować pary",
+      "sort pairs c++",
+      "sortowanie vectora par po pierwszym"
+     ],
+     "a": "`sort(v.begin(), v.end())` na `vector<pair<A,B>>` sortuje rosnąco po `first`, a przy równych `first` — po `second` (O(n log n)). Malejąco: `sort(v.rbegin(), v.rend())` albo `greater<>()`.",
+     "code": "vector<pair<int, int>> v = {{2, 1}, {1, 5}, {2, 0}};\nsort(v.begin(), v.end());                       // (1,5) (2,0) (2,1)\nsort(v.begin(), v.end(), greater<pair<int,int>>());   // (2,1) (2,0) (1,5)\nfor (auto [a, b] : v) cout << a << ',' << b << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "sortowanie par po drugim elemencie",
+      "sort by second",
+      "sort pair po second",
+      "posortuj pary po second"
+     ],
+     "a": "Podaj lambdę porównującą `second`: `[](auto& a, auto& b){ return a.second < b.second; }`. Jeśli przy remisach potrzebujesz dalszego klucza, porównaj go jawnie (inaczej kolejność remisów jest dowolna; `stable_sort` zachowa wejściową).",
+     "code": "vector<pair<string, int>> v = {{\"Ala\", 5}, {\"Bob\", 3}, {\"Cyp\", 5}};\nsort(v.begin(), v.end(), [](const auto& a, const auto& b) {\n    if (a.second != b.second) return a.second > b.second;   // punkty malejąco\n    return a.first < b.first;                                // imię rosnąco\n});\nfor (auto& [imie, pkt] : v) cout << imie << ' ' << pkt << '\\n';"
+    },
+    {
+     "q": [
+      "pair jako klucz map",
+      "map z parą",
+      "map<pair<int,int>,int>",
+      "set par",
+      "set<pair<int,int>>"
+     ],
+     "a": "`map` i `set` z kluczem `pair` działają od razu (używają `operator<` pary), operacje O(log n). Natomiast `unordered_map<pair<int,int>, ...>` wymaga własnego hasha — prościej zakodować parę jako `1LL * x * M + y`.",
+     "code": "map<pair<int, int>, int> siatka;\nsiatka[{1, 2}] = 5;\nsiatka[{0, 0}]++;\nset<pair<int, int>> pkt = {{1, 1}, {0, 3}};\ncout << siatka[{1, 2}] << ' ' << pkt.count({0, 3}) << '\\n';   // 5 1"
+    },
+    {
+     "q": [
+      "make_pair czy klamry",
+      "make_pair vs {}",
+      "czy używać make_pair",
+      "pair initialization braces"
+     ],
+     "a": "Oba są równoważne. `{a, b}` jest krótsze i dopasowuje się do docelowego typu (np. `v.push_back({1, 2})`). `make_pair` dedukuje typy z argumentów — przydaje się z `auto`, ale uważaj: `make_pair(1, 2)` to `pair<int,int>` nawet jeśli potrzebujesz `long long`.",
+     "code": "vector<pair<long long, int>> v;\nv.push_back({10000000000LL, 1});\nv.push_back(make_pair(5LL, 2));\nauto p = make_pair(1, 'x');     // pair<int, char>\ncout << v.size() << ' ' << p.second << '\\n';"
+    },
+    {
+     "q": [
+      "auto [a, b] pair",
+      "rozpakowanie pary",
+      "structured binding pair",
+      "jak wyciągnąć first i second"
+     ],
+     "a": "Od C++17: `auto [a, b] = p;` tworzy kopie `first` i `second` pod nowymi nazwami; `auto& [a, b] = p;` daje referencje (zmiana `a` zmienia `p.first`). Szczególnie wygodne w pętli po mapie lub vectorze par.",
+     "code": "map<string, int> wiek = {{\"Ala\", 17}, {\"Ola\", 16}};\nfor (auto& [imie, w] : wiek) w++;           // modyfikuje wartości w mapie\nfor (const auto& [imie, w] : wiek) cout << imie << ' ' << w << '\\n';"
+    },
+    {
+     "q": [
+      "pair w priority_queue",
+      "kolejka priorytetowa par",
+      "priority_queue pair min",
+      "dijkstra pair"
+     ],
+     "a": "`priority_queue<pair<long long,int>>` zwraca największą parę (po `first`). Dla Dijkstry potrzebny jest min-kopiec: `priority_queue<pair<long long,int>, vector<pair<long long,int>>, greater<>> pq;`. Operacje push/pop: O(log n).",
+     "code": "priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;\npq.push({5, 1});\npq.push({2, 3});\npq.push({7, 2});\nauto [d, v] = pq.top();\ncout << d << ' ' << v << '\\n';   // 2 3 — najmniejsza odległość"
+    },
+    {
+     "q": [
+      "jak porównują się pary",
+      "porównanie par c++",
+      "pair operator<",
+      "pair comparison c++"
+     ],
+     "a": "Pary porównują się leksykograficznie: najpierw `first`, a tylko przy równych `first` — `second`. Dlatego (1, 9) < (2, 0) oraz (2, 1) < (2, 5). `==` wymaga równości obu pól. Koszt porównania: O(1) dla typów prostych.",
+     "code": "pair<int, int> a = {1, 9}, b = {2, 0}, c = {2, 5};\ncout << (a < b) << (b < c) << (b == c) << '\\n';   // 110\ncout << (max(a, c) == c) << '\\n';                 // 1"
+    },
+    {
+     "q": [
+      "wczytywanie par",
+      "cin pair",
+      "jak wczytać parę",
+      "wczytaj n par liczb",
+      "read pairs c++"
+     ],
+     "a": "`cin >> p` dla pary nie działa (brak `operator>>`) — wczytaj pola osobno: `cin >> p.first >> p.second`. W pętli po vectorze par wygodnie użyć structured bindings z referencją.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n = 0;\n    cin >> n;\n    vector<pair<int, int>> v(n);\n    for (auto& [a, b] : v) cin >> a >> b;     // referencje do pól\n    sort(v.begin(), v.end());\n    for (auto [a, b] : v) cout << a << ' ' << b << '\\n';\n}"
+    },
+    {
+     "q": [
+      "zamień first i second",
+      "odwróć parę",
+      "swap pair elements",
+      "pary odwrotnie second first"
+     ],
+     "a": "`swap(p.first, p.second)` zamienia pola jednej pary (wymaga tego samego typu obu pól). Żeby odwrócić wszystkie pary w vectorze (np. przed sortowaniem po drugim polu), zrób to w pętli z `auto&`.",
+     "code": "vector<pair<int, int>> v = {{1, 30}, {2, 10}};\nfor (auto& p : v) swap(p.first, p.second);   // (30,1) (10,2)\nsort(v.begin(), v.end());                    // po dawnym second\ncout << v[0].second << '\\n';                 // 2"
+    }
+   ],
+   "related": [
+    "stl-tuple",
+    "stl-sort",
+    "stl-map",
+    "stl-priority-queue",
+    "cpp-modern-cpp",
+    "stl-unordered-map",
+    "cpp-functions",
+    "cpp-ref-utility-optional",
+    "oi-py-cpp-equivalents"
+   ]
+  },
+  {
+   "id": "stl-tuple",
+   "title": "std::tuple, tie i structured bindings",
+   "category": "STL kontenery",
+   "tags": [
+    "tuple",
+    "krotka",
+    "tie",
+    "make_tuple",
+    "get",
+    "structured bindings"
+   ],
+   "aliases": [
+    "tuple",
+    "std::tuple",
+    "tuple cpp",
+    "krotka c++",
+    "tie c++",
+    "make_tuple",
+    "get<0>",
+    "trojka c++"
+   ],
+   "summary": "Krotka dowolnej liczby wartości różnych typów z porównaniem leksykograficznym. `tie` pozwala rozpakować krotkę do zmiennych i zgrabnie pisać komparatory po kilku kluczach.",
+   "complexity": "tworzenie, get, porównanie: O(liczba pól) = O(1)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`tuple<A, B, C>` to uogólnienie `pair` na więcej elementów. Dostęp przez `get<i>(t)` (i musi być stałą), rozpakowanie przez `auto [a, b, c] = t;` (C++17) lub `tie(a, b, c) = t;`. Porównanie `<` jest leksykograficzne."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "tie w komparatorze i get",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Zawodnik {\n    string imie;\n    int punkty, czas;\n};\n\nint main() {\n    vector<Zawodnik> z = {{\"Ala\", 300, 50}, {\"Bob\", 300, 40}, {\"Cyp\", 250, 10}};\n    // więcej punktów lepiej, przy remisie mniejszy czas, potem imię\n    sort(z.begin(), z.end(), [](const Zawodnik& a, const Zawodnik& b) {\n        return tie(b.punkty, a.czas, a.imie) < tie(a.punkty, b.czas, b.imie);\n    });\n    for (auto& [imie, p, c] : z) cout << imie << ' ' << p << ' ' << c << '\\n';\n    // Bob 300 40 / Ala 300 50 / Cyp 250 10\n\n    tuple<int, string, double> t = {1, \"x\", 2.5};\n    cout << get<0>(t) << ' ' << get<1>(t) << ' ' << get<2>(t) << '\\n';\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Sztuczka z `tie`:** `tie(a.x, a.y) < tie(b.x, b.y)` porównuje leksykograficznie bez kopiowania pól (tworzy krotkę referencji). Zamiana `a` i `b` przy wybranym polu odwraca kolejność tylko dla tego klucza — w przykładzie wyżej `b.punkty` po lewej stronie oznacza sortowanie punktów **malejąco**."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zapis",
+      "Znaczenie"
+     ],
+     "rows": [
+      [
+       "`make_tuple(a, b, c)`",
+       "utworzenie z dedukcją typów"
+      ],
+      [
+       "`get<1>(t)`",
+       "drugi element (indeks stały)"
+      ],
+      [
+       "`auto [a, b, c] = t;`",
+       "rozpakowanie (kopie)"
+      ],
+      [
+       "`tie(a, b) = p;`",
+       "przypisanie do istniejących zmiennych"
+      ],
+      [
+       "`tie(a, ignore) = p;`",
+       "pominięcie pola"
+      ],
+      [
+       "`tuple_size<decltype(t)>::value`",
+       "liczba pól"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Dla czytelności w większym kodzie lepszy jest `struct` z nazwanymi polami — `get<2>(t)` łatwo pomylić. Krotki są wygodne na szybkie stany (np. `tuple<long long,int,int>` w Dijkstrze po siatce)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "tuple<A, B, C> t = {a, b, c};",
+     "desc": "utworzenie krotki",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "make_tuple(a, b, c)",
+     "desc": "utworzenie z dedukcją typów",
+     "complexity": "O(1)",
+     "returns": "tuple<...>"
+    },
+    {
+     "sig": "get<i>(t)",
+     "desc": "i-ty element (i — stała czasu kompilacji)",
+     "complexity": "O(1)",
+     "returns": "referencja"
+    },
+    {
+     "sig": "auto [a, b, c] = t;",
+     "desc": "structured bindings (C++17)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "tie(a, b, c) = t;",
+     "desc": "rozpakowanie do istniejących zmiennych",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "tie(x1, y1) < tie(x2, y2)",
+     "desc": "porównanie leksykograficzne bez kopiowania",
+     "complexity": "O(liczba pól)",
+     "returns": "bool"
+    },
+    {
+     "sig": "ignore",
+     "desc": "zaślepka w tie dla pomijanego pola",
+     "complexity": "O(1)",
+     "example": "tie(a, ignore, c) = t;"
+    },
+    {
+     "sig": "tuple_size<T>::value",
+     "desc": "liczba elementów krotki",
+     "complexity": "O(1) (stała)"
+    },
+    {
+     "sig": "t1 < t2, t1 == t2",
+     "desc": "porównania leksykograficzne",
+     "complexity": "O(liczba pól)",
+     "returns": "bool"
+    }
+   ],
+   "pitfalls": [
+    "`get<i>(t)` wymaga stałej — `get<k>(t)` ze zmienną `k` się nie skompiluje.",
+    "`tie(...)` wiąże referencje — nie podawaj tam wartości tymczasowych (`tie(a + 1, b)` nie zadziała).",
+    "W komparatorze z `tie` łatwo pomylić strony; zamiana `a`↔`b` dotyczy tylko konkretnego pola i odwraca porządek tylko dla niego.",
+    "Krotki z wieloma polami w `priority_queue` są porównywane po wszystkich polach — to poprawne, ale nieco wolniejsze niż porównanie samego klucza."
+   ],
+   "qa": [
+    {
+     "q": [
+      "tuple c++",
+      "jak używać tuple",
+      "krotka c++",
+      "tuple cpp przykład",
+      "how to use tuple"
+     ],
+     "a": "`tuple<int, int, int> t = {a, b, c};` przechowuje trzy wartości; dostęp `get<0>(t)` albo rozpakowanie `auto [x, y, z] = t;`. Porównania są leksykograficzne (O(liczba pól)), więc krotki działają w `sort`, `set`, `map`, `priority_queue`.",
+     "code": "tuple<int, int, int> t = {3, 1, 4};\ncout << get<0>(t) << get<1>(t) << get<2>(t) << '\\n';   // 314\nauto [a, b, c] = t;\ncout << a + b + c << '\\n';                              // 8\nvector<tuple<int, int, int>> v = {{2, 1, 1}, {1, 9, 9}};\nsort(v.begin(), v.end());                               // (1,9,9) (2,1,1)"
+    },
+    {
+     "q": [
+      "tie c++",
+      "co robi tie",
+      "std::tie",
+      "tie do porównania",
+      "tie comparator"
+     ],
+     "a": "`tie(a, b, c)` tworzy krotkę **referencji** do zmiennych. Dwa zastosowania: rozpakowanie (`tie(x, y) = para;`) oraz porównywanie po kilku kluczach w komparatorze: `return tie(a.x, a.y) < tie(b.x, b.y);` — porównuje najpierw x, potem y.",
+     "code": "struct P { int x, y; };\nbool cmp(const P& a, const P& b) {\n    return tie(a.x, a.y) < tie(b.x, b.y);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sortowanie po kilku kluczach tie",
+      "komparator wiele pól",
+      "sort po dwóch polach struktury",
+      "sort by multiple fields"
+     ],
+     "a": "W komparatorze porównaj krotki: `tie(a.k1, a.k2) < tie(b.k1, b.k2)`. Żeby jakiś klucz sortować malejąco, zamień przy nim `a` z `b`: `tie(b.pkt, a.czas) < tie(a.pkt, b.czas)` → punkty malejąco, czas rosnąco. Sort: O(n log n).",
+     "code": "struct Z { int pkt, czas; };\nvector<Z> v = {{10, 5}, {20, 7}, {20, 3}};\nsort(v.begin(), v.end(), [](const Z& a, const Z& b) {\n    return tie(b.pkt, a.czas) < tie(a.pkt, b.czas);\n});\nfor (auto [p, c] : v) cout << p << ' ' << c << '\\n';   // 20 3 / 20 7 / 10 5"
+    },
+    {
+     "q": [
+      "structured bindings",
+      "auto [a, b, c]",
+      "rozpakowanie krotki",
+      "structured binding c++17"
+     ],
+     "a": "`auto [a, b, c] = t;` (C++17) rozpakowuje krotkę, parę, `array` lub prostą strukturę. Z `auto&` dostajesz referencje, z `const auto&` — referencje tylko do odczytu (bez kopiowania). Liczba nazw musi zgadzać się z liczbą pól.",
+     "code": "vector<tuple<string, int, int>> v = {{\"Ala\", 1, 2}, {\"Ola\", 3, 4}};\nfor (auto& [imie, a, b] : v) a += b;\nfor (const auto& [imie, a, b] : v) cout << imie << ' ' << a << '\\n';   // Ala 3 / Ola 7"
+    },
+    {
+     "q": [
+      "tuple w priority_queue",
+      "kolejka priorytetowa z trzema wartościami",
+      "dijkstra tuple",
+      "priority_queue tuple min"
+     ],
+     "a": "Krotki porównują się leksykograficznie, więc `priority_queue<tuple<long long,int,int>, vector<...>, greater<>>` to min-kopiec po pierwszym polu (np. odległość, wiersz, kolumna w Dijkstrze na siatce). push/pop: O(log n).",
+     "code": "using T = tuple<long long, int, int>;\npriority_queue<T, vector<T>, greater<T>> pq;\npq.push({4, 0, 1});\npq.push({1, 2, 2});\nauto [d, r, c] = pq.top();\ncout << d << ' ' << r << ' ' << c << '\\n';   // 1 2 2"
+    },
+    {
+     "q": [
+      "get tuple zmienna indeks",
+      "get<i> nie działa",
+      "tuple indeks w pętli",
+      "iterowanie po tuple"
+     ],
+     "a": "`get<i>` przyjmuje indeks jako parametr szablonu, więc musi on być stałą czasu kompilacji — nie da się iterować pętlą `for` po polach krotki. Jeśli potrzebujesz indeksowania zmienną, użyj `array<T, N>` (wszystkie pola tego samego typu).",
+     "code": "array<int, 3> a = {5, 6, 7};\nint s = 0;\nfor (int i = 0; i < 3; i++) s += a[i];   // z array działa\ntuple<int, int, int> t = {5, 6, 7};\ncout << s << ' ' << get<2>(t) << '\\n';   // indeks stały"
+    },
+    {
+     "q": [
+      "tuple vs struct",
+      "kiedy struct a kiedy tuple",
+      "czy lepiej tuple czy struct",
+      "pair tuple czy struktura"
+     ],
+     "a": "Wydajność jest taka sama. `struct` ma nazwane pola (czytelniej, mniej pomyłek), ale wymaga napisania `operator<` do sortowania. `tuple`/`pair` mają porównania gratis. Praktyczna reguła na OI: krótkie, lokalne stany — krotka; dane używane w wielu miejscach — struktura (porównanie możesz napisać przez `tie`).",
+     "code": "struct Krawedz {\n    int a, b, w;\n    bool operator<(const Krawedz& o) const { return tie(w, a, b) < tie(o.w, o.a, o.b); }\n};",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "stl-pair",
+    "stl-array",
+    "cpp-struct",
+    "stl-sort",
+    "cpp-modern-cpp",
+    "cpp-functions",
+    "cpp-ref-utility-optional",
+    "oi-py-cpp-equivalents"
+   ]
+  },
+  {
+   "id": "stl-iterators",
+   "title": "Iteratory: begin/end, prev/next/advance i unieważnianie",
+   "category": "STL kontenery",
+   "tags": [
+    "iterator",
+    "begin",
+    "end",
+    "rbegin",
+    "prev",
+    "next",
+    "advance",
+    "distance",
+    "invalidacja"
+   ],
+   "aliases": [
+    "iterator",
+    "iteratory",
+    "iterator c++",
+    "begin end",
+    "prev next",
+    "advance",
+    "distance",
+    "rbegin rend",
+    "iterator invalidation",
+    "unieważnienie iteratora"
+   ],
+   "summary": "Iterator to „uogólniony wskaźnik” do elementu kontenera. Wyjaśnienie `begin/end`, odwrotnych iteratorów, funkcji `prev/next/advance/distance` (i ich złożoności) oraz zasad unieważniania iteratorów.",
+   "complexity": "prev/next/advance/distance: O(1) dla vector/deque/array/string, O(k) dla set/map/list",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`c.begin()` wskazuje pierwszy element, `c.end()` — **miejsce za ostatnim** (nie wolno go dereferencjonować). Zakresy w STL są półotwarte: `[begin, end)`. Element odczytujesz przez `*it`, pole struktury/pary przez `it->first`."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Kategoria",
+      "Kontenery",
+      "Co działa"
+     ],
+     "rows": [
+      [
+       "random access",
+       "vector, deque, array, string",
+       "`it + k`, `it - it2`, `it[k]`, `<` — wszystko O(1)"
+      ],
+      [
+       "bidirectional",
+       "set, map, multiset, multimap, list",
+       "`++it`, `--it`; `next(it, k)` w O(k); brak `it + k`"
+      ],
+      [
+       "forward",
+       "unordered_map/set, forward_list",
+       "tylko `++it`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Podstawowe operacje na iteratorach",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<int> v = {10, 20, 30, 40};\n    auto it = v.begin() + 2;            // wskazuje 30\n    cout << *it << ' ' << it - v.begin() << '\\n';   // 30 2 (indeks)\n\n    set<int> s = {5, 1, 9, 3};\n    cout << *s.begin() << ' ' << *s.rbegin() << '\\n';   // 1 9 (min i max)\n    cout << *prev(s.end()) << '\\n';                     // 9 — ostatni element\n    auto j = s.find(3);\n    cout << *next(j) << '\\n';                           // 5 — następnik 3\n    cout << distance(s.begin(), j) << '\\n';             // 1 — UWAGA: O(n) dla seta\n\n    for (auto r = v.rbegin(); r != v.rend(); ++r) cout << *r << ' ';   // 40 30 20 10\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Kontener",
+      "Co unieważnia iteratory"
+     ],
+     "rows": [
+      [
+       "vector, string",
+       "realokacja przy push_back/insert/reserve → WSZYSTKIE; insert/erase → od miejsca zmiany do końca"
+      ],
+      [
+       "deque",
+       "insert/push na końcach → wszystkie iteratory (referencje zostają); w środku → wszystko"
+      ],
+      [
+       "list, set, map, multiset",
+       "tylko iteratory do usuniętego elementu"
+      ],
+      [
+       "unordered_map/set",
+       "rehash (przy wstawianiu) → wszystkie iteratory (referencje zostają); erase → usunięty"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Usuwanie w trakcie iteracji",
+     "code": "set<int> s = {1, 2, 3, 4, 5, 6};\nfor (auto it = s.begin(); it != s.end(); ) {\n    if (*it % 2 == 0) it = s.erase(it);   // erase zwraca następny iterator\n    else ++it;\n}\n// s = {1, 3, 5}\nmap<int, int> m = {{1, 0}, {2, 5}, {3, 0}};\nfor (auto it = m.begin(); it != m.end(); ) {\n    if (it->second == 0) it = m.erase(it);\n    else ++it;\n}\ncout << s.size() << ' ' << m.size() << '\\n';   // 3 1"
+    },
+    {
+     "type": "warn",
+     "md": "`*s.end()`, `*v.end()`, `prev(s.begin())` oraz `*s.begin()` na pustym kontenerze to UB. Zanim cofniesz iterator (np. po `lower_bound`), sprawdź, czy nie jest równy `begin()`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "c.begin() / c.end()",
+     "desc": "iterator na pierwszy element / za ostatnim",
+     "complexity": "O(1)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "c.rbegin() / c.rend()",
+     "desc": "iteratory odwrotne (od końca)",
+     "complexity": "O(1)",
+     "returns": "reverse_iterator"
+    },
+    {
+     "sig": "c.cbegin() / c.cend()",
+     "desc": "iteratory tylko do odczytu",
+     "complexity": "O(1)",
+     "returns": "const_iterator"
+    },
+    {
+     "sig": "next(it, k = 1)",
+     "desc": "iterator przesunięty o k do przodu (kopia)",
+     "complexity": "O(1) random access, O(k) inne",
+     "returns": "iterator"
+    },
+    {
+     "sig": "prev(it, k = 1)",
+     "desc": "iterator przesunięty o k do tyłu (kopia)",
+     "complexity": "O(1) random access, O(k) inne",
+     "returns": "iterator"
+    },
+    {
+     "sig": "advance(it, k)",
+     "desc": "przesuwa it o k w miejscu (k może być ujemne dla bidirectional)",
+     "complexity": "O(1) / O(|k|)",
+     "returns": "void"
+    },
+    {
+     "sig": "distance(a, b)",
+     "desc": "liczba kroków od a do b",
+     "complexity": "O(1) random access, O(n) inne",
+     "returns": "ptrdiff_t"
+    },
+    {
+     "sig": "*it, it->pole",
+     "desc": "dostęp do elementu",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "++it, --it",
+     "desc": "następny / poprzedni element",
+     "complexity": "O(1) (zamortyzowane dla drzew)"
+    },
+    {
+     "sig": "it - v.begin()",
+     "desc": "indeks elementu (tylko random access)",
+     "complexity": "O(1)",
+     "returns": "ptrdiff_t"
+    },
+    {
+     "sig": "rit.base()",
+     "desc": "zamiana reverse_iterator na zwykły (wskazuje element ZA tym, na który wskazuje rit)",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`end()` wskazuje ZA ostatni element — `*v.end()` to UB. Ostatni element to `*prev(v.end())` albo `*v.rbegin()`.",
+    "Na `set`/`map` nie ma `it + k` ani `it - it2`; `next(it, k)` i `distance` działają, ale w O(k)/O(n) — `distance(s.begin(), it)` nie daje pozycji w O(log n) (do tego służy ordered_set z pb_ds).",
+    "Po `v.push_back` iteratory do vectora mogą być nieważne (realokacja). Nie trzymaj iteratora/wskaźnika/referencji do elementu vectora przez `push_back`.",
+    "`s.erase(it)` unieważnia `it` — dalsze `++it` to UB. Używaj `it = s.erase(it)`.",
+    "`prev(it)`, gdy `it == begin()`, to UB — sprawdź warunek przed cofnięciem (typowy błąd przy szukaniu poprzednika przez `lower_bound`).",
+    "`std::lower_bound(s.begin(), s.end(), x)` na secie działa w O(n), bo przesuwanie iteratorów seta jest liniowe — używaj `s.lower_bound(x)`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "co to jest iterator",
+      "iterator c++",
+      "iteratory jak działają",
+      "what is iterator c++",
+      "po co iteratory"
+     ],
+     "a": "Iterator to obiekt wskazujący element kontenera — działa jak wskaźnik: `*it` daje element, `++it` przechodzi do następnego. Dzięki iteratorom te same algorytmy (`sort`, `find`, `reverse`) działają na różnych kontenerach. Zakres to `[begin(), end())`, gdzie `end()` jest za ostatnim elementem.",
+     "code": "vector<int> v = {3, 1, 2};\nfor (auto it = v.begin(); it != v.end(); ++it) cout << *it << ' ';\ncout << '\\n';\nauto it = find(v.begin(), v.end(), 1);\nif (it != v.end()) cout << \"indeks: \" << it - v.begin() << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "ostatni element seta",
+      "największy element w secie",
+      "set max element",
+      "prev(s.end())",
+      "set last element"
+     ],
+     "a": "Set jest posortowany, więc maksimum to `*s.rbegin()` albo `*prev(s.end())`, a minimum `*s.begin()` — O(1). Sprawdź najpierw, czy set nie jest pusty. Usunięcie największego: `s.erase(prev(s.end()))`.",
+     "code": "set<int> s = {4, 8, 1};\nif (!s.empty()) {\n    cout << *s.begin() << ' ' << *s.rbegin() << '\\n';   // 1 8\n    s.erase(prev(s.end()));                             // usuń maksimum\n}\ncout << *prev(s.end()) << '\\n';                         // 4"
+    },
+    {
+     "q": [
+      "prev next c++",
+      "jak przesunąć iterator",
+      "advance iterator",
+      "next(it)",
+      "iterator + 1 set nie działa"
+     ],
+     "a": "`next(it, k)` i `prev(it, k)` zwracają nowy iterator przesunięty o k; `advance(it, k)` przesuwa w miejscu. Dla vectora to O(1), dla `set`/`map`/`list` O(k). Na iteratorach seta nie ma operatora `+` — `it + 1` się nie skompiluje, użyj `next(it)`.",
+     "code": "set<int> s = {10, 20, 30, 40};\nauto it = s.find(20);\ncout << *next(it) << ' ' << *prev(it) << '\\n';   // 30 10\nadvance(it, 2);\ncout << *it << '\\n';                             // 40"
+    },
+    {
+     "q": [
+      "iterator na indeks",
+      "jak dostać indeks z iteratora",
+      "it - v.begin()",
+      "pozycja elementu w vectorze",
+      "index from iterator"
+     ],
+     "a": "Dla vectora/stringa/array: `it - v.begin()` (O(1)) — np. indeks wyniku `lower_bound` albo `max_element`. Dla seta `distance(s.begin(), it)` też działa, ale w O(n); jeśli potrzebujesz pozycji w zbiorze w O(log n), użyj ordered_set z pb_ds.",
+     "code": "vector<int> v = {5, 9, 2, 7};\nint idx = max_element(v.begin(), v.end()) - v.begin();       // 1\nvector<int> w = {1, 3, 5, 7};\nint poz = lower_bound(w.begin(), w.end(), 4) - w.begin();    // 2\ncout << idx << ' ' << poz << '\\n';"
+    },
+    {
+     "q": [
+      "usuwanie w pętli z seta",
+      "erase w pętli map",
+      "jak usuwać elementy podczas iteracji",
+      "erase while iterating",
+      "segfault erase w petli"
+     ],
+     "a": "`erase(it)` unieważnia `it`, więc `++it` po nim to UB (często segfault). Wszystkie kontenery STL zwracają z `erase(it)` iterator na następny element — pisz `it = c.erase(it);`, a `++it` tylko w gałęzi bez usuwania. Dla vectora prościej użyć `erase_if` (C++20) — O(n) zamiast O(n²).",
+     "code": "map<string, int> m = {{\"a\", 1}, {\"b\", 0}, {\"c\", 2}};\nfor (auto it = m.begin(); it != m.end(); ) {\n    if (it->second == 0) it = m.erase(it);\n    else ++it;\n}\nvector<int> v = {1, 2, 3, 4};\nerase_if(v, [](int x) { return x % 2 == 0; });   // {1, 3}\ncout << m.size() << ' ' << v.size() << '\\n';     // 2 2"
+    },
+    {
+     "q": [
+      "iterator invalidation",
+      "unieważnienie iteratora",
+      "iterator nieważny po push_back",
+      "referencja do vectora po push_back",
+      "dlaczego iterator przestał działać"
+     ],
+     "a": "Vector przy braku miejsca przenosi elementy do nowej pamięci — wtedy WSZYSTKIE iteratory, wskaźniki i referencje do jego elementów są nieważne. `set`/`map`/`list` unieważniają tylko iterator do usuniętego elementu. W razie wątpliwości trzymaj indeks zamiast iteratora/referencji.",
+     "code": "vector<int> v = {1, 2, 3};\nint idx = 0;                 // indeks jest bezpieczny\n// int& r = v[0];            // ŹLE: po push_back r może wskazywać zwolnioną pamięć\nfor (int i = 0; i < 100; i++) v.push_back(i);\nv[idx] = 42;                 // OK\ncout << v[0] << '\\n';"
+    },
+    {
+     "q": [
+      "rbegin rend",
+      "iteracja od końca",
+      "odwrotny iterator",
+      "reverse iterator c++",
+      "pętla od tyłu po secie"
+     ],
+     "a": "`rbegin()` wskazuje ostatni element, `rend()` miejsce przed pierwszym; `++` na odwrotnym iteratorze idzie w stronę początku. Przydatne do przejścia seta/mapy od największego klucza i do sortowania malejąco: `sort(v.rbegin(), v.rend())`.",
+     "code": "map<int, string> m = {{1, \"a\"}, {5, \"b\"}, {3, \"c\"}};\nfor (auto it = m.rbegin(); it != m.rend(); ++it)\n    cout << it->first << it->second << ' ';     // 5b 3c 1a\ncout << '\\n';\nvector<int> v = {2, 9, 4};\nsort(v.rbegin(), v.rend());                     // malejąco: {9, 4, 2}"
+    },
+    {
+     "q": [
+      "poprzednik w secie",
+      "największy element mniejszy od x",
+      "set lower_bound prev",
+      "predecessor set c++",
+      "element mniejszy niż x w secie"
+     ],
+     "a": "`auto it = s.lower_bound(x);` wskazuje pierwszy element ≥ x. Jeśli `it != s.begin()`, to `*prev(it)` jest największym elementem < x. Całość O(log n). Bez sprawdzenia `begin()` dostaniesz UB, gdy wszystkie elementy są ≥ x.",
+     "code": "set<int> s = {2, 5, 9};\nint x = 6;\nauto it = s.lower_bound(x);\nif (it != s.begin()) cout << \"poprzednik: \" << *prev(it) << '\\n';   // 5\nelse cout << \"brak\\n\";"
+    },
+    {
+     "q": [
+      "auto it",
+      "jaki typ ma iterator",
+      "vector<int>::iterator",
+      "auto zamiast iterator"
+     ],
+     "a": "Pełny typ to np. `vector<int>::iterator` albo `map<string,int>::iterator` — długi, więc w praktyce pisze się `auto it = ...`. Dla kontenera `const` typem jest `const_iterator` (tylko odczyt).",
+     "code": "map<string, int> m = {{\"x\", 1}};\nmap<string, int>::iterator it1 = m.begin();   // pełna nazwa\nauto it2 = m.begin();                          // to samo, krócej\ncout << (it1 == it2) << ' ' << it2->first << '\\n';"
+    },
+    {
+     "q": [
+      "distance set wolne",
+      "pozycja elementu w secie",
+      "indeks w secie",
+      "ktory element w secie",
+      "set index of element"
+     ],
+     "a": "Iteratory seta są dwukierunkowe, więc `distance(s.begin(), it)` przechodzi element po elemencie — O(n). Dla wielu zapytań „ile elementów jest mniejszych od x” użyj ordered_set z pb_ds (`order_of_key`, O(log n)), drzewa Fenwicka po kompresji albo posortowanego vectora + `lower_bound` (gdy zbiór się nie zmienia).",
+     "code": "vector<int> posort = {1, 4, 6, 9};          // zbiór statyczny\nint x = 6;\nint mniejszych = lower_bound(posort.begin(), posort.end(), x) - posort.begin();   // O(log n)\ncout << mniejszych << '\\n';                  // 2"
+    }
+   ],
+   "related": [
+    "stl-vector",
+    "stl-set",
+    "stl-map",
+    "stl-binary-search",
+    "cpp-pbds-ordered-set",
+    "stl-list",
+    "pit-iterator-erase",
+    "stl-ref-deque-list-all",
+    "stl-ref-functional-iterator",
+    "stl-ref-ranges",
+    "stl-ref-set-all",
+    "stl-ref-vector-all"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,8 @@
+a, b = map(int, input().split())
+print(a // b, a % b)
+print(-a // b, -a % b)
+print(divmod(a, b))
+q, r = divmod(a, b)
+print(q * b + r == a)
+print(pow(a, 3, 1000), pow(2, 10), 2 ** 20)
+print(abs(a - b), (a - b) % 7, (a * b) // 3)

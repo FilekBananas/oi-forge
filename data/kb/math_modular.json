@@ -1,0 +1,980 @@
+{
+ "chunk": "math-modular",
+ "articles": [
+  {
+   "id": "math-fast-pow",
+   "title": "Szybkie potęgowanie (modularne) — a^b mod m w O(log b)",
+   "category": "Matematyka",
+   "tags": [
+    "szybkie potęgowanie",
+    "potęgowanie modularne",
+    "binary exponentiation",
+    "fast power",
+    "modulo",
+    "__int128"
+   ],
+   "aliases": [
+    "szybkie potęgowanie",
+    "szybkie potegowanie modulo",
+    "fast power",
+    "binary exponentiation",
+    "fast pow c++",
+    "potęgowanie modularne",
+    "modpow",
+    "powmod",
+    "a^b mod m",
+    "potega modulo",
+    "exponentiation by squaring"
+   ],
+   "summary": "a^b liczymy przez podnoszenie do kwadratu: a^b = (a^(b/2))² · (a, jeśli b nieparzyste). Wystarczy O(log b) mnożeń, więc nawet b = 10^18 to ok. 60 kroków. Modulo bierzemy po każdym mnożeniu.",
+   "complexity": "O(log b) mnożeń modularnych; dla m > ~3·10^9 mnożenie przez __int128",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Naiwne `a·a·…·a` to `b` mnożeń — dla b = 10^18 niemożliwe. **Szybkie potęgowanie** korzysta z rozkładu wykładnika\nna bity: `a^13 = a^8 · a^4 · a^1` (13 = 1101₂). Kolejne potęgi `a, a², a⁴, a⁸, …` dostajemy, podnosząc do kwadratu,\na mnożymy wynik przez te, którym odpowiada bit 1. Razem O(log b) mnożeń.\n\nModulo bierzemy po **każdym** mnożeniu (`(x·y) mod m = ((x mod m)·(y mod m)) mod m`), dzięki czemu liczby nie\nrosną. Iloczyn dwóch liczb < m musi się mieścić w typie: dla m ≤ ~3·10^9 wystarczy `long long`, dla większych — `__int128`.\n\n**Sygnały:** „modulo 10^9+7” z dużymi wykładnikami, odwrotność modularna (`a^(p−2)`), liczba podzbiorów `2^n`,\nliczba słów `k^n`, test Millera–Rabina, potęgowanie macierzy, „ostatnie cyfry a^b”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: szybkie potęgowanie iteracyjne",
+     "code": "// a^b mod m dla |a| <= 1e18, 0 <= b <= 1e18, 1 <= m <= 1e18 (mnożenie przez __int128).\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\n\nll powmod(ll a, ll b, ll m) {\n    a %= m;\n    if (a < 0) a += m;                    // podstawa ujemna -> reszta nieujemna\n    ll r = 1 % m;                         // 1 % m: dla m = 1 wynik ma być 0\n    while (b > 0) {\n        if (b & 1) r = (__int128)r * a % m;   // bit wykładnika = 1 -> domnażamy\n        a = (__int128)a * a % m;              // a, a^2, a^4, a^8, ...\n        b >>= 1;\n    }\n    return r;\n}\n\nint main() {\n    ll a, b, m;\n    cin >> a >> b >> m;\n    cout << powmod(a, b, m) << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersja rekurencyjna (modulo 10^9+7)",
+     "code": "// Wersja rekurencyjna — bezpośrednio ze wzoru a^b = (a^(b/2))^2 * a^(b mod 2).\nconst long long MOD = 1'000'000'007;\nlong long pw(long long a, long long b) {\n    if (b == 0) return 1;\n    long long h = pw(a, b / 2);\n    long long r = h * h % MOD;\n    if (b % 2 == 1) r = r * (a % MOD) % MOD;\n    return r;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Krok",
+      "b (binarnie)",
+      "a (kolejna potęga)",
+      "r"
+     ],
+     "rows": [
+      [
+       "start",
+       "1101 (13)",
+       "3",
+       "1"
+      ],
+      [
+       "bit 1",
+       "110",
+       "3² = 9",
+       "1·3 = 3"
+      ],
+      [
+       "bit 0",
+       "11",
+       "9² = 81",
+       "3"
+      ],
+      [
+       "bit 1",
+       "1",
+       "81² = 6561",
+       "3·81 = 243"
+      ],
+      [
+       "bit 1",
+       "0",
+       "—",
+       "243·6561 = 1594323 = 3^13"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`pow(a, b)` z `<cmath>` liczy na liczbach zmiennoprzecinkowych (`double`, 53 bity mantysy) — dla dużych wyników\ntraci dokładność, a modulo w ogóle nie obsługuje. Do liczb całkowitych zawsze pisz własne `powmod`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "long long powmod(long long a, long long b, long long m)",
+     "desc": "a^b mod m w O(log b); obsługuje a < 0, b = 0, m = 1",
+     "complexity": "O(log b)",
+     "returns": "long long",
+     "example": "powmod(2, 10, 1000) == 24"
+    }
+   ],
+   "pitfalls": [
+    "Brak `a %= m` na starcie — gdy a ≥ m (np. a = 10^18), pierwsze `a * a` przepełnia typ.",
+    "`r * a % m` w long long przepełnia się, gdy m > ~3,03·10^9 (iloczyn > 9,2·10^18) — użyj __int128.",
+    "Ujemna podstawa: w C++ `-2 % 5 == -2`; po `a %= m` dodaj m, jeśli wynik ujemny.",
+    "m = 1: każda liczba mod 1 to 0, więc zaczynaj od `r = 1 % m`, a nie od 1.",
+    "`pow()` z cmath zwraca double — błędne wyniki dla dużych liczb, brak modulo.",
+    "Wykładnik ujemny nie działa w tej pętli — a^(−b) mod p to (a^(−1))^b, czyli potrzebna odwrotność modularna."
+   ],
+   "qa": [
+    {
+     "q": [
+      "szybkie potęgowanie",
+      "szybkie potegowanie modulo",
+      "fast power c++",
+      "binary exponentiation",
+      "potęgowanie modularne",
+      "modpow",
+      "a do potęgi b modulo",
+      "jak policzyć a^b mod m"
+     ],
+     "a": "Trzymaj wynik `r = 1` i podstawę `a`. Dopóki `b > 0`: jeśli najmłodszy bit `b` to 1, `r = r·a mod m`; potem\n`a = a·a mod m` i `b >>= 1`. Każdy krok połowi wykładnik, więc O(log b) mnożeń — dla b = 10^18 to ok. 60 iteracji.",
+     "code": "const long long MOD = 1'000'000'007;\nlong long a = 2, b = 1000000000, r = 1;\na %= MOD;\nwhile (b > 0) {\n    if (b & 1) r = r * a % MOD;\n    a = a * a % MOD;\n    b >>= 1;\n}\ncout << r << \"\\n\";"
+    },
+    {
+     "q": [
+      "potęgowanie rekurencyjnie",
+      "fast pow recursive",
+      "szybkie potegowanie rekurencja",
+      "potega rekurencyjnie log n"
+     ],
+     "a": "`pw(a, b) = 1` dla `b = 0`; w przeciwnym razie `h = pw(a, b/2)`, wynik to `h·h` (i razy `a`, gdy `b` nieparzyste).\nKluczowe: `pw(a, b/2)` liczymy **raz** i zapisujemy w `h` — dwa wywołania `pw(a, b/2) * pw(a, b/2)` dałyby O(b).\nGłębokość rekurencji O(log b)."
+    },
+    {
+     "q": [
+      "dlaczego pow z cmath nie działa",
+      "pow long long błąd",
+      "pow zwraca zly wynik",
+      "pow c++ modulo",
+      "pow(2,n) blad"
+     ],
+     "a": "`std::pow` działa na `double` (53 bity mantysy ≈ 16 cyfr) — wyniki powyżej 2^53 są zaokrąglane, a rzutowanie\nna `long long` może dać liczbę o 1 za małą (np. `(int)pow(10, 2)` bywało 99 na niektórych kompilatorach).\nNie obsługuje też modulo. Do liczb całkowitych używaj własnego `powmod` albo przesunięć bitowych (`1LL << n` dla 2^n)."
+    },
+    {
+     "q": [
+      "a^b mod m przepełnienie",
+      "potęgowanie modulo 1e18 overflow",
+      "powmod duze modulo",
+      "mnozenie modulo 1e18 potegowanie"
+     ],
+     "a": "W `r * a % m` iloczyn dwóch liczb < m musi się zmieścić w typie. Dla `m = 10^9+7` iloczyn < 10^18 mieści się\nw `long long`. Dla `m` rzędu 10^18 rzutuj: `(__int128)r * a % m`. Bez `__int128` — mnożenie „po bitach”\n(mulmod w O(log))."
+    },
+    {
+     "q": [
+      "złożoność szybkiego potęgowania",
+      "fast pow complexity",
+      "ile mnozen szybkie potegowanie"
+     ],
+     "a": "O(log b): pętla wykonuje się tyle razy, ile bitów ma `b` (dla 10^18 — 60), a w każdym kroku są co najwyżej\n2 mnożenia. Dla macierzy k×k każde mnożenie kosztuje O(k³), więc razem O(k³ log b)."
+    },
+    {
+     "q": [
+      "potęga modulo wykładnik jako napis",
+      "wykladnik 10^100000",
+      "b bardzo duże string potega",
+      "huge exponent modulo"
+     ],
+     "a": "Dwie metody. (1) Dla pierwszego `p` i `a` niepodzielnego przez `p`: zredukuj wykładnik modulo `p − 1` (Fermat),\nczytając cyfry: `e = (e·10 + c) mod (p−1)`. (2) Działa dla dowolnego `m`: przetwarzaj cyfry wykładnika od lewej:\n`r = r^10 · a^cyfra (mod m)` — O(długość · log 10).",
+     "code": "const long long MOD = 1'000'000'007;\nauto pw = [&](long long a, long long b) {\n    long long r = 1; a %= MOD;\n    while (b) { if (b & 1) r = r * a % MOD; a = a * a % MOD; b >>= 1; }\n    return r;\n};\nstring e = \"100\";\nlong long a = 2, r = 1;\nfor (char c : e) r = pw(r, 10) * pw(a, c - '0') % MOD;   // r = a^(prefiks wykładnika)\ncout << r << \"\\n\";   // 2^100 mod 1e9+7"
+    },
+    {
+     "q": [
+      "potęga liczby ujemnej modulo",
+      "ujemna podstawa modulo",
+      "(-a)^b mod m",
+      "minus modulo potega"
+     ],
+     "a": "Najpierw sprowadź podstawę do zakresu `[0, m)`: `a %= m; if (a < 0) a += m;`. W C++ reszta ma znak dzielnej,\nwięc `-2 % 5 == -2`. Po normalizacji szybkie potęgowanie działa normalnie: `(-2)^3 mod 5 = 3^3 mod 5 = 2`."
+    },
+    {
+     "q": [
+      "0^0",
+      "potęga zerowa modulo 1",
+      "a^0 mod m",
+      "szybkie potegowanie b=0"
+     ],
+     "a": "Dla `b = 0` pętla się nie wykona i zwróci początkowe `r`. Ustaw `r = 1 % m`, wtedy `a^0 = 1` dla `m > 1` i `0`\ndla `m = 1` (każda liczba modulo 1 to 0). Konwencja `0^0 = 1` jest standardowa w kombinatoryce."
+    },
+    {
+     "q": [
+      "2^n modulo 1e9+7 wiele zapytań",
+      "potęgi dwójki tablica",
+      "precompute powers modulo",
+      "tablica poteg modulo"
+     ],
+     "a": "Gdy potrzebujesz `2^i` dla wszystkich `i ≤ n`, policz tablicę: `pw[0] = 1`, `pw[i] = pw[i−1]·2 mod p` — O(n)\ni każde zapytanie O(1). Szybkie potęgowanie opłaca się dla pojedynczych dużych wykładników.",
+     "code": "const long long MOD = 1'000'000'007;\nint n = 100;\nvector<long long> pw(n + 1);\npw[0] = 1;\nfor (int i = 1; i <= n; i++) pw[i] = pw[i - 1] * 2 % MOD;\ncout << pw[100] << \"\\n\";   // 976371285"
+    },
+    {
+     "q": [
+      "ostatnia cyfra a^b",
+      "last digit of power",
+      "ostatnie cyfry potegi",
+      "ostatnie 3 cyfry a^b"
+     ],
+     "a": "Ostatnia cyfra to `a^b mod 10`, ostatnie k cyfr — `a^b mod 10^k` (wypisz z zerami wiodącymi, np. `%03lld`).\nSzybkie potęgowanie liczy to w O(log b) nawet dla b = 10^18.",
+     "code": "long long a = 7, b = 222, m = 10, r = 1;\na %= m;\nwhile (b) { if (b & 1) r = r * a % m; a = a * a % m; b >>= 1; }\ncout << r << \"\\n\";   // 9"
+    },
+    {
+     "q": [
+      "szybkie potęgowanie liczb bez modulo",
+      "potega long long dokladnie",
+      "a^b bez modulo przepelnienie",
+      "integer power c++"
+     ],
+     "a": "Bez modulo wynik szybko przekracza 64 bity (2^63 ≈ 9,2·10^18). Jeśli wynik ma się mieścić, użyj tej samej pętli\nna `long long`/`__int128`, ale sprawdzaj przepełnienie (np. porównując `r > LIMIT / a` przed mnożeniem).\nDla potęg dwójki: `1LL << n` (n ≤ 62).",
+     "code": "long long a = 3, b = 39;\n__int128 r = 1, x = a;\nwhile (b) { if (b & 1) r *= x; x *= x; b >>= 1; }\ncout << (long long)r << \"\\n\";   // 4052555153018976267 = 3^39"
+    }
+   ],
+   "related": [
+    "math-mod-inverse",
+    "math-matrix-pow",
+    "math-primality",
+    "math-euler-phi",
+    "num-mod-arithmetic",
+    "num-int128",
+    "cpp-operators",
+    "cpp-recursion-basics",
+    "math-fft",
+    "math-ntt",
+    "oi-py-numbers",
+    "tech-hanoi"
+   ]
+  },
+  {
+   "id": "math-mod-inverse",
+   "title": "Odwrotność modularna — dzielenie modulo (Fermat, rozszerzony Euklides, odwrotności 1..n)",
+   "category": "Matematyka",
+   "tags": [
+    "odwrotność modularna",
+    "modular inverse",
+    "dzielenie modulo",
+    "fermat",
+    "rozszerzony euklides",
+    "silnie",
+    "modulo"
+   ],
+   "aliases": [
+    "odwrotność modularna",
+    "odwrotnosc modulo",
+    "modular inverse",
+    "inverse mod",
+    "dzielenie modulo",
+    "modinv",
+    "inv mod p",
+    "odwrotność modulo 10^9+7",
+    "division modulo",
+    "a/b mod p"
+   ],
+   "summary": "Odwrotność a modulo m to x z a·x ≡ 1 (mod m); istnieje ⇔ gcd(a, m) = 1. Dla pierwszego p: x = a^(p−2) mod p (Fermat). Dla dowolnego m: rozszerzony Euklides. Dzielenie modulo p = mnożenie przez odwrotność.",
+   "complexity": "Fermat i Euklides: O(log m); odwrotności wszystkich 1..n: O(n); odwrotności silni: O(n + log p)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "W arytmetyce modulo nie ma zwykłego dzielenia: `(a / b) mod p ≠ (a mod p) / (b mod p)`. Zamiast tego mnożymy przez\n**odwrotność**: `b⁻¹` to liczba z `b · b⁻¹ ≡ 1 (mod p)`, a wtedy `a / b ≡ a · b⁻¹ (mod p)`.\n\n* **Fermat** (p pierwsze, `p ∤ a`): `a^(p−1) ≡ 1`, więc `a⁻¹ ≡ a^(p−2) (mod p)` — jedno szybkie potęgowanie.\n* **Rozszerzony Euklides** (dowolne m, `gcd(a, m) = 1`): z `a·x + m·y = 1` mamy `a·x ≡ 1`, więc `a⁻¹ = x mod m`.\n* **Wszystkie odwrotności 1..n** (p pierwsze, n < p): `inv[1] = 1`, `inv[i] = −⌊p/i⌋ · inv[p mod i] mod p`.\n\n**Sygnały:** wynik „modulo 10^9+7 / 998244353” i we wzorze jest dzielenie (dwumian, średnia, prawdopodobieństwo,\nsuma szeregu geometrycznego), „podaj wynik jako P·Q⁻¹ mod p”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: odwrotność przez rozszerzony Euklides",
+     "code": "// Odwrotność a modulo m (dowolne m >= 2) przez rozszerzony Euklides; \"BRAK\", gdy gcd(a, m) != 1.\n#include <bits/stdc++.h>\nusing namespace std;\ntypedef long long ll;\n\nll extgcd(ll a, ll b, ll &x, ll &y) {\n    if (b == 0) { x = 1; y = 0; return a; }\n    ll x1, y1, g = extgcd(b, a % b, x1, y1);\n    x = y1; y = x1 - (a / b) * y1;\n    return g;\n}\n\nll modInverse(ll a, ll m) {                 // -1, gdy odwrotność nie istnieje\n    a %= m; if (a < 0) a += m;\n    ll x, y;\n    if (extgcd(a, m, x, y) != 1) return -1;\n    x %= m; if (x < 0) x += m;\n    return x;\n}\n\nint main() {\n    ll a, m;\n    cin >> a >> m;\n    ll r = modInverse(a, m);\n    if (r == -1) cout << \"BRAK\\n\";\n    else cout << r << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Fermat: a^(p−2) mod p",
+     "code": "// Odwrotność modulo liczba pierwsza z małego twierdzenia Fermata: a^(p-2).\nconst long long MOD = 1'000'000'007;\nlong long power(long long a, long long b) {\n    long long r = 1; a %= MOD; if (a < 0) a += MOD;\n    while (b) { if (b & 1) r = r * a % MOD; a = a * a % MOD; b >>= 1; }\n    return r;\n}\nlong long inv(long long a) { return power(a, MOD - 2); }   // wymaga a % MOD != 0",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Odwrotności 1..n liniowo",
+     "code": "// Odwrotności wszystkich liczb 1..n modulo p w O(n).\n// Z p = q*i + r (q = p / i, r = p % i):  0 ≡ q*i + r  =>  i^(-1) ≡ -q * r^(-1)  (mod p).\nconst long long MOD = 1'000'000'007;\nvector<long long> inverses(int n) {\n    vector<long long> inv(n + 1);\n    inv[1] = 1;\n    for (int i = 2; i <= n; i++)\n        inv[i] = (MOD - MOD / i) * inv[MOD % i] % MOD;\n    return inv;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Metoda",
+      "Kiedy",
+      "Koszt"
+     ],
+     "rows": [
+      [
+       "Fermat a^(p−2)",
+       "moduł pierwszy (10^9+7, 998244353), p ∤ a",
+       "O(log p)"
+      ],
+      [
+       "rozszerzony Euklides",
+       "dowolny moduł, gcd(a, m) = 1",
+       "O(log m)"
+      ],
+      [
+       "Euler a^(φ(m)−1)",
+       "dowolny moduł, znane φ(m)",
+       "O(log m) + φ"
+      ],
+      [
+       "tablica inv[1..n]",
+       "wiele odwrotności małych liczb, p pierwsze",
+       "O(n)"
+      ],
+      [
+       "odwrotności silni",
+       "dwumiany modulo p",
+       "O(n + log p)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Odwrotność **nie istnieje**, gdy `gcd(a, m) ≠ 1` — np. 2 modulo 4 albo dowolna wielokrotność p modulo p.\nFermat wtedy „po cichu” zwraca zły wynik (np. 0), więc sprawdź warunek, jeśli `a` może być podzielne przez moduł."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "long long inv(long long a)",
+     "desc": "odwrotność modulo pierwsze MOD: power(a, MOD − 2)",
+     "complexity": "O(log MOD)",
+     "returns": "long long",
+     "example": "inv(2) == 500000004 dla MOD = 10^9+7"
+    },
+    {
+     "sig": "long long modInverse(long long a, long long m)",
+     "desc": "odwrotność dla dowolnego m przez extgcd; −1 gdy brak",
+     "complexity": "O(log m)"
+    },
+    {
+     "sig": "inv[i] = (MOD − MOD / i) * inv[MOD % i] % MOD",
+     "desc": "odwrotności 1..n w czasie liniowym",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "`(a / b) % p` zamiast `a * inv(b) % p` — zwykłe dzielenie całkowite daje zły wynik.",
+    "Fermat (`a^(p−2)`) działa tylko dla PIERWSZEGO p; dla złożonego m użyj rozszerzonego Euklidesa.",
+    "Odwrotność 0 (lub wielokrotności p) nie istnieje — Fermat zwróci 0 bez ostrzeżenia.",
+    "Wynik extgcd może być ujemny — znormalizuj `((x % m) + m) % m`.",
+    "Tablica `inv[i]` liniowo wymaga, by p było pierwsze i n < p.",
+    "Przy liczeniu `(MOD − MOD / i) * inv[...]` w int — przepełnienie; użyj long long."
+   ],
+   "qa": [
+    {
+     "q": [
+      "odwrotność modularna",
+      "odwrotnosc modulo",
+      "modular inverse c++",
+      "inverse mod p",
+      "odwrotność modulo 10^9+7",
+      "modinv"
+     ],
+     "a": "Dla pierwszego `p` (np. 10^9+7): `inv(a) = a^(p−2) mod p` szybkim potęgowaniem — wynika z małego twierdzenia\nFermata `a^(p−1) ≡ 1`. Dla dowolnego modułu: rozszerzony Euklides na `(a, m)`. Obie metody O(log m). Odwrotność\nistnieje tylko, gdy `gcd(a, m) = 1`.",
+     "code": "const long long MOD = 1'000'000'007;\nlong long a = 3, e = MOD - 2, r = 1, b = a;\nwhile (e) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\ncout << r << \" \" << a * r % MOD << \"\\n\";   // 333333336 1"
+    },
+    {
+     "q": [
+      "dzielenie modulo",
+      "jak podzielić modulo",
+      "division modulo prime",
+      "a/b mod p",
+      "dzielenie przez liczbe modulo"
+     ],
+     "a": "`a / b (mod p)` = `a · b⁻¹ (mod p)`, gdzie `b⁻¹ = b^(p−2) mod p`. Działa, gdy `b` nie jest podzielne przez `p`.\nNp. średnia z liczb modulo p to `suma · inv(n)`. Nigdy nie dziel „normalnie” wyników, które już są wzięte modulo.",
+     "code": "const long long MOD = 1'000'000'007;\nauto power = [&](long long a, long long b) {\n    long long r = 1; a %= MOD;\n    while (b) { if (b & 1) r = r * a % MOD; a = a * a % MOD; b >>= 1; }\n    return r;\n};\nlong long a = 10, b = 4;\ncout << a * power(b, MOD - 2) % MOD << \"\\n\";   // 10/4 = 5/2 -> 500000006"
+    },
+    {
+     "q": [
+      "małe twierdzenie fermata odwrotność",
+      "a^(p-2)",
+      "fermat inverse",
+      "dlaczego a^(p-2) to odwrotnosc"
+     ],
+     "a": "Małe twierdzenie Fermata: dla pierwszego `p` i `p ∤ a` zachodzi `a^(p−1) ≡ 1 (mod p)`. Zatem\n`a · a^(p−2) = a^(p−1) ≡ 1`, czyli `a^(p−2)` jest odwrotnością `a`. Koszt to jedno szybkie potęgowanie: O(log p)."
+    },
+    {
+     "q": [
+      "odwrotność gdy modulo nie jest pierwsze",
+      "inverse mod composite",
+      "extgcd inverse",
+      "odwrotnosc modulo liczba zlozona"
+     ],
+     "a": "Użyj rozszerzonego Euklidesa: znajdź `x, y` z `a·x + m·y = gcd(a, m)`. Jeśli gcd = 1, to `a·x ≡ 1 (mod m)`,\nwięc odwrotność to `((x mod m) + m) mod m`. Jeśli gcd > 1, odwrotność nie istnieje. Pełny program jest w treści."
+    },
+    {
+     "q": [
+      "kiedy istnieje odwrotność",
+      "odwrotność nie istnieje",
+      "inverse does not exist",
+      "czy kazda liczba ma odwrotnosc modulo"
+     ],
+     "a": "Odwrotność `a` modulo `m` istnieje ⇔ `gcd(a, m) = 1`. Modulo liczba pierwsza `p` mają ją wszystkie liczby\nniepodzielne przez `p`. Modulo 10 odwracalne są tylko 1, 3, 7, 9. Dlatego zadania z dzieleniem używają pierwszych\nmodułów (10^9+7, 998244353)."
+    },
+    {
+     "q": [
+      "odwrotności wszystkich liczb do n",
+      "inv[i] liniowo",
+      "linear inverses",
+      "odwrotnosci 1..n o(n)"
+     ],
+     "a": "`inv[1] = 1`, `inv[i] = (p − p/i) · inv[p mod i] mod p`. Wzór wynika z `p = (p/i)·i + (p mod i)` — modulo p daje\n`0 ≡ (p/i)·i + (p mod i)`, mnożymy przez `i⁻¹ · (p mod i)⁻¹`. Czas O(n) zamiast O(n log p). Kod jest w treści."
+    },
+    {
+     "q": [
+      "odwrotność silni",
+      "inverse factorial",
+      "invfact",
+      "odwrotnosci silni modulo"
+     ],
+     "a": "Policz `fact[i]` do `n`, potem **jedną** odwrotność `invfact[n] = fact[n]^(p−2)`, a resztę w dół:\n`invfact[i−1] = invfact[i] · i`. Razem O(n + log p). Dzięki temu `C(n, k) = fact[n]·invfact[k]·invfact[n−k]` w O(1).",
+     "code": "const long long MOD = 1'000'000'007;\nconst int N = 10;\nvector<long long> fact(N + 1), invfact(N + 1);\nfact[0] = 1;\nfor (int i = 1; i <= N; i++) fact[i] = fact[i - 1] * i % MOD;\nlong long r = 1, b = fact[N], e = MOD - 2;\nwhile (e) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\ninvfact[N] = r;\nfor (int i = N; i > 0; i--) invfact[i - 1] = invfact[i] * i % MOD;\ncout << fact[10] * invfact[3] % MOD * invfact[7] % MOD << \"\\n\";   // C(10,3) = 120"
+    },
+    {
+     "q": [
+      "wartość oczekiwana modulo",
+      "P/Q mod 998244353",
+      "ulamek modulo p",
+      "prawdopodobienstwo modulo",
+      "wypisz P*Q^-1"
+     ],
+     "a": "Gdy wynik to ułamek `P/Q`, a zadanie każe wypisać go modulo p, wypisz `P · Q⁻¹ mod p` (Q niepodzielne przez p).\nNp. 7/2 modulo 998244353 to 7 · 499122177 mod p = 499122180. Dzięki temu można liczyć wartości oczekiwane\ncałkowicie w arytmetyce modularnej.",
+     "code": "const long long MOD = 998244353;\nlong long P = 7, Q = 2, r = 1, b = Q % MOD, e = MOD - 2;\nwhile (e) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\ncout << P % MOD * r % MOD << \"\\n\";   // 499122180"
+    },
+    {
+     "q": [
+      "dlaczego (a/b)%p jest źle",
+      "dzielenie zwykle modulo blad",
+      "suma/n modulo zly wynik"
+     ],
+     "a": "Gdy `a` jest już wzięte modulo p, „prawdziwa” wartość może być `a + k·p`, i dzielenie całkowite `a / b` nie ma z nią\nzwiązku. Np. 10/4 = 2,5 — modulo p poprawny wynik to `5 · inv(2)`, a `10 / 4 = 2` jest po prostu błędne. Dzielenie\nprzez odwrotność zachowuje zgodność z prawdziwym ułamkiem."
+    },
+    {
+     "q": [
+      "odwrotność 2 modulo",
+      "inv2",
+      "polowa modulo",
+      "dzielenie przez 2 modulo"
+     ],
+     "a": "Dla nieparzystego pierwszego `p`: `2⁻¹ = (p + 1)/2`, bo `2 · (p+1)/2 = p + 1 ≡ 1`. Dla 10^9+7 to 500000004,\ndla 998244353 — 499122177. Przydaje się np. przy wzorze `n(n+1)/2` modulo p.",
+     "code": "const long long MOD = 1'000'000'007;\nlong long inv2 = (MOD + 1) / 2;\nlong long n = 1000000000000LL % MOD;\ncout << inv2 << \" \" << n * ((n + 1) % MOD) % MOD * inv2 % MOD << \"\\n\";"
+    },
+    {
+     "q": [
+      "batch inverse",
+      "wiele odwrotności naraz",
+      "odwrotnosci wielu dowolnych liczb",
+      "prefix product inverse"
+     ],
+     "a": "Dla dowolnych `a_1..a_n` (niekoniecznie 1..n): policz iloczyny prefiksowe `pre[i]`, jedną odwrotność `inv(pre[n])`,\na potem idąc od końca: `inv(a_i) = inv(pre[i]) · pre[i−1]`, `inv(pre[i−1]) = inv(pre[i]) · a_i`. Razem O(n + log p).",
+     "code": "const long long MOD = 1'000'000'007;\nvector<long long> a = {2, 3, 5};\nint n = a.size();\nvector<long long> pre(n + 1, 1), res(n);\nfor (int i = 0; i < n; i++) pre[i + 1] = pre[i] * a[i] % MOD;\nlong long r = 1, b = pre[n], e = MOD - 2;\nwhile (e) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\nfor (int i = n - 1; i >= 0; i--) { res[i] = r * pre[i] % MOD; r = r * a[i] % MOD; }\nfor (auto x : res) cout << x << \" \";\ncout << \"\\n\";   // 500000004 333333336 400000003"
+    }
+   ],
+   "related": [
+    "math-fast-pow",
+    "math-extended-euclid",
+    "math-binomial",
+    "math-euler-phi",
+    "math-probability",
+    "num-mod-arithmetic",
+    "math-derangements-stirling",
+    "math-gauss",
+    "math-ntt",
+    "oi-py-numbers"
+   ]
+  },
+  {
+   "id": "math-binomial",
+   "title": "Dwumian Newtona C(n, k) modulo p — silnie z odwrotnościami, trójkąt Pascala, twierdzenie Lucasa",
+   "category": "Matematyka",
+   "tags": [
+    "dwumian newtona",
+    "symbol newtona",
+    "kombinacje",
+    "n po k",
+    "trójkąt pascala",
+    "lucas",
+    "silnia",
+    "modulo"
+   ],
+   "aliases": [
+    "dwumian newtona",
+    "symbol newtona",
+    "n po k",
+    "binomial coefficient",
+    "newton modulo",
+    "nCr mod p",
+    "kombinacje c++",
+    "trójkąt pascala",
+    "twierdzenie lucasa",
+    "lucas theorem",
+    "dwumian c++",
+    "ncr"
+   ],
+   "summary": "C(n, k) = n! / (k!(n−k)!). Modulo pierwsze p (n < p): preprocessing silni i odwrotności silni w O(n), potem każde zapytanie O(1). Dla dowolnego modułu i n ≤ ~5000 — trójkąt Pascala; dla ogromnych n i małego p — Lucas.",
+   "complexity": "silnie + odwrotności: O(N) preprocessingu, O(1) na zapytanie; Pascal: O(n²); Lucas: O(p + log_p n) na zapytanie",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "`C(n, k)` = liczba sposobów wyboru `k` elementów z `n` (bez kolejności). Wzory:\n`C(n, k) = n! / (k! · (n−k)!)` oraz rekurencja Pascala `C(n, k) = C(n−1, k−1) + C(n−1, k)` (element `n` wybrany\nalbo nie). Dla `k < 0` lub `k > n` przyjmujemy `C(n, k) = 0`.\n\n**Modulo pierwsze p (np. 10^9+7), n < p:** `fact[i]`, `invfact[i]` dla `i ≤ N` w O(N) (jedna odwrotność Fermatem,\nreszta w dół), potem `C(n, k) = fact[n] · invfact[k] · invfact[n−k] mod p`.\n\n**Sygnały:** „na ile sposobów wybrać”, „liczba ścieżek na siatce”, „liczba podzbiorów k-elementowych”,\n„rozłóż n kul do k pudełek” (gwiazdki i kreski), wynik *modulo 10^9+7*, rozwinięcie `(a + b)^n`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: C(n, k) mod p w O(1) na zapytanie",
+     "code": "// q zapytań C(n, k) mod 1e9+7, n <= 1e6. Preprocessing silni i odwrotności silni.\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\nconst int MAXN = 1'000'000;\nlong long fact[MAXN + 1], invfact[MAXN + 1];\n\nlong long power(long long a, long long b) {\n    long long r = 1; a %= MOD;\n    while (b) { if (b & 1) r = r * a % MOD; a = a * a % MOD; b >>= 1; }\n    return r;\n}\n\nvoid init() {\n    fact[0] = 1;\n    for (int i = 1; i <= MAXN; i++) fact[i] = fact[i - 1] * i % MOD;\n    invfact[MAXN] = power(fact[MAXN], MOD - 2);              // jedna odwrotność (Fermat)\n    for (int i = MAXN; i > 0; i--) invfact[i - 1] = invfact[i] * i % MOD;\n}\n\nlong long C(int n, int k) {\n    if (k < 0 || k > n) return 0;\n    return fact[n] * invfact[k] % MOD * invfact[n - k] % MOD;\n}\n\nint main() {\n    init();\n    int q;\n    cin >> q;\n    while (q--) {\n        int n, k;\n        cin >> n >> k;\n        cout << C(n, k) << \"\\n\";\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Trójkąt Pascala (moduł dowolny)",
+     "code": "// Trójkąt Pascala: dowolny moduł (także złożony), n <= ~5000. O(n^2) czasu i pamięci.\nconst int N = 1000;\nlong long Cp[N + 1][N + 1];\nvoid pascal(long long mod) {\n    for (int n = 0; n <= N; n++) {\n        Cp[n][0] = Cp[n][n] = 1 % mod;\n        for (int k = 1; k < n; k++) Cp[n][k] = (Cp[n - 1][k - 1] + Cp[n - 1][k]) % mod;\n    }\n}",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Twierdzenie Lucasa",
+     "code": "// Twierdzenie Lucasa: C(n, k) mod p = iloczyn C(n_i, k_i) po cyfrach n, k w systemie o podstawie p.\n// p pierwsze i małe (silnie do p - 1), n, k do 1e18.\nlong long lucasP;\nvector<long long> lf, lif;                 // silnie i odwrotności silni modulo p\nlong long pmod(long long a, long long b, long long m) {\n    long long r = 1; a %= m;\n    while (b) { if (b & 1) r = r * a % m; a = a * a % m; b >>= 1; }\n    return r;\n}\nvoid lucasInit(long long p) {\n    lucasP = p;\n    lf.assign(p, 1); lif.assign(p, 1);\n    for (long long i = 1; i < p; i++) lf[i] = lf[i - 1] * i % p;\n    lif[p - 1] = pmod(lf[p - 1], p - 2, p);\n    for (long long i = p - 1; i > 0; i--) lif[i - 1] = lif[i] * i % p;\n}\nlong long smallC(long long n, long long k) {     // n, k < p\n    if (k < 0 || k > n) return 0;\n    return lf[n] * lif[k] % lucasP * lif[n - k] % lucasP;\n}\nlong long lucas(long long n, long long k) {\n    long long r = 1;\n    while (n > 0 || k > 0) {\n        r = r * smallC(n % lucasP, k % lucasP) % lucasP;\n        if (r == 0) return 0;\n        n /= lucasP; k /= lucasP;\n    }\n    return r;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sytuacja",
+      "Metoda",
+      "Koszt"
+     ],
+     "rows": [
+      [
+       "n ≤ 10^6–10^7, moduł pierwszy > n",
+       "silnie + odwrotności silni",
+       "O(N) + O(1) na zapytanie"
+      ],
+      [
+       "n ≤ ~5000, dowolny moduł",
+       "trójkąt Pascala",
+       "O(n²)"
+      ],
+      [
+       "n do 10^18, mały pierwszy p",
+       "Lucas",
+       "O(p) + O(log_p n)"
+      ],
+      [
+       "n do 10^9, k ≤ 10^6, moduł pierwszy",
+       "iloczyn n(n−1)…(n−k+1) · inv(k!)",
+       "O(k)"
+      ],
+      [
+       "dokładna wartość (bez modulo)",
+       "iteracyjnie w __int128 lub Pascal w long long",
+       "do n ≈ 66 dla wszystkich k"
+      ],
+      [
+       "moduł złożony, duże n",
+       "rozkład modułu na p^e + CRT (uogólniony Lucas)",
+       "zaawansowane"
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Tożsamość",
+      "Wzór"
+     ],
+     "rows": [
+      [
+       "symetria",
+       "C(n, k) = C(n, n−k)"
+      ],
+      [
+       "suma wiersza",
+       "Σ_k C(n, k) = 2^n"
+      ],
+      [
+       "kij hokejowy",
+       "Σ_{i=k}^{n} C(i, k) = C(n+1, k+1)"
+      ],
+      [
+       "Vandermonde",
+       "Σ_i C(m, i)·C(n, k−i) = C(m+n, k)"
+      ],
+      [
+       "dwumian Newtona",
+       "(a + b)^n = Σ_k C(n, k)·a^k·b^(n−k)"
+      ],
+      [
+       "gwiazdki i kreski",
+       "liczba rozwiązań x1+…+xk = n, xi ≥ 0: C(n+k−1, k−1)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "long long C(int n, int k)",
+     "desc": "dwumian modulo p z tablic fact/invfact; 0 dla k < 0 lub k > n",
+     "complexity": "O(1) po O(N)",
+     "returns": "long long",
+     "example": "C(5, 2) == 10"
+    },
+    {
+     "sig": "void init()",
+     "desc": "liczy fact[0..N] i invfact[0..N]",
+     "complexity": "O(N + log p)"
+    },
+    {
+     "sig": "long long lucas(long long n, long long k)",
+     "desc": "C(n, k) mod małe pierwsze p dla ogromnych n",
+     "complexity": "O(log_p n)"
+    }
+   ],
+   "pitfalls": [
+    "Brak sprawdzenia `k < 0 || k > n` → indeks ujemny w invfact albo bzdurny wynik.",
+    "Silnie modulo p zerują się dla n ≥ p — metoda fact/invfact wymaga n < p (dla p = 10^9+7 zawsze OK przy n ≤ 10^7).",
+    "Iloczyn `fact[n] * invfact[k] * invfact[n-k]` bez `% MOD` po każdym mnożeniu przepełnia long long.",
+    "Tablice silni do 10^7 to 2 × 80 MB w long long — sprawdź limit pamięci (można trzymać w int).",
+    "Pascal w long long bez modulo przepełnia się od n ≈ 67 (C(67, 33) ≈ 1,4·10^19).",
+    "Lucas działa dla PIERWSZEGO p; dla p^e i modułów złożonych potrzebne są inne metody."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dwumian newtona",
+      "symbol newtona c++",
+      "n po k",
+      "binomial coefficient",
+      "newton modulo",
+      "ncr c++"
+     ],
+     "a": "`C(n, k) = n! / (k!(n−k)!)`. Na OI zwykle modulo 10^9+7: policz `fact[]` i `invfact[]` do max n (O(N)), a potem\n`C(n, k) = fact[n]·invfact[k]·invfact[n−k] mod p` w O(1). Dla małych n i dowolnego modułu — trójkąt Pascala O(n²).\nPełny program jest w treści."
+    },
+    {
+     "q": [
+      "n po k modulo 10^9+7",
+      "dwumian modulo p",
+      "nCr mod p",
+      "newton modulo 1e9+7",
+      "dwumian mod"
+     ],
+     "a": "Dzielenie zastępujemy odwrotnościami: `invfact[N] = fact[N]^(p−2)`, `invfact[i−1] = invfact[i]·i`. Każde zapytanie to\ndwa mnożenia modulo. Działa, bo p pierwsze i n < p (więc żadna silnia nie jest podzielna przez p).",
+     "code": "const long long MOD = 1'000'000'007;\nconst int N = 100;\nvector<long long> f(N + 1), fi(N + 1);\nf[0] = 1;\nfor (int i = 1; i <= N; i++) f[i] = f[i - 1] * i % MOD;\nlong long r = 1, b = f[N], e = MOD - 2;\nwhile (e) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\nfi[N] = r;\nfor (int i = N; i > 0; i--) fi[i - 1] = fi[i] * i % MOD;\nauto C = [&](int n, int k) -> long long {\n    if (k < 0 || k > n) return 0;\n    return f[n] * fi[k] % MOD * fi[n - k] % MOD;\n};\ncout << C(100, 50) << \" \" << C(5, 2) << \"\\n\";   // 538992043 10"
+    },
+    {
+     "q": [
+      "trójkąt pascala",
+      "pascal triangle dp",
+      "dwumian bez odwrotności",
+      "trojkat pascala c++"
+     ],
+     "a": "`C[n][0] = C[n][n] = 1`, `C[n][k] = C[n−1][k−1] + C[n−1][k]`. Same dodawania — działa z **dowolnym** modułem\n(także złożonym, np. 10^9) i bez modulo do n ≈ 66 w long long. Koszt O(n²) czasu i pamięci, więc n ≤ ~5000.",
+     "code": "int n = 6;\nvector<vector<long long>> C(n + 1, vector<long long>(n + 1, 0));\nfor (int i = 0; i <= n; i++) {\n    C[i][0] = 1;\n    for (int k = 1; k <= i; k++) C[i][k] = C[i - 1][k - 1] + C[i - 1][k];\n}\nfor (int k = 0; k <= n; k++) cout << C[n][k] << \" \";\ncout << \"\\n\";   // 1 6 15 20 15 6 1"
+    },
+    {
+     "q": [
+      "dwumian modulo liczba złożona",
+      "nCr mod m nie pierwsze",
+      "newton modulo 10^9 zlozone",
+      "dwumian modulo nie pierwsze"
+     ],
+     "a": "Odwrotności silni modulo złożone m nie muszą istnieć. Dla n ≤ ~5000 użyj trójkąta Pascala (same dodawania).\nDla dużych n: rozłóż m na potęgi pierwszych `p^e`, policz `C(n, k) mod p^e` (uogólniony Lucas/Granville albo\nLucas dla e = 1) i sklej chińskim twierdzeniem o resztach."
+    },
+    {
+     "q": [
+      "twierdzenie lucasa",
+      "lucas theorem",
+      "n po k modulo male p",
+      "dwumian duże n małe p",
+      "lucas c++"
+     ],
+     "a": "Dla pierwszego `p`: zapisz `n` i `k` w systemie o podstawie `p`; wtedy `C(n, k) ≡ Π C(n_i, k_i) (mod p)`\n(gdy `k_i > n_i` — wynik 0). Silnie liczysz tylko do `p − 1`, a zapytanie kosztuje O(log_p n). Kod jest w treści."
+    },
+    {
+     "q": [
+      "dwumian bez modulo long long",
+      "dokładna wartość n po k",
+      "nCr bez przepelnienia",
+      "n po k long long duze"
+     ],
+     "a": "Licz iteracyjnie `r = r · (n − k + i) / i` dla `i = 1..k` (z `k = min(k, n−k)`) — po każdym kroku `r = C(n−k+i, i)`\njest całkowite. Iloczyn pośredni może przekroczyć long long, więc mnóż w `__int128`. Wszystkie C(n, k) mieszczą się\nw long long do n = 66 (C(66, 33) ≈ 7,2·10^18), C(67, 33) już nie.",
+     "code": "auto Cexact = [](long long n, long long k) {\n    if (k < 0 || k > n) return (long long)0;\n    k = min(k, n - k);\n    __int128 r = 1;\n    for (long long i = 1; i <= k; i++) r = r * (n - k + i) / i;\n    return (long long)r;\n};\ncout << Cexact(66, 33) << \" \" << Cexact(52, 5) << \"\\n\";   // 7219428434016265740 2598960"
+    },
+    {
+     "q": [
+      "dwumian duże n małe k",
+      "n do 10^9 k do 10^6",
+      "nCr n huge k small",
+      "n po k dla duzego n"
+     ],
+     "a": "Gdy `n` jest ogromne (np. 10^9 lub 10^18), ale `k` małe, a p pierwsze i > k:\n`C(n, k) = n·(n−1)·…·(n−k+1) / k!` — licz licznik modulo p w O(k) i pomnóż przez `inv(k!)`. Każdy czynnik\nnajpierw zredukuj modulo p (`(n − i) % p`). Gdy któryś czynnik licznika jest podzielny przez p — użyj Lucasa.",
+     "code": "const long long MOD = 1'000'000'007;\nauto power = [&](long long a, long long b) {\n    long long r = 1; a %= MOD;\n    while (b) { if (b & 1) r = r * a % MOD; a = a * a % MOD; b >>= 1; }\n    return r;\n};\nlong long n = 1000000000, k = 5, num = 1, den = 1;\nfor (long long i = 0; i < k; i++) {\n    num = num * ((n - i) % MOD) % MOD;\n    den = den * (i + 1) % MOD;\n}\ncout << num * power(den, MOD - 2) % MOD << \"\\n\";   // C(1e9, 5) mod p"
+    },
+    {
+     "q": [
+      "własności dwumianu",
+      "suma n po k = 2^n",
+      "hockey stick",
+      "tożsamości kombinatoryczne",
+      "wzor vandermonde"
+     ],
+     "a": "Najczęściej używane: symetria `C(n, k) = C(n, n−k)`, suma wiersza `Σ C(n, k) = 2^n`, kij hokejowy\n`Σ_{i=k}^{n} C(i, k) = C(n+1, k+1)`, Vandermonde `Σ C(m, i)·C(n, k−i) = C(m+n, k)` oraz\n`k·C(n, k) = n·C(n−1, k−1)`. Pozwalają zamienić sumę O(n) na jeden dwumian O(1). Tabela jest w treści."
+    },
+    {
+     "q": [
+      "dwumian k > n",
+      "n po k gdy k ujemne",
+      "C(n,k) k wieksze od n",
+      "dwumian poza zakresem"
+     ],
+     "a": "Z definicji kombinatorycznej `C(n, k) = 0`, gdy `k < 0` lub `k > n` (nie da się wybrać). W kodzie zawsze zaczynaj\nfunkcję od `if (k < 0 || k > n) return 0;` — inaczej odwołasz się do `invfact[n − k]` z ujemnym indeksem."
+    },
+    {
+     "q": [
+      "silnia modulo",
+      "factorial mod p",
+      "n! mod p",
+      "silnia modulo 10^9+7"
+     ],
+     "a": "Licz iteracyjnie `f = f · i mod p` — O(n). Jeśli `n ≥ p`, to `n!` zawiera czynnik `p`, więc `n! ≡ 0 (mod p)`.\nDla wielu zapytań — tablica `fact[]`. Dla n ~ 10^9 i p = 10^9+7 iteracja jest za wolna (istnieją szybsze\nalgorytmy, ale na OI to rzadkość).",
+     "code": "const long long MOD = 1'000'000'007;\nlong long f = 1;\nfor (int i = 1; i <= 20; i++) f = f * i % MOD;\ncout << f << \"\\n\";   // 20! mod 1e9+7"
+    },
+    {
+     "q": [
+      "liczba podzbiorów k elementowych",
+      "ile sposobów wybrać k z n",
+      "kombinacje bez powtorzen",
+      "ile podzbiorow ma zbior"
+     ],
+     "a": "Podzbiorów k-elementowych zbioru n-elementowego jest `C(n, k)`; wszystkich podzbiorów — `2^n`. Gdy kolejność ma\nznaczenie (wariacje bez powtórzeń) — `n!/(n−k)!`. Gdy elementy mogą się powtarzać (kombinacje z powtórzeniami) —\n`C(n+k−1, k)`."
+    },
+    {
+     "q": [
+      "parzystość dwumianu",
+      "n po k nieparzyste",
+      "C(n,k) mod 2",
+      "kiedy dwumian jest nieparzysty"
+     ],
+     "a": "Z Lucasa dla p = 2: `C(n, k)` jest nieparzyste ⇔ każdy bit `k` jest też bitem `n`, czyli `(k & n) == k`.\nNp. C(7, 3) = 35 nieparzyste (011 ⊆ 111), C(10, 3) = 120 parzyste. To wyjaśnia też, dlaczego trójkąt Pascala\nmodulo 2 wygląda jak trójkąt Sierpińskiego.",
+     "code": "auto odd = [](long long n, long long k) { return (k & n) == k; };\ncout << odd(10, 3) << \" \" << odd(7, 3) << \"\\n\";   // 0 1"
+    }
+   ],
+   "related": [
+    "math-mod-inverse",
+    "math-fast-pow",
+    "math-combinatorics",
+    "math-crt",
+    "dp-grid-paths",
+    "math-inclusion-exclusion",
+    "math-derangements-stirling",
+    "math-ntt",
+    "oi-py-numbers"
+   ]
+  },
+  {
+   "id": "math-matrix-pow",
+   "title": "Potęgowanie macierzy — Fibonacci w O(log n), rekurencje liniowe, ścieżki długości k",
+   "category": "Matematyka",
+   "tags": [
+    "potęgowanie macierzy",
+    "matrix exponentiation",
+    "rekurencja liniowa",
+    "fibonacci",
+    "macierz przejść",
+    "graf"
+   ],
+   "aliases": [
+    "potęgowanie macierzy",
+    "matrix exponentiation",
+    "fibonacci macierz",
+    "macierz fibonacciego",
+    "rekurencja liniowa",
+    "linear recurrence",
+    "szybkie potegowanie macierzy",
+    "matrix power c++",
+    "fibonacci log n"
+   ],
+   "summary": "Rekurencję liniową f(n) = c1·f(n−1) + … + ck·f(n−k) zapisujemy jako mnożenie wektora stanu przez stałą macierz k×k. Wtedy f(n) dostajemy z M^n liczonego szybkim potęgowaniem w O(k³ log n) — n może być rzędu 10^18.",
+   "complexity": "O(k³ · log n) dla macierzy k×k; pamięć O(k²)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "Jeśli stan (wektor kilku ostatnich wartości) zmienia się co krok przez **ten sam** liniowy przepis, to krok to\nmnożenie przez macierz `M`, a `n` kroków to `M^n`. Mnożenie macierzy jest łączne, więc `M^n` liczymy szybkim\npotęgowaniem: O(log n) mnożeń po O(k³).\n\n**Fibonacci:** `[F(n+1), F(n)]ᵀ = [[1, 1], [1, 0]] · [F(n), F(n−1)]ᵀ`, więc\n`[[1, 1], [1, 0]]^n = [[F(n+1), F(n)], [F(n), F(n−1)]]`.\n\n**Ogólnie** dla `f(n) = c1·f(n−1) + … + ck·f(n−k)`: wektor `v_i = (f(i+k−1), …, f(i))`, macierz towarzysząca\nma w pierwszym wierszu `c1 … ck`, a pod przekątną jedynki (przesunięcie). `v_n = M^n · v_0`, a `f(n)` to ostatnia\nwspółrzędna.\n\n**Sygnały:** „n ≤ 10^18” przy rekurencji lub DP z małą liczbą stanów i stałymi przejściami, „liczba ścieżek\ndługości dokładnie k”, „liczba słów długości n bez zakazanego wzorca”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: Fibonacci w O(log n)",
+     "code": "// F(n) mod 1e9+7 dla n <= 1e18 przez potęgowanie macierzy 2x2.\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\ntypedef array<array<long long, 2>, 2> Mat;\n\nMat mul(const Mat &A, const Mat &B) {\n    Mat C{};                                     // zera\n    for (int i = 0; i < 2; i++)\n        for (int k = 0; k < 2; k++)\n            for (int j = 0; j < 2; j++)\n                C[i][j] = (C[i][j] + A[i][k] * B[k][j]) % MOD;\n    return C;\n}\n\nMat mpow(Mat A, long long e) {\n    Mat R{};\n    R[0][0] = R[1][1] = 1;                       // macierz jednostkowa\n    while (e > 0) {\n        if (e & 1) R = mul(R, A);\n        A = mul(A, A);\n        e >>= 1;\n    }\n    return R;\n}\n\nint main() {\n    long long n;\n    cin >> n;\n    Mat M{};\n    M[0][0] = 1; M[0][1] = 1; M[1][0] = 1;       // [[1,1],[1,0]]\n    cout << mpow(M, n)[0][1] << \"\\n\";            // element [0][1] = F(n)\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: rekurencja liniowa rzędu k",
+     "code": "// Ogólna rekurencja liniowa rzędu k: f(n) = c1 f(n-1) + ... + ck f(n-k)  (mod 1e9+7).\n// Wejście: k, potem c1..ck, potem f(0)..f(k-1), potem n (do 1e18).\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\ntypedef vector<vector<long long>> Mat;\n\nMat mul(const Mat &A, const Mat &B) {\n    int n = A.size();\n    Mat C(n, vector<long long>(n, 0));\n    for (int i = 0; i < n; i++)\n        for (int k = 0; k < n; k++) {\n            if (A[i][k] == 0) continue;\n            for (int j = 0; j < n; j++)\n                C[i][j] = (C[i][j] + A[i][k] * B[k][j]) % MOD;\n        }\n    return C;\n}\n\nMat mpow(Mat A, long long e) {\n    int n = A.size();\n    Mat R(n, vector<long long>(n, 0));\n    for (int i = 0; i < n; i++) R[i][i] = 1;\n    for (; e > 0; e >>= 1) {\n        if (e & 1) R = mul(R, A);\n        A = mul(A, A);\n    }\n    return R;\n}\n\nint main() {\n    int k;\n    cin >> k;\n    vector<long long> c(k), f(k);\n    for (auto &x : c) cin >> x;\n    for (auto &x : f) cin >> x;\n    long long n;\n    cin >> n;\n    Mat M(k, vector<long long>(k, 0));\n    for (int j = 0; j < k; j++) M[0][j] = (c[j] % MOD + MOD) % MOD;   // pierwszy wiersz: współczynniki\n    for (int i = 1; i < k; i++) M[i][i - 1] = 1;                     // przesunięcie stanu\n    // v0 = (f(k-1), ..., f(0)); f(n) = ostatnia współrzędna M^n * v0\n    Mat P = mpow(M, n);\n    long long ans = 0;\n    for (int j = 0; j < k; j++) ans = (ans + P[k - 1][j] * (f[k - 1 - j] % MOD)) % MOD;\n    cout << ans << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Problem",
+      "Stan",
+      "Macierz"
+     ],
+     "rows": [
+      [
+       "Fibonacci",
+       "(F(n), F(n−1))",
+       "[[1, 1], [1, 0]]"
+      ],
+      [
+       "f(n) = a·f(n−1) + b·f(n−2)",
+       "(f(n), f(n−1))",
+       "[[a, b], [1, 0]]"
+      ],
+      [
+       "f(n) = f(n−1) + f(n−2) + c",
+       "(f(n), f(n−1), 1)",
+       "[[1, 1, c], [1, 0, 0], [0, 0, 1]]"
+      ],
+      [
+       "suma S(n) = Σ F(i)",
+       "(F(n+1), F(n), S(n))",
+       "[[1, 1, 0], [1, 0, 0], [1, 0, 1]]"
+      ],
+      [
+       "ścieżki długości L w grafie",
+       "liczba ścieżek do każdego wierzchołka",
+       "macierz sąsiedztwa A; wynik (A^L)[u][v]"
+      ],
+      [
+       "DP z automatem (słowa bez wzorca)",
+       "stan automatu (np. KMP)",
+       "liczba przejść między stanami"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Mnożenie macierzy **nie jest przemienne** — przy `R = mul(R, A)` dla potęg jednej macierzy kolejność nie ma\nznaczenia, ale przy składaniu różnych macierzy (np. `M2 · M1 · v`) — ma. Macierz startowa w potęgowaniu to\n**jednostkowa**, nie zerowa."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "Mat mul(const Mat &A, const Mat &B)",
+     "desc": "iloczyn macierzy k×k modulo MOD",
+     "complexity": "O(k³)",
+     "returns": "Mat"
+    },
+    {
+     "sig": "Mat mpow(Mat A, long long e)",
+     "desc": "A^e szybkim potęgowaniem (start od macierzy jednostkowej)",
+     "complexity": "O(k³ log e)",
+     "returns": "Mat"
+    }
+   ],
+   "pitfalls": [
+    "Start potęgowania od macierzy zerowej zamiast jednostkowej — wynik zawsze 0.",
+    "Brak modulo po każdym dodaniu iloczynu: suma k składników < MOD² może przekroczyć long long dla dużych k — redukuj na bieżąco.",
+    "Złożoność O(k³ log n): k = 100 i n = 10^18 to ~6·10^7 operacji na potęgowanie — ok, ale k = 500 już nie.",
+    "Ujemne współczynniki rekurencji — znormalizuj do [0, MOD) przed wpisaniem do macierzy.",
+    "Pomylenie, która współrzędna wektora to f(n) — sprawdź na małym n z ręcznie policzonymi wartościami.",
+    "Dla wielu zapytań o różne n z tą samą macierzą — przelicz potęgi M^(2^i) raz i mnóż wektor (O(k² log n) na zapytanie)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "potęgowanie macierzy",
+      "matrix exponentiation",
+      "szybkie potegowanie macierzy c++",
+      "matrix power",
+      "potegowanie macierzy kod"
+     ],
+     "a": "To szybkie potęgowanie, w którym zamiast liczb mnożymy macierze: `R = I` (jednostkowa), dopóki `e > 0`: jeśli bit\nustawiony, `R = R·A`; `A = A·A`; `e >>= 1`. Każde mnożenie k×k to O(k³), razem O(k³ log e). Pełne programy są\nw treści."
+    },
+    {
+     "q": [
+      "fibonacci macierz",
+      "fibonacci log n macierz",
+      "fibonacci 10^18",
+      "n-ty wyraz fibonacciego szybko",
+      "fibonacci matrix"
+     ],
+     "a": "`[[1, 1], [1, 0]]^n = [[F(n+1), F(n)], [F(n), F(n−1)]]`, więc F(n) to element `[0][1]` potęgi. Szybkim potęgowaniem\nmacierzy 2×2 to ok. 60 mnożeń dla n = 10^18. Wynik bierzemy modulo (np. 10^9+7), bo F(n) rośnie wykładniczo."
+    },
+    {
+     "q": [
+      "rekurencja liniowa",
+      "linear recurrence matrix",
+      "f(n) = a f(n-1) + b f(n-2) duże n",
+      "rekurencja macierz towarzyszaca"
+     ],
+     "a": "Zbuduj macierz k×k: pierwszy wiersz to współczynniki `c1..ck`, a `M[i][i−1] = 1` dla `i ≥ 1` (przesuwa stare wartości).\nWektor `(f(k−1), …, f(0))` pomnożony przez `M^n` daje `(f(n+k−1), …, f(n))`. Czas O(k³ log n)."
+    },
+    {
+     "q": [
+      "rekurencja ze stałą",
+      "f(n) = f(n-1) + f(n-2) + 1 macierz",
+      "wyraz wolny w macierzy",
+      "rekurencja niejednorodna macierz"
+     ],
+     "a": "Dodaj do stanu stałą współrzędną równą 1: stan `(f(n), f(n−1), 1)`, macierz `[[1, 1, c], [1, 0, 0], [0, 0, 1]]`.\nOstatni wiersz utrzymuje jedynkę, a kolumna `c` dodaje stałą w każdym kroku. Tak samo można dodać `n` (stan z `n` i `1`).",
+     "code": "const long long MOD = 1'000'000'007;\ntypedef array<array<long long,3>,3> M3;\nauto mul = [&](const M3 &A, const M3 &B) {\n    M3 C{};\n    for (int i = 0; i < 3; i++) for (int k = 0; k < 3; k++) for (int j = 0; j < 3; j++)\n        C[i][j] = (C[i][j] + A[i][k] * B[k][j]) % MOD;\n    return C;\n};\n// f(0) = 0, f(1) = 1, f(n) = f(n-1) + f(n-2) + 1\nM3 T{}; T[0] = {1, 1, 1}; T[1] = {1, 0, 0}; T[2] = {0, 0, 1};\nM3 R{}; R[0][0] = R[1][1] = R[2][2] = 1;\nlong long e = 19;                              // z (f(1), f(0), 1) do (f(20), f(19), 1)\nfor (M3 A = T; e; e >>= 1, A = mul(A, A)) if (e & 1) R = mul(R, A);\nlong long f20 = (R[0][0] * 1 + R[0][1] * 0 + R[0][2] * 1) % MOD;\ncout << f20 << \"\\n\";   // 17710"
+    },
+    {
+     "q": [
+      "liczba ścieżek długości k w grafie",
+      "walks of length k adjacency matrix",
+      "ile sciezek dlugosci k miedzy wierzcholkami",
+      "macierz sasiedztwa do potegi"
+     ],
+     "a": "`(A^k)[u][v]` = liczba ścieżek (spacerów, wierzchołki mogą się powtarzać) długości dokładnie `k` z `u` do `v`,\ngdzie `A` to macierz sąsiedztwa. Dowód: `(A^k)[u][v] = Σ_w (A^(k−1))[u][w]·A[w][v]` — ostatni krok z `w` do `v`.\nCzas O(n³ log k).",
+     "code": "int n = 3;\nvector<vector<long long>> A = {{0, 1, 1}, {1, 0, 1}, {1, 1, 0}};   // trójkąt K3\nauto mul = [&](const vector<vector<long long>> &X, const vector<vector<long long>> &Y) {\n    vector<vector<long long>> Z(n, vector<long long>(n, 0));\n    for (int i = 0; i < n; i++) for (int k = 0; k < n; k++) for (int j = 0; j < n; j++)\n        Z[i][j] += X[i][k] * Y[k][j];\n    return Z;\n};\nauto A3 = mul(mul(A, A), A);\ncout << A3[0][0] << \" \" << A3[0][1] << \"\\n\";   // 2 3"
+    },
+    {
+     "q": [
+      "złożoność potęgowania macierzy",
+      "macierz 100x100 do potęgi 10^18",
+      "matrix exponentiation complexity",
+      "czy zdaze z macierza"
+     ],
+     "a": "O(k³ · log n): mnożenie macierzy k×k to k³ operacji, a potęgowanie robi ≤ 2·log₂ n mnożeń. Dla k = 2 to nic,\ndla k = 100 i n = 10^18: 10^6 · 120 ≈ 1,2·10^8 — na granicy, ale zwykle się mieści. Pomaga pomijanie zer\ni kolejność pętli i-k-j (lepsze wykorzystanie cache)."
+    },
+    {
+     "q": [
+      "suma ciągu rekurencyjnego macierz",
+      "suma fibonacci do n",
+      "suma wyrazow rekurencji duze n",
+      "prefix sum fibonacci"
+     ],
+     "a": "Dodaj do stanu sumę: `(F(n+1), F(n), S(n))` z `S(n+1) = S(n) + F(n+1)` — macierz `[[1,1,0],[1,0,0],[1,0,1]]`.\nDla Fibonacciego jest też wzór `Σ_{i=0}^{n} F(i) = F(n+2) − 1`.",
+     "code": "// S(n) = F(0) + ... + F(n); stan (F(i+1), F(i), S(i)), start (1, 0, 0)\nlong long a = 1, b = 0, s = 0;\nfor (int i = 0; i < 10; i++) {          // 10 kroków ręcznie (macierz robi to samo w log n)\n    long long na = a + b, nb = a, ns = s + a;\n    a = na; b = nb; s = ns;\n}\ncout << s << \"\\n\";   // S(10) = 143 = F(12) - 1"
+    },
+    {
+     "q": [
+      "macierz przepełnienie mnożenie modulo",
+      "matrix mul overflow",
+      "mnozenie macierzy modulo long long"
+     ],
+     "a": "Każdy iloczyn `A[i][k]·B[k][j]` dwóch liczb < 10^9+7 to < ~10^18 — mieści się w long long, ale suma kilku już nie.\nBierz `% MOD` po każdym dodaniu (albo sumuj w `unsigned long long` i odejmuj `MOD²`, gdy przekroczy próg).\nDla modułów ~10^18 potrzebne jest `__int128`."
+    },
+    {
+     "q": [
+      "dp z macierzą przejść",
+      "automat i potęgowanie macierzy",
+      "liczba słów długości n bez wzorca",
+      "dp n do 10^18 macierz"
+     ],
+     "a": "Jeśli DP ma mało stanów (np. stan automatu KMP, ostatnie znaki, maska) i te same przejścia w każdym kroku,\nto `T[a][b]` = liczba sposobów przejścia ze stanu `b` do `a` w jednym kroku, a po `n` krokach — `T^n`. Np. słowa\nbinarne długości n bez „11”: stany „ostatni znak 0/1”.",
+     "code": "// T[nowy][stary]: z 0 można dopisać 0 lub 1, z 1 tylko 0\nlong long T[2][2] = {{1, 1}, {1, 0}};\nlong long v[2] = {1, 1};                // słowa długości 1: \"0\" i \"1\"\nfor (int len = 2; len <= 10; len++) {   // tu ręcznie; dla n = 1e18 -> potęgowanie T\n    long long n0 = T[0][0] * v[0] + T[0][1] * v[1];\n    long long n1 = T[1][0] * v[0] + T[1][1] * v[1];\n    v[0] = n0; v[1] = n1;\n}\ncout << v[0] + v[1] << \"\\n\";   // 144 = F(12)"
+    }
+   ],
+   "related": [
+    "math-fast-pow",
+    "dp-stairs-fibonacci",
+    "str-kmp",
+    "dp-intro",
+    "graph-representation",
+    "math-fft",
+    "math-gauss"
+   ]
+  }
+ ]
+}

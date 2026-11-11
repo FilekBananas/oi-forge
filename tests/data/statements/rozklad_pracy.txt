@@ -1,0 +1,23 @@
+Rozkład pracy
+W kolejce czeka n zadań, i-te zadanie trwa t_i minut. Zadania trzeba rozdzielić między k pracowników tak, aby każdy
+dostał spójny fragment kolejki (kilka kolejnych zadań), a kolejność zadań nie może się zmienić. Wszyscy pracują
+równocześnie, więc całość kończy się, gdy skończy najbardziej obciążony pracownik. Jaki jest najmniejszy możliwy czas
+zakończenia wszystkich zadań?
+Wejście
+W pierwszym wierszu znajdują się liczby n i k (1 ≤ k ≤ n ≤ 100 000). W drugim wierszu znajduje się n liczb całkowitych
+t_1, ..., t_n (1 ≤ t_i ≤ 10^9).
+Wyjście
+Wypisz najmniejszy możliwy czas zakończenia pracy.
+Przykład 1
+Wejście:
+5 2
+7 2 5 10 8
+Wyjście:
+18
+
+Przykład 2
+Wejście:
+4 4
+1 2 3 4
+Wyjście:
+4

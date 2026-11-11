@@ -1,0 +1,1561 @@
+{
+ "chunk": "techniques-search",
+ "articles": [
+  {
+   "id": "tech-binary-search",
+   "title": "Wyszukiwanie binarne (binsearch) na posortowanej tablicy",
+   "category": "Techniki",
+   "tags": [
+    "wyszukiwanie binarne",
+    "binary search",
+    "binsearch",
+    "lower_bound",
+    "upper_bound",
+    "posortowana tablica",
+    "niezmiennik"
+   ],
+   "aliases": [
+    "wyszukiwanie binarne",
+    "binsearch",
+    "binserch",
+    "binary search",
+    "binary search c++",
+    "wyszukiwanie binarne c++",
+    "lower_bound",
+    "upper_bound",
+    "lower bound jak dziala",
+    "binarne wyszukiwanie",
+    "bin search",
+    "bisekcja",
+    "szukanie binarne",
+    "wyszukiwanie polowkowe"
+   ],
+   "summary": "Na posortowanej tablicy znajdujemy pierwszy element spełniający monotoniczny warunek (np. `a[i] ≥ x`), za każdym razem odrzucając połowę przedziału — O(log n). Kluczem jest niezmiennik: gdzie na pewno jest odpowiedź i jak zawężamy przedział, żeby się nie zapętlić.",
+   "complexity": "O(log n) na wyszukiwanie (po sortowaniu O(n log n))",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Jeśli tablica jest posortowana, warunek `a[i] ≥ x` ma postać `fałsz, fałsz, …, fałsz, prawda, …, prawda`. Szukamy pierwszej „prawdy”. Patrzymy na środek: jeśli tam jest prawda, odpowiedź jest w lewej połowie (łącznie ze środkiem), jeśli fałsz — w prawej (bez środka). Po ~log₂ n krokach przedział ma długość 1.\n\n**Niezmiennik (wersja `while (lo < hi)`):** odpowiedź zawsze leży w `[lo, hi]`, gdzie `hi = n` oznacza „brak”. `mid = lo + (hi - lo) / 2` spełnia `lo ≤ mid < hi`, więc oba przypisania (`hi = mid` lub `lo = mid + 1`) zmniejszają przedział — pętla nie może się zapętlić."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „posortowana tablica i *q* zapytań: ile elementów ≤ *x*”, „znajdź pierwszy dzień, w którym…”, „najmniejszy indeks, dla którego…”, dane do 10^5–10^6 i zapytania do 10^5 (liniowe szukanie dałoby 10^10). Gdy warunek dotyczy odpowiedzi, a nie tablicy — patrz binsearch po wyniku."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: ręczne lower_bound / upper_bound",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Pierwszy indeks i w [0, n) z a[i] >= x (jak std::lower_bound); n, gdy nie ma.\nint lowerBound(const vector<int>& a, int x) {\n    int lo = 0, hi = a.size();          // odpowiedź zawsze w [lo, hi]\n    while (lo < hi) {\n        int mid = lo + (hi - lo) / 2;   // lo <= mid < hi\n        if (a[mid] >= x) hi = mid;      // mid może być odpowiedzią\n        else lo = mid + 1;              // a[mid] < x, odpowiedź na prawo\n    }\n    return lo;\n}\n// Pierwszy indeks i z a[i] > x (jak std::upper_bound).\nint upperBound(const vector<int>& a, int x) {\n    int lo = 0, hi = a.size();\n    while (lo < hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (a[mid] > x) hi = mid;\n        else lo = mid + 1;\n    }\n    return lo;\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<int> a(n);\n    for (auto& x : a) cin >> x;              // tablica posortowana niemalejąco\n    while (q--) {\n        int x;\n        cin >> x;\n        int lb = lowerBound(a, x), ub = upperBound(a, x);\n        // pozycja (1-indeksowana) pierwszego elementu >= x albo -1, oraz liczba wystąpień x\n        cout << (lb < n ? lb + 1 : -1) << ' ' << ub - lb << '\\n';\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Gotowe funkcje z <algorithm>",
+     "code": "vector<int> a = {1, 3, 3, 3, 7, 9};\nint x = 3;\nauto lb = lower_bound(a.begin(), a.end(), x);    // pierwszy >= 3 -> indeks 1\nauto ub = upper_bound(a.begin(), a.end(), x);    // pierwszy > 3  -> indeks 4\ncout << lb - a.begin() << ' ' << ub - a.begin() << '\\n';   // 1 4\ncout << ub - lb << '\\n';                                   // liczba trójek: 3\nbool found = binary_search(a.begin(), a.end(), 7);         // true\ncout << found << '\\n';\n// ostatni element <= x: prev(upper_bound) (o ile ub != a.begin())\nif (ub != a.begin()) cout << *prev(ub) << '\\n';            // 3"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Szukasz",
+      "Funkcja",
+      "Warunek „prawdy”"
+     ],
+     "rows": [
+      [
+       "pierwszy element ≥ x",
+       "lower_bound(x)",
+       "a[i] >= x"
+      ],
+      [
+       "pierwszy element > x",
+       "upper_bound(x)",
+       "a[i] > x"
+      ],
+      [
+       "ostatni element ≤ x",
+       "upper_bound(x) - 1",
+       "—"
+      ],
+      [
+       "ostatni element < x",
+       "lower_bound(x) - 1",
+       "—"
+      ],
+      [
+       "liczba elementów = x",
+       "upper_bound(x) - lower_bound(x)",
+       "—"
+      ],
+      [
+       "liczba elementów < x",
+       "lower_bound(x) - begin",
+       "—"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wariant while (lo <= hi) z zapamiętywaniem odpowiedzi",
+     "code": "// Wersja z „while (lo <= hi)” i zmienną ans — też poprawna, jeśli konsekwentnie trzymasz się zasad.\nint firstAtLeast(const vector<int>& a, int x) {\n    int lo = 0, hi = (int)a.size() - 1, ans = a.size();   // ans = n, gdy brak\n    while (lo <= hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (a[mid] >= x) {\n            ans = mid;          // kandydat, szukamy jeszcze bardziej na lewo\n            hi = mid - 1;\n        } else {\n            lo = mid + 1;\n        }\n    }\n    return ans;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "warn",
+     "md": "**Pułapka nieskończonej pętli:** przy szukaniu *ostatniej* prawdy (`if (ok(mid)) lo = mid; else hi = mid - 1;`) środek musi być zaokrąglony **w górę**: `mid = lo + (hi - lo + 1) / 2`. Z zaokrągleniem w dół dla `hi = lo + 1` dostajesz `mid = lo`, `lo = mid` i pętla stoi w miejscu.\n\n**Przepełnienie:** `(lo + hi) / 2` przepełnia `int`, gdy `lo + hi > 2^31 - 1` (np. binsearch po wartościach do 2·10^9). Pisz `lo + (hi - lo) / 2` albo używaj `long long`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "lower_bound(first, last, x)",
+     "desc": "iterator na pierwszy element ≥ x (lub last)",
+     "complexity": "O(log n)",
+     "returns": "iterator",
+     "example": "int i = lower_bound(a.begin(), a.end(), x) - a.begin();"
+    },
+    {
+     "sig": "upper_bound(first, last, x)",
+     "desc": "iterator na pierwszy element > x (lub last)",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "binary_search(first, last, x)",
+     "desc": "czy x występuje",
+     "complexity": "O(log n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "equal_range(first, last, x)",
+     "desc": "para {lower_bound, upper_bound}",
+     "complexity": "O(log n)",
+     "returns": "pair<iterator, iterator>"
+    },
+    {
+     "sig": "partition_point(first, last, pred)",
+     "desc": "pierwszy element, dla którego pred jest fałszywe (pred: prawda…prawda, fałsz…)",
+     "complexity": "O(log n)",
+     "returns": "iterator"
+    }
+   ],
+   "pitfalls": [
+    "Binsearch na nieposortowanej tablicy — wynik bez sensu (najpierw `sort`).",
+    "`mid = (lo + hi) / 2` z `lo = mid` w gałęzi — nieskończona pętla; przy `lo = mid` zaokrąglaj w górę.",
+    "Przepełnienie `lo + hi` dla dużych zakresów `int`.",
+    "Pomylenie `lower_bound` i `upper_bound` — sprawdź na tablicy z powtórzeniami.",
+    "`std::lower_bound(s.begin(), s.end(), x)` na `set`/`map` działa w O(n) (iteratory nie są swobodnego dostępu) — używaj `s.lower_bound(x)`.",
+    "Dereferencja wyniku równego `end()` (gdy brak elementu) — UB.",
+    "Tablica posortowana malejąco — trzeba odwrócić warunek (`greater<int>()` jako komparator)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "binsearch c++",
+      "wyszukiwanie binarne c++",
+      "binary search c++",
+      "jak napisać wyszukiwanie binarne",
+      "binserch kod",
+      "wyszukiwanie binarne kod"
+     ],
+     "a": "Trzymaj przedział `[lo, hi]`, w którym na pewno jest odpowiedź, i w każdym kroku sprawdzaj środek: jeśli warunek jest prawdziwy, `hi = mid`, w przeciwnym razie `lo = mid + 1`. Pętla `while (lo < hi)` z `mid = lo + (hi - lo) / 2` kończy się zawsze, a na końcu `lo == hi` to pierwszy indeks spełniający warunek. O(log n) kroków.",
+     "code": "// Pierwszy indeks i w [0, n) z a[i] >= x (jak std::lower_bound); n, gdy nie ma.\nint lowerBound(const vector<int>& a, int x) {\n    int lo = 0, hi = a.size();          // odpowiedź zawsze w [lo, hi]\n    while (lo < hi) {\n        int mid = lo + (hi - lo) / 2;   // lo <= mid < hi\n        if (a[mid] >= x) hi = mid;      // mid może być odpowiedzią\n        else lo = mid + 1;              // a[mid] < x, odpowiedź na prawo\n    }\n    return lo;\n}\n// Pierwszy indeks i z a[i] > x (jak std::upper_bound).\nint upperBound(const vector<int>& a, int x) {\n    int lo = 0, hi = a.size();\n    while (lo < hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (a[mid] > x) hi = mid;\n        else lo = mid + 1;\n    }\n    return lo;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "lower_bound jak działa",
+      "lower_bound c++",
+      "co zwraca lower_bound",
+      "lower bound przyklad"
+     ],
+     "a": "`lower_bound(a.begin(), a.end(), x)` zwraca iterator na **pierwszy element ≥ x** (albo `end()`, gdy wszystkie są mniejsze). Indeks dostajesz przez odjęcie `a.begin()`. Wymaga posortowanej tablicy i działa w O(log n). Liczba elementów `< x` to właśnie ten indeks.",
+     "code": "vector<int> a = {2, 4, 4, 8};\ncout << lower_bound(a.begin(), a.end(), 4) - a.begin() << '\\n';   // 1\ncout << lower_bound(a.begin(), a.end(), 5) - a.begin() << '\\n';   // 3\ncout << (lower_bound(a.begin(), a.end(), 9) == a.end()) << '\\n'; // 1 (brak)"
+    },
+    {
+     "q": [
+      "upper_bound c++",
+      "upper_bound jak działa",
+      "różnica lower_bound upper_bound",
+      "lower bound vs upper bound"
+     ],
+     "a": "`upper_bound` zwraca pierwszy element **> x**, a `lower_bound` pierwszy **≥ x**. Różnią się tylko wtedy, gdy `x` występuje w tablicy: wtedy `[lower_bound, upper_bound)` to dokładnie wszystkie kopie `x`. Obie O(log n) na posortowanym zakresie."
+    },
+    {
+     "q": [
+      "ile razy występuje x w posortowanej tablicy",
+      "liczba wystąpień w posortowanym wektorze",
+      "count in sorted array",
+      "ile elementow rownych x"
+     ],
+     "a": "`upper_bound(x) - lower_bound(x)` — różnica dwóch iteratorów to liczba kopii `x`, w O(log n). `std::count` też zadziała, ale w O(n). Dla wielu zapytań o różne wartości w niesortowanych danych prostsza jest `map<int,int>` z licznikami.",
+     "code": "vector<int> a = {1, 2, 2, 2, 5, 7};\nauto [lo, hi] = equal_range(a.begin(), a.end(), 2);\ncout << hi - lo << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "ile elementów mniejszych od x",
+      "ile liczb jest mniejszych lub rownych x",
+      "count less than x sorted",
+      "liczba elementów <= x"
+     ],
+     "a": "W posortowanej tablicy: liczba elementów `< x` to `lower_bound(x) - begin`, a `≤ x` to `upper_bound(x) - begin`. Każde zapytanie O(log n) po jednym sortowaniu O(n log n). Gdy elementy są dodawane w trakcie — Fenwick po wartościach lub `ordered_set`."
+    },
+    {
+     "q": [
+      "ostatni element mniejszy lub równy x",
+      "największy element <= x",
+      "poprzednik x w posortowanej tablicy",
+      "floor w tablicy"
+     ],
+     "a": "Weź `upper_bound(x)` (pierwszy `> x`) i cofnij się o jeden — o ile nie jest to `begin()` (wtedy takiego elementu nie ma). Analogicznie największy element `< x` to element przed `lower_bound(x)`. O(log n).",
+     "code": "vector<int> a = {1, 4, 6, 10};\nint x = 7;\nauto it = upper_bound(a.begin(), a.end(), x);\nif (it == a.begin()) cout << \"brak\\n\";\nelse cout << *prev(it) << '\\n';   // 6"
+    },
+    {
+     "q": [
+      "while l < r czy l <= r",
+      "binsearch l<r czy l<=r",
+      "która wersja binsearcha",
+      "while (l <= r) binary search"
+     ],
+     "a": "Obie są poprawne, jeśli trzymasz się jednej konwencji. `while (lo < hi)` z `hi = mid` / `lo = mid + 1` zostawia odpowiedź w `lo` (przedział półotwarty, `hi = n` = brak). `while (lo <= hi)` z `hi = mid - 1` / `lo = mid + 1` wymaga zapamiętania kandydata w zmiennej `ans`. Mieszanie elementów obu wersji to najczęstsza przyczyna błędów."
+    },
+    {
+     "q": [
+      "binsearch nieskończona pętla",
+      "wyszukiwanie binarne się zawiesza",
+      "binary search infinite loop",
+      "binsearch nie konczy sie"
+     ],
+     "a": "Pętla stoi, gdy przypisanie nie zmienia przedziału. Typowo: `lo = mid` przy `mid = (lo + hi) / 2` i `hi = lo + 1` daje `mid = lo`. Gdy w gałęzi jest `lo = mid` (szukasz ostatniej prawdy), licz `mid = lo + (hi - lo + 1) / 2`; gdy jest `hi = mid`, licz `mid = lo + (hi - lo) / 2`.",
+     "code": "// ostatni indeks i z a[i] <= x (lub -1), wersja z lo = mid\nint lastAtMost(const vector<int>& a, int x) {\n    int lo = -1, hi = (int)a.size() - 1;     // odpowiedź w [lo, hi]\n    while (lo < hi) {\n        int mid = lo + (hi - lo + 1) / 2;    // zaokrąglenie w górę: mid > lo\n        if (a[mid] <= x) lo = mid;\n        else hi = mid - 1;\n    }\n    return lo;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "przepełnienie mid binsearch",
+      "(l+r)/2 overflow",
+      "mid = l + (r-l)/2 dlaczego",
+      "binary search overflow"
+     ],
+     "a": "Gdy `lo` i `hi` są duże (np. binsearch po wartościach do 2·10^9 w `int`), `lo + hi` przekracza 2^31 − 1 i staje się ujemne. `lo + (hi - lo) / 2` liczy ten sam środek bez przepełnienia. Przy binsearchu po wyniku i tak zwykle używaj `long long` dla `lo`, `hi` i `mid`."
+    },
+    {
+     "q": [
+      "lower_bound na secie",
+      "set lower_bound wolne",
+      "lower_bound set O(n)",
+      "std::lower_bound set"
+     ],
+     "a": "Dla `set`/`map`/`multiset` używaj metody `s.lower_bound(x)` — działa w O(log n) po drzewie. Funkcja `std::lower_bound(s.begin(), s.end(), x)` też się skompiluje, ale iteratory zbioru nie są swobodnego dostępu, więc przesuwanie ich kosztuje O(n) — łatwy sposób na TLE.",
+     "code": "set<int> s = {1, 5, 9};\nauto it = s.lower_bound(6);      // O(log n)\ncout << *it << '\\n';             // 9"
+    },
+    {
+     "q": [
+      "binsearch malejąca tablica",
+      "lower_bound posortowane malejąco",
+      "binary search descending"
+     ],
+     "a": "Podaj komparator `greater<int>()` — wtedy `lower_bound(a.begin(), a.end(), x, greater<int>())` zwraca pierwszy element **≤ x** w tablicy malejącej. Alternatywnie odwróć tablicę albo zaneguj wartości. Ręcznie: zmień warunek w `if` na odpowiedni monotoniczny.",
+     "code": "vector<int> a = {9, 7, 7, 3, 1};               // malejąco\nauto it = lower_bound(a.begin(), a.end(), 7, greater<int>());\ncout << it - a.begin() << '\\n';                 // 1 (pierwszy <= 7)"
+    },
+    {
+     "q": [
+      "binsearch python",
+      "bisect python",
+      "wyszukiwanie binarne python",
+      "bisect_left bisect_right"
+     ],
+     "a": "W Pythonie moduł `bisect`: `bisect_left(a, x)` = `lower_bound`, `bisect_right(a, x)` = `upper_bound`. Lista musi być posortowana. Od Pythona 3.10 obie funkcje przyjmują `key=`.",
+     "code": "from bisect import bisect_left, bisect_right\na = [1, 3, 3, 3, 7]\nprint(bisect_left(a, 3), bisect_right(a, 3))   # 1 4\nprint(bisect_right(a, 3) - bisect_left(a, 3))  # 3",
+     "lang": "python"
+    }
+   ],
+   "related": [
+    "tech-binary-search-answer",
+    "tech-binary-search-real",
+    "tech-ternary-search",
+    "stl-sort",
+    "stl-set",
+    "tech-coordinate-compression",
+    "stl-binary-search",
+    "ds-segment-tree-descent",
+    "oi-interactive",
+    "oi-py-sorting-bisect",
+    "stl-ref-binary-search-minmax",
+    "tech-intervals"
+   ]
+  },
+  {
+   "id": "tech-binary-search-answer",
+   "title": "Wyszukiwanie binarne po wyniku (binsearch po odpowiedzi)",
+   "category": "Techniki",
+   "tags": [
+    "binsearch po wyniku",
+    "binary search on answer",
+    "monotoniczność",
+    "funkcja check",
+    "minimalizacja maksimum",
+    "parametric search"
+   ],
+   "aliases": [
+    "binsearch po wyniku",
+    "wyszukiwanie binarne po wyniku",
+    "binary search on answer",
+    "binsearch po odpowiedzi",
+    "binary search the answer",
+    "minimalna wartość taka że",
+    "binsearch z funkcją check",
+    "wyszukiwanie binarne po odpowiedzi",
+    "bs po wyniku",
+    "minimalizuj maksimum",
+    "maksymalizuj minimum"
+   ],
+   "summary": "Gdy łatwo **sprawdzić**, czy odpowiedź `x` jest wystarczająca, a trudno ją wprost policzyć, i sprawdzenie jest monotoniczne (jeśli `x` działa, to każde większe też), szukamy binarnie najmniejszego działającego `x`. Koszt: O(log C) wywołań funkcji `check`.",
+   "complexity": "O(log C · koszt check), np. O(n log C) — C to zakres możliwych odpowiedzi",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Zamiast pytać „jaka jest najmniejsza możliwa wartość?”, pytamy „czy da się osiągnąć wynik ≤ x?”. Jeśli odpowiedź na to drugie pytanie jest monotoniczna — `NIE, NIE, …, NIE, TAK, TAK, …` — to szukamy pierwszego `TAK` wyszukiwaniem binarnym po `x`. Funkcja `check(x)` jest zwykle zachłanna i liniowa.\n\n**Klasyki:** podział tablicy na *k* spójnych części minimalizujący największą sumę; rozstawienie *c* krów w zagrodach maksymalizujące minimalną odległość; minimalny czas produkcji *k* sztuk przez maszyny o różnych prędkościach; wycinka drzew (EKO) — największa wysokość cięcia dająca ≥ *M* drewna."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „**minimalna** wartość taka, że…”, „**maksymalna** wartość taka, że…”, „zminimalizuj największy…”, „zmaksymalizuj najmniejszy…”, odpowiedź z dużego zakresu (do 10^9–10^18), a dla ustalonej odpowiedzi łatwo sprawdzić wykonalność zachłannie."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: podział na k części minimalizujący największą sumę",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint n, k;\nvector<long long> a;\n\n// Czy da się podzielić tablicę na co najwyżej k spójnych kawałków o sumach <= limit?\nbool check(long long limit) {\n    int parts = 1;\n    long long cur = 0;\n    for (long long x : a) {\n        if (x > limit) return false;           // pojedynczy element się nie mieści\n        if (cur + x > limit) { parts++; cur = 0; }\n        cur += x;\n    }\n    return parts <= k;\n}\n\nint main() {\n    cin >> n >> k;\n    a.resize(n);\n    for (auto& x : a) cin >> x;\n    long long lo = 0, hi = accumulate(a.begin(), a.end(), 0LL);   // hi zawsze działa\n    while (lo < hi) {                          // szukamy najmniejszego limit z check == true\n        long long mid = lo + (hi - lo) / 2;\n        if (check(mid)) hi = mid;\n        else lo = mid + 1;\n    }\n    cout << lo << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: maksymalizacja minimum (agresywne krowy)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Agresywne krowy: rozstaw c krów w n zagrodach (pozycje x), maksymalizując minimalną odległość.\nint main() {\n    int n, c;\n    cin >> n >> c;\n    vector<long long> x(n);\n    for (auto& v : x) cin >> v;\n    sort(x.begin(), x.end());\n    auto canPlace = [&](long long d) {          // czy da się z odstępem >= d (zachłannie od lewej)\n        int placed = 1;\n        long long last = x[0];\n        for (int i = 1; i < n; i++)\n            if (x[i] - last >= d) { placed++; last = x[i]; }\n        return placed >= c;\n    };\n    long long lo = 0, hi = x[n - 1] - x[0];     // lo zawsze działa\n    while (lo < hi) {                           // szukamy NAJWIĘKSZEGO d z canPlace == true\n        long long mid = lo + (hi - lo + 1) / 2; // zaokrąglenie w górę, bo lo = mid\n        if (canPlace(mid)) lo = mid;\n        else hi = mid - 1;\n    }\n    cout << lo << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Szukasz",
+      "Monotoniczność check",
+      "Pętla"
+     ],
+     "rows": [
+      [
+       "najmniejszego x, który działa",
+       "NIE…NIE TAK…TAK",
+       "if (check(mid)) hi = mid; else lo = mid + 1; (mid w dół)"
+      ],
+      [
+       "największego x, który działa",
+       "TAK…TAK NIE…NIE",
+       "if (check(mid)) lo = mid; else hi = mid - 1; (mid w górę)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Dobór zakresu: `lo` = wartość na pewno za mała lub najmniejsza możliwa, `hi` = wartość na pewno wystarczająca (np. suma wszystkich elementów, maksymalny czas `k · max_t`). Sprawdź, czy `hi` naprawdę działa — inaczej binsearch zwróci `hi`, mimo że odpowiedzi nie ma."
+    },
+    {
+     "type": "warn",
+     "md": "W `check` łatwo o przepełnienie: np. liczba sztuk wyprodukowanych w czasie `T` to `Σ T / t_i` — przy `T = 10^18` i wielu maszynach suma przekracza `long long`. Przerywaj sumowanie, gdy przekroczy potrzebne `k`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bool check(long long x)",
+     "desc": "czy odpowiedź x jest wykonalna (monotoniczna)",
+     "complexity": "zwykle O(n)",
+     "returns": "bool"
+    },
+    {
+     "sig": "while (lo < hi) { mid = lo + (hi - lo) / 2; check(mid) ? hi = mid : lo = mid + 1; }",
+     "desc": "najmniejszy x z check(x) == true",
+     "complexity": "O(log C) wywołań"
+    },
+    {
+     "sig": "while (lo < hi) { mid = lo + (hi - lo + 1) / 2; check(mid) ? lo = mid : hi = mid - 1; }",
+     "desc": "największy x z check(x) == true",
+     "complexity": "O(log C) wywołań"
+    }
+   ],
+   "pitfalls": [
+    "Brak monotoniczności `check` — binsearch daje losowy wynik; udowodnij: jeśli x działa, to x+1 też (albo odwrotnie).",
+    "Zły zakres: `hi`, które nie działa, albo `lo`, które pomija odpowiedź (np. 0 vs 1).",
+    "Przepełnienie wewnątrz `check` lub w `lo + hi`.",
+    "Szukanie maksimum z `mid` zaokrąglanym w dół — nieskończona pętla.",
+    "`check` ze złożonością O(n log n) i 60 iteracji przy n = 10^6 — policz łączny koszt."
+   ],
+   "qa": [
+    {
+     "q": [
+      "binsearch po wyniku",
+      "wyszukiwanie binarne po wyniku",
+      "binary search on answer",
+      "binsearch po odpowiedzi jak",
+      "bs po wyniku kod"
+     ],
+     "a": "Piszesz funkcję `check(x)` — „czy da się osiągnąć wynik `x`?” — i upewniasz się, że jest monotoniczna. Potem binsearch po `x` w zakresie możliwych odpowiedzi: dla najmniejszego działającego `if (check(mid)) hi = mid; else lo = mid + 1;`. Złożoność O(log C · koszt check), np. 60 · O(n) dla odpowiedzi do 10^18.",
+     "code": "// Szablon: najmniejsze x w [lo, hi] z check(x) == true (zakładamy, że check(hi) == true).\nlong long firstTrue(long long lo, long long hi, const function<bool(long long)>& check) {\n    while (lo < hi) {\n        long long mid = lo + (hi - lo) / 2;\n        if (check(mid)) hi = mid;\n        else lo = mid + 1;\n    }\n    return lo;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "minimalna wartość taka że",
+      "najmniejsze x takie że",
+      "minimalny czas żeby",
+      "jak znaleźć minimalną odpowiedź"
+     ],
+     "a": "Gdy treść brzmi „znajdź najmniejsze x, dla którego da się…”, to niemal zawsze binsearch po wyniku: sprawdzenie dla ustalonego x jest prostsze niż bezpośrednie liczenie optimum. Warunek: jeśli x wystarcza, to każde większe też. Szukasz pierwszego `true` w porządku NIE…NIE TAK…TAK."
+    },
+    {
+     "q": [
+      "maksymalna wartość taka że",
+      "największe x takie że",
+      "maksymalizuj minimum binsearch",
+      "maximize minimum distance"
+     ],
+     "a": "Szukasz ostatniego `true` w porządku TAK…TAK NIE…NIE: `if (check(mid)) lo = mid; else hi = mid - 1;` z **zaokrągleniem w górę** `mid = lo + (hi - lo + 1) / 2`, inaczej pętla utknie przy `hi = lo + 1`. Przykład: rozstawienie krów z maksymalnym minimalnym odstępem — `check(d)` stawia krowy zachłannie od lewej."
+    },
+    {
+     "q": [
+      "jak sprawdzić monotoniczność",
+      "skąd wiem że mogę zrobić binsearch po wyniku",
+      "monotonicznosc check",
+      "kiedy binsearch po wyniku działa"
+     ],
+     "a": "Zadaj pytanie: jeśli odpowiedź `x` jest dobra, czy `x + 1` też musi być dobra (albo `x - 1`)? Np. jeśli da się podzielić tablicę z limitem sumy `L`, to z limitem `L + 1` tym bardziej. Jeśli taka implikacja zachodzi, `check` jest monotoniczna. Jeśli nie (np. „dokładnie k części”), przeformułuj problem („co najwyżej k części”)."
+    },
+    {
+     "q": [
+      "podział tablicy na k części minimalna maksymalna suma",
+      "split array largest sum",
+      "dzielenie na k kawałków",
+      "minimalizacja największej sumy"
+     ],
+     "a": "Binsearch po limicie `L` największej sumy: `check(L)` idzie zachłannie od lewej i otwiera nowy kawałek, gdy suma przekroczyłaby `L`; zwraca, czy kawałków jest ≤ k (i żaden element nie przekracza `L`). Zakres: `[max(a), sum(a)]`. Złożoność O(n log(sum))."
+    },
+    {
+     "q": [
+      "eko wycinka drzew binsearch",
+      "wysokość cięcia piły",
+      "drzewa ile drewna binsearch",
+      "spoj eko"
+     ],
+     "a": "Szukasz największej wysokości `H` piły, przy której ścięte drewno `Σ max(0, h_i - H)` wynosi co najmniej `M`. Ilość drewna maleje wraz z `H`, więc `check(H) = (drewno(H) ≥ M)` jest monotoniczna (TAK…TAK NIE…NIE). Binsearch po `H ∈ [0, max h]` z zaokrągleniem w górę, suma w `long long`. O(n log max h).",
+     "code": "long long maxCutHeight(const vector<long long>& h, long long M) {\n    auto wood = [&](long long H) {\n        long long s = 0;\n        for (long long x : h) if (x > H) s += x - H;\n        return s;\n    };\n    long long lo = 0, hi = *max_element(h.begin(), h.end());\n    while (lo < hi) {\n        long long mid = lo + (hi - lo + 1) / 2;\n        if (wood(mid) >= M) lo = mid;\n        else hi = mid - 1;\n    }\n    return lo;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "minimalny czas produkcji k sztuk",
+      "maszyny produkcja binsearch czas",
+      "factory machines binary search"
+     ],
+     "a": "W czasie `T` maszyna o czasie `t_i` zrobi `T / t_i` sztuk, więc `check(T) = Σ T / t_i ≥ k` — monotoniczne. Binsearch po `T ∈ [1, k · min t_i]`. Przerwij sumowanie, gdy suma przekroczy `k`, żeby uniknąć przepełnienia. O(n log(k · min t)).",
+     "code": "long long minTime(const vector<long long>& t, long long k) {\n    auto made = [&](long long T) {\n        long long s = 0;\n        for (long long x : t) {\n            s += T / x;\n            if (s >= k) return true;     // przerwij przed przepełnieniem\n        }\n        return false;\n    };\n    long long lo = 1, hi = *min_element(t.begin(), t.end()) * k;\n    while (lo < hi) {\n        long long mid = lo + (hi - lo) / 2;\n        if (made(mid)) hi = mid;\n        else lo = mid + 1;\n    }\n    return lo;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile iteracji binsearch po wyniku",
+      "zakres binsearch lo hi jak dobrać",
+      "binsearch 1e18 ile krokow"
+     ],
+     "a": "Liczba kroków to ⌈log₂(hi - lo + 1)⌉: ~30 dla 10^9, ~60 dla 10^18. Dobierz `hi` tak, by na pewno działało (np. suma wszystkich wartości, `k · max`), a `lo` jako najmniejszą sensowną wartość. Zbyt ciasny zakres gubi odpowiedź, zbyt szeroki kosztuje tylko kilka dodatkowych kroków — lepiej z zapasem, ale uważaj na przepełnienie w `check`."
+    },
+    {
+     "q": [
+      "binsearch po wyniku z dp",
+      "check jako dynamika",
+      "binsearch + dp",
+      "binsearch po wyniku i graf"
+     ],
+     "a": "`check` może być dowolnym algorytmem: BFS po grafie z krawędziami ≤ x, dynamiką, sprawdzeniem dwudzielności, przepływem. Łączny koszt to `log C · koszt(check)`, więc przy drogim `check` licz dokładnie. Przykład: „minimalna maksymalna waga krawędzi na ścieżce” — binsearch po wadze + BFS po krawędziach ≤ x (albo DSU/Kruskal bez binsearcha)."
+    },
+    {
+     "q": [
+      "równoległy binsearch",
+      "parallel binary search",
+      "binsearch dla wielu zapytań naraz"
+     ],
+     "a": "Gdy masz wiele zapytań, z których każde to binsearch po czasie/wartości, a `check` wymaga symulacji całego procesu, robisz binsearch dla wszystkich naraz: w każdej z O(log C) rund sortujesz zapytania po bieżącym `mid`, przechodzisz proces raz i rozstrzygasz wszystkie. Złożoność O((n + q) log C · koszt kroku) zamiast O(q · n log C)."
+    }
+   ],
+   "related": [
+    "tech-binary-search",
+    "tech-binary-search-real",
+    "tech-greedy",
+    "tech-ternary-search",
+    "oi-py-sorting-bisect"
+   ]
+  },
+  {
+   "id": "tech-binary-search-real",
+   "title": "Wyszukiwanie binarne na liczbach rzeczywistych",
+   "category": "Techniki",
+   "tags": [
+    "binsearch rzeczywisty",
+    "bisekcja",
+    "double",
+    "precyzja",
+    "stała liczba iteracji",
+    "pierwiastek"
+   ],
+   "aliases": [
+    "binsearch na double",
+    "wyszukiwanie binarne na liczbach rzeczywistych",
+    "binary search double",
+    "bisekcja",
+    "binsearch zmiennoprzecinkowy",
+    "binsearch precyzja",
+    "binsearch 100 iteracji",
+    "binary search real numbers",
+    "binsearch eps"
+   ],
+   "summary": "Na liczbach rzeczywistych przedział nigdy nie „zbiegnie się” do jednego punktu, dlatego wykonujemy stałą liczbę iteracji (np. 100): każda połowi przedział, więc po 100 krokach błąd jest rzędu (hi − lo)/2^100. Tak liczy się pierwiastki, odpowiedzi w zadaniach z czasem/odległością i maksymalne średnie.",
+   "complexity": "O(iteracje · koszt check), zwykle 60–100 iteracji",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Warunek `check(x)` jest monotoniczny jak w wersji całkowitej, ale `x` jest liczbą rzeczywistą. Zamiast `while (lo < hi)` piszemy `for (int it = 0; it < 100; it++)`, a środek to `(lo + hi) / 2`. Po k iteracjach długość przedziału to `(hi − lo) / 2^k`; `double` ma ~15–16 cyfr znaczących, więc 60–100 iteracji wyczerpuje jego precyzję.\n\nPętla `while (hi - lo > eps)` też działa, ale przy dużych wartościach (np. 10^9) i małym `eps` (10^-9) może się **nigdy nie skończyć** — różnica sąsiednich `double` przy 10^9 to ok. 10^-7."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: pierwiastek sześcienny bisekcją",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    double x;\n    cin >> x;                              // x >= 0\n    double lo = 0, hi = max(1.0, x);       // pierwiastek sześcienny leży w [0, max(1, x)]\n    for (int it = 0; it < 100; it++) {\n        double mid = (lo + hi) / 2;\n        if (mid * mid * mid < x) lo = mid;\n        else hi = mid;\n    }\n    cout << fixed << setprecision(9) << lo << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: maksymalna średnia fragmentu długości ≥ k",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Maksymalna średnia spójnego fragmentu długości >= k: binsearch po średniej m.\n// check(m): czy istnieje fragment długości >= k z sumą (a[i] - m) >= 0 (sumy prefiksowe + minimum).\nint main() {\n    int n, k;\n    cin >> n >> k;\n    vector<double> a(n);\n    for (auto& v : a) cin >> v;\n    auto check = [&](double m) {\n        vector<double> pref(n + 1, 0);\n        for (int i = 0; i < n; i++) pref[i + 1] = pref[i] + a[i] - m;\n        double minPref = 0;\n        for (int i = k; i <= n; i++) {\n            minPref = min(minPref, pref[i - k]);\n            if (pref[i] - minPref >= 0) return true;\n        }\n        return false;\n    };\n    double lo = *min_element(a.begin(), a.end()), hi = *max_element(a.begin(), a.end());\n    for (int it = 0; it < 100; it++) {\n        double mid = (lo + hi) / 2;\n        if (check(mid)) lo = mid;\n        else hi = mid;\n    }\n    cout << fixed << setprecision(6) << lo << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Wypisuj wynik z ustaloną precyzją: `cout << fixed << setprecision(9) << x;`. Bez `fixed` duże liczby wypiszą się w notacji wykładniczej (`1e+09`), a sprawdzarka może tego nie zaakceptować."
+    },
+    {
+     "type": "warn",
+     "md": "Jeśli odpowiedź jest **ułamkiem o małym mianowniku** albo da się przeskalować (np. „z dokładnością do 0,01” → binsearch całkowity po wartościach ×100), wybierz wersję całkowitą — zero problemów z precyzją."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (int it = 0; it < 100; it++) { mid = (lo + hi) / 2; ... }",
+     "desc": "bisekcja ze stałą liczbą iteracji",
+     "complexity": "O(100 · check)"
+    },
+    {
+     "sig": "cout << fixed << setprecision(k) << x",
+     "desc": "wypisanie z k miejscami po przecinku",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`while (hi - lo > 1e-9)` przy dużych wartościach — pętla może się nie kończyć.",
+    "Za mało iteracji (np. 30) przy dużym zakresie — za mała precyzja.",
+    "Wypisanie bez `fixed` — notacja wykładnicza.",
+    "Porównania `==` na `double` w `check` — używaj nierówności, ewentualnie z eps.",
+    "`float` zamiast `double`/`long double` — tylko ~7 cyfr znaczących."
+   ],
+   "qa": [
+    {
+     "q": [
+      "binsearch na double",
+      "wyszukiwanie binarne na liczbach rzeczywistych",
+      "binary search double c++",
+      "bisekcja c++",
+      "binsearch zmiennoprzecinkowy"
+     ],
+     "a": "Zamiast `while (lo < hi)` wykonaj stałą liczbę kroków, np. 100: `mid = (lo + hi) / 2`, a potem `lo = mid` lub `hi = mid` zależnie od `check(mid)`. Każdy krok połowi przedział, więc po 100 krokach jesteś na granicy precyzji `double`. Złożoność O(100 · koszt check).",
+     "code": "double bisect(double lo, double hi, const function<bool(double)>& isEnough) {   // najmniejsze x z isEnough(x)\n    for (int it = 0; it < 100; it++) {\n        double mid = (lo + hi) / 2;\n        if (isEnough(mid)) hi = mid;\n        else lo = mid;\n    }\n    return hi;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile iteracji binsearch double",
+      "100 iteracji binsearch",
+      "dlaczego stała liczba iteracji",
+      "binsearch eps czy iteracje"
+     ],
+     "a": "Po k iteracjach przedział ma długość `(hi − lo) / 2^k`. Dla zakresu 10^9 i 60 iteracji to ~10^-9, dla 100 iteracji już poniżej precyzji `double`. Stała liczba kroków zawsze się kończy, podczas gdy `while (hi - lo > eps)` przy dużych liczbach może trwać wiecznie, bo sąsiednie `double` różnią się bardziej niż `eps`."
+    },
+    {
+     "q": [
+      "jak wypisać double z precyzją",
+      "setprecision fixed",
+      "wypisanie 6 miejsc po przecinku c++",
+      "printf %.9f"
+     ],
+     "a": "`cout << fixed << setprecision(6) << x;` wypisuje dokładnie 6 cyfr po przecinku (bez `fixed` — 6 cyfr znaczących i czasem notację `e`). W stylu C: `printf(\"%.6f\\n\", x);`. Ustaw to raz przed pętlą wypisywania.",
+     "code": "double x = 1234567.891011;\ncout << fixed << setprecision(3) << x << '\\n';   // 1234567.891\nprintf(\"%.2f\\n\", x);                             // 1234567.89"
+    },
+    {
+     "q": [
+      "pierwiastek binsearchem",
+      "sqrt binsearch",
+      "pierwiastek k-tego stopnia bisekcja",
+      "nth root binary search"
+     ],
+     "a": "Szukasz `y` z `y^k = x`: funkcja `y^k` jest rosnąca dla `y ≥ 0`, więc bisekcja na `[0, max(1, x)]` ze 100 iteracjami. Dla pierwiastka całkowitego (`⌊√n⌋` dla `n` do 10^18) użyj binsearcha na `long long` albo `sqrtl` z poprawką ±1 — `sqrt` na `double` może się mylić o jeden."
+    },
+    {
+     "q": [
+      "maksymalna średnia podtablicy",
+      "max average subarray length k",
+      "fragment o największej średniej",
+      "binsearch po średniej"
+     ],
+     "a": "Średnia fragmentu ≥ `m` ⇔ suma `(a[i] − m)` na fragmencie ≥ 0. Dla ustalonego `m` sprawdzasz to w O(n) sumami prefiksowymi (dla fragmentów długości ≥ k odejmujesz minimum prefiksu sprzed `i−k`). `check` jest monotoniczny w `m`, więc bisekcja po `m` — O(n · 100)."
+    },
+    {
+     "q": [
+      "binsearch rzeczywisty a całkowity",
+      "czy mogę zamienić double na int w binsearchu",
+      "skalowanie do całkowitych"
+     ],
+     "a": "Jeśli wymagana dokładność jest stała (np. dwa miejsca po przecinku) i wartości wejściowe są całkowite, przemnóż wszystko przez 100 i zrób binsearch po liczbach całkowitych — bez błędów zaokrągleń. Uważaj tylko na przepełnienie po przemnożeniu (przejdź na `long long`)."
+    }
+   ],
+   "related": [
+    "tech-binary-search-answer",
+    "tech-binary-search",
+    "tech-ternary-search",
+    "num-floating"
+   ]
+  },
+  {
+   "id": "tech-ternary-search",
+   "title": "Wyszukiwanie ternarne (minimum funkcji unimodalnej)",
+   "category": "Techniki",
+   "tags": [
+    "wyszukiwanie ternarne",
+    "ternary search",
+    "funkcja unimodalna",
+    "funkcja wypukła",
+    "minimum funkcji",
+    "optymalizacja"
+   ],
+   "aliases": [
+    "wyszukiwanie ternarne",
+    "ternary search",
+    "ternarne",
+    "ternary search c++",
+    "trójdzielne wyszukiwanie",
+    "minimum funkcji wypukłej",
+    "funkcja unimodalna",
+    "ternary search na liczbach calkowitych",
+    "ternarka"
+   ],
+   "summary": "Dla funkcji, która najpierw maleje, a potem rośnie (unimodalnej), porównujemy wartości w dwóch punktach wewnątrz przedziału i odrzucamy trzecią część, w której minimum na pewno nie ma. Na liczbach całkowitych lepiej szukać binarnie pierwszego `x` z `f(x) ≤ f(x+1)`.",
+   "complexity": "O(log C) obliczeń f (ok. 100 iteracji dla double, ~2·log₁.₅ C dla int)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Bierzemy `m1 = lo + (hi − lo)/3` i `m2 = hi − (hi − lo)/3`. Jeśli `f(m1) < f(m2)`, to minimum nie może leżeć na prawo od `m2` (funkcja już tam rośnie) — ustawiamy `hi = m2`. W przeciwnym razie `lo = m1`. Każdy krok odcina 1/3 przedziału.\n\n**Wersja całkowita (bezpieczniejsza).** Dla wypukłej funkcji różnica `f(x+1) − f(x)` jest niemalejąca, więc warunek `f(x) ≤ f(x+1)` ma postać NIE…NIE TAK…TAK — zwykły binsearch po pierwszym `TAK` daje argument minimum."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „wybierz punkt/czas/parametr minimalizujący koszt”, koszt to suma funkcji wypukłych (np. `Σ w_i·|x − a_i|`, `Σ (x − a_i)²`), odległość dwóch punktów poruszających się liniowo w czasie, „optymalna liczba czegoś” z kosztem malejącym, a potem rosnącym.\n\n**Uwaga:** funkcja musi być **ściśle** unimodalna poza samym minimum. Płaskie odcinki (plateau) z dala od minimum psują ternary search — w takich przypadkach trzeba innej metody."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: minimum funkcji wypukłej na liczbach całkowitych",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> a(n), w(n);\n    for (auto& x : a) cin >> x;\n    for (auto& x : w) cin >> x;\n    auto f = [&](long long x) {               // suma ważonych odległości — funkcja wypukła\n        long long s = 0;\n        for (int i = 0; i < n; i++) s += w[i] * llabs(x - a[i]);\n        return s;\n    };\n    // binsearch po pierwszym x z f(x) <= f(x + 1) — to argument minimum\n    long long lo = *min_element(a.begin(), a.end()), hi = *max_element(a.begin(), a.end());\n    while (lo < hi) {\n        long long mid = lo + (hi - lo) / 2;\n        if (f(mid) <= f(mid + 1)) hi = mid;\n        else lo = mid + 1;\n    }\n    cout << f(lo) << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: ternary search na liczbach rzeczywistych",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Dwa punkty poruszają się ze stałymi prędkościami; najmniejsza odległość w czasie t z [0, T].\nint main() {\n    double x1, y1, vx1, vy1, x2, y2, vx2, vy2, T;\n    cin >> x1 >> y1 >> vx1 >> vy1 >> x2 >> y2 >> vx2 >> vy2 >> T;\n    auto dist = [&](double t) {               // odległość w chwili t — funkcja wypukła\n        double dx = (x2 + vx2 * t) - (x1 + vx1 * t);\n        double dy = (y2 + vy2 * t) - (y1 + vy1 * t);\n        return sqrt(dx * dx + dy * dy);\n    };\n    double lo = 0, hi = T;\n    for (int it = 0; it < 200; it++) {\n        double m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;\n        if (dist(m1) < dist(m2)) hi = m2;\n        else lo = m1;\n    }\n    cout << fixed << setprecision(6) << dist((lo + hi) / 2) << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Plateau (równe wartości) poza minimum psuje porównanie `f(m1) < f(m2)` — algorytm może odrzucić część z minimum. Dla funkcji wypukłych plateau może być tylko na poziomie minimum, więc jest bezpiecznie; dla dowolnych „górek” — nie."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "m1 = lo + (hi - lo) / 3; m2 = hi - (hi - lo) / 3",
+     "desc": "dwa punkty podziału",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "if (f(m1) < f(m2)) hi = m2; else lo = m1;",
+     "desc": "odrzucenie trzeciej części (minimum)",
+     "complexity": "O(koszt f)"
+    },
+    {
+     "sig": "if (f(mid) <= f(mid + 1)) hi = mid; else lo = mid + 1;",
+     "desc": "wersja całkowita przez binsearch",
+     "complexity": "O(koszt f)"
+    }
+   ],
+   "pitfalls": [
+    "Funkcja nie jest unimodalna (np. ma kilka lokalnych minimów) — wynik przypadkowy.",
+    "Płaskie fragmenty poza minimum.",
+    "Wersja całkowita z `m1`, `m2` i `while (hi - lo > 2)` bez sprawdzenia pozostałych 3 punktów na końcu.",
+    "Szukanie maksimum zamiast minimum — odwróć nierówność.",
+    "Za mało iteracji w wersji rzeczywistej — każda iteracja zmniejsza przedział tylko o 1/3."
+   ],
+   "qa": [
+    {
+     "q": [
+      "ternary search",
+      "wyszukiwanie ternarne",
+      "ternary search c++",
+      "ternarne wyszukiwanie jak dziala",
+      "ternarka kod"
+     ],
+     "a": "Dla funkcji unimodalnej (maleje, potem rośnie) porównujesz `f(m1)` i `f(m2)` w punktach podziału na trzy części: jeśli `f(m1) < f(m2)`, minimum jest w `[lo, m2]`, inaczej w `[m1, hi]`. Na `double` robisz ~100–200 iteracji. Na liczbach całkowitych prościej: binsearch po pierwszym `x` z `f(x) ≤ f(x+1)`.",
+     "code": "double ternaryMin(double lo, double hi, const function<double(double)>& f) {\n    for (int it = 0; it < 200; it++) {\n        double m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;\n        if (f(m1) < f(m2)) hi = m2;\n        else lo = m1;\n    }\n    return (lo + hi) / 2;   // argument minimum\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ternary search na liczbach całkowitych",
+      "ternary search int",
+      "minimum funkcji na intach",
+      "ternary integer"
+     ],
+     "a": "Najprościej binsearchem: dla funkcji wypukłej warunek `f(x) ≤ f(x+1)` jest monotoniczny (NIE…NIE TAK…TAK), więc pierwszy `x`, który go spełnia, to argument minimum. Alternatywnie klasyczna wersja: `while (hi - lo > 2)` z `m1`, `m2`, a na końcu sprawdzasz wszystkie pozostałe punkty. Obie O(log C).",
+     "code": "long long argminConvex(long long lo, long long hi, const function<long long(long long)>& f) {\n    while (lo < hi) {\n        long long mid = lo + (hi - lo) / 2;\n        if (f(mid) <= f(mid + 1)) hi = mid;\n        else lo = mid + 1;\n    }\n    return lo;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kiedy ternary search",
+      "funkcja unimodalna co to",
+      "skąd wiedzieć że funkcja jest wypukła",
+      "czy mogę użyć ternary search"
+     ],
+     "a": "Ternary search wymaga, by funkcja na przedziale najpierw ściśle malała, a potem ściśle rosła (płaskie może być tylko minimum). Wystarczający warunek: funkcja jest **wypukła** — np. suma funkcji wypukłych (`|x − a|`, `(x − a)²`, maksimum funkcji liniowych). Gdy nie umiesz tego uzasadnić, sprawdź brutem na małych danych, czy różnice `f(x+1) − f(x)` są niemalejące."
+    },
+    {
+     "q": [
+      "ternary search maksimum",
+      "maksimum funkcji ternary",
+      "ternary search max"
+     ],
+     "a": "Odwróć porównanie: jeśli `f(m1) < f(m2)`, maksimum jest w `[m1, hi]` (`lo = m1`), w przeciwnym razie `hi = m2`. Albo szukaj minimum funkcji `-f`. Wymagana jest funkcja wklęsła/unimodalna z jednym maksimum."
+    },
+    {
+     "q": [
+      "suma odległości minimum",
+      "punkt minimalizujący sumę odległości",
+      "mediana minimalizuje sumę",
+      "sum of absolute differences minimum"
+     ],
+     "a": "`f(x) = Σ |x − a_i|` jest minimalizowana przez **medianę** — możesz ją wziąć wprost (`nth_element`) w O(n). Dla wag `Σ w_i·|x − a_i|` minimum jest w ważonej medianie (pierwszy punkt, w którym skumulowana waga przekracza połowę). Ternary/binsearch po `x` też zadziała, bo funkcja jest wypukła, ale kosztuje O(n log C)."
+    },
+    {
+     "q": [
+      "ternary search ile iteracji",
+      "ternary search precyzja",
+      "dlaczego 200 iteracji ternary"
+     ],
+     "a": "Każda iteracja zmniejsza przedział do 2/3, więc po k krokach długość to `(2/3)^k · (hi − lo)`. Dla precyzji 10^-9 przy zakresie 10^9 potrzeba ok. log₁.₅(10^18) ≈ 102 iteracji; 200 daje duży zapas. Złoty podział (golden section) oszczędza jedno obliczenie `f` na iterację, ale rzadko jest potrzebny."
+    }
+   ],
+   "related": [
+    "tech-binary-search-real",
+    "tech-binary-search",
+    "tech-binary-search-answer",
+    "geo-point-vector"
+   ]
+  },
+  {
+   "id": "tech-two-pointers",
+   "title": "Dwa wskaźniki (gąsienica)",
+   "category": "Techniki",
+   "tags": [
+    "dwa wskaźniki",
+    "two pointers",
+    "gąsienica",
+    "metoda gąsienicy",
+    "spójny fragment",
+    "posortowana tablica"
+   ],
+   "aliases": [
+    "dwa wskazniki",
+    "dwa wskaźniki",
+    "two pointers",
+    "gasienica",
+    "gąsienica",
+    "metoda gąsienicy",
+    "caterpillar method",
+    "two pointer technique",
+    "najdłuższy fragment z sumą",
+    "ile fragmentów z sumą mniejszą",
+    "para o sumie x posortowana"
+   ],
+   "summary": "Dwa indeksy przesuwane tylko do przodu: prawy rozszerza fragment, lewy go skraca, gdy warunek przestaje być spełniony. Każdy wskaźnik robi co najwyżej n kroków, więc zamiast O(n²) par mamy O(n). Wymaga monotoniczności: zwężenie poprawnego fragmentu nie psuje warunku.",
+   "complexity": "O(n) (plus ewentualne sortowanie O(n log n))",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja (gąsienica).** Dla każdego prawego końca `r` szukamy najmniejszego lewego końca `l`, przy którym fragment `[l, r]` jest „dobry”. Jeśli dobre fragmenty są zamknięte na zwężanie (podfragment dobrego jest dobry — np. suma liczb nieujemnych ≤ S), to przy zwiększaniu `r` optymalne `l` nigdy się nie cofa. Gąsienica wydłuża głowę (`r++`) i podciąga ogon (`l++`), aż fragment znów jest dobry.\n\n**Wariant na posortowanej tablicy:** szukanie pary o sumie `x` — `l` od lewej, `r` od prawej; za mała suma → `l++`, za duża → `r--`."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „najdłuższy/najkrótszy spójny fragment, w którym suma ≤ S / jest co najwyżej k różnych wartości / max − min ≤ d”, „ile fragmentów spełnia…”, „para elementów o sumie/różnicy x”, liczby **nieujemne** (dla ujemnych sum gąsienica nie działa — wtedy sumy prefiksowe + mapa/binsearch)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: najdłuższy fragment i liczba fragmentów o sumie ≤ S",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    long long S;\n    cin >> n >> S;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;              // a[i] >= 0\n    int left = 0, longest = 0;\n    long long sum = 0, count = 0;            // count = liczba fragmentów o sumie <= S\n    for (int right = 0; right < n; right++) {\n        sum += a[right];                     // głowa gąsienicy idzie do przodu\n        while (sum > S) sum -= a[left++];    // ogon podciągamy, aż fragment znów dobry\n        longest = max(longest, right - left + 1);\n        count += right - left + 1;           // wszystkie fragmenty [l', right] z l' >= left są dobre\n    }\n    cout << longest << ' ' << count << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Para o danej sumie w posortowanej tablicy",
+     "code": "// Para indeksów i < j z a[i] + a[j] == x w posortowanej tablicy (lub {-1, -1}).\npair<int, int> pairWithSum(const vector<long long>& a, long long x) {\n    int l = 0, r = (int)a.size() - 1;\n    while (l < r) {\n        long long s = a[l] + a[r];\n        if (s == x) return {l, r};\n        if (s < x) l++;       // potrzebujemy większej sumy\n        else r--;             // potrzebujemy mniejszej\n    }\n    return {-1, -1};\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Licząc fragmenty „dobre”, dla każdego `right` dodajesz `right − left + 1`, bo każdy fragment kończący się w `right` i zaczynający się nie wcześniej niż `left` jest dobry. Licząc fragmenty „o sumie dokładnie S”, użyj `count(≤ S) − count(≤ S − 1)`."
+    },
+    {
+     "type": "warn",
+     "md": "Gąsienica wymaga monotoniczności. Przy liczbach ujemnych dodanie elementu może zmniejszyć sumę, więc lewy wskaźnik musiałby się cofać — technika nie działa. Wtedy: sumy prefiksowe + `map` (liczba fragmentów o sumie k) lub sumy prefiksowe + binsearch/kolejka monotoniczna."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (r...) { dodaj a[r]; while (zły) usuń a[l++]; }",
+     "desc": "szablon gąsienicy",
+     "complexity": "O(n) łącznie"
+    },
+    {
+     "sig": "count += r - l + 1",
+     "desc": "liczba dobrych fragmentów kończących się w r",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "pairWithSum(a, x)",
+     "desc": "para o sumie x w posortowanej tablicy",
+     "complexity": "O(n)",
+     "returns": "pair<int, int>"
+    }
+   ],
+   "pitfalls": [
+    "Liczby ujemne przy warunku na sumę — brak monotoniczności.",
+    "Licznik fragmentów w `int` — może sięgać n²/2.",
+    "Lewy wskaźnik wyprzedzający prawy (`l > r + 1`) przy pustym fragmencie — sprawdź, czy `while` nie usuwa za dużo (np. pojedynczy element > S).",
+    "Zapomniane posortowanie przed szukaniem par.",
+    "Aktualizacja wyniku przed podciągnięciem ogona — liczysz zły fragment."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dwa wskaźniki",
+      "two pointers c++",
+      "metoda gąsienicy",
+      "gasienica algorytm",
+      "technika dwóch wskaźników",
+      "dwa wskazniki kod"
+     ],
+     "a": "Prawy wskaźnik `r` przesuwasz po kolei i dodajesz `a[r]` do fragmentu; lewy `l` przesuwasz, dopóki fragment nie spełnia warunku, usuwając `a[l]`. Oba wskaźniki tylko rosną, więc łącznie wykonują ≤ 2n kroków — O(n). Działa, gdy podfragment dobrego fragmentu też jest dobry.",
+     "code": "vector<int> a = {2, 1, 3, 1, 1, 4};\nlong long S = 5, sum = 0;\nint l = 0, best = 0;\nfor (int r = 0; r < (int)a.size(); r++) {\n    sum += a[r];\n    while (sum > S) sum -= a[l++];\n    best = max(best, r - l + 1);\n}\ncout << best << '\\n';   // 3 (np. 1 3 1 albo 3 1 1)"
+    },
+    {
+     "q": [
+      "najdłuższy fragment o sumie mniejszej niż s",
+      "longest subarray with sum at most k",
+      "najdluzszy podciag spojny suma <= s",
+      "maksymalna dlugosc fragmentu suma"
+     ],
+     "a": "Gąsienica: rozszerzaj w prawo, a gdy suma przekroczy `S`, podciągaj lewy koniec. Po każdym kroku `[l, r]` to najdłuższy dobry fragment kończący się w `r`, więc wynik to max `r − l + 1`. O(n) dla liczb nieujemnych; dla ujemnych — sumy prefiksowe i binsearch po minimum prefiksów."
+    },
+    {
+     "q": [
+      "ile fragmentów ma sumę mniejszą od s",
+      "count subarrays with sum less than k",
+      "liczba spojnych fragmentow o sumie <= s",
+      "ile przedzialow spelnia warunek"
+     ],
+     "a": "Dla każdego `r` po podciągnięciu ogona wszystkie fragmenty `[l', r]` z `l' ≥ l` są dobre — dodajesz `r − l + 1`. Suma po wszystkich `r` to wynik, w O(n). Licznik trzymaj w `long long` (do n²/2 ≈ 2·10^10 dla n = 2·10^5)."
+    },
+    {
+     "q": [
+      "para o sumie x",
+      "two sum posortowana tablica",
+      "dwie liczby o sumie x",
+      "pair with given sum sorted"
+     ],
+     "a": "W posortowanej tablicy ustaw `l = 0`, `r = n − 1`: gdy `a[l] + a[r] < x`, zwiększ `l`; gdy większa — zmniejsz `r`; gdy równa — znalazłeś. O(n) po sortowaniu O(n log n). Bez sortowania: `unordered_set`/`map` z dotychczasowymi wartościami (O(n) średnio)."
+    },
+    {
+     "q": [
+      "najkrótszy fragment zawierający wszystkie kolory",
+      "smallest window containing all",
+      "minimalne okno ze wszystkimi wartosciami",
+      "najkrótszy fragment z k różnymi"
+     ],
+     "a": "Gąsienica z licznikami: rozszerzaj w prawo, aktualizując `cnt[kolor]` i liczbę obecnych kolorów; dopóki wszystkie są obecne, zapisuj długość i podciągaj lewy koniec (zmniejszając licznik). Każdy wskaźnik przechodzi tablicę raz — O(n + k).",
+     "code": "int shortestWithAll(const vector<int>& a, int k) {   // kolory 0..k-1\n    vector<int> cnt(k, 0);\n    int present = 0, best = INT_MAX, l = 0;\n    for (int r = 0; r < (int)a.size(); r++) {\n        if (cnt[a[r]]++ == 0) present++;\n        while (present == k) {\n            best = min(best, r - l + 1);\n            if (--cnt[a[l]] == 0) present--;\n            l++;\n        }\n    }\n    return best == INT_MAX ? -1 : best;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "co najwyżej k różnych wartości w fragmencie",
+      "longest subarray with at most k distinct",
+      "najdluzszy fragment k roznych liczb"
+     ],
+     "a": "Liczniki wartości (po kompresji tablica, inaczej `map`) i liczba różnych w oknie. Rozszerzasz w prawo; gdy różnych jest więcej niż `k`, podciągasz lewy koniec, zmniejszając liczniki. Wynik to max długości. O(n) z tablicą, O(n log n) z mapą."
+    },
+    {
+     "q": [
+      "trzy liczby o sumie zero",
+      "3sum",
+      "three sum two pointers",
+      "trójki o sumie x"
+     ],
+     "a": "Posortuj tablicę, ustal pierwszy element `a[i]` i szukaj pary o sumie `x − a[i]` dwoma wskaźnikami na `[i+1, n−1]`. Razem O(n²) zamiast O(n³). Uważaj na powtórzenia, jeśli trzeba wypisać unikalne trójki."
+    },
+    {
+     "q": [
+      "dwa wskaźniki a liczby ujemne",
+      "gąsienica nie działa ujemne",
+      "two pointers negative numbers"
+     ],
+     "a": "Przy ujemnych liczbach dołożenie elementu może **zmniejszyć** sumę, więc fragment, który był za duży, może znów stać się dobry po rozszerzeniu — lewy wskaźnik musiałby się cofać. Zamiast gąsienicy: sumy prefiksowe (`suma(l, r) = P[r] − P[l−1]`) i dla każdego `r` szukanie odpowiedniego `l` (mapa, posortowane prefiksy, kolejka monotoniczna)."
+    }
+   ],
+   "related": [
+    "tech-sliding-window",
+    "ds-monotonic-queue",
+    "ds-prefix-sums",
+    "tech-two-sum-hashmap",
+    "tech-binary-search",
+    "ds-min-stack-queue"
+   ]
+  },
+  {
+   "id": "tech-sliding-window",
+   "title": "Okno przesuwne (sliding window)",
+   "category": "Techniki",
+   "tags": [
+    "okno przesuwne",
+    "sliding window",
+    "okno stałej długości",
+    "liczba różnych w oknie",
+    "suma okna",
+    "rolling"
+   ],
+   "aliases": [
+    "okno przesuwne",
+    "sliding window",
+    "przesuwne okno",
+    "okno długości k",
+    "sliding window technique",
+    "liczba różnych elementów w oknie",
+    "distinct in window",
+    "suma okna k",
+    "najdłuższy podciąg bez powtórzeń",
+    "longest substring without repeating characters"
+   ],
+   "summary": "Okno długości k przesuwamy o jedną pozycję: dodajemy element wchodzący i usuwamy wychodzący, zamiast liczyć każde okno od zera. Daje O(n) (lub O(n log n) z mapą) dla sumy, liczby różnych wartości, częstości; okno zmiennej długości to dwa wskaźniki.",
+   "complexity": "O(n) dla operacji O(1) przy dodawaniu/usuwaniu; O(n log n) z map/multiset",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Sąsiednie okna `[i, i+k−1]` i `[i+1, i+k]` różnią się dwoma elementami. Trzymamy „stan okna” (sumę, liczniki wartości, liczbę różnych) i aktualizujemy go przy każdym przesunięciu w O(1). Wymaga to, żeby stan dało się **zmienić przy usunięciu** elementu — suma i liczniki tak, ale minimum już nie (do minimum służy kolejka monotoniczna)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „dla każdego spójnego fragmentu długości *k*…”, „w każdym oknie…”, „ile różnych…”, „czy w jakimś oknie długości *k* są wszystkie litery”, anagramy wzorca w tekście (okno długości |p| z licznikami liter)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba różnych wartości w każdym oknie długości k",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, k;\n    cin >> n >> k;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    map<long long, int> cnt;                  // liczniki wartości w oknie (wartości dowolne)\n    vector<int> answer;\n    for (int i = 0; i < n; i++) {\n        cnt[a[i]]++;                          // element wchodzi\n        if (i >= k) {                         // element a[i-k] wychodzi\n            auto it = cnt.find(a[i - k]);\n            if (--it->second == 0) cnt.erase(it);\n        }\n        if (i >= k - 1) answer.push_back(cnt.size());   // liczba różnych w oknie [i-k+1, i]\n    }\n    for (size_t i = 0; i < answer.size(); i++) cout << answer[i] << \" \\n\"[i + 1 == answer.size()];\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Okno zmiennej długości: najdłuższy fragment bez powtórzeń",
+     "code": "// Najdłuższy fragment napisu bez powtarzających się znaków (okno zmiennej długości).\nint longestUniqueSubstring(const string& s) {\n    vector<int> lastPos(256, -1);\n    int best = 0, left = 0;\n    for (int right = 0; right < (int)s.size(); right++) {\n        unsigned char c = s[right];\n        if (lastPos[c] >= left) left = lastPos[c] + 1;   // przeskocz za poprzednie wystąpienie\n        lastPos[c] = right;\n        best = max(best, right - left + 1);\n    }\n    return best;   // \"abcabcbb\" -> 3\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Stan okna",
+      "Dodanie / usunięcie",
+      "Struktura"
+     ],
+     "rows": [
+      [
+       "suma, średnia",
+       "+= / -=",
+       "zmienna"
+      ],
+      [
+       "liczba różnych",
+       "licznik 0→1 / 1→0",
+       "tablica liczników lub map"
+      ],
+      [
+       "minimum / maksimum",
+       "nie da się „odjąć”",
+       "kolejka monotoniczna lub multiset"
+      ],
+      [
+       "mediana / k-ty",
+       "wstaw / usuń",
+       "dwa multisety lub ordered_set"
+      ],
+      [
+       "hash fragmentu",
+       "rolling hash",
+       "liczba"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "cnt[a[i]]++; if (i >= k) cnt[a[i-k]]--;",
+     "desc": "przesunięcie okna o 1",
+     "complexity": "O(1) z tablicą, O(log n) z map"
+    },
+    {
+     "sig": "if (i >= k - 1) ...",
+     "desc": "pierwsze pełne okno kończy się na k−1",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "Wypisywanie wyniku dla niepełnych okien (`i < k − 1`).",
+    "Zapomniane usuwanie zerowych liczników z `map` przy liczeniu różnych (`cnt.size()` liczy też zera).",
+    "Minimum okna przez „odejmowanie” — niemożliwe; potrzebna kolejka monotoniczna.",
+    "`unordered_map` z domyślnym hashem przy złośliwych danych — wolne; tablica po kompresji jest najszybsza."
+   ],
+   "qa": [
+    {
+     "q": [
+      "okno przesuwne",
+      "sliding window c++",
+      "okno przesuwne jak dziala",
+      "technika okna przesuwnego",
+      "sliding window kod"
+     ],
+     "a": "Trzymasz stan bieżącego okna i przy przesunięciu o jedną pozycję dodajesz element wchodzący oraz usuwasz wychodzący. Każdy element jest dodany i usunięty raz, więc całość O(n) przy aktualizacji O(1). Okno stałej długości to jedna pętla z warunkiem `i >= k`, okno zmiennej długości to dwa wskaźniki."
+    },
+    {
+     "q": [
+      "suma okna długości k",
+      "suma k kolejnych elementów",
+      "maksymalna suma k kolejnych",
+      "sliding window sum"
+     ],
+     "a": "Trzymaj bieżącą sumę: `sum += a[i]`, a dla `i ≥ k` także `sum -= a[i−k]`; od `i = k−1` masz sumę pełnego okna. O(n) i O(1) pamięci; suma w `long long`.",
+     "code": "vector<long long> a = {4, -1, 2, 7, -3, 5};\nint k = 3;\nlong long sum = 0, best = LLONG_MIN;\nfor (int i = 0; i < (int)a.size(); i++) {\n    sum += a[i];\n    if (i >= k) sum -= a[i - k];\n    if (i >= k - 1) best = max(best, sum);\n}\ncout << best << '\\n';   // 9 (7 - 3 + 5)"
+    },
+    {
+     "q": [
+      "liczba różnych elementów w oknie",
+      "distinct elements in every window",
+      "ile różnych w każdym oknie k",
+      "rozne liczby w oknie"
+     ],
+     "a": "Liczniki wartości w oknie (tablica po kompresji albo `map`) i licznik różnych: przy dodaniu, gdy licznik wartości zmienia się z 0 na 1, różnych przybywa; przy usunięciu z 1 na 0 — ubywa. O(n) z tablicą, O(n log n) z mapą."
+    },
+    {
+     "q": [
+      "najdłuższy podciąg bez powtórzeń",
+      "longest substring without repeating characters",
+      "najdłuższy fragment bez powtarzających się znaków",
+      "unikalne znaki najdluzszy fragment"
+     ],
+     "a": "Okno zmiennej długości: pamiętaj ostatnią pozycję każdego znaku. Gdy bieżący znak wystąpił już w oknie (`lastPos[c] ≥ left`), przesuń `left` za tamto wystąpienie. Długość okna `right − left + 1` w każdym kroku to kandydat na wynik. O(n)."
+    },
+    {
+     "q": [
+      "anagramy wzorca w tekście",
+      "find all anagrams",
+      "permutacja wzorca jako fragment tekstu",
+      "okno z licznikami liter"
+     ],
+     "a": "Okno długości `|p|` z licznikami 26 liter: porównujesz liczniki okna z licznikami wzorca. Zamiast porównywać 26 liczb za każdym razem, trzymaj liczbę liter, których liczniki się zgadzają, i aktualizuj ją przy każdym dodaniu/usunięciu — O(n).",
+     "code": "vector<int> anagramPositions(const string& text, const string& pat) {\n    vector<int> res;\n    int m = pat.size(), n = text.size();\n    if (m > n) return res;\n    array<int, 26> need{}, have{};\n    for (char c : pat) need[c - 'a']++;\n    for (int i = 0; i < n; i++) {\n        have[text[i] - 'a']++;\n        if (i >= m) have[text[i - m] - 'a']--;\n        if (i >= m - 1 && have == need) res.push_back(i - m + 1);   // porównanie 26 liczb\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "mediana w oknie przesuwnym",
+      "sliding window median",
+      "mediana każdego okna k"
+     ],
+     "a": "Trzymaj dwa `multiset`: dolną połowę i górną połowę okna, z rozmiarami różniącymi się o ≤ 1. Wstawiasz nowy element do właściwej połowy, usuwasz wychodzący (`erase(find(x))`) i wyrównujesz rozmiary. Mediana to największy element dolnej połowy. O(n log k). Alternatywa: `ordered_set` i `find_by_order((k−1)/2)`."
+    },
+    {
+     "q": [
+      "okno przesuwne a dwa wskaźniki",
+      "sliding window vs two pointers",
+      "czym różni się okno od gąsienicy"
+     ],
+     "a": "Okno przesuwne ma zwykle **stałą** długość k — obie granice przesuwają się razem. Dwa wskaźniki (gąsienica) to okno **zmiennej** długości: prawy koniec rośnie zawsze, lewy tylko wtedy, gdy warunek jest złamany. Mechanika aktualizacji stanu (dodaj wchodzący, usuń wychodzący) jest identyczna."
+    }
+   ],
+   "related": [
+    "tech-two-pointers",
+    "ds-monotonic-queue",
+    "ds-prefix-sums",
+    "ds-string-hashing",
+    "ds-min-stack-queue",
+    "tech-kadane",
+    "tech-median-stream"
+   ]
+  },
+  {
+   "id": "tech-sweep-line",
+   "title": "Zamiatanie (sweep line) i zdarzenia",
+   "category": "Techniki",
+   "tags": [
+    "zamiatanie",
+    "sweep line",
+    "miotła",
+    "zdarzenia",
+    "events",
+    "przedziały",
+    "geometria",
+    "sortowanie zdarzeń"
+   ],
+   "aliases": [
+    "zamiatanie",
+    "sweep line",
+    "miotła",
+    "miotla",
+    "zamiatanie prostą",
+    "sweep",
+    "zdarzenia",
+    "events sorting",
+    "suma długości odcinków",
+    "maksymalna liczba nakładających się przedziałów",
+    "przecinające się przedziały",
+    "line sweep"
+   ],
+   "summary": "Zamieniamy obiekty (odcinki, prostokąty, punkty) na zdarzenia „początek”/„koniec”, sortujemy je po współrzędnej i przechodzimy „miotłą” od lewej do prawej, utrzymując strukturę opisującą stan w bieżącym miejscu (licznik, set, Fenwick).",
+   "complexity": "O(n log n) na sortowanie + koszt struktury (zwykle O(log n) na zdarzenie)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Zamiast badać całą oś (albo płaszczyznę), patrzymy tylko na miejsca, gdzie coś się zmienia — końce odcinków, boki prostokątów, punkty. Między dwoma kolejnymi zdarzeniami stan jest stały. Sortujemy zdarzenia i przetwarzamy je w kolejności, aktualizując stan i odpowiedź.\n\n**Rozstrzyganie remisów** to sedno poprawności: przy odcinkach domkniętych `[l, r]` zdarzenie „początek” w punkcie `x` musi być przed „końcem” w tym samym `x` (bo odcinki `[1, 3]` i `[3, 5]` mają wspólny punkt). Przy półotwartych — odwrotnie."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „maksymalna liczba osób jednocześnie w sali”, „ile przedziałów się przecina”, „długość/pole sumy odcinków/prostokątów”, „ile punktów w prostokątach” (offline), przecięcia odcinków poziomych i pionowych, „w którym momencie najwięcej…”, rezerwacje sal (z kopcem wolnych sal)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: długość sumy odcinków i maksymalne pokrycie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<pair<long long, long long>> segs(n);\n    vector<pair<long long, int>> events;          // (współrzędna, typ): typ 0 = początek, 1 = koniec\n    for (auto& [l, r] : segs) {\n        cin >> l >> r;                            // odcinek domknięty [l, r]\n        events.push_back({l, 0});\n        events.push_back({r, 1});\n    }\n    sort(events.begin(), events.end());           // przy remisie początek (0) przed końcem (1)\n\n    long long unionLength = 0, lastX = 0;\n    int active = 0, maxActive = 0;\n    for (auto [x, type] : events) {\n        if (active > 0) unionLength += x - lastX; // od poprzedniego zdarzenia oś była pokryta\n        lastX = x;\n        if (type == 0) active++;\n        else active--;\n        maxActive = max(maxActive, active);\n    }\n    cout << unionLength << '\\n';                  // długość sumy odcinków\n    cout << maxActive << '\\n';                    // maks. liczba odcinków o wspólnym punkcie\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Przecięcia odcinków poziomych z pionowymi (miotła + Fenwick)",
+     "code": "// Ile odcinków poziomych przecina każdy z pionowych — miotła po x, Fenwick po y (skompresowanym).\n// poziome: (x1, x2, y), pionowe: (x, y1, y2); współrzędne y już skompresowane do [1, m].\nlong long countCrossings(const vector<array<int, 3>>& horizontal, const vector<array<int, 3>>& vertical, int m) {\n    vector<int> bit(m + 1, 0);\n    auto add = [&](int i, int v) { for (; i <= m; i += i & -i) bit[i] += v; };\n    auto sum = [&](int i) { int s = 0; for (; i > 0; i -= i & -i) s += bit[i]; return s; };\n    vector<array<int, 4>> ev;                  // (x, typ, a, b): typ 0 = start poziomego, 1 = pionowy, 2 = koniec poziomego\n    for (auto [x1, x2, y] : horizontal) { ev.push_back({x1, 0, y, 0}); ev.push_back({x2, 2, y, 0}); }\n    for (auto [x, y1, y2] : vertical) ev.push_back({x, 1, y1, y2});\n    sort(ev.begin(), ev.end());\n    long long total = 0;\n    for (auto [x, type, a, b] : ev) {\n        if (type == 0) add(a, 1);\n        else if (type == 2) add(a, -1);\n        else total += sum(b) - sum(a - 1);     // aktywne poziome z y w [y1, y2]\n    }\n    return total;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Kodowanie typu zdarzenia liczbą i sortowanie par/krotek od razu ustala kolejność przy remisach. Zastanów się raz, jaka kolejność jest poprawna (początek przed końcem? zapytanie pomiędzy?), i wybierz numerację typów zgodnie z nią."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "events.push_back({x, typ}); sort(events)",
+     "desc": "zdarzenia posortowane po współrzędnej, potem po typie",
+     "complexity": "O(n log n)"
+    },
+    {
+     "sig": "for (auto [x, typ] : events) { ... }",
+     "desc": "przejście miotły z aktualizacją stanu",
+     "complexity": "O(n · koszt struktury)"
+    }
+   ],
+   "pitfalls": [
+    "Zła kolejność zdarzeń w tym samym punkcie (początek/koniec) — błąd o jeden w pokryciu.",
+    "Liczenie długości z bieżącego zdarzenia zamiast od poprzedniego (`x − lastX` przed zmianą stanu).",
+    "Odcinki zerowej długości (`l == r`) — upewnij się, że ich obsługa zgadza się z treścią.",
+    "Za mały typ dla współrzędnych/sum (`long long` przy 10^9).",
+    "Pole sumy prostokątów bez drzewa przedziałowego — O(n²) zamiast O(n log n)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sweep line",
+      "zamiatanie",
+      "miotła algorytm",
+      "sweep line c++",
+      "zamiatanie jak dziala"
+     ],
+     "a": "Zamieniasz obiekty na zdarzenia (początek i koniec), sortujesz je po współrzędnej i przechodzisz w kolejności, utrzymując stan „pod miotłą” — licznik aktywnych odcinków, `set`, Fenwick. Między zdarzeniami nic się nie zmienia, więc wystarczy obsłużyć O(n) zdarzeń. Koszt to sortowanie O(n log n) plus aktualizacje struktury."
+    },
+    {
+     "q": [
+      "maksymalna liczba nakładających się przedziałów",
+      "ile osób jednocześnie",
+      "maximum overlapping intervals",
+      "maks liczba przedzialow w jednym punkcie"
+     ],
+     "a": "Zdarzenia `(l, +1)` i `(r, −1)` posortowane tak, by przy remisie `+1` było przed `−1` (dla odcinków domkniętych). Przechodzisz, sumujesz i zapamiętujesz maksimum. O(n log n). Dla półotwartych `[l, r)` (np. godziny pobytu, gdzie wyjście o 10:00 i wejście o 10:00 się nie nakładają) — `−1` przed `+1`."
+    },
+    {
+     "q": [
+      "długość sumy odcinków",
+      "union of segments length",
+      "ile osi jest pokryte przedzialami",
+      "suma przedziałów długość"
+     ],
+     "a": "Posortuj zdarzenia; gdy licznik aktywnych odcinków jest dodatni, dodaj `x − lastX` do wyniku przed aktualizacją stanu. Alternatywnie posortuj odcinki po początku i scalaj nakładające się (`if (l <= curR) curR = max(curR, r)`). Oba sposoby O(n log n).",
+     "code": "long long unionLength(vector<pair<long long, long long>> segs) {\n    sort(segs.begin(), segs.end());\n    long long total = 0, curL = LLONG_MIN, curR = LLONG_MIN;\n    for (auto [l, r] : segs) {\n        if (curR == LLONG_MIN || l > curR) {        // nowy, rozłączny blok\n            if (curR != LLONG_MIN) total += curR - curL;\n            curL = l, curR = r;\n        } else {\n            curR = max(curR, r);                    // scalanie\n        }\n    }\n    if (curR != LLONG_MIN) total += curR - curL;\n    return total;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "scalanie przedziałów",
+      "merge intervals",
+      "połącz nakładające się przedziały",
+      "łączenie odcinków"
+     ],
+     "a": "Posortuj przedziały po początku i idź po kolei: jeśli bieżący zaczyna się nie później niż koniec ostatniego scalonego, rozszerz koniec (`max`), w przeciwnym razie zacznij nowy blok. O(n log n). Dla odcinków całkowitych „stykających się” (`[1,2]` i `[3,4]`) ustal z treści, czy to jeden blok (`l <= curR + 1`)."
+    },
+    {
+     "q": [
+      "pole sumy prostokątów",
+      "area of union of rectangles",
+      "suma pól prostokątów nakładających się",
+      "sweep line prostokąty"
+     ],
+     "a": "Miotła po x: każdy prostokąt to zdarzenie „dodaj przedział [y1, y2)” na x1 i „usuń” na x2. W drzewie przedziałowym po skompresowanych y trzymasz licznik pokryć i pokrytą długość; między kolejnymi x dodajesz `pokryta_długość · Δx`. O(n log n). Bez drzewa — O(n²) przez przeliczanie pokrycia przy każdym zdarzeniu."
+    },
+    {
+     "q": [
+      "minimalna liczba sal",
+      "meeting rooms",
+      "ile sal potrzeba na spotkania",
+      "przydział sal kopiec"
+     ],
+     "a": "Minimalna liczba sal = maksymalna liczba spotkań odbywających się jednocześnie — policzysz miotłą po zdarzeniach. Jeśli trzeba też przydzielić konkretne sale, posortuj spotkania po początku i trzymaj min-heap końców zajętych sal: gdy najwcześniej kończąca się sala jest wolna, użyj jej, inaczej otwórz nową. O(n log n)."
+    },
+    {
+     "q": [
+      "punkty w prostokątach offline",
+      "sweep line fenwick",
+      "zapytania o punkty w prostokątach miotła"
+     ],
+     "a": "Miotła po x: punkty i zapytania (rozbite na dwa prefiksy po x) sortujesz po x; przy punkcie dodajesz go do Fenwicka po skompresowanym y, przy zapytaniu prefiksowym czytasz sumę na `[y1, y2]` ze znakiem + lub −. O((n + q) log n) zamiast O(n·q)."
+    }
+   ],
+   "related": [
+    "ds-difference-array",
+    "tech-coordinate-compression",
+    "ds-fenwick",
+    "ds-segment-tree",
+    "tech-offline-queries",
+    "geo-point-vector",
+    "geo-distances",
+    "tech-intervals"
+   ]
+  },
+  {
+   "id": "tech-coordinate-compression",
+   "title": "Kompresja współrzędnych",
+   "category": "Techniki",
+   "tags": [
+    "kompresja współrzędnych",
+    "coordinate compression",
+    "skalowanie",
+    "sort unique",
+    "lower_bound",
+    "ranga"
+   ],
+   "aliases": [
+    "kompresja wspolrzednych",
+    "kompresja współrzędnych",
+    "coordinate compression",
+    "skalowanie wartości",
+    "kompresja wartości",
+    "compress values c++",
+    "sort unique erase",
+    "zamiana wartości na rangi",
+    "przenumerowanie",
+    "mapowanie na 0..n-1"
+   ],
+   "summary": "Zamieniamy wartości (np. do 10^9) na ich pozycje w posortowanej liście różnych wartości — `0..k-1` z zachowaniem porządku. Pozwala indeksować tablice, Fenwicki i drzewa przedziałowe wartościami, gdy liczy się tylko kolejność.",
+   "complexity": "O(n log n) na kompresję, O(log n) na zamianę pojedynczej wartości",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** W wielu zadaniach ważne jest tylko, czy `a < b`, a nie same wartości. Jeśli różnych wartości jest k ≤ n, możemy je przenumerować na `0, 1, …, k−1` (najmniejsza → 0), zachowując wszystkie porównania. Teraz wartość może być indeksem tablicy rozmiaru k zamiast 10^9.\n\nPrzepis: skopiuj wartości → `sort` → `unique` + `erase` → numer wartości to `lower_bound(...) − begin`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: kompresja tablicy",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n\n    vector<long long> vals(a);                       // kopia\n    sort(vals.begin(), vals.end());\n    vals.erase(unique(vals.begin(), vals.end()), vals.end());   // różne wartości rosnąco\n\n    vector<int> id(n);\n    for (int i = 0; i < n; i++)\n        id[i] = lower_bound(vals.begin(), vals.end(), a[i]) - vals.begin();   // 0..k-1\n\n    cout << vals.size() << '\\n';\n    for (int i = 0; i < n; i++) cout << id[i] << \" \\n\"[i == n - 1];\n    // wartość oryginalna z numeru: vals[id[i]]\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Kompresuj **wszystkie** wartości, o które będziesz pytać — także te z zapytań i aktualizacji (offline). Jeśli zapytanie dotyczy wartości spoza listy, `lower_bound` zwróci pozycję następnej większej, co bywa dokładnie tym, czego chcesz (np. „ile elementów < x”), ale przy aktualizacji punktowej da zły indeks."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "sort(v.begin(), v.end()); v.erase(unique(v.begin(), v.end()), v.end());",
+     "desc": "posortowane różne wartości",
+     "complexity": "O(n log n)"
+    },
+    {
+     "sig": "lower_bound(v.begin(), v.end(), x) - v.begin()",
+     "desc": "numer wartości x (0-indeksowany)",
+     "complexity": "O(log n)",
+     "returns": "int"
+    },
+    {
+     "sig": "vals[id]",
+     "desc": "dekompresja: oryginalna wartość z numeru",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`unique` bez `erase` — wektor zachowuje rozmiar, a końcówka zawiera śmieci.",
+    "`unique` na nieposortowanym wektorze usuwa tylko sąsiednie duplikaty.",
+    "Pominięcie wartości z zapytań przy kompresji offline.",
+    "Fenwick 1-indeksowany po kompresji 0-indeksowanej — dodaj 1.",
+    "Gdy liczą się odległości (np. długości odcinków), sama kompresja je gubi — trzymaj `vals` i licz różnice `vals[i+1] − vals[i]`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "kompresja współrzędnych",
+      "coordinate compression c++",
+      "jak skompresować wartości",
+      "kompresja wartosci kod",
+      "skalowanie wartości c++"
+     ],
+     "a": "Skopiuj wartości, posortuj, usuń duplikaty (`erase(unique(...), end())`), a każdą wartość zamień na `lower_bound(vals, x) − vals.begin()`. Dostajesz numery `0..k−1` z zachowaniem porządku, w O(n log n). Dekompresja to `vals[numer]`.",
+     "code": "vector<int> compress(const vector<long long>& a) {\n    vector<long long> vals(a);\n    sort(vals.begin(), vals.end());\n    vals.erase(unique(vals.begin(), vals.end()), vals.end());\n    vector<int> id(a.size());\n    for (size_t i = 0; i < a.size(); i++)\n        id[i] = lower_bound(vals.begin(), vals.end(), a[i]) - vals.begin();\n    return id;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "po co kompresja współrzędnych",
+      "kiedy kompresja",
+      "wartości do 10^9 a tablica",
+      "duże liczby jako indeksy"
+     ],
+     "a": "Gdy chcesz użyć wartości jako indeksu (tablica liczników, Fenwick po wartościach, tablica różnicowa na osi), a wartości są do 10^9 — tablica byłaby za duża. Jeśli liczy się tylko kolejność, a różnych wartości jest ≤ n, kompresja zmniejsza zakres do n bez zmiany odpowiedzi. Przykłady: inwersje, LIS z drzewem, pokrycie odcinkami o wielkich końcach."
+    },
+    {
+     "q": [
+      "sort unique erase",
+      "unique c++ jak działa",
+      "usuwanie duplikatów z wektora",
+      "erase unique"
+     ],
+     "a": "`unique` przesuwa na początek po jednym elemencie z każdej grupy **sąsiednich** równych i zwraca iterator za ostatni zachowany — dlatego najpierw `sort`, a potem `erase` od tego iteratora do końca, żeby faktycznie skrócić wektor. Całość O(n log n).",
+     "code": "vector<int> v = {5, 1, 5, 3, 1};\nsort(v.begin(), v.end());                       // 1 1 3 5 5\nv.erase(unique(v.begin(), v.end()), v.end());   // 1 3 5\nfor (int x : v) cout << x << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "kompresja przez map",
+      "map do kompresji",
+      "kompresja współrzędnych map"
+     ],
+     "a": "Wstaw wszystkie wartości jako klucze `map<long long, int>`, potem przejdź po mapie (jest posortowana) i nadaj kolejne numery. Działa w O(n log n), ale wolniej niż `sort` + `unique` na wektorze. Wygoda: `id[x]` bez `lower_bound`."
+    },
+    {
+     "q": [
+      "ranga elementu",
+      "dense rank",
+      "numer elementu w posortowanej kolejności",
+      "zamiana na rangi"
+     ],
+     "a": "Kompresja daje tzw. gęstą rangę: równe wartości dostają ten sam numer, a numery są kolejne. Jeśli potrzebujesz rang unikalnych (np. przy remisach według pozycji), sortuj pary `(wartość, indeks)` i nadaj numery po kolei."
+    },
+    {
+     "q": [
+      "kompresja 2d",
+      "kompresja współrzędnych punktów",
+      "compress x and y separately"
+     ],
+     "a": "Każdą oś kompresujesz osobno: jedna lista dla wszystkich x, druga dla wszystkich y. Punkt `(x, y)` zamienia się na `(idX(x), idY(y))`, co pozwala użyć tablicy 2D, Fenwicka 2D albo miotły z Fenwickiem po y. Rozmiar to liczba różnych x × liczba różnych y — przy Fenwicku 2D wciąż może być za duży."
+    },
+    {
+     "q": [
+      "kompresja z zapytaniami",
+      "offline kompresja wartości z zapytań",
+      "kompresuj też zapytania"
+     ],
+     "a": "Zbierz do jednego wektora wartości z danych **i** z wszystkich zapytań/aktualizacji, dopiero potem sortuj i usuwaj duplikaty. Wymaga wczytania całego wejścia przed przetwarzaniem (offline). Dla zapytań przedziałowych `[L, R]` wystarczy też `lower_bound(L)` i `upper_bound(R) − 1` na liście samych danych."
+    }
+   ],
+   "related": [
+    "ds-segment-tree-compressed",
+    "ds-fenwick",
+    "tech-sweep-line",
+    "tech-offline-queries",
+    "stl-sort",
+    "stl-unique",
+    "ds-fenwick-kth",
+    "ds-wavelet-tree",
+    "oi-py-sorting-bisect",
+    "tech-counting-sort"
+   ]
+  },
+  {
+   "id": "tech-meet-in-the-middle",
+   "title": "Meet in the middle (spotkanie w połowie)",
+   "category": "Techniki",
+   "tags": [
+    "meet in the middle",
+    "spotkanie w połowie",
+    "podzbiory",
+    "2^(n/2)",
+    "subset sum",
+    "n do 40"
+   ],
+   "aliases": [
+    "meet in the middle",
+    "spotkanie w polowie",
+    "spotkanie w połowie",
+    "mitm",
+    "meet-in-the-middle",
+    "podzbiory n 40",
+    "subset sum n=40",
+    "suma podzbioru 40 elementow",
+    "dwie połowy podzbiory",
+    "2^20 podzbiorów"
+   ],
+   "summary": "Zamiast przeglądać 2^n podzbiorów, dzielimy elementy na dwie połowy, generujemy 2^(n/2) wyników dla każdej i łączymy je sortowaniem + binsearchem lub dwoma wskaźnikami. Dla n ≤ 40 to ok. 10^6 zamiast 10^12 operacji.",
+   "complexity": "O(2^(n/2) · n) czasu, O(2^(n/2)) pamięci",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Intuicja.** Każdy podzbiór całości to para (podzbiór lewej połowy, podzbiór prawej połowy). Jeśli szukamy podzbioru o sumie `S`, to dla każdej sumy `x` z lewej połowy potrzebujemy w prawej sumy `S − x`. Generujemy wszystkie sumy obu połów (po 2^20 ≈ 10^6 dla n = 40), sortujemy prawą i dla każdej lewej szukamy binarnie (albo dwoma wskaźnikami)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** n ≤ 40 (czasem ≤ 45) — za dużo na 2^n, za mało na „normalną” dynamikę, bo wartości są wielkie (do 10^9 lub 10^18), więc plecak po sumie nie wchodzi; „ile podzbiorów ma sumę ≤ S / = S”, plecak z 40 przedmiotami o ogromnych wagach, 4-sum („cztery liczby o sumie 0”), szukanie najkrótszej drogi z obu końców (dwukierunkowy BFS)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba podzbiorów o sumie S (n ≤ 40)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Wszystkie sumy podzbiorów elementów a[from..to)\nvector<long long> subsetSums(const vector<long long>& a, int from, int to) {\n    vector<long long> sums = {0};\n    for (int i = from; i < to; i++) {\n        int sz = sums.size();\n        for (int j = 0; j < sz; j++) sums.push_back(sums[j] + a[i]);   // podwajamy listę\n    }\n    return sums;\n}\n\nint main() {\n    int n;\n    long long S;\n    cin >> n >> S;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n    int half = n / 2;\n    vector<long long> left = subsetSums(a, 0, half);\n    vector<long long> right = subsetSums(a, half, n);\n    sort(right.begin(), right.end());\n    long long ways = 0;                                   // liczba podzbiorów o sumie dokładnie S\n    for (long long x : left) {\n        auto [lo, hi] = equal_range(right.begin(), right.end(), S - x);\n        ways += hi - lo;\n    }\n    cout << ways << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Dla zapytania „ile podzbiorów ma sumę ≤ S” posortuj obie listy i użyj dwóch wskaźników: lewa rośnie, prawa maleje — O(2^(n/2)) po sortowaniu. Sortowanie można zastąpić generowaniem sum od razu posortowanych przez scalanie (każdy nowy element: `merge(sums, sums + a[i])`)."
+    },
+    {
+     "type": "warn",
+     "md": "Pamięć: 2^20 liczb `long long` to 8 MB na połowę — OK. Dla n = 46 (2^23) to już 64 MB na listę; sprawdź limit. Liczba podzbiorów może sięgać 2^40 — wynik w `long long`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "subsetSums(a, from, to)",
+     "desc": "lista 2^(to−from) sum podzbiorów",
+     "complexity": "O(2^(to−from))",
+     "returns": "vector<long long>"
+    },
+    {
+     "sig": "equal_range(right, S - x)",
+     "desc": "ile sum prawej połowy równa S − x",
+     "complexity": "O(log 2^(n/2))"
+    }
+   ],
+   "pitfalls": [
+    "Generowanie podzbiorów rekurencją z kopiowaniem wektorów — wolno; buduj listę iteracyjnie (podwajanie).",
+    "Zapomniane posortowanie drugiej połowy przed binsearchem.",
+    "Przepełnienie sum przy wartościach do 10^18 (40 · 10^18 > zakres `long long`) — sprawdź ograniczenia.",
+    "Liczenie podzbioru pustego — zwykle jest wliczany (suma 0); sprawdź treść."
+   ],
+   "qa": [
+    {
+     "q": [
+      "meet in the middle",
+      "spotkanie w połowie",
+      "meet in the middle c++",
+      "mitm algorytm",
+      "meet in the middle przyklad"
+     ],
+     "a": "Dzielisz elementy na dwie połowy, dla każdej generujesz wszystkie 2^(n/2) wyniki (np. sumy podzbiorów), sortujesz jedną listę i dla każdego wyniku z drugiej szukasz pasującego partnera binsearchem lub dwoma wskaźnikami. Zamiast O(2^n) masz O(2^(n/2) · n) — dla n = 40 ok. 2·10^7 zamiast 10^12 operacji."
+    },
+    {
+     "q": [
+      "suma podzbioru n=40",
+      "subset sum 40 elements",
+      "podzbiór o sumie s duże liczby",
+      "plecak 40 przedmiotów"
+     ],
+     "a": "Gdy wagi są wielkie (plecak po sumie niemożliwy), a n ≤ 40 — meet in the middle. Dla plecaka z wartościami: w drugiej połowie po sortowaniu po wadze usuń pary zdominowane (większa waga i nie większa wartość), żeby wartości rosły z wagą; wtedy dla każdej lewej połowy binsearch po pozostałej pojemności daje najlepszą wartość. O(2^(n/2) · n)."
+    },
+    {
+     "q": [
+      "ile podzbiorów ma sumę mniejszą od s",
+      "count subsets sum at most s",
+      "liczba podzbiorów sumy <= s n 40"
+     ],
+     "a": "Posortuj obie listy sum połówek. Dla lewej rosnąco trzymaj wskaźnik w prawej, który maleje: dopóki `L[i] + R[j] > S`, zmniejszaj `j`; wtedy wszystkie `R[0..j]` pasują, dodaj `j + 1`. Dwa wskaźniki dają O(2^(n/2)) po sortowaniu.",
+     "code": "long long countAtMost(vector<long long> L, vector<long long> R, long long S) {\n    sort(L.begin(), L.end());\n    sort(R.begin(), R.end());\n    long long cnt = 0;\n    int j = (int)R.size() - 1;\n    for (long long x : L) {\n        while (j >= 0 && x + R[j] > S) j--;\n        cnt += j + 1;\n    }\n    return cnt;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "4 sum",
+      "cztery liczby o sumie zero",
+      "four sum meet in the middle",
+      "a+b+c+d=0"
+     ],
+     "a": "Zbierz wszystkie sumy par `a[i] + b[j]` (n² wartości) i posortuj; dla każdej pary `c[k] + d[l]` szukaj binarnie `−(c[k] + d[l])`. Z O(n⁴) robi się O(n² log n). Przy n = 1000 to 10^6 par — mieści się w pamięci."
+    },
+    {
+     "q": [
+      "złożoność meet in the middle",
+      "ile pamięci mitm",
+      "meet in the middle n 40 czas"
+     ],
+     "a": "Generowanie: 2 · 2^(n/2) sum, sortowanie O(2^(n/2) · n/2), łączenie O(2^(n/2) · n/2) z binsearchem. Dla n = 40: listy po 1 048 576 elementów (8 MB każda), ok. 4·10^7 operacji — szybko. Dla n = 50 już 2^25 = 3,3·10^7 elementów (268 MB) — za dużo."
+    },
+    {
+     "q": [
+      "dwukierunkowy bfs",
+      "bidirectional bfs",
+      "bfs z obu stron",
+      "meet in the middle graf"
+     ],
+     "a": "Gdy stanów jest wykładniczo dużo (np. układanki, permutacje), BFS z początku i z końca naraz spotyka się w środku: każdy przeszukuje tylko do głębokości d/2, więc odwiedza ok. 2·b^(d/2) zamiast b^d stanów. Rozwijasz zawsze mniejszą warstwę i kończysz, gdy warstwy się przetną."
+    }
+   ],
+   "related": [
+    "tech-bitmask-brute-force",
+    "tech-binary-search",
+    "tech-two-pointers",
+    "dp-knapsack-01"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+Schody
+Jaś wchodzi po schodach, które mają n stopni. W jednym kroku może wejść o jeden albo o dwa stopnie wyżej. Na ile różnych
+sposobów Jaś może wejść na najwyższy stopień? Ponieważ wynik może być bardzo duży, podaj resztę z dzielenia go przez
+10^9 + 7.
+Wejście
+W pierwszym i jedynym wierszu znajduje się liczba całkowita n (1 ≤ n ≤ 10^6).
+Wyjście
+Wypisz liczbę sposobów modulo 10^9 + 7.
+Przykład 1
+Wejście:
+4
+Wyjście:
+5
+
+Przykład 2
+Wejście:
+50
+Wyjście:
+365010934

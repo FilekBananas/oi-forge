@@ -1,0 +1,1764 @@
+{
+ "chunk": "math-combinatorics",
+ "articles": [
+  {
+   "id": "math-combinatorics",
+   "title": "Kombinatoryka — permutacje, kombinacje, Catalan, gwiazdki i kreski, nieporządki",
+   "category": "Matematyka",
+   "tags": [
+    "kombinatoryka",
+    "permutacje",
+    "kombinacje",
+    "wariacje",
+    "liczby Catalana",
+    "gwiazdki i kreski",
+    "nieporządki",
+    "permutacje z powtórzeniami",
+    "podziały liczby",
+    "modulo"
+   ],
+   "aliases": [
+    "kombinatoryka",
+    "combinatorics",
+    "permutacje",
+    "kombinacje",
+    "wariacje",
+    "liczby catalana",
+    "catalan",
+    "gwiazdki i kreski",
+    "stars and bars",
+    "nieporządki",
+    "derangements",
+    "permutacje z powtórzeniami",
+    "ile jest sposobów"
+   ],
+   "summary": "Podstawowe wzory zliczania: n!, n!/(n-k)!, n^k, C(n,k), C(n+k-1,k), n!/(k1!…km!), liczby Catalana i nieporządki. Na OI liczy się je modulo liczba pierwsza z tablic silni i odwrotności silni.",
+   "complexity": "preprocessing silni i odwrotności O(N), potem każde C(n,k) w O(1); Catalan rekurencyjnie O(n²), wzorem O(1) po preprocessingu",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Zanim zaczniesz liczyć, odpowiedz na dwa pytania: **czy kolejność ma znaczenie?** i **czy elementy mogą się\npowtarzać?** To od razu wskazuje wzór:"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Co liczymy",
+      "Kolejność",
+      "Powtórzenia",
+      "Wzór",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "permutacje n elementów",
+       "tak",
+       "nie",
+       "n!",
+       "ustawienia 5 osób w kolejce: 120"
+      ],
+      [
+       "wariacje bez powtórzeń (k z n)",
+       "tak",
+       "nie",
+       "n!/(n−k)!",
+       "podium (3 z 10): 720"
+      ],
+      [
+       "wariacje z powtórzeniami",
+       "tak",
+       "tak",
+       "n^k",
+       "PIN 4-cyfrowy: 10^4"
+      ],
+      [
+       "kombinacje (k z n)",
+       "nie",
+       "nie",
+       "C(n,k) = n!/(k!(n−k)!)",
+       "3 osoby z 10: 120"
+      ],
+      [
+       "kombinacje z powtórzeniami",
+       "nie",
+       "tak",
+       "C(n+k−1, k)",
+       "3 gałki lodów z 10 smaków: 220"
+      ],
+      [
+       "permutacje z powtórzeniami",
+       "tak",
+       "multizbiór",
+       "n!/(k₁!·k₂!·…·k_m!)",
+       "anagramy MISSISSIPPI: 34650"
+      ],
+      [
+       "podzbiory zbioru n-elementowego",
+       "nie",
+       "nie",
+       "2^n",
+       "n = 10: 1024"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Liczby Catalana** `Cat(n) = C(2n, n)/(n+1) = C(2n, n) − C(2n, n+1)`: 1, 1, 2, 5, 14, 42, 132, 429, 1430, 4862, …\nRekurencja `Cat(0) = 1`, `Cat(n+1) = Σ_{i=0..n} Cat(i)·Cat(n−i)`. Zliczają m.in.: poprawne nawiasowania z `n`\npar nawiasów, drzewa binarne o `n` węzłach, triangulacje wielokąta wypukłego o `n+2` wierzchołkach, ścieżki\nz (0,0) do (2n,0) krokami (+1,+1)/(+1,−1) nieschodzące pod oś (ścieżki Dycka), sposoby nawiasowania iloczynu\n`n+1` czynników.\n\n**Gwiazdki i kreski:** liczba rozwiązań `x₁ + … + x_k = n` w liczbach całkowitych `xᵢ ≥ 0` to `C(n+k−1, k−1)`\n(n gwiazdek i k−1 kresek ustawionych w rzędzie). Przy `xᵢ ≥ 1` — `C(n−1, k−1)`. Dolne ograniczenia `xᵢ ≥ aᵢ`\nusuwa się podstawieniem `yᵢ = xᵢ − aᵢ`; górne — zasadą włączeń i wyłączeń.\n\n**Nieporządki** (permutacje bez punktów stałych): `D(0) = 1, D(1) = 0, D(n) = (n−1)·(D(n−1) + D(n−2))`:\n1, 0, 1, 2, 9, 44, 265, 1854, … (`D(n) ≈ n!/e`)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: wszystkie podstawowe wzory modulo p",
+     "code": "// Wejście: n k. Wypisuje modulo 10^9+7: n!, n!/(n-k)!, n^k, C(n,k), C(n+k-1,k), Catalan(n), D(n).\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\nconst int MAXN = 2'000'001;                  // potrzebujemy silni do 2n (Catalan) i n+k-1\nlong long fact[MAXN], inv_fact[MAXN];\n\nlong long power(long long b, long long e) {\n    b %= MOD;\n    long long r = 1;\n    while (e > 0) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\n    return r;\n}\nvoid init() {\n    fact[0] = 1;\n    for (int i = 1; i < MAXN; i++) fact[i] = fact[i - 1] * i % MOD;\n    inv_fact[MAXN - 1] = power(fact[MAXN - 1], MOD - 2);        // małe twierdzenie Fermata\n    for (int i = MAXN - 1; i > 0; i--) inv_fact[i - 1] = inv_fact[i] * i % MOD;\n}\nlong long C(int n, int k) {\n    if (n < 0 || k < 0 || k > n) return 0;\n    return fact[n] * inv_fact[k] % MOD * inv_fact[n - k] % MOD;\n}\n\nint main() {\n    init();\n    int n, k;\n    cin >> n >> k;                                   // 0 <= k <= n <= 10^6\n    cout << fact[n] << \"\\n\";                         // permutacje\n    cout << fact[n] * inv_fact[n - k] % MOD << \"\\n\"; // wariacje bez powtórzeń\n    cout << power(n, k) << \"\\n\";                     // wariacje z powtórzeniami\n    cout << C(n, k) << \"\\n\";                         // kombinacje\n    cout << C(n + k - 1, k) << \"\\n\";                 // kombinacje z powtórzeniami\n    cout << C(2 * n, n) * power(n + 1, MOD - 2) % MOD << \"\\n\";   // liczba Catalana\n    long long d0 = 1, d1 = 0;                        // D(0), D(1)\n    for (int i = 2; i <= n; i++) { long long d2 = (i - 1) * ((d0 + d1) % MOD) % MOD; d0 = d1; d1 = d2; }\n    cout << (n == 0 ? 1 : d1) << \"\\n\";               // nieporządki\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Sygnały w treści: „na ile sposobów”, „ile jest różnych…”, „modulo 10^9+7”, „ciągów nawiasowych”, „rozdziel n\nidentycznych…”. Gdy wzoru nie widać — napisz brute force dla małych n, wypisz ciąg wyników i porównaj ze znanymi\nciągami (1, 2, 5, 14, 42 = Catalan; 1, 2, 6, 24 = silnia; 1, 0, 1, 2, 9, 44 = nieporządki)."
+    },
+    {
+     "type": "warn",
+     "md": "`20!` ≈ 2,43·10^18 to największa silnia mieszcząca się w `long long`; `21!` już się nie mieści. Liczby Catalana\nmieszczą się w `long long` do `Cat(35)`. Dla większych wartości licz modulo."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "long long C(int n, int k)",
+     "desc": "dwumian modulo p z tablic fact i inv_fact (0 dla k < 0 lub k > n)",
+     "complexity": "O(1) po O(N) preprocessingu"
+    },
+    {
+     "sig": "next_permutation(v.begin(), v.end())",
+     "desc": "przechodzi do następnej permutacji w porządku leksykograficznym; false po ostatniej",
+     "complexity": "O(n) pesymistycznie, O(1) zamortyzowane",
+     "returns": "bool"
+    },
+    {
+     "sig": "C(2*n, n) * inv(n + 1)",
+     "desc": "n-ta liczba Catalana modulo p",
+     "complexity": "O(1) po preprocessingu"
+    }
+   ],
+   "pitfalls": [
+    "Dzielenie modulo nie istnieje — zamiast `/ k!` mnożysz przez odwrotność modularną (`inv_fact[k]`).",
+    "Tablice silni muszą sięgać największego argumentu: dla Catalana `2n`, dla gwiazdek i kresek `n+k−1`.",
+    "Mnożenie dwóch wartości < MOD przekracza `int` — trzymaj je w `long long` i bierz `% MOD` po każdym mnożeniu.",
+    "Wzór z odwrotnościami wymaga, by MOD był liczbą pierwszą większą od n (dla 10^9+7 i n ≤ 10^6 — OK).",
+    "Mylenie C(n+k−1, k−1) (xᵢ ≥ 0) z C(n−1, k−1) (xᵢ ≥ 1) w gwiazdkach i kreskach.",
+    "`next_permutation` przechodzi wszystkie permutacje tylko, jeśli zaczniesz od posortowanego ciągu."
+   ],
+   "qa": [
+    {
+     "q": [
+      "permutacje kombinacje wariacje wzory",
+      "kombinatoryka wzory",
+      "kiedy kolejnosc ma znaczenie",
+      "wariacje z powtorzeniami wzor",
+      "permutacje a kombinacje roznica"
+     ],
+     "a": "Kolejność ważna i bez powtórzeń: wariacje `n!/(n−k)!` (dla k = n permutacje `n!`); kolejność ważna z powtórzeniami:\n`n^k`; kolejność nieważna bez powtórzeń: kombinacje `C(n, k)`; kolejność nieważna z powtórzeniami: `C(n+k−1, k)`.\nNp. podium z 10 zawodników to 10·9·8 = 720, a wybór 3-osobowej drużyny to C(10, 3) = 120 (każda drużyna\nodpowiada 3! = 6 ustawieniom na podium)."
+    },
+    {
+     "q": [
+      "ile jest permutacji",
+      "n silnia permutacje",
+      "liczba ustawien n osob w rzedzie",
+      "silnia c++",
+      "permutacje n elementow"
+     ],
+     "a": "`n!` — pierwsze miejsce na n sposobów, drugie na n−1 itd. W `long long` zmieści się do `20!` ≈ 2,43·10^18;\ndla większych n licz modulo (mnożenie z `% MOD` w pętli, O(n)).",
+     "code": "const long long MOD = 1'000'000'007;\nlong long f = 1;\nfor (int i = 1; i <= 20; i++) f = f * i;            // 20! jeszcze mieści się w long long\nlong long g = 1;\nfor (int i = 1; i <= 100; i++) g = g * i % MOD;     // 100! mod p\ncout << f << \"\\n\" << g << \"\\n\";"
+    },
+    {
+     "q": [
+      "next_permutation wszystkie permutacje",
+      "generowanie permutacji c++",
+      "jak wypisac wszystkie permutacje",
+      "all permutations c++"
+     ],
+     "a": "Posortuj ciąg i wołaj `next_permutation` w pętli `do { … } while (next_permutation(…))` — przejdziesz wszystkie\npermutacje w porządku leksykograficznym, a przy powtórzonych elementach każdą różną tylko raz. Razem O(n!·n),\nwięc tylko dla n ≤ ok. 10.",
+     "code": "vector<int> v = {1, 2, 3};\nsort(v.begin(), v.end());\ndo {\n    for (int x : v) cout << x;\n    cout << \" \";\n} while (next_permutation(v.begin(), v.end()));\ncout << \"\\n\";   // 123 132 213 231 312 321"
+    },
+    {
+     "q": [
+      "liczby catalana",
+      "catalan number",
+      "ile poprawnych nawiasowan",
+      "liczba drzew binarnych",
+      "catalan c++",
+      "liczby katalana"
+     ],
+     "a": "`Cat(n) = C(2n, n)/(n+1)`; modulo p: `C(2n, n) · (n+1)^(p−2)`. Ciąg: 1, 1, 2, 5, 14, 42, 132, … Zlicza poprawne\nciągi n par nawiasów, drzewa binarne o n węzłach, triangulacje (n+2)-kąta, ścieżki Dycka. Preprocessing silni do 2n\nto O(n), potem O(log p) na jedną liczbę.",
+     "code": "const long long MOD = 1'000'000'007;\nlong long power(long long b, long long e) {\n    b %= MOD; if (b < 0) b += MOD;\n    long long r = 1;\n    while (e > 0) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\n    return r;\n}\n\n           long long catalan(int n) {                  // C(2n, n) / (n + 1) mod p, O(n)\n               long long num = 1, den = 1;\n               for (int i = 1; i <= n; i++) {\n                   num = num * (n + i) % MOD;          // (2n)! / n! = (n+1)(n+2)...(2n)\n                   den = den * i % MOD;                // n!\n               }\n               return num * power(den, MOD - 2) % MOD * power(n + 1, MOD - 2) % MOD;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "catalana rekurencja",
+      "catalan dp n^2",
+      "liczby catalana dynamicznie",
+      "catalan recurrence"
+     ],
+     "a": "`Cat(0) = 1`, `Cat(n) = Σ_{i=0}^{n−1} Cat(i)·Cat(n−1−i)` — pierwszy nawias „(” zamyka się po poprawnym ciągu\ni par, a za nim stoi poprawny ciąg n−1−i par. O(n²); przydaje się, gdy modulo nie jest liczbą pierwszą (brak\nodwrotności). Bez modulo `long long` wystarcza do Cat(35).",
+     "code": "int n = 10;\nvector<long long> cat(n + 1, 0);\ncat[0] = 1;\nfor (int m = 1; m <= n; m++)\n    for (int i = 0; i < m; i++) cat[m] += cat[i] * cat[m - 1 - i];\ncout << cat[5] << \" \" << cat[10] << \"\\n\";   // 42 16796"
+    },
+    {
+     "q": [
+      "gwiazdki i kreski",
+      "stars and bars",
+      "ile rozwiazan rownania x1+x2+...+xk=n",
+      "rozdzielenie cukierkow miedzy dzieci",
+      "na ile sposobow rozdzielic n identycznych przedmiotow"
+     ],
+     "a": "Liczba rozwiązań `x₁ + … + x_k = n` w liczbach całkowitych nieujemnych to `C(n+k−1, k−1)`: ustawiamy w rzędzie\nn gwiazdek (jednostek) i k−1 kresek (przegródek), a wybór pozycji kresek wyznacza rozwiązanie. Np. 5 cukierków\ndla 3 dzieci: C(7, 2) = 21. Liczymy modulo p z silni w O(1) po preprocessingu.",
+     "code": "// bez modulo, małe liczby: C(n+k-1, k-1) iteracyjnie (każdy krok daje liczbę całkowitą)\nlong long n = 5, k = 3, r = 1;\nfor (long long i = 1; i <= k - 1; i++) r = r * (n + i) / i;    // C(n+k-1, k-1)\ncout << r << \"\\n\";   // 21"
+    },
+    {
+     "q": [
+      "stars and bars xi >= 1",
+      "kazde dziecko co najmniej jeden cukierek",
+      "gwiazdki i kreski dodatnie",
+      "rozwiazania dodatnie rownania"
+     ],
+     "a": "Gdy każde `xᵢ ≥ 1`, podstaw `yᵢ = xᵢ − 1 ≥ 0`: `y₁ + … + y_k = n − k`, czyli `C(n−1, k−1)` (kreski stawiamy w n−1\nprzerwach między gwiazdkami). Ogólnie dla `xᵢ ≥ aᵢ` odejmij `Σaᵢ` od n. Górne ograniczenia `xᵢ ≤ c` wymagają\nwłączeń i wyłączeń."
+    },
+    {
+     "q": [
+      "permutacje z powtorzeniami",
+      "ile anagramow slowa",
+      "ile roznych slow z liter",
+      "mississippi ile ustawien",
+      "multinomial coefficient"
+     ],
+     "a": "Dla multizbioru z krotnościami `k₁, …, k_m` (suma n): `n!/(k₁!·…·k_m!)` — dzielimy przez przestawienia identycznych\nliter. MISSISSIPPI: 11!/(1!·4!·4!·2!) = 34650. Modulo p mnożymy `fact[n]` przez `inv_fact[kᵢ]`; złożoność O(n + m).",
+     "code": "string s = \"MISSISSIPPI\";\nmap<char, int> cnt;\nfor (char c : s) cnt[c]++;\n// dokładnie, małe n: mnożymy kolejno przez współczynniki dwumianowe C(used + k, k)\nlong long res = 1; int used = 0;\nfor (auto [c, k] : cnt)\n    for (int i = 1; i <= k; i++) { used++; res = res * used / i; }\ncout << res << \"\\n\";   // 34650"
+    },
+    {
+     "q": [
+      "nieporzadki",
+      "derangements",
+      "permutacja bez punktow stalych",
+      "listy do niewlasciwych kopert",
+      "nikt nie dostanie swojego prezentu"
+     ],
+     "a": "`D(n) = (n−1)·(D(n−1) + D(n−2))`, `D(0) = 1`, `D(1) = 0`: element 1 trafia na pozycję j (n−1 możliwości), a potem\nalbo j trafia na 1 (D(n−2)), albo nie (D(n−1)). Ciąg: 1, 0, 1, 2, 9, 44, 265, 1854. Z włączeń i wyłączeń:\n`D(n) = Σ (−1)^i · n!/i!`. Liczenie O(n).",
+     "code": "const long long MOD = 1'000'000'007;\nint n = 7;\nvector<long long> D(n + 1);\nD[0] = 1; D[1] = 0;\nfor (int i = 2; i <= n; i++) D[i] = (long long)(i - 1) * ((D[i - 1] + D[i - 2]) % MOD) % MOD;\ncout << D[4] << \" \" << D[5] << \" \" << D[7] << \"\\n\";   // 9 44 1854"
+    },
+    {
+     "q": [
+      "kombinacje z powtorzeniami",
+      "wybor k elementow z powtorzeniami",
+      "ile multizbiorow k elementowych",
+      "combinations with repetition"
+     ],
+     "a": "Wybór k elementów z n typów, gdy typy mogą się powtarzać, a kolejność nieważna: `C(n+k−1, k)` — to gwiazdki\ni kreski (`xᵢ` = ile razy wybrano typ i, suma k). Np. 3 gałki lodów z 10 smaków: C(12, 3) = 220."
+    },
+    {
+     "q": [
+      "podzialy liczby",
+      "partition number",
+      "na ile sposobow zapisac n jako sume",
+      "rozklad liczby na skladniki",
+      "liczba podzialow n"
+     ],
+     "a": "Podziały liczby n (kolejność składników nieistotna) to wydawanie reszty monetami 1, 2, …, n: `p[0] = 1`, dla każdej\n„monety” k rosnąco `p[s] += p[s−k]`. O(n²). Wartości: p(5) = 7, p(10) = 42, p(100) = 190569292. Gdy kolejność\nma znaczenie (kompozycje), odpowiedź to `2^(n−1)`.",
+     "code": "int n = 100;\nvector<long long> p(n + 1, 0);\np[0] = 1;\nfor (int k = 1; k <= n; k++)\n    for (int s = k; s <= n; s++) p[s] += p[s - k];\ncout << p[5] << \" \" << p[10] << \" \" << p[100] << \"\\n\";"
+    },
+    {
+     "q": [
+      "ile podzbiorow",
+      "liczba podzbiorow zbioru n elementowego",
+      "2 do n podzbiory",
+      "iterowanie po podzbiorach"
+     ],
+     "a": "Każdy element jest w podzbiorze albo nie — `2^n` podzbiorów, z czego `C(n, k)` ma k elementów\n(Σ_k C(n,k) = 2^n). Dla n ≤ 20 wszystkie podzbiory przejdziesz maskami bitowymi w O(2^n·n).",
+     "code": "vector<int> a = {1, 2, 3};\nint n = a.size(), cntSum3 = 0;\nfor (int mask = 0; mask < (1 << n); mask++) {\n    int s = 0;\n    for (int i = 0; i < n; i++) if (mask >> i & 1) s += a[i];\n    if (s == 3) cntSum3++;\n}\ncout << (1 << n) << \" \" << cntSum3 << \"\\n\";   // 8 podzbiorów, 2 o sumie 3: {3}, {1,2}"
+    },
+    {
+     "q": [
+      "kombinatoryka modulo 10^9+7",
+      "silnie modulo",
+      "silnie i odwrotnosci silni",
+      "dwumian modulo szybko",
+      "nCr mod p"
+     ],
+     "a": "Policz `fact[i]` w pętli, `inv_fact[N] = fact[N]^(p−2)` (małe tw. Fermata), a potem w dół\n`inv_fact[i−1] = inv_fact[i]·i`. Wtedy `C(n,k) = fact[n]·inv_fact[k]·inv_fact[n−k]` w O(1). Preprocessing O(N + log p).\nSzczegóły i warianty (trójkąt Pascala, Lucas) — w artykule o dwumianie Newtona."
+    },
+    {
+     "q": [
+      "ile uscisków dloni",
+      "ile przekatnych wielokata",
+      "ile par z n elementow",
+      "liczba par n(n-1)/2"
+     ],
+     "a": "Par nieuporządkowanych z n elementów jest `C(n, 2) = n(n−1)/2` (tyle jest uścisków dłoni, krawędzi grafu pełnego).\nPrzekątnych n-kąta jest `n(n−3)/2` (pary wierzchołków minus n boków). Uwaga: dla n = 10^6 iloczyn n(n−1) ≈ 10^12\nwymaga `long long`.",
+     "code": "long long n = 1000000;\ncout << n * (n - 1) / 2 << \" \" << 6 * (6 - 3) / 2 << \"\\n\";   // 499999500000 9"
+    }
+   ],
+   "related": [
+    "math-binomial",
+    "math-mod-inverse",
+    "math-inclusion-exclusion",
+    "math-fast-pow",
+    "dp-coin-change",
+    "dp-grid-paths",
+    "math-bases",
+    "math-derangements-stirling"
+   ]
+  },
+  {
+   "id": "math-inclusion-exclusion",
+   "title": "Zasada włączeń i wyłączeń (maski bitowe, NWW, suriekcje)",
+   "category": "Matematyka",
+   "tags": [
+    "włączenia i wyłączenia",
+    "inclusion-exclusion",
+    "maski bitowe",
+    "NWW",
+    "podzielność",
+    "suriekcje",
+    "Möbius"
+   ],
+   "aliases": [
+    "zasada włączeń i wyłączeń",
+    "włączeń wyłączeń",
+    "wlaczen wylaczen",
+    "inclusion exclusion",
+    "PIE",
+    "zasada wlaczania i wylaczania",
+    "ile liczb podzielnych przez",
+    "suriekcje"
+   ],
+   "summary": "|A₁ ∪ … ∪ A_k| liczymy, sumując rozmiary przecięć wszystkich niepustych podzbiorów zbiorów ze znakiem (−1)^(liczność+1). Typowo: ile liczb ≤ N dzieli się przez któryś z k dzielników — iterujemy po maskach i liczymy NWW.",
+   "complexity": "O(2^k · k) dla k zbiorów (k ≤ ~20); z odcinaniem, gdy NWW > N, często dużo szybciej",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Dla dwóch zbiorów `|A ∪ B| = |A| + |B| − |A ∩ B|`, dla trzech\n`|A ∪ B ∪ C| = |A| + |B| + |C| − |A∩B| − |A∩C| − |B∩C| + |A∩B∩C|`. Ogólnie:\n**dodajemy przecięcia nieparzystej liczby zbiorów, odejmujemy przecięcia parzystej liczby.** Element należący\ndo dokładnie `t ≥ 1` zbiorów jest policzony `C(t,1) − C(t,2) + C(t,3) − … = 1` raz.\n\nLiczba elementów **nienależących do żadnego** zbioru = `|U| − |A₁ ∪ … ∪ A_k|` — to częstsze pytanie\n(„liczby względnie pierwsze z M”, „permutacje bez punktów stałych”, „ścieżki omijające przeszkody”).\n\n**Sygnały:** „ile liczb ≤ N jest podzielnych przez co najmniej jedną z…”, „ile nie jest podzielnych przez żadną”,\n„względnie pierwsze”, „każdy ... co najmniej raz” (suriekcje), „xᵢ ≤ c” w gwiazdkach i kreskach, mało zbiorów (k ≤ 20)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: podzielność przez którąkolwiek z k liczb",
+     "code": "// Ile liczb z [1, N] dzieli się przez co najmniej jedną z a_1..a_k?  (N do 10^18, k do ~20)\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    long long N;\n    int k;\n    cin >> N >> k;\n    vector<long long> a(k);\n    for (auto &x : a) cin >> x;\n\n    long long total = 0;\n    for (int mask = 1; mask < (1 << k); mask++) {\n        long long l = 1;                    // NWW liczb z maski\n        bool tooBig = false;\n        for (int i = 0; i < k && !tooBig; i++)\n            if (mask >> i & 1) {\n                long long g = __gcd(l, a[i]);\n                __int128 nl = (__int128)(l / g) * a[i];   // bez przepełnienia\n                if (nl > N) tooBig = true;                // wtedy N / NWW = 0\n                else l = (long long)nl;\n            }\n        if (tooBig) continue;\n        long long cnt = N / l;              // ile wielokrotności NWW w [1, N]\n        if (__builtin_popcount(mask) % 2 == 1) total += cnt;   // nieparzysta liczba zbiorów: +\n        else total -= cnt;                                     // parzysta: -\n    }\n    cout << total << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zastosowanie",
+      "Zbiory Aᵢ",
+      "Wynik"
+     ],
+     "rows": [
+      [
+       "liczby ≤ N podzielne przez któreś aᵢ",
+       "wielokrotności aᵢ",
+       "Σ ± ⌊N / NWW(maska)⌋"
+      ],
+      [
+       "liczby ≤ N względnie pierwsze z M",
+       "wielokrotności czynników pierwszych M",
+       "N − (powyższe); M ma ≤ 15 różnych czynników < 10^18"
+      ],
+      [
+       "suriekcje n-zbioru na k-zbiór",
+       "funkcje omijające wartość i",
+       "Σ_{i=0..k} (−1)^i C(k,i) (k−i)^n"
+      ],
+      [
+       "nieporządki",
+       "permutacje z punktem stałym i",
+       "Σ (−1)^i C(n,i) (n−i)! = Σ (−1)^i n!/i!"
+      ],
+      [
+       "x₁+…+x_k = n, 0 ≤ xᵢ ≤ c",
+       "rozwiązania z xᵢ ≥ c+1",
+       "Σ (−1)^i C(k,i) C(n − i(c+1) + k−1, k−1)"
+      ],
+      [
+       "pary (a,b) ≤ N z NWD = 1",
+       "pary podzielne przez d (funkcja Möbiusa)",
+       "Σ_d μ(d)·⌊N/d⌋²"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "NWW rośnie bardzo szybko — iloczyn dwóch liczb rzędu 10^9 już przekracza `long long`. Licz `l / gcd(l, a) * a`\nw `__int128` (albo sprawdzaj `l / g > N / a`) i przerywaj, gdy NWW > N (wtedy składnik wynosi 0)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "__builtin_popcount(mask)",
+     "desc": "liczba zbiorów w masce — parzystość decyduje o znaku",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "N / lcm",
+     "desc": "liczba wielokrotności lcm w przedziale [1, N]",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "f(R) - f(L - 1)",
+     "desc": "zliczanie w przedziale [L, R] przez dwa zliczenia prefiksowe",
+     "complexity": "2 × koszt f"
+    }
+   ],
+   "pitfalls": [
+    "Przepełnienie przy liczeniu NWW — używaj `__int128` lub sprawdzania przed mnożeniem i odcinaj, gdy NWW > N.",
+    "Znak: przecięcie nieparzystej liczby zbiorów dodajemy, parzystej odejmujemy (maska pusta = cały zbiór U, jeśli liczysz dopełnienie).",
+    "Liczby aᵢ nie muszą być względnie pierwsze — przecięcie to wielokrotności NWW, a nie iloczynu.",
+    "Powtórzone aᵢ lub aᵢ dzielące inne aⱼ nie psują wyniku, ale zwiększają koszt — można je wcześniej usunąć.",
+    "2^k rośnie szybko: k = 25 to już 3,3·10^7 masek × k operacji — sprawdź limity.",
+    "Wynik pośredni (sumy z różnymi znakami) w arytmetyce modulo: po odejmowaniu dodaj MOD."
+   ],
+   "qa": [
+    {
+     "q": [
+      "zasada wlaczen i wylaczen",
+      "wlaczen wylaczen",
+      "inclusion exclusion",
+      "wzor wlaczen wylaczen",
+      "co to jest zasada wlaczen i wylaczen"
+     ],
+     "a": "Rozmiar sumy zbiorów = suma rozmiarów pojedynczych zbiorów − suma przecięć par + suma przecięć trójek − …\nKażdy element należący do t ≥ 1 zbiorów zostaje policzony dokładnie raz, bo `Σ_{j≥1} (−1)^(j+1) C(t, j) = 1`.\nImplementacyjnie iterujemy po niepustych maskach `k` zbiorów — O(2^k · koszt przecięcia)."
+    },
+    {
+     "q": [
+      "ile liczb podzielnych przez 2 3 lub 5",
+      "liczby podzielne przez ktoras z liczb",
+      "count divisible by any",
+      "ile liczb od 1 do n dzieli sie przez a lub b"
+     ],
+     "a": "Dla każdej niepustej maski policz NWW wybranych liczb i dodaj `N / NWW` (maska nieparzystej liczności) albo odejmij\n(parzystej). Dla N = 100 i {2, 3, 5}: 50 + 33 + 20 − 16 − 10 − 6 + 3 = 74. Czas O(2^k · k · log). Pełny program\nz ochroną przed przepełnieniem jest w treści.",
+     "code": "long long N = 100;\nvector<long long> a = {2, 3, 5};\nint k = a.size();\nlong long total = 0;\nfor (int mask = 1; mask < (1 << k); mask++) {\n    long long l = 1;\n    for (int i = 0; i < k; i++) if (mask >> i & 1) l = l / __gcd(l, a[i]) * a[i];\n    total += (__builtin_popcount(mask) & 1 ? 1 : -1) * (N / l);\n}\ncout << total << \"\\n\";   // 74"
+    },
+    {
+     "q": [
+      "wlaczenia wylaczenia maski bitowe kod",
+      "jak iterowac po podzbiorach wlaczen wylaczen",
+      "inclusion exclusion bitmask",
+      "maski w zasadzie wlaczen"
+     ],
+     "a": "`for (mask = 1; mask < (1 << k); mask++)` przechodzi wszystkie niepuste podzbiory; bit `i` (`mask >> i & 1`)\nmówi, czy zbiór i jest w przecięciu, a `__builtin_popcount(mask) % 2` wyznacza znak. Alternatywnie rekurencja\n(DFS po elementach), która pozwala uciąć gałąź, gdy przecięcie jest już puste (np. NWW > N)."
+    },
+    {
+     "q": [
+      "nww przepelnienie wlaczenia wylaczenia",
+      "lcm overflow",
+      "nww za duze long long",
+      "jak liczyc nww bez przepelnienia"
+     ],
+     "a": "`l / gcd(l, a) * a` może przekroczyć 9,2·10^18. Policz iloczyn w `__int128` i jeśli wyjdzie > N, pomiń tę maskę\n(`N / NWW = 0`) — dalsze rozszerzanie maski tylko zwiększa NWW. Bez `__int128`: przepełnienia nie będzie, jeśli\n`l / g <= N / a`.",
+     "code": "long long N = 1000000000000000000LL, l = 3000000000LL, a = 3000000001LL;\nlong long g = __gcd(l, a);\n__int128 nl = (__int128)(l / g) * a;\nif (nl > N) cout << \"NWW > N, skladnik = 0\\n\";\nelse cout << N / (long long)nl << \"\\n\";"
+    },
+    {
+     "q": [
+      "ile liczb wzglednie pierwszych z n mniejszych od N",
+      "liczby wzglednie pierwsze w przedziale",
+      "count coprime to m up to n",
+      "ile liczb nie dzieli sie przez zadna z"
+     ],
+     "a": "Rozłóż M na różne czynniki pierwsze p₁…p_k (dla M ≤ 10^18 jest ich najwyżej 15), policz włączeniami-wyłączeniami\nliczby ≤ N podzielne przez któryś pᵢ i odejmij od N. Iloczyn różnych liczb pierwszych to ich NWW. Dla N = 100,\nM = 30: 100 − 74 = 26. Czas O(√M + 2^k).",
+     "code": "long long N = 100, M = 30;\nvector<long long> p;\nfor (long long d = 2; d * d <= M; d++)\n    if (M % d == 0) { p.push_back(d); while (M % d == 0) M /= d; }\nif (M > 1) p.push_back(M);\nint k = p.size();\nlong long divisible = 0;\nfor (int mask = 1; mask < (1 << k); mask++) {\n    long long prod = 1;\n    for (int i = 0; i < k; i++) if (mask >> i & 1) prod *= p[i];\n    divisible += (__builtin_popcount(mask) & 1 ? 1 : -1) * (N / prod);\n}\ncout << N - divisible << \"\\n\";   // 26"
+    },
+    {
+     "q": [
+      "liczba suriekcji",
+      "surjections count",
+      "funkcje na",
+      "rozdzielenie n roznych przedmiotow do k pudelek kazde niepuste",
+      "kazdy dostanie co najmniej jeden"
+     ],
+     "a": "Funkcji z n-zbioru na k-zbiór „na” (każda wartość trafiona) jest `Σ_{i=0}^{k} (−1)^i · C(k, i) · (k−i)^n`:\nod wszystkich `k^n` funkcji odejmujemy te, które omijają którąś wartość. Np. n = 4, k = 2: 16 − 2 = 14. Czas\nO(k log n) z szybkim potęgowaniem. (Dzieląc przez k! dostajesz liczbę Stirlinga II rodzaju S(n, k).)",
+     "code": "const long long MOD = 1'000'000'007;\nlong long power(long long b, long long e) {\n    b %= MOD; if (b < 0) b += MOD;\n    long long r = 1;\n    while (e > 0) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\n    return r;\n}\n\n           long long surjections(int n, int k) {\n               vector<long long> C(k + 1);\n               C[0] = 1;\n               for (int i = 1; i <= k; i++) C[i] = C[i - 1] * (k - i + 1) % MOD * power(i, MOD - 2) % MOD;\n               long long res = 0;\n               for (int i = 0; i <= k; i++) {\n                   long long term = C[i] * power(k - i, n) % MOD;\n                   res = (i % 2 == 0) ? (res + term) % MOD : (res - term + MOD) % MOD;\n               }\n               return res;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "gwiazdki i kreski z ograniczeniem gornym",
+      "xi <= c stars and bars",
+      "rozwiazania rownania z gornym ograniczeniem",
+      "bounded stars and bars"
+     ],
+     "a": "Zbiór Aᵢ = rozwiązania z `xᵢ ≥ c+1`. Wymuszenie tego dla i wybranych zmiennych odejmuje i(c+1) od n, więc\nwynik = `Σ_{i=0}^{k} (−1)^i · C(k, i) · C(n − i(c+1) + k − 1, k − 1)` (składniki z ujemnym górnym argumentem = 0).\nNp. k = 3, n = 5, c = 2: 21 − 3·6 + 0 = 3.",
+     "code": "auto C = [](long long n, long long r) -> long long {      // małe liczby, bez modulo\n    if (r < 0 || n < r || n < 0) return 0;\n    long long res = 1;\n    for (long long i = 1; i <= r; i++) res = res * (n - r + i) / i;\n    return res;\n};\nlong long n = 10, k = 4, c = 3, res = 0;\nfor (long long i = 0; i <= k; i++) {\n    long long term = C(k, i) * C(n - i * (c + 1) + k - 1, k - 1);\n    res += (i % 2 == 0 ? term : -term);\n}\ncout << res << \"\\n\";   // 10"
+    },
+    {
+     "q": [
+      "nieporzadki wlaczenia wylaczenia",
+      "derangement formula inclusion exclusion",
+      "wzor na nieporzadki"
+     ],
+     "a": "Aᵢ = permutacje z punktem stałym i; przecięcie j takich zbiorów ma `(n−j)!` elementów. Stąd\n`D(n) = Σ_{j=0}^{n} (−1)^j · C(n, j) · (n−j)! = n! · Σ (−1)^j / j!` ≈ n!/e. Rekurencja\n`D(n) = (n−1)(D(n−1) + D(n−2))` daje to samo w O(n)."
+    },
+    {
+     "q": [
+      "liczby w przedziale l r podzielne",
+      "ile liczb w przedziale [L,R] dzieli sie przez 2 lub 3",
+      "inclusion exclusion range",
+      "zliczanie w przedziale wlaczenia"
+     ],
+     "a": "Policz funkcję prefiksową `f(X)` = ile liczb w [1, X] spełnia warunek, a wynik to `f(R) − f(L−1)`. Np. liczby\nz [10, 30] podzielne przez 2 lub 3: f(30) = 15 + 10 − 5 = 20, f(9) = 4 + 3 − 1 = 6, wynik 14.",
+     "code": "auto f = [](long long X) { return X / 2 + X / 3 - X / 6; };\nlong long L = 10, R = 30;\ncout << f(R) - f(L - 1) << \"\\n\";   // 14"
+    },
+    {
+     "q": [
+      "funkcja mobiusa",
+      "mobius wlaczenia wylaczenia",
+      "pary wzglednie pierwsze",
+      "ile par z nwd rownym 1",
+      "mobius function c++"
+     ],
+     "a": "Funkcja Möbiusa μ(d) to współczynniki włączeń-wyłączeń po dzielnikach: μ(1) = 1, μ(d) = (−1)^k dla d będącego\niloczynem k różnych liczb pierwszych, 0 gdy d ma kwadrat. Liczba par (a, b) z [1, N]² o NWD = 1 to\n`Σ_{d=1}^{N} μ(d)·⌊N/d⌋²`. μ liczymy sitem liniowym w O(N).",
+     "code": "int N = 100;\nvector<int> mu(N + 1, 1), primes;\nvector<bool> comp(N + 1, false);\nmu[1] = 1;\nfor (int i = 2; i <= N; i++) {\n    if (!comp[i]) { primes.push_back(i); mu[i] = -1; }\n    for (int p : primes) {\n        if ((long long)i * p > N) break;\n        comp[i * p] = true;\n        if (i % p == 0) { mu[i * p] = 0; break; }\n        mu[i * p] = -mu[i];\n    }\n}\nlong long pairs = 0;\nfor (int d = 1; d <= N; d++) pairs += (long long)mu[d] * (N / d) * (N / d);\ncout << pairs << \"\\n\";   // 6087"
+    },
+    {
+     "q": [
+      "zlozonosc wlaczen wylaczen",
+      "2^k za duzo wlaczenia",
+      "ile zbiorow mozna w zasadzie wlaczen",
+      "inclusion exclusion complexity"
+     ],
+     "a": "Pełne przejście to O(2^k · k): k = 20 → ~2·10^7 operacji (OK), k = 30 → 3·10^10 (za dużo). Ratunek: DFS po elementach\nz odcinaniem, gdy NWW przekroczy N (dla liczb pierwszych > 1 iloczyn szybko rośnie), albo zauważenie, że znaczenie\nma tylko liczba wybranych zbiorów (wtedy Σ_j (−1)^j C(k, j)·g(j) w O(k))."
+    },
+    {
+     "q": [
+      "liczba elementow nie nalezacych do zadnego zbioru",
+      "dopelnienie wlaczenia wylaczenia",
+      "ile nie spelnia zadnego warunku",
+      "complement inclusion exclusion"
+     ],
+     "a": "`|U| − |A₁ ∪ … ∪ A_k| = Σ_{S ⊆ {1..k}} (−1)^|S| · |∩_{i∈S} Aᵢ|`, gdzie dla S = ∅ przecięcie to całe U. Często łatwiej\npoliczyć „złe” obiekty spełniające wybrane warunki niż „dobre” bezpośrednio — np. ścieżki omijające przeszkody,\nkolorowania bez konfliktów, liczby niepodzielne przez żadne aᵢ."
+    }
+   ],
+   "related": [
+    "math-combinatorics",
+    "math-gcd-lcm",
+    "math-euler-phi",
+    "math-sieve",
+    "dp-bitmask",
+    "math-binomial",
+    "dp-grid-paths",
+    "math-derangements-stirling",
+    "math-mobius"
+   ]
+  },
+  {
+   "id": "math-probability",
+   "title": "Prawdopodobieństwo i wartość oczekiwana (liniowość, modulo p, DP)",
+   "category": "Matematyka",
+   "tags": [
+    "prawdopodobieństwo",
+    "wartość oczekiwana",
+    "expected value",
+    "liniowość",
+    "modulo",
+    "dp na prawdopodobieństwach",
+    "kostka"
+   ],
+   "aliases": [
+    "wartość oczekiwana",
+    "expected value",
+    "prawdopodobieństwo",
+    "probability",
+    "wartosc oczekiwana modulo",
+    "liniowość wartości oczekiwanej",
+    "linearity of expectation",
+    "dp prawdopodobieństwo",
+    "średnia liczba"
+   ],
+   "summary": "Wartość oczekiwana E[X] = Σ x·P(X = x). Najważniejsze narzędzie: liniowość E[X+Y] = E[X] + E[Y] (także dla zmiennych zależnych). Wynik modulo p podaje się jako P·Q⁻¹ mod p; DP na wartościach oczekiwanych zwykle liczymy od stanów końcowych.",
+   "complexity": "zależnie od DP: liczba stanów × liczba przejść; odwrotność modularna O(log p)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Wartość oczekiwana** zmiennej losowej X: `E[X] = Σ x · P(X = x)` — „średni wynik przy wielu powtórzeniach”.\n\n* **Liniowość:** `E[X + Y] = E[X] + E[Y]` i `E[cX] = c·E[X]` — **zawsze**, nawet gdy X i Y są zależne. Trik:\n  rozbij X na sumę wskaźników `Xᵢ ∈ {0, 1}`, wtedy `E[X] = Σ P(Xᵢ = 1)`. Np. oczekiwana liczba punktów stałych\n  losowej permutacji: n zdarzeń „i stoi na miejscu i”, każde z prawdopodobieństwem 1/n ⇒ E = 1.\n* Dla X całkowitego nieujemnego: `E[X] = Σ_{k≥1} P(X ≥ k)` (przydatne dla maksimów/minimów).\n* **Rozkład geometryczny:** próbujemy aż do sukcesu z prawdopodobieństwem p — `E = 1/p` (kostka do szóstki: 6 rzutów).\n* **Kolekcjoner kuponów:** zebranie n różnych kuponów to średnio `n · (1 + 1/2 + … + 1/n)` losowań.\n* **Modulo p:** gdy wynik to ułamek P/Q, zadanie każe wypisać `P · Q^(p−2) mod p` (Q niepodzielne przez p).\n  W DP po prostu zamieniasz każde dzielenie przez q na mnożenie przez odwrotność q."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: DP na wartości oczekiwanej (double i modulo p)",
+     "code": "// Rzucamy kostką, dopóki suma oczek < n. Ile średnio rzutów? Wypisz wynik jako double i modulo 10^9+7.\n// E[s] = 0 dla s >= n;  E[s] = 1 + (1/6) * sum_{d=1..6} E[s+d]  dla s < n.  Liczymy od końca.\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\n\nlong long power(long long b, long long e) {\n    long long r = 1; b %= MOD;\n    while (e > 0) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\n    return r;\n}\n\nint main() {\n    int n;\n    cin >> n;\n    vector<double> E(n + 7, 0.0);\n    vector<long long> Em(n + 7, 0);\n    long long inv6 = power(6, MOD - 2);\n    for (int s = n - 1; s >= 0; s--) {               // od stanów końcowych do startu\n        double acc = 0; long long accm = 0;\n        for (int d = 1; d <= 6; d++) { acc += E[s + d]; accm = (accm + Em[s + d]) % MOD; }\n        E[s] = 1 + acc / 6;\n        Em[s] = (1 + accm * inv6) % MOD;\n    }\n    cout << fixed << setprecision(6) << E[0] << \"\\n\" << Em[0] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Fakt",
+      "Wzór",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "liniowość",
+       "E[ΣXᵢ] = ΣE[Xᵢ]",
+       "punkty stałe permutacji: E = 1"
+      ],
+      [
+       "wskaźniki",
+       "E[liczba zdarzeń] = Σ P(zdarzenie i)",
+       "oczekiwana liczba par o tej samej dacie urodzin"
+      ],
+      [
+       "ogon",
+       "E[X] = Σ_{k≥1} P(X ≥ k)",
+       "E[max dwóch kostek] = 161/36 ≈ 4,47"
+      ],
+      [
+       "geometryczny",
+       "E = 1/p",
+       "do pierwszej szóstki: 6 rzutów"
+      ],
+      [
+       "kupony",
+       "n·H_n",
+       "6 kuponów: 14,7"
+      ],
+      [
+       "niezależne",
+       "E[XY] = E[X]E[Y] (tylko niezależne!)",
+       "iloczyn dwóch kostek: 12,25"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "DP na **prawdopodobieństwach** zwykle idzie „do przodu” (z jakim prawdopodobieństwem dojdziemy do stanu s), a DP na\n**wartości oczekiwanej** — „od końca” (ile jeszcze średnio kroków ze stanu s). Pętla w stanie (np. rzut, który nic\nnie zmienia) daje równanie `E[s] = 1 + q·E[s] + …` — przenieś `q·E[s]` na lewą stronę i podziel przez `1 − q`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "P * power(Q, MOD - 2) % MOD",
+     "desc": "ułamek P/Q zapisany modulo liczba pierwsza",
+     "complexity": "O(log MOD)"
+    },
+    {
+     "sig": "cout << fixed << setprecision(9) << x",
+     "desc": "wypisanie prawdopodobieństwa/wartości oczekiwanej z ustaloną liczbą miejsc",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "E[XY] = E[X]·E[Y] tylko dla zmiennych niezależnych; liniowość sumy działa zawsze.",
+    "E[1/X] ≠ 1/E[X] i E[max] ≠ max(E) — licz z definicji albo przez P(X ≥ k).",
+    "Modulo p: dzielenie zastępuj odwrotnością; nie licz najpierw double, a potem nie „zamieniaj” na modulo.",
+    "Stan, z którego można wrócić do siebie (pętla), wymaga rozwiązania równania, a nie zwykłej rekurencji.",
+    "Bardzo małe prawdopodobieństwa w double mogą się wyzerować (underflow) — czasem liczy się logarytmy.",
+    "Odejmowanie modulo: `(a - b + MOD) % MOD`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "wartosc oczekiwana",
+      "expected value",
+      "srednia wartosc zmiennej losowej",
+      "jak liczyc wartosc oczekiwana",
+      "co to jest wartosc oczekiwana"
+     ],
+     "a": "`E[X] = Σ x · P(X = x)` — średnia wartość ważona prawdopodobieństwami. Dla kostki: (1+2+…+6)/6 = 3,5. W zadaniach\nrzadko liczy się ją z definicji: zwykle używa się liniowości (rozbicie na wskaźniki) albo DP po stanach od końca.",
+     "code": "double e = 0;\nfor (int x = 1; x <= 6; x++) e += x * (1.0 / 6);\ncout << e << \"\\n\";   // 3.5"
+    },
+    {
+     "q": [
+      "liniowosc wartosci oczekiwanej",
+      "linearity of expectation",
+      "suma wartosci oczekiwanych zalezne zmienne",
+      "wskazniki wartosc oczekiwana",
+      "indicator trick"
+     ],
+     "a": "`E[X₁ + … + X_n] = E[X₁] + … + E[X_n]` zawsze, także dla zmiennych zależnych. Licząc „oczekiwaną liczbę czegoś”,\nzdefiniuj wskaźnik `Xᵢ = 1`, gdy zachodzi i-te zdarzenie, i zsumuj `P(Xᵢ = 1)`. Przykład: w losowej permutacji\nn elementów każdy stoi na swoim miejscu z prawdopodobieństwem 1/n, więc oczekiwana liczba punktów stałych to 1."
+    },
+    {
+     "q": [
+      "wartosc oczekiwana modulo",
+      "expected value modulo p",
+      "wynik jako P*Q^-1 mod",
+      "ulamek modulo 10^9+7",
+      "prawdopodobienstwo modulo"
+     ],
+     "a": "Jeśli wynik to P/Q, wypisz `P · Q^(p−2) mod p` (małe twierdzenie Fermata; p pierwsze, Q niepodzielne przez p).\nW DP każde dzielenie przez q zamień na mnożenie przez `inv(q)` (policzoną raz). Np. 7/6 mod 10^9+7 = 166666669.",
+     "code": "const long long MOD = 1'000'000'007;\nlong long power(long long b, long long e) {\n    b %= MOD; if (b < 0) b += MOD;\n    long long r = 1;\n    while (e > 0) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\n    return r;\n}\n\n           long long fracMod(long long P, long long Q) { return P % MOD * power(Q, MOD - 2) % MOD; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "rzut kostka az do szostki",
+      "ile srednio rzutow do szostki",
+      "rozklad geometryczny wartosc oczekiwana",
+      "srednia liczba prob do sukcesu"
+     ],
+     "a": "Dla prób niezależnych z sukcesem o prawdopodobieństwie p: `E = 1 + (1−p)·E` (jedna próba i z prawdopodobieństwem\n1−p zaczynamy od nowa), więc `E = 1/p`. Do pierwszej szóstki: 6 rzutów średnio. To przykład równania z pętlą\nw stanie, które rozwiązujemy algebraicznie."
+    },
+    {
+     "q": [
+      "kolekcjoner kuponow",
+      "coupon collector",
+      "ile srednio losowan zeby zebrac wszystkie",
+      "srednio ile rzutow zeby wypadly wszystkie scianki"
+     ],
+     "a": "Mając już i różnych kuponów z n, nowy wypada z prawdopodobieństwem (n−i)/n, więc czekamy średnio n/(n−i) losowań.\nSuma (liniowość): `n·(1/n + 1/(n−1) + … + 1/1) = n·H_n ≈ n ln n`. Dla kostki: 6·49/20 = 14,7 rzutu.",
+     "code": "const long long MOD = 1'000'000'007;\nlong long power(long long b, long long e) {\n    b %= MOD; if (b < 0) b += MOD;\n    long long r = 1;\n    while (e > 0) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\n    return r;\n}\n\n           long long couponMod(int n) {                 // n * H_n mod p\n               long long h = 0;\n               for (int i = 1; i <= n; i++) h = (h + power(i, MOD - 2)) % MOD;\n               return h * n % MOD;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dp na prawdopodobienstwach",
+      "dp prawdopodobienstwo",
+      "prawdopodobienstwo dynamika",
+      "prawdopodobienstwo sumy kostek",
+      "probability dp"
+     ],
+     "a": "Stan = sytuacja po k krokach, wartość = prawdopodobieństwo dojścia do niej; przejście rozdziela prawdopodobieństwo\nna następniki. Np. `P[k][s]` = prawdopodobieństwo, że k kostek da sumę s: `P[k][s] = Σ_d P[k−1][s−d] / 6`.\nCzas O(n · S · 6). Suma 10 na trzech kostkach: 27/216 = 0,125.",
+     "code": "int n = 3, S = 6 * n;\nvector<double> P(S + 1, 0.0);\nP[0] = 1.0;\nfor (int k = 1; k <= n; k++) {\n    vector<double> Q(S + 1, 0.0);\n    for (int s = 0; s <= S; s++)\n        for (int d = 1; d <= 6 && d <= s; d++) Q[s] += P[s - d] / 6;\n    P = Q;\n}\ncout << P[10] << \"\\n\";   // 0.125"
+    },
+    {
+     "q": [
+      "dp wartosc oczekiwana od tylu",
+      "expected value dp backwards",
+      "dlaczego e dp liczymy od konca",
+      "oczekiwana liczba krokow dp"
+     ],
+     "a": "`E[s]` = oczekiwana liczba kroków **do końca** z s. W stanie końcowym `E = 0`, a dla pozostałych\n`E[s] = 1 + Σ P(s→t)·E[t]`. Wartości zależą od stanów „późniejszych”, więc liczy się je od końca (albo memoizacją).\nLiczenie „od przodu” wymagałoby znajomości prawdopodobieństw dojścia — to inny, zwykle trudniejszy wzór.\nPełny program w treści."
+    },
+    {
+     "q": [
+      "wartosc oczekiwana maksimum",
+      "E[X] = suma P(X>=k)",
+      "oczekiwane maksimum z rzutow",
+      "expected maximum dice"
+     ],
+     "a": "Dla X ∈ {1, 2, …}: `E[X] = Σ_{k≥1} P(X ≥ k)`. Dla maksimum dwóch kostek `P(max ≥ k) = 1 − ((k−1)/6)²`, więc\n`E = Σ_{k=1}^{6} (1 − (k−1)²/36) = 6 − 55/36 = 161/36 ≈ 4,472`. To samo dla m kostek: wykładnik m zamiast 2.",
+     "code": "int m = 2;   // liczba kostek\ndouble e = 0;\nfor (int k = 1; k <= 6; k++) e += 1 - pow((k - 1) / 6.0, m);\ncout << fixed << setprecision(4) << e << \"\\n\";   // 4.4722"
+    },
+    {
+     "q": [
+      "double czy modulo prawdopodobienstwo",
+      "precyzja double prawdopodobienstwo",
+      "jak wypisac prawdopodobienstwo z dokladnoscia",
+      "long double prawdopodobienstwo"
+     ],
+     "a": "Jeśli zadanie każe wypisać liczbę rzeczywistą z dokładnością (np. 10^−6), licz w `double`/`long double` i wypisz\n`fixed << setprecision(9)`. Jeśli każe wypisać wynik modulo p — licz cały czas modulo z odwrotnościami; nie da się\nzamienić gotowego `double` na wynik modulo. Sumuj małe składniki przed dużymi, by ograniczyć błędy zaokrągleń."
+    },
+    {
+     "q": [
+      "prawdopodobienstwo warunkowe",
+      "wzor bayesa",
+      "conditional probability",
+      "prawdopodobienstwo zdarzen niezaleznych"
+     ],
+     "a": "`P(A | B) = P(A ∩ B) / P(B)`; zdarzenia są niezależne, gdy `P(A ∩ B) = P(A)·P(B)`. Bayes: `P(A | B) = P(B | A)·P(A) / P(B)`.\nW zadaniach zwykle wystarczy policzyć „sprzyjające / wszystkie” albo DP, a warunkowanie oznacza po prostu\nograniczenie przestrzeni do przypadków spełniających B."
+    }
+   ],
+   "related": [
+    "math-mod-inverse",
+    "math-fast-pow",
+    "math-combinatorics",
+    "dp-intro",
+    "math-series",
+    "math-gauss"
+   ]
+  },
+  {
+   "id": "math-series",
+   "title": "Sumy szeregów — arytmetyczny, geometryczny, kwadraty, sześciany, ⌊n/i⌋",
+   "category": "Matematyka",
+   "tags": [
+    "sumy",
+    "szereg arytmetyczny",
+    "szereg geometryczny",
+    "suma kwadratów",
+    "suma sześcianów",
+    "szereg harmoniczny",
+    "floor sum",
+    "modulo"
+   ],
+   "aliases": [
+    "suma ciągu arytmetycznego",
+    "suma od 1 do n",
+    "suma kwadratów",
+    "suma ciągu geometrycznego",
+    "sumy szeregów",
+    "suma ciagu arytmetycznego wzor",
+    "suma n/i",
+    "szereg harmoniczny",
+    "gauss suma"
+   ],
+   "summary": "Zamknięte wzory na sumy pozwalają policzyć wynik w O(1) zamiast O(n): 1+…+n = n(n+1)/2, Σi² = n(n+1)(2n+1)/6, Σi³ = (n(n+1)/2)², Σq^i = (q^n − 1)/(q − 1). Modulo p dzielenie zastępujemy odwrotnością.",
+   "complexity": "wzory O(1) (geometryczny O(log n) przez potęgowanie); Σ⌊n/i⌋ w O(√n) blokami",
+   "level": 2,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Suma",
+      "Wzór",
+      "n = 10"
+     ],
+     "rows": [
+      [
+       "1 + 2 + … + n",
+       "n(n+1)/2",
+       "55"
+      ],
+      [
+       "a + (a+r) + … (n wyrazów)",
+       "n·(pierwszy + ostatni)/2",
+       "—"
+      ],
+      [
+       "a + … + b (kolejne liczby)",
+       "(a+b)(b−a+1)/2",
+       "17..100: 4914"
+      ],
+      [
+       "1² + … + n²",
+       "n(n+1)(2n+1)/6",
+       "385"
+      ],
+      [
+       "1³ + … + n³",
+       "(n(n+1)/2)²",
+       "3025"
+      ],
+      [
+       "1 + q + … + q^(n−1)",
+       "(q^n − 1)/(q − 1), q ≠ 1",
+       "q = 2: 1023"
+      ],
+      [
+       "1 + 1/2 + … + 1/n",
+       "≈ ln n + 0,5772",
+       "≈ 2,93"
+      ],
+      [
+       "Σ_{i=1}^{n} ⌊n/i⌋",
+       "≈ n ln n; O(√n) różnych wartości",
+       "27"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Modulo p** nie wolno po prostu podzielić. Dwie metody: (1) **podziel przed modulo** — z dwóch kolejnych liczb n, n+1\njedna jest parzysta, więc najpierw podziel ją przez 2 (dla 6 analogicznie: dziel przez 2 i 3 te czynniki, które\nsą podzielne), (2) **pomnóż przez odwrotność** — `inv2 = (p+1)/2`, `inv6 = 6^(p−2) mod p`. Przy n do 10^18 najpierw\nweź `n % p`, bo `n·(n+1)` przepełnia `long long`.\n\n**Szereg harmoniczny w złożoności:** pętla `for i in 1..n: for j = i, 2i, 3i, … ≤ n` wykonuje `n/1 + n/2 + … + n/n ≈ n ln n`\nkroków — stąd O(n log n) sita, liczenia dzielników wszystkich liczb itd.\n\n**Bloki ⌊n/i⌋:** wartość `q = ⌊n/i⌋` jest stała dla `i ∈ [i, ⌊n/q⌋]`, a różnych wartości jest ≤ 2√n."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: sumy potęg modulo p dla n do 10^18",
+     "code": "// Wejście: n (do 10^18). Wypisuje modulo 10^9+7: 1+..+n, 1²+..+n², 1³+..+n³.\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\n\nlong long power(long long b, long long e) {\n    long long r = 1; b %= MOD;\n    while (e > 0) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\n    return r;\n}\n\nint main() {\n    long long n;\n    cin >> n;\n    long long inv2 = power(2, MOD - 2), inv6 = power(6, MOD - 2);\n    long long a = n % MOD, b = (n + 1) % MOD, c = (2 * (n % MOD) + 1) % MOD;   // najpierw % MOD!\n    long long s1 = a * b % MOD * inv2 % MOD;\n    long long s2 = a * b % MOD * c % MOD * inv6 % MOD;\n    long long s3 = s1 * s1 % MOD;\n    cout << s1 << \"\\n\" << s2 << \"\\n\" << s3 << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: Σ⌊n/i⌋ blokami w O(√n)",
+     "code": "// Suma floor(n / i) dla i = 1..n w O(sqrt n) — wartości n/i grupują się w bloki.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    long long n;\n    cin >> n;\n    long long sum = 0;\n    for (long long i = 1; i <= n; ) {\n        long long q = n / i;          // wartość stała w bloku\n        long long j = n / q;          // ostatnie i z tą samą wartością\n        sum += q * (j - i + 1);\n        i = j + 1;\n    }\n    cout << sum << \"\\n\";              // = liczba par (i, k) z i*k <= n = suma liczby dzielników 1..n\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`n * (n + 1) / 2` dla n = 10^10 to 5·10^19 — przekracza `long long` (≈ 9,22·10^18) już przy mnożeniu. Iloczyn\n`n(n+1)` mieści się w `long long` mniej więcej do n ≈ 3·10^9. Dla większych n licz modulo albo w `__int128`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "n * (n + 1) / 2",
+     "desc": "suma 1..n (uwaga na przepełnienie dla n > ~3·10^9)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "(power(q, n) - 1 + MOD) % MOD * power(q - 1, MOD - 2) % MOD",
+     "desc": "suma geometryczna 1 + q + … + q^(n−1) mod p (q mod p ≠ 1)",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "for (i = 1; i <= n; i = n / (n / i) + 1)",
+     "desc": "iteracja po blokach stałej wartości ⌊n/i⌋",
+     "complexity": "O(√n)"
+    }
+   ],
+   "pitfalls": [
+    "Dzielenie przez 2 lub 6 po wzięciu modulo daje zły wynik — mnóż przez odwrotność albo dziel przed modulo.",
+    "Przy n do 10^18 najpierw `n % MOD`, potem mnożenie; `n * (n+1)` przepełnia nawet `unsigned long long`.",
+    "Suma geometryczna modulo dla q ≡ 1 (mod p): wzór dzieli przez 0 — wtedy suma = n mod p.",
+    "Ciąg arytmetyczny: liczba wyrazów od a do b to b − a + 1, nie b − a.",
+    "Bloki ⌊n/i⌋: `j = n / (n / i)` — nie myl z `n / i`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "suma ciagu arytmetycznego wzor",
+      "suma od 1 do n",
+      "suma liczb od 1 do n wzor",
+      "gauss suma",
+      "sum 1 to n formula"
+     ],
+     "a": "`1 + 2 + … + n = n(n+1)/2` — pary (1, n), (2, n−1), … mają tę samą sumę n+1. Dla dowolnego ciągu arytmetycznego:\nliczba wyrazów × (pierwszy + ostatni) / 2. Uważaj na przepełnienie: dla n > ~3·10^9 użyj modulo albo `__int128`.",
+     "code": "long long n = 1000000000;\ncout << n * (n + 1) / 2 << \"\\n\";   // 500000000500000000"
+    },
+    {
+     "q": [
+      "suma kwadratow wzor",
+      "suma kwadratow od 1 do n",
+      "sum of squares formula",
+      "1^2+2^2+...+n^2"
+     ],
+     "a": "`1² + 2² + … + n² = n(n+1)(2n+1)/6` (iloczyn zawsze dzieli się przez 6). Dla n = 10: 385. Modulo p: pomnóż przez\n`inv6`, albo podziel przez 2 i 3 te czynniki, które są podzielne, zanim weźmiesz modulo.",
+     "code": "long long n = 100;\ncout << n * (n + 1) * (2 * n + 1) / 6 << \"\\n\";   // 338350"
+    },
+    {
+     "q": [
+      "suma szescianow",
+      "sum of cubes",
+      "1^3+2^3+...+n^3",
+      "suma szescianow wzor"
+     ],
+     "a": "`1³ + 2³ + … + n³ = (n(n+1)/2)²` — kwadrat sumy kolejnych liczb. Dla n = 10: 55² = 3025. Modulo p: policz\n`s1 = n(n+1)/2 mod p` i weź `s1·s1 mod p`."
+    },
+    {
+     "q": [
+      "suma ciagu geometrycznego",
+      "suma poteg dwojki",
+      "geometric series sum",
+      "suma q^i",
+      "1+2+4+...+2^n"
+     ],
+     "a": "`1 + q + … + q^(n−1) = (q^n − 1)/(q − 1)` dla q ≠ 1 (dla q = 1 suma = n). Szczególnie: `1 + 2 + … + 2^(n−1) = 2^n − 1`.\nBez modulo uważaj na przepełnienie — `2^63` już się nie mieści w `long long`.",
+     "code": "long long q = 3, n = 5, s = 0, p = 1;\nfor (int i = 0; i < n; i++) { s += p; p *= q; }\ncout << s << \" \" << (p - 1) / (q - 1) << \"\\n\";   // 121 121"
+    },
+    {
+     "q": [
+      "suma modulo dzielenie przez 2",
+      "n(n+1)/2 modulo",
+      "jak dzielic przez 6 modulo",
+      "dzielenie we wzorze modulo",
+      "suma modulo 10^9+7 wzor"
+     ],
+     "a": "Po wzięciu modulo nie można dzielić całkowitoliczbowo. Albo dziel **przed** modulo (`n % 2 == 0 ? (n/2)%p * ((n+1)%p) : …`),\nalbo mnóż przez odwrotność: `inv2 = 500000004`, `inv6 = 166666668` dla p = 10^9+7. Dla n do 10^18 najpierw `n % p`.",
+     "code": "const long long MOD = 1'000'000'007;\nlong long n = 1000000000000000000LL;\nlong long a = n % MOD, b = (n + 1) % MOD;\nlong long inv2 = (MOD + 1) / 2;                 // odwrotność 2 modulo liczba pierwsza nieparzysta\ncout << a * b % MOD * inv2 % MOD << \"\\n\";      // 1225"
+    },
+    {
+     "q": [
+      "suma geometryczna modulo",
+      "geometric series mod p",
+      "suma poteg modulo",
+      "1+q+...+q^n mod"
+     ],
+     "a": "`S = (q^n − 1) · (q − 1)^(p−2) mod p` — O(log n) szybkim potęgowaniem. Gdy `q ≡ 1 (mod p)`, wzór dzieli przez 0\ni wtedy `S = n mod p`. Alternatywa bez odwrotności (dowolny moduł): dziel i zwyciężaj\n`S(2k) = S(k)·(1 + q^k)` albo potęgowanie macierzy 2×2.",
+     "code": "const long long MOD = 1'000'000'007;\nlong long power(long long b, long long e) {\n    b %= MOD; if (b < 0) b += MOD;\n    long long r = 1;\n    while (e > 0) { if (e & 1) r = r * b % MOD; b = b * b % MOD; e >>= 1; }\n    return r;\n}\n\n           long long geomSum(long long q, long long n) {      // 1 + q + ... + q^(n-1) mod p\n               q %= MOD;\n               if (q == 1) return n % MOD;\n               return (power(q, n) - 1 + MOD) % MOD * power(q - 1, MOD - 2) % MOD;\n           }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "suma harmoniczna",
+      "n/1 + n/2 + ... + n/n zlozonosc",
+      "harmonic series complexity",
+      "dlaczego sito ma n log n",
+      "petla po wielokrotnosciach zlozonosc"
+     ],
+     "a": "`1 + 1/2 + … + 1/n ≈ ln n + 0,577`, więc pętla po wszystkich i i ich wielokrotnościach wykonuje\n`n/1 + n/2 + … + n/n ≈ n ln n` kroków. Dlatego „dla każdego d dodaj do wszystkich wielokrotności” to O(n log n),\na sito Eratostenesa (tylko liczby pierwsze) — O(n log log n).",
+     "code": "int n = 10;\nvector<int> divisors(n + 1, 0);\nfor (int d = 1; d <= n; d++)\n    for (int m = d; m <= n; m += d) divisors[m]++;      // O(n log n) łącznie\nfor (int i = 1; i <= n; i++) cout << divisors[i] << \" \";\ncout << \"\\n\";   // 1 2 2 3 2 4 2 4 3 4"
+    },
+    {
+     "q": [
+      "suma floor n/i",
+      "sum of floor(n/i)",
+      "bloki n/i sqrt",
+      "dzielenie na bloki o tej samej wartosci n/i",
+      "n/i rozne wartosci sqrt"
+     ],
+     "a": "`⌊n/i⌋` przyjmuje najwyżej 2√n różnych wartości; dla bieżącego i ostatnie i' z tą samą wartością to `n / (n / i)`.\nPrzechodzimy blokami: `sum += q · (j − i + 1)`, `i = j + 1` — O(√n). Działa dla n do ~10^12–10^14 i jest podstawą\nwielu sum z dzielnikami (Σ d(k) = Σ ⌊n/i⌋). Pełny program w treści."
+    },
+    {
+     "q": [
+      "suma liczb od a do b",
+      "suma przedzialu l..r ciagu",
+      "sum from a to b",
+      "suma kolejnych liczb od a do b"
+     ],
+     "a": "`a + (a+1) + … + b = (a + b)(b − a + 1)/2` — liczba wyrazów × średnia pierwszego i ostatniego. Jeden z czynników\njest parzysty, więc dzielenie jest dokładne. Np. 17 + … + 100 = 117·84/2 = 4914.",
+     "code": "long long a = 17, b = 100;\ncout << (a + b) * (b - a + 1) / 2 << \"\\n\";   // 4914"
+    },
+    {
+     "q": [
+      "przepelnienie n(n+1)/2",
+      "suma do 10^10 long long",
+      "overflow sum formula",
+      "n*(n+1)/2 zly wynik"
+     ],
+     "a": "`long long` mieści do ≈ 9,22·10^18, więc `n·(n+1)` przepełnia się dla n > ~3,03·10^9 — zanim nastąpi dzielenie.\nRozwiązania: dziel parzysty czynnik przed mnożeniem (`n % 2 == 0 ? n/2*(n+1) : (n+1)/2*n` — działa do ~4,3·10^9),\nlicz w `__int128`, albo licz modulo.",
+     "code": "long long n = 4000000000LL;\nlong long s = (n % 2 == 0) ? (n / 2) * (n + 1) : ((n + 1) / 2) * n;   // dzielenie przed mnożeniem\n__int128 t = (__int128)n * (n + 1) / 2;\ncout << s << \" \" << (long long)t << \"\\n\";   // 8000000002000000000 x2"
+    }
+   ],
+   "related": [
+    "math-mod-inverse",
+    "math-fast-pow",
+    "math-divisors",
+    "math-sieve",
+    "math-matrix-pow",
+    "math-probability",
+    "math-mobius"
+   ]
+  },
+  {
+   "id": "math-pigeonhole",
+   "title": "Zasada szufladkowa (Dirichleta) w zadaniach algorytmicznych",
+   "category": "Matematyka",
+   "tags": [
+    "zasada szufladkowa",
+    "pigeonhole",
+    "Dirichlet",
+    "sumy prefiksowe",
+    "modulo",
+    "cykl",
+    "istnienie rozwiązania"
+   ],
+   "aliases": [
+    "zasada szufladkowa",
+    "pigeonhole principle",
+    "zasada dirichleta",
+    "szufladki",
+    "zasada szufladkowa dirichleta",
+    "podciąg o sumie podzielnej przez n",
+    "zawsze istnieje rozwiązanie"
+   ],
+   "summary": "Jeśli n+1 obiektów trafia do n szuflad, to któraś szuflada ma co najmniej dwa. W zadaniach gwarantuje istnienie rozwiązania (np. spójnego fragmentu o sumie podzielnej przez n) i ogranicza okres ciągów modulo m.",
+   "complexity": "typowe konstrukcje O(n) (sumy prefiksowe modulo n), wykrywanie cyklu O(m)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Zasada szufladkowa:** n+1 obiektów w n szufladach ⇒ któraś szuflada zawiera ≥ 2 obiekty. **Uogólnienie:** N obiektów\nw k szufladach ⇒ któraś ma ≥ ⌈N/k⌉.\n\nKlasyczne zastosowania w zadaniach:\n* **Sumy prefiksowe modulo n:** dla dowolnych n liczb istnieje niepusty spójny fragment o sumie podzielnej przez n.\n  Prefiksów P₀ = 0, P₁, …, P_n jest n+1, a reszt modulo n tylko n ⇒ dwa prefiksy Pᵢ ≡ Pⱼ, więc fragment (i, j] ma sumę ≡ 0.\n* **Ciągi x_{k+1} = f(x_k) mod m** przyjmują ≤ m wartości ⇒ po co najwyżej m krokach wartość się powtórzy i ciąg\n  wchodzi w cykl (np. okres Pisano Fibonacciego modulo m, zapętlenie symulacji).\n* **Spośród n+1 liczb z {1, …, 2n}** dwie są kolejne, więc względnie pierwsze (szuflady {1,2}, {3,4}, …).\n* **Erdős–Szekeres:** każdy ciąg n²+1 różnych liczb ma monotoniczny podciąg długości n+1.\n\n**Sygnał w treści:** „wypisz dowolny fragment/parę spełniającą…”, „udowodnij, że zawsze istnieje”, brak opcji „−1”\nw wyjściu, liczba elementów większa od liczby możliwych wartości."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: fragment o sumie podzielnej przez n",
+     "code": "// Dla n liczb całkowitych znajdź niepusty spójny fragment [l, r] o sumie podzielnej przez n (zawsze istnieje).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> a(n + 1);\n    for (int i = 1; i <= n; i++) cin >> a[i];\n    vector<int> first(n, -1);         // first[r] = najmniejsze i, dla którego P_i mod n == r\n    first[0] = 0;                     // P_0 = 0\n    long long P = 0;\n    for (int i = 1; i <= n; i++) {\n        P = ((P + a[i]) % n + n) % n; // reszta nieujemna także dla ujemnych a[i]\n        if (first[P] != -1) {         // dwa prefiksy w tej samej \"szufladzie\"\n            cout << first[P] + 1 << \" \" << i << \"\\n\";\n            return 0;\n        }\n        first[P] = i;\n    }\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Zasada szufladkowa często zamienia problem „czy istnieje?” na „znajdź” — skoro odpowiedź zawsze istnieje, wystarczy\nalgorytm, który ją wskaże (jak powyżej). Jeśli zbiór możliwych stanów jest mały (≤ 10^6), symulacja „aż stan się\npowtórzy” jest gwarantowanie krótka."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "((P + x) % n + n) % n",
+     "desc": "nieujemna reszta sumy prefiksowej (także dla ujemnych x)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "vector<int> first(n, -1)",
+     "desc": "tablica „szuflad”: pierwszy indeks, w którym pojawiła się dana reszta",
+     "complexity": "O(n) pamięci"
+    }
+   ],
+   "pitfalls": [
+    "Zapominanie o P₀ = 0 — bez niego mamy tylko n prefiksów i zasada szufladkowa nie gwarantuje kolizji.",
+    "Ujemne liczby: `%` w C++ może zwrócić ujemną resztę — normalizuj `((x % n) + n) % n`.",
+    "Okres ciągu modulo m może zacząć się dopiero po „ogonie” (ρ) — pierwsza wartość nie musi należeć do cyklu.",
+    "Zasada daje istnienie, nie optymalność — jeśli zadanie pyta o najkrótszy fragment, potrzebny jest inny algorytm."
+   ],
+   "qa": [
+    {
+     "q": [
+      "zasada szufladkowa",
+      "pigeonhole principle",
+      "zasada szufladkowa dirichleta",
+      "szufladki matematyka",
+      "co to jest zasada szufladkowa"
+     ],
+     "a": "Jeśli rozkładamy n+1 obiektów do n szuflad, to w którejś są co najmniej dwa (ogólnie: N obiektów w k szufladach ⇒\nktóraś ma ≥ ⌈N/k⌉). W zadaniach „szufladkami” są możliwe wartości (reszty modulo n, stany symulacji), a „obiektami”\n— prefiksy, kroki, elementy. Daje gwarancję istnienia rozwiązania i ograniczenie długości poszukiwań."
+    },
+    {
+     "q": [
+      "podciag o sumie podzielnej przez n",
+      "zawsze istnieje podtablica suma podzielna przez n",
+      "subarray sum divisible by n",
+      "fragment o sumie podzielnej przez n"
+     ],
+     "a": "Prefiksy P₀ = 0, P₁, …, P_n to n+1 liczb, a reszt modulo n jest n, więc dwa prefiksy Pᵢ, Pⱼ (i < j) mają tę samą\nresztę — fragment a[i+1..j] ma sumę podzielną przez n. Zapamiętuj pierwsze wystąpienie każdej reszty; O(n) czasu.\nPełny program w treści."
+    },
+    {
+     "q": [
+      "uogolniona zasada szufladkowa",
+      "ceil n/k szufladka",
+      "generalized pigeonhole",
+      "co najmniej ceil(n/k)"
+     ],
+     "a": "Jeśli N obiektów trafia do k szuflad, to któraś ma co najmniej ⌈N/k⌉ obiektów (inaczej łącznie byłoby ≤ k·(⌈N/k⌉−1) < N).\nNp. wśród 25 uczniów co najmniej 3 urodzili się w tym samym miesiącu (⌈25/12⌉ = 3). Przydaje się do szacowania\nodpowiedzi lub dolnych ograniczeń."
+    },
+    {
+     "q": [
+      "cykl w ciagu modulo",
+      "okres ciagu x = f(x) mod m",
+      "kiedy ciag sie zapetli",
+      "wykrywanie cyklu ciagu",
+      "symulacja az sie powtorzy"
+     ],
+     "a": "Ciąg `x_{k+1} = f(x_k)` o wartościach w {0, …, m−1} ma ≤ m różnych wartości, więc najpóźniej po m krokach jakaś się\npowtórzy i od tej chwili ciąg jest okresowy. Zapamiętuj `seen[x] = k` (pierwszy krok z wartością x); przy\npowtórzeniu: początek cyklu = `seen[x]`, okres = `k − seen[x]`. Pozwala „przewinąć” 10^18 kroków. Czas i pamięć O(m).",
+     "code": "long long m = 10, x = 3, K = 1000000000000LL;   // x -> (x*x + 1) mod m, wartość po K krokach\nvector<long long> seen(m, -1), val;\nlong long k = 0;\nwhile (seen[x] == -1) { seen[x] = k; val.push_back(x); x = (x * x + 1) % m; k++; }\nlong long start = seen[x], period = k - start;\nlong long ans = (K < start) ? val[K] : val[start + (K - start) % period];\ncout << start << \" \" << period << \" \" << ans << \"\\n\";   // 1 6 5"
+    },
+    {
+     "q": [
+      "dwie liczby wzglednie pierwsze z n+1 liczb",
+      "zadanie z szufladkowa przyklad",
+      "n+1 liczb z 1..2n",
+      "przyklady zasady szufladkowej"
+     ],
+     "a": "Podziel {1, …, 2n} na n par kolejnych liczb {1,2}, {3,4}, …, {2n−1, 2n}. Wybierając n+1 liczb, dwie trafią do jednej\npary, czyli są kolejne — a kolejne liczby są względnie pierwsze. Podobnie: wśród n+1 liczb z {1, …, 2n} jedna dzieli\ndrugą (szuflady wg części nieparzystej)."
+    },
+    {
+     "q": [
+      "erdos szekeres",
+      "podciag monotoniczny dlugosci",
+      "zawsze istnieje podciag rosnacy lub malejacy",
+      "erdos szekeres theorem"
+     ],
+     "a": "Każdy ciąg co najmniej `(r−1)(s−1)+1` różnych liczb ma rosnący podciąg długości r albo malejący długości s\n(dla r = s = n+1: n²+1 elementów ⇒ monotoniczny długości n+1). Dowód: każdemu elementowi przypisz parę (najdłuższy\nrosnący, najdłuższy malejący kończący się na nim) — pary są różne, a szuflad jest (r−1)(s−1). Algorytmicznie: LIS."
+    },
+    {
+     "q": [
+      "jak rozpoznac zasade szufladkowa",
+      "zasada szufladkowa w zadaniach olimpijskich",
+      "kiedy uzyc zasady szufladkowej",
+      "zawsze istnieje rozwiazanie zadanie"
+     ],
+     "a": "Szukaj: (1) treść każe wypisać *dowolne* rozwiązanie i nie przewiduje „NIE”/„−1”, (2) liczba obiektów przekracza\nliczbę możliwych wartości (n+1 prefiksów i n reszt), (3) symulacja na skończonej liczbie stanów (stan musi się\npowtórzyć), (4) dolne ograniczenie odpowiedzi typu „co najmniej ⌈N/k⌉”."
+    },
+    {
+     "q": [
+      "dwie osoby z ta sama liczba znajomych",
+      "graf dwa wierzcholki o tym samym stopniu",
+      "same degree two vertices",
+      "w grafie sa dwa wierzcholki o rownym stopniu"
+     ],
+     "a": "W prostym grafie o n ≥ 2 wierzchołkach stopnie należą do {0, …, n−1} (n szuflad), ale 0 i n−1 nie mogą wystąpić\njednocześnie (ktoś zna wszystkich ⇒ nikt nie zna nikogo jest niemożliwe). Zostaje n−1 szuflad na n wierzchołków,\nwięc dwa mają ten sam stopień."
+    }
+   ],
+   "related": [
+    "math-parity-invariants",
+    "dp-lis",
+    "math-combinatorics",
+    "dp-prefix-opt",
+    "dp-stairs-fibonacci"
+   ]
+  },
+  {
+   "id": "math-parity-invariants",
+   "title": "Parzystość, niezmienniki i monowarianty",
+   "category": "Matematyka",
+   "tags": [
+    "niezmiennik",
+    "invariant",
+    "parzystość",
+    "monowariant",
+    "inwersje",
+    "permutacje",
+    "szachownica",
+    "kolorowanie"
+   ],
+   "aliases": [
+    "niezmiennik",
+    "invariant",
+    "parzystość",
+    "parity",
+    "monowariant",
+    "monovariant",
+    "parzystosc permutacji",
+    "kolorowanie szachownicy",
+    "czy da się dojść",
+    "inwersje permutacji"
+   ],
+   "summary": "Niezmiennik to wielkość, której ruchy nie zmieniają — jeśli start i cel mają różne wartości, przejście jest niemożliwe. Monowariant rośnie lub maleje przy każdym ruchu — dowodzi, że proces się kończy. Najczęstsze: parzystość sumy, kolor pola, parzystość permutacji.",
+   "complexity": "sprawdzenie niezmiennika zwykle O(n); liczba inwersji O(n log n); parzystość permutacji przez cykle O(n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Niezmiennik** — wielkość zachowana przez każdy dozwolony ruch (np. suma modulo 2, kolor pola, parzystość permutacji).\nJeśli stan początkowy i docelowy mają różne wartości niezmiennika, odpowiedź brzmi „NIE” — bez przeszukiwania.\nCzęsto niezmiennik jest też warunkiem wystarczającym (trzeba to jednak uzasadnić konstrukcją).\n\n**Monowariant** — wielkość, która przy każdym ruchu ściśle rośnie (maleje) i jest ograniczona ⇒ proces musi się\nzakończyć, a liczba ruchów jest ograniczona zakresem tej wielkości.\n\nNajważniejsze przykłady:\n* **Kolorowanie szachownicy:** skoczek zawsze zmienia kolor pola; kostka domina zawsze zakrywa jedno pole białe\n  i jedno czarne ⇒ szachownicy 8×8 bez dwóch przeciwległych rogów (oba tego samego koloru) nie da się pokryć dominami.\n* **Parzystość permutacji:** każda zamiana dwóch elementów zmienia parzystość liczby inwersji. Permutacja z c cyklami\n  wymaga dokładnie `n − c` zamian (minimum), a jej parzystość to `(n − c) mod 2`.\n* **Lemat o uściskach dłoni:** suma stopni = 2·|E| ⇒ liczba wierzchołków nieparzystego stopnia jest parzysta.\n* **Piętnastka:** dla planszy o nieparzystej szerokości układ jest rozwiązywalny ⇔ liczba inwersji płytek jest\n  parzysta; dla parzystej szerokości ⇔ (inwersje + numer wiersza pustego pola liczony od dołu, od 1) jest nieparzyste."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: cykle i parzystość permutacji",
+     "code": "// Permutacja p[1..n]: liczba cykli, minimalna liczba zamian do posortowania, parzystość.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<int> p(n + 1);\n    for (int i = 1; i <= n; i++) cin >> p[i];\n    vector<bool> vis(n + 1, false);\n    int cycles = 0;\n    for (int i = 1; i <= n; i++) {\n        if (vis[i]) continue;\n        cycles++;\n        for (int j = i; !vis[j]; j = p[j]) vis[j] = true;   // przejdź cały cykl\n    }\n    int swaps = n - cycles;           // każda zamiana może zwiększyć liczbę cykli najwyżej o 1\n    cout << cycles << \" \" << swaps << \" \" << (swaps % 2 == 0 ? \"parzysta\" : \"nieparzysta\") << \"\\n\";\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Szukając niezmiennika, wypisz kilka ruchów i sprawdź, co się NIE zmienia: suma, suma modulo k, różnica liczby\nelementów dwóch rodzajów, parzystość liczby inwersji, kolor/parzystość (x + y) pozycji, XOR wszystkich liczb."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "(n - cycles) % 2",
+     "desc": "parzystość permutacji (0 = parzysta) z liczby cykli",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "(x + y) % 2",
+     "desc": "kolor pola (x, y) na szachownicy; skoczek i dowolny ruch o 1 pole zmieniają go",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Niezmiennik daje warunek konieczny — zanim odpowiesz „TAK”, upewnij się, że jest też wystarczający (konstrukcja lub brute force na małych danych).",
+    "Liczba inwersji może sięgnąć n(n−1)/2 ≈ 5·10^9 dla n = 10^5 — trzymaj ją w `long long`.",
+    "Parzystość piętnastki zależy od szerokości planszy — inna reguła dla szerokości parzystej i nieparzystej.",
+    "Ujemne liczby i `% 2` w C++: `-3 % 2 == -1`; parzystość sprawdzaj `x & 1` albo `x % 2 != 0`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "niezmiennik",
+      "invariant",
+      "co to jest niezmiennik w zadaniu",
+      "niezmienniki olimpiada",
+      "niezmiennik dowod niemozliwosci"
+     ],
+     "a": "Niezmiennik to wielkość, której żaden dozwolony ruch nie zmienia (np. suma modulo 2, kolor pola, XOR wszystkich liczb).\nJeśli start i cel mają różne wartości niezmiennika, z jednego nie da się dojść do drugiego — odpowiedź „NIE” bez\nprzeszukiwania. Sprawdzenie zwykle kosztuje O(n), zamiast wykładniczego BFS po stanach."
+    },
+    {
+     "q": [
+      "parzystosc permutacji",
+      "parity of permutation",
+      "permutacja parzysta nieparzysta",
+      "liczba inwersji parzystosc",
+      "znak permutacji"
+     ],
+     "a": "Parzystość permutacji = parzystość liczby inwersji = parzystość `n − (liczba cykli)`. Każda transpozycja (zamiana\ndwóch elementów) zmienia ją na przeciwną. Dlatego jeśli ruch to zawsze zamiana 3 elementów cyklicznie (parzysta),\nto z permutacji nieparzystej nie dojdziesz do identyczności. Liczenie przez cykle: O(n)."
+    },
+    {
+     "q": [
+      "minimalna liczba zamian zeby posortowac permutacje",
+      "min swaps to sort",
+      "ile swapow posortowac tablice",
+      "minimalna liczba zamian dowolnych elementow"
+     ],
+     "a": "Rozłóż permutację na cykle; cykl długości L wymaga L−1 zamian, więc minimum to `n − (liczba cykli)`. Dla dowolnej\ntablicy (różne wartości) najpierw zamień ją na permutację przez sortowanie z indeksami. Zamiany tylko sąsiednich\nelementów to inny problem — wtedy wynik = liczba inwersji. Pełny program w treści."
+    },
+    {
+     "q": [
+      "liczba inwersji",
+      "zliczanie inwersji merge sort",
+      "count inversions",
+      "inwersje w tablicy c++",
+      "ile zamian sasiednich do posortowania"
+     ],
+     "a": "Inwersja to para i < j z a[i] > a[j]. Liczymy przy sortowaniu przez scalanie: gdy bierzemy element z prawej połowy,\ndodajemy liczbę elementów pozostałych w lewej połowie. O(n log n). Liczba inwersji = minimalna liczba zamian\n**sąsiednich** elementów potrzebnych do posortowania (bubble sort).",
+     "code": "long long mergeCount(vector<int> &a, int l, int r) {   // [l, r)\n    if (r - l <= 1) return 0;\n    int m = (l + r) / 2;\n    long long cnt = mergeCount(a, l, m) + mergeCount(a, m, r);\n    vector<int> tmp;\n    int i = l, j = m;\n    while (i < m || j < r) {\n        if (j == r || (i < m && a[i] <= a[j])) tmp.push_back(a[i++]);\n        else { cnt += m - i; tmp.push_back(a[j++]); }       // a[i..m) > a[j]\n    }\n    copy(tmp.begin(), tmp.end(), a.begin() + l);\n    return cnt;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kolorowanie szachownicy",
+      "domino szachownica bez rogow",
+      "dowod kolorowanie",
+      "pokrycie plansza domino niemozliwe"
+     ],
+     "a": "Pokoloruj planszę jak szachownicę (kolor = (x + y) mod 2). Każde domino zakrywa jedno pole białe i jedno czarne,\nwięc pokrycie istnieje tylko, gdy obu kolorów jest tyle samo. Szachownica 8×8 bez dwóch przeciwległych rogów ma 32\npola jednego koloru i 30 drugiego ⇒ pokrycie niemożliwe. Podobne kolorowania (modulo 3, paski) działają dla trimin."
+    },
+    {
+     "q": [
+      "skoczek szachowy kolory",
+      "konik parzystosc ruchow",
+      "czy skoczek moze wrocic w nieparzystej liczbie ruchow",
+      "knight parity"
+     ],
+     "a": "Ruch skoczka zmienia x + y o ±1 lub ±3, czyli zawsze zmienia kolor pola. Po k ruchach kolor = kolor startowy ⇔ k\nparzyste. Zatem skoczek nie wróci na pole startowe w nieparzystej liczbie ruchów, a do pola o innym kolorze dojdzie\ntylko w nieparzystej. Graf ruchów skoczka jest dwudzielny.",
+     "code": "int x1 = 0, y1 = 0, x2 = 3, y2 = 4, k = 7;\nbool possibleParity = ((x1 + y1 + x2 + y2 + k) % 2 == 0);   // kolor zmienia się co ruch\ncout << (possibleParity ? \"parzystosc OK\" : \"niemozliwe\") << \"\\n\";   // 0+0+3+4+7 = 14 -> OK"
+    },
+    {
+     "q": [
+      "monowariant",
+      "monovariant",
+      "dowod ze proces sie konczy",
+      "funkcja potencjalu",
+      "czy proces sie zakonczy"
+     ],
+     "a": "Monowariant to wielkość, która przy każdym ruchu ściśle maleje (lub rośnie) i jest ograniczona, np. nieujemna liczba\ncałkowita. Wtedy proces kończy się po co najwyżej (wartość początkowa) krokach. Przykład: zamieniając sąsiednią parę\nw złej kolejności, liczba inwersji maleje o 1 ⇒ bubble sort kończy się po ≤ n(n−1)/2 zamianach."
+    },
+    {
+     "q": [
+      "pietnastka rozwiazywalnosc",
+      "15 puzzle solvable",
+      "czy ukladanka jest rozwiazywalna",
+      "przesuwanka parzystosc"
+     ],
+     "a": "Licz inwersje wśród płytek (bez pustego pola), czytając planszę wierszami. Szerokość nieparzysta: rozwiązywalna ⇔\ninwersji parzyście. Szerokość parzysta (np. 4×4): rozwiązywalna ⇔ (inwersje + numer wiersza pustego pola liczony\nod dołu, od 1) jest nieparzyste. Uzasadnienie: ruch poziomy nie zmienia inwersji, a pionowy zmienia je o liczbę\npłytek „przeskoczonych” — dla parzystej szerokości razem ze zmianą wiersza zachowuje parzystość sumy."
+    },
+    {
+     "q": [
+      "lemat o uscisku dloni",
+      "liczba wierzcholkow nieparzystego stopnia",
+      "suma stopni parzysta",
+      "handshake lemma"
+     ],
+     "a": "Suma stopni wszystkich wierzchołków = 2·(liczba krawędzi), bo każda krawędź ma dwa końce. Stąd liczba wierzchołków\no nieparzystym stopniu jest parzysta. Wnioski: graf z 3 wierzchołkami stopnia 1 i resztą stopnia 2 nie istnieje;\nścieżka Eulera istnieje tylko przy 0 lub 2 wierzchołkach nieparzystego stopnia (w grafie spójnym)."
+    },
+    {
+     "q": [
+      "parzystosc sumy po operacjach",
+      "czy mozna dojsc z a do b",
+      "operacje nie zmieniaja parzystosci",
+      "niezmiennik suma modulo"
+     ],
+     "a": "Sprawdź, jak ruch zmienia sumę (albo inną prostą wielkość) modulo k. Jeśli każda operacja dodaje do sumy liczbę\nparzystą (np. zwiększa dwa elementy o 1), parzystość sumy jest niezmiennikiem: start z sumą nieparzystą nie dojdzie\ndo samych zer. Potem upewnij się konstrukcją albo brute force'em na małych danych, że warunek jest też wystarczający.",
+     "code": "// ruch: wybierz dwa elementy i zwiększ oba o 1 -> suma zmienia się o 2\nvector<int> a = {1, 2, 4}, target = {3, 3, 3};\nlong long sa = accumulate(a.begin(), a.end(), 0LL), st = accumulate(target.begin(), target.end(), 0LL);\ncout << ((sa - st) % 2 == 0 ? \"mozliwe (warunek konieczny)\" : \"niemozliwe\") << \"\\n\";   // 7 vs 9 -> parzysta roznica"
+    }
+   ],
+   "related": [
+    "math-pigeonhole",
+    "game-mirror-strategy",
+    "game-nim",
+    "math-combinatorics",
+    "graph-bipartite",
+    "graph-weighted-dsu"
+   ]
+  },
+  {
+   "id": "math-bases",
+   "title": "Systemy liczbowe — zamiana podstaw (binarny, szesnastkowy, dowolna podstawa)",
+   "category": "Matematyka",
+   "tags": [
+    "systemy liczbowe",
+    "system dwójkowy",
+    "binarny",
+    "szesnastkowy",
+    "hex",
+    "podstawa",
+    "konwersja",
+    "bitset",
+    "system silniowy"
+   ],
+   "aliases": [
+    "systemy liczbowe",
+    "zamiana na system dwójkowy",
+    "zamiana na binarny",
+    "system binarny",
+    "system szesnastkowy",
+    "base conversion",
+    "decimal to binary",
+    "zamiana podstaw",
+    "system dwojkowy c++",
+    "hex"
+   ],
+   "summary": "Liczbę zapisaną w podstawie b odczytujemy schematem Hornera (wynik = wynik·b + cyfra), a do podstawy b zamieniamy przez wielokrotne dzielenie z resztą i odwrócenie cyfr. W C++ pomagają stoll(s, nullptr, b), bitset i cout << hex.",
+   "complexity": "O(liczba cyfr) = O(log_b x) w obie strony",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Zapis `d_{k−1} … d_1 d_0` w podstawie b oznacza `d_{k−1}·b^{k−1} + … + d_1·b + d_0`. Cyfry większe niż 9 zapisujemy\nliterami: A = 10, B = 11, …, Z = 35.\n\n* **Z podstawy b na liczbę (Horner):** `x = 0; dla każdej cyfry od lewej: x = x·b + cyfra` — bez potęgowania.\n* **Z liczby na podstawę b:** dopóki `x > 0`: ostatnia cyfra = `x % b`, `x /= b`; cyfry wychodzą od końca, więc\n  na koniec odwróć napis. Liczba 0 to osobny przypadek („0”).\n* **Binarny ↔ szesnastkowy:** każda cyfra hex to dokładnie 4 bity (ósemkowa — 3 bity), więc grupuje się bity od prawej."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: zamiana z dowolnej podstawy na dowolną",
+     "code": "// Wejście: s a b — liczba s zapisana w podstawie a; wypisz ją w podstawie b (2 <= a, b <= 36, wartość mieści się w long long).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint digitValue(char c) {\n    if (isdigit(c)) return c - '0';\n    return toupper(c) - 'A' + 10;\n}\n\nstring toBase(long long x, int b) {\n    const string D = \"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ\";\n    if (x == 0) return \"0\";\n    string res;\n    while (x > 0) { res += D[x % b]; x /= b; }    // cyfry od najmłodszej\n    reverse(res.begin(), res.end());\n    return res;\n}\n\nint main() {\n    string s;\n    int a, b;\n    cin >> s >> a >> b;\n    long long x = 0;\n    for (char c : s) x = x * a + digitValue(c);    // schemat Hornera\n    cout << toBase(x, b) << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Narzędzie C++",
+      "Co robi",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "stoll(s, nullptr, b)",
+       "napis w podstawie b (2..36) → long long",
+       "stoll(\"ff\", nullptr, 16) == 255"
+      ],
+      [
+       "bitset<32>(x).to_string()",
+       "32 bity liczby (z zerami wiodącymi)",
+       "bitset<8>(5) → 00000101"
+      ],
+      [
+       "cout << hex << x",
+       "wypisanie szesnastkowo (oct — ósemkowo); wróć `dec`",
+       "255 → ff"
+      ],
+      [
+       "__builtin_popcountll(x)",
+       "liczba jedynek w zapisie binarnym",
+       "popcount(7) == 3"
+      ],
+      [
+       "__lg(x) + 1",
+       "długość zapisu binarnego x > 0",
+       "__lg(8) + 1 == 4"
+      ],
+      [
+       "printf(\"%llx\", x)",
+       "hex przez printf (%llo — ósemkowo)",
+       "printf(\"%llX\", 255LL) → FF"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "`stoi`/`stoll` rzucają wyjątek przy napisie spoza zakresu typu, a binarny zapis 64-bitowej liczby z jedynką na\nnajstarszym bicie nie mieści się w `long long` — użyj `stoull`. Dla liczb dłuższych niż 64 bity potrzebna jest\narytmetyka dużych liczb."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "stoll(s, nullptr, base)",
+     "desc": "parsowanie liczby całkowitej w podstawie 2..36",
+     "complexity": "O(|s|)",
+     "returns": "long long",
+     "example": "long long x = stoll(\"1011\", nullptr, 2); // 11"
+    },
+    {
+     "sig": "bitset<N>(x).to_string()",
+     "desc": "zapis binarny o stałej długości N",
+     "complexity": "O(N)",
+     "returns": "string",
+     "example": "bitset<4>(5).to_string() // \"0101\""
+    },
+    {
+     "sig": "x = x * b + d",
+     "desc": "krok schematu Hornera przy odczycie cyfry d",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "__builtin_popcountll(x)",
+     "desc": "liczba ustawionych bitów",
+     "complexity": "O(1)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Zapomniana obsługa x = 0 w pętli `while (x > 0)` — wynik pusty zamiast „0”.",
+    "Cyfry wychodzą od najmłodszej — trzeba odwrócić napis.",
+    "Po `cout << hex` strumień zostaje w trybie szesnastkowym — przywróć `cout << dec`.",
+    "Litery cyfr: małe i duże (`'a'` vs `'A'`) — normalizuj `toupper`.",
+    "Przepełnienie w Hornerze dla długich napisów — sprawdź, czy wartość mieści się w typie (64 bity = ~19 cyfr dziesiętnych).",
+    "Ujemne liczby: `%` w C++ daje ujemne reszty — konwertuj wartość bezwzględną i dopisz znak."
+   ],
+   "qa": [
+    {
+     "q": [
+      "zamiana na system dwojkowy c++",
+      "liczba na binarny",
+      "decimal to binary c++",
+      "jak wypisac liczbe binarnie",
+      "zamiana dziesietny na binarny"
+     ],
+     "a": "Dziel przez 2 i zbieraj reszty (od najmłodszego bitu), na końcu odwróć napis; dla 0 wypisz „0”. Szybciej:\n`bitset<64>(x).to_string()` i usunięcie zer wiodących. O(log x).",
+     "code": "long long x = 37;\nstring s;\nif (x == 0) s = \"0\";\nwhile (x > 0) { s += char('0' + x % 2); x /= 2; }\nreverse(s.begin(), s.end());\ncout << s << \"\\n\";   // 100101"
+    },
+    {
+     "q": [
+      "binarny na dziesietny",
+      "binary to decimal c++",
+      "string binarny na liczbe",
+      "zamiana z dwojkowego na dziesietny"
+     ],
+     "a": "Schemat Hornera: `x = 0; for (char c : s) x = x * 2 + (c - '0');` — O(długość). Albo gotowe\n`stoll(s, nullptr, 2)` (dla 64 bitów z najstarszym bitem ustawionym — `stoull`).",
+     "code": "string s = \"100101\";\nlong long x = 0;\nfor (char c : s) x = x * 2 + (c - '0');\ncout << x << \" \" << stoll(s, nullptr, 2) << \"\\n\";   // 37 37"
+    },
+    {
+     "q": [
+      "bitset to_string",
+      "wypisz bity liczby",
+      "bitset<32> c++",
+      "zapis binarny z zerami wiodacymi"
+     ],
+     "a": "`bitset<N>(x).to_string()` daje dokładnie N znaków '0'/'1' (najstarszy bit pierwszy). Zera wiodące usuniesz przez\n`s.substr(min(s.find('1'), s.size() - 1))`. Bitset ma też `count()` (liczba jedynek) i `test(i)` (i-ty bit).",
+     "code": "int x = 10;\nstring s = bitset<8>(x).to_string();\ncout << s << \" \" << s.substr(min(s.find('1'), s.size() - 1)) << \" \" << bitset<8>(x).count() << \"\\n\";   // 00001010 1010 2"
+    },
+    {
+     "q": [
+      "system szesnastkowy c++",
+      "hex c++ cout",
+      "wypisz w hex",
+      "cout << hex",
+      "zamiana na szesnastkowy"
+     ],
+     "a": "`cout << hex << x` wypisuje szesnastkowo małymi literami (`uppercase` — wielkimi), `oct` — ósemkowo; potem wróć\n`cout << dec`. Wczytywanie hex: `cin >> hex >> x` albo `stoll(s, nullptr, 16)`. Systemu dwójkowego strumienie nie\nmają — użyj `bitset` lub własnej funkcji.",
+     "code": "int x = 255;\ncout << hex << x << \" \" << uppercase << x << \" \" << oct << x << dec << \" \" << x << \"\\n\";   // ff FF 377 255"
+    },
+    {
+     "q": [
+      "zamiana z dowolnego systemu na dowolny",
+      "konwersja podstaw",
+      "base conversion c++",
+      "zamiana systemow liczbowych program"
+     ],
+     "a": "Najprościej przez wartość pośrednią: odczytaj liczbę w podstawie a schematem Hornera (`x = x·a + cyfra`), potem\nzapisz w podstawie b, dzieląc przez b i odwracając reszty. Oba kroki O(liczba cyfr). Pełny program dla podstaw\n2..36 jest w treści; dla liczb dłuższych niż 64 bity dzieli się „pisemnie” wektor cyfr."
+    },
+    {
+     "q": [
+      "stoll podstawa",
+      "stoi z podstawa",
+      "strtoll c++",
+      "parsowanie liczby w innym systemie"
+     ],
+     "a": "`stoll(s, nullptr, b)` (oraz `stoi`, `stoull`) parsuje napis w podstawie b ∈ [2, 36]; litery a–z/A–Z to cyfry 10–35.\nPrzy złym formacie rzuca `invalid_argument`, przy przekroczeniu zakresu — `out_of_range`. W stylu C: `strtoll(s.c_str(), nullptr, b)`.",
+     "code": "cout << stoll(\"ff\", nullptr, 16) << \" \" << stoll(\"777\", nullptr, 8) << \" \" << stoll(\"z\", nullptr, 36) << \"\\n\";   // 255 511 35"
+    },
+    {
+     "q": [
+      "system -2",
+      "negabinary",
+      "podstawa minus dwa",
+      "system o podstawie ujemnej"
+     ],
+     "a": "W podstawie −2 każda liczba całkowita (także ujemna) ma zapis cyframi 0/1. Algorytm jak zwykle, ale reszta z dzielenia\nprzez −2 może wyjść ujemna — wtedy dodaj 2 do reszty i 1 do ilorazu. Np. 2 = 110 (4 − 2), −1 = 11 (−2 + 1), 6 = 11010.",
+     "code": "string negabinary(long long n) {\n    if (n == 0) return \"0\";\n    string s;\n    while (n != 0) {\n        long long r = n % -2;\n        n /= -2;\n        if (r < 0) { r += 2; n += 1; }\n        s += char('0' + r);\n    }\n    reverse(s.begin(), s.end());\n    return s;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile cyfr ma liczba w systemie b",
+      "dlugosc zapisu binarnego",
+      "liczba bitow liczby",
+      "ile cyfr ma liczba c++"
+     ],
+     "a": "Najpewniej pętlą: dziel przez b aż do zera i licz kroki (O(log_b x)). Dla podstawy 2: `__lg(x) + 1` (x > 0) albo\n`64 - __builtin_clzll(x)`. Unikaj `floor(log10(x)) + 1` na `double` — dla liczb bliskich potęgi 10 bywa o 1 źle.",
+     "code": "long long x = 1000;\nint digits10 = 0;\nfor (long long t = x; t > 0; t /= 10) digits10++;\ncout << digits10 << \" \" << __lg(x) + 1 << \" \" << 64 - __builtin_clzll(x) << \"\\n\";   // 4 10 10"
+    },
+    {
+     "q": [
+      "suma cyfr liczby",
+      "cyfry liczby c++",
+      "wyciaganie cyfr z liczby",
+      "jak rozbic liczbe na cyfry"
+     ],
+     "a": "Ostatnia cyfra to `x % 10`, reszta to `x / 10` — powtarzaj aż x = 0 (dla innej podstawy zamień 10 na b). O(liczba cyfr).\nAlternatywa: `to_string(x)` i iteracja po znakach (`c - '0'`).",
+     "code": "long long x = 9875, sum = 0;\nwhile (x > 0) { sum += x % 10; x /= 10; }\ncout << sum << \"\\n\";   // 29"
+    },
+    {
+     "q": [
+      "system silniowy",
+      "k-ta permutacja",
+      "kth permutation factorial number system",
+      "numer permutacji",
+      "lehmer code"
+     ],
+     "a": "W systemie silniowym k = d_{n−1}·(n−1)! + … + d_1·1! z cyframi 0 ≤ dᵢ ≤ i. Cyfry wyznaczają k-tą (od 0) permutację\nw porządku leksykograficznym: kolejna cyfra = indeks elementu wybieranego z listy pozostałych. O(n²) (wystarczy dla\nn ≤ 20, bo 20! mieści się w long long) albo O(n log n) z drzewem Fenwicka.",
+     "code": "vector<int> kthPermutation(int n, long long k) {     // k od 0, k < n!\n    vector<long long> f(n + 1, 1);\n    for (int i = 1; i <= n; i++) f[i] = f[i - 1] * i;\n    vector<int> pool(n), res;\n    iota(pool.begin(), pool.end(), 1);\n    for (int i = n - 1; i >= 0; i--) {\n        long long d = k / f[i];                          // cyfra systemu silniowego\n        k %= f[i];\n        res.push_back(pool[d]);\n        pool.erase(pool.begin() + d);\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "kod uzupelnien do dwoch",
+      "two's complement",
+      "liczby ujemne binarnie",
+      "jak wyglada -1 binarnie",
+      "u2"
+     ],
+     "a": "Liczby ze znakiem w C++ są w kodzie uzupełnień do dwóch: `−x = ~x + 1`, więc −1 to same jedynki, a najstarszy bit\noznacza znak. `bitset<8>(-1)` pokazuje `11111111`. Przesunięcie w prawo ujemnej liczby jest arytmetyczne (od C++20\ngwarantowane), a przesunięcie w lewo przez bit znaku przed C++20 było UB — do operacji bitowych używaj typów `unsigned`.",
+     "code": "int x = 5;\ncout << bitset<8>(-1) << \" \" << bitset<8>(-x) << \" \" << (~x + 1) << \"\\n\";   // 11111111 11111011 -5"
+    }
+   ],
+   "related": [
+    "math-bignum",
+    "math-combinatorics",
+    "dp-digit",
+    "tech-bit-tricks",
+    "cpp-ref-cstring-cstdlib"
+   ]
+  },
+  {
+   "id": "math-bignum",
+   "title": "Arytmetyka dużych liczb (dodawanie, mnożenie, porównanie na cyfrach)",
+   "category": "Matematyka",
+   "tags": [
+    "duże liczby",
+    "big integer",
+    "bignum",
+    "arytmetyka",
+    "__int128",
+    "mnożenie pisemne",
+    "silnia"
+   ],
+   "aliases": [
+    "duże liczby",
+    "big integer",
+    "bignum",
+    "duze liczby c++ dodawanie",
+    "liczby większe niż long long",
+    "arytmetyka dużych liczb",
+    "mnożenie dużych liczb",
+    "__int128",
+    "big numbers c++"
+   ],
+   "summary": "Gdy wynik nie mieści się w 64 bitach i nie ma modulo, liczby trzymamy jako wektor cyfr (od najmłodszej) i liczymy pisemnie: dodawanie O(n), mnożenie przez małą liczbę O(n), mnożenie dwóch dużych O(n·m). Do ~1,7·10^38 wystarczy __int128.",
+   "complexity": "dodawanie/odejmowanie/porównanie O(n); mnożenie przez int O(n); mnożenie dwóch liczb O(n·m)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Najpierw sprawdź, czy naprawdę trzeba: `long long` mieści ±9,22·10^18, `unsigned long long` do 1,84·10^19,\n`__int128` (GCC) do ±1,7·10^38. Jeśli zadanie każe podać wynik **modulo**, liczb dużych nie potrzebujesz.\nGdy wynik ma setki cyfr (100!, 2^1000, dokładne liczby Catalana) — arytmetyka pisemna.\n\nReprezentacja: `vector<int>` cyfr **od najmłodszej** (indeks 0 = jedności), dzięki czemu przeniesienie idzie w stronę\nrosnących indeksów, a nowe cyfry dopisujemy `push_back`. Po odejmowaniu i mnożeniu usuwamy zera wiodące (z końca wektora).\nSzczegółowy artykuł o implementacji (podstawa 10^9, dzielenie) — w części o liczbach i typach."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: dodawanie, mnożenie i porównanie dużych liczb",
+     "code": "// Wejście: dwie nieujemne liczby całkowite (do tysięcy cyfr). Wyjście: suma, iloczyn i wynik porównania.\n#include <bits/stdc++.h>\nusing namespace std;\nusing Big = vector<int>;                       // cyfry od najmłodszej\n\nBig fromString(const string &s) {\n    Big a;\n    for (int i = (int)s.size() - 1; i >= 0; i--) a.push_back(s[i] - '0');\n    while (a.size() > 1 && a.back() == 0) a.pop_back();   // zera wiodące\n    return a;\n}\nstring toString(const Big &a) {\n    string s;\n    for (int i = (int)a.size() - 1; i >= 0; i--) s += char('0' + a[i]);\n    return s;\n}\nBig add(const Big &a, const Big &b) {\n    Big c;\n    int carry = 0;\n    for (size_t i = 0; i < max(a.size(), b.size()) || carry; i++) {\n        int s = carry + (i < a.size() ? a[i] : 0) + (i < b.size() ? b[i] : 0);\n        c.push_back(s % 10);\n        carry = s / 10;\n    }\n    return c;\n}\nBig mul(const Big &a, const Big &b) {\n    vector<long long> c(a.size() + b.size(), 0);\n    for (size_t i = 0; i < a.size(); i++)\n        for (size_t j = 0; j < b.size(); j++) c[i + j] += (long long)a[i] * b[j];\n    Big r;\n    long long carry = 0;\n    for (size_t i = 0; i < c.size(); i++) {\n        long long s = c[i] + carry;\n        r.push_back(s % 10);\n        carry = s / 10;\n    }\n    while (carry) { r.push_back(carry % 10); carry /= 10; }\n    while (r.size() > 1 && r.back() == 0) r.pop_back();\n    return r;\n}\nint cmp(const Big &a, const Big &b) {          // -1: a<b, 0: równe, 1: a>b\n    if (a.size() != b.size()) return a.size() < b.size() ? -1 : 1;\n    for (int i = (int)a.size() - 1; i >= 0; i--)\n        if (a[i] != b[i]) return a[i] < b[i] ? -1 : 1;\n    return 0;\n}\n\nint main() {\n    string s, t;\n    cin >> s >> t;\n    Big a = fromString(s), b = fromString(t);\n    cout << toString(add(a, b)) << \"\\n\" << toString(mul(a, b)) << \"\\n\" << cmp(a, b) << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "dodawanie",
+       "O(n)",
+       "przeniesienie carry = s / 10"
+      ],
+      [
+       "odejmowanie (a ≥ b)",
+       "O(n)",
+       "pożyczka; usuń zera wiodące"
+      ],
+      [
+       "mnożenie przez int",
+       "O(n)",
+       "carry może mieć wiele cyfr"
+      ],
+      [
+       "mnożenie dwóch dużych",
+       "O(n·m)",
+       "sumuj w long long, potem przeniesienia"
+      ],
+      [
+       "dzielenie przez int",
+       "O(n)",
+       "od najstarszej cyfry, reszta·10 + cyfra"
+      ],
+      [
+       "porównanie",
+       "O(n)",
+       "najpierw długość, potem od najstarszej cyfry"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "Big add(const Big &a, const Big &b)",
+     "desc": "suma dwóch dużych liczb (cyfry od najmłodszej)",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "Big mul(const Big &a, const Big &b)",
+     "desc": "iloczyn pisemny",
+     "complexity": "O(n·m)"
+    },
+    {
+     "sig": "int cmp(const Big &a, const Big &b)",
+     "desc": "porównanie: najpierw liczba cyfr, potem leksykograficznie od najstarszej",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Porównywanie napisów `s < t` bez sprawdzenia długości: \"9\" > \"10\" leksykograficznie.",
+    "Zera wiodące po mnożeniu przez 0 lub odejmowaniu — usuń je, ale zostaw jedną cyfrę 0.",
+    "W mnożeniu dwóch dużych liczb sumy `c[i+j]` mogą przekroczyć int — trzymaj je w long long.",
+    "`__int128` nie ma operatora `<<` dla strumieni ani `cin >>` — trzeba własnej funkcji wypisującej.",
+    "Jeśli zadanie podaje modulo, duże liczby są zbędne i wolne — licz modulo."
+   ],
+   "qa": [
+    {
+     "q": [
+      "duze liczby c++ dodawanie",
+      "dodawanie duzych liczb",
+      "big integer addition c++",
+      "liczby wieksze niz long long",
+      "dodawanie pisemne c++"
+     ],
+     "a": "Trzymaj cyfry w `vector<int>` od najmłodszej i dodawaj jak pisemnie: cyfra wyniku = (aᵢ + bᵢ + carry) % 10,\nnowe przeniesienie = suma / 10; kontynuuj, dopóki są cyfry lub carry. O(n). Pełny program z mnożeniem i porównaniem\njest w treści.",
+     "code": "string a = \"99999999999999999999\", b = \"1\";\nstring r;\nint i = a.size() - 1, j = b.size() - 1, carry = 0;\nwhile (i >= 0 || j >= 0 || carry) {\n    int s = carry + (i >= 0 ? a[i--] - '0' : 0) + (j >= 0 ? b[j--] - '0' : 0);\n    r += char('0' + s % 10);\n    carry = s / 10;\n}\nreverse(r.begin(), r.end());\ncout << r << \"\\n\";   // 100000000000000000000"
+    },
+    {
+     "q": [
+      "mnozenie duzych liczb",
+      "big number multiplication",
+      "mnozenie pisemne c++",
+      "iloczyn dwoch duzych liczb"
+     ],
+     "a": "Iloczyn cyfr `a[i]·b[j]` dodaj do `c[i+j]` (w `long long`), a po wszystkich mnożeniach przejdź raz po `c` i zrób\nprzeniesienia. Złożoność O(n·m) — dla dwóch liczb po 10^4 cyfr to 10^8 operacji, jeszcze OK. Szybsze metody\n(Karatsuba, FFT) są potrzebne rzadko."
+    },
+    {
+     "q": [
+      "silnia 100 c++",
+      "duza silnia",
+      "100! dokladnie",
+      "silnia duzej liczby wszystkie cyfry",
+      "mnozenie duzej liczby przez int"
+     ],
+     "a": "Mnóż dużą liczbę przez małą: dla każdej cyfry `cur = cyfra·k + carry`, zapisz `cur % 10`, `carry = cur / 10`,\nna końcu dopisz wszystkie cyfry carry. O(liczba cyfr) na mnożenie, 100! ma 158 cyfr.",
+     "code": "vector<int> d = {1};                         // cyfry od najmłodszej\nfor (int k = 2; k <= 25; k++) {\n    long long carry = 0;\n    for (auto &x : d) { long long cur = (long long)x * k + carry; x = cur % 10; carry = cur / 10; }\n    while (carry) { d.push_back(carry % 10); carry /= 10; }\n}\nfor (int i = d.size() - 1; i >= 0; i--) cout << d[i];\ncout << \"\\n\";   // 25! = 15511210043330985984000000"
+    },
+    {
+     "q": [
+      "__int128",
+      "int128 wypisywanie",
+      "jak wypisac __int128",
+      "int128 c++ cout",
+      "128 bitowe liczby"
+     ],
+     "a": "`__int128` (GCC/Clang) mieści liczby do ≈ 1,7·10^38, ale nie ma `cout <<` ani `cin >>`. Wypisuj, zbierając cyfry\n`x % 10` do napisu (uwaga na znak i zero). Typowe użycie: iloczyn dwóch `long long` bez przepełnienia\n(`(__int128)a * b % m`).",
+     "code": "string toStr(__int128 x) {\n    if (x == 0) return \"0\";\n    bool neg = x < 0;\n    if (neg) x = -x;\n    string s;\n    while (x > 0) { s += char('0' + (int)(x % 10)); x /= 10; }\n    if (neg) s += '-';\n    reverse(s.begin(), s.end());\n    return s;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "porownanie duzych liczb string",
+      "ktora liczba wieksza string",
+      "compare big numbers",
+      "porownanie liczb jako napisy"
+     ],
+     "a": "Bez zer wiodących: dłuższa liczba jest większa; przy równej długości zwykłe porównanie leksykograficzne napisów\ndaje poprawny wynik. Samo `s < t` jest błędne dla różnych długości (\"9\" > \"10\").",
+     "code": "auto less_big = [](const string &a, const string &b) {\n    if (a.size() != b.size()) return a.size() < b.size();\n    return a < b;\n};\ncout << less_big(\"9\", \"10\") << \" \" << (string(\"9\") < string(\"10\")) << \"\\n\";   // 1 0"
+    },
+    {
+     "q": [
+      "odejmowanie duzych liczb",
+      "big subtraction",
+      "odejmowanie pisemne c++",
+      "roznica duzych liczb"
+     ],
+     "a": "Zakładając a ≥ b (inaczej zamień i dopisz minus): idź od najmłodszych cyfr, `d = aᵢ − bᵢ − borrow`; jeśli d < 0,\ndodaj 10 i ustaw pożyczkę 1. Na końcu usuń zera wiodące (zostaw jedno „0”). O(n).",
+     "code": "string a = \"1000000000000000000000\", b = \"1\";            // a >= b\nstring r;\nint i = a.size() - 1, j = b.size() - 1, borrow = 0;\nwhile (i >= 0) {\n    int d = (a[i--] - '0') - borrow - (j >= 0 ? b[j--] - '0' : 0);\n    borrow = d < 0;\n    if (d < 0) d += 10;\n    r += char('0' + d);\n}\nwhile (r.size() > 1 && r.back() == '0') r.pop_back();   // zera wiodące (na końcu odwróconego)\nreverse(r.begin(), r.end());\ncout << r << \"\\n\";   // 999999999999999999999"
+    },
+    {
+     "q": [
+      "python duze liczby",
+      "czy w pythonie trzeba bignum",
+      "python int bez limitu",
+      "duze liczby python czy c++"
+     ],
+     "a": "W Pythonie `int` ma nieograniczoną precyzję — `2**1000` czy `math.factorial(100)` działają od razu. Na OI można\nczasem napisać małą część obliczeń w Pythonie, ale główne rozwiązanie w C++ jest szybsze; w C++ potrzebna jest\nwłasna implementacja (lub `__int128`, gdy wystarczy 38 cyfr).",
+     "code": "import math\nprint(2 ** 100)\nprint(len(str(math.factorial(100))))   # 158",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "kiedy potrzebne duze liczby",
+      "czy wynik zmiesci sie w long long",
+      "jaki typ na wynik",
+      "zakres long long unsigned int128"
+     ],
+     "a": "Oszacuj maksymalny wynik: `long long` do 9,22·10^18 (≈ 19 cyfr), `unsigned long long` do 1,84·10^19, `__int128`\ndo 1,7·10^38. Jeśli zadanie podaje modulo — licz modulo. Duże liczby tylko, gdy trzeba wypisać dokładny, ogromny wynik\n(np. 2^n dla n = 1000, silnie, dokładne liczby Catalana)."
+    }
+   ],
+   "related": [
+    "num-bigint-strings",
+    "math-bases",
+    "math-combinatorics",
+    "num-int128",
+    "num-overflow",
+    "math-fft",
+    "oi-py-numbers"
+   ]
+  }
+ ]
+}

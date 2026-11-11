@@ -1,0 +1,1383 @@
+{
+ "chunk": "arrays",
+ "templates": [
+  {
+   "id": "sum-array",
+   "name": "Suma ciągu",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "\\bsum\\w*",
+     "lacznie",
+     "razem"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll s = 0; for (ll x : a) s += x;\ncout << s << \"\\n\";",
+   "example": {
+    "input": "3\n1 2 3\n",
+    "output": "6\n"
+   }
+  },
+  {
+   "id": "max-array",
+   "name": "Największy element",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "najwieksz\\w*",
+     "maksimum|maksymaln\\w*",
+     "najwyzsz\\w*",
+     "najdluzsz\\w*",
+     "najstarsz\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\ncout << *max_element(a.begin(), a.end()) << \"\\n\";",
+   "example": {
+    "input": "4\n3 9 2 7\n",
+    "output": "9\n"
+   }
+  },
+  {
+   "id": "min-array",
+   "name": "Najmniejszy element",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "najmniejsz\\w*",
+     "minimum|minimaln\\w*",
+     "najnizsz\\w*",
+     "najkrotsz\\w*",
+     "najmlodsz\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\ncout << *min_element(a.begin(), a.end()) << \"\\n\";",
+   "example": {
+    "input": "4\n3 9 2 7\n",
+    "output": "2\n"
+   }
+  },
+  {
+   "id": "min-max-array",
+   "name": "Minimum i maksimum",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "najmniejsz\\w*|minimum"
+     ],
+     [
+      "najwieksz\\w*|maksimum"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\ncout << *min_element(a.begin(), a.end()) << \" \" << *max_element(a.begin(), a.end()) << \"\\n\";",
+   "example": {
+    "input": "4\n3 9 2 7\n",
+    "output": "2 9\n"
+   },
+   "variants": [
+    {
+     "id": "max-min-array",
+     "name": "Maksimum i minimum",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\ncout << *max_element(a.begin(), a.end()) << \" \" << *min_element(a.begin(), a.end()) << \"\\n\";"
+    },
+    {
+     "id": "range-array",
+     "name": "Rozpiętość (max − min)",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\ncout << *max_element(a.begin(), a.end()) - *min_element(a.begin(), a.end()) << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "argmax-array",
+   "name": "Pozycja największego elementu",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "najwieksz\\w*|maksimum|maksymaln\\w*"
+     ],
+     [
+      "numer|pozycj|indeks|ktor\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\ncout << (max_element(a.begin(), a.end()) - a.begin()) + 1 << \"\\n\";",
+   "example": {
+    "input": "4\n3 9 2 9\n",
+    "output": "2\n"
+   },
+   "variants": [
+    {
+     "id": "argmin-array",
+     "name": "Pozycja najmniejszego elementu",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\ncout << (min_element(a.begin(), a.end()) - a.begin()) + 1 << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "avg-array",
+   "name": "Średnia arytmetyczna",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "sredni\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nlong double s = 0; for (ll x : a) s += x;\ncout << fixed << setprecision({{PREC}}) << s / n << \"\\n\";",
+   "example": {
+    "input": "4\n1 2 3 5\n",
+    "output": "2.75\n"
+   }
+  },
+  {
+   "id": "count-even",
+   "name": "Ile liczb parzystych",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "parzyst\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll c = 0; for (ll x : a) if (x % 2 == 0) c++;\ncout << c << \"\\n\";",
+   "example": {
+    "input": "4\n1 2 4 5\n",
+    "output": "2\n"
+   },
+   "variants": [
+    {
+     "id": "count-odd",
+     "name": "Ile liczb nieparzystych",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll c = 0; for (ll x : a) if (x % 2 != 0) c++;\ncout << c << \"\\n\";"
+    },
+    {
+     "id": "count-positive",
+     "name": "Ile liczb dodatnich",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll c = 0; for (ll x : a) if (x > 0) c++;\ncout << c << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "count-distinct",
+   "name": "Ile różnych wartości",
+   "description": "",
+   "algos": [
+    "sorting",
+    "stl"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "(ile|liczb\\w*) (jest )?roznych",
+     "rozn\\w* (liczb|wartosci|elementow)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\ncout << (unique(a.begin(), a.end()) - a.begin()) << \"\\n\";",
+   "example": {
+    "input": "5\n1 2 2 3 1\n",
+    "output": "3\n"
+   }
+  },
+  {
+   "id": "sort-asc",
+   "name": "Sortowanie rosnąco",
+   "description": "",
+   "algos": [
+    "sorting"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "posortuj\\w*",
+     "sortow\\w*",
+     "uporzadk\\w*",
+     "rosnaco|niemalejaco|rosnacej|niemalejacej"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\nfor (ll i = 0; i < n; i++) cout << a[i] << (i + 1 == n ? \"\\n\" : \" \");",
+   "example": {
+    "input": "5\n5 1 4 2 3\n",
+    "output": "1 2 3 4 5\n"
+   },
+   "variants": [
+    {
+     "id": "sort-desc",
+     "name": "Sortowanie malejąco",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.rbegin(), a.rend());\nfor (ll i = 0; i < n; i++) cout << a[i] << (i + 1 == n ? \"\\n\" : \" \");"
+    },
+    {
+     "id": "sort-unique",
+     "name": "Sortowanie bez powtórzeń",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end()); a.erase(unique(a.begin(), a.end()), a.end());\nfor (size_t i = 0; i < a.size(); i++) cout << a[i] << (i + 1 == a.size() ? \"\\n\" : \" \");"
+    }
+   ]
+  },
+  {
+   "id": "sort-all-rest",
+   "name": "Posortuj wszystkie liczby po pierwszej",
+   "description": "",
+   "algos": [
+    "sorting"
+   ],
+   "shapes": [
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "posortow\\w*",
+     "zlacz\\w*|scal\\w*",
+     "rosnaco"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 0.6,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> v; ll x; while (cin >> x) v.push_back(x);\nsort(v.begin(), v.end());\nfor (size_t i = 0; i < v.size(); i++) cout << v[i] << (i + 1 == v.size() ? \"\\n\" : \" \");",
+   "example": {
+    "input": "2\n3 1\n4 2\n",
+    "output": "1 2 3 4\n"
+   }
+  },
+  {
+   "id": "sort-pairs",
+   "name": "Sortowanie punktów / par",
+   "description": "",
+   "algos": [
+    "sorting"
+   ],
+   "shapes": [
+    "NR2",
+    "NR3"
+   ],
+   "signals": {
+    "any": [
+     "posortow\\w*",
+     "sortow\\w*",
+     "punkt\\w*",
+     "leksykograficzn\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nstring line; getline(cin, line);\nvector<vector<ll>> v(n);\nfor (ll i = 0; i < n; i++) { getline(cin, line); stringstream ss(line); ll x; while (ss >> x) v[i].push_back(x); }\nsort(v.begin(), v.end());\nfor (auto &r : v) { for (size_t j = 0; j < r.size(); j++) cout << r[j] << (j + 1 == r.size() ? \"\\n\" : \" \"); }",
+   "example": {
+    "input": "3\n2 3 5\n2 3 3\n-1 3 4\n",
+    "output": "-1 3 4\n2 3 3\n2 3 5\n"
+   }
+  },
+  {
+   "id": "reverse-array",
+   "name": "Odwrócenie ciągu",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "odwr\\w*",
+     "od tylu",
+     "od konca",
+     "w odwrotnej kolejnosci"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nfor (ll i = n - 1; i >= 0; i--) cout << a[i] << (i == 0 ? \"\\n\" : \" \");",
+   "example": {
+    "input": "3\n1 2 3\n",
+    "output": "3 2 1\n"
+   }
+  },
+  {
+   "id": "kadane",
+   "name": "Maksymalna suma spójnego fragmentu",
+   "description": "",
+   "algos": [
+    "dp",
+    "greedy"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "(najwieksz|maksymaln)\\w* sum\\w* (spojn|kolejn|ciagl|fragment|przedzial|podciag)",
+     "sp[oó]jn\\w* fragment\\w* o (najwiekszej|maksymalnej) sum",
+     "(najwieksz|maksymaln)\\w* (sum\\w*|laczn\\w*) (\\w+ ){0,3}(w |na )?spojn\\w*",
+     "spojn\\w* (okres|fragment|przedzial|odcin)\\w*.{0,60}(najwieksz|maksymaln)\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll best = a[0], cur = 0;\nfor (ll x : a) { cur = max(x, cur + x); best = max(best, cur); }\ncout << best << \"\\n\";",
+   "example": {
+    "input": "5\n-2 3 -1 4 -9\n",
+    "output": "6\n"
+   },
+   "variants": [
+    {
+     "id": "kadane-nonneg",
+     "name": "Maks. suma fragmentu (pusty dozwolony)",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll best = 0, cur = 0;\nfor (ll x : a) { cur = max(0LL, cur + x); best = max(best, cur); }\ncout << best << \"\\n\";"
+    }
+   ],
+   "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll best = LLONG_MIN; for (ll i = 0; i < n; i++) { ll s = 0; for (ll j = i; j < n; j++) { s += a[j]; best = max(best, s); } }\ncout << best << \"\\n\";"
+  },
+  {
+   "id": "inversions",
+   "name": "Liczba inwersji",
+   "description": "",
+   "algos": [
+    "sorting",
+    "fenwick",
+    "recursion"
+   ],
+   "shapes": [
+    "NA",
+    "NR1"
+   ],
+   "signals": {
+    "any": [
+     "inwersj\\w*",
+     "zamian\\w* sasiedn\\w*",
+     "babelkow\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nvector<ll> t(n);\nfunction<ll(ll, ll)> go = [&](ll l, ll r) -> ll { if (r - l <= 1) return 0; ll m = (l + r) / 2; ll c = go(l, m) + go(m, r); ll i = l, j = m, k = l; while (i < m || j < r) { if (j >= r || (i < m && a[i] <= a[j])) t[k++] = a[i++]; else { c += m - i; t[k++] = a[j++]; } } for (ll q = l; q < r; q++) a[q] = t[q]; return c; };\ncout << go(0, n) << \"\\n\";",
+   "example": {
+    "input": "4\n1 3 4 2\n",
+    "output": "2\n"
+   },
+   "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll c = 0; for (ll i = 0; i < n; i++) for (ll j = i + 1; j < n; j++) if (a[i] > a[j]) c++;\ncout << c << \"\\n\";"
+  },
+  {
+   "id": "lis",
+   "name": "Najdłuższy podciąg rosnący (LIS)",
+   "description": "",
+   "algos": [
+    "dp",
+    "binary_search"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "podciag\\w* (scisle )?rosnac\\w*",
+     "najdluzsz\\w* podciag",
+     "\\blis\\b"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nvector<ll> d; for (ll x : a) { auto it = lower_bound(d.begin(), d.end(), x); if (it == d.end()) d.push_back(x); else *it = x; }\ncout << d.size() << \"\\n\";",
+   "example": {
+    "input": "6\n1 5 2 3 7 4\n",
+    "output": "4\n"
+   },
+   "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nvector<ll> f(n, 1); ll b = 0; for (ll i = 0; i < n; i++) { for (ll j = 0; j < i; j++) if (a[j] < a[i]) f[i] = max(f[i], f[j] + 1); b = max(b, f[i]); }\ncout << b << \"\\n\";",
+   "variants": [
+    {
+     "id": "lnds",
+     "name": "Najdłuższy podciąg niemalejący",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nvector<ll> d; for (ll x : a) { auto it = upper_bound(d.begin(), d.end(), x); if (it == d.end()) d.push_back(x); else *it = x; }\ncout << d.size() << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "median",
+   "name": "Mediana",
+   "description": "",
+   "algos": [
+    "sorting"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "median\\w*",
+     "srodkow\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\ncout << a[(n - 1) / 2] << \"\\n\";",
+   "example": {
+    "input": "5\n5 1 4 2 3\n",
+    "output": "3\n"
+   },
+   "variants": [
+    {
+     "id": "median-avg",
+     "name": "Mediana (średnia dwóch środkowych)",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\nif (n % 2) cout << a[n / 2] << \"\\n\"; else { long double m = (a[n/2 - 1] + (long double)a[n/2]) / 2; if (m == (ll)m) cout << (ll)m << \"\\n\"; else cout << fixed << setprecision(1) << m << \"\\n\"; }"
+    }
+   ]
+  },
+  {
+   "id": "second-max",
+   "name": "Drugi największy element",
+   "description": "",
+   "algos": [
+    "sorting"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "drug\\w* (co do wielkosci|najwieksz)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end()); a.erase(unique(a.begin(), a.end()), a.end());\nif (a.size() < 2) cout << \"{{NONE}}\" << \"\\n\"; else cout << a[a.size() - 2] << \"\\n\";",
+   "example": {
+    "input": "5\n5 1 5 2 3\n",
+    "output": "3\n"
+   }
+  },
+  {
+   "id": "most-frequent",
+   "name": "Najczęściej występująca wartość",
+   "description": "",
+   "algos": [
+    "stl",
+    "sorting"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "najczesc\\w*",
+     "najwiecej razy",
+     "dominant\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nmap<ll, ll> c; for (ll x : a) c[x]++;\nll best = a[0], bc = 0; for (auto &[k, v] : c) if (v > bc) { bc = v; best = k; }\ncout << best << \"\\n\";",
+   "example": {
+    "input": "6\n3 1 3 2 1 3\n",
+    "output": "3\n"
+   },
+   "variants": [
+    {
+     "id": "most-frequent-count",
+     "name": "Ile razy występuje najczęstsza wartość",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nmap<ll, ll> c; ll b = 0; for (ll x : a) b = max(b, ++c[x]);\ncout << b << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "kth-smallest",
+   "name": "k-ty najmniejszy element",
+   "description": "",
+   "algos": [
+    "sorting"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "[a-z]-?t\\w* (co do wielkosci|najmniejsz)",
+     "[a-z]-?t\\w* element"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\ncout << a[k - 1] << \"\\n\";",
+   "example": {
+    "input": "5 2\n5 1 4 2 3\n",
+    "output": "2\n"
+   },
+   "variants": [
+    {
+     "id": "kth-largest",
+     "name": "k-ty największy element",
+     "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.rbegin(), a.rend());\ncout << a[k - 1] << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "pairs-sum-k",
+   "name": "Ile par o sumie k",
+   "description": "",
+   "algos": [
+    "two_pointers",
+    "stl"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "par\\w* (liczb |elementow )?o sumie",
+     "sum\\w* (rown\\w* )?[a-z]\\b.{0,30}par",
+     "dwie liczby .{0,40}sum",
+     "par\\w* (indeksow )?.{0,50}(a_?i ?\\+ ?a_?j|sum\\w*)",
+     "a_?i ?\\+ ?a_?j ?=",
+     "\\bpar\\w* .{0,30}[a-z] ?\\+ ?[a-z] ?= ?[a-z]\\b"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nmap<ll, ll> seen; ll c = 0; for (ll x : a) { auto it = seen.find(k - x); if (it != seen.end()) c += it->second; seen[x]++; }\ncout << c << \"\\n\";",
+   "example": {
+    "input": "5 6\n1 5 3 3 2\n",
+    "output": "2\n"
+   },
+   "brute": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll c = 0; for (ll i = 0; i < n; i++) for (ll j = i + 1; j < n; j++) if (a[i] + a[j] == k) c++;\ncout << c << \"\\n\";"
+  },
+  {
+   "id": "max-window-sum",
+   "name": "Maksymalna suma k kolejnych",
+   "description": "",
+   "algos": [
+    "sliding_window",
+    "prefix_sums"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "[a-z] kolejnych",
+     "(fragment|okn|przedzial)\\w* (o )?dlugosci [a-z]"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll s = 0; for (ll i = 0; i < k; i++) s += a[i];\nll b = s; for (ll i = k; i < n; i++) { s += a[i] - a[i - k]; b = max(b, s); }\ncout << b << \"\\n\";",
+   "example": {
+    "input": "5 2\n1 5 3 3 2\n",
+    "output": "8\n"
+   },
+   "variants": [
+    {
+     "id": "min-window-sum",
+     "name": "Minimalna suma k kolejnych",
+     "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll s = 0; for (ll i = 0; i < k; i++) s += a[i];\nll b = s; for (ll i = k; i < n; i++) { s += a[i] - a[i - k]; b = min(b, s); }\ncout << b << \"\\n\";"
+    }
+   ],
+   "brute": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll b = LLONG_MIN; for (ll i = 0; i + k <= n; i++) { ll s = 0; for (ll j = i; j < i + k; j++) s += a[j]; b = max(b, s); }\ncout << b << \"\\n\";"
+  },
+  {
+   "id": "shortest-subarray-sum-at-least",
+   "name": "Najkrótszy fragment o sumie ≥ k (gąsienica)",
+   "description": "",
+   "algos": [
+    "two_pointers"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "najkrotsz\\w* (spojn\\w* )?(fragment|przedzial|odcin)",
+     "gasienic\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll best = LLONG_MAX, s = 0, l = 0;\nfor (ll r = 0; r < n; r++) { s += a[r]; while (l <= r && s - a[l] >= k) s -= a[l++]; if (s >= k) best = min(best, r - l + 1); }\nif (best == LLONG_MAX) cout << \"{{NONE}}\" << \"\\n\"; else cout << best << \"\\n\";",
+   "example": {
+    "input": "5 7\n1 5 3 3 2\n",
+    "output": "2\n"
+   },
+   "brute": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll best = LLONG_MAX; for (ll i = 0; i < n; i++) { ll s = 0; for (ll j = i; j < n; j++) { s += a[j]; if (s >= k) best = min(best, j - i + 1); } }\nif (best == LLONG_MAX) cout << \"{{NONE}}\" << \"\\n\"; else cout << best << \"\\n\";"
+  },
+  {
+   "id": "longest-subarray-sum-at-most",
+   "name": "Najdłuższy fragment o sumie ≤ k (gąsienica)",
+   "description": "",
+   "algos": [
+    "two_pointers"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "najdluzsz\\w* (spojn\\w* )?(fragment|przedzial|odcin)",
+     "gasienic\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll best = 0, s = 0, l = 0;\nfor (ll r = 0; r < n; r++) { s += a[r]; while (l <= r && s > k) s -= a[l++]; best = max(best, r - l + 1); }\ncout << best << \"\\n\";",
+   "example": {
+    "input": "5 7\n1 5 3 3 2\n",
+    "output": "2\n"
+   },
+   "brute": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll best = 0; for (ll i = 0; i < n; i++) { ll s = 0; for (ll j = i; j < n; j++) { s += a[j]; if (s <= k) best = max(best, j - i + 1); } }\ncout << best << \"\\n\";"
+  },
+  {
+   "id": "prefix-sum-queries",
+   "name": "Sumy na przedziałach (n, a, q, l r)",
+   "description": "",
+   "algos": [
+    "prefix_sums"
+   ],
+   "shapes": [
+    "NA-Q2"
+   ],
+   "signals": {
+    "any": [
+     "sum\\w*",
+     "przedzial\\w*",
+     "zapytan\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nvector<ll> p(n + 1, 0); for (ll i = 0; i < n; i++) p[i + 1] = p[i] + a[i];\nll q; cin >> q; while (q--) { ll l, r; cin >> l >> r; cout << p[r] - p[l - 1] << \"\\n\"; }",
+   "example": {
+    "input": "5\n1 2 3 4 5\n2\n1 3\n2 5\n",
+    "output": "6\n14\n"
+   },
+   "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll q; cin >> q; while (q--) { ll l, r; cin >> l >> r; ll s = 0; for (ll i = l; i <= r; i++) s += a[i - 1]; cout << s << \"\\n\"; }"
+  },
+  {
+   "id": "prefix-sum-queries-nq",
+   "name": "Sumy na przedziałach (n q, a, l r)",
+   "description": "",
+   "algos": [
+    "prefix_sums"
+   ],
+   "shapes": [
+    "NQA-Q2"
+   ],
+   "signals": {
+    "any": [
+     "sum\\w*",
+     "przedzial\\w*",
+     "zapytan\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, q; cin >> n >> q;\nvector<ll> p(n + 1, 0); for (ll i = 1; i <= n; i++) { ll x; cin >> x; p[i] = p[i - 1] + x; }\nwhile (q--) { ll l, r; cin >> l >> r; cout << p[r] - p[l - 1] << \"\\n\"; }",
+   "example": {
+    "input": "5 2\n1 2 3 4 5\n1 3\n2 5\n",
+    "output": "6\n14\n"
+   },
+   "brute": "ll n, q; cin >> n >> q;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nwhile (q--) { ll l, r; cin >> l >> r; ll s = 0; for (ll i = l; i <= r; i++) s += a[i - 1]; cout << s << \"\\n\"; }"
+  },
+  {
+   "id": "count-queries",
+   "name": "Ile razy występuje x (zapytania)",
+   "description": "",
+   "algos": [
+    "binary_search",
+    "stl"
+   ],
+   "shapes": [
+    "NA-Q1"
+   ],
+   "signals": {
+    "any": [
+     "ile (jest|razy)",
+     "zapytan\\w*",
+     "wystepuj\\w*",
+     "o numerze"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\nll q; cin >> q; while (q--) { ll x; cin >> x; cout << upper_bound(a.begin(), a.end(), x) - lower_bound(a.begin(), a.end(), x) << \"\\n\"; }",
+   "example": {
+    "input": "5\n1 2 2 3 2\n2\n2\n5\n",
+    "output": "3\n0\n"
+   },
+   "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll q; cin >> q; while (q--) { ll x; cin >> x; ll c = 0; for (ll v : a) if (v == x) c++; cout << c << \"\\n\"; }"
+  },
+  {
+   "id": "count-leq-queries",
+   "name": "Ile elementów ≤ x (zapytania)",
+   "description": "",
+   "algos": [
+    "binary_search",
+    "sorting"
+   ],
+   "shapes": [
+    "NA-Q1"
+   ],
+   "signals": {
+    "any": [
+     "ile (jest )?(liczb|elementow) (nie wieksz|mniejsz)",
+     "zapytan\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\nll q; cin >> q; while (q--) { ll x; cin >> x; cout << upper_bound(a.begin(), a.end(), x) - a.begin() << \"\\n\"; }",
+   "example": {
+    "input": "5\n1 2 2 3 2\n2\n2\n0\n",
+    "output": "4\n0\n"
+   },
+   "variants": [
+    {
+     "id": "count-less-queries",
+     "name": "Ile elementów < x (zapytania)",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\nll q; cin >> q; while (q--) { ll x; cin >> x; cout << lower_bound(a.begin(), a.end(), x) - a.begin() << \"\\n\"; }",
+     "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll q; cin >> q; while (q--) { ll x; cin >> x; ll c = 0; for (ll v : a) if (v < x) c++; cout << c << \"\\n\"; }"
+    },
+    {
+     "id": "exists-queries",
+     "name": "Czy x występuje (zapytania, TAK/NIE)",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\nll q; cin >> q; while (q--) { ll x; cin >> x; cout << (binary_search(a.begin(), a.end(), x) ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\"; }"
+    }
+   ],
+   "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll q; cin >> q; while (q--) { ll x; cin >> x; ll c = 0; for (ll v : a) if (v <= x) c++; cout << c << \"\\n\"; }"
+  },
+  {
+   "id": "rotate-array",
+   "name": "Przesunięcie cykliczne o k",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "przesun\\w* cykliczn",
+     "rotacj\\w*",
+     "obr[oó]c\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nk = ((k % n) + n) % n;\nfor (ll i = 0; i < n; i++) cout << a[(i - k + n) % n] << (i + 1 == n ? \"\\n\" : \" \");",
+   "example": {
+    "input": "5 2\n1 2 3 4 5\n",
+    "output": "4 5 1 2 3\n"
+   },
+   "variants": [
+    {
+     "id": "rotate-array-left",
+     "name": "Przesunięcie cykliczne w lewo",
+     "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nk = ((k % n) + n) % n;\nfor (ll i = 0; i < n; i++) cout << a[(i + k) % n] << (i + 1 == n ? \"\\n\" : \" \");"
+    }
+   ]
+  },
+  {
+   "id": "prefix-sums-print",
+   "name": "Sumy prefiksowe (wypisz wszystkie)",
+   "description": "",
+   "algos": [
+    "prefix_sums"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "sum\\w* prefiks",
+     "sum\\w* (pierwszych|czesciow)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll s = 0; for (ll i = 0; i < n; i++) { s += a[i]; cout << s << (i + 1 == n ? \"\\n\" : \" \"); }",
+   "example": {
+    "input": "4\n1 2 3 4\n",
+    "output": "1 3 6 10\n"
+   }
+  },
+  {
+   "id": "count-greater-than-prev",
+   "name": "Ile elementów większych od wszystkich wcześniejszych",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "widoczn\\w*",
+     "wyzsz\\w* od wszystkich",
+     "rekord\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll c = 0, m = LLONG_MIN; for (ll x : a) { if (x > m) { c++; m = x; } }\ncout << c << \"\\n\";",
+   "example": {
+    "input": "5\n1 3 2 5 4\n",
+    "output": "3\n"
+   }
+  },
+  {
+   "id": "longest-equal-run",
+   "name": "Najdłuższy ciąg równych kolejnych",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "najdluzsz\\w* (ciag|seri|fragment)\\w* (takich samych|rownych|jednakowych)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll b = 1, c = 1; for (ll i = 1; i < n; i++) { c = (a[i] == a[i - 1]) ? c + 1 : 1; b = max(b, c); }\ncout << (n ? b : 0) << \"\\n\";",
+   "example": {
+    "input": "6\n1 1 2 2 2 3\n",
+    "output": "3\n"
+   },
+   "variants": [
+    {
+     "id": "longest-increasing-run",
+     "name": "Najdłuższy rosnący spójny fragment",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll b = 1, c = 1; for (ll i = 1; i < n; i++) { c = (a[i] > a[i - 1]) ? c + 1 : 1; b = max(b, c); }\ncout << (n ? b : 0) << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "two-arrays-merge-sort",
+   "name": "Scal dwa ciągi i posortuj",
+   "description": "",
+   "algos": [
+    "sorting"
+   ],
+   "shapes": [
+    "NA-NA"
+   ],
+   "signals": {
+    "any": [
+     "scal\\w*|zlacz\\w*",
+     "dwa ciagi"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n; vector<ll> v(n); for (auto &x : v) cin >> x;\nll m; cin >> m; for (ll i = 0; i < m; i++) { ll x; cin >> x; v.push_back(x); }\nsort(v.begin(), v.end());\nfor (size_t i = 0; i < v.size(); i++) cout << v[i] << (i + 1 == v.size() ? \"\\n\" : \" \");",
+   "example": {
+    "input": "2\n3 1\n2\n4 2\n",
+    "output": "1 2 3 4\n"
+   }
+  },
+  {
+   "id": "max-pair-product",
+   "name": "Największy iloczyn dwóch elementów",
+   "description": "",
+   "algos": [
+    "sorting",
+    "greedy"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "najwieksz\\w* iloczyn",
+     "maksymaln\\w* iloczyn"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\ncout << max(a[0] * a[1], a[n - 1] * a[n - 2]) << \"\\n\";",
+   "example": {
+    "input": "4\n-5 -4 1 3\n",
+    "output": "20\n"
+   }
+  },
+  {
+   "id": "greedy-pairing-min-max",
+   "name": "Paruj najmniejszy z największym (max suma pary)",
+   "description": "",
+   "algos": [
+    "greedy",
+    "sorting"
+   ],
+   "shapes": [
+    "NA"
+   ],
+   "signals": {
+    "any": [
+     "w pary",
+     "par\\w* (osob|uczniow|zawodnikow)",
+     "dwuosobow\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\nll b = LLONG_MIN; for (ll i = 0; i < n / 2; i++) b = max(b, a[i] + a[n - 1 - i]);\ncout << b << \"\\n\";",
+   "example": {
+    "input": "4\n1 9 3 5\n",
+    "output": "10\n"
+   }
+  },
+  {
+   "id": "prefix-sum-queries-0",
+   "name": "Sumy na przedziałach, indeksy od 0 (n, a, q, l r)",
+   "description": "",
+   "algos": [
+    "prefix_sums"
+   ],
+   "shapes": [
+    "NA-Q2"
+   ],
+   "signals": {
+    "any": [
+     "sum\\w*",
+     "przedzial\\w*|zapytan\\w*|pytan\\w*",
+     "od 0\\b|od zera|numer\\w* od 0|0 ?(≤|<=) ?l\\b|n ?- ?1\\b"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nvector<ll> p(n + 1, 0); for (ll i = 0; i < n; i++) p[i + 1] = p[i] + a[i];\nll q; cin >> q; while (q--) { ll l, r; cin >> l >> r; cout << p[r + 1] - p[l] << \"\\n\"; }   // indeksy od 0",
+   "example": {
+    "input": "4\n1 2 3 4\n2\n0 1\n1 3\n",
+    "output": "3\n9\n"
+   },
+   "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll q; cin >> q; while (q--) { ll l, r; cin >> l >> r; ll s = 0; for (ll i = l; i <= r; i++) s += a[i]; cout << s << \"\\n\"; }"
+  },
+  {
+   "id": "prefix-sum-queries-nq-0",
+   "name": "Sumy na przedziałach, indeksy od 0 (n q, a, l r)",
+   "description": "",
+   "algos": [
+    "prefix_sums"
+   ],
+   "shapes": [
+    "NQA-Q2"
+   ],
+   "signals": {
+    "any": [
+     "sum\\w*",
+     "przedzial\\w*|zapytan\\w*|pytan\\w*",
+     "od 0\\b|od zera|numer\\w* od 0|0 ?(≤|<=) ?l\\b|n ?- ?1\\b"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, q; cin >> n >> q;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nvector<ll> p(n + 1, 0); for (ll i = 0; i < n; i++) p[i + 1] = p[i] + a[i];\nwhile (q--) { ll l, r; cin >> l >> r; cout << p[r + 1] - p[l] << \"\\n\"; }   // indeksy od 0",
+   "example": {
+    "input": "4 2\n1 2 3 4\n0 1\n1 3\n",
+    "output": "3\n9\n"
+   },
+   "brute": "ll n, q; cin >> n >> q;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nwhile (q--) { ll l, r; cin >> l >> r; ll s = 0; for (ll i = l; i <= r; i++) s += a[i]; cout << s << \"\\n\"; }"
+  },
+  {
+   "id": "count-x-tail",
+   "name": "Ile razy występuje x (n, ciąg, potem x)",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "NA-S1"
+   ],
+   "signals": {
+    "any": [
+     "ile (razy|jest)",
+     "wystepuj\\w*|wystapi\\w*|pojawia\\w*|liczb\\w* wystapien"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll x; cin >> x;\ncout << count(a.begin(), a.end(), x) << \"\\n\";",
+   "example": {
+    "input": "5\n1 2 1 3 1\n1\n",
+    "output": "3\n"
+   },
+   "variants": [
+    {
+     "id": "count-ge-x-tail",
+     "name": "Ile elementów ≥ x (n, ciąg, potem x)",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll x; cin >> x;\ncout << count_if(a.begin(), a.end(), [&](ll v) { return v >= x; }) << \"\\n\";",
+     "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll x; cin >> x;\nll c = 0; for (ll i = 0; i < n; i++) if (a[i] >= x) c++;\ncout << c << \"\\n\";"
+    },
+    {
+     "id": "count-lt-x-tail",
+     "name": "Ile elementów < x (n, ciąg, potem x)",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll x; cin >> x;\ncout << count_if(a.begin(), a.end(), [&](ll v) { return v < x; }) << \"\\n\";",
+     "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll x; cin >> x;\nll c = 0; for (ll i = 0; i < n; i++) if (a[i] < x) c++;\ncout << c << \"\\n\";"
+    },
+    {
+     "id": "exists-x-tail",
+     "name": "Czy x występuje w ciągu (TAK/NIE)",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll x; cin >> x;\ncout << (count(a.begin(), a.end(), x) ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+     "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll x; cin >> x;\nll c = 0; for (ll i = 0; i < n; i++) if (a[i] == x) c++;\ncout << (c > 0 ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";"
+    }
+   ],
+   "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll x; cin >> x;\nll c = 0; for (ll i = 0; i < n; i++) if (a[i] == x) c++;\ncout << c << \"\\n\";"
+  },
+  {
+   "id": "count-geq-queries",
+   "name": "Ile elementów ≥ x (zapytania)",
+   "description": "",
+   "algos": [
+    "binary_search",
+    "sorting"
+   ],
+   "shapes": [
+    "NA-Q1"
+   ],
+   "signals": {
+    "any": [],
+    "all": [
+     [
+      "co najmniej|conajmniej|nie mniej\\w*|wieksz\\w* lub rown\\w*|(≥|>=) ?[a-z]\\b.{0,30}(zapyt|pyta)"
+     ],
+     [
+      "zapytan\\w*|pytan\\w*|zapyta\\w*|\\bpyta\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\nll q; cin >> q; while (q--) { ll x; cin >> x; cout << a.end() - lower_bound(a.begin(), a.end(), x) << \"\\n\"; }",
+   "example": {
+    "input": "4\n1 5 3 5\n2\n4\n6\n",
+    "output": "2\n0\n"
+   },
+   "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll q; cin >> q; while (q--) { ll x; cin >> x; ll c = 0; for (ll v : a) if (v >= x) c++; cout << c << \"\\n\"; }",
+   "variants": [
+    {
+     "id": "count-greater-queries",
+     "name": "Ile elementów > x (zapytania)",
+     "solve": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nsort(a.begin(), a.end());\nll q; cin >> q; while (q--) { ll x; cin >> x; cout << a.end() - upper_bound(a.begin(), a.end(), x) << \"\\n\"; }",
+     "brute": "ll n; cin >> n;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll q; cin >> q; while (q--) { ll x; cin >> x; ll c = 0; for (ll v : a) if (v > x) c++; cout << c << \"\\n\"; }"
+    }
+   ]
+  },
+  {
+   "id": "sort-name-score",
+   "name": "Ranking: sortuj po punktach malejąco, przy remisie alfabetycznie (imię punkty)",
+   "description": "",
+   "algos": [
+    "sorting"
+   ],
+   "shapes": [
+    "NRS2"
+   ],
+   "signals": {
+    "any": [
+     "imi\\w*|nazwisk\\w*|zawodnik\\w*|uczni\\w*"
+    ],
+    "all": [
+     [
+      "ranking\\w*|klasyfikacj\\w*|alfabetyczn\\w*|leksykograficzn\\w*|remis\\w*|przy (rown\\w*|takiej samej|tej samej) (liczbie|ilosci)"
+     ],
+     [
+      "punkt\\w*|wynik\\w*|ocen\\w*|glos\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nvector<pair<string, ll>> v(n); for (auto &p : v) cin >> p.first >> p.second;\nsort(v.begin(), v.end(), [](const pair<string, ll> &x, const pair<string, ll> &y) {\n    if (x.second != y.second) return x.second > y.second;   // więcej punktów wyżej\n    return x.first < y.first;                                // remis: alfabetycznie\n});\nfor (auto &p : v) cout << p.first << \"\\n\";",
+   "example": {
+    "input": "3\nOla 5\nAla 5\nJan 7\n",
+    "output": "Jan\nAla\nOla\n"
+   },
+   "brute": "ll n; cin >> n;\nvector<pair<string, ll>> v(n); for (auto &p : v) cin >> p.first >> p.second;\n// brute: sortowanie bąbelkowe z tym samym porównaniem\nfor (ll i = 0; i < n; i++) for (ll j = 0; j + 1 < n - i; j++) {\n    bool sw = v[j].second < v[j + 1].second || (v[j].second == v[j + 1].second && v[j].first > v[j + 1].first);\n    if (sw) swap(v[j], v[j + 1]); }\nfor (auto &p : v) cout << p.first << \"\\n\";",
+   "variants": [
+    {
+     "id": "sort-name-score-print",
+     "name": "Ranking (wypisz imię i punkty)",
+     "solve": "ll n; cin >> n;\nvector<pair<string, ll>> v(n); for (auto &p : v) cin >> p.first >> p.second;\nsort(v.begin(), v.end(), [](const pair<string, ll> &x, const pair<string, ll> &y) {\n    if (x.second != y.second) return x.second > y.second;   // więcej punktów wyżej\n    return x.first < y.first;                                // remis: alfabetycznie\n});\nfor (auto &p : v) cout << p.first << ' ' << p.second << \"\\n\";",
+     "brute": "ll n; cin >> n;\nvector<pair<string, ll>> v(n); for (auto &p : v) cin >> p.first >> p.second;\n// brute: sortowanie bąbelkowe z tym samym porównaniem\nfor (ll i = 0; i < n; i++) for (ll j = 0; j + 1 < n - i; j++) {\n    bool sw = v[j].second < v[j + 1].second || (v[j].second == v[j + 1].second && v[j].first > v[j + 1].first);\n    if (sw) swap(v[j], v[j + 1]); }\nfor (auto &p : v) cout << p.first << ' ' << p.second << \"\\n\";"
+    },
+    {
+     "id": "sort-name-score-asc",
+     "name": "Sortuj po punktach rosnąco, przy remisie alfabetycznie",
+     "solve": "ll n; cin >> n;\nvector<pair<string, ll>> v(n); for (auto &p : v) cin >> p.first >> p.second;\nsort(v.begin(), v.end(), [](const pair<string, ll> &x, const pair<string, ll> &y) {\n    if (x.second != y.second) return x.second < y.second;\n    return x.first < y.first;                                // remis: alfabetycznie\n});\nfor (auto &p : v) cout << p.first << \"\\n\";",
+     "brute": "ll n; cin >> n;\nvector<pair<string, ll>> v(n); for (auto &p : v) cin >> p.first >> p.second;\n// brute: sortowanie bąbelkowe z tym samym porównaniem\nfor (ll i = 0; i < n; i++) for (ll j = 0; j + 1 < n - i; j++) {\n    bool sw = v[j].second > v[j + 1].second || (v[j].second == v[j + 1].second && v[j].first > v[j + 1].first);\n    if (sw) swap(v[j], v[j + 1]); }\nfor (auto &p : v) cout << p.first << \"\\n\";"
+    }
+   ]
+  },
+  {
+   "id": "bs-cut-pieces",
+   "name": "Wyszukiwanie binarne po wyniku: największa długość kawałków (deski, liny, kable)",
+   "description": "",
+   "algos": [
+    "binary_search"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "najwieksz\\w* (mozliw\\w* )?dlugosc\\w*|maksymaln\\w* dlugosc\\w*"
+    ],
+    "all": [
+     [
+      "\\bciec\\w*|\\bciac\\w*|pociac\\w*|przecin\\w*|przeciac\\w*|\\btnie\\w*|kawalk\\w*"
+     ],
+     [
+      "desk\\w*|\\blin[aey]\\b|kabl\\w*|\\brur[aey]?\\b|pret\\w*|drut\\w*|tasm\\w*|wstazk\\w*|dlugosc\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nauto ok = [&](ll L) { ll c = 0; for (ll x : a) { c += x / L; if (c >= k) return true; } return false; };\nll lo = 0, hi = *max_element(a.begin(), a.end());   // największe L z ok(L); 0 = nie da się\nwhile (lo < hi) { ll mid = lo + (hi - lo + 1) / 2; if (ok(mid)) lo = mid; else hi = mid - 1; }\ncout << lo << \"\\n\";",
+   "example": {
+    "input": "4 11\n802 743 457 539\n",
+    "output": "200\n"
+   },
+   "brute": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll best = 0;   // brute: sprawdź po kolei każde L\nfor (ll L = 1; L <= *max_element(a.begin(), a.end()); L++) { ll c = 0; for (ll x : a) c += x / L; if (c >= k) best = L; }\ncout << best << \"\\n\";"
+  },
+  {
+   "id": "bs-saw-height",
+   "name": "Wyszukiwanie binarne po wyniku: najwyższe ustawienie piły (drwal)",
+   "description": "",
+   "algos": [
+    "binary_search"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "drzew\\w*"
+    ],
+    "all": [
+     [
+      "\\bpil[aeęy]\\b|\\bpile\\b|drwal\\w*|drewn\\w*|\\bscin\\w*|\\btnie\\w*"
+     ],
+     [
+      "wysokos\\w*|najwyzej"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nauto ok = [&](ll H) { ll c = 0; for (ll x : a) { if (x > H) c += x - H; if (c >= k) return true; } return false; };\nll lo = 0, hi = *max_element(a.begin(), a.end());   // największe H z ok(H)\nwhile (lo < hi) { ll mid = lo + (hi - lo + 1) / 2; if (ok(mid)) lo = mid; else hi = mid - 1; }\ncout << lo << \"\\n\";",
+   "example": {
+    "input": "4 7\n20 15 10 17\n",
+    "output": "15\n"
+   },
+   "brute": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nll best = 0;   // brute: sprawdź po kolei każdą wysokość\nfor (ll H = 0; H <= *max_element(a.begin(), a.end()); H++) { ll c = 0; for (ll x : a) if (x > H) c += x - H; if (c >= k) best = H; }\ncout << best << \"\\n\";"
+  },
+  {
+   "id": "bs-split-k-parts",
+   "name": "Wyszukiwanie binarne po wyniku: podział na k spójnych części, min. największa suma",
+   "description": "",
+   "algos": [
+    "binary_search",
+    "greedy"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "pracownik\\w*|robotnik\\w*|ciezarowk\\w*"
+    ],
+    "all": [
+     [
+      "spojn\\w* fragment|spojn\\w* (czesc|grup|blok)|kolejn\\w* (zadan|ksiaz|rozdzial|odcink|element|paczk)"
+     ],
+     [
+      "najbardziej obciazon\\w*|najwieksz\\w* (sum|obciazen|czas)\\w*|zminimalizow\\w*|najmniejsz\\w* mozliw\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nauto parts = [&](ll lim) { ll c = 1, s = 0; for (ll x : a) { if (x > lim) return LLONG_MAX; if (s + x > lim) { c++; s = 0; } s += x; } return c; };\nll lo = *max_element(a.begin(), a.end()), hi = accumulate(a.begin(), a.end(), 0LL);   // najmniejsze lim z parts(lim) ≤ k\nwhile (lo < hi) { ll mid = lo + (hi - lo) / 2; if (parts(mid) <= k) hi = mid; else lo = mid + 1; }\ncout << lo << \"\\n\";",
+   "example": {
+    "input": "5 2\n7 2 5 10 8\n",
+    "output": "18\n"
+   },
+   "brute": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\n// brute: f[i][j] = najmniejsze maksimum przy podziale pierwszych i elementów na j grup — O(n² k)\nconst ll INF = LLONG_MAX / 4; vector<vector<ll>> f(n + 1, vector<ll>(k + 1, INF)); f[0][0] = 0;\nfor (ll i = 1; i <= n; i++) for (ll j = 1; j <= k; j++) { ll s = 0; for (ll p = i; p >= 1; p--) { s += a[p - 1]; if (f[p - 1][j - 1] < INF) f[i][j] = min(f[i][j], max(f[p - 1][j - 1], s)); } }\nll best = INF; for (ll j = 1; j <= k; j++) best = min(best, f[n][j]);\ncout << best << \"\\n\";"
+  },
+  {
+   "id": "bs-machines",
+   "name": "Wyszukiwanie binarne po wyniku: po ilu sekundach maszyny wyprodukują k sztuk",
+   "description": "",
+   "algos": [
+    "binary_search"
+   ],
+   "shapes": [
+    "NKA"
+   ],
+   "signals": {
+    "any": [
+     "po ilu|najmniejsz\\w* (liczb\\w* )?(sekund|minut|czas)"
+    ],
+    "all": [
+     [
+      "maszyn\\w*|drukar\\w*|pracownik\\w*|\\bkas[aey]\\b|piekarni\\w*|stanowisk\\w*|robot\\w*"
+     ],
+     [
+      "co \\w+ (sekund|minut)|co t_?i\\b|produk\\w*|wytwarz\\w*|wydruk\\w*|\\bsztuk\\w*|kartk\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nauto ok = [&](ll T) { ll c = 0; for (ll x : a) { c += T / x; if (c >= k) return true; } return false; };\nll lo = 0, hi = *min_element(a.begin(), a.end()) * k;   // najmniejsze T z ok(T)\nwhile (lo < hi) { ll mid = lo + (hi - lo) / 2; if (ok(mid)) hi = mid; else lo = mid + 1; }\ncout << lo << \"\\n\";",
+   "example": {
+    "input": "3 7\n3 2 5\n",
+    "output": "8\n"
+   },
+   "brute": "ll n, k; cin >> n >> k;\nvector<ll> a(n); for (auto &x : a) cin >> x;\nfor (ll T = 0; ; T++) { ll c = 0; for (ll x : a) c += T / x; if (c >= k) { cout << T << \"\\n\"; break; } }   // brute: kolejne T"
+  }
+ ]
+}

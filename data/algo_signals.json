@@ -1,0 +1,2067 @@
+{
+ "_info": "Sygnały słownikowe dla doradcy algorytmów (OI Forge). Wzorce to wyrażenia regularne dopasowywane do treści zadania po normalizacji (małe litery, BEZ polskich znaków). 'any' = wystarczy jeden wzorzec, 'all' = wszystkie grupy muszą wystąpić (każda grupa to lista alternatyw), 'none' = wzorce wykluczające. 'algos' = wagi dla identyfikatorów algorytmów. 'reason' = uzasadnienie pokazywane uczniowi.",
+ "algorithms": {
+  "bfs": {
+   "name": "BFS — przeszukiwanie wszerz",
+   "complexity": "O(n + m)",
+   "when": "najkrótsze ścieżki w grafie bez wag, odległości w krokach, siatki",
+   "kb": [
+    "graph-bfs",
+    "graph-bfs-grid",
+    "graph-state-bfs"
+   ],
+   "query": "bfs przeszukiwanie wszerz"
+  },
+  "dfs": {
+   "name": "DFS — przeszukiwanie w głąb",
+   "complexity": "O(n + m)",
+   "when": "osiągalność, spójne składowe, cykle, przechodzenie drzewa",
+   "kb": [
+    "graph-dfs",
+    "graph-connected-components",
+    "graph-cycle-detection"
+   ],
+   "query": "dfs przeszukiwanie w głąb"
+  },
+  "dijkstra": {
+   "name": "Algorytm Dijkstry",
+   "complexity": "O((n + m) log n)",
+   "when": "najkrótsze ścieżki z nieujemnymi wagami",
+   "kb": [
+    "graph-dijkstra",
+    "graph-01-bfs"
+   ],
+   "query": "dijkstra najkrótsza ścieżka wagi"
+  },
+  "bellman_ford": {
+   "name": "Bellman–Ford",
+   "complexity": "O(n · m)",
+   "when": "ujemne wagi krawędzi, wykrywanie ujemnych cykli",
+   "kb": [
+    "graph-bellman-ford"
+   ],
+   "query": "bellman ford ujemne wagi"
+  },
+  "floyd": {
+   "name": "Floyd–Warshall",
+   "complexity": "O(n³)",
+   "when": "odległości między wszystkimi parami, n ≤ 500",
+   "kb": [
+    "graph-floyd",
+    "graph-floyd-warshall"
+   ],
+   "query": "floyd warshall wszystkie pary"
+  },
+  "topo_sort": {
+   "name": "Sortowanie topologiczne",
+   "complexity": "O(n + m)",
+   "when": "zależności „a przed b”, DAG, DP na grafie skierowanym",
+   "kb": [
+    "graph-topo-sort",
+    "graph-toposort"
+   ],
+   "query": "sortowanie topologiczne"
+  },
+  "dsu": {
+   "name": "Find & Union (DSU)",
+   "complexity": "≈ O(α(n)) na operację",
+   "when": "łączenie zbiorów, spójność przy dodawaniu krawędzi, Kruskal",
+   "kb": [
+    "ds-dsu",
+    "graph-dsu",
+    "ds-find-union"
+   ],
+   "query": "find union zbiory rozłączne dsu"
+  },
+  "mst": {
+   "name": "Minimalne drzewo rozpinające (Kruskal/Prim)",
+   "complexity": "O(m log m)",
+   "when": "połącz wszystko najtaniej",
+   "kb": [
+    "graph-mst",
+    "graph-kruskal"
+   ],
+   "query": "minimalne drzewo rozpinające kruskal"
+  },
+  "lca": {
+   "name": "LCA — najniższy wspólny przodek",
+   "complexity": "O(log n) na zapytanie",
+   "when": "zapytania o ścieżki/odległości w drzewie",
+   "kb": [
+    "tree-lca",
+    "tree-binary-lifting"
+   ],
+   "query": "lca najniższy wspólny przodek"
+  },
+  "tree": {
+   "name": "Algorytmy na drzewach (DFS, DP na drzewie)",
+   "complexity": "O(n)",
+   "when": "drzewo, poddrzewa, rodzic/syn, preorder/postorder",
+   "kb": [
+    "tree-dfs",
+    "tree-dp",
+    "graph-dfs"
+   ],
+   "query": "drzewo dfs poddrzewo"
+  },
+  "segment_tree": {
+   "name": "Drzewo przedziałowe",
+   "complexity": "O(log n) na operację",
+   "when": "zapytania o przedział + zmiany",
+   "kb": [
+    "ds-segment-tree",
+    "ds-segment-tree-lazy"
+   ],
+   "query": "drzewo przedziałowe"
+  },
+  "lazy_segment_tree": {
+   "name": "Drzewo przedziałowe z leniwą propagacją",
+   "complexity": "O(log n) na operację",
+   "when": "zmiana na przedziale + zapytanie o przedział",
+   "kb": [
+    "ds-segment-tree-lazy",
+    "ds-lazy-propagation"
+   ],
+   "query": "leniwa propagacja przedział przedział"
+  },
+  "fenwick": {
+   "name": "Drzewo Fenwicka (BIT)",
+   "complexity": "O(log n) na operację",
+   "when": "sumy prefiksowe ze zmianami, liczba inwersji",
+   "kb": [
+    "ds-fenwick",
+    "ds-bit"
+   ],
+   "query": "drzewo fenwicka"
+  },
+  "sparse_table": {
+   "name": "Sparse table (RMQ)",
+   "complexity": "O(1) na zapytanie",
+   "when": "min/max na przedziale bez zmian",
+   "kb": [
+    "ds-sparse-table"
+   ],
+   "query": "sparse table rmq"
+  },
+  "prefix_sums": {
+   "name": "Sumy prefiksowe",
+   "complexity": "O(n + q)",
+   "when": "suma na przedziale bez zmian, wiele zapytań",
+   "kb": [
+    "ds-prefix-sums",
+    "ds-prefix-sums-2d",
+    "ds-difference-array"
+   ],
+   "query": "sumy prefiksowe"
+  },
+  "binary_search": {
+   "name": "Wyszukiwanie binarne (także po wyniku)",
+   "complexity": "O(log W) · koszt sprawdzenia",
+   "when": "„minimalne X takie, że…”, monotoniczny warunek, szukanie w posortowanym",
+   "kb": [
+    "tech-binary-search",
+    "tech-binary-search-answer",
+    "stl-lower-bound"
+   ],
+   "query": "wyszukiwanie binarne po wyniku"
+  },
+  "two_pointers": {
+   "name": "Dwa wskaźniki (gąsienica)",
+   "complexity": "O(n)",
+   "when": "najdłuższy/najkrótszy spójny fragment z warunkiem, pary o sumie",
+   "kb": [
+    "tech-two-pointers",
+    "ds-monotonic-queue"
+   ],
+   "query": "dwa wskaźniki gąsienica"
+  },
+  "sliding_window": {
+   "name": "Okno przesuwne",
+   "complexity": "O(n)",
+   "when": "fragmenty stałej długości k, min/max w oknie",
+   "kb": [
+    "ds-monotonic-queue",
+    "tech-sliding-window"
+   ],
+   "query": "okno przesuwne"
+  },
+  "sorting": {
+   "name": "Sortowanie",
+   "complexity": "O(n log n)",
+   "when": "uporządkuj, k-ty element, mediana, zachłanne po sortowaniu",
+   "kb": [
+    "stl-sort",
+    "algo-sort"
+   ],
+   "query": "sortowanie sort"
+  },
+  "greedy": {
+   "name": "Algorytm zachłanny",
+   "complexity": "zwykle O(n log n)",
+   "when": "najlepszy lokalny wybór po posortowaniu, przedziały, wydawanie reszty",
+   "kb": [
+    "tech-greedy"
+   ],
+   "query": "algorytm zachłanny"
+  },
+  "dp": {
+   "name": "Programowanie dynamiczne",
+   "complexity": "zależy od stanu (O(n), O(n²), O(n·W))",
+   "when": "liczba sposobów, optymalizacja z podproblemami, plecak, LIS, LCS",
+   "kb": [
+    "dp-intro",
+    "dp-knapsack-01",
+    "dp-lis",
+    "dp-coin-change",
+    "dp-grid-paths",
+    "dp-stairs-fibonacci"
+   ],
+   "query": "programowanie dynamiczne"
+  },
+  "bitmask_dp": {
+   "name": "DP na maskach bitowych",
+   "complexity": "O(2^n · n²)",
+   "when": "n ≤ 20, wybór podzbiorów, komiwojażer",
+   "kb": [
+    "dp-bitmask"
+   ],
+   "query": "dp na maskach bitowych"
+  },
+  "backtracking": {
+   "name": "Przeszukiwanie z nawrotami (brute force)",
+   "complexity": "O(n!) / O(2^n)",
+   "when": "bardzo małe n, wszystkie permutacje/podzbiory",
+   "kb": [
+    "tech-backtracking",
+    "tech-recursion"
+   ],
+   "query": "przeszukiwanie z nawrotami backtracking"
+  },
+  "recursion": {
+   "name": "Rekurencja / dziel i zwyciężaj",
+   "complexity": "zależnie od podziału",
+   "when": "definicje rekurencyjne, sortowanie przez scalanie, wieże Hanoi",
+   "kb": [
+    "tech-recursion",
+    "tech-divide-and-conquer"
+   ],
+   "query": "rekurencja dziel i zwyciężaj"
+  },
+  "sieve": {
+   "name": "Sito Eratostenesa",
+   "complexity": "O(n log log n)",
+   "when": "wiele liczb pierwszych, rozkład wielu liczb na czynniki",
+   "kb": [
+    "math-sieve"
+   ],
+   "query": "sito eratostenesa"
+  },
+  "gcd": {
+   "name": "NWD / NWW (algorytm Euklidesa)",
+   "complexity": "O(log min(a, b))",
+   "when": "największy wspólny dzielnik, ułamki, proporcje",
+   "kb": [
+    "math-gcd",
+    "math-gcd-lcm"
+   ],
+   "query": "nwd euklides"
+  },
+  "fast_pow": {
+   "name": "Szybkie potęgowanie",
+   "complexity": "O(log k)",
+   "when": "a^k mod M dla dużych k",
+   "kb": [
+    "math-fast-pow",
+    "num-mod-arithmetic"
+   ],
+   "query": "szybkie potęgowanie modulo"
+  },
+  "mod_inverse": {
+   "name": "Odwrotność modularna",
+   "complexity": "O(log M)",
+   "when": "dzielenie modulo liczba pierwsza, dwumiany",
+   "kb": [
+    "math-mod-inverse",
+    "num-mod-arithmetic"
+   ],
+   "query": "odwrotność modularna"
+  },
+  "combinatorics": {
+   "name": "Kombinatoryka (dwumiany, zliczanie)",
+   "complexity": "O(n) preprocessing",
+   "when": "na ile sposobów, wybór k z n, modulo 10^9+7",
+   "kb": [
+    "math-combinatorics",
+    "math-binomial",
+    "num-mod-arithmetic"
+   ],
+   "query": "kombinatoryka dwumian newtona"
+  },
+  "math": {
+   "name": "Matematyka / wzór",
+   "complexity": "O(1) – O(√n)",
+   "when": "ogromne n (do 10^18), wzory, dzielniki, cyfry",
+   "kb": [
+    "num-int-types",
+    "num-overflow",
+    "num-ceil-div",
+    "num-sqrt-pow"
+   ],
+   "query": "matematyka wzór dzielniki"
+  },
+  "matrix_pow": {
+   "name": "Potęgowanie macierzy",
+   "complexity": "O(k³ log n)",
+   "when": "n-ty wyraz rekurencji liniowej dla n do 10^18",
+   "kb": [
+    "math-matrix-pow"
+   ],
+   "query": "potęgowanie macierzy"
+  },
+  "kmp": {
+   "name": "KMP / funkcja prefiksowa",
+   "complexity": "O(n + m)",
+   "when": "wystąpienia wzorca w tekście, okres słowa",
+   "kb": [
+    "str-kmp",
+    "str-prefix-function"
+   ],
+   "query": "kmp funkcja prefiksowa wzorzec"
+  },
+  "z_function": {
+   "name": "Funkcja Z",
+   "complexity": "O(n)",
+   "when": "najdłuższe wspólne prefiksy z sufiksami",
+   "kb": [
+    "str-z-function"
+   ],
+   "query": "funkcja z"
+  },
+  "hashing": {
+   "name": "Haszowanie napisów",
+   "complexity": "O(n) + O(1) na porównanie",
+   "when": "porównywanie podsłów, wzorce, palindromy",
+   "kb": [
+    "str-hashing",
+    "stl-unordered-map"
+   ],
+   "query": "haszowanie napisów"
+  },
+  "trie": {
+   "name": "Drzewo trie",
+   "complexity": "O(suma długości)",
+   "when": "słownik słów, wspólne prefiksy, XOR maksymalny",
+   "kb": [
+    "str-trie"
+   ],
+   "query": "drzewo trie"
+  },
+  "manacher": {
+   "name": "Algorytm Manachera",
+   "complexity": "O(n)",
+   "when": "najdłuższy podpalindrom",
+   "kb": [
+    "str-manacher"
+   ],
+   "query": "manacher palindrom"
+  },
+  "string_processing": {
+   "name": "Przetwarzanie napisów",
+   "complexity": "O(n)",
+   "when": "litery, słowa, zliczanie znaków, szyfry",
+   "kb": [
+    "stl-string",
+    "stl-string-methods",
+    "io-getline"
+   ],
+   "query": "napisy string"
+  },
+  "stl": {
+   "name": "Struktury STL (set / map / kolejka priorytetowa)",
+   "complexity": "O(log n) na operację",
+   "when": "dynamiczny zbiór, słownik, wyciąganie minimum, zliczanie wystąpień",
+   "kb": [
+    "stl-set",
+    "stl-map",
+    "stl-multiset",
+    "ds-heap",
+    "stl-unordered-map"
+   ],
+   "query": "set map priority_queue"
+  },
+  "monotonic_stack": {
+   "name": "Stos monotoniczny",
+   "complexity": "O(n)",
+   "when": "najbliższy większy/mniejszy element, prostokąty w histogramie, nawiasy",
+   "kb": [
+    "ds-monotonic-stack"
+   ],
+   "query": "stos monotoniczny"
+  },
+  "simulation": {
+   "name": "Symulacja / implementacja",
+   "complexity": "O(rozmiar danych)",
+   "when": "zrób dokładnie to, co opisano: pętle, warunki, tablice",
+   "kb": [
+    "io-fast-io",
+    "stl-vector",
+    "stl-vector-2d"
+   ],
+   "query": "symulacja pętla tablica"
+  },
+  "grid": {
+   "name": "Plansza / siatka (BFS/DFS po polach, DP na siatce)",
+   "complexity": "O(n · m)",
+   "when": "plansza, labirynt, pola, ruchy w 4 kierunkach",
+   "kb": [
+    "graph-bfs-grid",
+    "io-read-grid",
+    "dp-grid-paths"
+   ],
+   "query": "siatka plansza bfs"
+  },
+  "geometry": {
+   "name": "Geometria obliczeniowa",
+   "complexity": "zwykle O(n log n)",
+   "when": "punkty, odcinki, trójkąty, iloczyn wektorowy",
+   "kb": [
+    "geo-cross-product",
+    "geo-basics"
+   ],
+   "query": "geometria iloczyn wektorowy"
+  },
+  "convex_hull": {
+   "name": "Otoczka wypukła",
+   "complexity": "O(n log n)",
+   "when": "najmniejszy wielokąt zawierający punkty",
+   "kb": [
+    "geo-convex-hull"
+   ],
+   "query": "otoczka wypukła"
+  },
+  "bipartite": {
+   "name": "Graf dwudzielny",
+   "complexity": "O(n + m)",
+   "when": "podział na dwie grupy, kolorowanie dwoma kolorami",
+   "kb": [
+    "graph-bipartite"
+   ],
+   "query": "graf dwudzielny"
+  },
+  "scc": {
+   "name": "Silnie spójne składowe",
+   "complexity": "O(n + m)",
+   "when": "cykle w grafie skierowanym, kondensacja",
+   "kb": [
+    "graph-scc"
+   ],
+   "query": "silnie spójne składowe"
+  },
+  "bridges": {
+   "name": "Mosty i punkty artykulacji",
+   "complexity": "O(n + m)",
+   "when": "krawędzie/wierzchołki, których usunięcie rozspójnia graf",
+   "kb": [
+    "graph-bridges"
+   ],
+   "query": "mosty punkty artykulacji"
+  },
+  "flow": {
+   "name": "Przepływ w sieci",
+   "complexity": "O(V · E²) (Edmonds–Karp)",
+   "when": "maksymalny przepływ, minimalny przekrój",
+   "kb": [
+    "graph-flow"
+   ],
+   "query": "maksymalny przepływ"
+  },
+  "matching": {
+   "name": "Skojarzenia w grafie dwudzielnym",
+   "complexity": "O(V · E)",
+   "when": "przydział osób do zadań, pary",
+   "kb": [
+    "graph-matching"
+   ],
+   "query": "skojarzenie graf dwudzielny"
+  },
+  "mo": {
+   "name": "Algorytm Mo",
+   "complexity": "O((n + q) √n)",
+   "when": "wiele zapytań o przedziały offline bez zmian",
+   "kb": [
+    "ds-mo"
+   ],
+   "query": "algorytm mo"
+  },
+  "sqrt_decomp": {
+   "name": "Dekompozycja pierwiastkowa",
+   "complexity": "O(√n) na operację",
+   "when": "zapytania i zmiany, gdy drzewo przedziałowe trudno zastosować",
+   "kb": [
+    "ds-sqrt-decomposition"
+   ],
+   "query": "dekompozycja pierwiastkowa"
+  },
+  "coordinate_compression": {
+   "name": "Kompresja współrzędnych",
+   "complexity": "O(n log n)",
+   "when": "duże wartości (do 10^9) jako indeksy tablicy",
+   "kb": [
+    "tech-coordinate-compression"
+   ],
+   "query": "kompresja współrzędnych"
+  },
+  "meet_in_middle": {
+   "name": "Meet in the middle",
+   "complexity": "O(2^(n/2) · n)",
+   "when": "n ≤ 40, podzbiory o sumie",
+   "kb": [
+    "tech-meet-in-middle"
+   ],
+   "query": "meet in the middle"
+  },
+  "graph": {
+   "name": "Grafy — podstawy (reprezentacja, BFS/DFS)",
+   "complexity": "O(n + m)",
+   "when": "wierzchołki i krawędzie, sąsiedzi, osiągalność",
+   "kb": [
+    "graph-representation",
+    "graph-input",
+    "graph-bfs",
+    "graph-dfs"
+   ],
+   "query": "graf lista sąsiedztwa"
+  },
+  "bitset": {
+   "name": "Bitset",
+   "complexity": "O(n² / 64)",
+   "when": "przyspieszenie operacji na zbiorach, plecak z bitsetem",
+   "kb": [
+    "io-hex-bin",
+    "stl-bitset"
+   ],
+   "query": "bitset"
+  },
+  "simulation_queue": {
+   "name": "Kolejka / stos — symulacja",
+   "complexity": "O(n)",
+   "when": "kolejka osób, stos talerzy, ONP, nawiasy",
+   "kb": [
+    "ds-monotonic-stack",
+    "stl-vector"
+   ],
+   "query": "kolejka stos symulacja"
+  }
+ },
+ "signals": [
+  {
+   "id": "shortest-path",
+   "any": [
+    "najkrotsz\\w* (drog|sciezk|tras|czas|przejazd|odleglosc)",
+    "najmniejsz\\w* (liczb\\w* )?(ruchow|krokow|skokow|przesiadek|krawedzi)",
+    "odleglosc\\w* (od|miedzy|do) (wierzcholk|miast|pol)",
+    "najszybciej (dojsc|dotrzec|dostac)",
+    "najmniej (ruchow|krokow|minut|sekund)",
+    "ile (co najmniej|minimalnie) (ruchow|krokow)",
+    "odleglosc\\w* .{0,30}(od|do) (wierzcholk|miast|pol|punkt)\\w*"
+   ],
+   "algos": {
+    "bfs": 2.2,
+    "dijkstra": 1.8,
+    "graph": 0.6
+   },
+   "reason": "„najkrótsza droga/ścieżka” → BFS (bez wag) albo Dijkstra (z wagami)"
+  },
+  {
+   "id": "weights",
+   "all": [
+    [
+     "wag\\w*|dlugosc\\w* (drog|krawedzi|tunel)|koszt\\w* (przejazdu|przejscia|krawedzi|drog)|czas\\w* przejazdu|trwa (\\w+ )?minut|dlugosci? [a-z]? ?(metr|km)"
+    ],
+    [
+     "krawedz|drog|polaczen|tunel|most|miast|wierzcholk"
+    ]
+   ],
+   "none": [
+    "wagi? (przedmiot|plecak)"
+   ],
+   "algos": {
+    "dijkstra": 2.4,
+    "floyd": 0.4,
+    "mst": 0.5
+   },
+   "reason": "krawędzie mają wagi (długości/koszty) → Dijkstra zamiast BFS"
+  },
+  {
+   "id": "negative-weights",
+   "all": [
+    [
+     "ujemn\\w* (wag|dlugo|koszt)"
+    ],
+    [
+     "krawedz|drog|wierzcholk"
+    ]
+   ],
+   "algos": {
+    "bellman_ford": 2.5,
+    "dijkstra": -1.0
+   },
+   "reason": "ujemne wagi krawędzi → Bellman–Ford (Dijkstra nie działa)"
+  },
+  {
+   "id": "all-pairs",
+   "any": [
+    "kazd\\w* (pary|dwoch) (miast|wierzcholk)",
+    "wszystki\\w* par\\w* (miast|wierzcholk)",
+    "miedzy kazdymi dwoma",
+    "odleglosc\\w* miedzy dowolnymi"
+   ],
+   "algos": {
+    "floyd": 2.0,
+    "bfs": 0.5
+   },
+   "reason": "odległości między wszystkimi parami → Floyd–Warshall (gdy n ≤ 500) albo BFS z każdego wierzchołka"
+  },
+  {
+   "id": "graph-basic",
+   "any": [
+    "\\bgraf\\w*",
+    "wierzcholk\\w*",
+    "krawedz\\w*"
+   ],
+   "algos": {
+    "graph": 1.2,
+    "bfs": 0.5,
+    "dfs": 0.5
+   },
+   "reason": "w treści występuje graf (wierzchołki, krawędzie)"
+  },
+  {
+   "id": "graph-story",
+   "all": [
+    [
+     "miast|wysp|skrzyzowan|pokoj|stacj|komnat|jaskin|budynk|dom"
+    ],
+    [
+     "drog|tunel|most|korytarz|polaczen|przejsc|lin\\w* lotnicz|autostrad"
+    ]
+   ],
+   "algos": {
+    "graph": 1.0,
+    "bfs": 0.6,
+    "dfs": 0.4,
+    "dijkstra": 0.4
+   },
+   "reason": "miasta/wyspy połączone drogami/tunelami to graf"
+  },
+  {
+   "id": "connectivity",
+   "any": [
+    "spojn\\w*(?! (\\w+ )?(fragment|podciag|przedzial|odcin|blok|kawal|okres|ciag|czesc|grup))",
+    "polaczon\\w* (ze soba|bezposrednio lub posrednio)",
+    "da sie (dojsc|dojechac|przejsc|dotrzec)",
+    "czy (istnieje|jest) (droga|sciezka|polaczenie)",
+    "osiagaln\\w*",
+    "skladow\\w*",
+    "osobn\\w* (grup|czesc|wysp)",
+    "rozpada sie",
+    "ile (jest )?(grup|czesci|wysp|skladowych|panstw|kontynentow)"
+   ],
+   "algos": {
+    "dfs": 1.8,
+    "bfs": 1.0,
+    "dsu": 1.4,
+    "graph": 0.6
+   },
+   "reason": "„spójne / da się dojść / ile grup” → DFS/BFS albo Find & Union",
+   "none": [
+    "spojn\\w* (\\w+ )?(fragment|podciag|przedzial|odcin|blok|kawal|okres|ciag|czesc|grup)\\w*"
+   ]
+  },
+  {
+   "id": "dsu-online",
+   "all": [
+    [
+     "spojn\\w*|polaczon\\w*|w tej samej (grupie|czesci|skladowej)|nalez\\w* do (tej samej|jednej)|ten sam (zbior|bractw|klan|grup)"
+    ],
+    [
+     "zapytan\\w*|polacz\\w*|dodaj\\w*|laczy\\w*|sojusz|przyjazn|kolejn\\w* (krawedzi|polaczen|operacj)"
+    ]
+   ],
+   "algos": {
+    "dsu": 2.2
+   },
+   "reason": "łączenie grup + pytania „czy w tej samej grupie” → Find & Union"
+  },
+  {
+   "id": "dsu-reverse",
+   "any": [
+    "blokowan\\w*",
+    "usuwan\\w* (krawedzi|drog|tunel|polaczen)",
+    "zawal\\w*",
+    "niszczon\\w*",
+    "zamykan\\w* (drog|tunel)"
+   ],
+   "algos": {
+    "dsu": 1.4
+   },
+   "reason": "usuwanie krawędzi w czasie → odwróć kolejność i łącz Find & Unionem"
+  },
+  {
+   "id": "mst",
+   "any": [
+    "najtaniej (polaczyc|zbudowac|polaczenie)",
+    "minimaln\\w* (koszt|sum\\w*) (polaczenia|budowy|zbudowania|polaczen)",
+    "polaczyc wszystkie (miasta|wyspy|domy|wierzcholki)",
+    "drzew\\w* rozpinajac",
+    "sieci? (wifi|wodociag|energetycz|kabl)"
+   ],
+   "algos": {
+    "mst": 2.5,
+    "dsu": 1.0
+   },
+   "reason": "„połącz wszystko jak najtaniej” → minimalne drzewo rozpinające (Kruskal + DSU)"
+  },
+  {
+   "id": "dag",
+   "any": [
+    "musi (byc|zostac) (wykonan|zrobion|ukonczon)\\w* przed",
+    "przed (nim|nia|tym)",
+    "zaleznosc\\w*",
+    "jest wazniejsz\\w* od",
+    "kolejnosc\\w* (wykonania|zadan|czynnosci|gosci)",
+    "acykliczn\\w*",
+    "\\bdag\\b",
+    "porzadek topologiczn",
+    "wymaga (ukonczenia|wczesniejszego)",
+    "po wykonaniu"
+   ],
+   "algos": {
+    "topo_sort": 2.4,
+    "dp": 0.5,
+    "dfs": 0.4
+   },
+   "reason": "zależności „a przed b” → sortowanie topologiczne (DAG)",
+   "none": [
+    "kolejnosc\\w* (zadan|czynnosci) nie (moze|wolno)",
+    "nie (moze|wolno) (sie )?zmieni\\w* kolejnosc"
+   ]
+  },
+  {
+   "id": "directed",
+   "any": [
+    "skierowan\\w*",
+    "jednokierunkow\\w*",
+    "\\bz [a-z] do [a-z]\\b nie odwrotnie"
+   ],
+   "algos": {
+    "topo_sort": 0.7,
+    "scc": 0.5,
+    "dfs": 0.4
+   },
+   "reason": "graf skierowany (drogi jednokierunkowe)"
+  },
+  {
+   "id": "cycle",
+   "any": [
+    "\\bcykl\\w*",
+    "zapetl\\w*",
+    "wroci do (punktu|miejsca) (wyjscia|startu)"
+   ],
+   "algos": {
+    "dfs": 1.0,
+    "topo_sort": 0.6,
+    "scc": 0.5
+   },
+   "reason": "wykrywanie cyklu → DFS z kolorowaniem / toposort"
+  },
+  {
+   "id": "scc",
+   "any": [
+    "silnie spojn\\w*",
+    "wzajemnie osiagaln\\w*",
+    "z kazdego do kazdego"
+   ],
+   "algos": {
+    "scc": 2.5
+   },
+   "reason": "wzajemna osiągalność w grafie skierowanym → silnie spójne składowe"
+  },
+  {
+   "id": "bipartite",
+   "any": [
+    "dwie (druzyny|grupy|partie|klasy)",
+    "dwoch kolor\\w*",
+    "dwudzieln\\w*",
+    "nie (lubi|znosi) sie",
+    "wrog\\w*"
+   ],
+   "algos": {
+    "bipartite": 2.0,
+    "bfs": 0.4
+   },
+   "reason": "podział na dwie grupy bez konfliktów → graf dwudzielny"
+  },
+  {
+   "id": "bridges",
+   "any": [
+    "\\bmost\\w* (w grafie|krytyczn)",
+    "punkt\\w* artykulacji",
+    "usuniecie (ktorej|ktorego|jednej) (krawedzi|drogi|wierzcholka) rozspaja",
+    "krytyczn\\w* (polaczen|drog|kabl)"
+   ],
+   "algos": {
+    "bridges": 2.5
+   },
+   "reason": "krawędzie krytyczne dla spójności → mosty/punkty artykulacji"
+  },
+  {
+   "id": "flow",
+   "any": [
+    "przeplyw\\w*",
+    "przepustowosc\\w*",
+    "przekroj\\w*"
+   ],
+   "algos": {
+    "flow": 2.5
+   },
+   "reason": "przepustowości / przepływ → maksymalny przepływ"
+  },
+  {
+   "id": "matching",
+   "any": [
+    "skojarz\\w*",
+    "przydziel\\w* (kazdemu|pracownik|zadani)",
+    "kazdy (pracownik|chlopiec|uczen) (moze|chce) (wykonac|tanczyc|dostac)"
+   ],
+   "algos": {
+    "matching": 2.0
+   },
+   "reason": "przydział par (osoba ↔ zadanie) → skojarzenia"
+  },
+  {
+   "id": "tree",
+   "any": [
+    "\\bdrzew\\w*",
+    "korzen\\w*",
+    "poddrzew\\w*",
+    "\\bojc\\w*|\\brodzic\\w*",
+    "synow|\\bsyn\\b|potom\\w*|przodk\\w*",
+    "\\bn ?- ?1 (krawedzi|drog|polaczen|wierszy)",
+    "lis[cć]\\w*",
+    "hierarchi\\w*",
+    "\\bkierownik\\w*(?! (zadaje|pyta|chce))|przelozon\\w*|podwladn\\w*"
+   ],
+   "none": [
+    "drzewo przedzialowe",
+    "drzewa przedzialowego",
+    "\\blas\\b|\\blasu\\b|\\blesie\\b|drwal\\w*|scina\\w*|ogrod\\w*|sad\\b|sadzi\\w*|wysokos\\w* drzew",
+    "pole „?d”? to drzew"
+   ],
+   "algos": {
+    "tree": 1.8,
+    "dfs": 1.0,
+    "lca": 0.3
+   },
+   "reason": "struktura drzewa (rodzic/syn, n−1 krawędzi, poddrzewa) → DFS po drzewie / DP na drzewie"
+  },
+  {
+   "id": "tree-path-queries",
+   "all": [
+    [
+     "drzew\\w*|przodk\\w*|przelozon\\w*|korzen"
+    ],
+    [
+     "zapytan\\w*|pytan\\w*"
+    ],
+    [
+     "sciezk\\w*|odleglosc\\w*|przodk\\w*|przelozon\\w*|wspoln\\w*|pomiedzy|miedzy"
+    ]
+   ],
+   "algos": {
+    "lca": 2.3,
+    "tree": 0.8
+   },
+   "reason": "drzewo + zapytania o ścieżkę/przodka → LCA (skoki binarne) albo pre/postorder"
+  },
+  {
+   "id": "ancestor-query",
+   "any": [
+    "czy [a-z] jest (przodkiem|przelozon\\w*|potomkiem)",
+    "jest przelozon\\w* (kasjerki|pracownika|osoby)"
+   ],
+   "algos": {
+    "tree": 1.6,
+    "dfs": 1.2,
+    "lca": 0.8
+   },
+   "reason": "„czy a jest przodkiem b” → czasy wejścia/wyjścia DFS (preorder/postorder)"
+  },
+  {
+   "id": "preorder",
+   "any": [
+    "preorder",
+    "postorder",
+    "inorder",
+    "kolejnosc\\w* (odwiedzania|przechodzenia)"
+   ],
+   "algos": {
+    "tree": 2.0,
+    "dfs": 1.2,
+    "recursion": 0.6
+   },
+   "reason": "preorder/postorder → rekurencyjny DFS po drzewie"
+  },
+  {
+   "id": "range-queries-updates",
+   "all": [
+    [
+     "przedzial\\w*|fragment\\w*|odcink\\w*|od [a-z] do [a-z]|\\[a, ?b\\]|na pozycjach od"
+    ],
+    [
+     "zapytan\\w*|pytan\\w*|operacj\\w*"
+    ],
+    [
+     "zmian\\w*|zmien\\w*|zamien\\w*|ustaw\\w*|zwieksz\\w*|dodaj\\w*|aktualiz\\w*|modyfik\\w*|przelacz\\w*|zgas\\w*|zapal\\w*|wymien\\w*"
+    ]
+   ],
+   "algos": {
+    "segment_tree": 2.6,
+    "fenwick": 1.6,
+    "lazy_segment_tree": 0.8,
+    "sqrt_decomp": 0.5
+   },
+   "reason": "zapytania o przedział + zmiany → drzewo przedziałowe / Fenwick"
+  },
+  {
+   "id": "range-update-range",
+   "all": [
+    [
+     "(zmien|zwieksz|dodaj|ustaw|przelacz|odwroc|zapal|zgas)\\w* (\\w+ ){0,4}(na |w )?(calym )?(przedziale|fragmencie|odcinku|zakresie)|wszystk\\w* (lamp|elementow|pol|liczb) (na|w|z) (danym )?przedzial"
+    ],
+    [
+     "przedzial\\w*|fragment\\w*"
+    ]
+   ],
+   "algos": {
+    "lazy_segment_tree": 2.0,
+    "segment_tree": 1.2,
+    "fenwick": 0.6
+   },
+   "reason": "zmiana całego przedziału naraz → leniwa propagacja albo Fenwick z różnicami"
+  },
+  {
+   "id": "range-queries-static",
+   "all": [
+    [
+     "przedzial\\w*|fragment\\w*|od [a-z] do [a-z]|na pozycjach"
+    ],
+    [
+     "zapytan\\w*|pytan\\w*"
+    ]
+   ],
+   "none": [
+    "zmian\\w*|zmien\\w*|zamien\\w*|aktualiz\\w*"
+   ],
+   "algos": {
+    "prefix_sums": 1.8,
+    "sparse_table": 1.0,
+    "segment_tree": 0.6
+   },
+   "reason": "zapytania o przedział bez zmian → sumy prefiksowe (suma) / sparse table (min/max)"
+  },
+  {
+   "id": "range-sum",
+   "any": [
+    "sum\\w* (liczb |elementow |wartosci )?(na|w|z) (danym |podanym )?(przedziale|fragmencie|zakresie)",
+    "sum\\w* (od|elementow od) [a-z]-?(tego)? do",
+    "sum\\w* (kolejnych|ciaglego|spojnego)"
+   ],
+   "algos": {
+    "prefix_sums": 2.0,
+    "fenwick": 0.6
+   },
+   "reason": "suma na przedziale → sumy prefiksowe"
+  },
+  {
+   "id": "range-min",
+   "any": [
+    "(minimum|maksimum|najmniejsz\\w*|najwieksz\\w*) (\\w+ )?(na|w|z) (danym |podanym )?(przedziale|fragmencie|zakresie)"
+   ],
+   "algos": {
+    "sparse_table": 1.6,
+    "segment_tree": 1.2
+   },
+   "reason": "min/max na przedziale → sparse table (bez zmian) albo drzewo przedziałowe"
+  },
+  {
+   "id": "prefix-2d",
+   "all": [
+    [
+     "prostokat\\w*|podmacierz\\w*|kwadrat\\w*"
+    ],
+    [
+     "sum\\w*"
+    ],
+    [
+     "plansz\\w*|tablic\\w*|macierz\\w*|siatk\\w*"
+    ]
+   ],
+   "algos": {
+    "prefix_sums": 1.6,
+    "dp": 0.4
+   },
+   "reason": "suma w prostokącie planszy → sumy prefiksowe 2D"
+  },
+  {
+   "id": "binsearch-answer",
+   "any": [
+    "(minimaln|najmniejsz|maksymaln|najwieksz)\\w* (\\w+ ){0,3}(takie|taka|taki|takiej|taka), ze",
+    "jak (najmniejsz|najwieksz)\\w* (\\w+ ){0,3}(wystarczy|da sie|mozna|starczy)",
+    "co najwyzej [a-z] (dni|ciec|grup|czesci|cieciach|skrzyn|kurs)",
+    "podzielic na (co najwyzej )?[a-z] (czesci|grup|fragmentow|przedzialow)",
+    "wystarczy\\w*\\b.{0,40}(minimal|najmniejsz)",
+    "najmniejsz\\w* mozliw\\w* (maksymaln|najwieksz)",
+    "najwieksz\\w* mozliw\\w* (minimaln|najmniejsz)",
+    "minimaliz\\w* (maksim|najwieksz)",
+    "maksymaliz\\w* (minim|najmniejsz)",
+    "ile (maksymalnie|minimalnie|co najwyzej|najwiecej|najmniej) .{0,80}(tak,? aby|tak,? zeby|aby nadal|by nadal)",
+    "jak (najpozniej|najwczesniej|najdluzej) .{0,60}(aby|zeby|by)",
+    "nie wiecej niz [a-z] [a-z]{3,}.{0,200}(najwieksz|najmniejsz|minimaln|maksymaln)",
+    "median\\w* .{0,80}jak najwieksz|maksymaln\\w* (mozliw\\w* )?(do uzyskania )?median",
+    "najmniejsz\\w* (\\w+ ){0,2}[a-z] takie,? ze"
+   ],
+   "algos": {
+    "binary_search": 2.6,
+    "greedy": 0.6
+   },
+   "reason": "„najmniejsze X takie, że…” / minimalizacja maksimum → wyszukiwanie binarne po wyniku"
+  },
+  {
+   "id": "binsearch-sorted",
+   "any": [
+    "posortowan\\w* (rosnaco|niemalejaco|ciag|tablic)",
+    "czy (liczba|wartosc) [a-z] (wystepuje|znajduje sie|jest w)",
+    "ile (liczb|elementow) (jest )?(mniejsz|wieksz|nie wieksz)",
+    "pierwsz\\w* (element|liczb\\w*|pozycj\\w*) (wieksz|nie mniejsz|\\>=)",
+    "lower_bound|upper_bound",
+    "ile jest [a-z]{3,} o (numerze|wartosci|wadze|dlugosci) [a-z]\\b",
+    "dla kazdego (zapytania|z nich) (\\w+ ){0,3}(ile|czy)"
+   ],
+   "algos": {
+    "binary_search": 1.8,
+    "sorting": 0.8
+   },
+   "reason": "wyszukiwanie w posortowanym ciągu → lower_bound / binsearch"
+  },
+  {
+   "id": "guess-number",
+   "any": [
+    "zgad\\w* (liczb|wartosc)",
+    "wieksza\\W+mniejsza",
+    "interakc\\w*",
+    "interaktywn\\w*"
+   ],
+   "algos": {
+    "binary_search": 2.2
+   },
+   "reason": "zgadywanie liczby (WIĘKSZA/MNIEJSZA) → wyszukiwanie binarne"
+  },
+  {
+   "id": "ternary",
+   "any": [
+    "najpierw (malej|nieros)\\w*.{0,30}(potem|a nastepnie) (ros|niemal)\\w*",
+    "unimodaln\\w*",
+    "parabol\\w*",
+    "dolin\\w*",
+    "funkcj\\w* wypukl\\w*"
+   ],
+   "algos": {
+    "binary_search": 1.6,
+    "math": 0.4
+   },
+   "reason": "ciąg/funkcja najpierw maleje, potem rośnie → wyszukiwanie ternarne / binsearch po pochodnej"
+  },
+  {
+   "id": "two-pointers",
+   "any": [
+    "najdluzsz\\w* (spojn\\w* |ciagl\\w* )?(fragment|podciag spojny|przedzial|odcinek|podtablic|okres)",
+    "najkrotsz\\w* (spojn\\w* |ciagl\\w* )?(fragment|przedzial|odcinek|podtablic)",
+    "spojn\\w* fragment\\w*",
+    "kolejn\\w* (dni|elementow|domow|liczb) (o|ktorych|z) sum",
+    "gasienic\\w*",
+    "ile (jest )?(spojnych )?(fragmentow|przedzialow|podtablic) (o sumie|ktorych suma|w ktorych)",
+    "par\\w* (liczb |elementow )?o sumie"
+   ],
+   "algos": {
+    "two_pointers": 2.2,
+    "prefix_sums": 0.8,
+    "sliding_window": 0.6
+   },
+   "reason": "najdłuższy/najkrótszy spójny fragment z warunkiem → dwa wskaźniki (gąsienica)"
+  },
+  {
+   "id": "sliding-window",
+   "any": [
+    "(kazd\\w*|wszystki\\w*) (\\w+ )?(fragment|okn|przedzial)\\w* (dlugosci|o dlugosci) [a-z]",
+    "[a-z] kolejnych (dni|elementow|liczb|pomiarow)",
+    "okno przesuwne"
+   ],
+   "algos": {
+    "sliding_window": 2.0,
+    "two_pointers": 0.8,
+    "prefix_sums": 0.6
+   },
+   "reason": "fragmenty stałej długości k → okno przesuwne (kolejka monotoniczna dla min/max)"
+  },
+  {
+   "id": "modulo-ways",
+   "all": [
+    [
+     "modulo|reszt\\w* z dzielenia|10\\^9 ?\\+ ?7|1000000007|998244353"
+    ],
+    [
+     "ile (jest )?(sposobow|mozliwosci|roznych|ciagow|drog|sciezek|ustawien|podzial)|na ile sposobow|liczb\\w* (sposobow|mozliwosci|roznych)"
+    ]
+   ],
+   "algos": {
+    "dp": 2.4,
+    "combinatorics": 1.8,
+    "mod_inverse": 0.5
+   },
+   "reason": "„ile sposobów” + modulo 10^9+7 → DP liczące sposoby lub kombinatoryka"
+  },
+  {
+   "id": "count-ways",
+   "any": [
+    "na ile sposobow",
+    "ile (jest )?(roznych )?(sposobow|mozliwosci)",
+    "liczb\\w* (roznych )?(sposobow|mozliwosci)"
+   ],
+   "algos": {
+    "dp": 1.8,
+    "combinatorics": 1.0,
+    "backtracking": 0.3
+   },
+   "reason": "liczenie sposobów → programowanie dynamiczne (albo wzór kombinatoryczny)",
+   "none": [
+    "(wybrac|wybierz\\w*) (z ciagu )?dwa (elementy|liczby)",
+    "par\\w* indeksow",
+    "\\(i, ?j\\)"
+   ]
+  },
+  {
+   "id": "modulo",
+   "any": [
+    "modulo|reszt\\w* z dzielenia przez|10\\^9 ?\\+ ?7|1000000007"
+   ],
+   "algos": {
+    "fast_pow": 0.6,
+    "combinatorics": 0.5,
+    "math": 0.4
+   },
+   "reason": "wynik modulo → pamiętaj o (a·b) % M na long longach"
+  },
+  {
+   "id": "optimize-choice",
+   "any": [
+    "(maksymaln|najwieksz|minimaln|najmniejsz)\\w* (\\w+ ){0,2}(sum|koszt|zysk|wartosc|liczb|punkt|ocen)\\w*",
+    "jak (najwiecej|najmniej)",
+    "zoptymaliz\\w*"
+   ],
+   "algos": {
+    "dp": 1.0,
+    "greedy": 1.0,
+    "sorting": 0.3
+   },
+   "reason": "optymalizacja (max/min) → DP albo zachłanny po posortowaniu"
+  },
+  {
+   "id": "knapsack",
+   "any": [
+    "plecak\\w*",
+    "pojemnosc\\w*",
+    "(wag\\w*|ciezar\\w*) (\\w+ )?(nie (moze )?przekrac|co najwyzej)",
+    "budzet\\w*",
+    "udzwig\\w*",
+    "przedmiot\\w* (o wadze|ma wage|ma wartosc)",
+    "wartosc\\w* i wag\\w*|wag\\w* i wartosc\\w*"
+   ],
+   "algos": {
+    "dp": 2.4,
+    "greedy": 0.3
+   },
+   "reason": "wybór przedmiotów z limitem wagi/budżetu → problem plecakowy (DP po pojemności)"
+  },
+  {
+   "id": "coin-change",
+   "any": [
+    "wyda\\w* reszt\\w*",
+    "nominal\\w*",
+    "monet\\w*",
+    "banknot\\w*"
+   ],
+   "algos": {
+    "dp": 2.2,
+    "greedy": 0.8
+   },
+   "reason": "monety/nominały → wydawanie reszty (DP; zachłanny działa tylko dla „ładnych” nominałów)"
+  },
+  {
+   "id": "stairs",
+   "any": [
+    "schod\\w*",
+    "o 1 lub (o )?2",
+    "skacze o (jeden|1|dwa|2)",
+    "ciag\\w* fibonacci\\w*",
+    "fibonacci\\w*"
+   ],
+   "algos": {
+    "dp": 2.0,
+    "matrix_pow": 0.5,
+    "math": 0.4
+   },
+   "reason": "schody / Fibonacci → proste DP (f[i] = f[i−1] + f[i−2])"
+  },
+  {
+   "id": "subsequence",
+   "any": [
+    "podciag\\w*",
+    "wybierajac (niektore|pewne) (elementy|liczby)",
+    "usuwajac (niektore|pewne) (elementy|liczby|litery)"
+   ],
+   "algos": {
+    "dp": 2.0,
+    "binary_search": 0.3
+   },
+   "reason": "podciąg (niekoniecznie spójny) → DP (LIS/LCS)"
+  },
+  {
+   "id": "lis",
+   "any": [
+    "najdluzsz\\w* (podciag\\w* )?(ros|niemal|malej|nieros)\\w*",
+    "podciag\\w* (scisle )?rosnac\\w*",
+    "\\blis\\b"
+   ],
+   "algos": {
+    "dp": 2.2,
+    "binary_search": 1.0
+   },
+   "reason": "najdłuższy podciąg rosnący → LIS w O(n log n) (lower_bound)"
+  },
+  {
+   "id": "lcs",
+   "any": [
+    "wspoln\\w* podciag\\w*",
+    "najdluzsz\\w* wspoln\\w*",
+    "\\blcs\\b",
+    "odleglosc\\w* edycyjn\\w*",
+    "levenshtein",
+    "minimaln\\w* liczb\\w* (operacji|zmian) (zamiany|wstawien|usuniec)"
+   ],
+   "algos": {
+    "dp": 2.4,
+    "string_processing": 0.6
+   },
+   "reason": "dwa napisy + wspólny podciąg / edycja → DP na dwóch indeksach (LCS)"
+  },
+  {
+   "id": "grid-dp",
+   "all": [
+    [
+     "plansz\\w*|tablic\\w* (dwuwymiarow|o wymiarach)|siatk\\w*|macierz\\w*|pol\\w* (planszy|tablicy)"
+    ],
+    [
+     "(w prawo|w dol)\\w*.{0,40}(w prawo|w dol|w gore)|tylko w (prawo|dol)|prawy dolny|lewego gornego"
+    ]
+   ],
+   "algos": {
+    "dp": 2.2,
+    "grid": 1.0
+   },
+   "reason": "ruchy tylko w prawo/w dół po planszy → DP na siatce",
+   "none": [
+    "w lewo",
+    "w gor[eę]",
+    "(4|czter\\w*) kierunk\\w*",
+    "sasiadujac\\w* bokiem",
+    "w kazdym z czterech"
+   ]
+  },
+  {
+   "id": "grid",
+   "any": [
+    "plansz\\w*",
+    "siatk\\w*",
+    "labirynt\\w*",
+    "map\\w* (o wymiarach|sklada sie)",
+    "pol\\w* (planszy|siatki|mapy)",
+    "'#'|\\.#|#\\.|znak\\w* '?#'?",
+    "sasiedni\\w* pol\\w*",
+    "krat\\w*"
+   ],
+   "algos": {
+    "grid": 1.6,
+    "bfs": 0.8,
+    "dfs": 0.4
+   },
+   "reason": "plansza z polami → BFS/DFS po siatce (4 kierunki)"
+  },
+  {
+   "id": "interval-dp",
+   "any": [
+    "laczenie (sasiednich|kolejnych)",
+    "scal\\w* (sasiednich|dwoch sasiednich)",
+    "nawias\\w* (wyrazen|kolejnosc mnozenia)",
+    "kolejnosc\\w* mnozenia"
+   ],
+   "algos": {
+    "dp": 1.8
+   },
+   "reason": "łączenie sąsiednich fragmentów → DP przedziałowe O(n³)"
+  },
+  {
+   "id": "bitmask",
+   "any": [
+    "\\bn ?<= ?(1[0-9]|20)\\b",
+    "maski? bitow\\w*",
+    "kazd\\w* podzbior\\w*",
+    "wszystki\\w* podzbior\\w*",
+    "komiwojazer\\w*",
+    "odwiedz\\w* wszystki\\w* (miasta|wierzcholki|punkty)"
+   ],
+   "algos": {
+    "bitmask_dp": 1.8,
+    "backtracking": 1.0
+   },
+   "reason": "małe n i wybór podzbiorów → DP na maskach bitowych / brute force"
+  },
+  {
+   "id": "permutation",
+   "any": [
+    "permutacj\\w*",
+    "ustawien\\w* (w kolejnosci|w rzedzie|wszystkich)",
+    "wszystki\\w* kolejnosci\\w*",
+    "przestawien\\w*"
+   ],
+   "algos": {
+    "backtracking": 1.0,
+    "sorting": 0.6,
+    "combinatorics": 0.6,
+    "fenwick": 0.3
+   },
+   "reason": "permutacje → next_permutation (małe n), w przeciwnym razie sortowanie / zliczanie"
+  },
+  {
+   "id": "inversions",
+   "any": [
+    "inwersj\\w*",
+    "par\\w* (indeksow )?i ?< ?j.{0,30}a_?i ?> ?a_?j",
+    "ile zamian sasiednich",
+    "sortowani\\w* babelkow\\w*.{0,60}(ile|liczb)"
+   ],
+   "algos": {
+    "fenwick": 2.0,
+    "sorting": 1.4,
+    "recursion": 1.0,
+    "segment_tree": 0.8
+   },
+   "reason": "liczba inwersji → sortowanie przez scalanie albo drzewo Fenwicka"
+  },
+  {
+   "id": "sort-explicit",
+   "any": [
+    "posortuj\\w*",
+    "uporzadkuj\\w*",
+    "w kolejnosci (rosnacej|niemalejacej|malejacej|nierosnacej|alfabetycznej)",
+    "posortowan\\w* (rosnaco|niemalejaco|malejaco|nierosnaco|alfabetycznie|leksykograficznie)",
+    "sortowani\\w*",
+    "k-?t\\w* (najmniejsz|najwieksz)",
+    "median\\w*"
+   ],
+   "algos": {
+    "sorting": 2.2,
+    "greedy": 0.4
+   },
+   "reason": "uporządkuj / k-ty element / mediana → sortowanie"
+  },
+  {
+   "id": "greedy-intervals",
+   "any": [
+    "(maksymaln|najwieksz)\\w* liczb\\w* (\\w+ )?(rozlacznych|nienachodzacych|nie nachodzacych)",
+    "pocz\\w* i koniec",
+    "godzin\\w* rozpoczecia",
+    "termin\\w*",
+    "przedzial\\w* czasow\\w*",
+    "najwczesniej\\w*"
+   ],
+   "algos": {
+    "greedy": 2.0,
+    "sorting": 1.2
+   },
+   "reason": "przedziały czasowe / terminy → zachłanny po posortowaniu po końcach"
+  },
+  {
+   "id": "greedy-generic",
+   "any": [
+    "zachlann\\w*",
+    "oplaca sie",
+    "zawsze (warto|najlepiej) (wybrac|brac)",
+    "kolejno (wybiera|bierze)",
+    "najpierw (najwieksz|najmniejsz|najtansz|najdrozsz)"
+   ],
+   "algos": {
+    "greedy": 1.8,
+    "sorting": 0.8,
+    "stl": 0.4
+   },
+   "reason": "lokalnie najlepszy wybór → zachłanny (sprawdź kontrprzykład!)"
+  },
+  {
+   "id": "heap",
+   "any": [
+    "kopiec\\w*|kopc\\w*",
+    "kolejk\\w* priorytet\\w*",
+    "(wyjmij|usun|zabierz|wybier\\w*) (\\w+ )?(najmniejsz|najwieksz|najtansz|najdrozsz)",
+    "za kazdym razem (bierze|wybiera|zjada|zabiera) (\\w+ )?(najwieksz|najmniejsz)",
+    "dwa najmniejsze",
+    "aktualn\\w* (minimum|maksimum|najmniejsz|najwieksz)"
+   ],
+   "algos": {
+    "stl": 2.2,
+    "greedy": 1.2
+   },
+   "reason": "wielokrotne wyciąganie minimum/maksimum → kolejka priorytetowa (priority_queue)"
+  },
+  {
+   "id": "set-map",
+   "any": [
+    "\\bset\\b|\\bmap\\b|multiset|unordered",
+    "zbior\\w* (liczb|elementow)",
+    "wstaw\\w*.{0,40}usun\\w*",
+    "dodaj\\w* (liczbe|element).{0,60}(usun|sprawdz)",
+    "ile razy (wystepuje|wystapil|pojawil)",
+    "czy (liczba|slowo|element) [a-z]? ?(wystepuje|jest w zbiorze|juz byl)",
+    "rozn\\w* (liczb|wartosci|elementow|slow) (jest|wystepuje|pojawia)",
+    "ile (jest )?roznych",
+    "slownik\\w*",
+    "baz\\w* danych"
+   ],
+   "algos": {
+    "stl": 2.2,
+    "hashing": 0.5,
+    "sorting": 0.4
+   },
+   "reason": "dynamiczny zbiór / zliczanie wystąpień → set / map (unordered_map)"
+  },
+  {
+   "id": "stack",
+   "any": [
+    "\\bstos\\w*",
+    "nawias\\w*",
+    "onp|odwrotn\\w* notacj\\w* polsk\\w*",
+    "ostatni\\w* (wlozon|dodan)",
+    "cofnij|undo"
+   ],
+   "algos": {
+    "simulation_queue": 1.8,
+    "monotonic_stack": 1.0,
+    "string_processing": 0.4
+   },
+   "reason": "nawiasy / ONP / „ostatni dodany” → stos"
+  },
+  {
+   "id": "next-greater",
+   "any": [
+    "najbliz\\w* (\\w+ )?(wyzsz|wiekszy|wieksza|nizsz|mniejsz)\\w* (po prawej|po lewej|na prawo|na lewo|z prawej|z lewej)",
+    "pierwsz\\w* (\\w+ )?(wyzsz|wieksz)\\w* (od|niz)",
+    "widac (z|ze) ",
+    "zaslania\\w*",
+    "histogram\\w*",
+    "najwieksz\\w* prostokat\\w*"
+   ],
+   "algos": {
+    "monotonic_stack": 2.4
+   },
+   "reason": "najbliższy większy/mniejszy element → stos monotoniczny"
+  },
+  {
+   "id": "queue-sim",
+   "any": [
+    "kolejk\\w* (do|osob|ludzi|klientow)",
+    "staje na koncu",
+    "obsluz\\w* (klienta|osobe)",
+    "kto pierwszy"
+   ],
+   "algos": {
+    "simulation_queue": 1.4,
+    "simulation": 0.8
+   },
+   "reason": "symulacja kolejki → std::queue / deque"
+  },
+  {
+   "id": "string-pattern",
+   "any": [
+    "wzorzec\\w*|wzorc\\w*",
+    "podslow\\w*",
+    "wystapien\\w* (slowa|wzorca|napisu|tekstu)",
+    "okres\\w* (slowa|napisu)",
+    "prefiks\\w*.{0,30}sufiks\\w*",
+    "sufiks\\w*.{0,30}prefiks\\w*",
+    "cyklicz\\w* przesuni\\w* (slow|napis)"
+   ],
+   "algos": {
+    "kmp": 2.2,
+    "hashing": 1.6,
+    "z_function": 1.0
+   },
+   "reason": "wzorzec / podsłowo / prefikso-sufiks → KMP albo haszowanie"
+  },
+  {
+   "id": "palindrome",
+   "any": [
+    "palindrom\\w*"
+   ],
+   "algos": {
+    "string_processing": 1.4,
+    "manacher": 1.0,
+    "hashing": 0.8,
+    "dp": 0.6
+   },
+   "reason": "palindromy → porównanie z odwróconym, Manacher dla najdłuższego"
+  },
+  {
+   "id": "anagram",
+   "any": [
+    "anagram\\w*",
+    "te same litery",
+    "zliczanie liter",
+    "ile razy (wystepuje )?(kazda )?liter\\w*",
+    "czestosc\\w* (liter|znakow)"
+   ],
+   "algos": {
+    "string_processing": 2.0,
+    "sorting": 0.8
+   },
+   "reason": "anagramy / częstości liter → tablica cnt[26] albo sortowanie liter"
+  },
+  {
+   "id": "string-basic",
+   "any": [
+    "napis\\w*",
+    "\\bslow\\w*",
+    "liter\\w*",
+    "znak\\w*",
+    "tekst\\w*",
+    "szyfr\\w*",
+    "samoglosk\\w*",
+    "wyraz\\w*",
+    "alfabet\\w*"
+   ],
+   "algos": {
+    "string_processing": 1.3
+   },
+   "reason": "praca na napisach (litery, słowa, znaki)"
+  },
+  {
+   "id": "dictionary-words",
+   "any": [
+    "slownik\\w* (slow|wyrazow)",
+    "prefiks\\w* (slow|wyrazow)",
+    "ile slow (zaczyna|ma prefiks)"
+   ],
+   "algos": {
+    "trie": 2.0,
+    "stl": 0.8,
+    "sorting": 0.5
+   },
+   "reason": "zbiór słów i prefiksy → drzewo trie"
+  },
+  {
+   "id": "primes",
+   "any": [
+    "liczb\\w* pierwsz\\w*",
+    "pierwszosc\\w*",
+    "przestepn\\w*",
+    "rozklad\\w* na czynniki",
+    "czynnik\\w* pierwsz\\w*",
+    "dzielnik\\w* pierwsz\\w*",
+    "sito"
+   ],
+   "algos": {
+    "sieve": 2.2,
+    "math": 1.0
+   },
+   "reason": "liczby pierwsze / rozkład na czynniki → sito Eratostenesa (lub dzielenie do √n)"
+  },
+  {
+   "id": "divisors",
+   "any": [
+    "dzielnik\\w*",
+    "podzieln\\w*",
+    "dzieli sie przez",
+    "wielokrotnosc\\w*"
+   ],
+   "algos": {
+    "math": 1.6,
+    "gcd": 0.6,
+    "sieve": 0.6
+   },
+   "reason": "dzielniki / podzielność → pętla do √n, sito dla wielu liczb"
+  },
+  {
+   "id": "gcd",
+   "any": [
+    "\\bnwd\\b|\\bnww\\b|\\bgcd\\b|\\blcm\\b",
+    "najwieksz\\w* wspoln\\w* dzielnik\\w*",
+    "najmniejsz\\w* wspoln\\w* wielokrotnosc\\w*",
+    "ulam\\w*",
+    "skroc\\w*",
+    "proporcj\\w*",
+    "rowno (podzielic|rozdzielic)|sprawiedliwie"
+   ],
+   "algos": {
+    "gcd": 2.4,
+    "math": 0.8
+   },
+   "reason": "NWD/NWW, ułamki, proporcje → algorytm Euklidesa (__gcd / std::gcd)"
+  },
+  {
+   "id": "power",
+   "any": [
+    "poteg\\w*",
+    "\\^ ?[a-z]\\b",
+    "do potegi",
+    "[a-z]\\^[a-z]"
+   ],
+   "algos": {
+    "fast_pow": 2.0,
+    "math": 0.6
+   },
+   "reason": "potęga z dużym wykładnikiem → szybkie potęgowanie"
+  },
+  {
+   "id": "big-n",
+   "any": [
+    "10\\^1[2-8]",
+    "1018|10 18"
+   ],
+   "algos": {
+    "math": 1.4,
+    "fast_pow": 0.6,
+    "binary_search": 0.8,
+    "matrix_pow": 0.4
+   },
+   "reason": "liczby do 10^18 → pętla po n odpada: wzór, binsearch po wyniku, potęgowanie"
+  },
+  {
+   "id": "digits",
+   "any": [
+    "cyfr\\w*",
+    "sum\\w* cyfr",
+    "system\\w* (dwojkow|binarn|szesnastkow|osemkow)",
+    "zapis\\w* (dwojkow|binarn)",
+    "\\bbit\\w*"
+   ],
+   "algos": {
+    "math": 1.4,
+    "string_processing": 0.6,
+    "bitset": 0.3
+   },
+   "reason": "cyfry / systemy liczbowe → % 10 i / 10, operacje bitowe"
+  },
+  {
+   "id": "big-numbers",
+   "any": [
+    "duz\\w* liczb\\w*",
+    "(az|nawet) do 10\\^(1[0-9]{2}|[2-9][0-9])",
+    "nawet (\\w+ )?cyfr",
+    "\\d{3,} cyfr",
+    "dlugos\\w* (liczby|liczb) (do|nie przekracza)",
+    "dodawani\\w* pisemn\\w*",
+    "mnozeni\\w* pisemn\\w*"
+   ],
+   "algos": {
+    "string_processing": 1.6,
+    "math": 1.2
+   },
+   "reason": "liczby dłuższe niż long long → arytmetyka na napisach (dodawanie pisemne)"
+  },
+  {
+   "id": "combinatorics",
+   "any": [
+    "dwumian\\w*|symbol\\w* newtona|n po k",
+    "wybrac [a-z] (z|sposrod) [a-z]",
+    "kombinacj\\w*",
+    "wariacj\\w*"
+   ],
+   "algos": {
+    "combinatorics": 2.2,
+    "mod_inverse": 0.8,
+    "dp": 0.6
+   },
+   "reason": "wybór k z n → dwumiany Newtona (silnie + odwrotności modulo)"
+  },
+  {
+   "id": "geometry",
+   "any": [
+    "punkt\\w* (o wspolrzednych|na plaszczyznie)",
+    "wspolrzedn\\w*",
+    "odcin\\w*(?! (\\w+ )?(laczac\\w*|miedzy|kolejki|alejki|drogi|trasy))",
+    "trojkat\\w*",
+    "wielokat\\w*",
+    "prost\\w* (przechodzac|na plaszczyznie)",
+    "okreg\\w*|okrag\\w*|kol\\w* o promieniu",
+    "pol\\w* (trojkata|wielokata|figury)",
+    "plaszczyzn\\w*",
+    "przecin\\w* sie"
+   ],
+   "algos": {
+    "geometry": 2.0,
+    "math": 0.4
+   },
+   "reason": "punkty/odcinki/trójkąty → geometria (iloczyn wektorowy na long longach)"
+  },
+  {
+   "id": "convex-hull",
+   "any": [
+    "otoczk\\w*",
+    "ogrodz\\w* wszystki\\w* (punkt|drzew)",
+    "najkrotsz\\w* (plot|ogrodzeni)"
+   ],
+   "algos": {
+    "convex_hull": 2.5,
+    "geometry": 1.0
+   },
+   "reason": "ogrodzenie wszystkich punktów → otoczka wypukła"
+  },
+  {
+   "id": "distance-manhattan",
+   "any": [
+    "metryk\\w* (miejsk|manhattan)",
+    "\\|x_?1 ?- ?x_?2\\| ?\\+",
+    "odleglosc\\w* (manhattan|miejsk)"
+   ],
+   "algos": {
+    "geometry": 1.0,
+    "sorting": 0.8,
+    "math": 0.6
+   },
+   "reason": "metryka Manhattan → rozdziel współrzędne (sortowanie / mediana)"
+  },
+  {
+   "id": "simulation",
+   "any": [
+    "symul\\w*",
+    "krok po kroku",
+    "po kolei",
+    "dokladnie (tak|wedlug)",
+    "instrukcj\\w*",
+    "polecen\\w*",
+    "rozkaz\\w*",
+    "co sekunde",
+    "w kazdej (turze|rundzie|sekundzie|minucie)",
+    "robot\\w*",
+    "zegar\\w*|godzin\\w* (i|oraz) minut",
+    "kalendarz\\w*|dat\\w* (w formacie|dzien)"
+   ],
+   "algos": {
+    "simulation": 1.8
+   },
+   "reason": "opisany proces krok po kroku → symulacja (zaimplementuj dokładnie)"
+  },
+  {
+   "id": "basic-loop",
+   "any": [
+    "wypisz (sume|najwieksza|najmniejsza|srednia)",
+    "sum\\w* (wszystkich|podanych|tych) liczb",
+    "najwieksz\\w* (z )?(podanych|tych|wszystkich) liczb",
+    "srednia\\w* arytmetyczn\\w*",
+    "ile (jest )?(liczb )?(parzystych|nieparzystych|dodatnich|ujemnych)",
+    "czy (liczba|rok) (jest )?(parzyst|przestepn|pierwsz)",
+    "dla kazdej (liczby|z liczb) wypisz"
+   ],
+   "algos": {
+    "simulation": 2.0,
+    "math": 0.4
+   },
+   "reason": "prosta pętla po danych (suma/max/zliczanie) → implementacja wprost"
+  },
+  {
+   "id": "matrix",
+   "any": [
+    "macierz\\w*",
+    "tablic\\w* dwuwymiarow\\w*",
+    "wiersz\\w* i kolumn\\w*",
+    "kolumn\\w*",
+    "rzed\\w* i kolumn"
+   ],
+   "algos": {
+    "simulation": 1.0,
+    "prefix_sums": 0.4,
+    "grid": 0.5
+   },
+   "reason": "tablica 2D (wiersze i kolumny) → pętle po T[i][j]"
+  },
+  {
+   "id": "game",
+   "any": [
+    "gr\\w* (dwoch|dwuosobow)",
+    "gracz\\w*",
+    "ruch\\w* (wykonuje|na zmiane)",
+    "na zmiane",
+    "strategi\\w* wygrywaj\\w*",
+    "kto wygra",
+    "optymaln\\w* (graj|strategi)"
+   ],
+   "algos": {
+    "dp": 1.4,
+    "math": 1.0,
+    "recursion": 0.4
+   },
+   "reason": "gra dwuosobowa → DP po stanach wygrywających/przegrywających albo wzór"
+  },
+  {
+   "id": "coordinate-compression",
+   "all": [
+    [
+     "10\\^9|1 ?000 ?000 ?000"
+    ],
+    [
+     "wspolrzedn\\w*|pozycj\\w*|punkt\\w*|przedzial\\w*"
+    ],
+    [
+     "zapytan\\w*|zlicz\\w*|ile"
+    ]
+   ],
+   "algos": {
+    "coordinate_compression": 1.2,
+    "sorting": 0.6,
+    "fenwick": 0.4
+   },
+   "reason": "wartości do 10^9 używane jako indeksy → kompresja współrzędnych"
+  },
+  {
+   "id": "offline-many-queries",
+   "all": [
+    [
+     "zapytan\\w*"
+    ],
+    [
+     "(ile|liczb\\w*) roznych"
+    ],
+    [
+     "przedzial\\w*|fragment\\w*"
+    ]
+   ],
+   "algos": {
+    "mo": 1.6,
+    "fenwick": 1.0,
+    "sqrt_decomp": 0.6
+   },
+   "reason": "liczba różnych wartości na przedziale → Mo albo Fenwick offline"
+  },
+  {
+   "id": "xor",
+   "any": [
+    "\\bxor\\b|alternatyw\\w* wykluczaj\\w*|⊕"
+   ],
+   "algos": {
+    "math": 0.8,
+    "prefix_sums": 0.8,
+    "trie": 0.5,
+    "segment_tree": 0.4
+   },
+   "reason": "XOR → prefiksowe XOR-y (a^a = 0), trie bitowe dla maksimum"
+  },
+  {
+   "id": "recursion-def",
+   "any": [
+    "rekurencyj\\w*",
+    "zdefiniowan\\w* (rekurencyjnie|wzorem)",
+    "f\\(n\\) ?=",
+    "wiez\\w* hanoi",
+    "dziel i zwyciezaj",
+    "sortowani\\w* przez scalanie"
+   ],
+   "algos": {
+    "recursion": 2.0,
+    "dp": 0.6
+   },
+   "reason": "definicja rekurencyjna → rekurencja (z zapamiętywaniem, jeśli wywołania się powtarzają)"
+  },
+  {
+   "id": "meet-middle",
+   "any": [
+    "\\bn ?<= ?(3[0-9]|40)\\b"
+   ],
+   "algos": {
+    "meet_in_middle": 1.6,
+    "bitmask_dp": 0.4
+   },
+   "reason": "n ≤ 40 → meet in the middle (dwie połówki po 2^20)"
+  },
+  {
+   "id": "pairs-sum",
+   "any": [
+    "par\\w* .{0,40}(o sumie|sum\\w* (rown|wynos))",
+    "a_?i ?\\+ ?a_?j ?=",
+    "dwa elementy .{0,80}sum\\w*",
+    "dwie liczby .{0,40}sum\\w*"
+   ],
+   "algos": {
+    "two_pointers": 1.8,
+    "sorting": 1.0,
+    "stl": 1.0,
+    "binary_search": 0.4
+   },
+   "reason": "pary o zadanej sumie → sortowanie + dwa wskaźniki albo mapa zliczeń (O(n log n)), nie O(n²)"
+  },
+  {
+   "id": "binsearch-answer-classic",
+   "any": [
+    "(ciec|ciac|pociac|tnie)\\w*.{0,80}kawalk\\w*",
+    "kawalk\\w* .{0,40}(jednakow|rown)\\w* (\\w+ )?dlugosc",
+    "pil[aęe]\\b.{0,80}wysokos\\w*",
+    "(najwyzsz|najwieksz)\\w* (mozliw\\w* |calkowit\\w* )?(ustawien|wysokos)\\w*.{0,60}(zbierze|uzyska|otrzyma|wystarcz)",
+    "spojn\\w* fragment\\w* (kolejki|ciagu).{0,120}(pracownik|osob|ciezarowk)",
+    "najbardziej obciazon\\w*",
+    "co t_?i (sekund|minut)",
+    "po ilu (najmniej )?(sekundach|minutach|dniach|godzinach).{0,80}(lacznie|co najmniej)"
+   ],
+   "algos": {
+    "binary_search": 2.4,
+    "greedy": 0.4
+   },
+   "reason": "klasyczne „wyszukiwanie binarne po wyniku”: sprawdzenie, czy wynik X wystarcza, jest proste i monotoniczne"
+  },
+  {
+   "id": "sort-comparator",
+   "any": [
+    "ranking\\w*",
+    "przy (rown\\w*|takiej samej|tej samej) (liczbie|ilosci) (punktow|glosow|bramek)",
+    "w porzadku alfabetycznym|alfabetyczn\\w*",
+    "remis\\w*.{0,60}(alfabet|leksykograf|numer)"
+   ],
+   "algos": {
+    "sorting": 2.2,
+    "stl": 0.4
+   },
+   "reason": "sortowanie po kilku kluczach → sort z własnym komparatorem (lambda) albo krotki"
+  },
+  {
+   "id": "grid-shortest",
+   "all": [
+    [
+     "plansz\\w*|labirynt\\w*|siatk\\w*|map[aeiy]\\b|krat\\w*"
+    ],
+    [
+     "najmniejsz\\w* liczb\\w* (ruchow|krokow)|najmniej (ruchow|krokow)|najkrotsz\\w*|ile najmniej"
+    ]
+   ],
+   "algos": {
+    "bfs": 2.0,
+    "grid": 1.0
+   },
+   "reason": "najmniej ruchów po planszy → BFS po polach (każdy ruch kosztuje 1)"
+  },
+  {
+   "id": "grid-multi-source",
+   "any": [
+    "pozar\\w*",
+    "plon\\w*",
+    "ogie\\w*",
+    "zaraz\\w*",
+    "rozprzestrzen\\w*",
+    "zgnil\\w*"
+   ],
+   "all": [
+    [
+     "plansz\\w*|map[aeiy]\\b|siatk\\w*|\\blas\\b|lasu\\b|pol[ae]\\b"
+    ]
+   ],
+   "algos": {
+    "bfs": 2.0,
+    "grid": 1.0
+   },
+   "reason": "coś rozchodzi się jednocześnie z wielu miejsc → BFS z wielu źródeł naraz"
+  }
+ ],
+ "round_skip_patterns": [
+  "kontest",
+  "contest",
+  "warsztaty",
+  "piaskownica",
+  "testowanie",
+  "dobijanie",
+  "ternarne",
+  "dziel i zwyci"
+ ],
+ "round_rules": [
+  [
+   "drzew\\w* przedzial",
+   "segment_tree"
+  ],
+  [
+   "dijkstr",
+   "dijkstra"
+  ],
+  [
+   "find|union|\\bdsu\\b|zbior\\w* rozlaczn",
+   "dsu"
+  ],
+  [
+   "toposort|topologiczn|grafy skierowane",
+   "topo_sort"
+  ],
+  [
+   "dynamik\\w* na drzew|preorder|postorder|\\bdrzewa\\b|\\bdrzewo\\b",
+   "tree"
+  ],
+  [
+   "plecak|dynamik|zachlan|\\bdp\\b",
+   "dp"
+  ],
+  [
+   "geometri",
+   "geometry"
+  ],
+  [
+   "gasienic|dwa wskazniki|two pointers",
+   "two_pointers"
+  ],
+  [
+   "binsearch|wyszukiwanie binarne|binary search",
+   "binary_search"
+  ],
+  [
+   "sum\\w* prefiks",
+   "prefix_sums"
+  ],
+  [
+   "\\bsort",
+   "sorting"
+  ],
+  [
+   "\\bstl\\b|mapa|\\bset\\b|kopc|kopiec|struktury danych|kolejk",
+   "stl"
+  ],
+  [
+   "teori\\w* liczb|matematyk|poteg|duzych liczb|\\bnwd\\b|liczby pierwsze",
+   "math"
+  ],
+  [
+   "znaki|tekst|napis|szyfr|string",
+   "string_processing"
+  ],
+  [
+   "\\bgraf",
+   "graph"
+  ],
+  [
+   "instrukcj\\w* warunkow|petl|tablic|vector|t\\[\\]\\[\\]|sprawdzenie wiadomosci|podstawy programowania",
+   "simulation"
+  ]
+ ],
+ "_info_rounds": "round_rules: wzorce (bez polskich znaków, małe litery) dopasowywane do nazwy rundy/tematu z SIO2 → etykieta tematu do uczenia klasyfikatora; round_skip_patterns: rundy bez tematu (kontesty, warsztaty)."
+}

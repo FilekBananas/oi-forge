@@ -1,0 +1,17 @@
+Liczby pierwsze w przedziale
+Ile liczb pierwszych znajduje się w przedziale [a, b]?
+Wejście
+W jedynym wierszu wejścia znajdują się dwie liczby całkowite a i b (1 ≤ a ≤ b ≤ 10^7).
+Wyjście
+Wypisz liczbę liczb pierwszych p spełniających a ≤ p ≤ b.
+Przykład 1
+Wejście:
+1 10
+Wyjście:
+4
+
+Przykład 2
+Wejście:
+14 16
+Wyjście:
+0

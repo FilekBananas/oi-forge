@@ -1,0 +1,1453 @@
+{
+ "chunk": "geometry-basics",
+ "articles": [
+  {
+   "id": "geo-point-vector",
+   "title": "Punkt i wektor w C++ — struct z operatorami",
+   "category": "Geometria",
+   "tags": [
+    "punkt",
+    "wektor",
+    "struct",
+    "geometria",
+    "operator",
+    "long long",
+    "complex"
+   ],
+   "aliases": [
+    "struct punkt",
+    "point struct",
+    "punkt c++",
+    "wektor 2d",
+    "struktura punktu",
+    "geometria c++ punkt",
+    "point c++",
+    "vector 2d geometry",
+    "pt struct"
+   ],
+   "summary": "Podstawa każdej geometrii na OI: struktura P{x, y} na long long z operatorami +, -, mnożeniem przez skalar, porównaniem oraz metodami cross (iloczyn wektorowy), dot (skalarny) i norm2 (kwadrat długości).",
+   "complexity": "każda operacja O(1)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Punkt i wektor reprezentujemy tak samo: parą liczb `(x, y)`. **Wektor** `AB = B − A` to „przesunięcie” z A do B.\nNa OI współrzędne są prawie zawsze **całkowite**, więc trzymamy je w `long long` — wtedy iloczyny wektorowe,\nskalarne i pola liczymy **dokładnie**, bez błędów zaokrągleń. `double` bierzemy dopiero tam, gdzie wynik\nz natury nie jest całkowity (odległość, kąt, punkt przecięcia).\n\nNajważniejsze operacje:\n* `a + b`, `a − b` — dodawanie/odejmowanie wektorów, `a * k` — skalowanie;\n* `a.cross(b) = a.x·b.y − a.y·b.x` — iloczyn wektorowy (pole równoległoboku ze znakiem, orientacja);\n* `a.dot(b) = a.x·b.x + a.y·b.y` — iloczyn skalarny (kąty, rzuty, prostopadłość);\n* `a.norm2() = x² + y²` — kwadrat długości (porównuj odległości bez pierwiastka!);\n* `operator<` — sortowanie po `x`, potem po `y` (potrzebne w otoczce wypukłej, `set`, `map`)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "struct P — wersja do skopiowania",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: wczytywanie, operatory, sortowanie punktów",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};\n\nistream &operator>>(istream &in, P &p) { return in >> p.x >> p.y; }\nostream &operator<<(ostream &out, const P &p) { return out << p.x << \" \" << p.y; }\ndouble dist(P a, P b) { return sqrt((double)(a - b).norm2()); }\n\nint main() {\n    P a, b, c;\n    cin >> a >> b >> c;\n    cout << a + b << \"\\n\";                    // suma wektorów\n    cout << b - a << \"\\n\";                    // wektor AB\n    cout << (b - a).dot(c - a) << \"\\n\";       // iloczyn skalarny AB·AC\n    cout << (b - a).cross(c - a) << \"\\n\";     // iloczyn wektorowy AB×AC\n    cout << fixed << setprecision(6) << dist(a, b) << \"\\n\";\n    vector<P> v = {a, b, c};\n    sort(v.begin(), v.end());                 // po x, przy remisie po y\n    for (auto &p : v) cout << p << \" | \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Wzór",
+      "Interpretacja"
+     ],
+     "rows": [
+      [
+       "a − b",
+       "(a.x − b.x, a.y − b.y)",
+       "wektor od b do a"
+      ],
+      [
+       "a.cross(b)",
+       "a.x·b.y − a.y·b.x",
+       "pole równoległoboku ze znakiem; > 0 ⇔ b na lewo od a"
+      ],
+      [
+       "a.dot(b)",
+       "a.x·b.x + a.y·b.y",
+       "|a|·|b|·cos θ; 0 ⇔ prostopadłe"
+      ],
+      [
+       "a.norm2()",
+       "x² + y²",
+       "kwadrat długości (dokładnie, bez sqrt)"
+      ],
+      [
+       "obrót o 90° w lewo",
+       "(−y, x)",
+       "dokładny w liczbach całkowitych"
+      ],
+      [
+       "środek odcinka",
+       "(a + b) / 2",
+       "może nie być całkowity — trzymaj a + b (podwojone współrzędne)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Jeśli współrzędne mieszczą się w `|x|, |y| ≤ 10^9`, to `cross`, `dot` i `norm2` **różnic** punktów mieszczą się\nw `long long` (szczegóły w artykule o pułapkach i o orientacji). Wynik pośredni typu `int · int` liczony\nw `int` przepełnia się już przy 46341² — dlatego pola struktury są od razu `long long`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "P operator-(const P &o) const",
+     "desc": "wektor różnicy (this − o)",
+     "complexity": "O(1)",
+     "returns": "P",
+     "example": "P ab = b - a;"
+    },
+    {
+     "sig": "long long cross(const P &o) const",
+     "desc": "iloczyn wektorowy x·o.y − y·o.x",
+     "complexity": "O(1)",
+     "returns": "long long",
+     "example": "long long s = (b - a).cross(c - a);"
+    },
+    {
+     "sig": "long long dot(const P &o) const",
+     "desc": "iloczyn skalarny x·o.x + y·o.y",
+     "complexity": "O(1)",
+     "returns": "long long"
+    },
+    {
+     "sig": "long long norm2() const",
+     "desc": "kwadrat długości wektora",
+     "complexity": "O(1)",
+     "returns": "long long"
+    },
+    {
+     "sig": "bool operator<(const P &o) const",
+     "desc": "porządek leksykograficzny (x, potem y) — do sort/set/map",
+     "complexity": "O(1)",
+     "returns": "bool"
+    }
+   ],
+   "pitfalls": [
+    "Pola `int x, y` i iloczyn `a.x * b.y` — mnożenie wykona się w `int` i przepełni, nawet jeśli wynik przypiszesz do `long long`.",
+    "Porównywanie odległości przez `sqrt` i `double` — porównuj `norm2()` (kwadraty) dokładnie w `long long`.",
+    "Brak `operator<` przy wstawianiu punktów do `set`/`map` albo sortowaniu — błąd kompilacji (albo zły porządek, jeśli porównujesz tylko x).",
+    "`std::norm(complex)` zwraca KWADRAT długości, a nie długość — długość to `abs`.",
+    "Środek odcinka o współrzędnych całkowitych może mieć współrzędne połówkowe — przemnóż wszystkie współrzędne przez 2 zamiast przechodzić na double."
+   ],
+   "qa": [
+    {
+     "q": [
+      "struct punkt c++",
+      "point struct",
+      "jak zrobić punkt w c++",
+      "struktura punkt geometria",
+      "wektor 2d c++",
+      "struct point operator"
+     ],
+     "a": "Zrób `struct P { long long x, y; }` z operatorami `+`, `−`, `*` (skalar), `==`, `<` oraz metodami `cross`, `dot`,\n`norm2`. `long long` daje dokładne obliczenia dla współrzędnych całkowitych, a `operator<` pozwala sortować\npunkty i trzymać je w `set`. Wszystkie operacje są O(1).",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "pair jako punkt",
+      "pair<int,int> punkt geometria",
+      "czy uzywac pair do punktow",
+      "pair long long punkt"
+     ],
+     "a": "`pair<long long, long long>` działa (ma gotowe `<` i `==`, więc można sortować i wkładać do `set`), ale nie ma\noperatorów `+`, `−` ani iloczynów — trzeba pisać `a.first`/`a.second` i osobne funkcje. Do krótkiego kodu wystarczy;\nprzy większej geometrii własny `struct P` jest czytelniejszy i mniej podatny na pomyłki.",
+     "code": "using pt = pair<long long, long long>;\nauto cross = [](pt o, pt a, pt b) {                 // (a - o) x (b - o)\n    return (a.first - o.first) * (b.second - o.second) - (a.second - o.second) * (b.first - o.first);\n};\npt o{0, 0}, a{4, 0}, b{0, 3};\ncout << cross(o, a, b) << \"\\n\";   // 12"
+    },
+    {
+     "q": [
+      "complex jako punkt",
+      "std::complex geometria",
+      "complex<double> punkt",
+      "complex c++ geometry"
+     ],
+     "a": "`complex<double> p(x, y)` daje za darmo: `abs(p)` (długość), `arg(p)` (kąt), `norm(p)` (**kwadrat** długości!),\n`conj`, a mnożenie przez `polar(1.0, θ)` obraca o kąt θ. Wygodne przy obrotach, ale tylko na `double` —\n`complex<long long>` nie nadaje się do dokładnej geometrii. Iloczyn wektorowy: `imag(conj(a) * b)`,\nskalarny: `real(conj(a) * b)`.",
+     "code": "complex<double> a(3, 4);\ncomplex<double> r = a * complex<double>(0, 1);   // obrót o 90° w lewo\ncout << abs(a) << \" \" << norm(a) << \" \" << r.real() << \" \" << r.imag() << \"\\n\";   // 5 25 -4 3"
+    },
+    {
+     "q": [
+      "odległość między punktami",
+      "dystans euklidesowy c++",
+      "distance between two points",
+      "odleglosc dwoch punktow",
+      "długość odcinka"
+     ],
+     "a": "Odległość to `sqrt(dx² + dy²)`; w C++ najlepiej `hypot(dx, dy)` albo `sqrt((double)(a − b).norm2())`. Jeśli\ntylko **porównujesz** odległości, porównuj kwadraty `norm2()` w `long long` — dokładnie i bez pierwiastka.\nDla |współrzędnych| ≤ 10^9 kwadrat odległości ≤ 8·10^18 mieści się w `long long`.",
+     "code": "long long ax = 1, ay = 2, bx = 4, by = 6;\nlong long d2 = (ax - bx) * (ax - bx) + (ay - by) * (ay - by);   // 25\ncout << d2 << \" \" << hypot(double(ax - bx), double(ay - by)) << \"\\n\";   // 25 5"
+    },
+    {
+     "q": [
+      "sortowanie punktów",
+      "sort punktow po x i y",
+      "sort points c++",
+      "jak posortowac punkty"
+     ],
+     "a": "Zdefiniuj `operator<` porównujący najpierw `x`, a przy remisie `y` — wtedy działa zwykłe `sort(v.begin(), v.end())`.\nAlternatywnie lambda: `sort(..., [](P a, P b){ return tie(a.x, a.y) < tie(b.x, b.y); })`. Do sortowania\n**kątowego** (wokół punktu) potrzebny jest inny komparator — patrz sortowanie kątowe. Czas O(n log n).",
+     "code": "struct Q { long long x, y; };\nvector<Q> v = {{2, 1}, {1, 5}, {2, 0}, {1, 3}};\nsort(v.begin(), v.end(), [](const Q &a, const Q &b) { return tie(a.x, a.y) < tie(b.x, b.y); });\nfor (auto &q : v) cout << q.x << \",\" << q.y << \" \";   // 1,3 1,5 2,0 2,1"
+    },
+    {
+     "q": [
+      "obrót punktu o kąt",
+      "rotate point c++",
+      "obrot wektora o 90 stopni",
+      "jak obrocic punkt",
+      "rotation 2d"
+     ],
+     "a": "Obrót wektora `(x, y)` o 90° przeciwnie do ruchu wskazówek zegara to `(−y, x)`, o 90° zgodnie — `(y, −x)`;\no 180° — `(−x, −y)`; wszystkie dokładne w liczbach całkowitych. Obrót o dowolny kąt θ (w radianach):\n`(x·cos θ − y·sin θ, x·sin θ + y·cos θ)` — wymaga `double`. Obrót wokół punktu C: odejmij C, obróć, dodaj C.",
+     "code": "double x = 1, y = 0, th = acos(-1.0) / 2;     // 90 stopni\ndouble rx = x * cos(th) - y * sin(th), ry = x * sin(th) + y * cos(th);\ncout << fixed << setprecision(3) << rx + 0.0 << \" \" << ry << \"\\n\";   // 0.000 1.000"
+    },
+    {
+     "q": [
+      "wczytanie punktów",
+      "operator >> punkt",
+      "jak wczytac punkty c++",
+      "cin punkt struct"
+     ],
+     "a": "Przeciąż `operator>>`: `istream& operator>>(istream& in, P& p) { return in >> p.x >> p.y; }` — wtedy\n`cin >> a >> b;` wczytuje całe punkty. Analogicznie `operator<<` do wypisywania. Przy dużym wejściu nie\nzapomnij o `ios::sync_with_stdio(false); cin.tie(nullptr);`.",
+     "code": "struct Pt { long long x, y; };\nistream &operator>>(istream &in, Pt &p) { return in >> p.x >> p.y; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "punkt środkowy odcinka",
+      "midpoint c++",
+      "srodek odcinka wspolrzedne",
+      "środek dwóch punktów"
+     ],
+     "a": "Środek to `((x1 + x2) / 2, (y1 + y2) / 2)`, ale przy współrzędnych całkowitych może wyjść `.5`. Zamiast przechodzić\nna `double`, trzymaj **podwojony** środek `a + b` i podwój pozostałe punkty (pomnóż wszystkie współrzędne przez 2)\n— geometria zostaje dokładna w `long long`."
+    },
+    {
+     "q": [
+      "wektor między punktami",
+      "wektor AB",
+      "jak policzyc wektor z dwoch punktow",
+      "vector from A to B"
+     ],
+     "a": "Wektor z A do B to `B − A = (B.x − A.x, B.y − A.y)`. Prawie wszystkie testy geometryczne operują na wektorach\n**względem wspólnego punktu**, np. orientacja `(B − A).cross(C − A)`; liczenie na różnicach zmniejsza też\nwartości i chroni przed przepełnieniem."
+    },
+    {
+     "q": [
+      "dlaczego long long a nie double w geometrii",
+      "geometria double czy long long",
+      "czy geometrie liczyc na int"
+     ],
+     "a": "Przy współrzędnych całkowitych `cross`, `dot`, pola ×2 i kwadraty odległości są całkowite — w `long long` liczysz\nje **dokładnie**, więc testy „czy współliniowe”, „czy przecina” nie mają błędów zaokrągleń. `double` ma 53 bity\nmantysy (~16 cyfr), więc np. `cross` rzędu 10^18 traci jedności i znak może wyjść zły. `double` używaj tylko na\nwynik końcowy (odległość, kąt). Szczegóły w artykule o pułapkach geometrii."
+    }
+   ],
+   "related": [
+    "geo-cross-dot",
+    "geo-orientation",
+    "geo-pitfalls",
+    "geo-point-line-distance",
+    "geo-convex-hull",
+    "geo-circles",
+    "geo-distances"
+   ]
+  },
+  {
+   "id": "geo-cross-dot",
+   "title": "Iloczyn wektorowy i skalarny — pole, kąt, prostopadłość",
+   "category": "Geometria",
+   "tags": [
+    "iloczyn wektorowy",
+    "iloczyn skalarny",
+    "cross product",
+    "dot product",
+    "pole trójkąta",
+    "kąt",
+    "prostopadłość"
+   ],
+   "aliases": [
+    "iloczyn wektorowy",
+    "cross product",
+    "iloczyn skalarny",
+    "dot product",
+    "cross",
+    "dot",
+    "iloczyn wektorowy 2d",
+    "pole trójkąta",
+    "kąt między wektorami",
+    "iloczyn mieszany"
+   ],
+   "summary": "cross(a, b) = a.x·b.y − a.y·b.x to pole równoległoboku ze znakiem (orientacja), dot(a, b) = a.x·b.x + a.y·b.y mówi o kącie (0 ⇔ prostopadłe). Z nich wynikają pola, kąty, rzuty i testy stron prostej.",
+   "complexity": "O(1)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Iloczyn wektorowy** (w 2D liczba): `a × b = a.x·b.y − a.y·b.x = |a|·|b|·sin θ`, gdzie θ to kąt skierowany\nod `a` do `b`.\n* `|a × b|` = pole równoległoboku rozpiętego na `a` i `b`; pole trójkąta ABC = `|(B − A) × (C − A)| / 2`.\n* znak: `> 0` — `b` jest na lewo od `a` (obrót przeciwnie do wskazówek zegara), `< 0` — na prawo, `= 0` — równoległe.\n\n**Iloczyn skalarny**: `a · b = a.x·b.x + a.y·b.y = |a|·|b|·cos θ`.\n* `= 0` ⇔ wektory prostopadłe, `> 0` ⇔ kąt ostry, `< 0` ⇔ kąt rozwarty;\n* `a · b / |b|` = długość (ze znakiem) rzutu `a` na kierunek `b`; `a · a = |a|²`.\n\nKąt między wektorami najdokładniej: `atan2(a × b, a · b)` (kąt skierowany z przedziału (−π, π]) — lepsze niż\n`acos(dot / (|a|·|b|))`, które traci precyzję przy kątach bliskich 0 i π i zwraca NaN dla argumentu > 1."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: pole trójkąta, kąt przy wierzchołku A, typ kąta",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};\n\nint main() {\n    P a, b, c;\n    cin >> a.x >> a.y >> b.x >> b.y >> c.x >> c.y;\n    P u = b - a, v = c - a;\n    long long cr = u.cross(v), dt = u.dot(v);\n    long long twice = llabs(cr);                       // podwojone pole trójkąta ABC\n    cout << twice / 2 << (twice % 2 ? \".5\" : \"\") << \"\\n\";          // pole dokładnie\n    double ang = atan2((double)llabs(cr), (double)dt);             // kąt przy A w [0, pi]\n    cout << fixed << setprecision(6) << ang * 180 / acos(-1.0) << \"\\n\";\n    cout << (dt == 0 ? \"PROSTY\" : dt > 0 ? \"OSTRY\" : \"ROZWARTY\") << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wartość",
+      "cross(a, b)",
+      "dot(a, b)"
+     ],
+     "rows": [
+      [
+       "wzór",
+       "a.x·b.y − a.y·b.x",
+       "a.x·b.x + a.y·b.y"
+      ],
+      [
+       "geometrycznie",
+       "|a||b| sin θ",
+       "|a||b| cos θ"
+      ],
+      [
+       "= 0",
+       "a ∥ b (równoległe/współliniowe)",
+       "a ⟂ b (prostopadłe)"
+      ],
+      [
+       "> 0",
+       "b na lewo od a (CCW)",
+       "kąt ostry"
+      ],
+      [
+       "< 0",
+       "b na prawo od a (CW)",
+       "kąt rozwarty"
+      ],
+      [
+       "zastosowania",
+       "pola, orientacja, przecinanie odcinków, otoczka",
+       "kąty, rzuty, odległość od odcinka"
+      ],
+      [
+       "antysymetria/symetria",
+       "a × b = −(b × a)",
+       "a · b = b · a"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "`cross` nie zależy od punktu odniesienia tylko wtedy, gdy liczysz go na wektorach różnic: zawsze pisz\n`(B − A).cross(C − A)`, a nie `B.cross(C)` — to drugie to pole względem początku układu współrzędnych."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "u.cross(v)",
+     "desc": "iloczyn wektorowy: pole równoległoboku ze znakiem",
+     "complexity": "O(1)",
+     "returns": "long long",
+     "example": "(b - a).cross(c - a)"
+    },
+    {
+     "sig": "u.dot(v)",
+     "desc": "iloczyn skalarny: |u||v|cos θ",
+     "complexity": "O(1)",
+     "returns": "long long",
+     "example": "(b - a).dot(c - a) == 0  // kąt prosty przy a"
+    },
+    {
+     "sig": "atan2(cross, dot)",
+     "desc": "kąt skierowany od u do v w radianach, przedział (−π, π]",
+     "complexity": "O(1)",
+     "returns": "double"
+    }
+   ],
+   "pitfalls": [
+    "Pole trójkąta to |cross| / 2 — może być połówkowe; trzymaj podwojone pole w long long i dziel dopiero przy wypisywaniu.",
+    "`acos(dot / (|a|·|b|))` daje NaN, gdy przez zaokrąglenie argument wyjdzie 1.0000000002 — używaj atan2(cross, dot) albo przytnij do [−1, 1].",
+    "Kolejność argumentów: a × b = −(b × a). Zamiana zmienia znak i odwraca interpretację lewo/prawo.",
+    "Iloczyny dla współrzędnych do 10^9 mieszczą się w long long tylko na różnicach punktów w zakresie (±2·10^9); suma kilku takich iloczynów może się już nie zmieścić.",
+    "Wektor zerowy: cross i dot z nim są 0 — „równoległy i prostopadły jednocześnie”; obsłuż osobno, jeśli punkty mogą się pokrywać."
+   ],
+   "qa": [
+    {
+     "q": [
+      "iloczyn wektorowy",
+      "cross product",
+      "iloczyn wektorowy c++",
+      "cross 2d",
+      "iloczyn wektorowy wzor",
+      "co to jest cross product"
+     ],
+     "a": "W 2D iloczyn wektorowy to liczba `a × b = a.x·b.y − a.y·b.x = |a||b| sin θ`. Jego wartość bezwzględna to pole\nrównoległoboku rozpiętego na wektorach, a znak mówi, czy `b` jest na lewo (`> 0`), na prawo (`< 0`), czy\nrównolegle (`0`) względem `a`. Dla punktów liczymy go na różnicach: `(B − A) × (C − A)`. Koszt O(1).",
+     "code": "auto cross = [](long long ax, long long ay, long long bx, long long by) { return ax * by - ay * bx; };\ncout << cross(4, 0, 0, 3) << \" \" << cross(0, 3, 4, 0) << \" \" << cross(2, 2, 4, 4) << \"\\n\";   // 12 -12 0"
+    },
+    {
+     "q": [
+      "iloczyn skalarny",
+      "dot product",
+      "iloczyn skalarny c++",
+      "dot product wzor",
+      "co to jest dot"
+     ],
+     "a": "`a · b = a.x·b.x + a.y·b.y = |a||b| cos θ`. Wynik 0 oznacza wektory prostopadłe, dodatni — kąt ostry, ujemny —\nrozwarty. `a · a = |a|²`, a `a · b / |b|` to długość rzutu `a` na kierunek `b`. Koszt O(1), w `long long`\ndokładnie.",
+     "code": "auto dot = [](long long ax, long long ay, long long bx, long long by) { return ax * bx + ay * by; };\ncout << dot(1, 2, 3, 4) << \" \" << dot(1, 1, -1, 1) << \" \" << dot(1, 0, -1, 1) << \"\\n\";   // 11 0 -1"
+    },
+    {
+     "q": [
+      "pole trojkata ze wspolrzednych",
+      "pole trójkąta wektorowo",
+      "triangle area coordinates",
+      "pole trojkata z punktow c++",
+      "pole trójkąta wzór"
+     ],
+     "a": "Pole trójkąta ABC = `|(B − A) × (C − A)| / 2`. W liczbach całkowitych podwojone pole jest całkowite, więc licz\n`twice = llabs(cross)` i wypisz `twice / 2` oraz `.5`, gdy `twice` nieparzyste. To szczególny przypadek wzoru\nshoelace na pole wielokąta. O(1).",
+     "code": "long long ax = 0, ay = 0, bx = 3, by = 0, cx = 0, cy = 3;\nlong long twice = llabs((bx - ax) * (cy - ay) - (by - ay) * (cx - ax));   // 9\ncout << twice / 2 << (twice % 2 ? \".5\" : \"\") << \"\\n\";   // 4.5"
+    },
+    {
+     "q": [
+      "kąt między wektorami",
+      "angle between vectors",
+      "kat miedzy prostymi",
+      "jak policzyc kat c++",
+      "kat miedzy wektorami atan2"
+     ],
+     "a": "Najdokładniej `atan2(cross(a, b), dot(a, b))` — daje kąt skierowany od `a` do `b` w radianach z przedziału\n(−π, π]; wartość bezwzględna to zwykły kąt [0, π]. Wzór z `acos(dot / (|a||b|))` jest mniej dokładny przy kątach\nbliskich 0/π i może zwrócić NaN. Na stopnie: `· 180 / π`.",
+     "code": "double ax = 1, ay = 0, bx = 0, by = 1;\ndouble ang = atan2(ax * by - ay * bx, ax * bx + ay * by);   // +pi/2\ncout << fixed << setprecision(4) << ang * 180 / acos(-1.0) << \"\\n\";   // 90.0000"
+    },
+    {
+     "q": [
+      "czy wektory są prostopadłe",
+      "prostopadlosc wektorow",
+      "perpendicular vectors",
+      "czy kat prosty",
+      "czy trojkat prostokatny"
+     ],
+     "a": "Wektory są prostopadłe ⇔ `dot(a, b) == 0`. Trójkąt jest prostokątny, gdy dla któregoś wierzchołka iloczyn skalarny\nwektorów do dwóch pozostałych wynosi 0 — sprawdzasz 3 wierzchołki dokładnie w `long long` (bez Pitagorasa na\n`double`).",
+     "code": "long long A[2] = {0, 0}, B[2] = {4, 0}, C[2] = {0, 3};\nauto dotAt = [&](long long *o, long long *p, long long *q) {\n    return (p[0] - o[0]) * (q[0] - o[0]) + (p[1] - o[1]) * (q[1] - o[1]);\n};\nbool right = dotAt(A, B, C) == 0 || dotAt(B, A, C) == 0 || dotAt(C, A, B) == 0;\ncout << right << \"\\n\";   // 1"
+    },
+    {
+     "q": [
+      "czy wektory równoległe",
+      "parallel vectors",
+      "wspolliniowe wektory",
+      "czy proste sa rownolegle",
+      "czy odcinki rownolegle"
+     ],
+     "a": "Wektory są równoległe (lub któryś jest zerowy) ⇔ `cross(a, b) == 0`. Proste AB i CD są równoległe ⇔\n`(B − A) × (D − C) == 0`; pokrywają się, jeśli dodatkowo `(B − A) × (C − A) == 0`. Dokładnie w `long long`."
+    },
+    {
+     "q": [
+      "kąt ostry czy rozwarty",
+      "acute obtuse angle",
+      "jaki kat w trojkacie",
+      "czy trojkat ostrokatny"
+     ],
+     "a": "Znak iloczynu skalarnego wektorów wychodzących z wierzchołka: `> 0` — kąt ostry, `= 0` — prosty, `< 0` — rozwarty.\nTrójkąt jest ostrokątny, gdy wszystkie trzy iloczyny są dodatnie. Nie trzeba liczyć kątów na `double`."
+    },
+    {
+     "q": [
+      "iloczyn wektorowy znaczenie znaku",
+      "co oznacza ujemny cross",
+      "znak iloczynu wektorowego",
+      "cross dodatni ujemny"
+     ],
+     "a": "`(B − A) × (C − A) > 0` — C leży na lewo od skierowanej prostej A→B (trójka A, B, C idzie przeciwnie do wskazówek\nzegara, CCW); `< 0` — na prawo (CW); `= 0` — punkty współliniowe. Na tym opiera się test orientacji, otoczka\nwypukła i przecinanie odcinków."
+    },
+    {
+     "q": [
+      "rzut wektora",
+      "projection of vector",
+      "długość rzutu",
+      "rzut wektora na wektor"
+     ],
+     "a": "Długość rzutu `a` na kierunek `b` (ze znakiem) = `a · b / |b|`; sam wektor rzutu = `b · (a · b) / (b · b)`.\nJeśli potrzebujesz tylko porównań (np. „czy rzut punktu wpada w odcinek”), porównuj `a · b` z `0` i z `b · b` —\ndokładnie w liczbach całkowitych.",
+     "code": "double ax = 3, ay = 4, bx = 1, by = 0;\ndouble t = (ax * bx + ay * by) / (bx * bx + by * by);\ncout << t * bx << \" \" << t * by << \"\\n\";   // 3 0"
+    },
+    {
+     "q": [
+      "iloczyn wektorowy przepełnienie",
+      "cross overflow long long",
+      "czy cross zmiesci sie w long long",
+      "cross 10^9 overflow"
+     ],
+     "a": "Dla |współrzędnych| ≤ 10^9 różnice są ≤ 2·10^9, więc każdy iloczyn w `cross`/`dot` ≤ 4·10^18 < 9,22·10^18\n(`LLONG_MAX`) — mieści się. `dot` różnic może dojść do 8·10^18 i wciąż się mieści. Granica bezpieczeństwa dla `cross`\n(orientacji) to |współrzędne| ≲ 1,5·10^9, a dla `dot` różnic ≈ 1,07·10^9 (8·c² ≤ 9,22·10^18). Przy większych współrzędnych, przy mnożeniu dwóch `cross` przez siebie albo sumowaniu\nwielu iloczynów — użyj `__int128`."
+    },
+    {
+     "q": [
+      "kat skierowany",
+      "oriented angle",
+      "atan2 cross dot",
+      "kat ze znakiem miedzy wektorami"
+     ],
+     "a": "`atan2(a × b, a · b)` zwraca kąt, o jaki trzeba obrócić `a`, żeby uzyskać kierunek `b`: dodatni — przeciwnie do\nwskazówek zegara, ujemny — zgodnie. Zakres (−π, π]. Przydaje się np. do sumowania kątów (winding number)."
+    },
+    {
+     "q": [
+      "iloczyn wektorowy 3d",
+      "cross product 3d",
+      "iloczyn wektorowy w trzech wymiarach"
+     ],
+     "a": "W 3D iloczyn wektorowy jest wektorem: `a × b = (a.y·b.z − a.z·b.y, a.z·b.x − a.x·b.z, a.x·b.y − a.y·b.x)`,\nprostopadłym do obu, o długości równej polu równoległoboku. Wersja 2D to tylko jego składowa `z`.\nIloczyn mieszany `(a × b) · c` to objętość równoległościanu ze znakiem (orientacja czterech punktów w 3D).",
+     "code": "array<long long,3> a = {1, 0, 0}, b = {0, 1, 0};\narray<long long,3> c = {a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]};\ncout << c[0] << \" \" << c[1] << \" \" << c[2] << \"\\n\";   // 0 0 1"
+    }
+   ],
+   "related": [
+    "geo-point-vector",
+    "geo-orientation",
+    "geo-polygon-area",
+    "geo-segment-intersection",
+    "geo-point-line-distance",
+    "cpp-ref-cmath"
+   ]
+  },
+  {
+   "id": "geo-orientation",
+   "title": "Orientacja trzech punktów (lewo / prawo / współliniowe, CCW)",
+   "category": "Geometria",
+   "tags": [
+    "orientacja",
+    "ccw",
+    "lewo prawo",
+    "współliniowe",
+    "skręt",
+    "strona prostej",
+    "__int128"
+   ],
+   "aliases": [
+    "orientacja",
+    "ccw",
+    "orientation",
+    "orientacja punktów",
+    "lewo czy prawo",
+    "strona prostej",
+    "czy punkty współliniowe",
+    "skręt w lewo",
+    "counterclockwise",
+    "point location test"
+   ],
+   "summary": "orient(A, B, C) = znak (B − A) × (C − A): dodatni — C na lewo od A→B (skręt w lewo, CCW), ujemny — na prawo, zero — współliniowe. To najważniejszy predykat geometrii obliczeniowej.",
+   "complexity": "O(1); dokładnie w long long dla |współrzędnych| ≲ 1,5·10^9, powyżej __int128",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Idziemy od A do B. Gdzie leży C? Liczymy `v = (B − A) × (C − A)`:\n* `v > 0` — **na lewo** (trójka A, B, C jest przeciwnie do ruchu wskazówek zegara, CCW, „skręt w lewo”),\n* `v < 0` — **na prawo** (zgodnie z ruchem wskazówek, CW),\n* `v = 0` — A, B, C są **współliniowe**.\n\nNa tym jednym teście opierają się: otoczka wypukła (wyrzucamy punkty dające skręt w prawo), przecinanie odcinków\n(końce po przeciwnych stronach), punkt w trójkącie/wielokącie wypukłym, sprawdzanie wypukłości i orientacji\nwielokąta.\n\n**Zakres liczb:** dla |x|, |y| ≤ 10^9 różnice są ≤ 2·10^9, każdy z dwóch iloczynów ≤ 4·10^18, a sam wynik to\npodwojone pole trójkąta w kwadracie o boku 2·10^9, czyli też ≤ 4·10^18 — `long long` (max ≈ 9,22·10^18) wystarcza.\nGdy współrzędne mogą przekroczyć ~1,5·10^9 (np. do 10^18), licz w `__int128`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: orientacja dla wielu zapytań",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};\n\nint orient(P a, P b, P c) {               // 1: lewo (CCW), -1: prawo (CW), 0: współliniowe\n    long long v = (b - a).cross(c - a);\n    return (v > 0) - (v < 0);\n}\n\nint main() {\n    int q;\n    cin >> q;\n    while (q--) {\n        P a, b, c;\n        cin >> a.x >> a.y >> b.x >> b.y >> c.x >> c.y;\n        int o = orient(a, b, c);\n        cout << (o > 0 ? \"LEWO\" : o < 0 ? \"PRAWO\" : \"WSPOLLINIOWE\") << \"\\n\";\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersja z __int128 (bardzo duże współrzędne)",
+     "code": "// Orientacja dla współrzędnych do 10^18 — iloczyny liczone w __int128.\nint orient128(long long ax, long long ay, long long bx, long long by, long long cx, long long cy) {\n    __int128 v = (__int128)(bx - ax) * (cy - ay) - (__int128)(by - ay) * (cx - ax);\n    return (v > 0) - (v < 0);\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zastosowanie",
+      "Jak użyć orientacji"
+     ],
+     "rows": [
+      [
+       "po której stronie prostej AB jest C",
+       "znak orient(A, B, C)"
+      ],
+      [
+       "czy A, B, C współliniowe",
+       "orient(A, B, C) == 0"
+      ],
+      [
+       "otoczka wypukła",
+       "usuwaj ostatni punkt, dopóki orient(h[k−2], h[k−1], p) ≤ 0"
+      ],
+      [
+       "czy odcinki się przecinają",
+       "końce każdego odcinka po przeciwnych stronach drugiego"
+      ],
+      [
+       "punkt w trójkącie",
+       "trzy orientacje tego samego znaku (lub 0 na brzegu)"
+      ],
+      [
+       "wypukłość wielokąta",
+       "wszystkie skręty tego samego znaku (dla wielokąta prostego)"
+      ],
+      [
+       "orientacja wielokąta (CW/CCW)",
+       "znak sumy shoelace (pole ze znakiem)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Nigdy nie licz orientacji na `double` dla dużych współrzędnych całkowitych: w przykładzie z testu\n(−10^9, −10^9), (10^9, 10^9 − 1), (10^9 − 1, 10^9 − 2) iloczyny są rzędu 4·10^18, a wynik to −1 —\n`double` (53 bity mantysy) zgubi tę jedynkę i zwróci 0 albo zły znak."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int orient(P a, P b, P c)",
+     "desc": "znak (b − a) × (c − a): 1 lewo, −1 prawo, 0 współliniowe",
+     "complexity": "O(1)",
+     "returns": "int",
+     "example": "if (orient(a, b, c) > 0) ..."
+    },
+    {
+     "sig": "int orient128(...)",
+     "desc": "to samo z iloczynami w __int128 (współrzędne do 10^18)",
+     "complexity": "O(1)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Liczenie orientacji na double przy dużych współrzędnych — błędny znak przy prawie współliniowych punktach.",
+    "Mnożenie wyników dwóch orientacji (`cross1 * cross2 < 0`) przepełnia long long — mnóż ZNAKI (−1/0/1), nie wartości.",
+    "Pomylenie kolejności: orient(a, b, c) = −orient(a, c, b). Ustal konwencję (CCW > 0) i trzymaj się jej.",
+    "Test wypukłości „wszystkie skręty tego samego znaku” przepuszcza samoprzecinający się pentagram — działa tylko dla wielokąta prostego.",
+    "Punkty powtórzone (A == B) dają orientację 0 dla każdego C — obsłuż duplikaty osobno."
+   ],
+   "qa": [
+    {
+     "q": [
+      "orientacja trzech punktow",
+      "ccw",
+      "orientation test",
+      "czy punkt jest po lewej stronie",
+      "lewo prawo punkt prosta",
+      "orientacja punktow c++"
+     ],
+     "a": "Policz `v = (B − A) × (C − A)`. `v > 0` — C na lewo od kierunku A→B (CCW), `v < 0` — na prawo (CW), `v = 0` —\nwspółliniowe. Dokładnie w `long long` dla współrzędnych do ~1,5·10^9; O(1).",
+     "code": "auto orient = [](long long ax, long long ay, long long bx, long long by, long long cx, long long cy) {\n    long long v = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);\n    return (v > 0) - (v < 0);\n};\ncout << orient(1, 1, 5, 3, 2, 3) << \" \" << orient(1, 1, 5, 3, 4, 1) << \" \" << orient(1, 1, 5, 3, 3, 2) << \"\\n\";   // 1 -1 0"
+    },
+    {
+     "q": [
+      "czy trzy punkty są współliniowe",
+      "punkty na jednej prostej",
+      "collinear points c++",
+      "wspolliniowosc punktow",
+      "czy punkty leza na prostej"
+     ],
+     "a": "A, B, C są współliniowe ⇔ `(B − A) × (C − A) == 0` (pole trójkąta 0). Test jest dokładny w liczbach\ncałkowitych; nie porównuj współczynników kierunkowych `dy/dx` na `double` (dzielenie przez 0 dla pionowych\nprostych i błędy zaokrągleń)."
+    },
+    {
+     "q": [
+      "po której stronie prostej leży punkt",
+      "side of line",
+      "strona prostej punkt",
+      "punkt nad czy pod prosta"
+     ],
+     "a": "Dla prostej przez A i B (skierowanej od A do B): znak `(B − A) × (P − A)` mówi, czy P jest po lewej (`> 0`),\npo prawej (`< 0`), czy na prostej (`0`). Dla prostej `ax + by + c = 0` zamiast tego znak wyrażenia\n`a·x0 + b·y0 + c`."
+    },
+    {
+     "q": [
+      "zakręt w lewo czy w prawo",
+      "left turn right turn",
+      "skret w lewo w prawo lamana",
+      "w ktora strone skreca"
+     ],
+     "a": "Idąc łamaną A → B → C, skręcamy w lewo, gdy `(B − A) × (C − B) > 0`, w prawo, gdy `< 0`, a idziemy prosto\n(lub zawracamy), gdy `= 0`. To ten sam znak co `(B − A) × (C − A)`."
+    },
+    {
+     "q": [
+      "orientacja przepełnienie 10^9",
+      "ccw __int128",
+      "kiedy int128 geometria",
+      "cross nie miesci sie w long long",
+      "orientacja duze wspolrzedne"
+     ],
+     "a": "Dla |współrzędnych| ≤ 10^9 orientacja mieści się w `long long` (iloczyny ≤ 4·10^18). `__int128` jest potrzebny,\ngdy współrzędne są większe (np. 10^18), gdy mnożysz dwa iloczyny wektorowe przez siebie albo gdy sumujesz wiele\ntakich iloczynów (np. pole dużego wielokąta). Rzutuj **przed** mnożeniem: `(__int128)dx1 * dy2`.",
+     "code": "long long M = 1000000000000000000LL;   // współrzędne do 10^18\nlong long dx1 = M, dy1 = M - 1, dx2 = M - 1, dy2 = M - 2;\n__int128 v = (__int128)dx1 * dy2 - (__int128)dy1 * dx2;\ncout << (v > 0) - (v < 0) << \"\\n\";   // -1"
+    },
+    {
+     "q": [
+      "czy wielokąt jest wypukły",
+      "check convex polygon",
+      "sprawdzenie wypukłości wielokąta",
+      "czy wielokat wypukly c++"
+     ],
+     "a": "Dla wielokąta **prostego** (bez samoprzecięć): policz orientację każdej trójki kolejnych wierzchołków (cyklicznie);\nwielokąt jest wypukły ⇔ wszystkie niezerowe orientacje mają ten sam znak. O(n). Uwaga: pentagram (gwiazda)\nma wszystkie skręty w tę samą stronę, a nie jest wypukły — jeśli wejście może się samoprzecinać, sprawdź też,\nże suma kątów skrętu to 2π (jedno okrążenie).",
+     "code": "vector<pair<long long,long long>> p = {{0, 0}, {4, 0}, {4, 3}, {2, 5}, {0, 3}};\nint n = p.size(), pos = 0, neg = 0;\nfor (int i = 0; i < n; i++) {\n    auto [ax, ay] = p[i]; auto [bx, by] = p[(i + 1) % n]; auto [cx, cy] = p[(i + 2) % n];\n    long long v = (bx - ax) * (cy - by) - (by - ay) * (cx - bx);\n    if (v > 0) pos++; else if (v < 0) neg++;\n}\ncout << ((pos == 0 || neg == 0) ? \"wypukly\" : \"niewypukly\") << \"\\n\";"
+    },
+    {
+     "q": [
+      "orientacja wielokąta",
+      "zgodnie z ruchem wskazówek zegara czy przeciwnie",
+      "clockwise or counterclockwise polygon",
+      "czy wierzcholki sa CCW"
+     ],
+     "a": "Policz sumę shoelace `S = Σ (p_i × p_{i+1})` (podwojone pole ze znakiem). `S > 0` — wierzchołki podane przeciwnie\ndo ruchu wskazówek zegara (CCW), `S < 0` — zgodnie (CW). Jeśli algorytm wymaga CCW, a dostałeś CW, odwróć\nkolejność (`reverse`). O(n)."
+    },
+    {
+     "q": [
+      "czy punkt w trójkącie",
+      "point in triangle",
+      "punkt wewnatrz trojkata",
+      "czy punkt lezy w trojkacie c++"
+     ],
+     "a": "Policz `o1 = orient(A, B, P)`, `o2 = orient(B, C, P)`, `o3 = orient(C, A, P)`. P jest w trójkącie (z brzegiem)\n⇔ wśród nich nie ma jednocześnie wartości dodatniej i ujemnej. Ściśle wewnątrz ⇔ wszystkie trzy niezerowe\ni równe. Działa dla obu orientacji trójkąta, O(1).",
+     "code": "auto cr = [](long long ax, long long ay, long long bx, long long by, long long px, long long py) {\n    long long v = (bx - ax) * (py - ay) - (by - ay) * (px - ax); return (v > 0) - (v < 0);\n};\nlong long Ax = 0, Ay = 0, Bx = 5, By = 0, Cx = 0, Cy = 5;\nauto inside = [&](long long px, long long py) {\n    int o1 = cr(Ax, Ay, Bx, By, px, py), o2 = cr(Bx, By, Cx, Cy, px, py), o3 = cr(Cx, Cy, Ax, Ay, px, py);\n    bool hasPos = o1 > 0 || o2 > 0 || o3 > 0, hasNeg = o1 < 0 || o2 < 0 || o3 < 0;\n    return !(hasPos && hasNeg);\n};\ncout << inside(1, 1) << inside(5, 0) << inside(3, 3) << \"\\n\";   // 110"
+    },
+    {
+     "q": [
+      "orientacja double epsilon",
+      "ccw na double",
+      "orientacja punktow zmiennoprzecinkowych"
+     ],
+     "a": "Gdy współrzędne są rzeczywiste, porównuj z tolerancją: `v > EPS` — lewo, `v < −EPS` — prawo, w przeciwnym razie\nwspółliniowe. EPS dobieraj do skali (np. `1e-9 · max(|B − A|, |C − A|)²` albo po prostu `1e-9` przy małych\nliczbach). Jeśli dane są całkowite — nie używaj `double` w ogóle."
+    },
+    {
+     "q": [
+      "czy dwa punkty po tej samej stronie prostej",
+      "same side of line",
+      "punkty po przeciwnych stronach prostej"
+     ],
+     "a": "P i Q są po tej samej stronie prostej AB ⇔ `orient(A, B, P) · orient(A, B, Q) > 0` (mnożymy **znaki** −1/0/1,\na nie wartości iloczynów, które razem by się przepełniły). Po przeciwnych stronach ⇔ iloczyn znaków `< 0`."
+    },
+    {
+     "q": [
+      "maksymalnie ile punktów na jednej prostej",
+      "max points on a line",
+      "najwiecej punktow wspolliniowych"
+     ],
+     "a": "Dla każdego punktu A policz kierunki do pozostałych punktów, znormalizowane: `(dx, dy) / gcd(|dx|, |dy|)` ze\nznakiem ustalonym tak, by `dx > 0` lub (`dx == 0` i `dy > 0`). Najczęstszy kierunek + 1 to najwięcej punktów\nna prostej przez A. Czas O(n² log n) z `map` (bez `double`!).",
+     "code": "vector<pair<long long,long long>> p = {{0, 0}, {1, 1}, {2, 2}, {3, 1}, {5, 5}, {1, 0}};\nint n = p.size(), best = min(n, 1);\nfor (int i = 0; i < n; i++) {\n    map<pair<long long,long long>, int> cnt;\n    for (int j = 0; j < n; j++) if (j != i) {\n        long long dx = p[j].first - p[i].first, dy = p[j].second - p[i].second;\n        long long g = gcd(llabs(dx), llabs(dy)); dx /= g; dy /= g;\n        if (dx < 0 || (dx == 0 && dy < 0)) { dx = -dx; dy = -dy; }\n        best = max(best, ++cnt[{dx, dy}] + 1);\n    }\n}\ncout << best << \"\\n\";   // 4: (0,0) (1,1) (2,2) (5,5)"
+    }
+   ],
+   "related": [
+    "geo-cross-dot",
+    "geo-segment-intersection",
+    "geo-convex-hull",
+    "geo-point-in-polygon",
+    "geo-polygon-area",
+    "num-int128"
+   ]
+  },
+  {
+   "id": "geo-segment-intersection",
+   "title": "Przecinanie odcinków (z przypadkami współliniowymi) i punkt przecięcia prostych",
+   "category": "Geometria",
+   "tags": [
+    "przecinanie odcinków",
+    "segment intersection",
+    "orientacja",
+    "punkt przecięcia",
+    "odcinki współliniowe",
+    "punkt na odcinku"
+   ],
+   "aliases": [
+    "przecinanie odcinków",
+    "czy odcinki się przecinają",
+    "segment intersection",
+    "przecięcie odcinków",
+    "line intersection",
+    "punkt przecięcia prostych",
+    "przeciecie dwoch odcinkow",
+    "do segments intersect"
+   ],
+   "summary": "Odcinki AB i CD przecinają się, gdy C i D leżą po przeciwnych stronach prostej AB, a A i B po przeciwnych stronach CD; przypadki brzegowe (dotknięcie, współliniowość) obsługuje test „punkt na odcinku”. Wszystko dokładnie w long long.",
+   "complexity": "O(1) na parę odcinków; wszystkie pary O(n²); „czy jakakolwiek para się przecina” zamiataniem O(n log n)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Przypadek ogólny:** odcinki AB i CD przecinają się „na krzyż”, gdy\n`orient(A, B, C)` i `orient(A, B, D)` mają **przeciwne** znaki **oraz** `orient(C, D, A)` i `orient(C, D, B)`\nmają przeciwne znaki.\n\n**Przypadki brzegowe:** jeśli któraś orientacja jest zerowa, punkt leży na prostej drugiego odcinka. Wtedy odcinki\nmają punkt wspólny ⇔ któryś z czterech końców leży **na** drugim odcinku. Punkt P leży na odcinku AB ⇔\n`(B − A) × (P − A) = 0` (współliniowy) i `(A − P) · (B − P) ≤ 0` (jest między końcami). To obsługuje dotknięcie\nkońcem, „literę T”, odcinki współliniowe nachodzące na siebie i odcinki zdegenerowane do punktu."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: czy odcinki mają punkt wspólny (q zapytań)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};\n\nint sgn(long long v) { return (v > 0) - (v < 0); }\n\n// Czy p leży na odcinku [a, b] (końce włącznie)?\nbool onSegment(P p, P a, P b) {\n    return (b - a).cross(p - a) == 0 && (a - p).dot(b - p) <= 0;\n}\n\n// Czy odcinki [a, b] i [c, d] mają punkt wspólny (końce włącznie)?\nbool segmentsIntersect(P a, P b, P c, P d) {\n    int d1 = sgn((b - a).cross(c - a)), d2 = sgn((b - a).cross(d - a));\n    int d3 = sgn((d - c).cross(a - c)), d4 = sgn((d - c).cross(b - c));\n    if (d1 * d2 < 0 && d3 * d4 < 0) return true;        // przecięcie \"na krzyż\"\n    return onSegment(c, a, b) || onSegment(d, a, b) ||   // dotknięcia i przypadki\n           onSegment(a, c, d) || onSegment(b, c, d);     // współliniowe\n}\n\nint main() {\n    int q;\n    cin >> q;\n    while (q--) {\n        P a, b, c, d;\n        cin >> a.x >> a.y >> b.x >> b.y >> c.x >> c.y >> d.x >> d.y;\n        cout << (segmentsIntersect(a, b, c, d) ? \"TAK\" : \"NIE\") << \"\\n\";\n    }\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Punkt przecięcia prostych** AB i CD (gdy nie są równoległe): szukamy `t` takiego, że `A + t·(B − A)` leży na CD.\nZ iloczynu wektorowego: `t = ((C − A) × (D − C)) / ((B − A) × (D − C))`. Mianownik 0 ⇔ proste równoległe.\nDla odcinków punkt leży na obu ⇔ `t ∈ [0, 1]` i analogiczne `s ∈ [0, 1]`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Punkt przecięcia prostych (double)",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};\n\n// Punkt przecięcia PROSTYCH ab i cd (zakłada, że nie są równoległe: (b-a)x(d-c) != 0).\npair<double, double> lineIntersection(P a, P b, P c, P d) {\n    P r = b - a, s = d - c;\n    double t = (double)(c - a).cross(s) / (double)r.cross(s);\n    return {a.x + t * r.x, a.y + t * r.y};\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Sytuacja",
+      "Orientacje",
+      "Wynik"
+     ],
+     "rows": [
+      [
+       "przecięcie na krzyż",
+       "d1·d2 < 0 i d3·d4 < 0",
+       "TAK"
+      ],
+      [
+       "koniec jednego na drugim („T”)",
+       "jedna orientacja 0, punkt na odcinku",
+       "TAK"
+      ],
+      [
+       "współliniowe, nachodzą/stykają się",
+       "wszystkie 0, któryś koniec na drugim odcinku",
+       "TAK"
+      ],
+      [
+       "współliniowe, rozłączne",
+       "wszystkie 0, żaden koniec na drugim",
+       "NIE"
+      ],
+      [
+       "równoległe, różne proste",
+       "d1 = d2 ≠ 0",
+       "NIE"
+      ],
+      [
+       "jeden odcinek po jednej stronie drugiego",
+       "d1·d2 > 0 lub d3·d4 > 0",
+       "NIE"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Nie mnóż surowych iloczynów wektorowych (`cross1 * cross2 < 0`) — każdy może mieć ~4·10^18, a iloczyn przepełni\nnawet `long long`. Mnóż znaki (−1, 0, 1) albo porównuj `(c1 > 0) != (c2 > 0)`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bool onSegment(P p, P a, P b)",
+     "desc": "czy p leży na odcinku [a, b] (z końcami)",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "bool segmentsIntersect(P a, P b, P c, P d)",
+     "desc": "czy odcinki [a, b] i [c, d] mają punkt wspólny",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "pair<double,double> lineIntersection(P a, P b, P c, P d)",
+     "desc": "punkt przecięcia prostych ab i cd (nierównoległych)",
+     "complexity": "O(1)",
+     "returns": "pair<double,double>"
+    }
+   ],
+   "pitfalls": [
+    "Pominięcie przypadków współliniowych: sam test „d1·d2 < 0 i d3·d4 < 0” nie wykryje dotknięcia końcem ani nachodzących odcinków.",
+    "Mnożenie wartości cross zamiast znaków — przepełnienie.",
+    "Test „punkt na odcinku” tylko przez cross == 0 — to sprawdza prostą, nie odcinek; potrzebny też warunek dot ≤ 0 (albo bounding box).",
+    "Punkt przecięcia prostych w double dla równoległych prostych — dzielenie przez 0. Najpierw sprawdź mianownik.",
+    "Mylenie wersji „domkniętej” (końce się liczą) z „właściwą” (tylko przecięcie na krzyż) — czytaj treść zadania."
+   ],
+   "qa": [
+    {
+     "q": [
+      "czy odcinki sie przecinaja",
+      "segment intersection c++",
+      "przecinanie odcinkow",
+      "przeciecie dwoch odcinkow",
+      "do segments intersect",
+      "czy dwa odcinki maja punkt wspolny"
+     ],
+     "a": "Licz znaki orientacji: `d1 = orient(A,B,C)`, `d2 = orient(A,B,D)`, `d3 = orient(C,D,A)`, `d4 = orient(C,D,B)`.\nJeśli `d1·d2 < 0` i `d3·d4 < 0` — przecinają się na krzyż. W przeciwnym razie mają punkt wspólny tylko wtedy,\ngdy któryś koniec leży na drugim odcinku (`onSegment`). Wszystko w `long long`, O(1).",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};\n\nint sgn(long long v) { return (v > 0) - (v < 0); }\n\n// Czy p leży na odcinku [a, b] (końce włącznie)?\nbool onSegment(P p, P a, P b) {\n    return (b - a).cross(p - a) == 0 && (a - p).dot(b - p) <= 0;\n}\n\n// Czy odcinki [a, b] i [c, d] mają punkt wspólny (końce włącznie)?\nbool segmentsIntersect(P a, P b, P c, P d) {\n    int d1 = sgn((b - a).cross(c - a)), d2 = sgn((b - a).cross(d - a));\n    int d3 = sgn((d - c).cross(a - c)), d4 = sgn((d - c).cross(b - c));\n    if (d1 * d2 < 0 && d3 * d4 < 0) return true;        // przecięcie \"na krzyż\"\n    return onSegment(c, a, b) || onSegment(d, a, b) ||   // dotknięcia i przypadki\n           onSegment(a, c, d) || onSegment(b, c, d);     // współliniowe\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "punkt przecięcia prostych",
+      "line intersection point",
+      "gdzie przecinaja sie proste",
+      "punkt przeciecia dwoch prostych c++",
+      "intersection of two lines"
+     ],
+     "a": "Dla prostych przez A, B i C, D: `t = ((C − A) × (D − C)) / ((B − A) × (D − C))`, punkt = `A + t·(B − A)`.\nMianownik 0 oznacza proste równoległe (brak punktu albo nieskończenie wiele, gdy się pokrywają). Iloczyny licz\nw `long long`, dzielenie w `double`/`long double`. O(1).",
+     "code": "long long ax = 0, ay = 0, bx = 3, by = 1, cx = 0, cy = 2, dx = 2, dy = 0;\nlong long rx = bx - ax, ry = by - ay, sx = dx - cx, sy = dy - cy;\nlong long den = rx * sy - ry * sx;                       // 0 => równoległe\nlong long num = (cx - ax) * sy - (cy - ay) * sx;\ndouble t = (double)num / den;\ncout << ax + t * rx << \" \" << ay + t * ry << \"\\n\";       // 1.5 0.5"
+    },
+    {
+     "q": [
+      "przecięcie odcinków współliniowych",
+      "odcinki na jednej prostej czy nachodza",
+      "collinear segments overlap",
+      "odcinki wspolliniowe przeciecie"
+     ],
+     "a": "Gdy wszystkie cztery orientacje są zerowe, odcinki leżą na jednej prostej. Mają punkt wspólny ⇔ któryś koniec leży\nna drugim odcinku — dokładnie to robi `onSegment` (cross = 0 i dot ≤ 0). Równoważnie: przedziały ich rzutów na oś\nx (albo y, gdy prosta pionowa) się przecinają."
+    },
+    {
+     "q": [
+      "czy punkt leży na odcinku",
+      "point on segment c++",
+      "punkt na odcinku sprawdzenie",
+      "czy punkt nalezy do odcinka"
+     ],
+     "a": "P leży na odcinku AB ⇔ `(B − A) × (P − A) == 0` (P na prostej AB) **i** `(A − P) · (B − P) ≤ 0` (wektory do końców\nmają przeciwne zwroty, czyli P jest między A i B, końce włącznie). Zamiast drugiego warunku można sprawdzić\n`min(Ax,Bx) ≤ Px ≤ max(Ax,Bx)` i to samo dla y.",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};\n\nbool onSegment(P p, P a, P b) {\n    return (b - a).cross(p - a) == 0 && (a - p).dot(b - p) <= 0;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "odcinki stykające się końcem",
+      "przeciecie wlasciwe",
+      "proper intersection",
+      "przeciecie bez koncow",
+      "odcinki przecinaja sie wewnatrz"
+     ],
+     "a": "Przecięcie **właściwe** (wnętrza odcinków przecinają się w jednym punkcie, końce się nie liczą): wystarczy warunek\n`d1·d2 < 0 && d3·d4 < 0` bez przypadków brzegowych. Wersja „domknięta” (dotknięcie końcem się liczy) wymaga\ndodatkowo czterech testów `onSegment`. Zadania różnie to definiują — przeczytaj treść."
+    },
+    {
+     "q": [
+      "dlaczego nie mnożyć cross przez cross",
+      "d1*d2 overflow",
+      "przepelnienie przy przecinaniu odcinkow",
+      "cross razy cross long long"
+     ],
+     "a": "Każdy iloczyn wektorowy dla współrzędnych ~10^9 może mieć ~4·10^18; iloczyn dwóch takich liczb ~10^37 przepełnia\n`long long` (i daje losowy znak). Zamień wartości na znaki funkcją `sgn` (−1/0/1) i dopiero je mnóż albo porównuj\n`(c1 > 0) != (c2 > 0)`."
+    },
+    {
+     "q": [
+      "punkt przecięcia jako ułamek",
+      "dokładny punkt przecięcia",
+      "intersection exact rational",
+      "punkt przeciecia bez double"
+     ],
+     "a": "Współrzędne punktu przecięcia to ułamki: `x = (A.x·den + num·r.x) / den`, gdzie `den = r × s`, `num = (C − A) × s`.\nLicz licznik i mianownik w liczbach całkowitych, ustaw dodatni mianownik i skróć przez `gcd`. Przy współrzędnych\n~10^9 licznik może mieć ~10^27 — wtedy `__int128` i własny `gcd`.",
+     "code": "long long ax = 0, ay = 0, rx = 3, ry = 1;          // prosta A + t*r\nlong long cx = 0, cy = 2, sx = 2, sy = -2;         // prosta C + u*s\nlong long den = rx * sy - ry * sx;                 // -8\nlong long num = (cx - ax) * sy - (cy - ay) * sx;   // -4\nauto frac = [&](long long p, long long q) {\n    if (q < 0) { p = -p; q = -q; }\n    long long g = gcd(llabs(p), q);\n    cout << p / g << \"/\" << q / g << \" \";\n};\nfrac(ax * den + num * rx, den);   // 3/2\nfrac(ay * den + num * ry, den);   // 1/2"
+    },
+    {
+     "q": [
+      "ile par odcinków się przecina",
+      "n odcinkow przeciecia",
+      "czy jakiekolwiek odcinki sie przecinaja",
+      "sweep line odcinki"
+     ],
+     "a": "Dla n ≤ ~5000 sprawdź wszystkie pary — O(n²). Pytanie „czy jakakolwiek para się przecina” rozwiązuje zamiatanie\n(algorytm Shamosa–Hoeya) w O(n log n): zdarzenia = końce odcinków posortowane po x, aktywne odcinki w `set`\nuporządkowanym po y, sprawdzamy tylko sąsiadów. Wypisanie wszystkich k przecięć: Bentley–Ottmann O((n + k) log n)."
+    },
+    {
+     "q": [
+      "przecięcie prostej z odcinkiem",
+      "line segment intersection",
+      "czy prosta przecina odcinek"
+     ],
+     "a": "Prosta przez A, B przecina odcinek CD ⇔ C i D nie leżą ściśle po tej samej stronie prostej:\n`sgn((B − A) × (C − A)) · sgn((B − A) × (D − A)) ≤ 0`. O(1)."
+    },
+    {
+     "q": [
+      "wspólna część dwóch odcinków współliniowych",
+      "overlap of collinear segments",
+      "czesc wspolna odcinkow na prostej"
+     ],
+     "a": "Uporządkuj końce każdego odcinka (np. operatorem `<` po x, potem y). Część wspólna to odcinek od `max(A, C)`\ndo `min(B, D)`; jest niepusta ⇔ `max(A, C) ≤ min(B, D)` (pojedynczy punkt, gdy równe). Działa dla dowolnego\nkierunku prostej, bo porządek leksykograficzny punktów na prostej jest liniowy."
+    },
+    {
+     "q": [
+      "przeciecie odcinkow poziomych i pionowych",
+      "odcinki pionowe i poziome ile przeciec",
+      "axis aligned segments intersection count"
+     ],
+     "a": "Dla odcinków równoległych do osi przecięcie poziomego `[x1, x2] × {y}` z pionowym `{x} × [y1, y2]` to warunek\n`x1 ≤ x ≤ x2 && y1 ≤ y ≤ y2`. Liczba wszystkich przecięć: zamiatanie po x — poziome odcinki dodają/usuwają swoje y\nw drzewie Fenwicka, pionowy zlicza sumę na [y1, y2]. Czas O(n log n)."
+    }
+   ],
+   "related": [
+    "geo-orientation",
+    "geo-cross-dot",
+    "geo-point-line-distance",
+    "geo-pitfalls",
+    "ds-fenwick"
+   ]
+  },
+  {
+   "id": "geo-point-line-distance",
+   "title": "Odległość punktu od prostej i od odcinka, rzut punktu na prostą",
+   "category": "Geometria",
+   "tags": [
+    "odległość",
+    "prosta",
+    "odcinek",
+    "rzut",
+    "projekcja",
+    "równanie prostej",
+    "najbliższa para punktów"
+   ],
+   "aliases": [
+    "odległość punktu od prostej",
+    "distance point to line",
+    "odległość punktu od odcinka",
+    "distance point to segment",
+    "rzut punktu na prostą",
+    "projection",
+    "odleglosc od prostej wzor",
+    "równanie prostej"
+   ],
+   "summary": "Odległość punktu P od prostej AB to |(B − A) × (P − A)| / |B − A|. Dla odcinka: jeśli rzut P wypada poza odcinek (sprawdzane iloczynem skalarnym), odległość to odległość do bliższego końca.",
+   "complexity": "O(1) na zapytanie; najbliższa para punktów O(n log n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Prosta przez A i B:** pole równoległoboku `|(B − A) × (P − A)|` = podstawa `|B − A|` × wysokość, więc\n`dist(P, AB) = |(B − A) × (P − A)| / |B − A|`.\n\n**Odcinek AB:** rzut P na prostą AB wypada:\n* przed A, gdy `(B − A) · (P − A) ≤ 0` → odległość `|P − A|`;\n* za B, gdy `(A − B) · (P − B) ≤ 0` → odległość `|P − B|`;\n* w przeciwnym razie wewnątrz odcinka → odległość od prostej.\n\n**Rzut (spodek prostopadłej):** `H = A + (B − A) · t`, gdzie `t = ((P − A) · (B − A)) / |B − A|²`.\n\n**Dokładnie w liczbach całkowitych:** kwadrat odległości od prostej to ułamek `cross² / |B − A|²` — do porównań\ntrzymaj licznik i mianownik (uważaj: `cross²` ma do ~10^37, więc potrzebne `__int128`)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: odległość od prostej i od odcinka",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};\n\n// Odległość punktu p od PROSTEJ przez a i b (a != b).\ndouble distToLine(P p, P a, P b) {\n    return fabs((double)(b - a).cross(p - a)) / sqrt((double)(b - a).norm2());\n}\n\n// Odległość punktu p od ODCINKA [a, b].\ndouble distToSegment(P p, P a, P b) {\n    if (a == b) return sqrt((double)(p - a).norm2());\n    if ((b - a).dot(p - a) <= 0) return sqrt((double)(p - a).norm2());   // rzut przed a\n    if ((a - b).dot(p - b) <= 0) return sqrt((double)(p - b).norm2());   // rzut za b\n    return distToLine(p, a, b);                                          // rzut wewnątrz\n}\n\nint main() {\n    int q;\n    cin >> q;\n    cout << fixed << setprecision(6);\n    while (q--) {\n        P p, a, b;\n        cin >> p.x >> p.y >> a.x >> a.y >> b.x >> b.y;\n        cout << distToLine(p, a, b) << \" \" << distToSegment(p, a, b) << \"\\n\";\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Rzut punktu na prostą",
+     "code": "// Rzut punktu p na prostą ab (a != b) — spodek prostopadłej.\npair<double, double> projectOnLine(double px, double py, double ax, double ay, double bx, double by) {\n    double dx = bx - ax, dy = by - ay;\n    double t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy);\n    return {ax + t * dx, ay + t * dy};\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wielkość",
+      "Wzór",
+      "Typ"
+     ],
+     "rows": [
+      [
+       "odległość od prostej AB",
+       "|(B−A)×(P−A)| / |B−A|",
+       "double"
+      ],
+      [
+       "kwadrat odległości od prostej",
+       "((B−A)×(P−A))² / |B−A|²",
+       "ułamek dokładny (__int128 w liczniku)"
+      ],
+      [
+       "odległość od prostej ax+by+c=0",
+       "|a·x0 + b·y0 + c| / √(a² + b²)",
+       "double"
+      ],
+      [
+       "rzut na prostą",
+       "A + (B−A)·((P−A)·(B−A)) / |B−A|²",
+       "double"
+      ],
+      [
+       "odległość od odcinka",
+       "min(|PA|, |PB|) albo odl. od prostej (gdy rzut w środku)",
+       "double"
+      ],
+      [
+       "punkt w kole",
+       "(x−cx)² + (y−cy)² ≤ r²",
+       "long long, dokładnie"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "double distToLine(P p, P a, P b)",
+     "desc": "odległość p od prostej ab (a != b)",
+     "complexity": "O(1)",
+     "returns": "double"
+    },
+    {
+     "sig": "double distToSegment(P p, P a, P b)",
+     "desc": "odległość p od odcinka [a, b]",
+     "complexity": "O(1)",
+     "returns": "double"
+    },
+    {
+     "sig": "projectOnLine(px, py, ax, ay, bx, by)",
+     "desc": "rzut punktu na prostą",
+     "complexity": "O(1)",
+     "returns": "pair<double,double>"
+    }
+   ],
+   "pitfalls": [
+    "distToLine dla a == b dzieli przez 0 — odcinek zdegenerowany obsłuż osobno (odległość do punktu).",
+    "Odległość od odcinka liczona jak od prostej, bez sprawdzenia, czy rzut wpada w odcinek — za mały wynik.",
+    "Porównywanie odległości przez sqrt na double, gdy da się porównać kwadraty dokładnie w liczbach całkowitych.",
+    "Kwadrat iloczynu wektorowego (~10^37) nie mieści się w long long — do dokładnych porównań __int128 albo long double.",
+    "Wypisywanie bez `fixed << setprecision(k)` — cout domyślnie pokazuje 6 cyfr znaczących i notację naukową dla dużych liczb."
+   ],
+   "qa": [
+    {
+     "q": [
+      "odleglosc punktu od prostej",
+      "distance from point to line",
+      "odległość punktu od prostej wzór",
+      "odleglosc punktu od prostej c++",
+      "wysokosc trojkata z punktow"
+     ],
+     "a": "`dist = |(B − A) × (P − A)| / |B − A|` — pole równoległoboku podzielone przez długość podstawy. Iloczyn wektorowy\nlicz w `long long`, dzielenie w `double`. O(1). Prosta musi być wyznaczona przez dwa różne punkty (A ≠ B).",
+     "code": "long long px = 0, py = 5, ax = -3, ay = 1, bx = 3, by = 1;\nlong long cr = (bx - ax) * (py - ay) - (by - ay) * (px - ax);\ndouble d = fabs((double)cr) / hypot(double(bx - ax), double(by - ay));\ncout << fixed << setprecision(3) << d << \"\\n\";   // 4.000"
+    },
+    {
+     "q": [
+      "odległość punktu od odcinka",
+      "distance point to segment c++",
+      "odleglosc od odcinka",
+      "najblizsza odleglosc do odcinka"
+     ],
+     "a": "Najpierw sprawdź, gdzie wpada rzut: jeśli `(B − A) · (P − A) ≤ 0`, najbliższy jest koniec A; jeśli\n`(A − B) · (P − B) ≤ 0` — koniec B; w przeciwnym razie odległość od prostej. Oba testy są dokładne w `long long`.\nO(1).",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};\n\n// Odległość punktu p od PROSTEJ przez a i b (a != b).\ndouble distToLine(P p, P a, P b) {\n    return fabs((double)(b - a).cross(p - a)) / sqrt((double)(b - a).norm2());\n}\n\n// Odległość punktu p od ODCINKA [a, b].\ndouble distToSegment(P p, P a, P b) {\n    if (a == b) return sqrt((double)(p - a).norm2());\n    if ((b - a).dot(p - a) <= 0) return sqrt((double)(p - a).norm2());   // rzut przed a\n    if ((a - b).dot(p - b) <= 0) return sqrt((double)(p - b).norm2());   // rzut za b\n    return distToLine(p, a, b);                                          // rzut wewnątrz\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "rzut punktu na prostą",
+      "projection of point onto line",
+      "spodek prostopadłej",
+      "punkt na prostej najblizszy punktowi"
+     ],
+     "a": "`t = ((P − A) · (B − A)) / |B − A|²`, rzut `H = A + t·(B − A)`. Dla odcinka przytnij `t` do [0, 1], żeby dostać\nnajbliższy punkt odcinka. Licznik i mianownik są całkowite — jeśli potrzebujesz dokładności, trzymaj `H` jako ułamek."
+    },
+    {
+     "q": [
+      "odległość od prostej ax+by+c=0",
+      "wzór na odległość punktu od prostej ax by c",
+      "distance to line ax+by+c"
+     ],
+     "a": "Dla prostej `a·x + b·y + c = 0` i punktu `(x0, y0)`: `dist = |a·x0 + b·y0 + c| / √(a² + b²)`. Znak licznika\nmówi, po której stronie prostej leży punkt. To ten sam wzór co z iloczynem wektorowym, zapisany przez współczynniki.",
+     "code": "double a = 3, b = 4, c = -10, x0 = 0, y0 = 0;\ncout << fabs(a * x0 + b * y0 + c) / sqrt(a * a + b * b) << \"\\n\";   // 2"
+    },
+    {
+     "q": [
+      "równanie prostej przez dwa punkty",
+      "prosta przez dwa punkty ax+by+c",
+      "line through two points equation",
+      "wspolczynniki prostej z punktow"
+     ],
+     "a": "Dla punktów (x1, y1), (x2, y2): `a = y2 − y1`, `b = x1 − x2`, `c = −(a·x1 + b·y1)`; wtedy oba punkty spełniają\n`a·x + b·y + c = 0`. Wszystko całkowite. Żeby porównywać proste (np. w `set`), podziel a, b, c przez\n`gcd(|a|, |b|, |c|)` i ustal znak (np. pierwszy niezerowy z a, b dodatni). Postać `y = kx + m` zawodzi dla prostych pionowych.",
+     "code": "long long x1 = 1, y1 = 2, x2 = 3, y2 = 6;\nlong long a = y2 - y1, b = x1 - x2, c = -(a * x1 + b * y1);\nlong long g = gcd(gcd(llabs(a), llabs(b)), llabs(c));\na /= g; b /= g; c /= g;\nif (a < 0 || (a == 0 && b < 0)) { a = -a; b = -b; c = -c; }\ncout << a << \" \" << b << \" \" << c << \"\\n\";   // 2 -1 0  (2x - y = 0)"
+    },
+    {
+     "q": [
+      "odległość między odcinkami",
+      "distance between two segments",
+      "odleglosc dwoch odcinkow"
+     ],
+     "a": "Jeśli odcinki się przecinają — 0. W przeciwnym razie minimum z czterech odległości: każdy koniec jednego odcinka\nod drugiego odcinka (`distToSegment`). O(1).",
+     "code": "struct P {\n    long long x, y;\n    P operator+(const P &o) const { return {x + o.x, y + o.y}; }\n    P operator-(const P &o) const { return {x - o.x, y - o.y}; }\n    P operator*(long long k) const { return {x * k, y * k}; }\n    bool operator==(const P &o) const { return x == o.x && y == o.y; }\n    bool operator<(const P &o) const { return x != o.x ? x < o.x : y < o.y; }\n    long long cross(const P &o) const { return x * o.y - y * o.x; }   // iloczyn wektorowy\n    long long dot(const P &o) const { return x * o.x + y * o.y; }     // iloczyn skalarny\n    long long norm2() const { return x * x + y * y; }                 // kwadrat długości\n};\n\nint sgn(long long v) { return (v > 0) - (v < 0); }\n\n// Czy p leży na odcinku [a, b] (końce włącznie)?\nbool onSegment(P p, P a, P b) {\n    return (b - a).cross(p - a) == 0 && (a - p).dot(b - p) <= 0;\n}\n\n// Czy odcinki [a, b] i [c, d] mają punkt wspólny (końce włącznie)?\nbool segmentsIntersect(P a, P b, P c, P d) {\n    int d1 = sgn((b - a).cross(c - a)), d2 = sgn((b - a).cross(d - a));\n    int d3 = sgn((d - c).cross(a - c)), d4 = sgn((d - c).cross(b - c));\n    if (d1 * d2 < 0 && d3 * d4 < 0) return true;        // przecięcie \"na krzyż\"\n    return onSegment(c, a, b) || onSegment(d, a, b) ||   // dotknięcia i przypadki\n           onSegment(a, c, d) || onSegment(b, c, d);     // współliniowe\n}\n\n// Odległość punktu p od PROSTEJ przez a i b (a != b).\ndouble distToLine(P p, P a, P b) {\n    return fabs((double)(b - a).cross(p - a)) / sqrt((double)(b - a).norm2());\n}\n\n// Odległość punktu p od ODCINKA [a, b].\ndouble distToSegment(P p, P a, P b) {\n    if (a == b) return sqrt((double)(p - a).norm2());\n    if ((b - a).dot(p - a) <= 0) return sqrt((double)(p - a).norm2());   // rzut przed a\n    if ((a - b).dot(p - b) <= 0) return sqrt((double)(p - b).norm2());   // rzut za b\n    return distToLine(p, a, b);                                          // rzut wewnątrz\n}\n\ndouble segDist(P a, P b, P c, P d) {\n    if (segmentsIntersect(a, b, c, d)) return 0;\n    return min({distToSegment(a, c, d), distToSegment(b, c, d), distToSegment(c, a, b), distToSegment(d, a, b)});\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "porównanie odległości bez pierwiastka",
+      "kwadrat odległości",
+      "dokładna odległość long long",
+      "porownac odleglosci bez sqrt"
+     ],
+     "a": "Odległości między punktami porównuj przez kwadraty `dx² + dy²` w `long long` — monotoniczność pierwiastka gwarantuje\nten sam wynik, a nie ma błędów zaokrągleń. Dla odległości od prostych porównuj ułamki `cross² / len2` przez mnożenie\nna krzyż w `__int128` (uwaga: `cross²·len2` może przekroczyć nawet `__int128` dla współrzędnych 10^9 — wtedy\n`long double`)."
+    },
+    {
+     "q": [
+      "najbliższy punkt na odcinku",
+      "closest point on segment",
+      "najblizszy punkt odcinka do punktu"
+     ],
+     "a": "Policz `t = ((P − A) · (B − A)) / |B − A|²` i przytnij do [0, 1]: `t = clamp(t, 0.0, 1.0)`. Najbliższy punkt to\n`A + t·(B − A)`. Dla A = B zwróć A."
+    },
+    {
+     "q": [
+      "czy punkt jest w kole",
+      "point in circle",
+      "punkt wewnatrz okregu",
+      "odleglosc punktu od okregu"
+     ],
+     "a": "Punkt (x, y) jest w kole o środku (cx, cy) i promieniu r ⇔ `(x − cx)² + (y − cy)² ≤ r²` — dokładnie w `long long`\n(`<` dla wnętrza, `==` dla okręgu). Odległość punktu od okręgu = `|√((x−cx)² + (y−cy)²) − r|`.",
+     "code": "long long cx = 0, cy = 0, r = 5;\nauto in = [&](long long x, long long y) { return (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r; };\ncout << in(3, 4) << in(4, 4) << in(0, -5) << \"\\n\";   // 101"
+    },
+    {
+     "q": [
+      "najbliższa para punktów",
+      "closest pair of points",
+      "najblizsza para punktow nlogn",
+      "minimalna odleglosc miedzy punktami"
+     ],
+     "a": "Zamiatanie: posortuj punkty po x, trzymaj w `set` (po y) punkty o x w odległości < d od bieżącego (d = najlepszy\nwynik), a dla nowego punktu sprawdzaj tylko punkty z y w [y − d, y + d] — takich jest O(1). Czas O(n log n).\nWynik trzymaj jako kwadrat odległości w `long long`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<pair<long long, long long>> p(n);       // (x, y)\n    for (auto &[x, y] : p) cin >> x >> y;\n    sort(p.begin(), p.end());\n    set<pair<long long, long long>> s;              // (y, x) punktów w pasie\n    long long best = LLONG_MAX;                     // kwadrat najmniejszej odległości\n    for (int i = 0, j = 0; i < n; i++) {\n        long long d = (long long)ceil(sqrt((long double)best));\n        while (p[i].first - p[j].first > d) { s.erase({p[j].second, p[j].first}); j++; }\n        for (auto it = s.lower_bound({p[i].second - d, LLONG_MIN}); it != s.end() && it->first <= p[i].second + d; ++it) {\n            long long dx = p[i].first - it->second, dy = p[i].second - it->first;\n            best = min(best, dx * dx + dy * dy);\n        }\n        s.insert({p[i].second, p[i].first});\n    }\n    cout << best << \"\\n\";\n}"
+    }
+   ],
+   "related": [
+    "geo-cross-dot",
+    "geo-segment-intersection",
+    "geo-point-vector",
+    "geo-pitfalls",
+    "geo-circles"
+   ]
+  },
+  {
+   "id": "geo-pitfalls",
+   "title": "Pułapki w geometrii: long long zamiast double, epsilon, precyzja, -0.000",
+   "category": "Geometria",
+   "tags": [
+    "geometria",
+    "epsilon",
+    "double",
+    "long double",
+    "precyzja",
+    "przepełnienie",
+    "setprecision",
+    "atan2",
+    "nan"
+   ],
+   "aliases": [
+    "pułapki geometria",
+    "epsilon double",
+    "porównywanie double",
+    "double czy long long",
+    "geometry precision",
+    "eps c++",
+    "minus zero",
+    "long double",
+    "geometria błędy",
+    "precyzja zmiennoprzecinkowa"
+   ],
+   "summary": "Przy współrzędnych całkowitych licz wszystko w long long (dokładnie), double tylko na końcowy wynik. Gdy double jest konieczny: porównania z epsilonem, atan2 zamiast acos, setprecision przy wypisywaniu i uwaga na -0.000.",
+   "complexity": "—",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Zasada nr 1:** jeśli dane są całkowite, wszystkie predykaty (orientacja, przecinanie, punkt w wielokącie, porównania\nodległości i kątów) da się policzyć **dokładnie** w `long long` (ewentualnie `__int128`). `double` ma tylko 53 bity\nmantysy (~15–16 cyfr), więc liczby rzędu 10^18 traci na ostatnich cyfrach — znak iloczynu wektorowego może wyjść zły.\n\n**Zasada nr 2:** gdy wynik nie jest całkowity (odległość, kąt, punkt przecięcia), licz na `double`/`long double`\ndopiero na końcu i porównuj z tolerancją `EPS`: `a < b − EPS` (ściśle mniejsze), `fabs(a − b) < EPS` (równe).\nEPS dobierz do skali danych (np. 1e-9 dla wartości ~1, większy dla wartości ~10^6).\n\n**Zasada nr 3:** przypadki zdegenerowane — punkty powtórzone, trzy punkty współliniowe, odcinek długości 0,\nwielokąt podany zgodnie z ruchem wskazówek zegara — to najczęstsze źródła WA. Testuj je osobno."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Problem",
+      "Objaw",
+      "Rozwiązanie"
+     ],
+     "rows": [
+      [
+       "int w iloczynie",
+       "`a.x * b.y` przepełnia się przy 10^5·10^5",
+       "pola struktury `long long` albo rzutowanie przed mnożeniem"
+      ],
+      [
+       "iloczyn > 9,2·10^18",
+       "zły znak cross przy współrzędnych > 1,5·10^9",
+       "`__int128`"
+      ],
+      [
+       "porównanie `double ==`",
+       "0.1 + 0.2 != 0.3",
+       "`fabs(a - b) < EPS`"
+      ],
+      [
+       "acos/asin poza [−1, 1]",
+       "NaN",
+       "przytnij argument: `max(-1.0, min(1.0, c))` albo atan2"
+      ],
+      [
+       "sqrt z liczby ujemnej",
+       "NaN (np. sqrt(-1e-18))",
+       "`sqrt(max(0.0, x))`"
+      ],
+      [
+       "wypisywanie",
+       "1e+06, 3.14159 zamiast 6 miejsc",
+       "`cout << fixed << setprecision(6)`"
+      ],
+      [
+       "ujemne zero",
+       "„-0.000000”",
+       "zeruj wartości bliskie 0 przed wypisaniem"
+      ],
+      [
+       "long double na Macu (ARM)",
+       "brak dodatkowej precyzji",
+       "na Apple Silicon long double = double; na sprawdzarce x86-64 ma 64 bity mantysy"
+      ],
+      [
+       "atan2 dla dużych współrzędnych",
+       "dwa różne kierunki, ten sam kąt",
+       "sortowanie kątowe na iloczynie wektorowym"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: typowe pułapki double w praktyce",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst double EPS = 1e-9;\nint sgnEps(double x) { return (x > EPS) - (x < -EPS); }\n\nint main() {\n    double a = 0.1 + 0.2;\n    cout << (a == 0.3) << \" \" << (fabs(a - 0.3) < EPS) << \"\\n\";   // 0 1\n\n    double c = 1.0 + 1e-15;                    // \"cosinus\" minimalnie > 1 przez zaokrąglenia\n    cout << isnan(acos(c)) << \" \" << acos(max(-1.0, min(1.0, c))) << \"\\n\";   // 1 0\n\n    double tiny = -0.0001;\n    printf(\"%.3f \", tiny);                     // -0.000  (ujemne zero na wyjściu!)\n    if (fabs(tiny) < 5e-4) tiny = 0;\n    printf(\"%.3f\\n\", tiny);                    // 0.000\n\n    cout << fixed << setprecision(6) << acos(-1.0) << \" \" << sgnEps(1e-12) << \"\\n\";   // 3.141593 0\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Na Macu z procesorem Apple Silicon (ARM) `long double` to zwykły 64-bitowy `double`. Program, który „przechodzi”\nlokalnie dzięki `long double`, zachowuje się inaczej niż na sprawdzarce x86-64 (tam `long double` ma 80 bitów,\n64 bity mantysy) — i odwrotnie. Nie polegaj na `long double` jako ratunku przed złym algorytmem."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int sgnEps(double x)",
+     "desc": "znak z tolerancją: 0, gdy |x| ≤ EPS",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "hypot(x, y)",
+     "desc": "√(x² + y²) bez przepełnienia/niedomiaru pośredniego x²",
+     "complexity": "O(1)",
+     "returns": "double"
+    },
+    {
+     "sig": "atan2(y, x)",
+     "desc": "kąt wektora (x, y) w radianach, przedział (−π, π]",
+     "complexity": "O(1)",
+     "returns": "double"
+    },
+    {
+     "sig": "cout << fixed << setprecision(k)",
+     "desc": "wypisywanie dokładnie k cyfr po przecinku",
+     "complexity": "—"
+    }
+   ],
+   "pitfalls": [
+    "Mnożenie dwóch `int` daje `int` — `long long s = a.x * b.y;` przepełnia się, jeśli pola są int.",
+    "`==` na double — prawie zawsze błąd; porównuj z EPS albo licz w liczbach całkowitych.",
+    "EPS za mały przy dużych wartościach (1e-9 przy liczbach ~10^9 to poniżej precyzji double) albo za duży przy małych.",
+    "acos/asin z argumentem minimalnie poza [−1, 1] zwraca NaN, a NaN „zaraża” wszystkie dalsze obliczenia (porównania z NaN są fałszywe).",
+    "Wypisanie -0.000000 może dać WA przy sprawdzaczce porównującej tekst.",
+    "atan2 dla współrzędnych ~10^9 nie rozróżnia kierunków różniących się o ~10^-18 rad — sortowanie kątowe rób iloczynem wektorowym.",
+    "Liczba π: `M_PI` nie jest w standardzie C++ (zwykle działa, ale bywa niezdefiniowane); pewne są `acos(-1.0)` i `std::numbers::pi` (C++20, <numbers>)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "double czy long long geometria",
+      "kiedy uzywac double w geometrii",
+      "geometria na intach czy doublach",
+      "czy w geometrii liczyc na double"
+     ],
+     "a": "Gdy współrzędne wejścia są całkowite — licz w `long long`: orientacja, przecinanie, pola ×2, kwadraty odległości,\nporównania kątów są wtedy dokładne. `double` tylko tam, gdzie wynik z natury jest niecałkowity (odległość,\nkąt, punkt przecięcia) i najlepiej dopiero przy wypisywaniu. Gdy wejście jest rzeczywiste — `double`/`long double`\nz porównaniami przez EPS."
+    },
+    {
+     "q": [
+      "epsilon porownanie double",
+      "jak porownac double",
+      "eps c++",
+      "porownywanie liczb zmiennoprzecinkowych",
+      "double rowne"
+     ],
+     "a": "Nie używaj `==` na `double`. Równość: `fabs(a − b) < EPS`; mniejszość: `a < b − EPS`; znak: `x > EPS`, `x < −EPS`.\nEPS dobierz do skali (typowo 1e-9 dla wartości rzędu 1–10^3; przy większych wartościach względny:\n`EPS · max(1, |a|, |b|)`).",
+     "code": "const double EPS = 1e-9;\ndouble a = 0.1 + 0.2, b = 0.3;\ncout << (a == b) << \" \" << (fabs(a - b) < EPS) << \"\\n\";   // 0 1"
+    },
+    {
+     "q": [
+      "wypisywanie z dokladnoscia",
+      "setprecision",
+      "ile miejsc po przecinku cout",
+      "printf %.6f",
+      "jak wypisac double z 6 miejscami"
+     ],
+     "a": "           `cout << fixed << setprecision(6) << x;` wypisuje dokładnie 6 cyfr po przecinku (bez `fixed` — 6 cyfr\n           **znaczących**, a duże liczby w notacji naukowej, np. `1e+06`). Odpowiednik w C: `printf(\"%.6f\n\", x)`.\n           `fixed` i `setprecision` działają do końca programu (są „lepkie”).",
+     "code": "double x = 1234567.891, y = 2.0 / 3;\ncout << x << \" | \";\ncout << fixed << setprecision(3) << x << \" \" << y << \"\\n\";   // 1.23457e+06 | 1234567.891 0.667"
+    },
+    {
+     "q": [
+      "-0.000 wynik",
+      "minus zero",
+      "ujemne zero printf",
+      "wypisuje -0.00",
+      "dlaczego wypisuje minus zero"
+     ],
+     "a": "Mała ujemna liczba (np. −0.0001 z błędu zaokrąglenia) wypisana z 3 miejscami daje `-0.000`. Sprawdzaczka\nporównująca tekst uzna to za błąd. Przed wypisaniem: `if (fabs(x) < 0.5e-k) x = 0;` (dla k miejsc) —\nsamo `x += 0.0` naprawia tylko dokładne `-0.0`, a nie −0.0001.",
+     "code": "double x = -0.0001;\nprintf(\"%.3f \", x);              // -0.000\nif (fabs(x) < 5e-4) x = 0;\nprintf(\"%.3f\\n\", x);             // 0.000"
+    },
+    {
+     "q": [
+      "long double na macu",
+      "long double precyzja",
+      "long double mac m1",
+      "czy long double pomaga",
+      "long double sizeof"
+     ],
+     "a": "Na x86-64 Linux (typowa sprawdzarka) `long double` ma 80 bitów (64 bity mantysy, ~19 cyfr). Na Macu z Apple\nSilicon (ARM) `long double` jest tym samym co `double` (53 bity). Wynik „poprawiony” przez `long double` na\nsprawdzarce może więc lokalnie wyglądać inaczej. Sprawdź `numeric_limits<long double>::digits` (64 vs 53).",
+     "code": "cout << numeric_limits<double>::digits << \" \" << numeric_limits<long double>::digits << \"\\n\";   // 53 i 64 (x86) albo 53 (ARM Mac)"
+    },
+    {
+     "q": [
+      "hypot c++",
+      "sqrt(x*x+y*y) przepełnienie",
+      "hypot vs sqrt",
+      "dlugosc wektora double"
+     ],
+     "a": "`hypot(x, y)` liczy √(x² + y²) bez przepełnienia pośredniego `x²` (np. dla x ~ 10^200) i zwykle dokładniej.\nDla typowych OI-owych wartości (≤ 10^9) `sqrt((double)(x*x + y*y))` z `x*x + y*y` w `long long` też jest OK.",
+     "code": "double x = 3e200, y = 4e200;\ncout << isinf(sqrt(x * x + y * y)) << \" \" << hypot(x, y) << \"\\n\";   // 1 5e+200"
+    },
+    {
+     "q": [
+      "acos nan",
+      "acos zwraca nan",
+      "sqrt z ujemnej",
+      "nan w geometrii",
+      "skad nan w wyniku"
+     ],
+     "a": "NaN powstaje z `acos`/`asin` dla argumentu spoza [−1, 1] i z `sqrt` liczby ujemnej — w geometrii zwykle przez\nzaokrąglenie (cosinus 1.0000000000000002, kwadrat długości −1e-17). Przycinaj: `acos(max(-1.0, min(1.0, c)))`,\n`sqrt(max(0.0, v))`, albo licz kąty przez `atan2(cross, dot)`. Sprawdzanie: `isnan(x)`.",
+     "code": "double c = 1.0 + 1e-15;\ncout << isnan(acos(c)) << \" \" << acos(clamp(c, -1.0, 1.0)) << \"\\n\";   // 1 0"
+    },
+    {
+     "q": [
+      "liczba pi c++",
+      "M_PI",
+      "std::numbers::pi",
+      "jak uzyc pi w c++",
+      "stala pi"
+     ],
+     "a": "Najpewniej `const double PI = acos(-1.0);` (działa wszędzie). W C++20 jest `std::numbers::pi` z nagłówka\n`<numbers>`. `M_PI` z `<cmath>` nie należy do standardu C++ — zwykle działa z GCC, ale nie musi.\nStopnie ↔ radiany: `rad = deg · PI / 180`.",
+     "code": "const double PI = acos(-1.0);\ncout << fixed << setprecision(10) << PI << \" \" << std::numbers::pi << \"\\n\";   // 3.1415926536 3.1415926536"
+    },
+    {
+     "q": [
+      "przypadki zdegenerowane geometria",
+      "wspolliniowe punkty blad",
+      "geometria WA",
+      "geometria zle odpowiedzi co sprawdzic"
+     ],
+     "a": "Sprawdź: (1) punkty powtórzone, (2) trzy punkty współliniowe (otoczka, orientacja 0), (3) odcinek długości 0,\n(4) wszystkie punkty na jednej prostej, (5) n = 1 lub 2, (6) wielokąt w kolejności CW zamiast CCW,\n(7) wartości graniczne współrzędnych (przepełnienie), (8) punkt na brzegu wielokąta. Najlepiej stress-test\nz brute force na małych współrzędnych (0..5), gdzie degeneracje zdarzają się często."
+    },
+    {
+     "q": [
+      "atan2 precyzja duże współrzędne",
+      "atan2 remisy",
+      "atan2 sortowanie blad",
+      "atan2 dokladnosc"
+     ],
+     "a": "Kierunki (10^9, 10^9 − 1) i (10^9 − 1, 10^9 − 2) mają iloczyn wektorowy −1 (różne!), ale różnica kątów to ~5·10^-19\nrad — poniżej precyzji `double` przy wartości ~0,785, więc `atan2` zwraca dla nich tę samą liczbę. Sortowanie\nkątowe i porównania kątów rób iloczynem wektorowym (dokładnie), a `atan2` zostaw do wypisywania kątów.",
+     "code": "long long ax = 1000000000, ay = 999999999, bx = 999999999, by = 999999998;\ncout << (atan2((double)ay, (double)ax) == atan2((double)by, (double)bx)) << \" \" << ax * by - ay * bx << \"\\n\";   // 1 -1"
+    },
+    {
+     "q": [
+      "int przepełnienie geometria",
+      "int zamiast long long iloczyn",
+      "dlaczego cross wychodzi ujemny",
+      "overflow w geometrii"
+     ],
+     "a": "`int * int` liczy się w `int` niezależnie od typu zmiennej, do której przypisujesz wynik — `long long c = a * b;`\ndla `a = b = 10^5` przepełnia się (10^10 > 2^31). Trzymaj współrzędne od razu w `long long` albo rzutuj jeden\nczynnik: `(long long)a * b`.",
+     "code": "int a = 100000, b = 100000;\nlong long good = (long long)a * b;   // 10000000000\ncout << good << \"\\n\";"
+    },
+    {
+     "q": [
+      "radiany stopnie c++",
+      "zamiana stopni na radiany",
+      "sin cos w stopniach"
+     ],
+     "a": "Funkcje `sin`, `cos`, `tan`, `atan2`, `acos` w C++ działają na **radianach**. `rad = deg · π / 180`,\n`deg = rad · 180 / π`, gdzie `π = acos(-1.0)`. Typowy błąd: `sin(30)` to sinus 30 radianów, a nie 30°.",
+     "code": "const double PI = acos(-1.0);\ncout << fixed << setprecision(4) << sin(30 * PI / 180) << \" \" << atan2(1.0, 1.0) * 180 / PI << \"\\n\";   // 0.5000 45.0000"
+    }
+   ],
+   "related": [
+    "geo-point-vector",
+    "geo-orientation",
+    "geo-angular-sort",
+    "num-int128",
+    "num-floating",
+    "num-overflow",
+    "io-precision",
+    "cpp-ref-cmath",
+    "geo-circles",
+    "geo-distances"
+   ]
+  }
+ ]
+}

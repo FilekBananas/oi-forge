@@ -1,0 +1,15 @@
+Fabryka
+W fabryce pracuje n maszyn. Maszyna nr i wytwarza jeden produkt co t_i sekund (pierwszy po t_i sekundach, drugi po
+2·t_i sekundach itd.), a wszystkie maszyny pracują równocześnie. Po ilu najmniej sekundach fabryka wyprodukuje
+łącznie co najmniej k produktów?
+Wejście
+Pierwszy wiersz zawiera dwie liczby całkowite n i k (1 ≤ n ≤ 200 000, 1 ≤ k ≤ 10^9). Drugi wiersz zawiera n liczb
+całkowitych t_1, ..., t_n (1 ≤ t_i ≤ 10^9).
+Wyjście
+Wypisz najmniejszą liczbę sekund.
+Przykład
+Wejście:
+3 7
+3 2 5
+Wyjście:
+8

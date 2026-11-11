@@ -1,0 +1,532 @@
+{
+ "chunk": "basics",
+ "templates": [
+  {
+   "id": "sum-two",
+   "name": "Suma dwóch liczb",
+   "description": "Wypisuje a + b.",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "\\bsum\\w*",
+     "dodaj\\w*",
+     "a ?\\+ ?b"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\ncout << a + b << \"\\n\";",
+   "example": {
+    "input": "2 3\n",
+    "output": "5\n"
+   }
+  },
+  {
+   "id": "diff-two",
+   "name": "Różnica dwóch liczb",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "roznic\\w*",
+     "odejm\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\ncout << a - b << \"\\n\";",
+   "example": {
+    "input": "7 3\n",
+    "output": "4\n"
+   }
+  },
+  {
+   "id": "product-two",
+   "name": "Iloczyn dwóch liczb",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "iloczyn\\w*",
+     "pomnoz\\w*",
+     "mnoz\\w*",
+     "pole prostokat"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\ncout << a * b << \"\\n\";",
+   "example": {
+    "input": "4 5\n",
+    "output": "20\n"
+   }
+  },
+  {
+   "id": "max-two",
+   "name": "Większa z dwóch liczb",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "wieksz\\w* (z|liczb)",
+     "najwieksz\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\ncout << max(a, b) << \"\\n\";",
+   "example": {
+    "input": "4 9\n",
+    "output": "9\n"
+   }
+  },
+  {
+   "id": "min-two",
+   "name": "Mniejsza z dwóch liczb",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "mniejsz\\w* (z|liczb)",
+     "najmniejsz\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\ncout << min(a, b) << \"\\n\";",
+   "example": {
+    "input": "4 9\n",
+    "output": "4\n"
+   }
+  },
+  {
+   "id": "div-mod-two",
+   "name": "Iloraz i reszta",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "iloraz\\w*",
+     "reszt\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\ncout << a / b << \" \" << a % b << \"\\n\";",
+   "example": {
+    "input": "17 5\n",
+    "output": "3 2\n"
+   }
+  },
+  {
+   "id": "ceil-div-two",
+   "name": "Dzielenie z zaokrągleniem w górę",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S2"
+   ],
+   "signals": {
+    "any": [
+     "zaokragl\\w* w gore",
+     "co najmniej ile",
+     "ile (co najmniej |minimalnie )?(autobus|kurs|paczek|pudel|skrzyn|samochod|opakowan|stolik)"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll a, b; cin >> a >> b;\ncout << (a + b - 1) / b << \"\\n\";",
+   "example": {
+    "input": "17 5\n",
+    "output": "4\n"
+   }
+  },
+  {
+   "id": "square",
+   "name": "Kwadrat liczby",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "kwadrat\\w*",
+     "do kwadratu"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\ncout << n * n << \"\\n\";",
+   "example": {
+    "input": "7\n",
+    "output": "49\n"
+   }
+  },
+  {
+   "id": "parity",
+   "name": "Parzystość (TAK/NIE)",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "parzyst\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\ncout << (n % 2 == 0 ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "6\n",
+    "output": "{{YES}}\n"
+   }
+  },
+  {
+   "id": "leap-year",
+   "name": "Rok przestępny",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "przestepn\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll y; cin >> y;\nbool p = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;\ncout << (p ? \"{{YES}}\" : \"{{NO}}\") << \"\\n\";",
+   "example": {
+    "input": "2024\n",
+    "output": "{{YES}}\n"
+   }
+  },
+  {
+   "id": "sum-1-to-n",
+   "name": "Suma 1 + 2 + … + n",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "1 ?\\+ ?2 ?\\+",
+     "sum\\w* (liczb )?(od 1|kolejnych liczb naturaln)",
+     "trojkatn\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\ncout << n * (n + 1) / 2 << \"\\n\";",
+   "example": {
+    "input": "10\n",
+    "output": "55\n"
+   }
+  },
+  {
+   "id": "sum-of-all-input",
+   "name": "Suma wszystkich liczb na wejściu",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "ANY"
+   ],
+   "signals": {
+    "any": [
+     "sum\\w* (wszystkich )?liczb (z|na) wejsci",
+     "sum\\w* (wszystkich )?(podanych |tych )?liczb"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 0.6,
+   "globals": "",
+   "solve": "ll x, s = 0; while (cin >> x) s += x;\ncout << s << \"\\n\";",
+   "example": {
+    "input": "1 2 3\n4\n",
+    "output": "10\n"
+   }
+  },
+  {
+   "id": "abs-value",
+   "name": "Wartość bezwzględna",
+   "description": "",
+   "algos": [
+    "simulation"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "bezwzgledn\\w*",
+     "modul\\w* liczby"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\ncout << (n < 0 ? -n : n) << \"\\n\";",
+   "example": {
+    "input": "-5\n",
+    "output": "5\n"
+   }
+  },
+  {
+   "id": "sum-digits",
+   "name": "Suma cyfr",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1",
+    "STR"
+   ],
+   "signals": {
+    "any": [
+     "sum\\w* cyfr"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; cin >> s;\nll r = 0; for (char c : s) if (isdigit(c)) r += c - '0';\ncout << r << \"\\n\";",
+   "example": {
+    "input": "1234\n",
+    "output": "10\n"
+   }
+  },
+  {
+   "id": "digital-root",
+   "name": "Suma cyfr aż do jednej cyfry",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1",
+    "STR"
+   ],
+   "signals": {
+    "any": [
+     "sum\\w* cyfr",
+     "az (do|zostanie) (jednej|jedna) cyfr"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; cin >> s;\nll r = 0; for (char c : s) if (isdigit(c)) r += c - '0';\nwhile (r >= 10) { ll t = 0; while (r) { t += r % 10; r /= 10; } r = t; }\ncout << r << \"\\n\";",
+   "example": {
+    "input": "9875\n",
+    "output": "2\n"
+   }
+  },
+  {
+   "id": "count-digits",
+   "name": "Liczba cyfr",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1",
+    "STR"
+   ],
+   "signals": {
+    "any": [
+     "(ile|liczb\\w*) cyfr"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; cin >> s;\nll r = 0; for (char c : s) if (isdigit(c)) r++;\ncout << r << \"\\n\";",
+   "example": {
+    "input": "12345\n",
+    "output": "5\n"
+   }
+  },
+  {
+   "id": "reverse-number",
+   "name": "Liczba czytana od tyłu",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1",
+    "STR"
+   ],
+   "signals": {
+    "any": [
+     "odwr\\w* (kolejnosc )?cyfr",
+     "od tylu",
+     "lustrzan\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; cin >> s;\nbool neg = !s.empty() && s[0] == '-'; if (neg) s = s.substr(1);\nreverse(s.begin(), s.end());\nsize_t p = s.find_first_not_of('0'); s = (p == string::npos) ? \"0\" : s.substr(p);\ncout << (neg ? \"-\" : \"\") << s << \"\\n\";",
+   "example": {
+    "input": "1200\n",
+    "output": "21\n"
+   }
+  },
+  {
+   "id": "to-binary",
+   "name": "Zapis dwójkowy",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "dwojkow\\w*",
+     "binarn\\w*",
+     "system\\w* (o podstawie )?2"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\nif (n == 0) { cout << 0 << \"\\n\"; return; }\nstring s; while (n > 0) { s += char('0' + n % 2); n /= 2; }\nreverse(s.begin(), s.end());\ncout << s << \"\\n\";",
+   "example": {
+    "input": "10\n",
+    "output": "1010\n"
+   }
+  },
+  {
+   "id": "count-ones-binary",
+   "name": "Liczba jedynek w zapisie binarnym",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "S1"
+   ],
+   "signals": {
+    "any": [
+     "(ile|liczb\\w*) (zapalonych )?(jedynek|bitow)",
+     "zapalon\\w* bit"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "ll n; cin >> n;\ncout << __builtin_popcountll(n) << \"\\n\";",
+   "example": {
+    "input": "13\n",
+    "output": "3\n"
+   }
+  },
+  {
+   "id": "from-binary",
+   "name": "Z dwójkowego na dziesiętny",
+   "description": "",
+   "algos": [
+    "math"
+   ],
+   "shapes": [
+    "STR"
+   ],
+   "signals": {
+    "any": [
+     "dwojkow\\w*.{0,40}dziesietn\\w*",
+     "binarn\\w*.{0,40}dziesietn\\w*"
+    ],
+    "all": [],
+    "none": []
+   },
+   "weight": 1.0,
+   "globals": "",
+   "solve": "string s; cin >> s;\nll r = 0; for (char c : s) r = r * 2 + (c - '0');\ncout << r << \"\\n\";",
+   "example": {
+    "input": "1010\n",
+    "output": "10\n"
+   }
+  }
+ ]
+}

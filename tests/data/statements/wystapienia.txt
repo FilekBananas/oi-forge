@@ -1,0 +1,14 @@
+Ulubiona liczba
+Kasia zapisała w zeszycie ciąg liczb. Jej ulubiona liczba to x. Ile razy liczba x pojawia się w zapisanym ciągu?
+Wejście
+W pierwszym wierszu znajduje się liczba całkowita n (1 ≤ n ≤ 500 000) — długość ciągu. W drugim wierszu znajduje się
+n liczb całkowitych z zakresu [1, 10^9]. W trzecim wierszu znajduje się liczba x (1 ≤ x ≤ 10^9).
+Wyjście
+Wypisz, ile razy liczba x występuje w ciągu.
+Przykład
+Wejście:
+7
+3 1 4 1 5 9 1
+1
+Wyjście:
+3

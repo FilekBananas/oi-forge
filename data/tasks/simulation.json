@@ -1,0 +1,81 @@
+{
+ "chunk": "simulation",
+ "templates": [
+  {
+   "id": "sim-queue",
+   "name": "Symulacja kolejki (operacje z argumentem = dodaj, bez = obsłuż/zdejmij)",
+   "description": "",
+   "algos": [
+    "simulation_queue",
+    "simulation"
+   ],
+   "shapes": [
+    "NQ"
+   ],
+   "signals": {
+    "any": [
+     "kolejk\\w*",
+     "fifo|na koniec|z poczatku|pierwsz\\w* w kolejce|obsluz\\w*|obsluguj\\w*"
+    ],
+    "all": [],
+    "none": [
+     "\\bstos\\w*|\\blifo\\b|na wierzch|z wierzchu"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "static string up_(string s) { for (auto &c : s) c = toupper((unsigned char)c); return s; }\nstatic bool has_(const string &s, initializer_list<const char*> ws) { for (auto w : ws) if (s.find(w) != string::npos) return true; return false; }\n// operacja bez argumentu: zapytanie (podgląd/rozmiar) czy zdjęcie elementu?\nstatic bool is_peek_(const string &op) { return has_(up_(op), {\"TOP\", \"FRONT\", \"PEEK\", \"SZCZYT\", \"GORA\", \"WIERZCH\", \"PIERWSZ\", \"PODAJ\", \"JAKI\", \"KTO\", \"POKAZ\", \"SPRAWDZ\"}); }\nstatic bool is_size_(const string &op) { return has_(up_(op), {\"SIZE\", \"ILE\", \"ROZMIAR\", \"LICZB\", \"DLUGOSC\", \"COUNT\"}); }",
+   "solve": "ll q; cin >> q; string line; getline(cin, line);\ndeque<string> c;\nfor (ll i = 0; i < q && getline(cin, line); i++) {\n    stringstream ss(line); string op, arg; ss >> op; if (op.empty()) { i--; continue; }\n    if (ss >> arg) c.push_back(arg);                                  // operacja z argumentem: dodaj\n    else if (is_size_(op)) cout << c.size() << \"\\n\";\n    else if (is_peek_(op)) { if (c.empty()) cout << \"{{NONE}}\" << \"\\n\"; else cout << c.front() << \"\\n\"; }\n    else { if (c.empty()) cout << \"{{NONE}}\" << \"\\n\"; else { cout << c.front() << \"\\n\"; c.pop_front(); } }\n}",
+   "example": {
+    "input": "4\nDODAJ 5\nDODAJ 7\nZDEJMIJ\nZDEJMIJ\n",
+    "output": "5\n7\n"
+   },
+   "brute": "ll q; cin >> q; string line; getline(cin, line);\nvector<string> v;\nfor (ll i = 0; i < q && getline(cin, line); i++) {\n    stringstream ss(line); string op, arg; ss >> op; if (op.empty()) { i--; continue; }\n    if (ss >> arg) v.push_back(arg);\n    else if (is_size_(op)) cout << v.size() << \"\\n\";\n    else if (is_peek_(op)) { if (v.empty()) cout << \"{{NONE}}\" << \"\\n\"; else cout << v[0] << \"\\n\"; }\n    else { if (v.empty()) cout << \"{{NONE}}\" << \"\\n\"; else { cout << v[0] << \"\\n\"; v.erase(v.begin()); } }\n}",
+   "variants": [
+    {
+     "id": "sim-queue-silent-pop",
+     "name": "Symulacja kolejki (zdjęcie bez wypisywania, osobne zapytanie o przód)",
+     "solve": "ll q; cin >> q; string line; getline(cin, line);\ndeque<string> c;\nfor (ll i = 0; i < q && getline(cin, line); i++) {\n    stringstream ss(line); string op, arg; ss >> op; if (op.empty()) { i--; continue; }\n    if (ss >> arg) c.push_back(arg);                                  // operacja z argumentem: dodaj\n    else if (is_size_(op)) cout << c.size() << \"\\n\";\n    else if (is_peek_(op)) { if (c.empty()) cout << \"{{NONE}}\" << \"\\n\"; else cout << c.front() << \"\\n\"; }\n    else { if (!c.empty()) c.pop_front(); }\n}",
+     "brute": "ll q; cin >> q; string line; getline(cin, line);\nvector<string> v;\nfor (ll i = 0; i < q && getline(cin, line); i++) {\n    stringstream ss(line); string op, arg; ss >> op; if (op.empty()) { i--; continue; }\n    if (ss >> arg) v.push_back(arg);\n    else if (is_size_(op)) cout << v.size() << \"\\n\";\n    else if (is_peek_(op)) { if (v.empty()) cout << \"{{NONE}}\" << \"\\n\"; else cout << v[0] << \"\\n\"; }\n    else { if (!v.empty()) v.erase(v.begin()); }\n}"
+    }
+   ]
+  },
+  {
+   "id": "sim-stack",
+   "name": "Symulacja stosu (operacje z argumentem = połóż, bez = zdejmij/podejrzyj)",
+   "description": "",
+   "algos": [
+    "simulation_queue",
+    "simulation"
+   ],
+   "shapes": [
+    "NQ"
+   ],
+   "signals": {
+    "any": [
+     "\\bstos\\w*|\\blifo\\b",
+     "na wierzch\\w*|z wierzchu|wierzch\\w*|\\bpush\\b|\\bpop\\b|\\btop\\b"
+    ],
+    "all": [],
+    "none": [
+     "kolejk\\w*"
+    ]
+   },
+   "weight": 1.0,
+   "globals": "static string up_(string s) { for (auto &c : s) c = toupper((unsigned char)c); return s; }\nstatic bool has_(const string &s, initializer_list<const char*> ws) { for (auto w : ws) if (s.find(w) != string::npos) return true; return false; }\n// operacja bez argumentu: zapytanie (podgląd/rozmiar) czy zdjęcie elementu?\nstatic bool is_peek_(const string &op) { return has_(up_(op), {\"TOP\", \"FRONT\", \"PEEK\", \"SZCZYT\", \"GORA\", \"WIERZCH\", \"PIERWSZ\", \"PODAJ\", \"JAKI\", \"KTO\", \"POKAZ\", \"SPRAWDZ\"}); }\nstatic bool is_size_(const string &op) { return has_(up_(op), {\"SIZE\", \"ILE\", \"ROZMIAR\", \"LICZB\", \"DLUGOSC\", \"COUNT\"}); }",
+   "solve": "ll q; cin >> q; string line; getline(cin, line);\ndeque<string> c;\nfor (ll i = 0; i < q && getline(cin, line); i++) {\n    stringstream ss(line); string op, arg; ss >> op; if (op.empty()) { i--; continue; }\n    if (ss >> arg) c.push_back(arg);                                  // operacja z argumentem: dodaj\n    else if (is_size_(op)) cout << c.size() << \"\\n\";\n    else if (is_peek_(op)) { if (c.empty()) cout << \"{{NONE}}\" << \"\\n\"; else cout << c.back() << \"\\n\"; }\n    else { if (!c.empty()) c.pop_back(); }\n}",
+   "example": {
+    "input": "4\nPUSH 5\nPUSH 7\nTOP\nPOP\n",
+    "output": "7\n"
+   },
+   "brute": "ll q; cin >> q; string line; getline(cin, line);\nvector<string> v;\nfor (ll i = 0; i < q && getline(cin, line); i++) {\n    stringstream ss(line); string op, arg; ss >> op; if (op.empty()) { i--; continue; }\n    if (ss >> arg) v.push_back(arg);\n    else if (is_size_(op)) cout << v.size() << \"\\n\";\n    else if (is_peek_(op)) { if (v.empty()) cout << \"{{NONE}}\" << \"\\n\"; else cout << v.back() << \"\\n\"; }\n    else { if (!v.empty()) v.pop_back(); }\n}",
+   "variants": [
+    {
+     "id": "sim-stack-pop-prints",
+     "name": "Symulacja stosu (zdjęcie wypisuje element)",
+     "solve": "ll q; cin >> q; string line; getline(cin, line);\ndeque<string> c;\nfor (ll i = 0; i < q && getline(cin, line); i++) {\n    stringstream ss(line); string op, arg; ss >> op; if (op.empty()) { i--; continue; }\n    if (ss >> arg) c.push_back(arg);                                  // operacja z argumentem: dodaj\n    else if (is_size_(op)) cout << c.size() << \"\\n\";\n    else if (is_peek_(op)) { if (c.empty()) cout << \"{{NONE}}\" << \"\\n\"; else cout << c.back() << \"\\n\"; }\n    else { if (c.empty()) cout << \"{{NONE}}\" << \"\\n\"; else { cout << c.back() << \"\\n\"; c.pop_back(); } }\n}",
+     "brute": "ll q; cin >> q; string line; getline(cin, line);\nvector<string> v;\nfor (ll i = 0; i < q && getline(cin, line); i++) {\n    stringstream ss(line); string op, arg; ss >> op; if (op.empty()) { i--; continue; }\n    if (ss >> arg) v.push_back(arg);\n    else if (is_size_(op)) cout << v.size() << \"\\n\";\n    else if (is_peek_(op)) { if (v.empty()) cout << \"{{NONE}}\" << \"\\n\"; else cout << v.back() << \"\\n\"; }\n    else { if (v.empty()) cout << \"{{NONE}}\" << \"\\n\"; else { cout << v.back() << \"\\n\"; v.pop_back(); } }\n}"
+    }
+   ]
+  }
+ ]
+}

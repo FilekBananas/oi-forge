@@ -1,0 +1,1620 @@
+{
+ "chunk": "trees-basics",
+ "articles": [
+  {
+   "id": "tree-basics",
+   "title": "Drzewa — podstawy: korzeń, rodzic, głębokość, rozmiar poddrzewa, liście",
+   "category": "Drzewa",
+   "tags": [
+    "drzewo",
+    "korzeń",
+    "rodzic",
+    "głębokość",
+    "rozmiar poddrzewa",
+    "liść",
+    "ukorzenianie",
+    "las",
+    "n-1 krawędzi",
+    "dfs po drzewie"
+   ],
+   "aliases": [
+    "drzewo",
+    "drzewa podstawy",
+    "co to jest drzewo",
+    "drzewo graf",
+    "ukorzenienie drzewa",
+    "jak ukorzenić drzewo",
+    "rodzic w drzewie",
+    "głębokość wierzchołka",
+    "rozmiar poddrzewa",
+    "subtree size",
+    "tree basics",
+    "liście drzewa",
+    "drzewo n-1 krawędzi"
+   ],
+   "summary": "Drzewo to spójny graf bez cykli (n wierzchołków, n−1 krawędzi, między każdą parą dokładnie jedna ścieżka). Po wybraniu korzenia każdy wierzchołek ma rodzica, głębokość i poddrzewo — to podstawa wszystkich algorytmów drzewowych.",
+   "complexity": "ukorzenienie, głębokości, rozmiary poddrzew: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Drzewo** = graf spójny i bez cykli. Równoważnie: spójny graf o `n` wierzchołkach i `n − 1`\nkrawędziach albo graf, w którym między każdymi dwoma wierzchołkami jest **dokładnie jedna** ścieżka.\nKilka rozłącznych drzew to **las**.\n\nGdy wybierzemy **korzeń** (zwykle wierzchołek 1, chyba że treść mówi inaczej), drzewo „zwisa” z niego:\n- **rodzic** `par[v]` — sąsiad `v` bliższy korzeniowi (korzeń nie ma rodzica),\n- **dzieci** — pozostali sąsiedzi,\n- **głębokość** `depth[v]` — liczba krawędzi od korzenia do `v`,\n- **poddrzewo** `v` — `v` i wszyscy jego potomkowie; `sz[v]` to ich liczba,\n- **liść** — wierzchołek bez dzieci."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały w treści:** „n miast połączonych n−1 drogami, z każdego da się dojechać do każdego”,\n„sieć bez cykli”, „hierarchia/drzewo genealogiczne/szef każdego pracownika”, „p_i — rodzic i-tego”,\n„dokładnie jedna droga między każdą parą”. Wtedy masz drzewo i możesz używać DFS/BFS bez tablicy\n`visited` (wystarczy pomijać rodzica), DP na drzewie, LCA itd."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Ukorzenienie w 1: rodzic, głębokość, rozmiar poddrzewa, liście (iteracyjnie)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {        // drzewo: n-1 krawędzi\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    // BFS od korzenia 1 — iteracyjnie, więc bezpieczne nawet dla n = 10^6\n    vector<int> par(n + 1, 0), depth(n + 1, 0), sz(n + 1, 1), order;\n    order.reserve(n);\n    queue<int> q;\n    q.push(1);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        order.push_back(v);\n        for (int u : g[v])\n            if (u != par[v]) {                // w drzewie wystarczy pominąć rodzica\n                par[u] = v;\n                depth[u] = depth[v] + 1;\n                q.push(u);\n            }\n    }\n    // rozmiary poddrzew: od najgłębszych (koniec kolejności BFS) do korzenia\n    for (int i = n - 1; i > 0; i--) sz[par[order[i]]] += sz[order[i]];\n    int liscie = 0;\n    for (int v = 1; v <= n; v++) {\n        cout << v << ' ' << par[v] << ' ' << depth[v] << ' ' << sz[v] << '\\n';\n        if (sz[v] == 1) liscie++;           // brak dzieci = liść\n    }\n    cout << \"liście: \" << liscie << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "To samo rekurencyjnie (krócej, ale uwaga na głębokość)",
+     "code": "const int MAXN = 200005;\nvector<int> g[MAXN];\nint par[MAXN], dep[MAXN], sz[MAXN];\n\nvoid dfs(int v, int p) {          // wywołanie: dfs(1, 0)\n    par[v] = p;\n    sz[v] = 1;\n    for (int u : g[v]) {\n        if (u == p) continue;     // nie wracamy do rodzica\n        dep[u] = dep[v] + 1;\n        dfs(u, v);\n        sz[v] += sz[u];           // po powrocie z dziecka znamy jego rozmiar\n    }\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Pojęcie",
+      "Definicja",
+      "Jak policzyć"
+     ],
+     "rows": [
+      [
+       "rodzic `par[v]`",
+       "sąsiad v na ścieżce do korzenia",
+       "przy wejściu do dziecka: `par[u] = v`"
+      ],
+      [
+       "głębokość `dep[v]`",
+       "liczba krawędzi od korzenia",
+       "`dep[u] = dep[v] + 1`"
+      ],
+      [
+       "rozmiar `sz[v]`",
+       "liczba wierzchołków poddrzewa v",
+       "`sz[v] = 1 + Σ sz[dziecko]` (po dzieciach)"
+      ],
+      [
+       "liść",
+       "wierzchołek bez dzieci",
+       "`sz[v] == 1` (albo stopień 1 i nie korzeń)"
+      ],
+      [
+       "wysokość drzewa",
+       "maksymalna głębokość",
+       "`*max_element(dep...)`"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Drzewo może być **ścieżką** (1–2–3–…–n). Rekurencyjny DFS ma wtedy głębokość `n`; przy `n = 10^6`\ni małym stosie kończy się błędem wykonania. Jeśli `n` jest duże, użyj BFS-a (kolejność `order`)\ni licz rozmiary pętlą od końca — jak w programie powyżej."
+    },
+    {
+     "type": "tip",
+     "md": "Kolejność BFS (albo preorder DFS) ma tę własność, że **rodzic występuje przed dziećmi**. Przechodząc ją\nod końca, przetwarzasz dzieci przed rodzicem — to wystarcza do każdego DP „od liści do korzenia”."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "dfs(v, p)",
+     "desc": "rekurencyjne ukorzenienie: par, dep, sz w poddrzewie v",
+     "complexity": "O(n)",
+     "example": "dfs(1, 0);"
+    },
+    {
+     "sig": "for (int u : g[v]) if (u != par[v])",
+     "desc": "przejście po dzieciach v w drzewie z listą sąsiedztwa",
+     "complexity": "O(deg v)"
+    }
+   ],
+   "pitfalls": [
+    "Drzewo ma `n − 1` krawędzi — pętla wczytująca `n` krawędzi zepsuje resztę wejścia.",
+    "Rekurencyjny DFS na drzewie-ścieżce z `n ≈ 10^6` → przepełnienie stosu. Wersja BFS/iteracyjna jest bezpieczna.",
+    "Warunek `u != p` zamiast tablicy `visited` działa TYLKO w drzewie (i w lesie), nie w grafie z cyklami.",
+    "Korzeń ma rodzica `0` — gdy wierzchołki są od 1, `0` jest bezpiecznym „brakiem”; przy numeracji od 0 użyj `-1`.",
+    "Krawędzie drzewa na wejściu są nieskierowane i w dowolnej kolejności („a b” nie znaczy, że a jest rodzicem). Kierunek ustala dopiero DFS/BFS od korzenia.",
+    "`n = 1`: brak krawędzi, jeden wierzchołek będący jednocześnie korzeniem i liściem — sprawdź, czy kod to obsługuje."
+   ],
+   "qa": [
+    {
+     "q": [
+      "co to jest drzewo",
+      "drzewo definicja graf",
+      "czym jest drzewo w grafach",
+      "tree definition graph",
+      "drzewo n-1 krawedzi"
+     ],
+     "a": "Drzewo to graf **spójny i bez cykli**. Ma zawsze `n − 1` krawędzi, a między każdą parą wierzchołków\nistnieje dokładnie jedna ścieżka. Dlatego np. „odległość” w drzewie nie wymaga Dijkstry — jedyna ścieżka\njest jednocześnie najkrótsza — a DFS nie potrzebuje tablicy `visited` (wystarczy nie wracać do rodzica).\nKilka drzew naraz to las.",
+     "code": "int n = 4;\nvector<pair<int,int>> e = {{1, 2}, {2, 3}, {2, 4}};\n// drzewo <=> n-1 krawędzi i spójność (albo n-1 krawędzi i brak cyklu)\ncout << (e.size() == (size_t)n - 1 ? \"może być drzewem\" : \"nie jest drzewem\") << '\\n';"
+    },
+    {
+     "q": [
+      "jak ukorzenić drzewo",
+      "ukorzenienie drzewa",
+      "root tree c++",
+      "jak policzyć rodzica w drzewie",
+      "rodzic kazdego wierzcholka"
+     ],
+     "a": "Wybierz korzeń (np. 1) i przejdź drzewo DFS-em lub BFS-em: wchodząc z `v` do sąsiada `u ≠ par[v]`,\nustaw `par[u] = v`. Każda krawędź zostaje „skierowana” od rodzica do dziecka. Czas **O(n)**.\nBFS jest iteracyjny, więc nie grozi mu przepełnienie stosu.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0);\n    queue<int> q;\n    q.push(1);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int u : g[v]) if (u != par[v]) { par[u] = v; q.push(u); }\n    }\n    for (int v = 2; v <= n; v++) cout << par[v] << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "głębokość wierzchołka",
+      "glebokosc w drzewie",
+      "depth tree c++",
+      "odległość od korzenia drzewo",
+      "poziom wierzchołka w drzewie"
+     ],
+     "a": "Głębokość korzenia to 0, a dziecka: `dep[u] = dep[v] + 1`, ustawiane przy wejściu do dziecka w DFS/BFS.\nTo jednocześnie odległość od korzenia (w liczbie krawędzi), bo w drzewie ścieżka jest jedyna.\nDla krawędzi z wagami trzymaj osobno `dist[u] = dist[v] + w` w `long long`. Czas O(n).",
+     "code": "int n = 5;\nvector<vector<int>> g = {{}, {2, 3}, {1}, {1, 4, 5}, {3}, {3}};\nvector<int> dep(n + 1, 0), par(n + 1, 0);\nvector<int> st = {1};\nwhile (!st.empty()) {\n    int v = st.back(); st.pop_back();\n    for (int u : g[v]) if (u != par[v]) { par[u] = v; dep[u] = dep[v] + 1; st.push_back(u); }\n}\ncout << dep[4] << ' ' << *max_element(dep.begin(), dep.end()) << '\\n';   // 2 2"
+    },
+    {
+     "q": [
+      "rozmiar poddrzewa",
+      "subtree size",
+      "ile wierzchołków w poddrzewie",
+      "liczba potomków",
+      "rozmiar poddrzewa dfs"
+     ],
+     "a": "`sz[v] = 1 + suma sz[dzieci]`. Liczysz to **po** przetworzeniu dzieci: w rekurencji po powrocie\nz `dfs(u)`, a iteracyjnie — przechodząc kolejność BFS od końca (`sz[par[v]] += sz[v]`). Czas O(n).\nRozmiar poddrzewa przydaje się do: liczenia par przez krawędź (`sz · (n − sz)`), centroidu, HLD,\nsmall-to-large.",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint sz[MAXN];\nvoid dfs(int v, int p) {\n    sz[v] = 1;\n    for (int u : g[v]) if (u != p) { dfs(u, v); sz[v] += sz[u]; }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liście drzewa",
+      "jak znaleźć liście",
+      "leaf tree c++",
+      "ile liści ma drzewo",
+      "liscie w drzewie"
+     ],
+     "a": "W drzewie **ukorzenionym** liść to wierzchołek bez dzieci. W nieukorzenionym zwykle przyjmuje się:\nwierzchołek stopnia 1 (`g[v].size() == 1`). Uwaga: korzeń może mieć stopień 1, a nie jest wtedy liściem\nw sensie ukorzenionym; a przy `n = 1` jedyny wierzchołek ma stopień 0. Policz zgodnie z definicją\nz treści. O(n).",
+     "code": "int n = 5;\nvector<vector<int>> g = {{}, {2}, {1, 3, 4}, {2}, {2, 5}, {4}};\nint liscieStopien = 0;\nfor (int v = 1; v <= n; v++) if (g[v].size() == 1) liscieStopien++;\ncout << liscieStopien << '\\n';   // 3: wierzchołki 1, 3, 5"
+    },
+    {
+     "q": [
+      "dfs po drzewie bez visited",
+      "u != parent zamiast vis",
+      "dlaczego w drzewie nie trzeba visited",
+      "dfs drzewo parent"
+     ],
+     "a": "W drzewie nie ma cykli, więc jedyny już odwiedzony sąsiad `v` (w trakcie DFS od korzenia) to jego rodzic.\nWystarczy przekazać rodzica i pomijać go: `if (u != p) dfs(u, v)`. Oszczędza to tablicę `vis` i jej\nczyszczenie. W grafie z cyklami ten trik NIE działa — tam potrzebny jest `vis`.",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nlong long sumaGlebokosci = 0;\nvoid dfs(int v, int p, int d) {\n    sumaGlebokosci += d;\n    for (int u : g[v]) if (u != p) dfs(u, v, d + 1);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "drzewo 10^6 rekurencja",
+      "stack overflow drzewo dfs",
+      "dfs po drzewie bez rekurencji",
+      "iteracyjny dfs drzewo",
+      "segfault dfs drzewo sciezka"
+     ],
+     "a": "Drzewo-ścieżka z 10^6 wierzchołkami daje 10^6 zagnieżdżonych wywołań — przy stosie 8 MB to błąd\nwykonania. Rozwiązanie: BFS lub DFS ze stosem `vector<int>`, zapisz kolejność `order` (rodzic przed\ndziećmi), a potem przetwarzaj ją od końca, żeby zbierać wyniki od liści do korzenia. Złożoność bez\nzmian, O(n).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order, st = {1}, sz(n + 1, 1);\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        order.push_back(v);\n        for (int u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); }\n    }\n    for (int i = n - 1; i > 0; i--) sz[par[order[i]]] += sz[order[i]];\n    cout << sz[1] << ' ' << sz[2] << '\\n';\n}"
+    },
+    {
+     "q": [
+      "wysokość drzewa",
+      "height of tree",
+      "maksymalna głębokość drzewa",
+      "wysokosc drzewa"
+     ],
+     "a": "Wysokość drzewa ukorzenionego = maksymalna głębokość wierzchołka (w krawędziach). Policz głębokości\nBFS-em/DFS-em i weź maksimum — O(n). Rekurencyjnie: `h(v) = 1 + max h(dziecko)`, liść ma `h = 0`.\nNie myl z **średnicą** (najdłuższa ścieżka między dowolnymi wierzchołkami, niekoniecznie przez korzeń).",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint wysokosc(int v, int p) {\n    int h = 0;\n    for (int u : g[v]) if (u != p) h = max(h, 1 + wysokosc(u, v));\n    return h;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "lista dzieci wierzchołka",
+      "children drzewo",
+      "jak trzymać dzieci w drzewie",
+      "dzieci zamiast sąsiadów"
+     ],
+     "a": "Po ukorzenieniu możesz zbudować osobne listy `ch[v]` tylko z dziećmi (bez rodzica). Upraszcza to kod\nDP i przejścia, bo nie trzeba sprawdzać `u != p`. Koszt: dodatkowe O(n) pamięci. Alternatywnie\nusuń rodzica z listy sąsiedztwa każdego wierzchołka.",
+     "code": "int n = 4;\nvector<vector<int>> g = {{}, {2, 3}, {1, 4}, {1}, {2}};\nvector<int> par(n + 1, 0), st = {1};\nvector<vector<int>> ch(n + 1);\nwhile (!st.empty()) {\n    int v = st.back(); st.pop_back();\n    for (int u : g[v]) if (u != par[v]) { par[u] = v; ch[v].push_back(u); st.push_back(u); }\n}\ncout << ch[1].size() << ' ' << ch[2].size() << '\\n';   // 2 1"
+    },
+    {
+     "q": [
+      "las",
+      "forest graf",
+      "kilka drzew",
+      "las drzew ile drzew",
+      "las ukorzenienie"
+     ],
+     "a": "Las to graf bez cykli, niekoniecznie spójny — każda składowa jest drzewem. Ma `n − c` krawędzi, gdzie\n`c` to liczba drzew. Algorytmy drzewowe uruchamiasz z każdego nieodwiedzonego wierzchołka jako korzenia\n(pętla `for v = 1..n`). Liczba drzew = `n − m`.",
+     "code": "int n = 5;\nvector<vector<int>> g = {{}, {2}, {1}, {4}, {3}, {}};    // 3 drzewa: {1,2}, {3,4}, {5}\nvector<int> par(n + 1, -1);\nint drzewa = 0;\nfor (int r = 1; r <= n; r++) {\n    if (par[r] != -1) continue;\n    drzewa++;\n    par[r] = 0;                      // r = korzeń kolejnego drzewa\n    vector<int> st = {r};\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        for (int u : g[v]) if (par[u] == -1) { par[u] = v; st.push_back(u); }\n    }\n}\ncout << drzewa << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "który wierzchołek wybrać na korzeń",
+      "korzeń drzewa dowolny",
+      "czy korzeń musi być 1"
+     ],
+     "a": "Jeśli treść nie wskazuje korzenia, możesz wybrać **dowolny** wierzchołek — zwykle 1. Wyniki takie jak\nśrednica, odległości czy LCA-odległości nie zależą od wyboru. Zależą od niego tylko pojęcia\n„ukorzenione” (rodzic, poddrzewo, głębokość). Gdy odpowiedź trzeba policzyć dla **każdego** korzenia,\nużyj rerootingu zamiast n razy DFS (O(n) zamiast O(n²)).",
+     "code": "int korzen = 1;            // dowolny; ważne, by konsekwentnie używać tego samego\nvector<int> par(6, 0);\npar[korzen] = 0;           // korzeń nie ma rodzica\ncout << korzen << '\\n';"
+    },
+    {
+     "q": [
+      "liczba par wierzchołków przez krawędź",
+      "ile ścieżek przechodzi przez krawędź",
+      "sz * (n - sz)",
+      "suma odległości wszystkich par drzewo"
+     ],
+     "a": "Usunięcie krawędzi `(par[v], v)` dzieli drzewo na poddrzewo `v` (`sz[v]` wierzchołków) i resztę\n(`n − sz[v]`). Przez tę krawędź przechodzi dokładnie `sz[v] · (n − sz[v])` ścieżek między parami.\nSuma odległości wszystkich par = suma tego po wszystkich krawędziach (razy waga, jeśli są wagi). O(n);\npamiętaj o `long long`, bo wynik rzędu n³/4.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order, st = {1};\n    vector<long long> sz(n + 1, 1);\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        order.push_back(v);\n        for (int u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); }\n    }\n    long long wynik = 0;\n    for (int i = n - 1; i > 0; i--) {\n        int v = order[i];\n        sz[par[v]] += sz[v];\n        wynik += sz[v] * (n - sz[v]);\n    }\n    cout << wynik << '\\n';\n}"
+    }
+   ],
+   "related": [
+    "tree-from-parents",
+    "tree-dfs-order",
+    "tree-diameter",
+    "tree-dp",
+    "tree-lca",
+    "graph-dfs",
+    "graph-bfs",
+    "graph-input",
+    "tree-isomorphism"
+   ]
+  },
+  {
+   "id": "tree-from-parents",
+   "title": "Drzewo z tablicy rodziców (p[v]) — budowa dzieci, korzeń, DP bez DFS",
+   "category": "Drzewa",
+   "tags": [
+    "tablica rodziców",
+    "parent array",
+    "p[v]",
+    "korzeń",
+    "dzieci",
+    "drzewo ukorzenione",
+    "kolejność topologiczna"
+   ],
+   "aliases": [
+    "drzewo z tablicy rodziców",
+    "tablica rodziców",
+    "parent array",
+    "p[i] rodzic",
+    "rodzic każdego wierzchołka",
+    "p2 p3 pn",
+    "jak znaleźć korzeń drzewa",
+    "drzewo dane przez rodziców",
+    "parent array tree c++"
+   ],
+   "summary": "Wiele zadań podaje drzewo jako tablicę rodziców `p[v]` (korzeń ma `0` lub `-1`). Z niej łatwo zbudować listy dzieci, znaleźć korzeń, a gdy `p[v] < v` — policzyć głębokości i rozmiary poddrzew zwykłą pętlą, bez DFS-u.",
+   "complexity": "O(n) czasu i pamięci",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Formaty spotykane na OI:\n- „w drugim wierszu `n − 1` liczb `p_2, …, p_n`” — korzeń to 1, a `p_v` to rodzic `v`; często dodatkowo\n  `p_v < v`,\n- „dla każdego `i` liczba `p_i`, dla korzenia `p_i = 0`” (albo `-1`) — korzeń trzeba znaleźć,\n- „szef każdego pracownika” — to samo pod inną nazwą.\n\nTablica rodziców to już drzewo **ukorzenione**: kierunki krawędzi są znane. Jeśli `p_v < v` dla każdego\n`v`, to numeracja jest **topologiczna** (rodzic przed dzieckiem): pętla rosnąca liczy rzeczy „od korzenia\nw dół” (głębokość), malejąca — „od liści w górę” (rozmiar poddrzewa, DP)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Tablica p[1..n] z zerem w korzeniu: korzeń, głębokości, rozmiary",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    vector<int> p(n + 1);\n    int root = -1;\n    vector<vector<int>> ch(n + 1);\n    for (int v = 1; v <= n; v++) {\n        cin >> p[v];                  // p[v] == 0 -> v jest korzeniem\n        if (p[v] == 0) root = v;\n        else ch[p[v]].push_back(v);\n    }\n    // numeracja dowolna -> BFS od korzenia daje kolejność „rodzic przed dzieckiem”\n    vector<int> dep(n + 1, 0), sz(n + 1, 1), order;\n    queue<int> q;\n    q.push(root);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        order.push_back(v);\n        for (int u : ch[v]) { dep[u] = dep[v] + 1; q.push(u); }\n    }\n    for (int i = n - 1; i > 0; i--) sz[p[order[i]]] += sz[order[i]];\n    cout << \"korzeń: \" << root << '\\n';\n    for (int v = 1; v <= n; v++) cout << dep[v] << (v == n ? '\\n' : ' ');\n    for (int v = 1; v <= n; v++) cout << sz[v] << (v == n ? '\\n' : ' ');\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Gdy p[v] < v: pętle zamiast DFS",
+     "code": "// Format „p_2 ... p_n”, gwarantowane p[v] < v: wszystko bez DFS-u i bez kolejki.\nint n = 6;\nvector<int> p = {0, 0, 1, 1, 2, 2, 3};      // p[2..6]\nvector<int> dep(n + 1, 0), sz(n + 1, 1);\nfor (int v = 2; v <= n; v++) dep[v] = dep[p[v]] + 1;   // rodzic już policzony\nfor (int v = n; v >= 2; v--) sz[p[v]] += sz[v];        // dzieci przed rodzicem\ncout << dep[6] << ' ' << sz[1] << ' ' << sz[2] << '\\n';  // 2 6 3"
+    },
+    {
+     "type": "tip",
+     "md": "Gdy masz tablicę rodziców, **nie musisz** budować listy sąsiedztwa do wielu zadań: skok do rodzica to\n`p[v]`, a binary lifting startuje wprost od `up[0][v] = p[v]`."
+    },
+    {
+     "type": "warn",
+     "md": "Nie zakładaj `p[v] < v`, jeśli treść tego nie gwarantuje. Pętla `for v = 2..n: dep[v] = dep[p[v]] + 1`\nprzy `p[v] > v` odczyta jeszcze niepoliczoną głębokość i da złe wyniki — użyj wtedy BFS-a od korzenia."
+    }
+   ],
+   "pitfalls": [
+    "Założenie `p[v] < v` bez gwarancji w treści → złe głębokości/rozmiary.",
+    "Korzeń oznaczony `0` albo `-1` — sprawdź w treści; `ch[-1]` to wyjście poza tablicę.",
+    "Format `p_2..p_n` ma `n − 1` liczb — pętla od `v = 2`; format `p_1..p_n` ma `n` liczb.",
+    "Gdy tablica może nie opisywać drzewa (zadanie „sprawdź poprawność”), trzeba wykryć cykl i wiele korzeni.",
+    "Przy numeracji od 0 korzeń ma zwykle `p = -1` — nie indeksuj tablic przez `p[root]`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "drzewo z tablicy rodziców",
+      "tablica rodziców drzewo",
+      "parent array tree",
+      "p[i] to rodzic i",
+      "drzewo dane jako rodzice"
+     ],
+     "a": "Tablica `p[v]` mówi, kto jest rodzicem `v`; korzeń ma `0`/`-1`. Zbuduj listy dzieci: `ch[p[v]].push_back(v)`\ndla każdego `v ≠ korzeń` — to O(n). Dalej przechodzisz drzewo od korzenia po `ch` (bez sprawdzania\nrodzica). Jeśli potrzebujesz zwykłej listy sąsiedztwa, dodaj krawędź w obie strony.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> ch(n + 1);\n    for (int v = 2; v <= n; v++) {\n        int p;\n        cin >> p;\n        ch[p].push_back(v);\n    }\n    for (int v = 1; v <= n; v++) cout << ch[v].size() << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "p[v] < v bez dfs",
+      "rodzic ma mniejszy numer",
+      "pętla od n do 2 rozmiar poddrzewa",
+      "dp bez rekurencji tablica rodzicow"
+     ],
+     "a": "Jeśli `p[v] < v`, numery tworzą porządek topologiczny: rodzic zawsze przed dzieckiem. Głębokość:\n`for v = 2..n: dep[v] = dep[p[v]] + 1`. Rozmiar/DP od liści: `for v = n..2: sz[p[v]] += sz[v]`.\nZero rekurencji, O(n) i bardzo szybkie — idealne dla `n = 10^6`.",
+     "code": "int n = 5;\nvector<int> p = {0, 0, 1, 2, 2, 1};\nvector<long long> val = {0, 5, 1, 2, 3, 4}, sub(val);\nfor (int v = n; v >= 2; v--) sub[p[v]] += sub[v];      // suma wartości w poddrzewie\ncout << sub[1] << ' ' << sub[2] << '\\n';                // 15 6"
+    },
+    {
+     "q": [
+      "jak znaleźć korzeń drzewa",
+      "korzeń p = 0",
+      "root parent -1",
+      "który wierzchołek jest korzeniem",
+      "znalezc korzen z tablicy rodzicow"
+     ],
+     "a": "Korzeń to jedyny wierzchołek, który **nie ma rodzica** — w tablicy ma `0` (lub `-1`). Jeśli zamiast\ntablicy dostajesz listę krawędzi „rodzic dziecko”, korzeń to wierzchołek, który nigdy nie pojawił się\njako dziecko (`!jestDzieckiem[v]`). O(n).",
+     "code": "int n = 4;\nvector<pair<int,int>> rodzicDziecko = {{3, 1}, {3, 2}, {1, 4}};\nvector<bool> jestDzieckiem(n + 1, false);\nfor (auto [r, d] : rodzicDziecko) jestDzieckiem[d] = true;\nint root = -1;\nfor (int v = 1; v <= n; v++) if (!jestDzieckiem[v]) root = v;\ncout << root << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "głębokość z tablicy rodziców",
+      "depth parent array",
+      "odległość od korzenia p[v]"
+     ],
+     "a": "Przy `p[v] < v`: pętla rosnąca `dep[v] = dep[p[v]] + 1`. Bez tej gwarancji: zbuduj dzieci i puść BFS\nod korzenia, albo licz z pamięcią: idź w górę po `p` do pierwszego wierzchołka o znanej głębokości\n(iteracyjnie, ze stosem odwiedzonych), potem rozwiń wynik w dół. Wszystko O(n).",
+     "code": "int n = 4;\nvector<int> p = {0, 2, 0, 2, 1};             // korzeń 2, rodzice dowolnie numerowani\nvector<int> dep(n + 1, -1);\nfor (int v = 1; v <= n; v++) if (p[v] == 0) dep[v] = 0;\nfor (int v = 1; v <= n; v++) {\n    vector<int> st;\n    int x = v;\n    while (dep[x] == -1) { st.push_back(x); x = p[x]; }\n    while (!st.empty()) { int y = st.back(); st.pop_back(); dep[y] = dep[p[y]] + 1; }\n}\ncout << dep[1] << dep[2] << dep[3] << dep[4] << '\\n';   // 1012"
+    },
+    {
+     "q": [
+      "lista krawędzi na tablicę rodziców",
+      "zamiana krawędzi na rodziców",
+      "edges to parent array"
+     ],
+     "a": "Z nieskierowanej listy krawędzi tablicę rodziców dostajesz jednym BFS-em od wybranego korzenia:\n`par[u] = v` dla każdego nowo odwiedzonego `u`. O(n). Potem możesz korzystać z tricków z `p[v]`\n(np. pętla po kolejności BFS od końca zamiast rekurencji).",
+     "code": "int n = 4;\nvector<vector<int>> g = {{}, {2}, {1, 3, 4}, {2}, {2}};\nvector<int> par(n + 1, -1), q = {1};\npar[1] = 0;\nfor (size_t i = 0; i < q.size(); i++) {\n    int v = q[i];\n    for (int u : g[v]) if (par[u] == -1) { par[u] = v; q.push_back(u); }\n}\nfor (int v = 1; v <= n; v++) cout << par[v] << ' ';   // 0 1 2 2\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "czy tablica rodziców to drzewo",
+      "sprawdź poprawność drzewa z rodziców",
+      "cykl w tablicy rodziców"
+     ],
+     "a": "Tablica `p` opisuje drzewo ⇔ jest dokładnie jeden korzeń i idąc z każdego wierzchołka w górę po `p`\ndochodzimy do korzenia (brak cyklu). Sprawdź: liczba zer = 1, a potem BFS od korzenia po dzieciach\nodwiedza wszystkie `n` wierzchołków (wierzchołki na cyklu nie są osiągalne z korzenia). O(n).",
+     "code": "int n = 4;\nvector<int> p = {0, 0, 3, 2, 1};             // 2 i 3 tworzą cykl\nvector<vector<int>> ch(n + 1);\nint root = -1, korzenie = 0;\nfor (int v = 1; v <= n; v++) { if (p[v] == 0) { root = v; korzenie++; } else ch[p[v]].push_back(v); }\nint odw = 0;\nif (korzenie == 1) {\n    vector<int> st = {root};\n    while (!st.empty()) { int v = st.back(); st.pop_back(); odw++; for (int u : ch[v]) st.push_back(u); }\n}\ncout << (korzenie == 1 && odw == n ? \"drzewo\" : \"nie drzewo\") << '\\n';   // nie drzewo"
+    },
+    {
+     "q": [
+      "drzewo genealogiczne szef pracownika",
+      "hierarchia firmy drzewo",
+      "przełożony każdego pracownika"
+     ],
+     "a": "„Każdy pracownik poza prezesem ma jednego szefa” to tablica rodziców: prezes = korzeń. Typowe pytania:\nilu podwładnych (pośrednich) ma każdy → `sz[v] − 1`; na którym poziomie jest → głębokość; czy A jest\n(pośrednim) szefem B → czy A jest przodkiem B (tin/tout albo LCA). Wszystko w O(n) preprocessingu.",
+     "code": "int n = 5;\nvector<int> szef = {0, 0, 1, 1, 3, 3};      // prezes = 1\nvector<int> sz(n + 1, 1);\nfor (int v = n; v >= 2; v--) sz[szef[v]] += sz[v];\nfor (int v = 1; v <= n; v++) cout << sz[v] - 1 << ' ';   // 4 0 2 0 0\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "tree-basics",
+    "tree-lca",
+    "tree-dp",
+    "graph-input",
+    "tree-dfs-order"
+   ]
+  },
+  {
+   "id": "tree-dfs-order",
+   "title": "DFS po drzewie: preorder/postorder, tin/tout, Euler tour i zapytania o poddrzewa",
+   "category": "Drzewa",
+   "tags": [
+    "euler tour",
+    "tin",
+    "tout",
+    "preorder",
+    "postorder",
+    "spłaszczenie drzewa",
+    "poddrzewo",
+    "fenwick",
+    "drzewo przedziałowe",
+    "czy przodek"
+   ],
+   "aliases": [
+    "euler tour",
+    "euler tour drzewo",
+    "tin tout",
+    "czasy wejścia i wyjścia",
+    "spłaszczenie drzewa",
+    "tree flattening",
+    "zapytania o poddrzewo",
+    "suma w poddrzewie",
+    "subtree query",
+    "preorder drzewo",
+    "czy u jest przodkiem v",
+    "drzewo na tablicę"
+   ],
+   "summary": "Numerując wierzchołki w kolejności wejścia DFS-a (preorder), każde poddrzewo staje się spójnym przedziałem `[tin[v], tout[v]]`. Zapytania i aktualizacje na poddrzewach zamieniają się w operacje na przedziałach tablicy (Fenwick, drzewo przedziałowe), a test „czy u jest przodkiem v” działa w O(1).",
+   "complexity": "spłaszczenie O(n); zapytanie/aktualizacja poddrzewa O(log n) z Fenwickiem/drzewem przedziałowym",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "DFS wchodzi do `v`, przechodzi **całe** jego poddrzewo i dopiero potem wychodzi. Jeśli przy wejściu\nnadajemy kolejne numery `tin[v] = ++timer`, to wierzchołki poddrzewa `v` dostaną numery\n`tin[v], tin[v]+1, …, tin[v]+sz[v]−1` — **spójny przedział**. Oznaczmy `tout[v] = tin[v] + sz[v] − 1`\n(ostatni numer w poddrzewie).\n\nWtedy:\n- **u jest w poddrzewie v** (v przodkiem u) ⇔ `tin[v] ≤ tin[u] ≤ tout[v]` — O(1),\n- **suma/max/… w poddrzewie v** = zapytanie na przedziale `[tin[v], tout[v]]` tablicy `a[tin[x]] = val[x]`,\n- **dodaj x do całego poddrzewa** = aktualizacja przedziałowa."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „zmień wartość wierzchołka / podaj sumę w poddrzewie”, „dodaj wszystkim podwładnym”,\n„ile w poddrzewie jest wierzchołków spełniających…”, „czy A jest przodkiem B” dla wielu zapytań.\nŚcieżki (a nie poddrzewa) to już LCA/HLD."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Suma w poddrzewie z aktualizacjami punktowymi (Euler tour + Fenwick)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint n;\nvector<long long> bit;                    // Fenwick na pozycjach 1..n\nvoid add(int i, long long x) { for (; i <= n; i += i & -i) bit[i] += x; }\nlong long sum(int i) { long long s = 0; for (; i > 0; i -= i & -i) s += bit[i]; return s; }\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int q;\n    cin >> n >> q;\n    vector<long long> a(n + 1);\n    for (int i = 1; i <= n; i++) cin >> a[i];\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int x, y;\n        cin >> x >> y;\n        g[x].push_back(y);\n        g[y].push_back(x);\n    }\n    // Iteracyjny preorder: zdejmujemy v, nadajemy tin, wrzucamy dzieci.\n    // Poddrzewo v jest przetwarzane w całości, zanim stos wróci poniżej v -> przedziały są spójne.\n    vector<int> tin(n + 1), tout(n + 1), par(n + 1, 0), order, st = {1};\n    int timer = 0;\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        tin[v] = ++timer;\n        order.push_back(v);\n        for (int u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); }\n    }\n    vector<int> sz(n + 1, 1);\n    for (int i = n - 1; i > 0; i--) sz[par[order[i]]] += sz[order[i]];\n    for (int v = 1; v <= n; v++) tout[v] = tin[v] + sz[v] - 1;\n\n    bit.assign(n + 1, 0);\n    for (int v = 1; v <= n; v++) add(tin[v], a[v]);\n    while (q--) {\n        int t, v;\n        cin >> t >> v;\n        if (t == 1) {                      // 1 v x : ustaw wartość v na x\n            long long x;\n            cin >> x;\n            add(tin[v], x - a[v]);\n            a[v] = x;\n        } else {                           // 2 v : suma w poddrzewie v\n            cout << sum(tout[v]) - sum(tin[v] - 1) << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersja rekurencyjna: tin, tout, przodek w O(1)",
+     "code": "const int MAXN = 200005;\nvector<int> g[MAXN];\nint tin[MAXN], tout[MAXN], timer_ = 0;\nint kto[MAXN];                     // kto[t] = wierzchołek o numerze t (odwrotność tin)\n\nvoid dfs(int v, int p) {\n    tin[v] = ++timer_;\n    kto[tin[v]] = v;\n    for (int u : g[v]) if (u != p) dfs(u, v);\n    tout[v] = timer_;              // ostatni numer w poddrzewie v\n}\nbool przodek(int v, int u) {       // czy v jest przodkiem u (lub v == u)\n    return tin[v] <= tin[u] && tin[u] <= tout[v];\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja na drzewie",
+      "Po spłaszczeniu",
+      "Struktura"
+     ],
+     "rows": [
+      [
+       "zmień wartość v, suma w poddrzewie",
+       "punkt `tin[v]`, suma na `[tin, tout]`",
+       "Fenwick"
+      ],
+      [
+       "dodaj x do poddrzewa, wartość wierzchołka",
+       "dodaj na `[tin, tout]`, wartość w punkcie",
+       "Fenwick (różnice)"
+      ],
+      [
+       "dodaj x do poddrzewa, suma w poddrzewie",
+       "przedział + przedział",
+       "drzewo przedziałowe lazy"
+      ],
+      [
+       "max/min w poddrzewie",
+       "max na `[tin, tout]`",
+       "drzewo przedziałowe / sparse table (statycznie)"
+      ],
+      [
+       "dodaj x na ścieżce do korzenia, wartość wierzchołka",
+       "punkt `tin[v]`, suma na `[tin[u], tout[u]]`",
+       "Fenwick"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Prosty „iteracyjny DFS ze stosem, wrzucający wszystkich sąsiadów” daje poprawny preorder dla poddrzew\ntylko wtedy, gdy numer nadajesz **przy zdejmowaniu** ze stosu (jak wyżej). Nadawanie numeru przy\nwrzucaniu psuje spójność przedziałów."
+    },
+    {
+     "type": "tip",
+     "md": "**Pełny Euler tour** (wierzchołek wypisywany przy wejściu i po powrocie z każdego dziecka, długość\n`2n − 1`) to co innego — służy do LCA przez RMQ (zob. `tree-lca-euler`). Do zapytań o poddrzewa\nwystarcza preorder długości `n`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "tin[v], tout[v]",
+     "desc": "poddrzewo v = pozycje [tin[v], tout[v]] w preorderze",
+     "complexity": "O(1) po O(n) preprocessingu"
+    },
+    {
+     "sig": "przodek(v, u)",
+     "desc": "czy v jest przodkiem u: tin[v] ≤ tin[u] ≤ tout[v]",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "tout[v] - tin[v] + 1",
+     "desc": "rozmiar poddrzewa v",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Tablica Fenwicka indeksowana od 1 — `tin` też numeruj od 1 (`++timer`), inaczej `add(0, x)` zapętli się.",
+    "Wartość wierzchołka trzeba wstawić na pozycję `tin[v]`, nie `v`.",
+    "Przy aktualizacji „ustaw na x” dodawaj różnicę `x − a[v]` i aktualizuj `a[v]`.",
+    "Sumy w poddrzewie mogą przekroczyć `int` — `long long`.",
+    "Rekurencyjny DFS dla `n = 10^6` (drzewo-ścieżka) może przepełnić stos — wersja iteracyjna powyżej.",
+    "Ścieżka u–v NIE jest przedziałem w preorderze — do zapytań o ścieżki użyj LCA + prefiksów lub HLD."
+   ],
+   "qa": [
+    {
+     "q": [
+      "euler tour drzewo",
+      "spłaszczenie drzewa",
+      "tree flattening",
+      "drzewo na tablicę",
+      "euler tour c++"
+     ],
+     "a": "Numerujesz wierzchołki w kolejności wejścia DFS-a (`tin[v] = ++timer`). Każde poddrzewo to wtedy\nspójny przedział `[tin[v], tin[v] + sz[v] − 1]`, więc „operacja na poddrzewie” = „operacja na\nprzedziale tablicy”. Spłaszczenie kosztuje O(n), a potem używasz Fenwicka lub drzewa przedziałowego —\nO(log n) na zapytanie.",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint tin[MAXN], tout[MAXN], timer_ = 0;\nvoid dfs(int v, int p) {\n    tin[v] = ++timer_;\n    for (int u : g[v]) if (u != p) dfs(u, v);\n    tout[v] = timer_;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "suma w poddrzewie zapytania",
+      "subtree sum query",
+      "zapytania o poddrzewo fenwick",
+      "zmiana wartości i suma poddrzewa",
+      "suma poddrzewa z aktualizacjami"
+     ],
+     "a": "Spłaszcz drzewo (tin/tout), wstaw `val[v]` na pozycję `tin[v]` w Fenwicku. Zmiana wartości `v` =\n`add(tin[v], różnica)`, suma w poddrzewie = `sum(tout[v]) − sum(tin[v] − 1)`. Każda operacja O(log n),\npreprocessing O(n log n) (albo O(n) budową Fenwicka).",
+     "code": "int n = 5;\nvector<long long> bit(n + 1, 0);\nauto add = [&](int i, long long x) { for (; i <= n; i += i & -i) bit[i] += x; };\nauto sum = [&](int i) { long long s = 0; for (; i > 0; i -= i & -i) s += bit[i]; return s; };\nvector<int> tin = {0, 1, 2, 3, 4, 5}, tout = {0, 5, 2, 5, 4, 5};   // drzewo 1-2, 1-3, 3-4, 3-5\nvector<long long> val = {0, 1, 2, 3, 4, 5};\nfor (int v = 1; v <= n; v++) add(tin[v], val[v]);\ncout << sum(tout[3]) - sum(tin[3] - 1) << '\\n';   // 12"
+    },
+    {
+     "q": [
+      "tin tout",
+      "czasy wejścia i wyjścia drzewo",
+      "entry exit time tree",
+      "tin tout co to"
+     ],
+     "a": "`tin[v]` = numer kolejny, gdy DFS wchodzi do `v`; `tout[v]` = największy numer nadany w poddrzewie `v`\n(czyli w chwili wyjścia). Poddrzewo `v` to dokładnie wierzchołki z `tin` w `[tin[v], tout[v]]`.\nWersja z licznikiem zwiększanym także przy wyjściu (`tout = ++timer`) też działa do testu przodka,\nale wtedy przedziały nie odpowiadają pozycjom w tablicy długości n.",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nint tin[MAXN], tout[MAXN], t_ = 0;\nvoid dfs(int v, int p) {\n    tin[v] = ++t_;\n    for (int u : g[v]) if (u != p) dfs(u, v);\n    tout[v] = t_;\n}\nint rozmiar(int v) { return tout[v] - tin[v] + 1; }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy u jest przodkiem v",
+      "is ancestor o(1)",
+      "sprawdzenie przodka drzewo",
+      "czy wierzchołek jest w poddrzewie"
+     ],
+     "a": "Po jednym DFS-ie: `v` jest przodkiem `u` (lub `v == u`) ⇔ `tin[v] ≤ tin[u] && tout[u] ≤ tout[v]`.\nDziała, bo poddrzewo `v` zajmuje ciągły przedział czasów. Każde zapytanie O(1), preprocessing O(n).\nCzęsto używane w LCA (binary lifting) i przy sprawdzaniu, czy wierzchołek leży na ścieżce.",
+     "code": "vector<int> tin = {0, 1, 2, 4, 3}, tout = {0, 4, 3, 4, 3};   // 1 -> 2 -> 4, 1 -> 3\nauto przodek = [&](int v, int u) { return tin[v] <= tin[u] && tout[u] <= tout[v]; };\ncout << przodek(1, 4) << przodek(2, 4) << przodek(3, 4) << '\\n';   // 110"
+    },
+    {
+     "q": [
+      "preorder postorder drzewo",
+      "kolejność preorder",
+      "postorder drzewo c++",
+      "pre order post order tree"
+     ],
+     "a": "**Preorder** — wierzchołek wypisujesz przy wejściu (przed dziećmi): rodzic zawsze przed potomkami.\n**Postorder** — przy wyjściu (po dzieciach): dzieci przed rodzicem, więc to naturalna kolejność dla DP\n„od liści”. Oba w O(n). Dla drzew binarnych jest jeszcze inorder (lewe, korzeń, prawe) — zob. BST.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> g[100];\nvector<int> pre, post;\nvoid dfs(int v, int p) {\n    pre.push_back(v);\n    for (int u : g[v]) if (u != p) dfs(u, v);\n    post.push_back(v);\n}\nint main() {\n    int n;\n    cin >> n;\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    dfs(1, 0);\n    for (int v : pre) cout << v << ' ';\n    cout << '\\n';\n    for (int v : post) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dodaj do całego poddrzewa",
+      "update subtree range",
+      "dodaj x wszystkim w poddrzewie",
+      "aktualizacja poddrzewa"
+     ],
+     "a": "Poddrzewo to przedział `[tin[v], tout[v]]`, więc „dodaj x do poddrzewa, podaj wartość wierzchołka”\n= Fenwick na różnicach: `add(tin[v], x); add(tout[v] + 1, −x)`, wartość `u` = `sum(tin[u])`. Jeśli\npytasz o **sumę** w poddrzewie przy dodawaniu na poddrzewach — drzewo przedziałowe z lazy propagation\n(albo dwa Fenwicki). O(log n) na operację.",
+     "code": "int n = 5;\nvector<long long> bit(n + 2, 0);\nauto add = [&](int i, long long x) { for (; i <= n; i += i & -i) bit[i] += x; };\nauto pref = [&](int i) { long long s = 0; for (; i > 0; i -= i & -i) s += bit[i]; return s; };\nvector<int> tin = {0, 1, 2, 3, 4, 5}, tout = {0, 5, 2, 5, 4, 5};\nauto dodajPoddrzewo = [&](int v, long long x) { add(tin[v], x); if (tout[v] + 1 <= n) add(tout[v] + 1, -x); };\ndodajPoddrzewo(3, 10);\ndodajPoddrzewo(1, 1);\ncout << pref(tin[4]) << ' ' << pref(tin[2]) << '\\n';   // 11 1"
+    },
+    {
+     "q": [
+      "max w poddrzewie",
+      "minimum w poddrzewie drzewo przedziałowe",
+      "subtree max query"
+     ],
+     "a": "Ułóż wartości w tablicy `b[tin[v]] = val[v]` i zbuduj drzewo przedziałowe na maksimum (dla zmian\nwartości) albo sparse table (dla danych statycznych, O(1) na zapytanie). Max w poddrzewie `v` to\nmax na `[tin[v], tout[v]]`. O(log n) na zapytanie/aktualizację.",
+     "code": "int n = 5;\nvector<int> b = {0, 1, 2, 3, 4, 5};        // b[tin[v]] = val[v]\nint sz = 1;\nwhile (sz < n + 1) sz <<= 1;\nvector<int> t(2 * sz, INT_MIN);\nfor (int i = 1; i <= n; i++) t[sz + i] = b[i];\nfor (int i = sz - 1; i >= 1; i--) t[i] = max(t[2 * i], t[2 * i + 1]);\nauto query = [&](int l, int r) {             // max na [l, r]\n    int res = INT_MIN;\n    for (l += sz, r += sz + 1; l < r; l >>= 1, r >>= 1) {\n        if (l & 1) res = max(res, t[l++]);\n        if (r & 1) res = max(res, t[--r]);\n    }\n    return res;\n};\ncout << query(3, 5) << ' ' << query(2, 2) << '\\n';   // 5 2"
+    },
+    {
+     "q": [
+      "tin bez rekurencji",
+      "iteracyjny euler tour",
+      "euler tour iteracyjnie",
+      "tin tout stos"
+     ],
+     "a": "Stos wierzchołków: zdejmij `v`, nadaj `tin[v] = ++timer`, wrzuć dzieci. Rozmiar poddrzew policz\nprzechodząc kolejność zdejmowania od końca, a `tout[v] = tin[v] + sz[v] − 1`. Działa, bo zanim stos\nzejdzie poniżej `v`, zdejmie całe jego poddrzewo. O(n), bez ryzyka przepełnienia stosu wywołań.",
+     "code": "int n = 5;\nvector<vector<int>> g = {{}, {2, 3}, {1}, {1, 4, 5}, {3}, {3}};\nvector<int> tin(n + 1), tout(n + 1), par(n + 1, 0), sz(n + 1, 1), order, st = {1};\nint timer = 0;\nwhile (!st.empty()) {\n    int v = st.back(); st.pop_back();\n    tin[v] = ++timer;\n    order.push_back(v);\n    for (int u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); }\n}\nfor (int i = n - 1; i > 0; i--) sz[par[order[i]]] += sz[order[i]];\nfor (int v = 1; v <= n; v++) tout[v] = tin[v] + sz[v] - 1;\ncout << tin[3] << ' ' << tout[3] << '\\n';   // 2 4"
+    },
+    {
+     "q": [
+      "euler tour 2n-1",
+      "pełny euler tour",
+      "euler tour do lca",
+      "ciąg eulera drzewa"
+     ],
+     "a": "Pełny Euler tour zapisuje wierzchołek przy wejściu i ponownie po powrocie z każdego dziecka — długość\n`2n − 1`. Między pierwszymi wystąpieniami `u` i `v` leży ich LCA jako wierzchołek o najmniejszej\ngłębokości, więc LCA = RMQ na tym ciągu (sparse table → O(1) na zapytanie). Do zapytań o poddrzewa\nwystarczy zwykły preorder długości `n`.",
+     "code": "const int MAXN = 100005;\nvector<int> g[MAXN];\nvector<int> euler;\nint first_[MAXN];\nvoid dfs(int v, int p) {\n    first_[v] = euler.size();\n    euler.push_back(v);\n    for (int u : g[v]) if (u != p) { dfs(u, v); euler.push_back(v); }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dodaj na ścieżce do korzenia",
+      "aktualizacja ścieżka do korzenia zapytanie o wierzchołek",
+      "path to root update point query",
+      "wartość wierzchołka suma z poddrzewa"
+     ],
+     "a": "Trik odwrotny: „dodaj x do wszystkich wierzchołków na ścieżce `v → korzeń`, potem pytaj o wartość `u`”.\nWartość `u` = suma dodanych `x` w punktach leżących w poddrzewie `u` (bo `u` jest na ścieżce od `v`\ndo korzenia ⇔ `v` jest w poddrzewie `u`). Więc: `add(tin[v], x)`, a zapytanie = suma na\n`[tin[u], tout[u]]`. O(log n).",
+     "code": "int n = 5;\nvector<long long> bit(n + 1, 0);\nauto add = [&](int i, long long x) { for (; i <= n; i += i & -i) bit[i] += x; };\nauto sum = [&](int i) { long long s = 0; for (; i > 0; i -= i & -i) s += bit[i]; return s; };\nvector<int> tin = {0, 1, 2, 3, 4, 5}, tout = {0, 5, 2, 5, 4, 5};   // 1-2, 1-3, 3-4, 3-5\nadd(tin[4], 7);                                 // +7 na ścieżce 4 -> 3 -> 1\nauto wartosc = [&](int u) { return sum(tout[u]) - sum(tin[u] - 1); };\ncout << wartosc(3) << ' ' << wartosc(5) << ' ' << wartosc(1) << '\\n';   // 7 0 7"
+    },
+    {
+     "q": [
+      "ile wierzchołków w poddrzewie spełnia warunek",
+      "zapytania offline poddrzewo",
+      "liczba wartości ≤ k w poddrzewie"
+     ],
+     "a": "Po spłaszczeniu pytanie o poddrzewo to pytanie o przedział tablicy, więc działają wszystkie techniki\nprzedziałowe: „ile wartości ≤ k w poddrzewie” — offline (sortujesz zapytania po k i wartości, dodajesz\ndo Fenwicka) albo drzewo przedziałowe z posortowanymi wektorami (merge sort tree). Zwykle O((n + q) log n).",
+     "code": "// b[t] = wartość wierzchołka o tin = t; zapytanie: ile b[l..r] <= k (offline)\nint n = 5;\nvector<int> b = {0, 4, 1, 5, 2, 3};\nstruct Q { int l, r, k, id; };\nvector<Q> qs = {{2, 5, 3, 0}, {1, 5, 4, 1}};\nvector<pair<int,int>> el;\nfor (int i = 1; i <= n; i++) el.push_back({b[i], i});\nsort(el.begin(), el.end());\nsort(qs.begin(), qs.end(), [](const Q& x, const Q& y) { return x.k < y.k; });\nvector<int> bit(n + 1, 0), ans(qs.size());\nauto add = [&](int i) { for (; i <= n; i += i & -i) bit[i]++; };\nauto sum = [&](int i) { int s = 0; for (; i > 0; i -= i & -i) s += bit[i]; return s; };\nsize_t j = 0;\nfor (auto& q : qs) {\n    while (j < el.size() && el[j].first <= q.k) add(el[j++].second);\n    ans[q.id] = sum(q.r) - sum(q.l - 1);\n}\ncout << ans[0] << ' ' << ans[1] << '\\n';   // 3 4"
+    }
+   ],
+   "related": [
+    "tree-basics",
+    "tree-lca-euler",
+    "tree-path-sum",
+    "tree-hld",
+    "tree-small-to-large",
+    "ds-fenwick",
+    "ds-segment-tree",
+    "graph-dfs",
+    "oi-py-recursion",
+    "tree-isomorphism",
+    "tree-virtual"
+   ]
+  },
+  {
+   "id": "tree-diameter",
+   "title": "Średnica drzewa — dwa BFS-y i programowanie dynamiczne",
+   "category": "Drzewa",
+   "tags": [
+    "średnica drzewa",
+    "diameter",
+    "najdłuższa ścieżka",
+    "2 bfs",
+    "dp",
+    "najdalszy wierzchołek",
+    "drzewo ważone"
+   ],
+   "aliases": [
+    "średnica drzewa",
+    "srednica drzewa",
+    "tree diameter",
+    "najdłuższa ścieżka w drzewie",
+    "najdluzsza sciezka drzewo",
+    "dwa bfs średnica",
+    "diameter of tree c++",
+    "najdalsze wierzchołki drzewa",
+    "średnica drzewa ważonego"
+   ],
+   "summary": "Średnica to najdłuższa ścieżka w drzewie. Klasyka: BFS z dowolnego wierzchołka do najdalszego A, potem BFS z A do najdalszego B — ścieżka A–B jest średnicą. Alternatywnie DP: w każdym wierzchołku dwie najgłębsze gałęzie. Oba sposoby O(n).",
+   "complexity": "O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Średnica** drzewa to największa odległość między dwoma wierzchołkami (w krawędziach albo w sumie wag).\n\n**Metoda 2×BFS (2×DFS):** z dowolnego wierzchołka `s` znajdź najdalszy wierzchołek `A`. Z `A` znajdź\nnajdalszy `B`. Wtedy `dist(A, B)` to średnica. Dlaczego? Najdalszy wierzchołek od dowolnego punktu jest\nzawsze końcem jakiejś średnicy (gdyby nie był, dałoby się zbudować ścieżkę dłuższą od średnicy).\nDziała dla wag **nieujemnych**.\n\n**Metoda DP:** ukorzeń drzewo; `down[v]` = najdłuższa ścieżka w dół z `v`. Najdłuższa ścieżka, której\n„najwyższym” punktem jest `v`, to suma dwóch największych wartości `down[dziecko] + w` — maksimum po\nwszystkich `v` to średnica. Działa też przy ujemnych wagach (z drobną modyfikacją)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „najdłuższa trasa”, „dwa najbardziej oddalone miasta”, „maksymalna odległość między dowolną\nparą”, „ile czasu potrzeba, by sygnał doszedł wszędzie z najlepszego miejsca” (promień = połowa średnicy),\n„dodaj jedną krawędź, by zminimalizować…”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Średnica 2×BFS z odtworzeniem ścieżki",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint n;\nvector<vector<int>> g;\n\n// BFS z s: zwraca najdalszy wierzchołek, wypełnia dist i par\nint bfs(int s, vector<int>& dist, vector<int>& par) {\n    dist.assign(n + 1, -1);\n    par.assign(n + 1, 0);\n    queue<int> q;\n    dist[s] = 0;\n    q.push(s);\n    int far = s;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        if (dist[v] > dist[far]) far = v;\n        for (int u : g[v])\n            if (dist[u] == -1) { dist[u] = dist[v] + 1; par[u] = v; q.push(u); }\n    }\n    return far;\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    cin >> n;\n    g.assign(n + 1, {});\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> dist, par;\n    int A = bfs(1, dist, par);        // najdalszy od dowolnego = koniec średnicy\n    int B = bfs(A, dist, par);        // najdalszy od A = drugi koniec\n    cout << dist[B] << '\\n';          // długość średnicy (w krawędziach)\n    for (int v = B; v != A; v = par[v]) cout << v << ' ';\n    cout << A << '\\n';                // wierzchołki średnicy od B do A\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Średnica przez DP (drzewo ważone)",
+     "code": "// DP: średnica drzewa ważonego (wagi mogą być duże -> long long)\nconst int MAXN = 200005;\nvector<pair<int, int>> adj[MAXN];\nlong long down_[MAXN], best = 0;\n\nvoid dfs(int v, int p) {\n    long long m1 = 0, m2 = 0;                 // dwie najdłuższe gałęzie w dół\n    for (auto [u, w] : adj[v]) {\n        if (u == p) continue;\n        dfs(u, v);\n        long long d = down_[u] + w;\n        if (d > m1) { m2 = m1; m1 = d; }\n        else if (d > m2) m2 = d;\n    }\n    down_[v] = m1;\n    best = max(best, m1 + m2);                // najlepsza ścieżka „zgięta” w v\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Najdalszy wierzchołek od **dowolnego** `v` to jeden z końców średnicy `A` lub `B`. Więc\n„ekscentryczność” (odległość do najdalszego) każdego wierzchołka = `max(distA[v], distB[v])` —\ndwa dodatkowe BFS-y zamiast n BFS-ów."
+    },
+    {
+     "type": "warn",
+     "md": "2×BFS nie działa przy **ujemnych** wagach krawędzi. Wtedy użyj DP (i zdecyduj, czy ścieżka pusta/jednowierzchołkowa\njest dozwolona — od tego zależy inicjalizacja `m1, m2`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bfs(s, dist, par)",
+     "desc": "odległości od s; zwraca najdalszy wierzchołek",
+     "complexity": "O(n)",
+     "returns": "int"
+    },
+    {
+     "sig": "dfs(v, p)",
+     "desc": "DP: down[v] i aktualizacja best = m1 + m2",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "W drzewie ważonym BFS nie liczy odległości — użyj DFS/BFS sumującego wagi (`dist[u] = dist[v] + w`, kolejność odwiedzin w drzewie nie ma znaczenia, bo ścieżka jest jedyna).",
+    "Średnica w krawędziach vs w wierzchołkach — sprawdź, o co pyta treść (różnica o 1).",
+    "Wagi do 10^9 i n do 10^5 → średnica do 10^14: `long long`.",
+    "Ujemne wagi → 2×BFS daje złe wyniki; DP działa.",
+    "Rekurencyjne DP na drzewie-ścieżce z n = 10^6 → stos; BFS-owa wersja jest iteracyjna.",
+    "Metoda 2×BFS działa tylko dla drzew (i lasów osobno na każdym drzewie), nie dla dowolnych grafów."
+   ],
+   "qa": [
+    {
+     "q": [
+      "średnica drzewa",
+      "srednica drzewa",
+      "tree diameter c++",
+      "najdłuższa ścieżka w drzewie",
+      "najdluzsza sciezka w drzewie kod"
+     ],
+     "a": "Dwa BFS-y: z wierzchołka 1 znajdź najdalszy `A`, z `A` najdalszy `B`; `dist(A, B)` to średnica.\nKażdy BFS to O(n), więc całość **O(n)**. Działa, bo najdalszy wierzchołek od dowolnego punktu zawsze\njest końcem pewnej średnicy. W drzewie ważonym (wagi ≥ 0) zamiast BFS-a liczysz odległości DFS-em\nz sumowaniem wag.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint n;\nvector<vector<int>> g;\npair<int,int> najdalszy(int s) {\n    vector<int> d(n + 1, -1);\n    queue<int> q; q.push(s); d[s] = 0;\n    int far = s;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        if (d[v] > d[far]) far = v;\n        for (int u : g[v]) if (d[u] == -1) { d[u] = d[v] + 1; q.push(u); }\n    }\n    return {far, d[far]};\n}\nint main() {\n    cin >> n;\n    g.assign(n + 1, {});\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    int A = najdalszy(1).first;\n    cout << najdalszy(A).second << '\\n';\n}"
+    },
+    {
+     "q": [
+      "dlaczego dwa bfs działa średnica",
+      "dowód 2 bfs średnica",
+      "czemu najdalszy wierzchołek jest końcem średnicy"
+     ],
+     "a": "Niech `A` będzie najdalszy od `s`, a `P–Q` dowolną średnicą. Gdyby `A` nie był końcem żadnej średnicy,\nto ścieżka od `A` do dalszego z końców `P`/`Q` (przechodząca przez miejsce, gdzie ścieżka `s–A` styka\nsię z `P–Q`) byłaby dłuższa niż `P–Q` — sprzeczność. Argument używa nierówności między długościami\nodcinków, więc wymaga **nieujemnych** wag.",
+     "code": "// sprawdzenie własności: z KAŻDEGO startu najdalszy wierzchołek jest końcem średnicy\nint n = 7;\nvector<vector<int>> g = {{}, {2}, {1, 3, 5}, {2, 4}, {3}, {2, 6, 7}, {5}, {5}};\nauto bfs = [&](int s) {\n    vector<int> d(n + 1, -1);\n    queue<int> q; q.push(s); d[s] = 0;\n    while (!q.empty()) { int v = q.front(); q.pop(); for (int u : g[v]) if (d[u] == -1) { d[u] = d[v] + 1; q.push(u); } }\n    return d;\n};\nint D = 0;\nfor (int s = 1; s <= n; s++) { auto d = bfs(s); D = max(D, *max_element(d.begin() + 1, d.end())); }\nbool ok = true;\nfor (int s = 1; s <= n; s++) {\n    auto d = bfs(s);\n    int A = max_element(d.begin() + 1, d.end()) - d.begin();        // najdalszy od s\n    auto dA = bfs(A);\n    if (*max_element(dA.begin() + 1, dA.end()) != D) ok = false;   // z A widać całą średnicę\n}\ncout << D << ' ' << (ok ? \"OK\" : \"ZLE\") << '\\n';   // 4 OK"
+    },
+    {
+     "q": [
+      "średnica drzewa ważonego",
+      "weighted tree diameter",
+      "średnica z wagami krawędzi",
+      "srednica drzewa wagi"
+     ],
+     "a": "Przy wagach ≥ 0 nadal działa metoda dwóch przejść, ale odległość liczysz sumując wagi:\n`dist[u] = dist[v] + w` (DFS albo BFS — w drzewie kolejność nie ma znaczenia, bo ścieżka do każdego\nwierzchołka jest jedyna). Wynik i odległości trzymaj w `long long`. O(n).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint n;\nvector<vector<pair<int,int>>> g;\npair<int,long long> najdalszy(int s) {\n    vector<long long> d(n + 1, -1);\n    vector<int> st = {s};\n    d[s] = 0;\n    int far = s;\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        if (d[v] > d[far]) far = v;\n        for (auto [u, w] : g[v]) if (d[u] == -1) { d[u] = d[v] + w; st.push_back(u); }\n    }\n    return {far, d[far]};\n}\nint main() {\n    cin >> n;\n    g.assign(n + 1, {});\n    for (int i = 0; i < n - 1; i++) {\n        int a, b, w;\n        cin >> a >> b >> w;\n        g[a].push_back({b, w});\n        g[b].push_back({a, w});\n    }\n    int A = najdalszy(1).first;\n    cout << najdalszy(A).second << '\\n';\n}"
+    },
+    {
+     "q": [
+      "średnica dp",
+      "diameter dp drzewo",
+      "średnica drzewa programowanie dynamiczne",
+      "dwie najgłębsze gałęzie"
+     ],
+     "a": "Ukorzeń drzewo i policz `down[v]` = najdłuższa ścieżka z `v` w dół. W każdym `v` weź dwie największe\nwartości `down[dziecko] + w` (`m1 ≥ m2`); `m1 + m2` to najdłuższa ścieżka „zgięta” w `v`. Średnica =\nmaksimum po wszystkich `v`. O(n). Zaleta nad 2×BFS: działa w ramach jednego DFS-a z innym DP i przy\nujemnych wagach.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> par(n + 1, 0), order, st = {1}, down(n + 1, 0);\n    while (!st.empty()) {\n        int v = st.back(); st.pop_back();\n        order.push_back(v);\n        for (int u : g[v]) if (u != par[v]) { par[u] = v; st.push_back(u); }\n    }\n    int best = 0;\n    for (int i = n - 1; i >= 0; i--) {          // dzieci przed rodzicem\n        int v = order[i], m1 = 0, m2 = 0;\n        for (int u : g[v]) {\n            if (u == par[v]) continue;\n            int d = down[u] + 1;\n            if (d > m1) { m2 = m1; m1 = d; } else if (d > m2) m2 = d;\n        }\n        down[v] = m1;\n        best = max(best, m1 + m2);\n    }\n    cout << best << '\\n';\n}"
+    },
+    {
+     "q": [
+      "wypisz wierzchołki średnicy",
+      "odtworzenie średnicy",
+      "ścieżka średnicy drzewa",
+      "print diameter path"
+     ],
+     "a": "W drugim BFS-ie (z `A`) zapamiętuj rodziców `par[u] = v`. Po znalezieniu `B` idź `B → par[B] → … → A`\n— to są wierzchołki średnicy. Długość ścieżki w wierzchołkach to `dist[B] + 1`. Koszt O(n).",
+     "code": "vector<int> sciezkaSrednicy(const vector<int>& par, int A, int B) {\n    vector<int> p;\n    for (int v = B; v != A; v = par[v]) p.push_back(v);\n    p.push_back(A);\n    return p;          // od B do A\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ujemne wagi średnica drzewa",
+      "średnica z ujemnymi wagami",
+      "max suma ścieżki w drzewie ujemne"
+     ],
+     "a": "Przy ujemnych wagach (albo wartościach w wierzchołkach, które mogą być ujemne) 2×BFS zawodzi. Użyj DP:\n`down[v] = val[v] + max(0, max down[dziecko])` (gałąź można uciąć), a kandydat w `v` to\n`val[v] + dwie największe dodatnie gałęzie`. Jeśli ścieżka musi mieć ≥ 1 wierzchołek, inicjalizuj\nwynik jako `max val`. O(n).",
+     "code": "int n = 4;\nvector<long long> val = {0, -5, 3, 4, -1};\nvector<vector<int>> ch = {{}, {2, 3}, {}, {4}, {}};      // dzieci, korzeń 1\nvector<long long> down(n + 1);\nlong long best = LLONG_MIN;\nvector<int> order = {1, 2, 3, 4};                        // rodzic przed dzieckiem\nfor (int i = n - 1; i >= 0; i--) {\n    int v = order[i];\n    long long m1 = 0, m2 = 0;\n    for (int u : ch[v]) {\n        long long d = max(0LL, down[u]);\n        if (d > m1) { m2 = m1; m1 = d; } else if (d > m2) m2 = d;\n    }\n    down[v] = val[v] + m1;\n    best = max(best, val[v] + m1 + m2);\n}\ncout << best << '\\n';   // 4 (sam wierzchołek 3)"
+    },
+    {
+     "q": [
+      "najdalszy wierzchołek od każdego",
+      "ekscentryczność drzewo",
+      "max odległość z każdego wierzchołka",
+      "farthest node from every node tree"
+     ],
+     "a": "Znajdź końce średnicy `A` i `B` (2×BFS), policz `distA` i `distB` (jeszcze jeden BFS). Dla każdego `v`\nnajdalszy wierzchołek to `A` albo `B`, więc odpowiedź = `max(distA[v], distB[v])`. Razem 3 BFS-y,\nO(n), zamiast n BFS-ów (O(n²)).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint n;\nvector<vector<int>> g;\nvector<int> bfs(int s) {\n    vector<int> d(n + 1, -1);\n    queue<int> q; q.push(s); d[s] = 0;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int u : g[v]) if (d[u] == -1) { d[u] = d[v] + 1; q.push(u); }\n    }\n    return d;\n}\nint main() {\n    cin >> n;\n    g.assign(n + 1, {});\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    auto d1 = bfs(1);\n    int A = max_element(d1.begin() + 1, d1.end()) - d1.begin();\n    auto dA = bfs(A);\n    int B = max_element(dA.begin() + 1, dA.end()) - dA.begin();\n    auto dB = bfs(B);\n    for (int v = 1; v <= n; v++) cout << max(dA[v], dB[v]) << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "średnica złożoność",
+      "ile działa liczenie średnicy",
+      "diameter complexity"
+     ],
+     "a": "Obie metody są liniowe: 2×BFS to dwa przejścia po `n` wierzchołkach i `n − 1` krawędziach, DP to jedno\nprzejście. Pamięć O(n). Brute force (BFS z każdego wierzchołka) to O(n²) — dla `n = 10^5` za wolno.",
+     "code": "// ścieżka n = 1000: 2 BFS-y = 2n kroków, BFS z każdego wierzchołka = n^2 kroków\nint n = 1000;\nvector<vector<int>> g(n + 1);\nfor (int v = 1; v < n; v++) { g[v].push_back(v + 1); g[v + 1].push_back(v); }\nlong long kroki = 0;\nauto bfs = [&](int s) {\n    vector<int> d(n + 1, -1);\n    queue<int> q; q.push(s); d[s] = 0;\n    int far = s;\n    while (!q.empty()) {\n        int v = q.front(); q.pop(); kroki++;\n        if (d[v] > d[far]) far = v;\n        for (int u : g[v]) if (d[u] == -1) { d[u] = d[v] + 1; q.push(u); }\n    }\n    return make_pair(far, d[far]);\n};\nint A = bfs(1).first;\nint D = bfs(A).second;\nlong long dwaBfs = kroki;\nkroki = 0;\nint Dbrute = 0;\nfor (int s = 1; s <= n; s++) Dbrute = max(Dbrute, bfs(s).second);\ncout << D << ' ' << Dbrute << ' ' << dwaBfs << ' ' << kroki << '\\n';   // 999 999 2000 1000000"
+    },
+    {
+     "q": [
+      "średnica grafu",
+      "średnica w zwykłym grafie",
+      "diameter of general graph",
+      "najdłuższa ścieżka w grafie"
+     ],
+     "a": "Uwaga na pojęcia. W **dowolnym grafie** „najdłuższa prosta ścieżka” to problem NP-trudny (brak szybkiego\nalgorytmu). „Średnica” grafu w sensie *największej odległości najkrótszych ścieżek* liczy się BFS-em\nz każdego wierzchołka — O(n·(n + m)). Trik 2×BFS jest poprawny tylko dla drzew; w grafie z cyklami\nmoże dać zły wynik. W DAG-u najdłuższą ścieżkę liczy DP po toposorcie.",
+     "code": "// graf z cyklami: K4 bez krawędzi 3-4. Trik 2×BFS daje 1, a prawdziwa średnica to 2 (3-1-4).\nint n = 4;\nvector<vector<int>> g(n + 1);\nfor (auto [a, b] : vector<pair<int, int>>{{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}}) {\n    g[a].push_back(b);\n    g[b].push_back(a);\n}\nauto bfs = [&](int s) {\n    vector<int> d(n + 1, -1);\n    queue<int> q; q.push(s); d[s] = 0;\n    while (!q.empty()) { int v = q.front(); q.pop(); for (int u : g[v]) if (d[u] == -1) { d[u] = d[v] + 1; q.push(u); } }\n    return d;\n};\nauto d1 = bfs(1);\nint A = max_element(d1.begin() + 1, d1.end()) - d1.begin();      // A = 2\nauto dA = bfs(A);\nint dwaBfs = *max_element(dA.begin() + 1, dA.end());\nint D = 0;                                                          // poprawnie: BFS z każdego\nfor (int s = 1; s <= n; s++) { auto d = bfs(s); D = max(D, *max_element(d.begin() + 1, d.end())); }\ncout << dwaBfs << ' ' << D << '\\n';   // 1 2"
+    },
+    {
+     "q": [
+      "łączenie dwóch drzew krawędzią minimalna średnica",
+      "połącz dwa drzewa minimalizując średnicę",
+      "merge two trees min diameter"
+     ],
+     "a": "Łącząc drzewa o średnicach `d1`, `d2` jedną krawędzią, najlepiej połączyć ich **środki**. Nowa średnica\n= `max(d1, d2, ⌈d1/2⌉ + ⌈d2/2⌉ + 1)`. Mniej się nie da, bo z każdego drzewa musi dojść gałąź długości\nco najmniej promienia `⌈d/2⌉`. O(1) po policzeniu średnic.",
+     "code": "long long d1 = 4, d2 = 3;\nauto r = [](long long d) { return (d + 1) / 2; };     // promień = ceil(d / 2)\ncout << max({d1, d2, r(d1) + r(d2) + 1}) << '\\n';     // max(4, 3, 2 + 2 + 1) = 5"
+    },
+    {
+     "q": [
+      "promień drzewa",
+      "radius tree",
+      "minimalna maksymalna odległość drzewo"
+     ],
+     "a": "Promień = najmniejsza możliwa „największa odległość” z jednego wierzchołka do wszystkich innych.\nW drzewie (bez wag) promień = `⌈D/2⌉`, gdzie `D` to średnica, a wierzchołek realizujący to minimum\nto **środek** drzewa (środek ścieżki średnicy). Zobacz artykuł o środku drzewa. O(n).",
+     "code": "int D = 5;\ncout << (D + 1) / 2 << '\\n';   // 3"
+    }
+   ],
+   "related": [
+    "tree-center",
+    "tree-basics",
+    "tree-rerooting",
+    "tree-dp",
+    "graph-bfs",
+    "graph-multi-source-bfs"
+   ]
+  },
+  {
+   "id": "tree-center",
+   "title": "Środek drzewa (center) — obcinanie liści i środek średnicy",
+   "category": "Drzewa",
+   "tags": [
+    "środek drzewa",
+    "center",
+    "promień",
+    "obcinanie liści",
+    "średnica",
+    "ekscentryczność",
+    "izomorfizm drzew"
+   ],
+   "aliases": [
+    "środek drzewa",
+    "srodek drzewa",
+    "center of tree",
+    "tree center",
+    "obcinanie liści",
+    "peeling leaves",
+    "promień drzewa",
+    "jak znaleźć środek drzewa",
+    "dwa środki drzewa"
+   ],
+   "summary": "Środek drzewa to wierzchołek minimalizujący największą odległość do pozostałych. Jest jeden albo dwa sąsiednie. Znajduje się go obcinając liście warstwami albo biorąc środek(i) ścieżki średnicy — O(n).",
+   "complexity": "O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Ekscentryczność** `e(v)` = odległość od `v` do najdalszego wierzchołka. **Środek** (center) =\nwierzchołek o najmniejszej ekscentryczności; ta minimalna wartość to **promień** `= ⌈D/2⌉` (D = średnica).\nKażde drzewo ma **1 środek** (gdy D parzyste) albo **2 sąsiednie środki** (gdy D nieparzyste).\n\n**Obcinanie liści:** usuń jednocześnie wszystkie liście, potem nowe liście itd. — jak obieranie cebuli.\nOstatni 1 lub 2 wierzchołki to środek. **Przez średnicę:** środek leży w połowie ścieżki A–B."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „gdzie postawić szpital/nadajnik, by najdalszy dom był jak najbliżej”, „minimalny czas,\nżeby informacja rozeszła się z jednego miejsca”, „izomorfizm drzew nieukorzenionych” (ukorzeniamy\nw środku), „korzeń minimalizujący wysokość drzewa”.\n\nNie myl ze **centroidem** — on minimalizuje rozmiar największego poddrzewa po usunięciu, a nie odległość."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Środek drzewa przez obcinanie liści",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    vector<vector<int>> g(n + 1);\n    vector<int> deg(n + 1, 0);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n        deg[a]++; deg[b]++;\n    }\n    vector<int> leaves;\n    for (int v = 1; v <= n; v++) if (deg[v] <= 1) leaves.push_back(v);\n    int pozostalo = n;\n    while (pozostalo > 2) {                  // obcinamy całą warstwę liści naraz\n        pozostalo -= leaves.size();\n        vector<int> nowe;\n        for (int v : leaves)\n            for (int u : g[v])\n                if (--deg[u] == 1) nowe.push_back(u);\n        leaves = nowe;\n    }\n    sort(leaves.begin(), leaves.end());\n    for (int v : leaves) cout << v << ' ';  // 1 albo 2 środki\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Liczba „warstw” obcinania = promień drzewa. Jeśli zostały 2 wierzchołki, promień = liczba warstw + 1,\na średnica jest nieparzysta."
+    }
+   ],
+   "pitfalls": [
+    "Warunek pętli `pozostalo > 2`, a nie `> 1` — dwa sąsiednie środki obcięte w jednej warstwie by zniknęły.",
+    "Przy `n = 1` liściem (stopień 0) jest sam korzeń — inicjalizuj liście warunkiem `deg <= 1`.",
+    "Obcinanie musi być warstwami (wszystkie liście naraz), inaczej możesz skończyć w złym miejscu.",
+    "Środek ≠ centroid. Na „miotle” (długa ścieżka z gwiazdą na końcu) to różne wierzchołki.",
+    "W drzewie z wagami obcinanie liści nie działa — szukaj na ścieżce średnicy punktu minimalizującego `max(dist(A, v), dist(v, B))`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "środek drzewa",
+      "srodek drzewa",
+      "center of tree c++",
+      "jak znaleźć środek drzewa",
+      "tree center algorithm"
+     ],
+     "a": "Obcinaj liście warstwami: w każdej rundzie usuń wszystkie obecne liście i zmniejsz stopnie sąsiadów;\nwierzchołki, które stały się liśćmi, tworzą następną warstwę. Gdy zostaną ≤ 2 wierzchołki — to środek.\nKażdy wierzchołek usuwasz raz → **O(n)**. Środek minimalizuje odległość do najdalszego wierzchołka.",
+     "code": "vector<int> srodki(const vector<vector<int>>& g, int n) {\n    vector<int> deg(n + 1), leaves;\n    for (int v = 1; v <= n; v++) { deg[v] = g[v].size(); if (deg[v] <= 1) leaves.push_back(v); }\n    int left = n;\n    while (left > 2) {\n        left -= leaves.size();\n        vector<int> nowe;\n        for (int v : leaves) for (int u : g[v]) if (--deg[u] == 1) nowe.push_back(u);\n        leaves = nowe;\n    }\n    return leaves;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "obcinanie liści",
+      "peeling leaves",
+      "usuwanie liści warstwami",
+      "topological sort na drzewie liście"
+     ],
+     "a": "To BFS „od zewnątrz do środka”: startujesz od wszystkich liści, a wierzchołek trafia do kolejnej\nwarstwy, gdy jego stopień spadnie do 1. Numer warstwy wierzchołka mówi, jak daleko jest od\nnajbliższego liścia „w sensie obierania”. Ta sama technika służy np. do znajdowania cyklu w grafie\nz jednym cyklem (to, co zostanie po obcięciu liści, to cykl).",
+     "code": "int n = 5;\nvector<vector<int>> g = {{}, {2}, {1, 3, 4}, {2}, {2, 5}, {4}};\nvector<int> deg(n + 1), warstwa(n + 1, 0), q;\nfor (int v = 1; v <= n; v++) { deg[v] = g[v].size(); if (deg[v] == 1) q.push_back(v); }\nfor (size_t i = 0; i < q.size(); i++) {\n    int v = q[i];\n    for (int u : g[v]) if (--deg[u] == 1) { warstwa[u] = warstwa[v] + 1; q.push_back(u); }\n}\ncout << warstwa[2] << ' ' << warstwa[4] << '\\n';   // 1 1"
+    },
+    {
+     "q": [
+      "środek przez średnicę",
+      "środek ścieżki średnicy",
+      "center via diameter"
+     ],
+     "a": "Znajdź średnicę `A–B` (2×BFS) i ścieżkę `B = p_0, p_1, …, p_D = A`. Środek to `p_{D/2}`, a przy\nnieparzystym `D` także `p_{(D+1)/2}`. Działa, bo dla każdego `v` najdalszy wierzchołek to `A` lub `B`,\nwięc minimalizujemy `max(dist(v,A), dist(v,B))` — minimum leży w połowie średnicy. O(n).",
+     "code": "vector<int> path = {6, 5, 2, 3, 4};      // średnica od B do A, D = 4\nint D = path.size() - 1;\ncout << path[D / 2];\nif (D % 2 == 1) cout << ' ' << path[(D + 1) / 2];\ncout << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "ile może być środków drzewa",
+      "dwa środki drzewa",
+      "czy środek jest jeden",
+      "two centers tree"
+     ],
+     "a": "Zawsze **1 albo 2**. Gdy średnica `D` jest parzysta — jeden środek; gdy nieparzysta — dwa sąsiednie\n(połączone krawędzią) środki. Przykład: ścieżka 1–2–3–4 (D = 3) ma środki 2 i 3. Gdy potrzebny jest\njeden korzeń (np. do haszowania drzewa), przy dwóch środkach można „wstawić” sztuczny wierzchołek\nna krawędzi między nimi albo policzyć obie wersje.",
+     "code": "int D = 3;\ncout << (D % 2 == 0 ? 1 : 2) << '\\n';   // 2 środki"
+    },
+    {
+     "q": [
+      "promień drzewa",
+      "radius of tree",
+      "minimalna ekscentryczność",
+      "najdalszy dom jak najbliżej"
+     ],
+     "a": "Promień = `⌈D/2⌉` = ekscentryczność środka. To odpowiedź na pytania typu „postaw jedną stację tak, by\nnajdalszy wierzchołek był jak najbliżej”. Policz średnicę (O(n)) i zwróć `(D + 1) / 2`. Przy wagach\ntrzeba szukać punktu na ścieżce średnicy minimalizującego `max(dist(A, v), dist(v, B))`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint n;\nvector<vector<int>> g;\nvector<int> bfs(int s) {\n    vector<int> d(n + 1, -1);\n    queue<int> q; q.push(s); d[s] = 0;\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        for (int u : g[v]) if (d[u] == -1) { d[u] = d[v] + 1; q.push(u); }\n    }\n    return d;\n}\nint main() {\n    cin >> n;\n    g.assign(n + 1, {});\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    auto d1 = bfs(1);\n    int A = max_element(d1.begin() + 1, d1.end()) - d1.begin();\n    auto dA = bfs(A);\n    int D = *max_element(dA.begin() + 1, dA.end());\n    cout << (D + 1) / 2 << '\\n';\n}"
+    },
+    {
+     "q": [
+      "po co środek drzewa",
+      "izomorfizm drzew środek",
+      "hash drzewa nieukorzenionego",
+      "tree isomorphism center"
+     ],
+     "a": "Dwa drzewa **nieukorzenione** są izomorficzne ⇔ po ukorzenieniu w środkach (sprawdzając oba, gdy są\ndwa) mają te same kanoniczne kody. Środek jest wyznaczony jednoznacznie przez kształt drzewa, więc to\ndobry „kanoniczny korzeń”. Kod kanoniczny: posortowane kody dzieci (np. nawiasy albo numer z mapy) —\nO(n log n).",
+     "code": "map<vector<int>, int> ids;\nvector<vector<int>> ch = {{}, {2, 3}, {}, {4}, {}};    // drzewo ukorzenione w środku 1\nfunction<int(int)> kod = [&](int v) {\n    vector<int> k;\n    for (int u : ch[v]) k.push_back(kod(u));\n    sort(k.begin(), k.end());\n    auto it = ids.find(k);\n    if (it != ids.end()) return it->second;\n    int id = ids.size();\n    ids[k] = id;\n    return id;\n};\ncout << kod(1) << '\\n';   // numer klasy kształtu drzewa"
+    },
+    {
+     "q": [
+      "środek a centroid różnica",
+      "center vs centroid",
+      "czym się różni środek od centroidu"
+     ],
+     "a": "**Środek** minimalizuje *odległość* do najdalszego wierzchołka (liczony z średnicy/obcinania liści).\n**Centroid** minimalizuje *rozmiar* największego kawałka po usunięciu wierzchołka (każdy kawałek ≤ n/2;\nliczony z rozmiarów poddrzew). Na ścieżce to ten sam wierzchołek, ale np. na „miotle” — długiej\nścieżce z wieloma liśćmi na końcu — centroid przesuwa się w stronę liści, a środek zostaje w połowie\nścieżki.",
+     "code": "// „miotła”: ścieżka 1-2-3-4-5 i liście 6, 7, 8, 9 przy 5\nint n = 9;\nvector<vector<int>> g(n + 1);\nauto kr = [&](int a, int b) { g[a].push_back(b); g[b].push_back(a); };\nkr(1, 2); kr(2, 3); kr(3, 4); kr(4, 5); kr(5, 6); kr(5, 7); kr(5, 8); kr(5, 9);\nauto bfs = [&](int s) {\n    vector<int> d(n + 1, -1);\n    queue<int> q; q.push(s); d[s] = 0;\n    while (!q.empty()) { int v = q.front(); q.pop(); for (int u : g[v]) if (d[u] == -1) { d[u] = d[v] + 1; q.push(u); } }\n    return d;\n};\nvector<int> ecc(n + 1);\nfor (int v = 1; v <= n; v++) { auto d = bfs(v); ecc[v] = *max_element(d.begin() + 1, d.end()); }\nauto d1 = bfs(1);                                     // rozmiary poddrzew przy korzeniu 1\nvector<int> ord(n), sz(n + 1, 1), par(n + 1, 0);\niota(ord.begin(), ord.end(), 1);\nsort(ord.begin(), ord.end(), [&](int a, int b) { return d1[a] > d1[b]; });\nfor (int v = 1; v <= n; v++) for (int u : g[v]) if (d1[u] == d1[v] + 1) par[u] = v;\nfor (int v : ord) if (par[v]) sz[par[v]] += sz[v];\nint r = *min_element(ecc.begin() + 1, ecc.end());\ncout << \"środki:\";\nfor (int v = 1; v <= n; v++) if (ecc[v] == r) cout << ' ' << v;      // min odległość do najdalszego\ncout << \", centroid:\";\nfor (int v = 1; v <= n; v++) {\n    int mx = n - sz[v];\n    for (int u : g[v]) if (par[u] == v) mx = max(mx, sz[u]);\n    if (2 * mx <= n) cout << ' ' << v;                                 // największy kawałek <= n/2\n}\ncout << '\\n';   // środki: 3 4, centroid: 5"
+    }
+   ],
+   "related": [
+    "tree-diameter",
+    "tree-centroid",
+    "tree-basics",
+    "tree-rerooting",
+    "tree-isomorphism"
+   ]
+  },
+  {
+   "id": "tree-binary-bst",
+   "title": "Drzewa binarne i BST — przejścia (pre/in/post/level order), wstawianie, wyszukiwanie",
+   "category": "Drzewa",
+   "tags": [
+    "drzewo binarne",
+    "bst",
+    "binary search tree",
+    "inorder",
+    "preorder",
+    "postorder",
+    "level order",
+    "wysokość",
+    "przejścia drzewa",
+    "lewy prawy syn"
+   ],
+   "aliases": [
+    "drzewo binarne",
+    "bst",
+    "binary search tree",
+    "drzewo bst",
+    "drzewo poszukiwań binarnych",
+    "inorder",
+    "preorder",
+    "postorder",
+    "przejście inorder",
+    "level order",
+    "binary tree c++",
+    "przejścia drzewa binarnego",
+    "lewy i prawy syn"
+   ],
+   "summary": "Drzewo binarne: każdy wierzchołek ma co najwyżej lewego i prawego syna. BST dodatkowo trzyma klucze w porządku (lewe < korzeń < prawe), więc inorder wypisuje je posortowane. Na OI zwykle trzymamy je w tablicach `L[]`, `R[]`; w praktyce zbalansowane BST to `std::set`.",
+   "complexity": "przejścia O(n); wstawianie/szukanie w BST O(h), gdzie h = wysokość (O(log n) średnio, O(n) pesymistycznie)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Drzewo binarne** — każdy wierzchołek ma lewego (`L[v]`) i prawego (`R[v]`) syna, `0` oznacza brak.\nTypowy format wejścia na OI: „w `i`-tym wierszu dwie liczby — numer lewego i prawego syna (0 = brak)”.\n\n**Przejścia** (rekurencyjnie od korzenia):\n- **preorder**: korzeń, lewe, prawe,\n- **inorder**: lewe, korzeń, prawe — w BST daje klucze **posortowane**,\n- **postorder**: lewe, prawe, korzeń — dzieci przed rodzicem (DP, usuwanie),\n- **level order**: BFS — poziomami od korzenia.\n\n**BST (drzewo poszukiwań binarnych)**: dla każdego węzła klucze w lewym poddrzewie są mniejsze, a w prawym\nwiększe. Szukanie/wstawianie idzie jedną ścieżką od korzenia: O(wysokość). Wstawianie posortowanego\nciągu daje „listę” o wysokości `n` — dlatego w praktyce używa się zbalansowanych drzew (`std::set`, `std::map`)."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „lewy i prawy syn”, „drzewo binarne”, „wypisz w kolejności inorder/preorder”, „odtwórz drzewo\nz dwóch przejść”, „wstawiaj kolejno liczby do drzewa BST i podaj wysokość/kształt”, „kopiec”, „drzewo\nturniejowe”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "BST na tablicach: wstawianie i cztery przejścia",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 200005;\nint key_[MAXN], L[MAXN], R[MAXN], cnt = 0;    // węzły 1..cnt, 0 = brak syna\n\nint nowy(int k) { key_[++cnt] = k; L[cnt] = R[cnt] = 0; return cnt; }\n\nint root = 0;\nvoid insert(int k) {                         // iteracyjnie: bez rekurencji na wysokim drzewie\n    if (!root) { root = nowy(k); return; }\n    int v = root;\n    while (true) {\n        if (k == key_[v]) return;            // duplikaty pomijamy\n        int& nxt = (k < key_[v]) ? L[v] : R[v];\n        if (!nxt) { nxt = nowy(k); return; }\n        v = nxt;\n    }\n}\nvoid pre(int v)  { if (!v) return; cout << key_[v] << ' '; pre(L[v]); pre(R[v]); }\nvoid in(int v)   { if (!v) return; in(L[v]); cout << key_[v] << ' '; in(R[v]); }\nvoid post(int v) { if (!v) return; post(L[v]); post(R[v]); cout << key_[v] << ' '; }\nint height(int v) { return v ? 1 + max(height(L[v]), height(R[v])) : 0; }   // liczba poziomów\n\nint main() {\n    int n;\n    cin >> n;\n    for (int i = 0; i < n; i++) { int x; cin >> x; insert(x); }\n    in(root);   cout << '\\n';\n    pre(root);  cout << '\\n';\n    post(root); cout << '\\n';\n    queue<int> q;                            // level order = BFS\n    if (root) q.push(root);\n    while (!q.empty()) {\n        int v = q.front(); q.pop();\n        cout << key_[v] << ' ';\n        if (L[v]) q.push(L[v]);\n        if (R[v]) q.push(R[v]);\n    }\n    cout << '\\n' << height(root) << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szukanie, minimum, następnik",
+     "code": "// Szukanie w BST, minimum, następnik (najmniejszy klucz > k)\nconst int MAXN = 200005;\nint key_[MAXN], L[MAXN], R[MAXN];\nbool znajdz(int v, int k) {\n    while (v && key_[v] != k) v = (k < key_[v]) ? L[v] : R[v];\n    return v != 0;\n}\nint minimum(int v) { while (L[v]) v = L[v]; return key_[v]; }\nint nastepnik(int root, int k) {      // -1 gdy brak\n    int v = root, res = -1;\n    while (v) {\n        if (key_[v] > k) { res = key_[v]; v = L[v]; }\n        else v = R[v];\n    }\n    return res;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Przejście",
+      "Kolejność",
+      "Zastosowanie"
+     ],
+     "rows": [
+      [
+       "preorder",
+       "korzeń, L, R",
+       "kopiowanie/serializacja drzewa, odtwarzanie z inorderem"
+      ],
+      [
+       "inorder",
+       "L, korzeń, R",
+       "BST → posortowane klucze, sprawdzenie czy to BST"
+      ],
+      [
+       "postorder",
+       "L, R, korzeń",
+       "DP od liści, usuwanie drzewa, wyrażenia (ONP)"
+      ],
+      [
+       "level order",
+       "poziomami (BFS)",
+       "szerokość drzewa, wypisywanie poziomami"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Zwykłe BST bez balansowania przy posortowanych danych ma wysokość `n`: wstawianie kosztuje wtedy O(n),\na całość O(n²), a rekurencyjne przejścia mają głębokość `n` (ryzyko przepełnienia stosu). Jeśli\npotrzebujesz tylko zbioru uporządkowanego — użyj `std::set`/`std::map` (drzewo czerwono-czarne, O(log n))."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "insert(k)",
+     "desc": "wstawia klucz do BST (iteracyjnie)",
+     "complexity": "O(h)"
+    },
+    {
+     "sig": "in(v) / pre(v) / post(v)",
+     "desc": "przejścia rekurencyjne od węzła v",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "height(v)",
+     "desc": "liczba poziomów poddrzewa v (0 dla pustego)",
+     "complexity": "O(n)",
+     "returns": "int"
+    },
+    {
+     "sig": "nastepnik(root, k)",
+     "desc": "najmniejszy klucz większy od k",
+     "complexity": "O(h)",
+     "returns": "int (-1 gdy brak)"
+    }
+   ],
+   "pitfalls": [
+    "Niezbalansowane BST na posortowanych danych → wysokość n, O(n²) i głęboka rekurencja.",
+    "Wysokość: liczba poziomów vs liczba krawędzi na najdłuższej ścieżce — różnią się o 1; sprawdź definicję w treści.",
+    "Duplikaty kluczy w BST — ustal regułę (pomijaj, licznik w węźle albo zawsze w prawo) i trzymaj się jej.",
+    "Format „L R” z zerem jako brakiem — korzeń trzeba znaleźć (wierzchołek, który nie jest niczyim synem), nie musi być nim wierzchołek 1.",
+    "Odtwarzanie drzewa z pre + in wymaga unikalnych kluczy; z pre + post nie da się jednoznacznie odtworzyć drzewa binarnego (gdy węzeł ma jednego syna)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "drzewo binarne c++",
+      "binary tree c++",
+      "jak zapisać drzewo binarne",
+      "lewy prawy syn tablice",
+      "drzewo binarne implementacja"
+     ],
+     "a": "Najprościej na tablicach: `L[v]`, `R[v]` (0 = brak syna) i ewentualnie `key[v]`. To szybsze i bezpieczniejsze\nniż wskaźniki i `new`. Wejście „dla każdego węzła lewy i prawy syn” wczytujesz wprost do `L` i `R`.\nPrzejścia robisz rekurencją (`O(n)`) albo — dla bardzo głębokich drzew — stosem.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint L[100005], R[100005];\nvoid inorder(int v) {\n    if (!v) return;\n    inorder(L[v]);\n    cout << v << ' ';\n    inorder(R[v]);\n}\nint main() {\n    int n;\n    cin >> n;\n    vector<bool> syn(n + 1, false);\n    for (int i = 1; i <= n; i++) {\n        cin >> L[i] >> R[i];\n        syn[L[i]] = syn[R[i]] = true;\n    }\n    int root = 1;\n    while (syn[root]) root++;            // korzeń = niczyj syn\n    inorder(root);\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "inorder preorder postorder",
+      "przejścia drzewa binarnego",
+      "kolejność przejścia drzewa",
+      "inorder co to",
+      "tree traversal"
+     ],
+     "a": "Różnią się tylko momentem wypisania korzenia: **pre** — przed poddrzewami, **in** — między lewym a prawym,\n**post** — po obu. Każde przejście odwiedza każdy węzeł raz: O(n). Inorder BST daje klucze posortowane,\npostorder przetwarza dzieci przed rodzicem (DP), preorder zaczyna od korzenia (serializacja).",
+     "code": "const int N = 100005;\nint L[N], R[N];\nvector<int> wynik;\nvoid pre(int v)  { if (!v) return; wynik.push_back(v); pre(L[v]); pre(R[v]); }\nvoid in(int v)   { if (!v) return; in(L[v]); wynik.push_back(v); in(R[v]); }\nvoid post(int v) { if (!v) return; post(L[v]); post(R[v]); wynik.push_back(v); }",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "bst wstawianie",
+      "jak wstawić do bst",
+      "bst insert c++",
+      "drzewo bst kod",
+      "binary search tree insert"
+     ],
+     "a": "Zaczynasz od korzenia i porównujesz: mniejszy klucz idzie w lewo, większy w prawo, aż trafisz na brak syna —\ntam tworzysz nowy węzeł. Koszt to wysokość drzewa: O(log n) dla losowych danych, ale O(n) dla\nposortowanych. Pisz iteracyjnie, żeby wysokie drzewo nie przepełniło stosu.",
+     "code": "const int N = 100005;\nint key_[N], L[N], R[N], cnt = 0, root = 0;\nvoid insert(int k) {\n    int nowy = ++cnt;\n    key_[nowy] = k;\n    if (!root) { root = nowy; return; }\n    int v = root;\n    while (true) {\n        int& nxt = (k < key_[v]) ? L[v] : R[v];   // duplikaty idą w prawo\n        if (!nxt) { nxt = nowy; return; }\n        v = nxt;\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "wysokość drzewa binarnego",
+      "height binary tree",
+      "głębokość bst",
+      "ile poziomów ma drzewo"
+     ],
+     "a": "`h(v) = 1 + max(h(L[v]), h(R[v]))`, a `h(0) = 0` — to liczba poziomów. Jeśli treść liczy wysokość\nw krawędziach, odejmij 1 (pojedynczy węzeł ma wysokość 0). Złożoność O(n). Dla drzew o wysokości\n10^5+ zamień rekurencję na BFS po poziomach.",
+     "code": "int L[] = {0, 2, 0, 0}, R[] = {0, 3, 0, 0};   // 1 ma synów 2 i 3\nqueue<int> q;\nq.push(1);\nint poziomy = 0;\nwhile (!q.empty()) {\n    int sz = q.size();\n    poziomy++;\n    while (sz--) {\n        int v = q.front(); q.pop();\n        if (L[v]) q.push(L[v]);\n        if (R[v]) q.push(R[v]);\n    }\n}\ncout << poziomy << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "odtworzenie drzewa z preorder i inorder",
+      "pre i in order odtwórz drzewo",
+      "build tree from preorder inorder",
+      "postorder z preorder i inorder"
+     ],
+     "a": "Pierwszy element preorderu to korzeń. Znajdź go w inorderze (pozycja `k`): elementy na lewo to lewe\npoddrzewo (rozmiar `k − l`), na prawo — prawe. Rekurencyjnie dla obu części. Z mapą pozycji w inorderze\ncałość O(n). Wymaga unikalnych kluczy.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nvector<int> pre_, in_;\nunordered_map<int, int> pos;                  // pos[klucz] = indeks w inorderze\nvoid postorder(int pl, int il, int len) {     // poddrzewo: pre_[pl..], in_[il..], len elementów\n    if (len <= 0) return;\n    int root = pre_[pl];\n    int k = pos[root] - il;                    // rozmiar lewego poddrzewa\n    postorder(pl + 1, il, k);\n    postorder(pl + 1 + k, il + k + 1, len - k - 1);\n    cout << root << ' ';\n}\nint main() {\n    int n;\n    cin >> n;\n    pre_.resize(n); in_.resize(n);\n    for (auto& x : pre_) cin >> x;\n    for (int i = 0; i < n; i++) { cin >> in_[i]; pos[in_[i]] = i; }\n    postorder(0, 0, n);\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "level order",
+      "przejście poziomami",
+      "bfs drzewo binarne",
+      "wypisz drzewo poziomami",
+      "level order traversal"
+     ],
+     "a": "Level order to BFS od korzenia: kolejka, zdejmujesz węzeł, wypisujesz, wrzucasz lewego i prawego syna.\nŻeby rozdzielić poziomy, w każdej iteracji przetwórz dokładnie `q.size()` elementów. O(n).",
+     "code": "int L[] = {0, 2, 4, 0, 0, 0}, R[] = {0, 3, 5, 0, 0, 0};\nqueue<int> q;\nq.push(1);\nwhile (!q.empty()) {\n    int sz = q.size();\n    while (sz--) {\n        int v = q.front(); q.pop();\n        cout << v << ' ';\n        if (L[v]) q.push(L[v]);\n        if (R[v]) q.push(R[v]);\n    }\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "czy drzewo jest bst",
+      "sprawdź czy to bst",
+      "validate bst",
+      "is binary search tree"
+     ],
+     "a": "Dwie metody, obie O(n): (1) inorder musi być ściśle rosnący; (2) rekurencja z przedziałem dozwolonych\nwartości `(lo, hi)` — korzeń musi być w przedziale, lewe poddrzewo dostaje `(lo, key)`, prawe `(key, hi)`.\nSamo porównywanie każdego węzła z bezpośrednimi synami NIE wystarcza (wnuk może łamać porządek).",
+     "code": "const int N = 100005;\nint key_[N], L[N], R[N];\nbool jestBST(int v, long long lo, long long hi) {\n    if (!v) return true;\n    if (key_[v] <= lo || key_[v] >= hi) return false;\n    return jestBST(L[v], lo, key_[v]) && jestBST(R[v], key_[v], hi);\n}\n// wywołanie: jestBST(root, LLONG_MIN, LLONG_MAX)",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "std set to bst",
+      "czy używać set zamiast bst",
+      "zbalansowane drzewo c++",
+      "set drzewo czerwono czarne"
+     ],
+     "a": "`std::set` i `std::map` to zbalansowane BST (drzewa czerwono-czarne): wstawianie, usuwanie, szukanie,\n`lower_bound` w gwarantowanym O(log n). Własne BST pisz tylko, gdy zadanie każe symulować konkretne\n(niezbalansowane) drzewo albo potrzebujesz operacji, których `set` nie ma (np. k-ty element — wtedy\nraczej Fenwick/drzewo przedziałowe albo `__gnu_pbds::tree`).",
+     "code": "set<int> s = {5, 3, 8, 1};\ns.insert(4);\nauto it = s.upper_bound(4);           // następnik 4\ncout << *it << ' ' << *s.begin() << '\\n';   // 5 1"
+    },
+    {
+     "q": [
+      "ile jest różnych bst",
+      "liczba drzew bst z n kluczy",
+      "liczby catalana drzewa",
+      "number of bst"
+     ],
+     "a": "Liczba różnych BST z kluczy `1..n` to liczba Catalana `C_n`: `C_0 = 1`, `C_n = Σ C_i · C_{n−1−i}`\n(korzeń `i+1` dzieli klucze na lewe `i` i prawe `n−1−i`). Tyle samo jest kształtów drzew binarnych\no `n` węzłach. DP w O(n²) albo wzór `C_n = (2n)! / ((n+1)! n!)`.",
+     "code": "int n = 5;\nvector<long long> C(n + 1, 0);\nC[0] = 1;\nfor (int k = 1; k <= n; k++)\n    for (int i = 0; i < k; i++) C[k] += C[i] * C[k - 1 - i];\ncout << C[n] << '\\n';   // 42"
+    },
+    {
+     "q": [
+      "inorder iteracyjnie",
+      "inorder bez rekurencji",
+      "iterative inorder stack"
+     ],
+     "a": "Stos: idź w lewo, wrzucając węzły; gdy nie ma lewego syna, zdejmij węzeł, wypisz go i przejdź do jego\nprawego syna. Każdy węzeł wchodzi i wychodzi ze stosu raz — O(n), a głębokość ograniczona tylko pamięcią\nsterty, nie stosem wywołań.",
+     "code": "int L[] = {0, 2, 0, 0}, R[] = {0, 3, 0, 0};   // korzeń 1, synowie 2 (lewy) i 3 (prawy)\nvector<int> st;\nint v = 1;\nwhile (v || !st.empty()) {\n    while (v) { st.push_back(v); v = L[v]; }\n    v = st.back(); st.pop_back();\n    cout << v << ' ';\n    v = R[v];\n}\ncout << '\\n';   // 2 1 3"
+    },
+    {
+     "q": [
+      "liczba liści drzewa binarnego",
+      "ile węzłów w drzewie binarnym",
+      "count leaves binary tree"
+     ],
+     "a": "Liść to węzeł bez obu synów (`!L[v] && !R[v]`). Policz rekurencyjnie albo po prostu pętlą po wszystkich\nwęzłach, jeśli są w tablicy — O(n). Dla pełnego drzewa binarnego (każdy węzeł ma 0 albo 2 synów)\nzachodzi `liście = węzły wewnętrzne + 1`.",
+     "code": "int n = 5;\nint L[] = {0, 2, 4, 0, 0, 0}, R[] = {0, 3, 5, 0, 0, 0};\nint liscie = 0;\nfor (int v = 1; v <= n; v++) if (!L[v] && !R[v]) liscie++;\ncout << liscie << '\\n';   // 3"
+    }
+   ],
+   "related": [
+    "tree-heap-array",
+    "tree-basics",
+    "tree-dfs-order",
+    "stl-set"
+   ]
+  },
+  {
+   "id": "tree-heap-array",
+   "title": "Drzewo w tablicy (2i, 2i+1) i kopiec binarny napisany ręcznie",
+   "category": "Drzewa",
+   "tags": [
+    "kopiec",
+    "heap",
+    "drzewo w tablicy",
+    "2i 2i+1",
+    "sift up",
+    "sift down",
+    "heapify",
+    "priority_queue",
+    "pełne drzewo binarne"
+   ],
+   "aliases": [
+    "kopiec binarny",
+    "drzewo jako tablica",
+    "2i 2i+1",
+    "heap array",
+    "kopiec implementacja",
+    "własny kopiec c++",
+    "sift down",
+    "heapify",
+    "kopiec ręcznie"
+   ],
+   "summary": "Pełne drzewo binarne można trzymać w tablicy bez wskaźników: korzeń w 1, dzieci `v` w `2v` i `2v+1`, rodzic w `v/2`. Na tym opiera się kopiec (priority_queue) i drzewo przedziałowe.",
+   "complexity": "push/pop kopca O(log n), top O(1), heapify O(n), heap sort O(n log n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Drzewo w tablicy (indeksowanie od 1):** węzeł `v` ma lewego syna `2v`, prawego `2v + 1`, rodzica `v / 2`.\nGłębokość węzła to `⌊log₂ v⌋` (`__lg(v)`). Nie trzeba trzymać żadnych wskaźników — struktura wynika z indeksów.\nPrzy indeksowaniu od 0: synowie `2v + 1`, `2v + 2`, rodzic `(v − 1) / 2`.\n\n**Kopiec (min-heap):** wartość w każdym węźle ≤ wartości jego dzieci, więc minimum jest w korzeniu `h[1]`.\n- **push**: dopisz na koniec i „przesiewaj w górę” (sift up), zamieniając z rodzicem, póki jest mniejszy,\n- **pop**: przenieś ostatni element do korzenia i „przesiewaj w dół” (sift down) w stronę mniejszego syna.\nWysokość kopca to `⌊log₂ n⌋`, więc obie operacje są O(log n)."
+    },
+    {
+     "type": "text",
+     "md": "**Kiedy pisać samemu?** Prawie nigdy — `priority_queue` robi to samo. Ręczny kopiec przydaje się, gdy treść\nkaże symulować kopiec krok po kroku, gdy potrzebujesz zmiany priorytetu elementu (indexed heap) albo żeby\nzrozumieć drzewo przedziałowe, które używa identycznego indeksowania."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Min-kopiec na tablicy: push, pop, top",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXN = 1000005;\nint h[MAXN], sz = 0;                  // min-kopiec w h[1..sz]\n\nvoid push(int x) {\n    h[++sz] = x;\n    int v = sz;\n    while (v > 1 && h[v / 2] > h[v]) {    // sift up\n        swap(h[v / 2], h[v]);\n        v /= 2;\n    }\n}\nvoid siftDown(int v) {\n    while (2 * v <= sz) {\n        int c = 2 * v;                         // lewy syn\n        if (c + 1 <= sz && h[c + 1] < h[c]) c++;   // mniejszy z synów\n        if (h[v] <= h[c]) break;\n        swap(h[v], h[c]);\n        v = c;\n    }\n}\nint pop() {                           // zdejmuje i zwraca minimum\n    int res = h[1];\n    h[1] = h[sz--];\n    siftDown(1);\n    return res;\n}\n\nint main() {\n    int q;\n    cin >> q;\n    while (q--) {\n        int t;\n        cin >> t;\n        if (t == 1) { int x; cin >> x; push(x); }          // 1 x : dodaj\n        else if (t == 2) cout << pop() << '\\n';            // 2   : zdejmij minimum\n        else cout << h[1] << '\\n';                         // 3   : podejrzyj minimum\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Heapify w O(n)",
+     "code": "// heapify: budowa kopca z całej tablicy w O(n) — sift down od ostatniego węzła wewnętrznego\nconst int MAXN = 1000005;\nint h[MAXN], sz;\nvoid siftDown(int v) {\n    while (2 * v <= sz) {\n        int c = 2 * v;\n        if (c + 1 <= sz && h[c + 1] < h[c]) c++;\n        if (h[v] <= h[c]) break;\n        swap(h[v], h[c]);\n        v = c;\n    }\n}\nvoid heapify(int n) {\n    sz = n;\n    for (int v = n / 2; v >= 1; v--) siftDown(v);\n}",
+     "scope": "global"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wielkość",
+      "Od 1",
+      "Od 0"
+     ],
+     "rows": [
+      [
+       "lewy syn",
+       "`2v`",
+       "`2v + 1`"
+      ],
+      [
+       "prawy syn",
+       "`2v + 1`",
+       "`2v + 2`"
+      ],
+      [
+       "rodzic",
+       "`v / 2`",
+       "`(v − 1) / 2`"
+      ],
+      [
+       "głębokość",
+       "`__lg(v)`",
+       "`__lg(v + 1)`"
+      ],
+      [
+       "liście (n węzłów)",
+       "`n/2 + 1 .. n`",
+       "`n/2 .. n − 1`"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Drzewo przedziałowe „bottom-up” to dokładnie ta sama tablica: liście w `[N, 2N)`, węzeł `v` = połączenie\n`2v` i `2v + 1`. Rozmiar `2N` (N = potęga dwójki ≥ n) albo bezpiecznie `4n` dla wersji rekurencyjnej."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "push(x)",
+     "desc": "dodaje element do kopca (sift up)",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "pop()",
+     "desc": "zdejmuje i zwraca minimum (sift down)",
+     "complexity": "O(log n)",
+     "returns": "int"
+    },
+    {
+     "sig": "heapify(n)",
+     "desc": "buduje kopiec z h[1..n]",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "priority_queue<int, vector<int>, greater<int>>",
+     "desc": "gotowy min-kopiec z STL",
+     "complexity": "push/pop O(log n), top O(1)",
+     "example": "priority_queue<int, vector<int>, greater<int>> pq; pq.push(3); pq.top();"
+    }
+   ],
+   "pitfalls": [
+    "Mieszanie indeksowania od 0 i od 1 (`2v` vs `2v + 1` jako lewy syn) — przy 0 korzeń nie może używać `2v`, bo `2·0 = 0`.",
+    "`pop()` na pustym kopcu — sprawdzaj `sz > 0`.",
+    "W sift down porównuj z MNIEJSZYM z synów (dla min-kopca), a prawy syn może nie istnieć (`c + 1 <= sz`).",
+    "`priority_queue<int>` w C++ to kopiec MAKSYMALNY — dla minimum użyj `greater<int>` albo wkładaj `-x`.",
+    "Drzewo przedziałowe rekurencyjne potrzebuje tablicy `4n`, nie `2n` (gdy n nie jest potęgą dwójki)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "drzewo jako tablica",
+      "2i 2i+1",
+      "kopiec w tablicy indeksy",
+      "heap array indexing",
+      "drzewo binarne w tablicy"
+     ],
+     "a": "W pełnym drzewie binarnym numerowanym od 1 poziomami: synowie `v` to `2v` i `2v + 1`, rodzic to `v / 2`.\nDzięki temu nie trzeba wskaźników, a przejście w górę/dół to jedno mnożenie/dzielenie. Wysokość przy `n`\nwęzłach to `⌊log₂ n⌋`. Tak są zbudowane kopiec binarny i drzewo przedziałowe.",
+     "code": "int v = 5;\ncout << \"rodzic \" << v / 2 << \", synowie \" << 2 * v << \" i \" << 2 * v + 1\n     << \", głębokość \" << __lg(v) << '\\n';   // rodzic 2, synowie 10 i 11, głębokość 2"
+    },
+    {
+     "q": [
+      "kopiec ręcznie",
+      "własny kopiec c++",
+      "heap implementation c++",
+      "jak napisać kopiec",
+      "kopiec binarny kod"
+     ],
+     "a": "Trzymasz `h[1..sz]`. **push**: `h[++sz] = x`, potem zamieniasz z rodzicem, dopóki rodzic jest większy.\n**pop**: zapamiętaj `h[1]`, wstaw tam `h[sz--]` i przesiewaj w dół, zamieniając z mniejszym synem.\nObie operacje idą jedną ścieżką korzeń–liść, więc O(log n).",
+     "code": "const int N = 100005;\nint h[N], sz = 0;\nvoid push(int x) {\n    h[++sz] = x;\n    for (int v = sz; v > 1 && h[v / 2] > h[v]; v /= 2) swap(h[v], h[v / 2]);\n}\nint pop() {\n    int res = h[1];\n    h[1] = h[sz--];\n    for (int v = 1; 2 * v <= sz; ) {\n        int c = 2 * v;\n        if (c + 1 <= sz && h[c + 1] < h[c]) c++;\n        if (h[v] <= h[c]) break;\n        swap(h[v], h[c]);\n        v = c;\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sift down sift up",
+      "przesiewanie w górę w dół",
+      "heapify up down",
+      "naprawa kopca"
+     ],
+     "a": "**Sift up** — element za mały na swoim miejscu wędruje w górę (zamiany z rodzicem); używany po dopisaniu\nna koniec i po zmniejszeniu klucza. **Sift down** — element za duży wędruje w dół, zawsze do mniejszego\nsyna; używany po zdjęciu korzenia i w heapify. Oba O(wysokość) = O(log n).",
+     "code": "int h[] = {0, 9, 2, 3, 5, 4};    // korzeń 9 łamie własność kopca\nint sz = 5, v = 1;\nwhile (2 * v <= sz) {\n    int c = 2 * v;\n    if (c + 1 <= sz && h[c + 1] < h[c]) c++;\n    if (h[v] <= h[c]) break;\n    swap(h[v], h[c]);\n    v = c;\n}\nfor (int i = 1; i <= sz; i++) cout << h[i] << ' ';   // 2 4 3 5 9\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "heapify o(n) dlaczego",
+      "budowa kopca w czasie liniowym",
+      "build heap complexity",
+      "dlaczego heapify jest o(n)"
+     ],
+     "a": "Heapify robi sift down od `n/2` do 1. Połowa węzłów to liście (0 pracy), ćwierć schodzi o ≤ 1 poziom,\nósma o ≤ 2 itd. Suma `Σ n/2^(k+1) · k` jest ograniczona przez `n`, więc całość O(n), a nie O(n log n)\njak `n` razy push. `make_heap` z STL robi to samo.",
+     "code": "vector<int> a = {5, 1, 4, 2, 3};\nmake_heap(a.begin(), a.end(), greater<int>());   // min-kopiec w O(n)\ncout << a.front() << '\\n';                        // 1"
+    },
+    {
+     "q": [
+      "priority_queue min heap",
+      "kopiec minimalny stl",
+      "priority queue greater",
+      "jak zrobić min kopiec c++"
+     ],
+     "a": "`priority_queue<int>` zwraca **największy** element. Dla najmniejszego: `priority_queue<int, vector<int>,\ngreater<int>>` albo wkładaj liczby ze znakiem minus. Dla par (np. w Dijkstrze) `greater<pair<...>>`\nporównuje najpierw `first`. push/pop O(log n), top O(1).",
+     "code": "priority_queue<int, vector<int>, greater<int>> pq;\nfor (int x : {5, 1, 4}) pq.push(x);\ncout << pq.top() << '\\n';   // 1\npq.pop();\ncout << pq.top() << '\\n';   // 4"
+    },
+    {
+     "q": [
+      "kopiec od zera indeksowanie",
+      "2i+1 2i+2",
+      "heap 0 indexed",
+      "kopiec indeksy od 0"
+     ],
+     "a": "Przy tablicy od 0: synowie `2v + 1` i `2v + 2`, rodzic `(v − 1) / 2`. Wersja od 1 jest prostsza (mniej\nplusów i minusów), dlatego większość kodów olimpijskich zostawia `h[0]` puste. Najważniejsze, żeby nie\nmieszać obu konwencji w jednym kodzie.",
+     "code": "vector<int> h = {1, 3, 2, 7, 4};       // min-kopiec od 0\nbool ok = true;\nfor (int v = 1; v < (int)h.size(); v++) if (h[(v - 1) / 2] > h[v]) ok = false;\ncout << ok << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "drzewo przedziałowe tablica 2i 2i+1",
+      "rozmiar drzewa przedziałowego 4n",
+      "segment tree array size"
+     ],
+     "a": "Drzewo przedziałowe to pełne drzewo binarne w tablicy: węzeł `v` pokrywa przedział, synowie `2v`, `2v + 1`\ndzielą go na pół. Wersja rekurencyjna dla dowolnego `n` potrzebuje do `4n` komórek; wersja „bottom-up”\nz `N` = potęga dwójki ≥ n — `2N` komórek, liście na pozycjach `N .. N + n − 1`.",
+     "code": "int n = 5, N = 1;\nwhile (N < n) N <<= 1;                 // 8\nvector<int> t(2 * N, 0);\nint a[] = {3, 1, 4, 1, 5};\nfor (int i = 0; i < n; i++) t[N + i] = a[i];\nfor (int v = N - 1; v >= 1; v--) t[v] = t[2 * v] + t[2 * v + 1];\ncout << t[1] << '\\n';                  // 14 = suma całości"
+    },
+    {
+     "q": [
+      "heap sort",
+      "sortowanie przez kopcowanie",
+      "heapsort c++"
+     ],
+     "a": "Zbuduj kopiec maksymalny (heapify, O(n)), potem `n` razy zamień korzeń z ostatnim elementem i zmniejsz\nrozmiar kopca, przesiewając nowy korzeń w dół — O(n log n), w miejscu, bez dodatkowej pamięci. W STL:\n`make_heap` + `sort_heap`. W praktyce `sort` jest szybszy, ale heap sort ma gwarantowane O(n log n).",
+     "code": "vector<int> a = {5, 2, 9, 1, 7};\nmake_heap(a.begin(), a.end());          // kopiec maksymalny\nsort_heap(a.begin(), a.end());          // rosnąco\nfor (int x : a) cout << x << ' ';       // 1 2 5 7 9\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "tree-binary-bst",
+    "ds-segment-tree",
+    "stl-priority-queue",
+    "graph-dijkstra",
+    "stl-ref-heap"
+   ]
+  },
+  {
+   "id": "tree-path-sum",
+   "title": "Suma na ścieżce w drzewie przez prefiksy od korzenia (+ XOR, wagi krawędzi, aktualizacje)",
+   "category": "Drzewa",
+   "tags": [
+    "suma na ścieżce",
+    "path sum",
+    "prefiksy od korzenia",
+    "lca",
+    "xor na ścieżce",
+    "wagi krawędzi",
+    "euler tour",
+    "fenwick"
+   ],
+   "aliases": [
+    "suma na ścieżce w drzewie",
+    "suma na sciezce drzewo",
+    "path sum tree",
+    "suma wartości na ścieżce u v",
+    "prefiksy od korzenia",
+    "xor na ścieżce",
+    "suma wag na ścieżce",
+    "path query tree",
+    "zapytania o ścieżkę w drzewie"
+   ],
+   "summary": "Niech `pre[v]` = suma wartości od korzenia do `v`. Wtedy suma na ścieżce u–v = `pre[u] + pre[v] − 2·pre[lca] + val[lca]` (dla wag na krawędziach bez ostatniego składnika). Działa dla każdej operacji odwracalnej (suma, XOR); zmiany wartości obsługuje Euler tour + Fenwick.",
+   "complexity": "preprocessing O(n log n) (LCA), zapytanie O(log n); z aktualizacjami O(log n) na operację",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "To samo co sumy prefiksowe na tablicy, tylko „prefiks” to ścieżka od korzenia. Ścieżka u–v to\n`u → lca` i `lca → v`. Sumując `pre[u] + pre[v]`, część od korzenia do `lca` liczymy dwa razy, więc\nodejmujemy `2·pre[lca]`. Ale sam `lca` też wtedy zniknął, a leży na ścieżce — dodajemy `val[lca]`:\n\n`sum(u, v) = pre[u] + pre[v] − 2·pre[lca] + val[lca]`  (wartości w wierzchołkach)\n\n`dist(u, v) = pre[u] + pre[v] − 2·pre[lca]`  (wagi na krawędziach; `pre` = odległość od korzenia)\n\nDla XOR-a: `x[u] ^ x[v] ^ val[lca]` (wierzchołki) albo `x[u] ^ x[v]` (krawędzie) — `x[lca]` znosi się sam."
+    },
+    {
+     "type": "text",
+     "md": "**Sygnały:** „wiele zapytań o sumę/XOR/długość na ścieżce między u i v”, „odległość między miastami\nw drzewie z wagami”. Gdy pytania są o **max/min** na ścieżce — prefiksy nie działają (max nie jest\nodwracalny); użyj binary liftingu z maksimum albo HLD."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Suma wartości na ścieżce u–v (prefiksy + LCA)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int LOG = 18;                      // 2^18 > 2*10^5\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n, q;\n    cin >> n >> q;\n    vector<long long> val(n + 1);\n    for (int i = 1; i <= n; i++) cin >> val[i];\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    // BFS od korzenia 1: rodzic, głębokość, prefiks\n    vector<int> dep(n + 1, 0), order;\n    vector<vector<int>> up(LOG, vector<int>(n + 1, 1));   // up[k][v] = przodek o 2^k wyżej\n    vector<long long> pre(n + 1, 0);\n    vector<bool> vis(n + 1, false);\n    queue<int> qu;\n    qu.push(1); vis[1] = true; pre[1] = val[1];\n    while (!qu.empty()) {\n        int v = qu.front(); qu.pop();\n        order.push_back(v);\n        for (int u : g[v]) if (!vis[u]) {\n            vis[u] = true;\n            up[0][u] = v;\n            dep[u] = dep[v] + 1;\n            pre[u] = pre[v] + val[u];\n            qu.push(u);\n        }\n    }\n    for (int k = 1; k < LOG; k++)\n        for (int v = 1; v <= n; v++) up[k][v] = up[k - 1][up[k - 1][v]];\n    auto lca = [&](int a, int b) {\n        if (dep[a] < dep[b]) swap(a, b);\n        int diff = dep[a] - dep[b];\n        for (int k = 0; k < LOG; k++) if (diff >> k & 1) a = up[k][a];\n        if (a == b) return a;\n        for (int k = LOG - 1; k >= 0; k--)\n            if (up[k][a] != up[k][b]) { a = up[k][a]; b = up[k][b]; }\n        return up[0][a];\n    };\n    while (q--) {\n        int u, v;\n        cin >> u >> v;\n        int l = lca(u, v);\n        cout << pre[u] + pre[v] - 2 * pre[l] + val[l] << '\\n';\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Suma na ścieżce ze zmianami wartości (Euler tour + Fenwick)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Zapytania: \"1 v x\" — ustaw wartość v na x; \"2 u v\" — suma na ścieżce u–v.\n// Zmiana val[v] o d zmienia pre[] o d w CAŁYM poddrzewie v -> Fenwick: dodaj na [tin, tout], punktowo czytaj.\nconst int LOG = 18;\nint n;\nvector<long long> bit;\nvoid add(int i, long long x) { for (; i <= n; i += i & -i) bit[i] += x; }\nlong long pref(int i) { long long s = 0; for (; i > 0; i -= i & -i) s += bit[i]; return s; }\n\nint main() {\n    int q;\n    cin >> n >> q;\n    vector<long long> val(n + 1);\n    for (int i = 1; i <= n; i++) cin >> val[i];\n    vector<vector<int>> g(n + 1);\n    for (int i = 0; i < n - 1; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    vector<int> dep(n + 1, 0), tin(n + 1), tout(n + 1), order, st = {1}, sz(n + 1, 1);\n    vector<vector<int>> up(LOG, vector<int>(n + 1, 1));\n    up[0][1] = 0;\n    int timer = 0;\n    while (!st.empty()) {                       // iteracyjny preorder\n        int v = st.back(); st.pop_back();\n        tin[v] = ++timer;\n        order.push_back(v);\n        for (int u : g[v]) if (u != up[0][v]) { up[0][u] = v; dep[u] = dep[v] + 1; st.push_back(u); }\n    }\n    up[0][1] = 1;\n    for (int i = n - 1; i > 0; i--) sz[up[0][order[i]]] += sz[order[i]];\n    for (int v = 1; v <= n; v++) tout[v] = tin[v] + sz[v] - 1;\n    for (int k = 1; k < LOG; k++)\n        for (int v = 1; v <= n; v++) up[k][v] = up[k - 1][up[k - 1][v]];\n    auto lca = [&](int a, int b) {\n        if (dep[a] < dep[b]) swap(a, b);\n        for (int k = LOG - 1; k >= 0; k--) if (dep[a] - (1 << k) >= dep[b]) a = up[k][a];\n        if (a == b) return a;\n        for (int k = LOG - 1; k >= 0; k--) if (up[k][a] != up[k][b]) { a = up[k][a]; b = up[k][b]; }\n        return up[0][a];\n    };\n    bit.assign(n + 2, 0);\n    auto dodajPoddrzewo = [&](int v, long long d) { add(tin[v], d); add(tout[v] + 1, -d); };\n    for (int v = 1; v <= n; v++) dodajPoddrzewo(v, val[v]);\n    auto P = [&](int v) { return pref(tin[v]); };      // aktualne pre[v]\n    while (q--) {\n        int t, a;\n        long long b;\n        cin >> t >> a >> b;\n        if (t == 1) { dodajPoddrzewo(a, b - val[a]); val[a] = b; }\n        else {\n            int u = a, v = (int)b, l = lca(u, v);\n            cout << P(u) + P(v) - 2 * P(l) + val[l] << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Liczbę wierzchołków na ścieżce też liczysz „prefiksowo”: `dep[u] + dep[v] − 2·dep[lca] + 1`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "pre[v]",
+     "desc": "suma wartości (albo wag krawędzi) od korzenia do v",
+     "complexity": "O(1) po O(n) preprocessingu"
+    },
+    {
+     "sig": "pre[u] + pre[v] - 2*pre[l] + val[l]",
+     "desc": "suma wartości wierzchołków na ścieżce u–v, l = lca(u, v)",
+     "complexity": "O(log n) (koszt LCA)"
+    },
+    {
+     "sig": "x[u] ^ x[v] ^ val[l]",
+     "desc": "XOR wartości wierzchołków na ścieżce",
+     "complexity": "O(log n)"
+    }
+   ],
+   "pitfalls": [
+    "Zapomniany `+ val[lca]` przy wartościach w wierzchołkach (albo dodany przy wagach na krawędziach).",
+    "Sumy na ścieżkach przekraczają `int` — `pre` w `long long`.",
+    "Prefiksy działają tylko dla operacji odwracalnych (suma, XOR, iloczyn modulo pierwszą bez zer). Max/min → binary lifting z maksimum albo HLD.",
+    "Przy aktualizacji wartości `v` zmienia się `pre` całego poddrzewa `v`, nie tylko `pre[v]` — dlatego Fenwick na przedziale `[tin[v], tout[v]]`.",
+    "Rekurencyjne liczenie `pre` na drzewie-ścieżce n = 10^6 → stos; BFS jest bezpieczny."
+   ],
+   "qa": [
+    {
+     "q": [
+      "suma na ścieżce w drzewie",
+      "suma na sciezce drzewo",
+      "path sum tree",
+      "suma wartości na ścieżce u v",
+      "suma wierzcholkow na sciezce"
+     ],
+     "a": "Policz `pre[v]` = suma wartości od korzenia do `v` (BFS/DFS, O(n)) i LCA. Suma na ścieżce u–v =\n`pre[u] + pre[v] − 2·pre[lca] + val[lca]`: odejmujemy dwukrotnie policzoną część nad `lca`, ale sam `lca`\nnależy do ścieżki, więc go dodajemy. Zapytanie kosztuje tyle co LCA — O(log n).",
+     "code": "// dane: pre[], val[], lca() policzone wcześniej\nvector<long long> pre = {0, 1, 3, 4, 8, 9}, val = {0, 1, 2, 3, 4, 5};   // drzewo 1-2, 1-3, 3-4, 3-5\nint u = 4, v = 5, l = 3;                                                // lca(4, 5) = 3\ncout << pre[u] + pre[v] - 2 * pre[l] + val[l] << '\\n';                  // 4 + 3 + 5 = 12"
+    },
+    {
+     "q": [
+      "prefiksy od korzenia",
+      "pre[v] suma od korzenia",
+      "suma od korzenia do wierzchołka",
+      "root prefix sum tree"
+     ],
+     "a": "`pre[root] = val[root]`, a dla dziecka `pre[u] = pre[v] + val[u]` — liczone przy wejściu do dziecka w BFS/DFS.\nTo odpowiednik sum prefiksowych: „suma na ścieżce od korzenia do v” jest od razu w `pre[v]`, a dowolna\nścieżka to kombinacja trzech prefiksów (przez LCA). O(n).",
+     "code": "int n = 5;\nvector<vector<int>> g = {{}, {2, 3}, {1}, {1, 4, 5}, {3}, {3}};\nvector<long long> val = {0, 1, 2, 3, 4, 5}, pre(n + 1, 0);\nvector<int> par(n + 1, 0), st = {1};\npre[1] = val[1];\nwhile (!st.empty()) {\n    int v = st.back(); st.pop_back();\n    for (int u : g[v]) if (u != par[v]) { par[u] = v; pre[u] = pre[v] + val[u]; st.push_back(u); }\n}\ncout << pre[4] << ' ' << pre[5] << '\\n';   // 8 9"
+    },
+    {
+     "q": [
+      "odległość ważona w drzewie",
+      "suma wag krawędzi na ścieżce",
+      "weighted distance tree",
+      "dlugosc sciezki drzewo wagi"
+     ],
+     "a": "Przy wagach na krawędziach `pre[v]` = odległość od korzenia (`pre[u] = pre[v] + w`), a długość ścieżki\nu–v = `pre[u] + pre[v] − 2·pre[lca]` — tym razem bez dodawania czegokolwiek, bo krawędzie nad `lca` nie\nnależą do ścieżki. `long long`, O(log n) na zapytanie.",
+     "code": "vector<long long> pre = {0, 0, 3, 5, 5, 7};    // odległości od korzenia 1\nint u = 4, v = 5, l = 2;                        // lca(4, 5) = 2\ncout << pre[u] + pre[v] - 2 * pre[l] << '\\n';   // 5 + 7 - 6 = 6"
+    },
+    {
+     "q": [
+      "xor na ścieżce drzewo",
+      "xor path tree",
+      "xor wag na ścieżce",
+      "xor wartosci na sciezce"
+     ],
+     "a": "XOR jest sam do siebie odwrotny (`a ^ a = 0`), więc `x[v]` = XOR od korzenia do `v`, a XOR na ścieżce\nu–v = `x[u] ^ x[v]` dla wag na krawędziach (część nad LCA znosi się automatycznie — nawet LCA nie jest\npotrzebne!) albo `x[u] ^ x[v] ^ val[lca]` dla wartości w wierzchołkach. Klasyk: „para wierzchołków\nz maksymalnym XOR-em ścieżki” = max XOR pary liczb `x[]` (trie binarne).",
+     "code": "int n = 4;\nvector<vector<pair<int,int>>> g = {{}, {{2, 5}, {3, 6}}, {{1, 5}, {4, 3}}, {{1, 6}}, {{2, 3}}};\nvector<int> x(n + 1, 0), par(n + 1, 0), st = {1};\nwhile (!st.empty()) {\n    int v = st.back(); st.pop_back();\n    for (auto [u, w] : g[v]) if (u != par[v]) { par[u] = v; x[u] = x[v] ^ w; st.push_back(u); }\n}\ncout << (x[4] ^ x[3]) << '\\n';   // 3 ^ 5 ^ 6 = 0"
+    },
+    {
+     "q": [
+      "suma na ścieżce z aktualizacjami",
+      "zmiana wartości wierzchołka zapytanie o ścieżkę",
+      "path sum with updates",
+      "suma sciezki update fenwick"
+     ],
+     "a": "Zmiana `val[v]` o `d` zmienia `pre` wszystkich wierzchołków w poddrzewie `v` o `d`. Poddrzewo to przedział\n`[tin[v], tout[v]]` w Euler tourze, więc trzymaj `pre` w Fenwicku „na różnicach”: aktualizacja = dodanie\nna przedziale, odczyt `pre[u]` = suma prefiksowa w `tin[u]`. Zapytanie: wzór z LCA. Wszystko O(log n).\nAlternatywa: HLD (ogólniejsze, ale dłuższe).",
+     "code": "int n = 5;\nvector<long long> bit(n + 2, 0);\nauto add = [&](int i, long long x) { for (; i <= n; i += i & -i) bit[i] += x; };\nauto pref = [&](int i) { long long s = 0; for (; i > 0; i -= i & -i) s += bit[i]; return s; };\nvector<int> tin = {0, 1, 2, 3, 4, 5}, tout = {0, 5, 2, 5, 4, 5};   // 1-2, 1-3, 3-4, 3-5\nauto dodaj = [&](int v, long long d) { add(tin[v], d); add(tout[v] + 1, -d); };\nvector<long long> val = {0, 1, 2, 3, 4, 5};\nfor (int v = 1; v <= n; v++) dodaj(v, val[v]);\ndodaj(3, 10 - val[3]); val[3] = 10;                 // val[3] := 10\ncout << pref(tin[4]) << '\\n';                        // pre[4] = 1 + 10 + 4 = 15"
+    },
+    {
+     "q": [
+      "max na ścieżce w drzewie",
+      "maksimum na ścieżce",
+      "path max query",
+      "minimum na sciezce drzewo"
+     ],
+     "a": "Maksimum nie da się „odjąć”, więc prefiksy od korzenia nie działają. Bez aktualizacji: binary lifting\nz tablicą `mx[k][v]` = max na odcinku o długości `2^k` w górę od `v`; przy liczeniu LCA zbierasz maksima\nz wykonanych skoków — O(log n). Z aktualizacjami: HLD + drzewo przedziałowe — O(log² n).",
+     "code": "// mx[k][v] = max wag krawędzi na odcinku v -> up[k][v]\nconst int LOG = 17, N = 100005;\nint up[LOG][N], mx[LOG][N], dep[N];\nint maxNaSciezce(int a, int b) {\n    int res = INT_MIN;\n    if (dep[a] < dep[b]) swap(a, b);\n    for (int k = LOG - 1; k >= 0; k--)\n        if (dep[a] - (1 << k) >= dep[b]) { res = max(res, mx[k][a]); a = up[k][a]; }\n    if (a == b) return res;\n    for (int k = LOG - 1; k >= 0; k--)\n        if (up[k][a] != up[k][b]) {\n            res = max({res, mx[k][a], mx[k][b]});\n            a = up[k][a]; b = up[k][b];\n        }\n    return max({res, mx[0][a], mx[0][b]});\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "liczba wierzchołków na ścieżce",
+      "długość ścieżki w krawędziach drzewo",
+      "ile krawędzi między u i v"
+     ],
+     "a": "Krawędzi na ścieżce: `dep[u] + dep[v] − 2·dep[lca]`; wierzchołków: o jeden więcej. To ten sam trik\nz prefiksami, gdzie „wartością” każdej krawędzi jest 1. O(log n) przez LCA.",
+     "code": "vector<int> dep = {0, 0, 1, 1, 2, 2};   // 1 korzeń; 2, 3 dzieci 1; 4, 5 dzieci 3\nint u = 4, v = 2, l = 1;\nint kraw = dep[u] + dep[v] - 2 * dep[l];\ncout << kraw << ' ' << kraw + 1 << '\\n';   // 3 4"
+    },
+    {
+     "q": [
+      "suma na ścieżce do korzenia",
+      "suma od wierzchołka do korzenia",
+      "path to root sum"
+     ],
+     "a": "To po prostu `pre[v]` — bez LCA. Jeśli wartości się zmieniają, użyj Fenwicka na Euler tourze (zmiana `v`\n= dodanie na `[tin[v], tout[v]]`, odczyt w punkcie `tin[u]`). Odwrotny wariant („dodaj na ścieżce do\nkorzenia, czytaj wartość wierzchołka”) — dodanie w punkcie `tin[v]` i suma na `[tin[u], tout[u]]`.",
+     "code": "vector<long long> pre = {0, 1, 3, 4, 8, 9};\ncout << pre[5] << '\\n';   // 1 + 3 + 5 = 9"
+    }
+   ],
+   "related": [
+    "tree-lca",
+    "tree-distance",
+    "tree-dfs-order",
+    "tree-hld",
+    "ds-fenwick",
+    "graph-mst-path-max"
+   ]
+  }
+ ]
+}

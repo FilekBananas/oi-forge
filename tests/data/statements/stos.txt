@@ -1,0 +1,23 @@
+Stos talerzy
+W stołówce talerze odkłada się na stos. Operacja „PUSH x” kładzie na wierzch talerz z numerem x, „POP” zdejmuje talerz
+z wierzchu (jeśli stos jest pusty, nic się nie dzieje), a „TOP” to pytanie o numer talerza leżącego na wierzchu.
+Wejście
+W pierwszym wierszu znajduje się liczba operacji q (1 ≤ q ≤ 10^6). Każdy z kolejnych q wierszy zawiera jedną operację:
+PUSH x (1 ≤ x ≤ 10^9), POP albo TOP.
+Wyjście
+Dla każdej operacji TOP wypisz w osobnym wierszu numer talerza na wierzchu stosu albo słowo PUSTY, jeśli stos jest
+pusty.
+Przykład
+Wejście:
+7
+PUSH 3
+PUSH 8
+TOP
+POP
+TOP
+POP
+TOP
+Wyjście:
+8
+3
+PUSTY

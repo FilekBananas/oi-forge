@@ -1,0 +1,22 @@
+Deski
+Stolarz ma n desek o długościach d_1, ..., d_n. Potrzebuje co najmniej k kawałków o jednakowej, całkowitej długości L.
+Każdą deskę może ciąć na kawałki dowolnie, ale kawałków nie wolno sklejać, a ścinki są wyrzucane. Jaka jest największa
+długość L, dla której stolarz otrzyma co najmniej k kawałków?
+Wejście
+W pierwszym wierszu znajdują się liczby n i k (1 ≤ n ≤ 100 000, 1 ≤ k ≤ 10^9). W drugim wierszu znajduje się n liczb
+całkowitych d_i (1 ≤ d_i ≤ 10^9) — długości desek.
+Wyjście
+Wypisz największą możliwą długość L. Jeśli nie da się uzyskać k kawałków nawet o długości 1, wypisz 0.
+Przykład 1
+Wejście:
+4 11
+802 743 457 539
+Wyjście:
+200
+
+Przykład 2
+Wejście:
+2 20
+3 4
+Wyjście:
+0

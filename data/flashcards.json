@@ -1,0 +1,1401 @@
+{
+ "version": 1,
+ "description": "Ręcznie przygotowane fiszki OI Forge (q/a w markdown). Karty z bazy wiedzy są dokładane automatycznie.",
+ "decks": [
+  {
+   "id": "stl",
+   "title": "Złożoności STL",
+   "icon": "braces",
+   "description": "Ile kosztują operacje na vector, set, map, priority_queue… i co dokładnie zwracają."
+  },
+  {
+   "id": "algo",
+   "title": "Jaki algorytm do…?",
+   "icon": "lightbulb",
+   "description": "Rozpoznawanie problemu: od opisu sytuacji do właściwego algorytmu i jego złożoności."
+  },
+  {
+   "id": "limits",
+   "title": "Limity → złożoność",
+   "icon": "gauge",
+   "description": "Z ograniczeń w treści odczytaj, jaka złożoność się zmieści — i ile pamięci zajmą tablice."
+  },
+  {
+   "id": "pitfalls",
+   "title": "Pułapki C++",
+   "icon": "triangle-alert",
+   "description": "Błędy, które najczęściej zabierają punkty: przepełnienia, UB, wczytywanie, komparatory."
+  },
+  {
+   "id": "math",
+   "title": "Wzory i matematyka",
+   "icon": "sigma",
+   "description": "Sumy, kombinatoryka, teoria liczb, geometria i gry — wzory, które warto mieć w głowie."
+  },
+  {
+   "id": "defs",
+   "title": "Definicje i pojęcia",
+   "icon": "book-open",
+   "description": "Precyzyjne definicje: grafy, drzewa, teksty, DP — żeby treść zadania nie zaskakiwała."
+  },
+  {
+   "id": "oi",
+   "title": "Praktyka zawodów",
+   "icon": "trophy",
+   "description": "Strategia na zawodach, testowanie, werdykty SIO2 i nawyki, które ratują punkty."
+  }
+ ],
+ "cards": [
+  {
+   "id": "stl-001",
+   "deck": "stl",
+   "q": "Jaka jest złożoność `v.push_back(x)` w `vector`?",
+   "a": "**Zamortyzowane O(1).** Gdy brakuje miejsca, vector alokuje większy blok (zwykle 2× większy) i kopiuje elementy w O(n), ale zdarza się to tak rzadko, że średnio wychodzi O(1). Realokacja unieważnia iteratory i referencje.",
+   "kb": "stl-vector"
+  },
+  {
+   "id": "stl-002",
+   "deck": "stl",
+   "q": "Ile kosztuje `v.insert(v.begin(), x)` albo `v.erase(v.begin())` w `vector`?",
+   "a": "**O(n)** — wszystkie elementy za miejscem wstawienia/usunięcia trzeba przesunąć. Gdy często dokładasz na początek, użyj `deque` (O(1) z obu stron).",
+   "kb": "stl-vector"
+  },
+  {
+   "id": "stl-003",
+   "deck": "stl",
+   "q": "Co robi `v.clear()` z pamięcią vectora?",
+   "a": "Usuwa elementy (O(n), dla `int` praktycznie natychmiast), ale **nie zwalnia pamięci** — `capacity()` zostaje. Pamięć oddasz przez `vector<int>().swap(v);` albo `v.shrink_to_fit();`.",
+   "kb": "stl-vector"
+  },
+  {
+   "id": "stl-004",
+   "deck": "stl",
+   "q": "Czym różni się `v.emplace_back(a, b)` od `v.push_back({a, b})`?",
+   "a": "`emplace_back` konstruuje element **w miejscu** z podanych argumentów (np. `vector<pair<int,int>> v; v.emplace_back(1, 2);`), `push_back` dostaje gotowy obiekt. Złożoność ta sama — zamortyzowane O(1).",
+   "kb": "stl-vector"
+  },
+  {
+   "id": "stl-005",
+   "deck": "stl",
+   "q": "Jak utworzyć vector 2D `n × m` wypełniony wartością −1?",
+   "a": "```cpp\nvector<vector<int>> g(n, vector<int>(m, -1));\n```\nDostęp: `g[i][j]`. Pamięć to n·m intów (+ mały narzut na każdy wiersz).",
+   "kb": "stl-vector-2d"
+  },
+  {
+   "id": "stl-006",
+   "deck": "stl",
+   "q": "Złożoność `insert`, `erase(x)`, `find`, `count`, `lower_bound` w `std::set`?",
+   "a": "**O(log n)** — set to zrównoważone drzewo BST (czerwono-czarne). Minimum: `*s.begin()`, maksimum: `*s.rbegin()` — O(1).",
+   "kb": "stl-set"
+  },
+  {
+   "id": "stl-007",
+   "deck": "stl",
+   "q": "Czy `lower_bound(s.begin(), s.end(), x)` na `std::set` działa w O(log n)?",
+   "a": "**Nie — O(n).** Iteratory seta są tylko dwukierunkowe, więc algorytm z `<algorithm>` przesuwa je krok po kroku. Zawsze używaj metody: `s.lower_bound(x)` — O(log n). To samo dotyczy `map` i `multiset`.",
+   "kb": "stl-set"
+  },
+  {
+   "id": "stl-008",
+   "deck": "stl",
+   "q": "Jak wziąć największy element ze `std::set<int> s`?",
+   "a": "`*s.rbegin()` albo `*prev(s.end())` — O(1). Najmniejszy: `*s.begin()`. Przed użyciem sprawdź `!s.empty()`!",
+   "kb": "stl-set"
+  },
+  {
+   "id": "stl-009",
+   "deck": "stl",
+   "q": "Ile kosztuje `s.erase(it)` (po iteratorze) w `set`?",
+   "a": "**Zamortyzowane O(1)** (bez szukania). `s.erase(x)` po wartości — O(log n). Po `erase(it)` iterator `it` jest nieważny — użyj zwróconego: `it = s.erase(it);`.",
+   "kb": "stl-set"
+  },
+  {
+   "id": "stl-010",
+   "deck": "stl",
+   "q": "`s.count(x)` na `set` vs na `multiset` — co zwraca i ile kosztuje?",
+   "a": "W `set` zwraca 0 albo 1, O(log n). W `multiset` zwraca liczbę kopii w **O(log n + k)**, gdzie k = liczba wystąpień — przy wielu kopiach bywa wolne. Do sprawdzenia obecności: `ms.find(x) != ms.end()` albo `ms.contains(x)` (C++20).",
+   "kb": "stl-multiset"
+  },
+  {
+   "id": "stl-011",
+   "deck": "stl",
+   "q": "Co robi `ms.erase(x)` na `multiset`, a co `ms.erase(ms.find(x))`?",
+   "a": "`ms.erase(x)` usuwa **wszystkie** kopie x. `ms.erase(ms.find(x))` usuwa **jedną** kopię (upewnij się, że `find` nie zwrócił `end()`).",
+   "kb": "stl-multiset"
+  },
+  {
+   "id": "stl-012",
+   "deck": "stl",
+   "q": "Co się dzieje przy `m[k]` w `std::map`, gdy klucza k nie ma?",
+   "a": "Tworzy się nowy element `m[k]` z wartością domyślną (0 dla liczb, pusty string…). Złożoność O(log n). Do samego sprawdzenia używaj `m.count(k)` / `m.find(k)` / `m.contains(k)`, żeby nie zaśmiecać mapy.",
+   "kb": "stl-map"
+  },
+  {
+   "id": "stl-013",
+   "deck": "stl",
+   "q": "W jakiej kolejności iteruje się `map`, a w jakiej `unordered_map`?",
+   "a": "`map` — rosnąco po kluczu (drzewo BST). `unordered_map` — w kolejności nieokreślonej (tablica haszująca), może się zmieniać między uruchomieniami i wersjami kompilatora.",
+   "kb": "stl-map"
+  },
+  {
+   "id": "stl-014",
+   "deck": "stl",
+   "q": "Złożoność operacji w `unordered_map`?",
+   "a": "**Średnio O(1)**, pesymistycznie **O(n)** — na specjalnie przygotowanych testach (anty-hash) wszystkie klucze trafiają do jednego kubełka. Ratunek: własny hash (splitmix64) albo zwykła `map` (O(log n) zawsze).",
+   "kb": "stl-unordered-map"
+  },
+  {
+   "id": "stl-015",
+   "deck": "stl",
+   "q": "Złożoność `push`, `pop`, `top` w `priority_queue`?",
+   "a": "`push` i `pop`: **O(log n)**, `top`: **O(1)**. Domyślnie to **kopiec maksymalny** — `top()` zwraca największy element.",
+   "kb": "stl-priority-queue"
+  },
+  {
+   "id": "stl-016",
+   "deck": "stl",
+   "q": "Jak zrobić `priority_queue` zwracającą najmniejszy element?",
+   "a": "```cpp\npriority_queue<int, vector<int>, greater<int>> pq;\n```\nAlternatywa: wkładaj `-x` do zwykłej kolejki i neguj przy odczycie. Dla par (np. w Dijkstrze): `priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<>>`.",
+   "kb": "stl-priority-queue"
+  },
+  {
+   "id": "stl-017",
+   "deck": "stl",
+   "q": "Jakie operacje `deque` są w O(1)?",
+   "a": "`push_front`, `push_back`, `pop_front`, `pop_back` i dostęp `d[i]` — wszystkie O(1). Wstawianie w środek — O(n). Przydaje się w 0-1 BFS i kolejce monotonicznej.",
+   "kb": "stl-deque"
+  },
+  {
+   "id": "stl-018",
+   "deck": "stl",
+   "q": "Złożoność `sort` i `stable_sort`?",
+   "a": "`sort`: **O(n log n)** (introsort, gwarantowane). `stable_sort`: O(n log n), gdy jest dodatkowa pamięć (inaczej O(n log² n)); zachowuje kolejność elementów równych.",
+   "kb": "stl-sort"
+  },
+  {
+   "id": "stl-019",
+   "deck": "stl",
+   "q": "Co zwraca `lower_bound(a, a + n, x)` na posortowanej tablicy?",
+   "a": "Wskaźnik (iterator) na **pierwszy element ≥ x**, albo `a + n`, gdy takiego nie ma. Indeks: `lower_bound(a, a + n, x) - a`. O(log n). Tablica musi być posortowana rosnąco.",
+   "kb": "stl-binary-search"
+  },
+  {
+   "id": "stl-020",
+   "deck": "stl",
+   "q": "Co zwraca `upper_bound(v.begin(), v.end(), x)`?",
+   "a": "Iterator na **pierwszy element > x** (ściśle większy) albo `v.end()`. O(log n) na posortowanym zakresie.",
+   "kb": "stl-binary-search"
+  },
+  {
+   "id": "stl-021",
+   "deck": "stl",
+   "q": "Jak w O(log n) policzyć, ile razy x występuje w posortowanym vectorze?",
+   "a": "```cpp\nint ile = upper_bound(v.begin(), v.end(), x) - lower_bound(v.begin(), v.end(), x);\n```\nAlbo `equal_range` — zwraca obie granice naraz.",
+   "kb": "stl-binary-search"
+  },
+  {
+   "id": "stl-022",
+   "deck": "stl",
+   "q": "Co dokładnie robi `unique(v.begin(), v.end())`?",
+   "a": "Usuwa **sąsiednie** duplikaty: przesuwa unikalne elementy na początek i zwraca iterator na nowy koniec. **Nie zmienia rozmiaru!** Idiom:\n```cpp\nsort(v.begin(), v.end());\nv.erase(unique(v.begin(), v.end()), v.end());\n```",
+   "kb": "stl-unique"
+  },
+  {
+   "id": "stl-023",
+   "deck": "stl",
+   "q": "Dlaczego `s = s + c;` w pętli może dać TLE, a `s += c;` nie?",
+   "a": "`s + c` tworzy **nowy napis** (kopia O(n)), więc pętla po n znakach to O(n²). `s += c` / `s.push_back(c)` dopisuje w zamortyzowanym O(1).",
+   "kb": "stl-string"
+  },
+  {
+   "id": "stl-024",
+   "deck": "stl",
+   "q": "Ile kosztuje `s.substr(pos, len)`?",
+   "a": "**O(len)** — tworzy kopię fragmentu. Wywoływane w pętli dla wielu pozycji szybko robi się O(n²). Jeśli porównujesz fragmenty wiele razy, rozważ hashowanie.",
+   "kb": "stl-string-methods"
+  },
+  {
+   "id": "stl-025",
+   "deck": "stl",
+   "q": "Czy `s.find(t)` na stringu działa w czasie liniowym?",
+   "a": "Nie ma takiej gwarancji — w praktyce (libstdc++) w najgorszym razie **O(n·m)**. Do wyszukiwania wzorca w dużych danych użyj KMP albo Z-funkcji (O(n + m)). Gdy brak wystąpienia, zwraca `string::npos`.",
+   "kb": "stl-string-methods"
+  },
+  {
+   "id": "stl-026",
+   "deck": "stl",
+   "q": "Co robi `nth_element(v.begin(), v.begin() + k, v.end())` i ile kosztuje?",
+   "a": "Ustawia na pozycji k element, który byłby tam po posortowaniu; mniejsze lądują przed nim, większe za nim (w dowolnej kolejności). Średnio **O(n)** — szybciej niż sort, gdy potrzebujesz tylko k-tego elementu (np. mediany).",
+   "kb": "stl-nth-element"
+  },
+  {
+   "id": "stl-027",
+   "deck": "stl",
+   "q": "Jak wygenerować wszystkie permutacje vectora `v`?",
+   "a": "```cpp\nsort(v.begin(), v.end());\ndo {\n    // przetwórz v\n} while (next_permutation(v.begin(), v.end()));\n```\n`next_permutation` zwraca `false` po ostatniej permutacji. Bez sortowania na początku pominiesz część permutacji. Razem O(n!·n).",
+   "kb": "stl-permutations"
+  },
+  {
+   "id": "stl-028",
+   "deck": "stl",
+   "q": "Co jest nie tak z `accumulate(v.begin(), v.end(), 0)` dla vectora `long long`?",
+   "a": "Typ wyniku to typ **wartości początkowej** — `0` to `int`, więc suma liczona jest w int i się przepełnia. Pisz `0LL`:\n```cpp\nlong long suma = accumulate(v.begin(), v.end(), 0LL);\n```",
+   "kb": "stl-accumulate"
+  },
+  {
+   "id": "stl-029",
+   "deck": "stl",
+   "q": "Jak dostać **indeks** największego elementu vectora?",
+   "a": "```cpp\nint i = max_element(v.begin(), v.end()) - v.begin();\n```\n`max_element` zwraca iterator (pierwsze maksimum), O(n).",
+   "kb": "stl-min-max"
+  },
+  {
+   "id": "stl-030",
+   "deck": "stl",
+   "q": "Co robi `iota(v.begin(), v.end(), 0)`?",
+   "a": "Wypełnia zakres kolejnymi wartościami 0, 1, 2, … (O(n)). Typowe użycie: tablica indeksów do posortowania po kluczu albo inicjalizacja rodziców w DSU.",
+   "kb": "stl-iota-fill"
+  },
+  {
+   "id": "stl-031",
+   "deck": "stl",
+   "q": "Co liczy `__builtin_popcount(x)` i jak to zrobić dla `long long`?",
+   "a": "Liczbę zapalonych bitów (jedynek) w `unsigned int`. Dla 64 bitów: `__builtin_popcountll(x)`. W C++20 także `std::popcount`.",
+   "kb": "stl-builtin-bits"
+  },
+  {
+   "id": "stl-032",
+   "deck": "stl",
+   "q": "Co zwraca `__builtin_ctz(0)` albo `__builtin_clz(0)`?",
+   "a": "**Zachowanie niezdefiniowane** — dla zera te funkcje nie mają sensownego wyniku. `ctz` = liczba zer na końcu (najmłodsze bity), `clz` = liczba zer na początku. Zawsze sprawdź `x != 0`.",
+   "kb": "stl-builtin-bits"
+  },
+  {
+   "id": "stl-033",
+   "deck": "stl",
+   "q": "Ile kosztują operacje `&`, `|`, `^`, `<<`, `count()` na `bitset<N>`?",
+   "a": "**O(N / 64)** — bitset przetwarza 64 bity naraz (na 64-bitowej maszynie). Dlatego daje przyspieszenie ok. 64× np. w plecaku na zbiorach osiągalnych sum.",
+   "kb": "stl-bitset"
+  },
+  {
+   "id": "stl-034",
+   "deck": "stl",
+   "q": "Jak porównywane są obiekty `pair`?",
+   "a": "**Leksykograficznie**: najpierw `first`, przy remisie `second`. Dzięki temu `sort` na `vector<pair<int,int>>` sortuje po pierwszym, a potem po drugim elemencie.",
+   "kb": "stl-pair"
+  },
+  {
+   "id": "stl-035",
+   "deck": "stl",
+   "q": "Jak sprawdzić, czy element jest w secie w C++20 i wcześniej?",
+   "a": "C++20: `s.contains(x)`. Wcześniej: `s.count(x)` (0/1) albo `s.find(x) != s.end()`. Wszystko O(log n) (w `unordered_set` średnio O(1)).",
+   "kb": "stl-set"
+  },
+  {
+   "id": "stl-036",
+   "deck": "stl",
+   "q": "Jakie metody mają `queue` i `stack`?",
+   "a": "`queue` (FIFO): `push`, `pop`, `front`, `back`, `empty`, `size`. `stack` (LIFO): `push`, `pop`, `top`, `empty`, `size`. Wszystko O(1). `pop()` nic nie zwraca — najpierw odczytaj `front()`/`top()`.",
+   "kb": "stl-queue"
+  },
+  {
+   "id": "stl-037",
+   "deck": "stl",
+   "q": "Co robi `reverse(v.begin(), v.end())` i `rotate(v.begin(), v.begin() + k, v.end())`?",
+   "a": "`reverse` odwraca kolejność (O(n)). `rotate` przesuwa cyklicznie w lewo: element `v[k]` staje się pierwszy (O(n)).",
+   "kb": "stl-reverse-rotate"
+  },
+  {
+   "id": "algo-001",
+   "deck": "algo",
+   "q": "Najkrótsze ścieżki w grafie **bez wag** (każda krawędź kosztuje 1) — jaki algorytm?",
+   "a": "**BFS** z wierzchołka startowego — odległości rosną warstwami. Złożoność **O(n + m)**.",
+   "kb": "graph-bfs"
+  },
+  {
+   "id": "algo-002",
+   "deck": "algo",
+   "q": "Najkrótsze ścieżki z jednego źródła, wagi **nieujemne**?",
+   "a": "**Algorytm Dijkstry** z kopcem (`priority_queue`): **O((n + m) log n)**. Przy ujemnych wagach nie działa poprawnie.",
+   "kb": "graph-dijkstra"
+  },
+  {
+   "id": "algo-003",
+   "deck": "algo",
+   "q": "Najkrótsze ścieżki, gdy krawędzie mają wagi tylko **0 i 1**?",
+   "a": "**0-1 BFS** na `deque`: krawędź wagi 0 → `push_front`, wagi 1 → `push_back`. Złożoność **O(n + m)**.",
+   "kb": "graph-01-bfs"
+  },
+  {
+   "id": "algo-004",
+   "deck": "algo",
+   "q": "Graf ma **ujemne wagi** — jak policzyć najkrótsze ścieżki i wykryć ujemny cykl?",
+   "a": "**Bellman-Ford**: n − 1 rund relaksacji wszystkich krawędzi, O(n·m). Jeśli w n-tej rundzie coś się jeszcze poprawia — jest ujemny cykl osiągalny ze źródła.",
+   "kb": "graph-bellman-ford"
+  },
+  {
+   "id": "algo-005",
+   "deck": "algo",
+   "q": "Odległości między **wszystkimi parami** wierzchołków, n ≤ 400?",
+   "a": "**Floyd-Warshall**: `d[i][j] = min(d[i][j], d[i][k] + d[k][j])` z pętlą po k na **zewnątrz**. O(n³) czasu, O(n²) pamięci.",
+   "kb": "graph-floyd-warshall"
+  },
+  {
+   "id": "algo-006",
+   "deck": "algo",
+   "q": "Dodajesz krawędzie i pytasz „czy u i v są w tej samej spójnej składowej?” — co użyć?",
+   "a": "**DSU (Find & Union)** z kompresją ścieżek i łączeniem wg rozmiaru/rangi — prawie O(1) na operację (O(α(n))).",
+   "kb": "graph-dsu"
+  },
+  {
+   "id": "algo-007",
+   "deck": "algo",
+   "q": "Minimalne drzewo rozpinające (MST) — jakie algorytmy?",
+   "a": "**Kruskal**: posortuj krawędzie rosnąco, dodawaj, jeśli łączą różne składowe DSU — O(m log m). **Prim**: rozrastanie drzewa z kopcem — O(m log n).",
+   "kb": "graph-mst-kruskal"
+  },
+  {
+   "id": "algo-008",
+   "deck": "algo",
+   "q": "Zadania z zależnościami „a musi być przed b” — jak ustalić kolejność?",
+   "a": "**Sortowanie topologiczne** (Kahn: kolejka wierzchołków o stopniu wejściowym 0) — O(n + m). Jeśli nie da się ułożyć wszystkich wierzchołków, w grafie jest cykl.",
+   "kb": "graph-toposort"
+  },
+  {
+   "id": "algo-009",
+   "deck": "algo",
+   "q": "Najdłuższa ścieżka w grafie skierowanym **acyklicznym** (DAG)?",
+   "a": "**DP po porządku topologicznym**: `dp[v] = max(dp[u] + w(u, v))` po krawędziach wchodzących. O(n + m). (W grafie z cyklami to problem NP-trudny!)",
+   "kb": "graph-dag-dp"
+  },
+  {
+   "id": "algo-010",
+   "deck": "algo",
+   "q": "Wiele zapytań o sumę na przedziale [l, r], tablica się **nie zmienia**?",
+   "a": "**Sumy prefiksowe**: `p[i] = a[1] + … + a[i]`, wynik `p[r] − p[l−1]`. O(n) przygotowania, **O(1)** na zapytanie.",
+   "kb": "ds-prefix-sums"
+  },
+  {
+   "id": "algo-011",
+   "deck": "algo",
+   "q": "Wiele operacji „dodaj x na przedziale [l, r]”, odczyt dopiero na końcu?",
+   "a": "**Tablica różnicowa**: `d[l] += x; d[r+1] -= x;`, na końcu sumy prefiksowe z `d`. O(1) na operację + O(n) na końcu.",
+   "kb": "ds-difference-array"
+  },
+  {
+   "id": "algo-012",
+   "deck": "algo",
+   "q": "Suma na przedziale + **zmiany pojedynczych elementów** online?",
+   "a": "**Drzewo Fenwicka** (BIT) albo **drzewo przedziałowe** — obie operacje O(log n).",
+   "kb": "ds-fenwick"
+  },
+  {
+   "id": "algo-013",
+   "deck": "algo",
+   "q": "Minimum na przedziale, tablica **stała**, bardzo dużo zapytań?",
+   "a": "**Sparse table**: O(n log n) przygotowania, **O(1)** na zapytanie (dwa nachodzące przedziały długości 2^k).",
+   "kb": "ds-sparse-table"
+  },
+  {
+   "id": "algo-014",
+   "deck": "algo",
+   "q": "„Dodaj x na przedziale” i „suma na przedziale” wymieszane online?",
+   "a": "**Drzewo przedziałowe z lazy propagation** — obie operacje O(log n).",
+   "kb": "ds-lazy-propagation"
+  },
+  {
+   "id": "algo-015",
+   "deck": "algo",
+   "q": "Szukasz najmniejszego X, dla którego warunek jest spełniony, a warunek jest **monotoniczny**?",
+   "a": "**Wyszukiwanie binarne po wyniku**: binsearch po X, w każdym kroku sprawdź warunek. Złożoność: O(log zakresu · koszt sprawdzenia).",
+   "kb": "tech-binary-search-answer"
+  },
+  {
+   "id": "algo-016",
+   "deck": "algo",
+   "q": "Najdłuższy spójny fragment ciągu liczb **dodatnich** o sumie ≤ S?",
+   "a": "**Gąsienica (dwa wskaźniki)**: przesuwaj prawy koniec, a lewy, dopóki suma > S. Każdy wskaźnik idzie tylko do przodu — **O(n)**.",
+   "kb": "tech-two-pointers"
+  },
+  {
+   "id": "algo-017",
+   "deck": "algo",
+   "q": "Minimum (albo maksimum) w każdym oknie długości k?",
+   "a": "**Kolejka monotoniczna** na `deque` (trzymasz indeksy kandydatów) — **O(n)** łącznie.",
+   "kb": "ds-monotonic-queue"
+  },
+  {
+   "id": "algo-018",
+   "deck": "algo",
+   "q": "Dla każdego elementu: najbliższy **większy** element na lewo?",
+   "a": "**Stos monotoniczny**: zdejmuj ze stosu elementy ≤ bieżącego; to, co zostało na wierzchu, jest odpowiedzią. **O(n)** łącznie.",
+   "kb": "ds-monotonic-stack"
+  },
+  {
+   "id": "algo-019",
+   "deck": "algo",
+   "q": "Znajdź wszystkie wystąpienia wzorca w tekście w czasie liniowym?",
+   "a": "**KMP** (funkcja prefiksowa) albo **Z-funkcja** na `wzorzec + '#' + tekst` — O(n + m). Alternatywa: hashowanie.",
+   "kb": "str-kmp"
+  },
+  {
+   "id": "algo-020",
+   "deck": "algo",
+   "q": "Wiele porównań „czy fragmenty s[a..b] i s[c..d] są równe?”",
+   "a": "**Hashowanie wielomianowe**: hashe prefiksów i potęgi podstawy, porównanie w **O(1)** po O(n) przygotowania. Uwaga na kolizje — dwa moduły albo mod 2^61 − 1.",
+   "kb": "str-hashing"
+  },
+  {
+   "id": "algo-021",
+   "deck": "algo",
+   "q": "Wiele zapytań o najniższego wspólnego przodka (LCA) w drzewie?",
+   "a": "**Binary lifting** (skoki o 2^k): O(n log n) przygotowania, **O(log n)** na zapytanie. Albo Euler tour + sparse table: O(1).",
+   "kb": "tree-lca"
+  },
+  {
+   "id": "algo-022",
+   "deck": "algo",
+   "q": "Jak znaleźć średnicę drzewa?",
+   "a": "**Dwa BFS/DFS**: z dowolnego wierzchołka znajdź najdalszy u, potem z u najdalszy v — odległość u–v to średnica. O(n). (Przy ujemnych wagach — DP na drzewie.)",
+   "kb": "tree-diameter"
+  },
+  {
+   "id": "algo-023",
+   "deck": "algo",
+   "q": "Wszystkie liczby pierwsze do 10^7?",
+   "a": "**Sito Eratostenesa**: O(n log log n). Wersja z najmniejszym dzielnikiem pierwszym (SPF) pozwala potem rozkładać liczby w O(log n).",
+   "kb": "math-sieve"
+  },
+  {
+   "id": "algo-024",
+   "deck": "algo",
+   "q": "Policz a^b mod m dla b do 10^18?",
+   "a": "**Szybkie potęgowanie** (podnoszenie do kwadratu): **O(log b)** mnożeń. Mnożenie modulo w `long long` (przy m ≤ ~3·10^9) albo `__int128` dla większych m.",
+   "kb": "math-fast-pow"
+  },
+  {
+   "id": "algo-025",
+   "deck": "algo",
+   "q": "Jak dzielić modulo p (p pierwsze, np. 10^9 + 7)?",
+   "a": "Mnóż przez **odwrotność modularną**: `a / b ≡ a · b^(p−2) (mod p)` (małe twierdzenie Fermata), O(log p). Dla modułu niepierwszego: rozszerzony Euklides (gdy NWD(b, m) = 1).",
+   "kb": "math-mod-inverse"
+  },
+  {
+   "id": "algo-026",
+   "deck": "algo",
+   "q": "n ≤ 20 i trzeba wybrać najlepszy **podzbiór** — jakie podejście?",
+   "a": "**Przegląd wszystkich podzbiorów maskami bitowymi**: 2^n ≈ 10^6 masek, O(2^n · n). Często też DP na maskach.",
+   "kb": "tech-bitmask-brute-force"
+  },
+  {
+   "id": "algo-027",
+   "deck": "algo",
+   "q": "n ≤ 40, czy da się wybrać podzbiór o sumie dokładnie S?",
+   "a": "**Meet in the middle**: podziel na dwie połowy po 20, wygeneruj wszystkie sumy (2^20 każda), posortuj jedną i szukaj binarnie (albo dwoma wskaźnikami) uzupełnienia. O(2^(n/2) · n).",
+   "kb": "tech-meet-in-the-middle"
+  },
+  {
+   "id": "algo-028",
+   "deck": "algo",
+   "q": "Plecak: n przedmiotów (waga, wartość), pojemność W ≤ 10^5 — maksymalna wartość?",
+   "a": "**DP plecakowe 0/1**: `dp[w]` = najlepsza wartość przy wadze w, pętla po w **od tyłu**. O(n · W) czasu, O(W) pamięci.",
+   "kb": "dp-knapsack-01"
+  },
+  {
+   "id": "algo-029",
+   "deck": "algo",
+   "q": "Najdłuższy podciąg rosnący dla n ≤ 2·10^5?",
+   "a": "**LIS w O(n log n)**: trzymaj `d[k]` = najmniejszy możliwy ostatni element podciągu długości k+1 i aktualizuj przez `lower_bound` (ściśle rosnący) albo `upper_bound` (niemalejący).",
+   "kb": "dp-lis"
+  },
+  {
+   "id": "algo-030",
+   "deck": "algo",
+   "q": "Podziel graf skierowany na silnie spójne składowe?",
+   "a": "**Tarjan** (low-link, jeden DFS) albo **Kosaraju** (dwa DFS-y, drugi na grafie odwróconym) — O(n + m). Graf składowych (kondensacja) jest DAG-iem.",
+   "kb": "graph-scc"
+  },
+  {
+   "id": "algo-031",
+   "deck": "algo",
+   "q": "Maksymalne skojarzenie w grafie dwudzielnym?",
+   "a": "**Algorytm Kuhna** (ścieżki powiększające DFS-em) — O(n · m), w praktyce szybki; **Hopcroft-Karp** — O(m √n).",
+   "kb": "graph-bipartite-matching"
+  },
+  {
+   "id": "algo-032",
+   "deck": "algo",
+   "q": "Minimum funkcji, która najpierw maleje, potem rośnie (unimodalnej)?",
+   "a": "**Wyszukiwanie ternarne**: porównaj f(m1) i f(m2) w 1/3 i 2/3 przedziału, odrzuć jedną trzecią. O(log zakresu) wywołań. Na liczbach całkowitych często prościej binsearch po f(x+1) − f(x).",
+   "kb": "tech-ternary-search"
+  },
+  {
+   "id": "algo-033",
+   "deck": "algo",
+   "q": "Czy graf jest **dwudzielny**?",
+   "a": "**BFS/DFS z kolorowaniem na dwa kolory**: sąsiad dostaje przeciwny kolor; konflikt (krawędź w obrębie jednego koloru) = nie jest dwudzielny. O(n + m).",
+   "kb": "graph-bipartite"
+  },
+  {
+   "id": "algo-034",
+   "deck": "algo",
+   "q": "Graf funkcyjny (każdy wierzchołek ma jeden następnik): gdzie będę po k krokach, k ≤ 10^18?",
+   "a": "**Binary lifting**: `up[j][v]` = wierzchołek po 2^j krokach; rozkładasz k na potęgi dwójki. O(n log k) pamięci/przygotowania, O(log k) na zapytanie.",
+   "kb": "graph-functional"
+  },
+  {
+   "id": "algo-035",
+   "deck": "algo",
+   "q": "Liczba inwersji w permutacji długości 10^6?",
+   "a": "**Sortowanie przez scalanie** z liczeniem przy scalaniu albo **Fenwick** po wartościach — O(n log n). (Brute O(n²) za wolny.)",
+   "kb": "tech-divide-and-conquer"
+  },
+  {
+   "id": "algo-036",
+   "deck": "algo",
+   "q": "Przedziały na osi (np. wydarzenia start–koniec): ile maksymalnie nakłada się naraz?",
+   "a": "**Zamiatanie (sweep line)**: zdarzenia (+1 na początku, −1 na końcu), posortuj i przejdź, licząc bieżącą sumę. O(n log n). Uważaj na kolejność zdarzeń w tym samym punkcie.",
+   "kb": "tech-sweep-line"
+  },
+  {
+   "id": "algo-037",
+   "deck": "algo",
+   "q": "Wartości do 10^9, ale tylko 2·10^5 różnych — jak użyć ich jako indeksów tablicy?",
+   "a": "**Kompresja współrzędnych**: posortuj unikalne wartości i zamieniaj x na `lower_bound(...) - begin`. O(n log n).",
+   "kb": "tech-coordinate-compression"
+  },
+  {
+   "id": "limits-001",
+   "deck": "limits",
+   "q": "Ile prostych operacji na sekundę można bezpiecznie założyć w C++?",
+   "a": "Około **10^8** prostych operacji (z -O2 często więcej, ale licz z zapasem). Do tego doliczasz stałą: `map`, `set`, rekurencja i dzielenie są wyraźnie droższe od dodawania na tablicy.",
+   "kb": "oi-complexity-limits"
+  },
+  {
+   "id": "limits-002",
+   "deck": "limits",
+   "q": "n ≤ 10 — na jaką złożoność cię stać?",
+   "a": "**O(n!)** lub O(n! · n): 10! = 3 628 800. Przegląd wszystkich permutacji (`next_permutation`) się zmieści.",
+   "kb": "oi-complexity-limits"
+  },
+  {
+   "id": "limits-003",
+   "deck": "limits",
+   "q": "n ≤ 20 — jaka złożoność?",
+   "a": "**O(2^n · n)**: 2^20 ≈ 10^6, razy 20 to ~2·10^7. Maski bitowe, DP na podzbiorach.",
+   "kb": "oi-complexity-limits"
+  },
+  {
+   "id": "limits-004",
+   "deck": "limits",
+   "q": "n ≤ 40 — co to sugeruje?",
+   "a": "2^40 ≈ 10^12 za dużo, ale **2^20** na połowę wystarczy → **meet in the middle**.",
+   "kb": "tech-meet-in-the-middle"
+  },
+  {
+   "id": "limits-005",
+   "deck": "limits",
+   "q": "n ≤ 500 — jaka złożoność się zmieści?",
+   "a": "**O(n³)**: 500³ = 1,25·10^8 — na granicy, ale zwykle OK przy prostych operacjach (Floyd-Warshall, DP na przedziałach).",
+   "kb": "oi-complexity-limits"
+  },
+  {
+   "id": "limits-006",
+   "deck": "limits",
+   "q": "n ≤ 5000 — jaka złożoność?",
+   "a": "**O(n²)**: 2,5·10^7 operacji — spokojnie. O(n² log n) też zwykle przejdzie.",
+   "kb": "oi-complexity-limits"
+  },
+  {
+   "id": "limits-007",
+   "deck": "limits",
+   "q": "n ≤ 2·10^5 — jaka złożoność?",
+   "a": "**O(n log n)** (≈ 3,6·10^6) albo O(n √n) (≈ 9·10^7, ostrożnie ze stałą). O(n²) = 4·10^10 — zdecydowanie za wolno.",
+   "kb": "oi-complexity-limits"
+  },
+  {
+   "id": "limits-008",
+   "deck": "limits",
+   "q": "n ≤ 10^6 — jaka złożoność?",
+   "a": "**O(n)** albo O(n log n) z małą stałą (2·10^7). Pamiętaj o szybkim wczytywaniu — samo wejście to miliony liczb.",
+   "kb": "oi-complexity-limits"
+  },
+  {
+   "id": "limits-009",
+   "deck": "limits",
+   "q": "n ≤ 10^18 — co to sugeruje?",
+   "a": "Nawet O(n) odpada → **O(log n)** albo O(√n) przy n ≤ 10^12: wzór matematyczny, binsearch po wyniku, szybkie potęgowanie, potęgowanie macierzy, binary lifting.",
+   "kb": "oi-complexity-limits"
+  },
+  {
+   "id": "limits-010",
+   "deck": "limits",
+   "q": "Ile pamięci zajmuje `int a[10^7]`, a ile `long long a[10^7]`?",
+   "a": "`int` ma 4 B → **ok. 40 MB** (38,1 MiB). `long long` ma 8 B → **ok. 80 MB**. Przy limicie 64 MB druga tablica się nie zmieści.",
+   "kb": "oi-memory"
+  },
+  {
+   "id": "limits-011",
+   "deck": "limits",
+   "q": "Tablica `int` 5000 × 5000 — ile pamięci?",
+   "a": "25·10^6 · 4 B = **100 MB** — za dużo przy typowym limicie. Szukaj rozwiązania O(n) pamięci (np. DP trzymające dwa wiersze).",
+   "kb": "oi-memory"
+  },
+  {
+   "id": "limits-012",
+   "deck": "limits",
+   "q": "Ile pamięci zajmuje `bool b[10^8]`, a ile `bitset<100000000>`?",
+   "a": "`bool` zajmuje 1 bajt → **100 MB**. `bitset` trzyma 1 bit na element → **12,5 MB**.",
+   "kb": "ds-bitset"
+  },
+  {
+   "id": "limits-013",
+   "deck": "limits",
+   "q": "Jaki jest maksymalny `int`, a jaki `long long`?",
+   "a": "`int`: 2^31 − 1 = **2 147 483 647** (≈ 2,1·10^9). `long long`: 2^63 − 1 ≈ **9,22·10^18**.",
+   "kb": "num-int-types"
+  },
+  {
+   "id": "limits-014",
+   "deck": "limits",
+   "q": "Iloczyn dwóch liczb ≤ 10^9 — czy zmieści się w `long long`? A dwóch ≤ 10^10?",
+   "a": "10^9 · 10^9 = 10^18 < 9,22·10^18 → **tak** (pamiętaj o rzutowaniu przed mnożeniem!). 10^10 · 10^10 = 10^20 → **nie**: `__int128` albo mnożenie modulo.",
+   "kb": "num-overflow"
+  },
+  {
+   "id": "limits-015",
+   "deck": "limits",
+   "q": "Suma n = 10^6 liczb, każda do 10^9 — jaki typ?",
+   "a": "Do 10^15 → **long long**. W int przepełni się już przy kilku liczbach (2·10^9 > INT_MAX).",
+   "kb": "num-overflow"
+  },
+  {
+   "id": "limits-016",
+   "deck": "limits",
+   "q": "Ile elementów może mieć mapa `map<int,int>` przy limicie 256 MB?",
+   "a": "Każdy węzeł drzewa to kilkadziesiąt bajtów (dane + 3 wskaźniki + kolor + narzut alokatora), więc 10^6 elementów to rząd **50 MB**. Kilka milionów — już ryzykownie; tablica/vector jest wielokrotnie oszczędniejsza.",
+   "kb": "oi-memory"
+  },
+  {
+   "id": "limits-017",
+   "deck": "limits",
+   "q": "Ile to jest 2^10, 2^20, 2^30?",
+   "a": "2^10 = 1024 ≈ 10^3, 2^20 ≈ 10^6 (1 048 576), 2^30 ≈ 10^9 (1 073 741 824). Stąd log₂(10^6) ≈ 20, log₂(10^9) ≈ 30.",
+   "kb": "num-log2"
+  },
+  {
+   "id": "pitfalls-001",
+   "deck": "pitfalls",
+   "q": "Co jest źle?\n```cpp\nint a = 100000, b = 100000;\nlong long c = a * b;\n```",
+   "a": "Mnożenie liczy się w `int` (oba argumenty są int) i przepełnia **zanim** wynik trafi do `long long`. Poprawnie:\n```cpp\nlong long c = 1LL * a * b;\n```",
+   "kb": "pit-int-overflow"
+  },
+  {
+   "id": "pitfalls-002",
+   "deck": "pitfalls",
+   "q": "Dlaczego `for (int i = 0; i < v.size() - 1; i++)` wysypuje się dla pustego vectora?",
+   "a": "`v.size()` jest **unsigned** (`size_t`), więc `0 − 1` to ogromna liczba (≈ 1,8·10^19) i pętla wychodzi poza vector. Pisz `i + 1 < v.size()` albo `(int)v.size() - 1`.",
+   "kb": "pit-unsigned-size"
+  },
+  {
+   "id": "pitfalls-003",
+   "deck": "pitfalls",
+   "q": "Tablica `int a[n];` i pętla `for (int i = 0; i <= n; i++) a[i] = 0;` — co się stanie?",
+   "a": "Indeks `n` jest **poza tablicą** (poprawne są 0…n−1) — niezdefiniowane zachowanie: nadpisanie innych zmiennych albo RE. Na zawodach deklaruj z zapasem: `int a[MAXN + 5];`.",
+   "kb": "pit-out-of-bounds"
+  },
+  {
+   "id": "pitfalls-004",
+   "deck": "pitfalls",
+   "q": "Co robi `memset(a, 1, sizeof a)` na tablicy `int`?",
+   "a": "Ustawia **każdy bajt** na 1, więc każdy int to 0x01010101 = **16 843 009**, a nie 1. memset nadaje się tylko do 0, −1 i wzorców bajtowych (np. 0x3f). Do innych wartości: `fill(a, a + n, 1);`.",
+   "kb": "pit-memset"
+  },
+  {
+   "id": "pitfalls-005",
+   "deck": "pitfalls",
+   "q": "Dlaczego popularne jest `memset(dist, 0x3f, sizeof dist)` jako nieskończoność?",
+   "a": "Każdy int dostaje wartość 0x3f3f3f3f = **1 061 109 567** (≈ 10^9): jest duża, a suma dwóch takich (≈ 2,12·10^9) **wciąż mieści się w int**, więc `dist[u] + w` się nie przepełni.",
+   "kb": "num-inf-constants"
+  },
+  {
+   "id": "pitfalls-006",
+   "deck": "pitfalls",
+   "q": "Dlaczego `cout << x << endl;` w pętli dla 10^6 liczb może dać TLE?",
+   "a": "`endl` wymusza **opróżnienie bufora** (flush) przy każdej linii. Używaj `'\\n'` i szybkiego IO (`ios_base::sync_with_stdio(false); cin.tie(nullptr);`).",
+   "kb": "pit-endl-tle"
+  },
+  {
+   "id": "pitfalls-007",
+   "deck": "pitfalls",
+   "q": "Co robi `if (x = 5)`?",
+   "a": "To **przypisanie**, nie porównanie: x staje się 5, a warunek jest zawsze prawdziwy. Porównanie to `x == 5`. Kompiluj z `-Wall`, kompilator ostrzeże.",
+   "kb": "pit-assign-vs-compare"
+  },
+  {
+   "id": "pitfalls-008",
+   "deck": "pitfalls",
+   "q": "Dlaczego `if (cnt[s] > 0)` na `map<string,int> cnt` może spowolnić program i zmienić wynik?",
+   "a": "`cnt[s]` **wstawia** brakujący klucz z wartością 0 — mapa rośnie, a późniejsze `cnt.size()` czy iteracja dają inne wyniki. Do sprawdzania: `cnt.count(s)` albo `cnt.find(s)`.",
+   "kb": "pit-map-bracket"
+  },
+  {
+   "id": "pitfalls-009",
+   "deck": "pitfalls",
+   "q": "Co jest złego w komparatorze `return a <= b;` dla `sort`?",
+   "a": "Komparator musi być **ścisły** (strict weak ordering): `cmp(a, a)` musi zwracać `false`. Z `<=` sort ma niezdefiniowane zachowanie — może się zapętlić albo wyjść poza tablicę (RE). Używaj `<`.",
+   "kb": "pit-comparator"
+  },
+  {
+   "id": "pitfalls-010",
+   "deck": "pitfalls",
+   "q": "Jak C++ czyta `if (a & 1 == 0)`?",
+   "a": "Jako `a & (1 == 0)`, czyli `a & 0` — zawsze fałsz. `==` ma **wyższy priorytet** niż `&`. Pisz `if ((a & 1) == 0)`.",
+   "kb": "pit-bit-ops"
+  },
+  {
+   "id": "pitfalls-011",
+   "deck": "pitfalls",
+   "q": "Ile wynosi `1 << 40` w C++?",
+   "a": "Niezdefiniowane — `1` to `int` (32 bity), przesunięcie o ≥ 32 to UB. Dla dużych przesunięć: `1LL << 40`.",
+   "kb": "pit-bit-ops"
+  },
+  {
+   "id": "pitfalls-012",
+   "deck": "pitfalls",
+   "q": "Dlaczego `int a[1000000];` zadeklarowane **w main** może wywalić program?",
+   "a": "Zmienne lokalne leżą na **stosie**, który bywa mały (np. 1–8 MB). 4 MB tablicy może go przepełnić → RE (segfault). Duże tablice deklaruj **globalnie** (są też wyzerowane) albo użyj `vector`.",
+   "kb": "pit-stack-overflow"
+  },
+  {
+   "id": "pitfalls-013",
+   "deck": "pitfalls",
+   "q": "Zadanie ma wiele testów w jednym wejściu (multitest). Co łatwo zapomnieć?",
+   "a": "**Wyczyścić struktury** między testami: listy sąsiedztwa, tablice odwiedzin, liczniki, mapy. Najbezpieczniej: deklaruj je wewnątrz pętli po testach albo czyść tylko używany fragment (do n, nie cały MAXN — inaczej TLE).",
+   "kb": "pit-multitest-reset"
+  },
+  {
+   "id": "pitfalls-014",
+   "deck": "pitfalls",
+   "q": "Co zawiera `int suma;` zadeklarowane w funkcji bez inicjalizacji?",
+   "a": "**Śmieci** — wartość nieokreśloną. Lokalne zmienne trzeba zainicjalizować (`int suma = 0;`). Globalne i statyczne są automatycznie zerowane.",
+   "kb": "pit-uninitialized"
+  },
+  {
+   "id": "pitfalls-015",
+   "deck": "pitfalls",
+   "q": "Jak porównywać liczby `double`?",
+   "a": "Nie przez `==` (błędy zaokrągleń: `0.1 + 0.2 != 0.3`). Sprawdzaj `fabs(a - b) < EPS`, np. `EPS = 1e-9`. Najlepiej, jeśli się da, licz na liczbach całkowitych.",
+   "kb": "pit-double-equal"
+  },
+  {
+   "id": "pitfalls-016",
+   "deck": "pitfalls",
+   "q": "Ile wynosi `7 / 2`, `-7 / 2` i `-7 % 3` w C++?",
+   "a": "`7 / 2 == 3`, `-7 / 2 == -3` (dzielenie całkowite **obcina w stronę zera**), `-7 % 3 == -1` (reszta ma znak dzielnej). Poprawne modulo: `((a % m) + m) % m`.",
+   "kb": "num-negative-mod"
+  },
+  {
+   "id": "pitfalls-017",
+   "deck": "pitfalls",
+   "q": "Dlaczego `min(a, b)` się nie kompiluje, gdy `a` to `int`, a `b` to `long long`?",
+   "a": "`std::min` wymaga **tego samego typu** obu argumentów. Pisz `min<long long>(a, b)` albo `min((long long)a, b)`. Podobnie z `max`.",
+   "kb": "pit-abs-long-long"
+  },
+  {
+   "id": "pitfalls-018",
+   "deck": "pitfalls",
+   "q": "Dlaczego globalna zmienna `int y1;` daje błąd kompilacji z `bits/stdc++.h`?",
+   "a": "W `<cmath>` istnieje funkcja `y1` (funkcja Bessela) — nazwa koliduje. Podobnie ryzykowne: `next`, `prev`, `count`, `left`, `index`, `time`. Wybieraj inne nazwy (np. `Y1`, `nxt`).",
+   "kb": "pit-name-collisions"
+  },
+  {
+   "id": "pitfalls-019",
+   "deck": "pitfalls",
+   "q": "Co jest szczególnego w `vector<bool>`?",
+   "a": "Trzyma bity **upakowane** (1 bit na element), więc `v[i]` nie zwraca prawdziwej referencji (`bool& r = v[i];` się nie skompiluje) i dostęp jest wolniejszy. Gdy to przeszkadza, użyj `vector<char>` albo `bitset`.",
+   "kb": "pit-vector-bool"
+  },
+  {
+   "id": "pitfalls-020",
+   "deck": "pitfalls",
+   "q": "Jak poprawnie usuwać elementy z seta podczas iteracji?",
+   "a": "```cpp\nfor (auto it = s.begin(); it != s.end(); ) {\n    if (warunek(*it)) it = s.erase(it);\n    else ++it;\n}\n```\nPo `erase(it)` stary iterator jest nieważny — `++it` po nim to UB.",
+   "kb": "pit-iterator-erase"
+  },
+  {
+   "id": "pitfalls-021",
+   "deck": "pitfalls",
+   "q": "Dlaczego `(long long)sqrt(n)` dla n ≈ 10^18 bywa o 1 za duże lub za małe?",
+   "a": "`sqrt` liczy na `double` (53 bity mantysy) — dla dużych liczb wynik jest przybliżony. Popraw pętlami:\n```cpp\nlong long r = sqrtl(n);\nwhile (r * r > n) r--;\nwhile ((r + 1) * (r + 1) <= n) r++;\n```",
+   "kb": "num-sqrt-pow"
+  },
+  {
+   "id": "pitfalls-022",
+   "deck": "pitfalls",
+   "q": "Dlaczego nie liczyć potęg liczb całkowitych przez `pow(a, b)`?",
+   "a": "`pow` działa na `double`: wynik bywa przybliżony (np. `(int)pow(5, 2)` mogło dać 24 na niektórych kompilatorach), a dla dużych liczb traci precyzję. Licz pętlą albo szybkim potęgowaniem na liczbach całkowitych.",
+   "kb": "num-sqrt-pow"
+  },
+  {
+   "id": "pitfalls-023",
+   "deck": "pitfalls",
+   "q": "Po `cin >> n;` wywołujesz `getline(cin, s)` i dostajesz pusty napis. Dlaczego?",
+   "a": "`cin >> n` zostawia w buforze znak nowej linii, a `getline` od razu go czyta. Przed `getline` zrób `cin.ignore();` albo `getline(cin >> ws, s);`.",
+   "kb": "io-getline"
+  },
+  {
+   "id": "pitfalls-024",
+   "deck": "pitfalls",
+   "q": "Co się stanie, gdy po `ios_base::sync_with_stdio(false)` mieszasz `printf` i `cout`?",
+   "a": "Strumienie przestają być zsynchronizowane — **kolejność wypisanych danych może się pomieszać**. Wybierz jedno: albo `cin/cout`, albo `scanf/printf`.",
+   "kb": "io-fast-io"
+  },
+  {
+   "id": "pitfalls-025",
+   "deck": "pitfalls",
+   "q": "Dlaczego ten binsearch się zapętla?\n```cpp\nwhile (l < r) {\n    int mid = (l + r) / 2;\n    if (ok(mid)) l = mid; else r = mid - 1;\n}\n```",
+   "a": "Gdy `r = l + 1`, `mid = l`; jeśli `ok(mid)`, to `l = mid` — nic się nie zmienia. Przy `l = mid` zaokrąglaj w górę: `int mid = (l + r + 1) / 2;`.",
+   "kb": "tech-binary-search"
+  },
+  {
+   "id": "pitfalls-026",
+   "deck": "pitfalls",
+   "q": "Czemu `int mid = (l + r) / 2;` bywa niebezpieczne?",
+   "a": "Przy l, r blisko 2·10^9 suma **przepełnia int**. Bezpiecznie: `l + (r - l) / 2` albo zmienne `long long`.",
+   "kb": "tech-binary-search"
+  },
+  {
+   "id": "pitfalls-027",
+   "deck": "pitfalls",
+   "q": "Ustawiasz `INF = INT_MAX` i liczysz `dist[u] + w`. Co może pójść źle?",
+   "a": "`INT_MAX + w` **przepełnia się** do liczby ujemnej, która wygląda na „krótszą” ścieżkę. Używaj mniejszej nieskończoności (np. 1e9 dla int, 1e18 dla long long) albo sprawdzaj `dist[u] != INF` przed dodaniem.",
+   "kb": "num-inf-constants"
+  },
+  {
+   "id": "pitfalls-028",
+   "deck": "pitfalls",
+   "q": "DFS rekurencyjny na grafie-ścieżce z 10^6 wierzchołków — jaki problem?",
+   "a": "Głębokość rekurencji 10^6 może **przepełnić stos** (RE). Zwiększ stos (jeśli platforma pozwala), przepisz DFS iteracyjnie ze stosem albo użyj BFS.",
+   "kb": "cpp-stack-overflow"
+  },
+  {
+   "id": "pitfalls-029",
+   "deck": "pitfalls",
+   "q": "Wierzchołki numerowane od 1 do n, a `vector<int> g[n]` — co jest źle?",
+   "a": "Indeks `n` wychodzi poza tablicę (poprawne 0…n−1). Deklaruj rozmiar **n + 1** albo odejmuj 1 przy wczytywaniu.",
+   "kb": "pit-off-by-one"
+  },
+  {
+   "id": "pitfalls-030",
+   "deck": "pitfalls",
+   "q": "Ile cyfr znaczących ma `float`, a ile `double`?",
+   "a": "`float` — ok. **7**, `double` — ok. **15–16**, `long double` (na x86 GCC) — ok. 18–19. Na zawodach praktycznie zawsze `double` lub `long double`, nigdy `float`.",
+   "kb": "num-floating"
+  },
+  {
+   "id": "pitfalls-031",
+   "deck": "pitfalls",
+   "q": "Liczba par (i, j), i < j, dla n = 10^5 — w jakim typie liczyć?",
+   "a": "n(n−1)/2 ≈ **5·10^9** > INT_MAX → `long long`. Uwaga: `n * (n - 1) / 2` przy `int n` przepełni się już przy mnożeniu.",
+   "kb": "pit-int-overflow"
+  },
+  {
+   "id": "pitfalls-032",
+   "deck": "pitfalls",
+   "q": "Dlaczego `for (auto x : v) x *= 2;` nie zmienia vectora?",
+   "a": "`x` jest **kopią** elementu. Żeby modyfikować, użyj referencji: `for (auto& x : v) x *= 2;`.",
+   "kb": "cpp-auto-range-for"
+  },
+  {
+   "id": "pitfalls-033",
+   "deck": "pitfalls",
+   "q": "Jak poprawnie wypisać liczbę rzeczywistą z dokładnie 2 miejscami po przecinku?",
+   "a": "```cpp\ncout << fixed << setprecision(2) << x << '\\n';\n```\nBez `fixed` `setprecision` liczy cyfry znaczące, a nie po przecinku. `printf(\"%.2f\\n\", x);` też działa.",
+   "kb": "io-precision"
+  },
+  {
+   "id": "math-001",
+   "deck": "math",
+   "q": "Wzór na 1 + 2 + … + n?",
+   "a": "**n(n + 1) / 2**. Dla n = 10^9 wynik ≈ 5·10^17 — licz w `long long`.",
+   "kb": "math-series"
+  },
+  {
+   "id": "math-002",
+   "deck": "math",
+   "q": "Wzór na 1² + 2² + … + n²?",
+   "a": "**n(n + 1)(2n + 1) / 6**.",
+   "kb": "math-series"
+  },
+  {
+   "id": "math-003",
+   "deck": "math",
+   "q": "Wzór na sumę ciągu geometrycznego 1 + q + q² + … + q^(k−1)?",
+   "a": "**(q^k − 1) / (q − 1)** dla q ≠ 1 (dla q = 1 suma to k). Modulo p: dzielenie przez (q − 1) zamień na mnożenie przez odwrotność.",
+   "kb": "math-series"
+  },
+  {
+   "id": "math-004",
+   "deck": "math",
+   "q": "Wzór na dwumian Newtona C(n, k) i zależność Pascala?",
+   "a": "C(n, k) = n! / (k! · (n − k)!). Pascal: **C(n, k) = C(n−1, k−1) + C(n−1, k)** — tablica O(n²) bez dzielenia. Dla dużych n modulo p: silnie i odwrotności silni.",
+   "kb": "math-binomial"
+  },
+  {
+   "id": "math-005",
+   "deck": "math",
+   "q": "Ile podzbiorów ma zbiór n-elementowy?",
+   "a": "**2^n** (każdy element jest albo nie jest wybrany).",
+   "kb": "math-combinatorics"
+  },
+  {
+   "id": "math-006",
+   "deck": "math",
+   "q": "Ile to jest 10!, 12! i czy 13! mieści się w `int`?",
+   "a": "10! = 3 628 800, 12! = 479 001 600 (mieści się w int), 13! = 6 227 020 800 — **nie mieści się** w int. 20! ≈ 2,4·10^18 to ostatnia silnia mieszcząca się w long long.",
+   "kb": "math-combinatorics"
+  },
+  {
+   "id": "math-007",
+   "deck": "math",
+   "q": "Co liczą liczby Catalana i jak się zaczynają?",
+   "a": "C_n = C(2n, n) / (n + 1): **1, 1, 2, 5, 14, 42, 132, …** Liczą m.in. poprawne nawiasowania z n par nawiasów, drzewa binarne o n węzłach, triangulacje wielokąta.",
+   "kb": "math-combinatorics"
+  },
+  {
+   "id": "math-008",
+   "deck": "math",
+   "q": "Ile rozwiązań ma x₁ + x₂ + … + x_k = n w liczbach całkowitych nieujemnych?",
+   "a": "**C(n + k − 1, k − 1)** — metoda „gwiazdek i kresek” (stars and bars).",
+   "kb": "math-combinatorics"
+  },
+  {
+   "id": "math-009",
+   "deck": "math",
+   "q": "Na czym polega algorytm Euklidesa i jaka jest jego złożoność?",
+   "a": "**gcd(a, b) = gcd(b, a mod b)**, gcd(a, 0) = a. Złożoność O(log min(a, b)). W C++: `std::gcd` (C++17) lub `__gcd`.",
+   "kb": "math-gcd-lcm"
+  },
+  {
+   "id": "math-010",
+   "deck": "math",
+   "q": "Jak bezpiecznie policzyć NWW(a, b)?",
+   "a": "**a / gcd(a, b) * b** — najpierw dzielenie, potem mnożenie, żeby nie przepełnić pośredniego wyniku. W C++17: `std::lcm`.",
+   "kb": "math-gcd-lcm"
+  },
+  {
+   "id": "math-011",
+   "deck": "math",
+   "q": "Co mówi małe twierdzenie Fermata i do czego się przydaje?",
+   "a": "Dla p pierwszego i a niepodzielnego przez p: **a^(p−1) ≡ 1 (mod p)**. Stąd odwrotność: **a^(−1) ≡ a^(p−2) (mod p)** — liczona szybkim potęgowaniem.",
+   "kb": "math-mod-inverse"
+  },
+  {
+   "id": "math-012",
+   "deck": "math",
+   "q": "Jak poprawnie policzyć (a − b) mod m w C++?",
+   "a": "```cpp\nlong long r = ((a - b) % m + m) % m;\n```\nW C++ `%` może dać wynik ujemny, dlatego dodajemy m.",
+   "kb": "num-mod-arithmetic"
+  },
+  {
+   "id": "math-013",
+   "deck": "math",
+   "q": "Dlaczego modulo 10^9 + 7 jest takie wygodne?",
+   "a": "To **liczba pierwsza** (działa Fermat i odwrotności), a (10^9 + 7)² ≈ 10^18 mieści się w `long long` — iloczyn dwóch reszt liczysz bez przepełnienia.",
+   "kb": "num-mod-arithmetic"
+  },
+  {
+   "id": "math-014",
+   "deck": "math",
+   "q": "Jak z rozkładu n = p₁^a₁ · p₂^a₂ · … policzyć liczbę dzielników?",
+   "a": "**(a₁ + 1)(a₂ + 1)…** Np. 72 = 2³ · 3² → (3+1)(2+1) = 12 dzielników.",
+   "kb": "math-divisors"
+  },
+  {
+   "id": "math-015",
+   "deck": "math",
+   "q": "Ile maksymalnie dzielników ma liczba ≤ 10^9, a ile ≤ 10^18?",
+   "a": "≤ 10^9: maksymalnie **1344** (np. 735 134 400). ≤ 10^18: maksymalnie **103 680**. Przydaje się przy szacowaniu złożoności.",
+   "kb": "math-divisors"
+  },
+  {
+   "id": "math-016",
+   "deck": "math",
+   "q": "Ile jest liczb pierwszych mniejszych od 10^6, a ile od 10^7?",
+   "a": "π(10^6) = **78 498**, π(10^7) = **664 579** (w przybliżeniu n / ln n).",
+   "kb": "math-sieve"
+  },
+  {
+   "id": "math-017",
+   "deck": "math",
+   "q": "Dlaczego test pierwszości wystarczy robić dzieląc do √n?",
+   "a": "Jeśli n = a · b i a ≤ b, to a ≤ √n — każda liczba złożona ma dzielnik nie większy niż √n. Pętla: `for (i = 2; i * i <= n; i++)`. O(√n).",
+   "kb": "math-primality"
+  },
+  {
+   "id": "math-018",
+   "deck": "math",
+   "q": "Wzór na funkcję Eulera φ(n)?",
+   "a": "**φ(n) = n · ∏ (1 − 1/p)** po różnych pierwszych p | n. φ(n) = liczba liczb 1…n względnie pierwszych z n; dla p pierwszego φ(p) = p − 1.",
+   "kb": "math-euler-phi"
+  },
+  {
+   "id": "math-019",
+   "deck": "math",
+   "q": "Ile krawędzi ma drzewo o n wierzchołkach? Ile wynosi suma stopni w grafie o m krawędziach?",
+   "a": "Drzewo: **n − 1** krawędzi. Suma stopni wszystkich wierzchołków: **2m** (każda krawędź liczy się dwa razy) — dlatego wierzchołków nieparzystego stopnia jest parzyście wiele.",
+   "kb": "tree-basics"
+  },
+  {
+   "id": "math-020",
+   "deck": "math",
+   "q": "Wzór na pole wielokąta z wierzchołków (x_i, y_i)?",
+   "a": "**Shoelace (Gaussa):** P = |Σ (x_i · y_{i+1} − x_{i+1} · y_i)| / 2 (indeksy cyklicznie). Licz podwojone pole w `long long`, dzielenie przez 2 na końcu.",
+   "kb": "geo-polygon-area"
+  },
+  {
+   "id": "math-021",
+   "deck": "math",
+   "q": "Jak iloczynem wektorowym sprawdzić orientację punktów a, b, c?",
+   "a": "cross = (b − a) × (c − a) = (b.x − a.x)(c.y − a.y) − (b.y − a.y)(c.x − a.x). **> 0** — skręt w lewo (przeciwnie do wskazówek zegara), **< 0** — w prawo, **= 0** — współliniowe.",
+   "kb": "geo-orientation"
+  },
+  {
+   "id": "math-022",
+   "deck": "math",
+   "q": "Co mówi twierdzenie Picka?",
+   "a": "Dla wielokąta o wierzchołkach w punktach kratowych: **P = I + B/2 − 1**, gdzie I — punkty kratowe wewnątrz, B — na brzegu.",
+   "kb": "geo-pick"
+  },
+  {
+   "id": "math-023",
+   "deck": "math",
+   "q": "Ile punktów kratowych leży na odcinku od (x₁, y₁) do (x₂, y₂)?",
+   "a": "**gcd(|x₂ − x₁|, |y₂ − y₁|) + 1** (wliczając oba końce).",
+   "kb": "geo-pick"
+  },
+  {
+   "id": "math-024",
+   "deck": "math",
+   "q": "Kiedy pierwszy gracz wygrywa w Nim?",
+   "a": "Gdy **XOR rozmiarów wszystkich stosów ≠ 0**. Ruch wygrywający: zmniejsz stos tak, by XOR stał się 0.",
+   "kb": "game-nim"
+  },
+  {
+   "id": "math-025",
+   "deck": "math",
+   "q": "Ile liczb z 1…n dzieli się przez 2 lub przez 3?",
+   "a": "Włączenia-wyłączenia: **⌊n/2⌋ + ⌊n/3⌋ − ⌊n/6⌋** (podzielne przez oba liczymy raz).",
+   "kb": "math-inclusion-exclusion"
+  },
+  {
+   "id": "math-026",
+   "deck": "math",
+   "q": "Jak podzielić a przez b z zaokrągleniem w górę (a, b > 0)?",
+   "a": "```cpp\nlong long c = (a + b - 1) / b;\n```\nBez `double` i `ceil` — te bywają nieprecyzyjne dla dużych liczb.",
+   "kb": "num-ceil-div"
+  },
+  {
+   "id": "math-027",
+   "deck": "math",
+   "q": "Co mówi liniowość wartości oczekiwanej?",
+   "a": "**E[X + Y] = E[X] + E[Y]** — zawsze, nawet gdy X i Y są zależne. Pozwala rozbić skomplikowaną zmienną na sumę wskaźników (np. „oczekiwana liczba punktów stałych permutacji” = n · 1/n = 1).",
+   "kb": "math-probability"
+  },
+  {
+   "id": "math-028",
+   "deck": "math",
+   "q": "Jak zamienić liczbę na zapis binarny w C++?",
+   "a": "`bitset<32>(x).to_string()` (z wiodącymi zerami) albo pętla `while (x) { s += char('0' + x % 2); x /= 2; }` i odwrócenie. Z binarnego na liczbę: `stoll(s, nullptr, 2)`.",
+   "kb": "math-bases"
+  },
+  {
+   "id": "defs-001",
+   "deck": "defs",
+   "q": "Co to jest graf dwudzielny i jak go rozpoznać?",
+   "a": "Graf, którego wierzchołki da się podzielić na dwie grupy tak, że każda krawędź łączy różne grupy. **Graf jest dwudzielny ⇔ nie ma cyklu nieparzystej długości.**",
+   "kb": "graph-bipartite"
+  },
+  {
+   "id": "defs-002",
+   "deck": "defs",
+   "q": "Co to jest drzewo (w teorii grafów)?",
+   "a": "Graf **spójny i acykliczny**. Równoważnie: spójny z n − 1 krawędziami albo taki, w którym między każdą parą wierzchołków jest dokładnie jedna ścieżka.",
+   "kb": "tree-basics"
+  },
+  {
+   "id": "defs-003",
+   "deck": "defs",
+   "q": "Co to jest DAG?",
+   "a": "**Skierowany graf acykliczny** (directed acyclic graph). Każdy DAG ma porządek topologiczny, więc można na nim liczyć DP.",
+   "kb": "graph-toposort"
+  },
+  {
+   "id": "defs-004",
+   "deck": "defs",
+   "q": "Co to jest porządek topologiczny?",
+   "a": "Ułożenie wierzchołków grafu skierowanego w ciąg tak, że **każda krawędź u → v prowadzi od wcześniejszego do późniejszego**. Istnieje wtedy i tylko wtedy, gdy graf nie ma cyklu.",
+   "kb": "graph-toposort"
+  },
+  {
+   "id": "defs-005",
+   "deck": "defs",
+   "q": "Co to jest silnie spójna składowa?",
+   "a": "Maksymalny zbiór wierzchołków grafu skierowanego, w którym **z każdego da się dojść do każdego**. Po ściągnięciu składowych do punktów powstaje DAG.",
+   "kb": "graph-scc"
+  },
+  {
+   "id": "defs-006",
+   "deck": "defs",
+   "q": "Co to jest most w grafie?",
+   "a": "Krawędź, której usunięcie **zwiększa liczbę spójnych składowych**. Wyznacza się je w O(n + m) DFS-em z wartościami low.",
+   "kb": "graph-bridges-articulation"
+  },
+  {
+   "id": "defs-007",
+   "deck": "defs",
+   "q": "Co to jest punkt artykulacji?",
+   "a": "Wierzchołek, którego usunięcie (razem z krawędziami) **rozspójnia graf** (zwiększa liczbę składowych).",
+   "kb": "graph-bridges-articulation"
+  },
+  {
+   "id": "defs-008",
+   "deck": "defs",
+   "q": "Co to jest LCA?",
+   "a": "**Najniższy wspólny przodek** u i v w drzewie ukorzenionym: najgłębszy wierzchołek, który jest przodkiem obu. dist(u, v) = dep[u] + dep[v] − 2 · dep[LCA(u, v)].",
+   "kb": "tree-lca"
+  },
+  {
+   "id": "defs-009",
+   "deck": "defs",
+   "q": "Co to jest średnica drzewa?",
+   "a": "**Najdłuższa ścieżka** między dwoma wierzchołkami drzewa (w krawędziach lub sumie wag).",
+   "kb": "tree-diameter"
+  },
+  {
+   "id": "defs-010",
+   "deck": "defs",
+   "q": "Co to jest centroid drzewa?",
+   "a": "Wierzchołek, po usunięciu którego **każda powstała składowa ma co najwyżej n/2 wierzchołków**. Każde drzewo ma 1 albo 2 centroidy.",
+   "kb": "tree-centroid"
+  },
+  {
+   "id": "defs-011",
+   "deck": "defs",
+   "q": "Czym różni się podciąg od podsłowa (fragmentu)?",
+   "a": "**Podciąg** — elementy w tej samej kolejności, ale niekoniecznie sąsiednie (np. LIS, LCS). **Podsłowo/fragment** — spójny kawałek s[i..j].",
+   "kb": "dp-lcs"
+  },
+  {
+   "id": "defs-012",
+   "deck": "defs",
+   "q": "Co oznacza π[i] w funkcji prefiksowej (KMP)?",
+   "a": "Długość **najdłuższego właściwego prefiksu** słowa s[0..i], który jest jednocześnie jego **sufiksem** (prefikso-sufiksu).",
+   "kb": "str-kmp"
+  },
+  {
+   "id": "defs-013",
+   "deck": "defs",
+   "q": "Co oznacza z[i] w Z-funkcji?",
+   "a": "Długość **najdłuższego wspólnego prefiksu** całego słowa s i jego sufiksu zaczynającego się na pozycji i.",
+   "kb": "str-z-function"
+  },
+  {
+   "id": "defs-014",
+   "deck": "defs",
+   "q": "Jakie warunki musi spełniać komparator dla `sort` (strict weak ordering)?",
+   "a": "Antyzwrotność: `cmp(a, a) == false`; asymetria: jeśli `cmp(a, b)`, to nie `cmp(b, a)`; przechodniość; przechodniość nieporównywalności. W praktyce: używaj `<`, nigdy `<=`.",
+   "kb": "pit-comparator"
+  },
+  {
+   "id": "defs-015",
+   "deck": "defs",
+   "q": "Co to jest złożoność zamortyzowana?",
+   "a": "Średni koszt operacji liczony **po całym ciągu operacji** (a nie w najgorszym przypadku pojedynczej). Przykład: `push_back` czasem kosztuje O(n), ale n operacji to łącznie O(n), więc zamortyzowane O(1).",
+   "kb": "stl-vector"
+  },
+  {
+   "id": "defs-016",
+   "deck": "defs",
+   "q": "Z czego składa się rozwiązanie DP?",
+   "a": "**Stan** (co pamiętamy, np. dp[i][w]), **przejście** (jak liczyć stan z mniejszych), **przypadki bazowe** i **kolejność** liczenia. Działa, gdy podproblemy się powtarzają i mają optymalną podstrukturę.",
+   "kb": "dp-intro"
+  },
+  {
+   "id": "defs-017",
+   "deck": "defs",
+   "q": "Co to jest algorytm zachłanny i jak uzasadnić jego poprawność?",
+   "a": "Algorytm wybierający w każdym kroku **lokalnie najlepszą** opcję. Poprawność trzeba udowodnić — najczęściej **argumentem wymiany** (zamiana w optymalnym rozwiązaniu na wybór zachłanny nie pogarsza wyniku). Gdy się nie da — sprawdź brute-em.",
+   "kb": "tech-greedy"
+  },
+  {
+   "id": "defs-018",
+   "deck": "defs",
+   "q": "Kiedy można zrobić wyszukiwanie binarne po wyniku?",
+   "a": "Gdy predykat jest **monotoniczny**: dla kolejnych X wartości warunku wyglądają jak fałsz…fałsz prawda…prawda. Szukamy pierwszego „prawda” (albo ostatniego „fałsz”).",
+   "kb": "tech-binary-search-answer"
+  },
+  {
+   "id": "defs-019",
+   "deck": "defs",
+   "q": "Co to jest kopiec (heap)?",
+   "a": "Drzewo binarne (zwykle w tablicy: dzieci i to 2i i 2i+1), w którym **rodzic jest ≥ dzieci** (kopiec max). Korzeń to maksimum; wstawianie i usuwanie korzenia — O(log n).",
+   "kb": "ds-heap"
+  },
+  {
+   "id": "defs-020",
+   "deck": "defs",
+   "q": "Co to jest inwersja w ciągu?",
+   "a": "Para indeksów **i < j**, dla której **a_i > a_j**. Liczba inwersji = minimalna liczba zamian sąsiednich elementów potrzebna do posortowania (bubble sort).",
+   "kb": "tech-divide-and-conquer"
+  },
+  {
+   "id": "defs-021",
+   "deck": "defs",
+   "q": "Kiedy graf nieskierowany ma ścieżkę Eulera, a kiedy cykl Eulera?",
+   "a": "Graf musi być spójny (pomijając izolowane wierzchołki). **Cykl** — wszystkie stopnie parzyste. **Ścieżka** — dokładnie 0 albo 2 wierzchołki nieparzystego stopnia (wtedy zaczyna i kończy się w nich).",
+   "kb": "graph-euler"
+  },
+  {
+   "id": "defs-022",
+   "deck": "defs",
+   "q": "Co to jest cykl Hamiltona i jak go szukać na zawodach?",
+   "a": "Cykl odwiedzający **każdy wierzchołek dokładnie raz**. Problem NP-trudny — dla n ≤ 20 DP na maskach O(2^n · n²). Nie myl z Eulerem (każda **krawędź** raz — to łatwe).",
+   "kb": "dp-bitmask"
+  },
+  {
+   "id": "defs-023",
+   "deck": "defs",
+   "q": "Pozycja przegrywająca vs wygrywająca w grze?",
+   "a": "**Przegrywająca (P)**: każdy ruch prowadzi do pozycji wygrywającej dla przeciwnika (albo ruchów brak). **Wygrywająca (N)**: istnieje ruch do pozycji przegrywającej.",
+   "kb": "dp-games"
+  },
+  {
+   "id": "defs-024",
+   "deck": "defs",
+   "q": "Co to jest mex i wartość Grundy'ego?",
+   "a": "**mex** zbioru = najmniejsza nieujemna liczba całkowita, której w nim nie ma (mex{0, 1, 3} = 2). **Grundy(pozycja)** = mex wartości Grundy'ego pozycji osiągalnych w jednym ruchu; pozycja przegrywająca ⇔ Grundy = 0.",
+   "kb": "game-sprague-grundy"
+  },
+  {
+   "id": "defs-025",
+   "deck": "defs",
+   "q": "Co to jest MST?",
+   "a": "**Minimalne drzewo rozpinające**: podzbiór krawędzi łączący wszystkie wierzchołki bez cykli o najmniejszej sumie wag.",
+   "kb": "graph-mst-kruskal"
+  },
+  {
+   "id": "defs-026",
+   "deck": "defs",
+   "q": "Co to jest palindrom i ile ma środków?",
+   "a": "Słowo czytane tak samo od przodu i od tyłu. Palindrom nieparzystej długości ma środek w literze, parzystej — między literami; dlatego „rozszerzanie od środka” sprawdza 2n − 1 środków.",
+   "kb": "str-palindromes"
+  },
+  {
+   "id": "oi-001",
+   "deck": "oi",
+   "q": "Co robić w pierwszych 20–30 minutach zawodów?",
+   "a": "**Przeczytać wszystkie zadania**, zanotować ograniczenia i podzadania, oszacować trudność. Zacząć od zadania, w którym widzisz pewne punkty — nie od tego, które jest pierwsze.",
+   "kb": "oi-strategy"
+  },
+  {
+   "id": "oi-002",
+   "deck": "oi",
+   "q": "Kiedy warto napisać brute force?",
+   "a": "Gdy nie masz pełnego rozwiązania — **za podzadania** z małymi ograniczeniami; oraz zawsze jako wzorzec do **stress-testu** szybkiego rozwiązania.",
+   "kb": "oi-brute-generator"
+  },
+  {
+   "id": "oi-003",
+   "deck": "oi",
+   "q": "Jak działa stress-test?",
+   "a": "W pętli: **generator** losuje mały test → uruchamiasz **brute** i **rozwiązanie** → porównujesz wyjścia. Pierwsza różnica daje mały test, na którym łatwo znaleźć błąd. (W OI Forge: Testerka.)",
+   "kb": "oi-stress-test"
+  },
+  {
+   "id": "oi-004",
+   "deck": "oi",
+   "q": "Jakie flagi kompilacji pomagają łapać błędy lokalnie?",
+   "a": "`-O2 -Wall -Wextra` oraz do testów `-fsanitize=address,undefined` i `-D_GLIBCXX_DEBUG` (sprawdzanie zakresów w STL). Przed wysłaniem — testuj też zwykłą kompilacją -O2.",
+   "kb": "oi-compile-flags"
+  },
+  {
+   "id": "oi-005",
+   "deck": "oi",
+   "q": "Jak wygląda szablon szybkiego wejścia/wyjścia?",
+   "a": "```cpp\nint main() {\n    ios_base::sync_with_stdio(false);\n    cin.tie(nullptr);\n    // ...\n}\n```\nPlus `'\\n'` zamiast `endl`. Przy 10^6+ liczb robi ogromną różnicę.",
+   "kb": "io-fast-io"
+  },
+  {
+   "id": "oi-006",
+   "deck": "oi",
+   "q": "Co oznaczają werdykty WA, TLE, RE i MLE?",
+   "a": "**WA** — zła odpowiedź, **TLE** — przekroczony limit czasu, **RE** — błąd wykonania (np. wyjście poza tablicę, dzielenie przez 0, przepełnienie stosu), **MLE** — przekroczony limit pamięci.",
+   "kb": "oi-sio2"
+  },
+  {
+   "id": "oi-007",
+   "deck": "oi",
+   "q": "Jak szybko oszacować pamięć programu?",
+   "a": "Zsumuj największe tablice: liczba elementów × rozmiar typu (int 4 B, long long 8 B, double 8 B, char/bool 1 B). Dolicz zapas na stos, STL (`map`/`set` — kilkadziesiąt B na element) i bibliotekę.",
+   "kb": "oi-memory"
+  },
+  {
+   "id": "oi-008",
+   "deck": "oi",
+   "q": "Czym są podzadania w OI?",
+   "a": "Testy są pogrupowane; każda grupa ma swoje ograniczenia (np. „n ≤ 1000”) i punkty. **Punkty za grupę dostajesz tylko wtedy, gdy przejdą wszystkie jej testy.**",
+   "kb": "oi-about"
+  },
+  {
+   "id": "oi-009",
+   "deck": "oi",
+   "q": "Lokalnie działa, a w SIO2 jest RE. Co sprawdzić?",
+   "a": "Niezdefiniowane zachowanie: **wyjście poza tablicę**, niezainicjalizowane zmienne, zbyt mała tablica dla maksymalnego n, przepełnienie stosu, brak `return` w funkcji. Uruchom z sanitizerami na dużym teście.",
+   "kb": "oi-debugging"
+  },
+  {
+   "id": "oi-010",
+   "deck": "oi",
+   "q": "Przykład z treści przechodzi, a jest WA. Co sprawdzić najpierw?",
+   "a": "Przepełnienie (**long long**), przypadki brzegowe (**n = 1**, same równe liczby, wartości maksymalne), **format wyjścia**, czyszczenie danych między testami — a potem stress-test z brute-em.",
+   "kb": "oi-debugging"
+  },
+  {
+   "id": "oi-011",
+   "deck": "oi",
+   "q": "Ile zgłoszeń wysyłać na zawodach?",
+   "a": "Wysyłaj **regularnie** — działający brute za podzadania, potem lepsze wersje (backup co godzinę). Sprawdź w regulaminie, które zgłoszenie jest oceniane (ostatnie czy najlepsze), żeby na koniec nie podmienić dobrej wersji gorszą.",
+   "kb": "oi-strategy"
+  },
+  {
+   "id": "oi-012",
+   "deck": "oi",
+   "q": "Jak debugować wypisywaniem, żeby nie zepsuć wyjścia?",
+   "a": "Wypisuj na **`cerr`** (standardowe wyjście błędów) — nie miesza się z wynikiem. Przed wysłaniem usuń lub wyłącz makrem, bo duża liczba wypisań spowalnia program.",
+   "kb": "oi-debugging"
+  },
+  {
+   "id": "oi-013",
+   "deck": "oi",
+   "q": "Jak czytać ograniczenia w treści zadania?",
+   "a": "Z ograniczeń odczytaj złożoność (n ≤ 2·10^5 → O(n log n)) i typ (wartości do 10^9 i sumy → long long). Sprawdź też limity czasu i pamięci oraz ograniczenia podzadań — podpowiadają, jakie częściowe rozwiązania przewidziano.",
+   "kb": "oi-reading-statement"
+  },
+  {
+   "id": "oi-014",
+   "deck": "oi",
+   "q": "Utknąłeś na zadaniu od godziny. Co zrobić?",
+   "a": "Wyślij to, co masz (brute za podzadania), zapisz w notatce pomysły i **przejdź do innego zadania**. Świeże spojrzenie po przerwie często pomaga — wróć z nowymi pomysłami.",
+   "kb": "oi-strategy"
+  },
+  {
+   "id": "oi-015",
+   "deck": "oi",
+   "q": "Co sprawdzić tuż przed wysłaniem rozwiązania?",
+   "a": "long long, rozmiary tablic, szybkie IO, usunięte debugi, przykład z treści, przypadek n = 1 — i czy wysyłasz **właściwy plik** do **właściwego zadania**.",
+   "kb": "oi-template"
+  }
+ ]
+}

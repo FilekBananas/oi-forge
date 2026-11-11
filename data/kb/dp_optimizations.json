@@ -1,0 +1,917 @@
+{
+ "chunk": "dp-optimizations",
+ "articles": [
+  {
+   "id": "dp-prefix-opt",
+   "title": "Przyspieszanie przejść DP sumami prefiksowymi i bieżącym maksimum",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "dp",
+    "sumy prefiksowe",
+    "optymalizacja dp",
+    "prefix sum dp",
+    "kadane",
+    "inwersje",
+    "suma przesuwna"
+   ],
+   "aliases": [
+    "dp sumy prefiksowe",
+    "prefix sum dp",
+    "optymalizacja przejść dp",
+    "przyspieszenie dp sumy prefiksowe",
+    "dp z sumami prefiksowymi",
+    "kadane",
+    "maksymalna suma podtablicy"
+   ],
+   "summary": "Gdy przejście sumuje (albo bierze max/min) po spójnym zakresie poprzednich stanów, nie licz go pętlą: trzymaj sumy prefiksowe dp (lub bieżące maksimum). Zamienia to O(n·k) albo O(n²) na O(n).",
+   "complexity": "z O(liczba stanów × długość zakresu) do O(liczba stanów); np. permutacje z k inwersjami O(n·k) zamiast O(n·k²)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "Jeśli wzór ma postać `dp[i] = Σ_{j = lo(i)}^{hi(i)} dp[j]`, to zamiast pętli po `j` trzymamy\n`pre[t] = dp[0] + … + dp[t−1]` i liczymy `dp[i] = pre[hi + 1] − pre[lo]` w O(1). To samo w 2D:\n`dp[i][j] = Σ_{t=j−a}^{j} dp[i−1][t]` ⇒ sumy prefiksowe **poprzedniego wiersza**.\n\nGdy przejście to `max`/`min` po **wszystkich** wcześniejszych `j` (zakres `[0, i−1]`), wystarczy bieżące\nmaksimum (np. algorytm Kadane'a). Gdy zakres to **okno** `[i−k, i−1]` i potrzebne jest min/max — kolejka\nmonotoniczna (osobny artykuł).\n\nSygnały: „na ile sposobów” z warunkiem „co najwyżej a_i”, „dokładnie k inwersji”, „suma ostatnich k”, wzór DP\nz pętlą po przedziale, który wychodzi za wolny o czynnik n lub k."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: permutacje z k inwersjami w O(n·k)",
+     "code": "// Liczba permutacji n elementów z dokładnie k inwersjami, modulo 10^9+7.\n// dp[i][j] = Σ_{t=0}^{min(j, i-1)} dp[i-1][j-t]  (nowy największy element tworzy t inwersji)\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\n\nint main() {\n    int n, k;\n    cin >> n >> k;\n    vector<long long> dp(k + 1, 0), pre(k + 2);\n    dp[0] = 1;                                     // jeden element: 0 inwersji\n    for (int i = 2; i <= n; i++) {\n        pre[0] = 0;\n        for (int j = 0; j <= k; j++) pre[j + 1] = (pre[j] + dp[j]) % MOD;   // sumy prefiksowe wiersza i-1\n        for (int j = 0; j <= k; j++) {\n            int lo = max(0, j - (i - 1));          // t <= i-1  =>  j - t >= j - (i-1)\n            dp[j] = (pre[j + 1] - pre[lo] + MOD) % MOD;\n        }\n    }\n    cout << dp[k] << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: rozdawanie cukierków z limitami",
+     "code": "// Ile sposobów rozdać K cukierków n dzieciom, gdy dziecko i dostaje od 0 do a[i]? O(n·K).\n#include <bits/stdc++.h>\nusing namespace std;\nconst long long MOD = 1'000'000'007;\n\nint main() {\n    int n, K;\n    cin >> n >> K;\n    vector<long long> dp(K + 1, 0), pre(K + 2);\n    dp[0] = 1;\n    for (int i = 0; i < n; i++) {\n        int a;\n        cin >> a;\n        pre[0] = 0;\n        for (int j = 0; j <= K; j++) pre[j + 1] = (pre[j] + dp[j]) % MOD;\n        for (int j = 0; j <= K; j++)               // nowe dp[j] = Σ_{t=0}^{min(j,a)} dp[j-t]\n            dp[j] = (pre[j + 1] - pre[max(0, j - a)] + MOD) % MOD;\n    }\n    cout << dp[K] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wzór przejścia",
+      "Przyspieszenie",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "dp[i] = Σ dp[j], j ∈ [lo, hi]",
+       "sumy prefiksowe tablicy dp",
+       "O(1) na stan"
+      ],
+      [
+       "dp[i] = max_{j < i} dp[j] + f(i)",
+       "bieżące maksimum best = max(best, dp[i])",
+       "O(1) na stan"
+      ],
+      [
+       "dp[i] = min_{j ∈ [i−k, i−1]} dp[j] + c[i]",
+       "kolejka monotoniczna",
+       "O(1) zamortyzowane"
+      ],
+      [
+       "dp[i] = min_j (dp[j] + b[j]·x[i])",
+       "convex hull trick",
+       "O(1)–O(log n)"
+      ],
+      [
+       "dp[i][j] = Σ_{t ≤ j} dp[i−1][t]",
+       "sumy prefiksowe poprzedniego wiersza",
+       "O(1) na stan"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "Odejmowanie sum prefiksowych modulo daje liczby ujemne: zawsze `(pre[b] - pre[a] + MOD) % MOD`.\nSumy prefiksowe licz z wartości z **poprzedniej** warstwy, zanim zaczniesz nadpisywać `dp`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "pre[j+1] = (pre[j] + dp[j]) % MOD",
+     "desc": "sumy prefiksowe warstwy DP",
+     "complexity": "O(K) na warstwę"
+    },
+    {
+     "sig": "(pre[hi+1] - pre[lo] + MOD) % MOD",
+     "desc": "suma dp[lo..hi] modulo w O(1)",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Brak `+ MOD` przy odejmowaniu — ujemny wynik modulo.",
+    "Nadpisywanie dp przed policzeniem sum prefiksowych z tej samej warstwy — mieszasz warstwy.",
+    "Przesunięcie o 1 w pre (pre[t] = suma pierwszych t elementów) — zapisz definicję w komentarzu.",
+    "Granica dolna zakresu max(0, j − a) — bez max wyjdziesz poza tablicę."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dp sumy prefiksowe optymalizacja",
+      "prefix sum dp",
+      "przyspieszenie dp sumy prefiksowe",
+      "dp za wolne petla po przedziale"
+     ],
+     "a": "Jeśli `dp[i]` to suma `dp[j]` po spójnym zakresie `j ∈ [lo, hi]`, trzymaj `pre[t] = dp[0] + … + dp[t−1]` i licz\n`dp[i] = pre[hi + 1] − pre[lo]` (modulo z `+ MOD`). Pętla wewnętrzna znika, więc złożoność spada o czynnik\ndługości zakresu, np. z O(n·k²) do O(n·k)."
+    },
+    {
+     "q": [
+      "permutacje z k inwersjami",
+      "liczba permutacji o k inwersjach",
+      "permutations with k inversions",
+      "ile permutacji ma dokladnie k inwersji"
+     ],
+     "a": "Wstawiając największy element `i` do permutacji `i−1` elementów, tworzysz `t ∈ [0, i−1]` nowych inwersji, więc\n`dp[i][j] = Σ_{t=0}^{min(j, i−1)} dp[i−1][j−t]`. Z sumami prefiksowymi poprzedniego wiersza: O(n·k) czasu\ni O(k) pamięci. Pełny program jest w treści (np. n = 4, k = 2 → 5)."
+    },
+    {
+     "q": [
+      "rozdawanie cukierków dp",
+      "candies dp",
+      "na ile sposobów rozdzielić K przedmiotów z limitami",
+      "rozdzial cukierkow dzieciom limit"
+     ],
+     "a": "`dp[i][j]` = liczba sposobów rozdania `j` cukierków pierwszym `i` dzieciom; dziecko `i` dostaje `t ∈ [0, a_i]`,\nwięc `dp[i][j] = Σ_{t=0}^{min(j, a_i)} dp[i−1][j−t]` — suma po przedziale ⇒ sumy prefiksowe, O(n·K).\nBez limitów to gwiazdki i kreski: C(K + n − 1, n − 1)."
+    },
+    {
+     "q": [
+      "kadane",
+      "maksymalna suma podtablicy",
+      "max subarray sum",
+      "najwieksza suma spojnego fragmentu",
+      "maximum subarray"
+     ],
+     "a": "`best_end[i]` = najlepsza suma fragmentu kończącego się na `i` = `max(a[i], best_end[i−1] + a[i])`. Wynik to\nmaksimum po `i`. To DP z O(1) pamięci — O(n). Równoważnie: suma prefiksowa minus najmniejsza wcześniejsza suma\nprefiksowa.",
+     "code": "vector<long long> a = {-2, 1, -3, 4, -1, 2, 1, -5, 4};\nlong long cur = a[0], best = a[0];\nfor (size_t i = 1; i < a.size(); i++) {\n    cur = max(a[i], cur + a[i]);\n    best = max(best, cur);\n}\ncout << best << \"\\n\";   // 6 (4 -1 2 1)"
+    },
+    {
+     "q": [
+      "dp prefix max",
+      "dp[i] = max dp[j] + f(i) dla j < i",
+      "dp maksimum po wszystkich poprzednich",
+      "bieżące maksimum dp"
+     ],
+     "a": "Gdy `dp[i] = max_{j < i} (dp[j] + g(j)) + f(i)` i zakres to **wszystkie** wcześniejsze `j`, trzymaj zmienną\n`best = max po j < i (dp[j] + g(j))` i aktualizuj ją po policzeniu każdego `dp[i]`. O(n) zamiast O(n²). Jeśli\nzakres to okno — kolejka monotoniczna; jeśli warunek na wartości (np. `a[j] < a[i]`) — drzewo Fenwicka po wartościach."
+    },
+    {
+     "q": [
+      "dp z oknem suma przesuwna",
+      "dp[i] = suma dp[i-k..i-1]",
+      "suma ostatnich k dp",
+      "sliding window sum dp"
+     ],
+     "a": "Trzymaj sumę bieżącego okna: po policzeniu `dp[i]` dodaj je, a odejmij `dp[i−k]` (gdy `i − k ≥ 0`). Każdy krok O(1),\nwięc całość O(n) zamiast O(n·k) — przykład: schody z krokami 1..k (artykuł o schodach)."
+    },
+    {
+     "q": [
+      "odejmowanie sum prefiksowych modulo",
+      "ujemny wynik modulo dp",
+      "pre[r] - pre[l] modulo ujemne"
+     ],
+     "a": "Sumy prefiksowe trzymane modulo nie są monotoniczne, więc `pre[r] − pre[l]` może być ujemne. Pisz\n`(pre[r] - pre[l] + MOD) % MOD` (zakładając wartości w `[0, MOD)`). W C++ `%` z liczby ujemnej daje wynik ujemny.",
+     "code": "const long long MOD = 1'000'000'007;\nlong long pr = 5, pl = 1'000'000'000;   // po modulo pre[r] może być mniejsze od pre[l]\ncout << (pr - pl) % MOD << \" \" << (pr - pl + MOD) % MOD << \"\\n\";   // -999999995 12"
+    }
+   ],
+   "related": [
+    "dp-monotonic-queue",
+    "dp-cht",
+    "dp-stairs-fibonacci",
+    "dp-partition",
+    "ds-prefix-sums",
+    "num-mod-arithmetic",
+    "tech-kadane"
+   ]
+  },
+  {
+   "id": "dp-divide-conquer",
+   "title": "Optymalizacja dziel i zwyciężaj w DP (monotoniczny punkt podziału)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "optymalizacja dp",
+    "dziel i zwyciężaj",
+    "divide and conquer optimization",
+    "monotoniczność opt",
+    "podział na k grup"
+   ],
+   "aliases": [
+    "dziel i zwyciężaj dp",
+    "divide and conquer dp",
+    "d&c optimization",
+    "optymalizacja dziel i zwyciezaj",
+    "dp divide conquer",
+    "monotone opt dp"
+   ],
+   "summary": "Dla dp[c][i] = min_{j<i} dp[c−1][j] + C(j, i), gdy optymalne j (opt) nie maleje wraz z i, warstwę liczymy rekurencyjnie: środek przedziału w O(zakres opt), a połówki dziedziczą zawężony zakres. Daje O(k·n log n) zamiast O(k·n²).",
+   "complexity": "O(k · n log n) (k warstw, każda O(n log n)); pamięć O(n)",
+   "level": 5,
+   "body": [
+    {
+     "type": "text",
+     "md": "Problem: podział ciągu na `k` fragmentów, `dp[c][i] = min_{j < i} (dp[c−1][j] + C(j, i))`, gdzie `C(j, i)` to koszt\nfragmentu `a[j..i)`. Niech `opt(i)` = najmniejsze `j` dające minimum. Jeśli `opt(1) ≤ opt(2) ≤ … ≤ opt(n)`, to:\n\n`compute(l, r, optl, optr)`: policz `mid = (l + r) / 2` sprawdzając `j ∈ [optl, min(mid − 1, optr)]`, znajdź\n`best`, a potem `compute(l, mid − 1, optl, best)` i `compute(mid + 1, r, best, optr)`.\n\nNa każdym poziomie rekurencji łączna długość zakresów `j` to O(n), poziomów jest O(log n) ⇒ warstwa w O(n log n).\n\n**Kiedy opt jest monotoniczne?** Wystarczy, że koszt spełnia nierówność czworokąta\n`C(a, c) + C(b, d) ≤ C(a, d) + C(b, c)` dla `a ≤ b ≤ c ≤ d` (np. `C(j, i) = (suma a[j..i))²` dla `a ≥ 0`,\nkoszt „liczba par równych elementów w fragmencie”). W praktyce: sprawdź na losowych testach z brute force."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: podział na k fragmentów, O(k·n log n)",
+     "code": "// Podział ciągu liczb nieujemnych na k fragmentów minimalizujący sumę kwadratów sum fragmentów.\n// O(k · n log n) dzięki optymalizacji dziel i zwyciężaj.\n#include <bits/stdc++.h>\nusing namespace std;\n\nconst long long INF = LLONG_MAX;\nvector<long long> P, prv, cur;\n\nlong long cost(int j, int i) { long long s = P[i] - P[j]; return s * s; }   // fragment a[j..i)\n\n// liczy cur[i] dla i w [l, r], wiedząc, że optymalne j leży w [optl, optr]\nvoid compute(int l, int r, int optl, int optr) {\n    if (l > r) return;\n    int mid = (l + r) / 2, best = optl;\n    long long bestVal = INF;\n    for (int j = optl; j <= min(mid - 1, optr); j++) {\n        if (prv[j] == INF) continue;\n        long long v = prv[j] + cost(j, mid);\n        if (v < bestVal) { bestVal = v; best = j; }\n    }\n    cur[mid] = bestVal;\n    compute(l, mid - 1, optl, best);\n    compute(mid + 1, r, best, optr);\n}\n\nint main() {\n    int n, k;\n    cin >> n >> k;\n    P.assign(n + 1, 0);\n    for (int i = 0; i < n; i++) { long long x; cin >> x; P[i + 1] = P[i] + x; }\n    prv.assign(n + 1, INF);\n    prv[0] = 0;                                  // 0 fragmentów, pusty prefiks\n    for (int c = 1; c <= k; c++) {\n        cur.assign(n + 1, INF);\n        compute(1, n, 0, n - 1);\n        prv = cur;\n    }\n    cout << prv[n] << \"\\n\";\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Optymalizację łatwo napisać źle, a błąd daje „prawie dobre” wyniki. Zawsze zrób stres-test z wersją O(k·n²)\nna losowych małych danych (przykład w pytaniach poniżej)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Technika",
+      "Postać DP",
+      "Warunek",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "dziel i zwyciężaj",
+       "dp[c][i] = min_j dp[c−1][j] + C(j, i)",
+       "opt(i) monotoniczne w i",
+       "O(k·n log n)"
+      ],
+      [
+       "Knuth",
+       "dp[l][r] = min_k dp[l][k] + dp[k+1][r] + C(l, r)",
+       "opt[l][r−1] ≤ opt[l][r] ≤ opt[l+1][r]",
+       "O(n²)"
+      ],
+      [
+       "convex hull trick",
+       "dp[i] = min_j dp[j] + m_j·x_i",
+       "koszt liniowy w x_i",
+       "O(n) / O(n log n)"
+      ],
+      [
+       "kolejka monotoniczna",
+       "dp[i] = min_{j ∈ okno} dp[j] + f(i)",
+       "okno przesuwa się w prawo",
+       "O(n)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "void compute(int l, int r, int optl, int optr)",
+     "desc": "liczy warstwę dp dla i ∈ [l, r] przy opt ∈ [optl, optr]",
+     "complexity": "O(n log n) na warstwę"
+    }
+   ],
+   "pitfalls": [
+    "Zakres j dla środka to [optl, min(mid − 1, optr)] — bez min(mid − 1, …) fragment byłby pusty lub ujemny.",
+    "Stany nieosiągalne (INF) w poprzedniej warstwie trzeba pomijać, inaczej INF + koszt przepełni typ.",
+    "Bez spełnionej monotoniczności opt algorytm daje błędne (za duże) wyniki bez żadnego ostrzeżenia — testuj z brute force.",
+    "Kwadrat sumy może przekroczyć long long przy sumach > 3·10^9 — wtedy __int128.",
+    "Głębokość rekurencji to tylko O(log n) — tu stos nie jest problemem."
+   ],
+   "qa": [
+    {
+     "q": [
+      "dziel i zwyciężaj dp",
+      "divide and conquer optimization",
+      "d&c dp optimization",
+      "optymalizacja dziel i zwyciezaj jak dziala"
+     ],
+     "a": "Dla `dp[c][i] = min_j dp[c−1][j] + C(j, i)` z monotonicznym `opt(i)` liczysz środek przedziału indeksów, a jego\noptymalny podział `best` ogranicza poszukiwania: lewa połowa szuka w `[optl, best]`, prawa w `[best, optr]`.\nŁącznie O(n log n) na warstwę zamiast O(n²), czyli O(k·n log n) dla k warstw."
+    },
+    {
+     "q": [
+      "kiedy można użyć dziel i zwyciężaj dp",
+      "warunek monotoniczności opt",
+      "nierówność czworokąta",
+      "quadrangle inequality"
+     ],
+     "a": "Wystarczającym warunkiem jest nierówność czworokąta kosztu: `C(a, c) + C(b, d) ≤ C(a, d) + C(b, c)` dla\n`a ≤ b ≤ c ≤ d`. Spełniają ją m.in. kwadrat sumy fragmentu liczb nieujemnych i liczba par równych elementów we\nfragmencie. Na zawodach najprościej: zaimplementuj, porównaj z O(k·n²) na losowych danych."
+    },
+    {
+     "q": [
+      "podział na k grup minimalny koszt szybko",
+      "k segmentow suma kwadratow n=10^4",
+      "split into k groups optimization"
+     ],
+     "a": "Naiwne DP podziału ma O(k·n²) — dla n = 10^4, k = 100 to 10^10. Z optymalizacją dziel i zwyciężaj O(k·n log n)\n≈ 1,4·10^7. Pełny program dla kosztu „kwadrat sumy fragmentu” jest w treści artykułu."
+    },
+    {
+     "q": [
+      "stres test dziel i zwyciężaj dp",
+      "jak sprawdzić optymalizację dp",
+      "brute force porównanie dp",
+      "dp optimization stress test"
+     ],
+     "a": "Napisz obie wersje (O(k·n²) i zoptymalizowaną) jako funkcje, losuj małe dane (n ≤ 12, wartości ≤ 10) i porównuj\nwyniki w pętli; przy różnicy wypisz test. Taki program warto mieć gotowy przed wysłaniem rozwiązania.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nconst long long INF = LLONG_MAX;\nvector<long long> P, prv, cur;\nlong long cost(int j, int i) { long long s = P[i] - P[j]; return s * s; }\nvoid compute(int l, int r, int optl, int optr) {\n    if (l > r) return;\n    int mid = (l + r) / 2, best = optl; long long bv = INF;\n    for (int j = optl; j <= min(mid - 1, optr); j++)\n        if (prv[j] != INF && prv[j] + cost(j, mid) < bv) { bv = prv[j] + cost(j, mid); best = j; }\n    cur[mid] = bv;\n    compute(l, mid - 1, optl, best); compute(mid + 1, r, best, optr);\n}\nlong long fast(int n, int k) {\n    prv.assign(n + 1, INF); prv[0] = 0;\n    for (int c = 1; c <= k; c++) { cur.assign(n + 1, INF); compute(1, n, 0, n - 1); prv = cur; }\n    return prv[n];\n}\nlong long slow(int n, int k) {\n    vector<vector<long long>> dp(k + 1, vector<long long>(n + 1, INF)); dp[0][0] = 0;\n    for (int c = 1; c <= k; c++) for (int i = 1; i <= n; i++) for (int j = 0; j < i; j++)\n        if (dp[c - 1][j] != INF) dp[c][i] = min(dp[c][i], dp[c - 1][j] + cost(j, i));\n    return dp[k][n];\n}\nint main() {\n    mt19937 rng(12345);\n    for (int it = 0; it < 2000; it++) {\n        int n = rng() % 12 + 1, k = rng() % n + 1;\n        P.assign(n + 1, 0);\n        for (int i = 0; i < n; i++) P[i + 1] = P[i] + rng() % 11;\n        if (fast(n, k) != slow(n, k)) { cout << \"BŁĄD n=\" << n << \" k=\" << k << \"\\n\"; return 0; }\n    }\n    cout << \"OK\\n\";\n}"
+    },
+    {
+     "q": [
+      "dziel i zwyciężaj dp vs knuth",
+      "różnica knuth a divide and conquer",
+      "ktora optymalizacje dp wybrac"
+     ],
+     "a": "Dziel i zwyciężaj: DP warstwowe `dp[c][i]` z jednym wymiarem podziału (k fragmentów), O(k·n log n).\nKnuth: DP na przedziałach `dp[l][r]` z podziałem w `k`, gdy `opt[l][r−1] ≤ opt[l][r] ≤ opt[l+1][r]`, O(n²).\nDla podziału na k fragmentów da się też użyć Knutha (`opt[c−1][i] ≤ opt[c][i] ≤ opt[c][i+1]`) w O(n²)."
+    },
+    {
+     "q": [
+      "opt monotoniczne co to znaczy",
+      "monotonic opt dp",
+      "optymalny punkt podzialu rosnie"
+     ],
+     "a": "`opt(i)` to indeks `j`, dla którego przejście daje minimum. Monotoniczność oznacza: dla większego `i` optymalny\npoczątek ostatniego fragmentu nie przesuwa się w lewo. Intuicja: dłuższy prefiks nie powinien mieć „krótszego\npoczątku” ostatniego kawałka. Gdy jest wiele minimów, bierz konsekwentnie najmniejsze (albo największe) `j`."
+    }
+   ],
+   "related": [
+    "dp-partition",
+    "dp-knuth",
+    "dp-cht",
+    "dp-prefix-opt"
+   ]
+  },
+  {
+   "id": "dp-knuth",
+   "title": "Optymalizacja Knutha (DP na przedziałach w O(n²))",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "optymalizacja knutha",
+    "knuth optimization",
+    "dp na przedziałach",
+    "łączenie stosów",
+    "optymalne drzewo bst",
+    "knuth yao"
+   ],
+   "aliases": [
+    "optymalizacja knutha",
+    "knuth optimization",
+    "knuth dp",
+    "knuth yao",
+    "dp przedziały n^2",
+    "łączenie stosów szybko",
+    "optimal bst dp"
+   ],
+   "summary": "W DP na przedziałach dp[l][r] = min_{l ≤ k < r} dp[l][k] + dp[k+1][r] + C(l, r) przy spełnionych warunkach zachodzi opt[l][r−1] ≤ opt[l][r] ≤ opt[l+1][r], więc k sprawdzamy tylko w tym zakresie — łącznie O(n²).",
+   "complexity": "O(n²) czasu (zamiast O(n³)), O(n²) pamięci",
+   "level": 5,
+   "body": [
+    {
+     "type": "text",
+     "md": "Klasyczne DP na przedziałach z podziałem ma O(n³). Jeśli koszt `C(l, r)` spełnia:\n* nierówność czworokąta: `C(a, c) + C(b, d) ≤ C(a, d) + C(b, c)` dla `a ≤ b ≤ c ≤ d`,\n* monotoniczność względem zawierania: `C(b, c) ≤ C(a, d)` dla `a ≤ b ≤ c ≤ d`,\n\nto optymalny punkt podziału spełnia `opt[l][r−1] ≤ opt[l][r] ≤ opt[l+1][r]`. Dla ustalonej długości przedziału\nsuma długości zakresów `opt[l+1][r] − opt[l][r−1] + 1` teleskopuje się do O(n), więc cały algorytm to O(n²).\n\nTypowe zastosowania: łączenie sąsiednich stosów (koszt = suma), optymalne drzewo BST (koszt = suma częstości),\ncięcie pręta/napisu w zadanych miejscach (koszt = długość kawałka)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: łączenie stosów w O(n²)",
+     "code": "// Łączenie sąsiednich stosów (koszt złączenia = suma), optymalizacja Knutha: O(n^2).\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> P(n + 1, 0);\n    for (int i = 0; i < n; i++) { long long x; cin >> x; P[i + 1] = P[i] + x; }\n    vector<vector<long long>> dp(n, vector<long long>(n, 0));\n    vector<vector<int>> opt(n, vector<int>(n, 0));\n    for (int i = 0; i < n; i++) opt[i][i] = i;\n    for (int len = 2; len <= n; len++)\n        for (int l = 0; l + len - 1 < n; l++) {\n            int r = l + len - 1;\n            dp[l][r] = LLONG_MAX;\n            int from = opt[l][r - 1], to = min(r - 1, opt[l + 1][r]);\n            for (int k = from; k <= to; k++) {          // tylko zakres z twierdzenia Knutha\n                long long v = dp[l][k] + dp[k + 1][r];\n                if (v < dp[l][r]) { dp[l][r] = v; opt[l][r] = k; }\n            }\n            dp[l][r] += P[r + 1] - P[l];\n        }\n    cout << dp[0][n - 1] << \"\\n\";\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Warunki Knutha nie zawsze zachodzą (np. mnożenie macierzy ich NIE spełnia w ogólności). Jeśli nie umiesz ich\nudowodnić, porównaj wersję Knutha z O(n³) na tysiącach losowych testów."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (k = opt[l][r-1]; k <= min(r-1, opt[l+1][r]); k++)",
+     "desc": "zawężony zakres punktu podziału w optymalizacji Knutha",
+     "complexity": "O(n) zamortyzowane na długość"
+    }
+   ],
+   "pitfalls": [
+    "Inicjalizacja opt[i][i] = i — bez niej zakres dla przedziałów długości 2 jest zły.",
+    "Iteracja po długości przedziału jest konieczna: opt[l][r−1] i opt[l+1][r] muszą być już policzone.",
+    "Zastosowanie do kosztu, który nie spełnia warunków (np. mnożenie macierzy) — złe wyniki.",
+    "Przy remisach wybieraj konsekwentnie najmniejsze k (porównanie ostre <)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "optymalizacja knutha",
+      "knuth optimization",
+      "knuth dp jak dziala",
+      "knuth yao speedup"
+     ],
+     "a": "Gdy `dp[l][r] = min_k dp[l][k] + dp[k+1][r] + C(l, r)`, a koszt spełnia nierówność czworokąta i monotoniczność,\nto `opt[l][r−1] ≤ opt[l][r] ≤ opt[l+1][r]`. Szukasz `k` tylko w tym zakresie; dla każdej długości suma zakresów\nto O(n), więc całość O(n²) zamiast O(n³)."
+    },
+    {
+     "q": [
+      "łączenie stosów szybko",
+      "merging stones n^2",
+      "laczenie kamieni knuth",
+      "scalanie stosow 5000"
+     ],
+     "a": "Koszt `C(l, r) = suma(l..r)` spełnia warunki Knutha, więc łączenie sąsiednich stosów da się policzyć w O(n²) —\ndla n = 5000 to ok. 2,5·10^7 operacji. Pełny program jest w treści."
+    },
+    {
+     "q": [
+      "warunki knutha",
+      "kiedy działa optymalizacja knutha",
+      "knuth conditions quadrangle",
+      "czy mnozenie macierzy knuth"
+     ],
+     "a": "Potrzebne: (1) nierówność czworokąta `C(a,c) + C(b,d) ≤ C(a,d) + C(b,c)` dla `a ≤ b ≤ c ≤ d`, (2) monotoniczność\n`C(b,c) ≤ C(a,d)`. Sumy fragmentów (łączenie stosów, optymalne BST) je spełniają. Mnożenie łańcucha macierzy —\nw ogólności nie, tam zostaje O(n³) (albo specjalny algorytm Hu–Shinga)."
+    },
+    {
+     "q": [
+      "optymalne drzewo bst dp",
+      "optimal binary search tree",
+      "optymalne drzewo wyszukiwan czestosci"
+     ],
+     "a": "`dp[l][r]` = minimalny koszt drzewa BST dla kluczy `l..r`; korzeń `k`: `dp[l][r] = min_k dp[l][k−1] + dp[k+1][r] +\nsuma częstości(l..r)`. To klasyczne zastosowanie Knutha: `root[l][r−1] ≤ root[l][r] ≤ root[l+1][r]`, O(n²)."
+    },
+    {
+     "q": [
+      "stres test knuth",
+      "jak sprawdzić knutha brute force",
+      "knuth vs n^3 porownanie"
+     ],
+     "a": "Zaimplementuj obie wersje i porównaj na losowych małych tablicach. Poniższy program robi to dla łączenia stosów\n(wypisuje OK, gdy wszystkie wyniki się zgadzają).",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nlong long solve(const vector<long long> &a, bool knuth) {\n    int n = a.size();\n    vector<long long> P(n + 1, 0);\n    for (int i = 0; i < n; i++) P[i + 1] = P[i] + a[i];\n    vector<vector<long long>> dp(n, vector<long long>(n, 0));\n    vector<vector<int>> opt(n, vector<int>(n));\n    for (int i = 0; i < n; i++) opt[i][i] = i;\n    for (int len = 2; len <= n; len++)\n        for (int l = 0; l + len - 1 < n; l++) {\n            int r = l + len - 1;\n            int from = knuth ? opt[l][r - 1] : l, to = knuth ? min(r - 1, opt[l + 1][r]) : r - 1;\n            dp[l][r] = LLONG_MAX;\n            for (int k = from; k <= to; k++)\n                if (dp[l][k] + dp[k + 1][r] < dp[l][r]) { dp[l][r] = dp[l][k] + dp[k + 1][r]; opt[l][r] = k; }\n            dp[l][r] += P[r + 1] - P[l];\n        }\n    return dp[0][n - 1];\n}\nint main() {\n    mt19937 rng(7);\n    for (int it = 0; it < 3000; it++) {\n        int n = rng() % 10 + 1;\n        vector<long long> a(n);\n        for (auto &x : a) x = rng() % 20;\n        if (solve(a, true) != solve(a, false)) { cout << \"BŁĄD\\n\"; return 0; }\n    }\n    cout << \"OK\\n\";\n}"
+    },
+    {
+     "q": [
+      "cięcie napisu w zadanych miejscach",
+      "cutting a stick dp",
+      "ciecie preta w punktach koszt dlugosc",
+      "breaking string dp"
+     ],
+     "a": "Pręt długości L ma być przecięty w punktach `c_1 < … < c_m`; cięcie kosztuje długość aktualnego kawałka. Dodaj\npunkty 0 i L, `dp[i][j]` = koszt pocięcia kawałka między `c_i` i `c_j`: `dp[i][j] = min_{i<k<j} dp[i][k] + dp[k][j]\n+ (c_j − c_i)`. O(m³), a z Knuthem O(m²).",
+     "code": "vector<long long> c = {0, 2, 4, 7, 10};   // L = 10, cięcia w 2, 4, 7\nint m = c.size();\nvector<vector<long long>> dp(m, vector<long long>(m, 0));\nfor (int len = 2; len < m; len++)\n    for (int i = 0; i + len < m; i++) {\n        int j = i + len;\n        dp[i][j] = LLONG_MAX;\n        for (int k = i + 1; k < j; k++) dp[i][j] = min(dp[i][j], dp[i][k] + dp[k][j]);\n        dp[i][j] += c[j] - c[i];\n    }\ncout << dp[0][m - 1] << \"\\n\";   // 20"
+    }
+   ],
+   "related": [
+    "dp-interval",
+    "dp-divide-conquer",
+    "dp-partition",
+    "tech-huffman"
+   ]
+  },
+  {
+   "id": "dp-cht",
+   "title": "Convex Hull Trick i drzewo Li Chao w DP",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "convex hull trick",
+    "cht",
+    "li chao",
+    "optymalizacja dp",
+    "proste",
+    "otoczka dolna",
+    "dp liniowe"
+   ],
+   "aliases": [
+    "convex hull trick",
+    "cht",
+    "cht dp",
+    "li chao tree",
+    "drzewo li chao",
+    "optymalizacja otoczką",
+    "trik z otoczką wypukłą",
+    "dp z prostymi"
+   ],
+   "summary": "Gdy dp[i] = min_j (m_j · x_i + c_j) + f(i), każde j to prosta y = m_j·x + c_j, a pytamy o minimum w punkcie x_i. Przy monotonicznych współczynnikach kierunkowych i zapytaniach wystarczy deque (O(n)); w ogólności drzewo Li Chao (O(n log C)).",
+   "complexity": "monotoniczne nachylenia i zapytania: O(n) zamortyzowane; nachylenia monotoniczne + dowolne zapytania: O(n log n); Li Chao: O(n log C)",
+   "level": 5,
+   "body": [
+    {
+     "type": "text",
+     "md": "Rozpisz przejście tak, by oddzielić to, co zależy tylko od `j`, od tego, co zależy od `i`:\n\n`dp[i] = min_j (dp[j] + (h_i − h_j)² + C) = h_i² + C + min_j (−2h_j · h_i + dp[j] + h_j²)`.\n\nKażde `j` to prosta o nachyleniu `m_j = −2h_j` i wyrazie wolnym `c_j = dp[j] + h_j²`, a dla `i` pytamy o minimum\ntych prostych w punkcie `x = h_i`. Minimum zbioru prostych to wypukła łamana („dolna otoczka”).\n\n**Wersja z deque:** jeśli proste dodajemy w kolejności malejących nachyleń (dla minimum), a zapytania `x` rosną,\ntrzymamy otoczkę w deque: przy dodawaniu usuwamy z tyłu proste, które przestały być potrzebne, a przy zapytaniu\nusuwamy z przodu proste gorsze od następnej. Każda prosta wchodzi i wychodzi raz ⇒ O(n).\n\n**Drzewo Li Chao:** gdy nachylenia lub zapytania nie są monotoniczne — drzewo przedziałowe po zakresie `x`,\nw każdym węźle jedna prosta; dodanie i zapytanie w O(log C)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: CHT na deque (O(n))",
+     "code": "// Żaba 3: kamienie o rosnących wysokościach h; skok j -> i kosztuje (h_i - h_j)^2 + C. Min. koszt 1 -> n.\n// CHT z deque: nachylenia -2h_j maleją, zapytania x = h_i rosną.\n#include <bits/stdc++.h>\nusing namespace std;\n\nstruct Line {\n    long long m, c;\n    long long eval(long long x) const { return m * x + c; }\n};\n\n// czy l2 jest zbędna między l1 i l3 (nachylenia m1 > m2 > m3, minimum)\nbool bad(const Line &l1, const Line &l2, const Line &l3) {\n    return (__int128)(l3.c - l1.c) * (l1.m - l2.m) <= (__int128)(l2.c - l1.c) * (l1.m - l3.m);\n}\n\nint main() {\n    int n;\n    long long C;\n    cin >> n >> C;\n    vector<long long> h(n);\n    for (auto &x : h) cin >> x;\n    vector<long long> dp(n, 0);\n    deque<Line> hull;\n    hull.push_back({-2 * h[0], dp[0] + h[0] * h[0]});\n    for (int i = 1; i < n; i++) {\n        while (hull.size() >= 2 && hull[1].eval(h[i]) <= hull[0].eval(h[i])) hull.pop_front();\n        dp[i] = hull.front().eval(h[i]) + h[i] * h[i] + C;\n        Line nl = {-2 * h[i], dp[i] + h[i] * h[i]};\n        while (hull.size() >= 2 && bad(hull[hull.size() - 2], hull.back(), nl)) hull.pop_back();\n        hull.push_back(nl);\n    }\n    cout << dp[n - 1] << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Drzewo Li Chao (dynamiczne, minimum)",
+     "code": "// Drzewo Li Chao dla minimum na całkowitych x z [lo, hi]. Dowolna kolejność prostych i zapytań.\nstruct LiChao {\n    struct Line { long long m, c; long long eval(long long x) const { return m * x + c; } };\n    struct Node { Line ln; int left = -1, right = -1; };\n    vector<Node> t;                               // węzły tworzone leniwie\n    long long lo, hi;\n    LiChao(long long lo, long long hi) : lo(lo), hi(hi) {}\n    void add(long long m, long long c) {\n        Line nw{m, c};\n        if (t.empty()) { t.push_back({nw}); return; }\n        int v = 0;\n        long long l = lo, r = hi;\n        while (true) {\n            long long mid = l + (r - l) / 2;\n            bool lef = nw.eval(l) < t[v].ln.eval(l);\n            bool md = nw.eval(mid) < t[v].ln.eval(mid);\n            if (md) swap(t[v].ln, nw);            // w węźle zostaje prosta lepsza w środku\n            if (l == r) return;\n            if (lef != md) {                      // gorsza w środku może wygrywać tylko w [l, mid]\n                if (t[v].left == -1) { t[v].left = t.size(); t.push_back({nw}); return; }\n                v = t[v].left; r = mid;\n            } else {                              // ... albo tylko w [mid+1, r]\n                if (t[v].right == -1) { t[v].right = t.size(); t.push_back({nw}); return; }\n                v = t[v].right; l = mid + 1;\n            }\n        }\n    }\n    long long query(long long x) const {          // LLONG_MAX, gdy brak prostych\n        long long res = LLONG_MAX, l = lo, r = hi;\n        int v = t.empty() ? -1 : 0;\n        while (v != -1) {\n            res = min(res, t[v].ln.eval(x));\n            long long mid = l + (r - l) / 2;\n            if (x <= mid) { v = t[v].left; r = mid; } else { v = t[v].right; l = mid + 1; }\n        }\n        return res;\n    }\n};",
+     "scope": "global"
+    },
+    {
+     "type": "warn",
+     "md": "Iloczyny w warunku `bad` łatwo przepełniają `long long` (różnica wyrazów wolnych ~10^17 × różnica nachyleń ~10^6).\nLicz je w `__int128` albo porównuj punkty przecięcia jako ułamki z dzieleniem całkowitym w dół."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bool bad(l1, l2, l3)",
+     "desc": "czy prosta l2 przestała należeć do otoczki (porównanie punktów przecięcia bez dzielenia)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "LiChao::add(m, c)",
+     "desc": "dodaje prostą y = m·x + c",
+     "complexity": "O(log(hi − lo))"
+    },
+    {
+     "sig": "LiChao::query(x)",
+     "desc": "minimum wszystkich prostych w punkcie x",
+     "complexity": "O(log(hi − lo))"
+    }
+   ],
+   "pitfalls": [
+    "Mylenie kierunku: dla minimum przy rosnących x nachylenia mają MALEĆ (dla maksimum — rosnąć). Inaczej zmień znaki.",
+    "Przepełnienie w porównaniu punktów przecięcia — __int128.",
+    "Proste o równych nachyleniach: zostaw tylko tę z mniejszym wyrazem wolnym (dla minimum), inaczej dzielenie przez 0 w innych implementacjach.",
+    "Zapytania niemonotoniczne przy deque z „pop_front” — złe wyniki; użyj wyszukiwania binarnego po otoczce albo Li Chao.",
+    "Li Chao na liczbach rzeczywistych/ogromnym zakresie — ustaw zakres [lo, hi] na faktyczne wartości x (po kompresji albo do 10^9)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "convex hull trick",
+      "cht dp",
+      "trik z otoczką wypukłą",
+      "cht jak dziala",
+      "convex hull optimization"
+     ],
+     "a": "Gdy `dp[i] = min_j (m_j·x_i + c_j) + f(i)`, każde `j` to prosta, a obliczenie `dp[i]` to zapytanie o minimum\nprostych w punkcie `x_i`. Trzymasz tylko proste z dolnej otoczki; przy monotonicznych nachyleniach i zapytaniach\nrobisz to dequem w O(n) łącznie, zamiast O(n²) dla wszystkich par `(j, i)`."
+    },
+    {
+     "q": [
+      "jak rozpisać dp do cht",
+      "dp na proste",
+      "jak zauwazyc convex hull trick",
+      "dp z iloczynem h_i h_j"
+     ],
+     "a": "Szukaj członu będącego **iloczynem** czegoś zależnego od `j` i czegoś zależnego od `i` (np. `h_j·h_i`, `P_j·P_i`,\n`j·a_i`). Rozpisz kwadraty: `(h_i − h_j)² = h_i² − 2h_i·h_j + h_j²`. Wtedy nachylenie = współczynnik przy\nwielkości zależnej od `i` (tu `−2h_j`), wyraz wolny = reszta zależna od `j` (tu `dp[j] + h_j²`), a `h_i²` dodajesz\npo zapytaniu."
+    },
+    {
+     "q": [
+      "li chao tree",
+      "drzewo li chao",
+      "li chao c++",
+      "lichao segment tree lines"
+     ],
+     "a": "Drzewo przedziałowe po zakresie `x`: w każdym węźle trzymasz prostą najlepszą w środku przedziału; przy dodawaniu\ngorsza z dwóch prostych schodzi do jednej połowy (tej, w której może jeszcze wygrywać). Zapytanie idzie ścieżką\nod korzenia do liścia `x` i bierze minimum. O(log C) na operację, bez żadnych wymagań co do kolejności.\nImplementacja (dynamiczna, z testem) jest w treści."
+    },
+    {
+     "q": [
+      "cht monotoniczne zapytania",
+      "cht deque pop front",
+      "kiedy cht w O(n)",
+      "cht amortyzowane"
+     ],
+     "a": "O(n) wymaga dwóch rzeczy: proste dodajesz w kolejności monotonicznych nachyleń (dla minimum malejących) **oraz**\nzapytania `x` są monotoniczne (rosnące) — wtedy z przodu deque usuwasz proste, które już nigdy nie będą najlepsze.\nGdy zapytania są dowolne, ale nachylenia monotoniczne — wyszukiwanie binarne po otoczce, O(log n) na zapytanie."
+    },
+    {
+     "q": [
+      "żaba 3 dp",
+      "frog 3",
+      "skoki kamienie koszt kwadrat roznicy wysokosci",
+      "dp (h_i - h_j)^2 + C"
+     ],
+     "a": "`dp[i] = h_i² + C + min_j (−2h_j·h_i + dp[j] + h_j²)` — proste o nachyleniu `−2h_j` (maleją, bo `h` rośnie)\ni zapytania w `h_i` (rosną). CHT na deque daje O(n). Pełny program jest w treści; dla danych\n`5 6 / 1 2 3 4 5` wynik to 20."
+    },
+    {
+     "q": [
+      "cht maksimum zamiast minimum",
+      "cht max",
+      "convex hull trick maximum",
+      "gorna otoczka cht"
+     ],
+     "a": "Najprościej zanegować: `max_j (m_j x + c_j) = −min_j (−m_j x − c_j)`. Dodawaj proste `(−m_j, −c_j)` do struktury\ndla minimum i neguj wynik zapytania. Dzięki temu masz jedną sprawdzoną implementację."
+    },
+    {
+     "q": [
+      "cht przepełnienie",
+      "cht long long overflow",
+      "bad function cht int128",
+      "porownanie przeciec prostych"
+     ],
+     "a": "Warunek usuwania prostej porównuje punkty przecięcia: `(c3 − c1)·(m1 − m2) ≤ (c2 − c1)·(m1 − m3)`. Gdy\n`|c| ~ 10^17` i `|m| ~ 10^6`, iloczyn ~10^23 nie mieści się w `long long` — rzutuj na `__int128`. Unikasz też\ndzielenia i błędów zaokrągleń `double`."
+    }
+   ],
+   "related": [
+    "dp-divide-conquer",
+    "dp-prefix-opt",
+    "dp-partition",
+    "geo-convex-hull",
+    "ds-segment-tree"
+   ]
+  },
+  {
+   "id": "dp-sos",
+   "title": "SOS DP — sumy po podmaskach (sum over subsets)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "sos dp",
+    "sum over subsets",
+    "podmaski",
+    "maski bitowe",
+    "transformata zeta",
+    "möbius",
+    "nadmaski"
+   ],
+   "aliases": [
+    "sos dp",
+    "sum over subsets",
+    "suma po podmaskach",
+    "dp po podmaskach",
+    "zeta transform",
+    "sos dp c++",
+    "suma po nadmaskach",
+    "f[mask] suma podzbiorow"
+   ],
+   "summary": "Dla każdej maski liczymy F[mask] = Σ A[sub] po wszystkich podmaskach sub ⊆ mask w O(n·2^n) zamiast O(3^n): przechodzimy po bitach i dla masek z ustawionym bitem i dodajemy F[mask ^ (1<<i)].",
+   "complexity": "O(n·2^n) czasu, O(2^n) pamięci (n — liczba bitów, typowo ≤ 20–22)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "Mamy wartości `A[mask]` dla masek `n`-bitowych i chcemy dla **każdej** maski sumę po wszystkich jej podmaskach.\nNaiwnie (iteracja po podmaskach) to O(3^n). SOS DP przetwarza bity po kolei: po przetworzeniu bitów `0..i`\nwartość `F[mask]` to suma `A[sub]` po podmaskach różniących się od `mask` tylko na bitach `0..i`.\n\n```\nF = A\nfor i in 0..n-1:\n    for mask in 0..2^n-1:\n        if mask ma bit i:  F[mask] += F[mask ^ (1 << i)]\n```\n\nWarianty: suma po **nadmaskach** (`if !(mask >> i & 1): F[mask] += F[mask | 1 << i]`), max/min zamiast sumy,\nodwrotność (transformata Möbiusa) — to samo z odejmowaniem.\n\nSygnały: liczby do 10^6 (≈ 2^20) i warunki typu „`a_i & a_j == a_i`”, „`a_i & a_j == 0`”, „`a_i | a_j` ≤ …”,\n„dla każdego x policz, ile elementów jest jego podmaską”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba podmasek w zbiorze dla każdego elementu",
+     "code": "// Dla każdego a_i: ile elementów a_j (j dowolne, także j = i) jest podmaską a_i (a_j & a_i == a_j)? a_i < 2^20.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    const int B = 20;\n    int n;\n    cin >> n;\n    vector<int> a(n);\n    vector<int> F(1 << B, 0);\n    for (auto &x : a) { cin >> x; F[x]++; }            // A[mask] = liczba wystąpień mask\n    for (int i = 0; i < B; i++)\n        for (int mask = 0; mask < (1 << B); mask++)\n            if (mask >> i & 1) F[mask] += F[mask ^ (1 << i)];\n    for (int x : a) cout << F[x] << \" \";\n    cout << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Cel",
+      "Pętla wewnętrzna",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "Σ po podmaskach",
+       "if (mask>>i&1) F[mask] += F[mask^(1<<i)]",
+       "zeta transform"
+      ],
+      [
+       "Σ po nadmaskach",
+       "if (!(mask>>i&1)) F[mask] += F[mask|(1<<i)]",
+       ""
+      ],
+      [
+       "odwrotność (z sum po podmaskach do A)",
+       "if (mask>>i&1) F[mask] -= F[mask^(1<<i)]",
+       "Möbius"
+      ],
+      [
+       "max po podmaskach",
+       "F[mask] = max(F[mask], F[mask^(1<<i)])",
+       "np. para o największej sumie"
+      ],
+      [
+       "liczba par a_i & a_j == 0",
+       "F po podmaskach, potem F[~a_i & FULL]",
+       "j ⊆ dopełnienie a_i"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Kolejność pętli jest istotna: **bity na zewnątrz**, maski wewnątrz. Odwrotna kolejność liczy niektóre podmaski\nwielokrotnie."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "for (i < B) for (mask) if (mask >> i & 1) F[mask] += F[mask ^ (1 << i)];",
+     "desc": "sumy po podmaskach (SOS)",
+     "complexity": "O(B·2^B)"
+    }
+   ],
+   "pitfalls": [
+    "Pętla po maskach na zewnątrz, a po bitach wewnątrz — błędny wynik (podzbiory liczone wiele razy).",
+    "Za mało bitów: wartości do 10^6 wymagają B = 20 (2^20 = 1 048 576).",
+    "Sumy mogą przekroczyć int (np. sumy wartości, a nie liczności) — użyj long long.",
+    "Pamięć: 2^22 long longów = 32 MB, 2^24 = 128 MB — pilnuj limitu.",
+    "Dopełnienie maski: ~x ma ustawione wysokie bity — zawsze `~x & ((1 << B) - 1)`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sos dp",
+      "sum over subsets",
+      "suma po podmaskach",
+      "sos dp jak dziala",
+      "dp po podmaskach szybko"
+     ],
+     "a": "SOS DP liczy dla każdej maski sumę `A` po wszystkich jej podmaskach w O(n·2^n) zamiast O(3^n). Przetwarzasz bity\npo kolei: dla każdego bitu `i` i każdej maski z tym bitem dodajesz `F[mask ^ (1 << i)]`. Po wszystkich bitach\n`F[mask] = Σ_{sub ⊆ mask} A[sub]`."
+    },
+    {
+     "q": [
+      "suma po nadmaskach",
+      "sum over supersets",
+      "sos dp nadmaski",
+      "ile elementow zawiera maske"
+     ],
+     "a": "Odwróć warunek: dla masek **bez** bitu `i` dodawaj `F[mask | (1 << i)]`. Wtedy `F[mask]` = suma po wszystkich\nnadmaskach — np. ile liczb ma ustawione wszystkie bity z `mask`. Złożoność ta sama, O(n·2^n).",
+     "code": "const int B = 3;\nvector<int> a = {1, 3, 5, 7, 2};\nvector<int> F(1 << B, 0);\nfor (int x : a) F[x]++;\nfor (int i = 0; i < B; i++)\n    for (int mask = 0; mask < (1 << B); mask++)\n        if (!(mask >> i & 1)) F[mask] += F[mask | (1 << i)];\ncout << F[1] << \" \" << F[3] << \" \" << F[0] << \"\\n\";   // 4 2 5"
+    },
+    {
+     "q": [
+      "liczba par a_i & a_j == 0",
+      "pary o zerowym and",
+      "count pairs bitwise and zero",
+      "and rowne zero ile par"
+     ],
+     "a": "`a_i & a_j == 0` ⇔ `a_j` jest podmaską dopełnienia `a_i`. Policz SOS po podmaskach z licznościami, a potem dla\nkażdego `i` weź `F[~a_i & FULL]`. Suma po `i` liczy pary uporządkowane (także `i = j`, co zachodzi tylko dla\n`a_i = 0`) — odejmij je i podziel przez 2. O(B·2^B + n).",
+     "code": "const int B = 2, FULL = (1 << B) - 1;\nvector<int> a = {1, 2, 3, 0};\nvector<long long> F(1 << B, 0);\nfor (int x : a) F[x]++;\nfor (int i = 0; i < B; i++)\n    for (int mask = 0; mask <= FULL; mask++)\n        if (mask >> i & 1) F[mask] += F[mask ^ (1 << i)];\nlong long ordered = 0, self = 0;\nfor (int x : a) { ordered += F[~x & FULL]; if (x == 0) self++; }\ncout << (ordered - self) / 2 << \"\\n\";   // 4: {1,2}, {1,0}, {2,0}, {3,0}"
+    },
+    {
+     "q": [
+      "transformata mobiusa maski",
+      "odwrotność sos dp",
+      "inverse sos",
+      "mobius transform subsets"
+     ],
+     "a": "Jeśli znasz `F[mask] = Σ_{sub ⊆ mask} A[sub]` i chcesz odzyskać `A`, wykonaj tę samą pętlę z odejmowaniem:\n`if (mask >> i & 1) F[mask] -= F[mask ^ (1 << i)]`. To transformata Möbiusa (włączenia-wyłączenia po bitach),\nO(n·2^n).",
+     "code": "const int B = 3;\nvector<long long> A = {3, 1, 4, 1, 5, 9, 2, 6}, F = A;\nfor (int i = 0; i < B; i++)\n    for (int m = 0; m < (1 << B); m++) if (m >> i & 1) F[m] += F[m ^ (1 << i)];\nfor (int i = 0; i < B; i++)\n    for (int m = 0; m < (1 << B); m++) if (m >> i & 1) F[m] -= F[m ^ (1 << i)];\ncout << (F == A ? \"zgodne\" : \"rozne\") << \"\\n\";   // zgodne"
+    },
+    {
+     "q": [
+      "sos dp kolejność pętli",
+      "dlaczego bity na zewnatrz sos",
+      "sos dp zly wynik"
+     ],
+     "a": "Pętla po bitach musi być **zewnętrzna**: po etapie `i` maski różnią się od siebie dozwolonymi zmianami tylko na\nbitach `0..i`, więc każda podmaska jest doliczona dokładnie raz (przez jedną ścieżkę zdejmowania bitów w ustalonej\nkolejności). Przy pętli po maskach na zewnątrz ta sama podmaska dochodzi różnymi ścieżkami i jest liczona wielokrotnie."
+    },
+    {
+     "q": [
+      "stres test sos dp",
+      "sos dp brute force porownanie",
+      "sprawdz sos dp podmaski 3^n"
+     ],
+     "a": "Porównaj z iteracją po podmaskach (O(3^n)) dla małego `n`. Program poniżej losuje tablicę dla n = 8 i sprawdza\nobie metody.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    const int B = 8;\n    mt19937 rng(3);\n    for (int it = 0; it < 50; it++) {\n        vector<long long> A(1 << B), F(1 << B);\n        for (auto &x : A) x = rng() % 100;\n        F = A;\n        for (int i = 0; i < B; i++)\n            for (int m = 0; m < (1 << B); m++) if (m >> i & 1) F[m] += F[m ^ (1 << i)];\n        for (int m = 0; m < (1 << B); m++) {\n            long long s = A[0];                       // pusta podmaska\n            for (int sub = m; sub; sub = (sub - 1) & m) s += A[sub];\n            if (m == 0) s = A[0];\n            if (s != F[m]) { cout << \"BŁĄD\\n\"; return 0; }\n        }\n    }\n    cout << \"OK\\n\";\n}"
+    }
+   ],
+   "related": [
+    "dp-bitmask",
+    "math-inclusion-exclusion",
+    "tech-bit-tricks",
+    "stl-builtin-bits"
+   ]
+  },
+  {
+   "id": "dp-monotonic-queue",
+   "title": "Kolejka monotoniczna w DP (minimum w przesuwanym oknie)",
+   "category": "Programowanie dynamiczne",
+   "tags": [
+    "kolejka monotoniczna",
+    "monotonic queue",
+    "deque",
+    "przesuwane okno",
+    "sliding window",
+    "optymalizacja dp",
+    "plecak ograniczony"
+   ],
+   "aliases": [
+    "kolejka monotoniczna",
+    "monotonic queue",
+    "monotonic deque",
+    "minimum w oknie",
+    "sliding window minimum",
+    "dp z oknem",
+    "kolejka monotoniczna dp",
+    "deque dp"
+   ],
+   "summary": "Gdy dp[i] = min_{j ∈ [i−k, i−1]} dp[j] + f(i), a okno przesuwa się w prawo, trzymamy w deque indeksy kandydatów o rosnących wartościach: minimum jest z przodu, każdy indeks wchodzi i wychodzi raz — O(n).",
+   "complexity": "O(n) zamortyzowane (każdy indeks raz dodany i raz usunięty); plecak ograniczony O(n·W)",
+   "level": 4,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Minimum w oknie:** chcemy dla każdego `i` minimum z `dp[i−k..i−1]`. Trzymamy deque indeksów, w którym wartości\nrosną od przodu do tyłu:\n1. przed dodaniem nowego `j` usuwamy z tyłu indeksy o wartości ≥ `dp[j]` — nigdy już nie będą minimum\n   (są starsze i nie mniejsze),\n2. z przodu usuwamy indeksy, które wypadły z okna (`< i − k`),\n3. minimum to `dp[front]`.\n\nKażdy indeks raz wchodzi i raz wychodzi, więc całość O(n) zamiast O(n·k).\n\nSygnały: „skok o co najwyżej k”, „między dwoma wybranymi elementami co najwyżej k pozycji”, „okno długości k”,\nDP z `min`/`max` po ostatnich k stanach, plecak z limitem sztuk przy dużych limitach."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: DP ze skokami o co najwyżej k",
+     "code": "// Pola 1..n z kosztami c_i; startujesz na polu 1, kończysz na n, skok o 1..k pól do przodu.\n// Minimalna suma kosztów odwiedzonych pól. dp[i] = c[i] + min(dp[i-k..i-1]) — O(n) kolejką monotoniczną.\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, k;\n    cin >> n >> k;\n    vector<long long> c(n), dp(n);\n    for (auto &x : c) cin >> x;\n    deque<int> dq;                       // indeksy; dp[dq[0]] < dp[dq[1]] < ...\n    dp[0] = c[0];\n    dq.push_back(0);\n    for (int i = 1; i < n; i++) {\n        while (dq.front() < i - k) dq.pop_front();       // wypadło z okna [i-k, i-1]\n        dp[i] = c[i] + dp[dq.front()];\n        while (!dq.empty() && dp[dq.back()] >= dp[i]) dq.pop_back();\n        dq.push_back(i);\n    }\n    cout << dp[n - 1] << \"\\n\";\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: plecak ograniczony O(n·W)",
+     "code": "// Plecak ograniczony w O(n·W): przedmiot (w, v, c) — osobna kolejka monotoniczna dla każdej reszty r = cap mod w.\n// dp_new[r + t·w] = max_{t-c <= s <= t} (dp_old[r + s·w] - s·v) + t·v\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, W;\n    cin >> n >> W;\n    vector<long long> dp(W + 1, 0), nd(W + 1);\n    for (int it = 0; it < n; it++) {\n        long long w, v, c;\n        cin >> w >> v >> c;\n        for (long long r = 0; r < w && r <= W; r++) {\n            deque<pair<long long, long long>> dq;          // (s, dp_old[r + s·w] - s·v), wartości malejące\n            for (long long t = 0; r + t * w <= W; t++) {\n                long long val = dp[r + t * w] - t * v;\n                while (!dq.empty() && dq.back().second <= val) dq.pop_back();\n                dq.push_back({t, val});\n                while (dq.front().first < t - c) dq.pop_front();   // co najwyżej c sztuk\n                nd[r + t * w] = dq.front().second + t * v;\n            }\n        }\n        dp = nd;\n    }\n    cout << dp[W] << \"\\n\";\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Co trzymać w deque",
+      "Usuwanie z tyłu, gdy"
+     ],
+     "rows": [
+      [
+       "minimum w oknie",
+       "indeksy o rosnących wartościach",
+       "wartość z tyłu ≥ nowa"
+      ],
+      [
+       "maksimum w oknie",
+       "indeksy o malejących wartościach",
+       "wartość z tyłu ≤ nowa"
+      ],
+      [
+       "dp[i] = min okna + f(i)",
+       "indeksy dp",
+       "dp[back] ≥ dp[i]"
+      ],
+      [
+       "plecak ograniczony",
+       "pary (s, dp_old − s·v) dla jednej reszty",
+       "wartość z tyłu ≤ nowa (maksimum)"
+      ]
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "sig": "deque<int> dq; while (dq.front() < i - k) dq.pop_front();",
+     "desc": "usunięcie indeksów spoza okna z przodu",
+     "complexity": "O(1) zamortyzowane"
+    },
+    {
+     "sig": "while (!dq.empty() && val[dq.back()] >= val[i]) dq.pop_back(); dq.push_back(i);",
+     "desc": "dodanie z zachowaniem monotoniczności (minimum)",
+     "complexity": "O(1) zamortyzowane"
+    }
+   ],
+   "pitfalls": [
+    "Trzymaj w deque INDEKSY (albo pary indeks–wartość), nie same wartości — inaczej nie wiesz, kiedy element wypadł z okna.",
+    "Granice okna o jeden: okno [i−k, i−1] usuwa indeksy < i−k; okno [i−k+1, i] — indeksy ≤ i−k.",
+    "Kolejność: dla okna bez bieżącego elementu najpierw policz dp[i] z frontu, dopiero potem dodaj i do deque.",
+    "Puste deque przy pierwszym zapytaniu (np. gdy okno może być puste) — sprawdzaj dq.empty().",
+    "Dla maksimum odwróć nierówność przy usuwaniu z tyłu."
+   ],
+   "qa": [
+    {
+     "q": [
+      "kolejka monotoniczna",
+      "monotonic queue",
+      "monotonic deque",
+      "kolejka monotoniczna jak dziala",
+      "deque minimum okna"
+     ],
+     "a": "Deque indeksów, w którym wartości są posortowane (rosnąco dla minimum). Nowy element usuwa z tyłu wszystkie\nnie lepsze od siebie (starsze i nie mniejsze — nigdy nie będą minimum), a z przodu wyrzucasz indeksy spoza okna.\nMinimum to przód. Każdy element wchodzi i wychodzi raz, więc O(n) łącznie."
+    },
+    {
+     "q": [
+      "minimum w oknie",
+      "sliding window minimum",
+      "minimum na przesuwanym oknie",
+      "min z k kolejnych elementow"
+     ],
+     "a": "Dla każdego okna `a[i..i+k−1]` minimum to przód kolejki monotonicznej. O(n) zamiast O(n·k), a `multiset` dałby\nO(n log k). Ten sam kod z odwróconą nierównością daje maksimum.",
+     "code": "vector<int> a = {1, 3, -1, -3, 5, 3, 6, 7};\nint k = 3;\ndeque<int> dq;\nfor (int i = 0; i < (int)a.size(); i++) {\n    while (!dq.empty() && a[dq.back()] >= a[i]) dq.pop_back();\n    dq.push_back(i);\n    if (dq.front() <= i - k) dq.pop_front();\n    if (i >= k - 1) cout << a[dq.front()] << \" \";\n}\ncout << \"\\n\";   // -1 -3 -3 -3 3 3"
+    },
+    {
+     "q": [
+      "dp z oknem minimum",
+      "dp[i] = min dp[j] j z ostatnich k",
+      "dp skok o co najwyzej k",
+      "jump game dp k"
+     ],
+     "a": "`dp[i] = f(i) + min_{j ∈ [i−k, i−1]} dp[j]` — okno przesuwa się w prawo razem z `i`, więc minimum utrzymujesz kolejką\nmonotoniczną nad wartościami `dp`. Najpierw zdejmij z przodu indeksy < `i − k`, policz `dp[i]`, potem dodaj `i`.\nO(n). Pełny program jest w treści."
+    },
+    {
+     "q": [
+      "constrained subsequence sum",
+      "podciąg o max sumie z odstępem co najwyżej k",
+      "wybierz elementy odstep k max suma"
+     ],
+     "a": "`dp[i] = a[i] + max(0, max_{j ∈ [i−k, i−1]} dp[j])` — można zacząć nowy podciąg w `i` albo przedłużyć jeden\nz ostatnich `k`. Maksimum okna z kolejki monotonicznej (malejącej). Wynik to max `dp[i]`. O(n).",
+     "code": "vector<long long> a = {10, 2, -10, 5, 20};\nint k = 2, n = a.size();\nvector<long long> dp(n);\ndeque<int> dq;\nlong long best = LLONG_MIN;\nfor (int i = 0; i < n; i++) {\n    while (!dq.empty() && dq.front() < i - k) dq.pop_front();\n    dp[i] = a[i] + max(0LL, dq.empty() ? 0LL : dp[dq.front()]);\n    while (!dq.empty() && dp[dq.back()] <= dp[i]) dq.pop_back();\n    dq.push_back(i);\n    best = max(best, dp[i]);\n}\ncout << best << \"\\n\";   // 37 (10 + 2 + 5 + 20)"
+    },
+    {
+     "q": [
+      "plecak ograniczony kolejka monotoniczna kod",
+      "bounded knapsack O(nW)",
+      "plecak z limitem sztuk deque"
+     ],
+     "a": "Dla przedmiotu `(w, v, c)` pojemności dzielą się na klasy reszt modulo `w`. W klasie `r` pojemność `r + t·w`\nkorzysta z `r + s·w` dla `s ∈ [t − c, t]`: `dp_new = max_s (dp_old[r + s·w] − s·v) + t·v`. Maksimum z okna\ndługości `c + 1` daje kolejka monotoniczna — O(W) na przedmiot, razem O(n·W). Pełny program w treści."
+    },
+    {
+     "q": [
+      "kolejka monotoniczna vs multiset",
+      "sliding window multiset czy deque",
+      "minimum okna set"
+     ],
+     "a": "`multiset` (wstaw nowy, usuń wypadający, `*begin()`) też działa i jest prostszy do poprawnego napisania, ale kosztuje\nO(log k) na krok. Kolejka monotoniczna to O(1) zamortyzowane i mniejsza stała — przy n = 10^7 robi różnicę."
+    },
+    {
+     "q": [
+      "kolejka monotoniczna granice okna",
+      "off by one deque okno",
+      "kiedy pop front deque"
+     ],
+     "a": "Ustal dokładnie okno. Jeśli dla `i` dozwolone są `j ∈ [i − k, i − 1]`, to przed obliczeniem `dp[i]` usuń z przodu\nindeksy `< i − k`, a `i` dodaj dopiero po obliczeniu. Jeśli okno zawiera `i` (`[i − k + 1, i]`), najpierw dodaj\n`i`, a usuwaj indeksy `≤ i − k`."
+    }
+   ],
+   "related": [
+    "dp-knapsack-bounded",
+    "dp-prefix-opt",
+    "dp-partition",
+    "ds-monotonic-stack",
+    "stl-deque",
+    "ds-monotonic-queue",
+    "tech-sliding-window"
+   ]
+  }
+ ]
+}

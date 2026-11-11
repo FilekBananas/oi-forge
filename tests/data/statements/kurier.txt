@@ -1,0 +1,26 @@
+Kurier
+Bajtocja składa się z n miast połączonych m dwukierunkowymi drogami. Przejazd i-tą drogą zajmuje c_i minut. Kurier
+wyrusza z miasta nr 1 i musi jak najszybciej dotrzeć do miasta nr n. Ile minut zajmie mu najszybsza podróż?
+Wejście
+W pierwszym wierszu wejścia znajdują się dwie liczby całkowite n i m (2 ≤ n ≤ 100 000, 0 ≤ m ≤ 300 000). Każdy z
+kolejnych m wierszy zawiera trzy liczby całkowite a, b, c (1 ≤ a, b ≤ n, a ≠ b, 1 ≤ c ≤ 10^9) — drogę łączącą miasta
+a i b, której przejazd zajmuje c minut.
+Wyjście
+Wypisz najmniejszy czas przejazdu z miasta 1 do miasta n albo -1, jeżeli z miasta 1 nie da się dojechać do miasta n.
+Przykład 1
+Wejście:
+4 5
+1 2 4
+1 3 1
+3 2 2
+2 4 5
+3 4 9
+Wyjście:
+8
+
+Przykład 2
+Wejście:
+3 1
+1 2 5
+Wyjście:
+-1

@@ -1,0 +1,18 @@
+Plamy atramentu
+Na kartce w kratkę rozlano atrament. Kratka zalana atramentem jest oznaczona gwiazdką „*”, a czysta kratka kropką „.”.
+Dwie zalane kratki należą do tej samej plamy, jeśli stykają się bokiem lub rogiem (łączymy je w każdym z 8 kierunków).
+Ile plam jest na kartce?
+Wejście
+W pierwszym wierszu znajdują się liczby n i m (1 ≤ n, m ≤ 1000) — liczba wierszy i kolumn kartki. W kolejnych n wierszach
+znajduje się opis kartki: każdy wiersz to napis długości m złożony ze znaków „*” i „.”.
+Wyjście
+Wypisz liczbę plam.
+Przykład
+Wejście:
+4 5
+*..*.
+.*...
+...**
+*....
+Wyjście:
+4

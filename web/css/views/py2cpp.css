@@ -1,0 +1,73 @@
+/* Tłumacz Python → C++ — układ: pasek opcji | dwa edytory (Python → C++) | ostrzeżenia / równoważność */
+.view[data-view="py2cpp"] .p2c-layout { flex: 1; min-height: 0; }
+.view[data-view="py2cpp"] .p2c-layout > .pane { overflow: hidden; }
+.p2c-split { flex: 1; min-height: 0; height: 100%; }
+.p2c-pane { flex: 1; min-height: 0; height: 100%; display: flex; flex-direction: column; position: relative; }
+.p2c-right { position: relative; }
+.p2c-empty { position: absolute; inset: 44px 0 0 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.p2c-empty[hidden] { display: none; }
+
+.p2c-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 9px 12px; margin-bottom: 12px;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel-2); }
+.p2c-opt { display: flex; align-items: center; gap: 8px; }
+.p2c-opt-label { font-size: 12.5px; color: var(--muted); }
+.p2c-sep { width: 1px; align-self: stretch; background: var(--border); }
+.p2c-status { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.p2c-examples { width: auto; max-width: 280px; }
+
+/* odpowiadające sobie linie Python ↔ C++ */
+.p2c-hl { background: color-mix(in srgb, var(--accent) 16%, transparent) !important; box-shadow: inset 3px 0 0 var(--accent); }
+
+.p2c-bottom-tabs { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.p2c-bottom-tabs > .tab-panels { flex: 1; min-height: 0; overflow: auto; padding-top: 10px; }
+.p2c-bottom-tabs > .tab-panels > .tab-panel[hidden] { display: none; }
+
+.p2c-warns { display: flex; flex-direction: column; gap: 6px; }
+.p2c-wsum { flex-wrap: wrap; margin-bottom: 4px; }
+.p2c-warn { display: flex; align-items: flex-start; gap: 10px; padding: 7px 11px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--panel-2); cursor: pointer; transition: border-color .12s, background .12s; }
+.p2c-warn:hover { border-color: var(--accent-ring, var(--accent)); background: var(--panel); }
+.p2c-warn.error { border-left: 3px solid var(--danger); }
+.p2c-warn.warn { border-left: 3px solid var(--warn); }
+.p2c-warn.info { border-left: 3px solid var(--info); }
+.p2c-wicon { flex: none; display: inline-flex; padding-top: 2px; }
+.p2c-wline { flex: none; font-family: var(--mono); font-size: 11.5px; color: var(--text-2); background: var(--panel-3, var(--bg-2));
+  border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; margin-top: 1px; white-space: nowrap; }
+.p2c-wmsg { font-size: 13px; line-height: 1.5; color: var(--text); min-width: 0; }
+.p2c-wmsg p { margin: 0; }
+.p2c-wmsg code { font-family: var(--mono); font-size: 12px; }
+.p2c-allgood { display: flex; align-items: center; gap: 8px; color: var(--success); font-size: 13px; padding: 6px 2px; }
+
+.p2c-verify { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.p2c-verify-in { display: flex; flex-direction: column; gap: 8px; position: sticky; top: 0; }
+.p2c-verify-in code { font-family: var(--mono); font-size: 11.5px; background: var(--panel-3, var(--bg-2)); border: 1px solid var(--border);
+  border-radius: 4px; padding: 0 4px; }
+.p2c-input { min-height: 120px; resize: vertical; }
+.p2c-verify-res { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.p2c-progress { padding: 8px 2px; }
+
+.p2c-summary { display: grid; grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(110px, 1fr)); gap: 10px; align-items: stretch; }
+.p2c-verdict { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: var(--panel-2); }
+.p2c-verdict.ok { color: var(--success); border-color: color-mix(in srgb, var(--success) 45%, var(--border)); }
+.p2c-verdict.bad { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.p2c-vt { font-weight: 650; font-size: 15px; color: var(--text); }
+
+.p2c-test { border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel-2); }
+.p2c-test > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 12px;
+  user-select: none; }
+.p2c-test > summary::-webkit-details-marker { display: none; }
+.p2c-test[open] > summary { border-bottom: 1px solid var(--border); }
+.p2c-tname { font-weight: 650; font-size: 13px; }
+.p2c-tmeta { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-2); font-family: var(--mono); }
+.p2c-speed { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 650; color: var(--success); }
+.p2c-tbody { padding: 10px 12px 12px; }
+.p2c-outs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.p2c-out { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.p2c-out pre.out { max-height: 260px; overflow: auto; margin: 0; }
+
+@media (max-width: 1100px) {
+  .p2c-verify { grid-template-columns: 1fr; }
+  .p2c-summary { grid-template-columns: 1fr 1fr; }
+  .p2c-outs { grid-template-columns: 1fr; }
+}

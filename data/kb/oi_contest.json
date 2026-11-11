@@ -1,0 +1,984 @@
+{
+ "chunk": "oi-contest",
+ "articles": [
+  {
+   "id": "oi-about",
+   "title": "Jak wygląda Olimpiada Informatyczna: etapy, zadania, punktacja, podzadania, limity",
+   "category": "OI praktyka",
+   "tags": [
+    "OI",
+    "olimpiada",
+    "etapy",
+    "punktacja",
+    "podzadania",
+    "grupy testów",
+    "limit czasu",
+    "limit pamięci",
+    "finał"
+   ],
+   "aliases": [
+    "jak wyglada olimpiada informatyczna",
+    "etapy oi",
+    "ile jest etapow oi",
+    "punktacja na oi",
+    "co to sa podzadania",
+    "grupy testow oi",
+    "jak sa liczone punkty",
+    "olimpiada informatyczna zasady",
+    "oi pierwszy etap"
+   ],
+   "summary": "OI ma trzy etapy: I (zdalny, zadania rozwiązywane w domu przez kilka tygodni), II (zawody w okręgach) i III (finał). Każde zadanie jest warte zwykle 100 punktów, rozdzielonych na grupy testów; punkty za grupę dostajesz, gdy program przejdzie wszystkie jej testy w limicie czasu i pamięci.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Etapy (w ogólnym zarysie — szczegóły co roku w regulaminie i „Zasadach organizacji zawodów” na stronie OI):**\n- **I etap** — zdalny: kilka zadań do rozwiązania w domu w ciągu kilku tygodni, rozwiązania wysyła się przez system SIO2.\n- **II etap** — zawody stacjonarne w okręgach: sesja próbna i zwykle dwa dni zawodów po kilka godzin.\n- **III etap (finał)** — ogólnopolski, podobny format; najlepsi zostają laureatami i mogą trafić do reprezentacji\n  na olimpiady międzynarodowe (IOI, CEOI, BOI)."
+    },
+    {
+     "type": "text",
+     "md": "**Jak oceniane są zadania:**\n- Rozwiązanie to program, który czyta dane ze standardowego wejścia i wypisuje wynik na standardowe wyjście.\n- Sprawdzarka uruchamia go na wielu testach. Testy są pogrupowane; **grupa** jest zaliczona tylko wtedy, gdy wszystkie jej\n  testy dadzą poprawny wynik w limicie czasu i pamięci.\n- W treści zwykle jest sekcja o **podzadaniach**: np. „w testach wartych 30% punktów zachodzi n ≤ 1000”. Dzięki temu\n  prostsze (wolniejsze) rozwiązanie też zdobywa punkty.\n- Limity czasu i pamięci są podane w treści dla każdego zadania. Regulamin może przewidywać obniżanie punktów, gdy czas\n  działania zbliża się do limitu — sprawdź aktualne zasady."
+    },
+    {
+     "type": "tip",
+     "md": "Archiwum zadań z poprzednich edycji (z treściami i możliwością wysyłania) jest dostępne m.in. w serwisie Szkopuł.\nRozwiązywanie starych zadań z I i II etapu to najlepszy trening."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wyglada olimpiada informatyczna",
+      "etapy oi",
+      "ile jest etapow olimpiady informatycznej",
+      "olimpiada informatyczna zasady",
+      "co to jest OI"
+     ],
+     "a": "Olimpiada Informatyczna ma trzy etapy: **I** — zdalny (kilka zadań do rozwiązania w domu przez kilka tygodni), **II** —\nzawody w okręgach (sesja próbna + zwykle dwa dni zawodów), **III** — finał ogólnopolski. Zadania są algorytmiczne:\npiszesz program, który dla danych z wejścia wypisuje wynik, a sprawdzarka testuje go automatycznie. Dokładne terminy\ni zasady publikuje co roku komitet na stronie OI."
+    },
+    {
+     "q": [
+      "jak sa liczone punkty na oi",
+      "punktacja oi",
+      "ile punktow za zadanie",
+      "jak dziala ocenianie zadan"
+     ],
+     "a": "Każde zadanie jest warte zwykle 100 punktów. Testy są podzielone na grupy, a każda grupa ma przypisaną liczbę punktów.\nGrupę zaliczasz tylko wtedy, gdy program przejdzie **wszystkie** jej testy (dobra odpowiedź w limicie czasu i pamięci).\nWynik zadania to suma punktów za zaliczone grupy. Szczegóły (np. ewentualne obniżanie punktów za czas bliski limitowi)\nsą w regulaminie danej edycji."
+    },
+    {
+     "q": [
+      "co to sa podzadania",
+      "podzadania oi",
+      "subtasks",
+      "testy warte x punktow",
+      "ograniczenia dla czesci testow"
+     ],
+     "a": "Podzadania to części testów o łatwiejszych ograniczeniach, np. „w testach wartych 20% punktów n ≤ 20”. Wolniejsze lub\nprostsze rozwiązanie (np. brute force) zdobędzie te punkty. Czytaj sekcję o ocenianiu uważnie — często opłaca się najpierw\nzabezpieczyć łatwe podzadania, a potem walczyć o pełne rozwiązanie."
+    },
+    {
+     "q": [
+      "grupy testow",
+      "czym jest grupa testow",
+      "dlaczego 0 punktow mimo ze wiekszosc testow ok",
+      "test grupowy"
+     ],
+     "a": "Testy w grupie sprawdzają podobny przypadek (np. te same ograniczenia). Wystarczy, że **jeden** test z grupy nie przejdzie\n(zła odpowiedź, przekroczony czas, błąd), a cała grupa daje 0 punktów. Dlatego warto testować przypadki brzegowe —\npojedynczy brakujący przypadek potrafi zabrać wiele punktów."
+    },
+    {
+     "q": [
+      "limit czasu oi",
+      "time limit olimpiada",
+      "ile czasu ma program",
+      "limit pamieci oi"
+     ],
+     "a": "Limit czasu (na jeden test) i limit pamięci są podane w treści zadania i różnią się między zadaniami. Program, który\nprzekroczy czas na teście, nie dostaje za niego punktów (a więc i za całą grupę). Szacuj złożoność z ograniczeń — patrz\nartykuł o szacowaniu złożoności."
+    },
+    {
+     "q": [
+      "jakie jezyki na oi",
+      "czy na oi mozna pisac w pythonie",
+      "c++ czy python na olimpiade"
+     ],
+     "a": "Lista dozwolonych języków jest w regulaminie danej edycji — C++ jest zawsze dostępny i zdecydowanie najpopularniejszy.\nPython bywa dopuszczony, ale jest wielokrotnie wolniejszy, więc przy ciasnych limitach trudno w nim zdobyć pełne punkty.\nDo zawodów polecamy C++."
+    },
+    {
+     "q": [
+      "jak sie przygotowac do oi",
+      "jak trenowac do olimpiady",
+      "od czego zaczac olimpiade informatyczna"
+     ],
+     "a": "Rozwiązuj zadania z archiwum (Szkopuł: stare OI, OIJ, zadania treningowe), ucz się kolejnych technik (sumy prefiksowe,\nwyszukiwanie binarne, grafy, programowanie dynamiczne, struktury danych) i bierz udział w zawodach próbnych. Po każdym\nzadaniu przeczytaj omówienie wzorcowe. Ćwicz też warsztat: stress-testy, szablon, szybkie debugowanie."
+    },
+    {
+     "q": [
+      "czy na oi jest internet",
+      "co wolno na zawodach",
+      "czy mozna korzystac z dokumentacji na oi"
+     ],
+     "a": "Na zawodach stacjonarnych (II i III etap) zasady korzystania z materiałów i sieci określa regulamin — zwykle nie ma dostępu\ndo internetu, a dozwolona bywa dokumentacja języka udostępniona na komputerach. W I etapie (w domu) obowiązuje\nsamodzielność rozwiązań. Zawsze sprawdź aktualny regulamin."
+    },
+    {
+     "q": [
+      "oi a oij",
+      "olimpiada informatyczna juniorow",
+      "co to oij"
+     ],
+     "a": "OIJ (Olimpiada Informatyczna Juniorów) jest dla uczniów szkół podstawowych, OI — głównie dla szkół ponadpodstawowych\n(zasady dopuszczenia młodszych uczniów określa regulamin). Format zadań jest podobny, OIJ ma łatwiejsze zadania."
+    }
+   ],
+   "related": [
+    "oi-sio2",
+    "oi-strategy",
+    "oi-complexity-limits",
+    "oi-reading-statement",
+    "oi-py-cpp-equivalents",
+    "oi-py-performance"
+   ]
+  },
+  {
+   "id": "oi-sio2",
+   "title": "SIO2: wysyłanie rozwiązań, statusy (OK, WA, TLE, RE, MLE, CE) i wyniki",
+   "category": "OI praktyka",
+   "tags": [
+    "SIO2",
+    "sio",
+    "szkopuł",
+    "wysyłanie",
+    "status",
+    "WA",
+    "TLE",
+    "RE",
+    "MLE",
+    "CE",
+    "ocena wstępna"
+   ],
+   "aliases": [
+    "sio2",
+    "jak wyslac rozwiazanie",
+    "co znaczy WA",
+    "co znaczy TLE",
+    "co znaczy RE",
+    "status zgloszenia",
+    "bledna odpowiedz sio",
+    "przekroczony limit czasu",
+    "blad wykonania",
+    "initial tests",
+    "ocena wstepna"
+   ],
+   "summary": "SIO2 to system, przez który wysyłasz rozwiązania na OI (i w wielu kółkach/serwisach, np. Szkopuł). Zgłoszenie jest kompilowane i uruchamiane na testach; status mówi, co poszło nie tak: WA — zła odpowiedź, TLE — za wolno, RE — błąd wykonania (crash), MLE — za dużo pamięci, CE — błąd kompilacji.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Status",
+      "Znaczenie",
+      "Najczęstsze przyczyny"
+     ],
+     "rows": [
+      [
+       "OK",
+       "test zaliczony",
+       "—"
+      ],
+      [
+       "WA (zła odpowiedź)",
+       "wynik niezgodny ze wzorcem",
+       "błąd w algorytmie, przepełnienie, zły format wyjścia, przypadek brzegowy"
+      ],
+      [
+       "TLE (przekroczony limit czasu)",
+       "program działał za długo",
+       "za duża złożoność, pętla nieskończona, wolne I/O (`endl`)"
+      ],
+      [
+       "RE (błąd wykonania)",
+       "program zakończył się błędem",
+       "wyjście poza tablicę, przepełnienie stosu, dzielenie przez 0, `return 1` z main, wyjątek"
+      ],
+      [
+       "MLE (przekroczony limit pamięci)",
+       "za dużo pamięci",
+       "za duże tablice, `long long` zamiast `int`, wycieki, za głęboka rekurencja"
+      ],
+      [
+       "CE (błąd kompilacji)",
+       "kod się nie skompilował",
+       "brak nagłówka, zły język/wersja, `getchar_unlocked` na Windows itp."
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Wyniki w trakcie i po zawodach.** W trakcie zawodów SIO2 zwykle pokazuje wynik na **testach przykładowych** lub\nwstępnych (ang. *initial tests*) — to sprawdza głównie, czy program się kompiluje i działa na przykładzie. Pełna ocena\n(na wszystkich testach) jest publikowana po zakończeniu rundy. Zasady, które zgłoszenie jest oceniane (np. ostatnie),\nokreśla regulamin — nie wysyłaj na koniec gorszej wersji „na próbę”."
+    },
+    {
+     "type": "warn",
+     "md": "`main` musi kończyć się kodem 0 (`return 0;` lub brak `return`). Zwrócenie innej wartości (np. `return 1`) sprawdzarka\ntraktuje jako błąd wykonania."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "co znaczy WA",
+      "zla odpowiedz sio",
+      "wrong answer co to",
+      "bledna odpowiedz",
+      "WA na sio2"
+     ],
+     "a": "WA (Wrong Answer, „zła odpowiedź”) — program zakończył się poprawnie, ale wypisał inny wynik niż wzorcowy. Przyczyny: błąd\nw algorytmie, nieobsłużony przypadek brzegowy (n = 1, puste, równe elementy), przepełnienie `int`, zły format wyjścia\n(np. `Tak` zamiast `TAK`, brak części wyniku). Napisz brute i zrób stress-test."
+    },
+    {
+     "q": [
+      "co znaczy TLE",
+      "przekroczony limit czasu",
+      "time limit exceeded",
+      "program za wolny sio"
+     ],
+     "a": "TLE — program nie zmieścił się w limicie czasu. Najpierw sprawdź złożoność względem ograniczeń (np. O(n²) dla n = 10^5 to\n10^10 operacji — za dużo). Potem: pętle nieskończone, wolne wejście/wyjście (brak `sync_with_stdio(false)`, `endl` w pętli),\nkopiowanie dużych struktur przez wartość w rekurencji."
+    },
+    {
+     "q": [
+      "co znaczy RE",
+      "blad wykonania",
+      "runtime error sio",
+      "RE sigsegv",
+      "program sie wywala na sprawdzarce"
+     ],
+     "a": "RE — program zakończył się błędem: segfault (wyjście poza tablicę, za duża tablica lokalna, za głęboka rekurencja,\nnieważny iterator), dzielenie przez zero (SIGFPE), nieobsłużony wyjątek (np. `stoi` na pustym napisie, `vector::at`) albo\nniezerowy kod wyjścia z `main`. Uruchom lokalnie z `-fsanitize=address,undefined` na dużym teście."
+    },
+    {
+     "q": [
+      "co znaczy MLE",
+      "przekroczony limit pamieci",
+      "memory limit exceeded",
+      "za duzo pamieci"
+     ],
+     "a": "MLE — program zużył więcej pamięci niż limit. Policz rozmiar tablic (10^7 `int` = 40 MB, 10^7 `long long` = 80 MB), sprawdź\n`vector<vector<...>>` z dużym narzutem, `map`/`set` z milionami elementów (dziesiątki bajtów na węzeł) i głęboką rekurencję."
+    },
+    {
+     "q": [
+      "co znaczy CE",
+      "blad kompilacji sio",
+      "compilation error na sprawdzarce",
+      "lokalnie sie kompiluje a na sio nie"
+     ],
+     "a": "CE — sprawdzarka nie skompilowała programu. Częste przyczyny: wybrany zły język/wersja, funkcje dostępne tylko u Ciebie\n(np. rozszerzenia MSVC, `getchar_unlocked` przy innym systemie), brak nagłówka (gdy lokalnie dołączał się „przypadkiem”),\nzostawiony kod testowy. Komunikat kompilatora zwykle jest widoczny w szczegółach zgłoszenia."
+    },
+    {
+     "q": [
+      "jak wyslac rozwiazanie na sio2",
+      "wysylanie zadania sio",
+      "jak oddac zadanie na olimpiadzie"
+     ],
+     "a": "Zaloguj się, wybierz konkurs i zadanie, w formularzu zgłoszenia wskaż plik z kodem (lub wklej kod) i język, potem wyślij.\nPo chwili w liście zgłoszeń pojawi się status. Wysyłaj plik źródłowy (`.cpp`), nie skompilowany program."
+    },
+    {
+     "q": [
+      "initial tests",
+      "ocena wstepna",
+      "testy przykladowe sio",
+      "wynik w trakcie zawodow",
+      "dlaczego widze tylko czesc wyniku"
+     ],
+     "a": "W trakcie zawodów SIO2 często pokazuje tylko wynik na testach przykładowych/wstępnych („initial tests”) — to informacja, że\nprogram się kompiluje i działa na przykładach, a nie gwarancja punktów. Pełna ocena na wszystkich testach pojawia się po\nzakończeniu rundy. Dlatego testuj sam (brute + stress-test)."
+    },
+    {
+     "q": [
+      "ktore zgloszenie jest oceniane",
+      "czy liczy sie ostatnie zgloszenie",
+      "najlepsze czy ostatnie zgloszenie"
+     ],
+     "a": "Zależy od regulaminu zawodów — w wielu konkursach oceniane jest ostatnie poprawnie skompilowane zgłoszenie, w innych\nnajlepsze. Sprawdź zasady i nie wysyłaj pod koniec eksperymentalnej, gorszej wersji."
+    },
+    {
+     "q": [
+      "return 1 z main",
+      "kod wyjscia main",
+      "return 0 czy potrzebne"
+     ],
+     "a": "`main` bez `return` zwraca 0 — to OK. Ale `return 1` (albo `exit(1)`) sprawdzarka zinterpretuje jako błąd wykonania (RE).\nKończ program normalnie."
+    },
+    {
+     "q": [
+      "szkopul",
+      "szkopul.edu.pl",
+      "gdzie cwiczyc zadania oi"
+     ],
+     "a": "Szkopuł to serwis z archiwum zadań olimpijskich (OI, OIJ, inne) działający na SIO2 — możesz wysyłać rozwiązania i od razu\ndostawać pełną ocenę. Najlepsze miejsce do treningu przed zawodami."
+    }
+   ],
+   "related": [
+    "oi-about",
+    "oi-strategy",
+    "pit-stack-overflow",
+    "pit-endl-tle",
+    "cpp-ref-chrono-ctime",
+    "oi-interactive"
+   ]
+  },
+  {
+   "id": "oi-strategy",
+   "title": "Strategia na zawodach: czytanie zadań, punkty częściowe, kolejność, testowanie",
+   "category": "OI praktyka",
+   "tags": [
+    "strategia",
+    "zawody",
+    "punkty częściowe",
+    "brute force",
+    "czas",
+    "kolejność zadań",
+    "stress-test"
+   ],
+   "aliases": [
+    "strategia na olimpiade",
+    "jak rozwiazywac zadania na zawodach",
+    "od ktorego zadania zaczac",
+    "punkty czesciowe",
+    "co robic gdy nie umiem zadania",
+    "jak zdobyc punkty na oi",
+    "taktyka na zawody"
+   ],
+   "summary": "Przeczytaj wszystkie zadania na początku, zabezpiecz łatwe punkty (podzadania, brute force), pilnuj czasu i testuj każde rozwiązanie przed wysłaniem — najlepiej stress-testem z brute'em.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Plan na zawody (np. 5 godzin, 3 zadania):**\n1. **Pierwsze ~20–30 minut:** przeczytaj wszystkie zadania (także sekcje o ocenianiu), zanotuj pomysły i podzadania.\n2. **Wybierz kolejność:** zacznij od zadania, które najlepiej rozumiesz. Nie zakładaj, że zadania są ułożone od najłatwiejszego.\n3. **Zabezpiecz punkty:** napisz najpierw proste rozwiązanie na małe podzadania (brute force). Wyślij je. Ten kod przyda się\n   też jako wzorzec do stress-testu.\n4. **Rozwiązanie pełne:** dopiero potem optymalizuj. Testuj na przykładach, przypadkach brzegowych i stress-testem.\n5. **Pilnuj czasu:** jeśli od dawna stoisz w miejscu, przejdź do innego zadania i zbierz tam punkty częściowe.\n6. **Ostatnie ~15 minut:** upewnij się, że wysłane są najlepsze wersje każdego zadania i że się kompilują."
+    },
+    {
+     "type": "tip",
+     "md": "Punkty za podzadania sumują się: 3 × 40 punktów częściowych to więcej niż 100 za jedno zadanie i 0 za resztę."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "strategia na olimpiade",
+      "jak rozwiazywac zadania na zawodach",
+      "taktyka na oi",
+      "jak sie zachowac na zawodach"
+     ],
+     "a": "Przeczytaj wszystkie zadania na początku, zanotuj ograniczenia i podzadania. Zacznij od tego, co rozumiesz najlepiej.\nNajpierw zabezpiecz punkty częściowe prostym rozwiązaniem (i wyślij je), potem szukaj pełnego. Każdą wersję testuj\n(przykłady, przypadki brzegowe, stress-test). Pilnuj zegara i nie utknij na jednym zadaniu."
+    },
+    {
+     "q": [
+      "od ktorego zadania zaczac",
+      "kolejnosc rozwiazywania zadan",
+      "czy zadania sa od najlatwiejszego"
+     ],
+     "a": "Nie zakładaj, że kolejność w zestawie oznacza trudność. Po przeczytaniu wszystkich wybierz zadanie, w którym najszybciej\nwidzisz rozwiązanie (choćby częściowe). Pewne punkty na początku zmniejszają stres."
+    },
+    {
+     "q": [
+      "punkty czesciowe",
+      "jak zdobyc czesc punktow",
+      "brute force na czesc punktow",
+      "nie umiem calego zadania"
+     ],
+     "a": "Przeczytaj sekcję o ocenianiu: zwykle część testów ma małe ograniczenia (np. n ≤ 20 albo n ≤ 1000). Rozwiązanie wykładnicze\nlub kwadratowe zdobędzie te punkty. Często da się też zdobyć punkty za przypadki szczególne (np. graf jest ścieżką, wszystkie\nliczby równe)."
+    },
+    {
+     "q": [
+      "co robic gdy utknalem",
+      "nie mam pomyslu na zadanie",
+      "jak wymyslic rozwiazanie"
+     ],
+     "a": "Rozpisz małe przykłady ręcznie i szukaj regularności. Zadaj sobie pytania: co się stanie, gdy posortuję? Czy odpowiedź\njest monotoniczna (wyszukiwanie binarne po wyniku)? Czy da się to zapisać jako graf? Jaki stan opisuje częściowe\nrozwiązanie (DP)? Co mówi ograniczenie n o złożoności? Jeśli nic — weź punkty częściowe i wróć później."
+    },
+    {
+     "q": [
+      "ile czasu na jedno zadanie",
+      "zarzadzanie czasem na zawodach",
+      "kiedy przejsc do innego zadania"
+     ],
+     "a": "Ustal sobie „punkty kontrolne”, np. co godzinę przegląd: ile mam punktów, gdzie najłatwiej dobrać kolejne. Jeśli przez\ndłuższy czas nie robisz postępu, przejdź do innego zadania — świeże spojrzenie często pomaga po powrocie."
+    },
+    {
+     "q": [
+      "czy wysylac brute force",
+      "wyslac wolne rozwiazanie",
+      "czy oplaca sie wyslac czesciowe"
+     ],
+     "a": "Tak — szczególnie gdy regulamin ocenia ostatnie lub najlepsze zgłoszenie i nie karze za liczbę wysłań (sprawdź zasady).\nWolne, ale poprawne rozwiązanie zabezpiecza punkty za małe podzadania, a zachowany plik posłuży jako wzorzec do testowania."
+    },
+    {
+     "q": [
+      "jak testowac przed wyslaniem",
+      "checklista przed wyslaniem",
+      "co sprawdzic przed wyslaniem rozwiazania"
+     ],
+     "a": "Lista: (1) przykład z treści, (2) przypadki brzegowe: n = 1, minimalne/maksymalne wartości, wszystkie równe, (3) duży\ntest na czas (generator), (4) stress-test z brute'em na małych losowych danych, (5) usunięty debug i `freopen`,\n(6) poprawny format wyjścia, (7) `long long` tam, gdzie trzeba."
+    },
+    {
+     "q": [
+      "stres na zawodach",
+      "jak sie nie stresowac na olimpiadzie",
+      "panika na zawodach"
+     ],
+     "a": "Pomaga rutyna: znany szablon, sprawdzony sposób testowania i plan czasowy. Zabezpieczenie pierwszych punktów (choćby\nbrute force) mocno zmniejsza presję. Rób krótkie przerwy, pij wodę, a pomysły zapisuj na kartce."
+    },
+    {
+     "q": [
+      "ostatnie minuty zawodow",
+      "koniec zawodow co zrobic",
+      "przed koncem zawodow"
+     ],
+     "a": "W ostatnich minutach nie zaczynaj dużych zmian. Upewnij się, że dla każdego zadania wysłana jest najlepsza działająca\nwersja i że się kompiluje. Drobna poprawka „na ostatnią chwilę” bez testów częściej szkodzi niż pomaga."
+    }
+   ],
+   "related": [
+    "oi-brute-generator",
+    "oi-stress-test",
+    "oi-complexity-limits",
+    "oi-reading-statement"
+   ]
+  },
+  {
+   "id": "oi-reading-statement",
+   "title": "Jak czytać treść zadania: wejście, wyjście, przykład, ograniczenia, ocenianie",
+   "category": "OI praktyka",
+   "tags": [
+    "treść",
+    "wejście",
+    "wyjście",
+    "przykład",
+    "ograniczenia",
+    "ocenianie",
+    "format",
+    "zadanie"
+   ],
+   "aliases": [
+    "jak czytac tresc zadania",
+    "co jest w tresci zadania",
+    "sekcja wejscie wyjscie",
+    "jak zrozumiec zadanie",
+    "ograniczenia w tresci",
+    "przyklad w zadaniu",
+    "jak czytac format wejscia"
+   ],
+   "summary": "Treść ma zwykle sekcje: opis (historyjka), Wejście, Wyjście, Przykład, Ocenianie/podzadania i limity. Najważniejsze informacje to ograniczenia (decydują o złożoności i typach), dokładny format wejścia/wyjścia oraz przypadki specjalne (brak rozwiązania, wiele odpowiedzi).",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Sekcja",
+      "Na co zwrócić uwagę"
+     ],
+     "rows": [
+      [
+       "Opis",
+       "przełóż historyjkę na abstrakcyjny problem (graf? ciąg? przedziały?)"
+      ],
+      [
+       "Wejście",
+       "kolejność liczb, zakresy (→ `long long`?), numeracja od 0/1, liczba testów, czy liczby mogą być ujemne"
+      ],
+      [
+       "Wyjście",
+       "dokładny format, wielkość liter (`TAK`/`NIE`), co wypisać, gdy brak rozwiązania, czy dowolne z wielu rozwiązań"
+      ],
+      [
+       "Przykład",
+       "przelicz go ręcznie — to najlepszy test zrozumienia treści"
+      ],
+      [
+       "Ocenianie / podzadania",
+       "jakie ograniczenia mają punkty częściowe"
+      ],
+      [
+       "Limity",
+       "czas i pamięć — razem z n wyznaczają dopuszczalną złożoność"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "W tekście skopiowanym z PDF potęgi tracą formatowanie: „10\\n9” albo „10 9” obok siebie to zwykle 10^9. Sprawdź to w\noryginalnym PDF, zanim dobierzesz typy."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak czytac tresc zadania",
+      "jak zrozumiec zadanie",
+      "na co zwracac uwage w tresci",
+      "how to read problem statement"
+     ],
+     "a": "Czytaj dwa razy: raz dla ogólnej idei, drugi raz z ołówkiem — wypisz ograniczenia (n, wartości), format wejścia i wyjścia,\nprzypadki specjalne. Przelicz przykład ręcznie: jeśli wynik się nie zgadza, źle rozumiesz treść. Na koniec sformułuj\nproblem jednym zdaniem bez historyjki."
+    },
+    {
+     "q": [
+      "ograniczenia w tresci",
+      "co mowia ograniczenia",
+      "n <= 100000 co to oznacza",
+      "zakresy w zadaniu"
+     ],
+     "a": "Ograniczenie na `n` mówi, jaka złożoność przejdzie (np. n ≤ 10^5 → O(n log n)), a ograniczenia na wartości — jakich typów\nużyć (wartości do 10^9 i ich sumy → `long long`). Zwróć uwagę na ograniczenia dolne (czy n może być 1? czy liczby mogą być\nujemne lub zerowe?)."
+    },
+    {
+     "q": [
+      "przyklad sie nie zgadza",
+      "nie rozumiem przykladu",
+      "wynik przykladu inny niz moj"
+     ],
+     "a": "Przelicz przykład krok po kroku na kartce. Najczęściej źle zrozumiana jest jedna definicja (np. czy przedział jest domknięty,\nczy liczymy pary uporządkowane, czy wierzchołek jest sąsiadem samego siebie). Przeczytaj ponownie zdanie definiujące wynik."
+    },
+    {
+     "q": [
+      "co gdy brak rozwiazania",
+      "wypisz -1 gdy nie istnieje",
+      "NIE gdy brak odpowiedzi",
+      "brak rozwiazania format"
+     ],
+     "a": "Treść zwykle określa, co wypisać, gdy rozwiązanie nie istnieje (`-1`, `NIE`, `BRAK`…). Ten przypadek często jest w osobnej\ngrupie testów — łatwo stracić punkty, jeśli go nie obsłużysz. Dodaj go do swoich testów."
+    },
+    {
+     "q": [
+      "wiele poprawnych odpowiedzi",
+      "wypisz dowolne rozwiazanie",
+      "dowolna z odpowiedzi"
+     ],
+     "a": "Jeśli treść pozwala wypisać dowolne poprawne rozwiązanie, sprawdzarka ma własny weryfikator — Twój wynik nie musi być\nidentyczny z przykładem. Przy stress-teście nie porównuj wtedy wyjść znak w znak, tylko napisz prosty program sprawdzający\npoprawność."
+    },
+    {
+     "q": [
+      "format wyjscia",
+      "jak wypisac wynik zgodnie z trescia",
+      "spacje i nowe linie w wyniku"
+     ],
+     "a": "Wypisuj dokładnie to, o co prosi treść: tyle liczb, w takiej kolejności i podziale na wiersze. Słowa (np. `TAK`) kopiuj\nz treści. Niczego nie dopisuj („Wynik: …”, zachęt do wprowadzenia danych).",
+     "code": "int wynik = 42;\ncout << wynik << '\\n';           // nie: cout << \"Wynik: \" << wynik;"
+    },
+    {
+     "q": [
+      "potegi w pdf",
+      "10 9 w tresci co to",
+      "skopiowana tresc dziwne liczby",
+      "10^9 z pdf"
+     ],
+     "a": "Przy kopiowaniu z PDF indeks górny „spada” do zwykłego tekstu: `10` i `9` obok siebie (czasem w osobnych wierszach) to 10^9,\na `2 · 10 5` to 2·10^5. Upewnij się w oryginalnym PDF."
+    },
+    {
+     "q": [
+      "historyjka w zadaniu",
+      "jak przetlumaczyc tresc na algorytm",
+      "abstrakcja problemu"
+     ],
+     "a": "Historyjka (Bajtazar, Bajtocja…) to opakowanie. Spróbuj zapisać problem matematycznie: „dany ciąg liczb, znajdź…”, „dany\ngraf ważony, policz…”. Wtedy łatwiej rozpoznać znaną technikę."
+    },
+    {
+     "q": [
+      "czy liczby moga byc ujemne",
+      "dolne ograniczenia",
+      "czy n moze byc 0"
+     ],
+     "a": "Sprawdź ograniczenia dolne w treści. Jeśli wartości mogą być ujemne, uważaj na inicjalizację maksimum zerem i na `%`. Jeśli\n`n` może być 1 (albo 0), przetestuj taki przypadek osobno."
+    }
+   ],
+   "related": [
+    "oi-complexity-limits",
+    "pit-input-format",
+    "oi-strategy",
+    "io-print-separators"
+   ]
+  },
+  {
+   "id": "oi-complexity-limits",
+   "title": "Szacowanie złożoności z ograniczeń (n ≤ 20 → 2^n, n ≤ 10^5 → n log n...)",
+   "category": "OI praktyka",
+   "tags": [
+    "złożoność",
+    "ograniczenia",
+    "limit czasu",
+    "O(n log n)",
+    "O(n^2)",
+    "2^n",
+    "operacje na sekundę"
+   ],
+   "aliases": [
+    "jaka zlozonosc dla n 10^5",
+    "ile operacji na sekunde",
+    "czy n^2 przejdzie",
+    "zlozonosc z ograniczen",
+    "n <= 20 jaka zlozonosc",
+    "n <= 5000",
+    "time complexity from constraints",
+    "czy 10^8 operacji przejdzie",
+    "jak szacowac zlozonosc"
+   ],
+   "summary": "Przyjmij, że w sekundzie wykonasz rzędu 10^8 prostych operacji (z dużym marginesem zależnym od stałej). Z ograniczenia na n odczytasz oczekiwaną złożoność: n ≤ 20 → O(2^n·n), n ≤ 500 → O(n^3), n ≤ 5000 → O(n^2), n ≤ 10^6 → O(n log n) lub O(n), n ≤ 10^18 → O(log n) lub O(√n) (do ~10^12).",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Ograniczenie",
+      "Złożoność, która zwykle przechodzi",
+      "Typowe techniki"
+     ],
+     "rows": [
+      [
+       "n ≤ 10–11",
+       "O(n!)",
+       "wszystkie permutacje"
+      ],
+      [
+       "n ≤ 20–25",
+       "O(2^n · n)",
+       "podzbiory, DP na maskach bitowych"
+      ],
+      [
+       "n ≤ 40",
+       "O(2^(n/2))",
+       "meet in the middle"
+      ],
+      [
+       "n ≤ 100–500",
+       "O(n^3)",
+       "Floyd–Warshall, DP przedziałowe"
+      ],
+      [
+       "n ≤ 2000–5000",
+       "O(n^2)",
+       "DP dwuwymiarowe, wszystkie pary"
+      ],
+      [
+       "n ≤ 10^5–10^6",
+       "O(n log n), O(n)",
+       "sortowanie, drzewa przedziałowe, wyszukiwanie binarne, BFS/DFS"
+      ],
+      [
+       "n ≤ 10^7–10^8",
+       "O(n), mała stała",
+       "liniowe przejście, sito"
+      ],
+      [
+       "n ≤ 10^12",
+       "O(√n)",
+       "dzielniki, rozkład na czynniki"
+      ],
+      [
+       "n ≤ 10^18",
+       "O(log n)",
+       "szybkie potęgowanie, wyszukiwanie binarne po wyniku, potęgowanie macierzy"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Jak liczyć:** podstaw maksymalne n do złożoności. Dla n = 10^5: n² = 10^10 (za dużo), n log n ≈ 1,7·10^6 (bardzo mało).\nDla n = 5000: n² = 2,5·10^7 (OK). Dla n = 20: 2^20 · 20 ≈ 2·10^7 (OK). Wynik rzędu 10^8 w 1 s jest „na granicy” —\nzależy od stałej (proste operacje na tablicach vs. `map`, dzielenie, cache misses)."
+    },
+    {
+     "type": "tip",
+     "md": "Podzadania podpowiadają kolejne kroki: jeśli są grupy z n ≤ 20, n ≤ 1000 i n ≤ 10^6, to autor przewidział rozwiązania\nwykładnicze, kwadratowe i liniowo-logarytmiczne."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "ile operacji na sekunde",
+      "ile operacji wykona komputer w sekunde",
+      "operations per second c++",
+      "10^8 operacji"
+     ],
+     "a": "Przyjmuje się orientacyjnie 10^8 prostych operacji na sekundę (dodawania, porównania, dostępy do tablicy). Nowoczesne\nprocesory potrafią więcej, ale operacje „drogie” (dzielenie, `map`, losowy dostęp do pamięci) są wolniejsze. Jeśli\noszacowanie daje ≤ 10^7–10^8 — zwykle OK; 10^9 — raczej nie; 10^10 — na pewno nie."
+    },
+    {
+     "q": [
+      "czy n^2 przejdzie",
+      "n kwadrat dla 10^5",
+      "czy o(n^2) zmiesci sie w czasie",
+      "n=100000 n^2"
+     ],
+     "a": "Dla n = 10^5 mamy n² = 10^10 operacji — o dwa rzędy za dużo na 1–2 s. O(n²) jest bezpieczne mniej więcej do n ≈ 5000\n(2,5·10^7), na granicy przy n ≈ 10^4 (10^8). Dla n = 10^5 szukaj O(n log n) albo O(n √n) (≈ 3·10^7)."
+    },
+    {
+     "q": [
+      "n <= 20 jaka zlozonosc",
+      "male n 20",
+      "2^n kiedy",
+      "n do 20 brute force"
+     ],
+     "a": "n ≤ 20 to sygnał rozwiązania wykładniczego: 2^20 ≈ 10^6 podzbiorów, więc O(2^n · n) ≈ 2·10^7 — przejdzie. Typowo: przegląd\nwszystkich podzbiorów, DP na maskach bitowych. Permutacje (n!) przechodzą tylko do n ≈ 10–11.",
+     "code": "int n = 20;\nlong long ile = 0;\nfor (int mask = 0; mask < (1 << n); mask++) ile += __builtin_popcount(mask);\ncout << ile << '\\n';   // 20 * 2^19"
+    },
+    {
+     "q": [
+      "n <= 5000 jaka zlozonosc",
+      "n do 5000",
+      "n 2000 zlozonosc",
+      "kiedy n^2"
+     ],
+     "a": "n ≤ 2000–5000 zwykle oznacza O(n²): np. DP po dwóch indeksach, wszystkie pary elementów. Pamięć: tablica 5000 × 5000 `int`\nto 100 MB — często za dużo, wtedy trzymaj tylko dwa wiersze DP."
+    },
+    {
+     "q": [
+      "n <= 10^5 jaka zlozonosc",
+      "n do 200000",
+      "n 10^6 zlozonosc",
+      "kiedy n log n"
+     ],
+     "a": "n ≤ 10^5–10^6 → O(n log n) lub O(n). n log n dla 10^6 to ~2·10^7 — spokojnie. Techniki: sortowanie, wyszukiwanie binarne,\nkopce, drzewa przedziałowe/Fenwicka, two pointers, BFS/DFS, Dijkstra z kolejką."
+    },
+    {
+     "q": [
+      "n <= 500 zlozonosc",
+      "n do 500 n^3",
+      "kiedy n^3"
+     ],
+     "a": "n ≤ 100–500 sugeruje O(n³): 500³ = 1,25·10^8 — na granicy, ale proste pętle (np. Floyd–Warshall) zwykle się mieszczą.\nPrzykłady: Floyd–Warshall, DP przedziałowe, mnożenie macierzy."
+    },
+    {
+     "q": [
+      "n do 10^18",
+      "bardzo duze n zlozonosc",
+      "n 10^18 jak rozwiazac",
+      "log n kiedy"
+     ],
+     "a": "Gdy n sięga 10^18, nie możesz nawet przejść pętlą do n. Potrzebujesz O(log n) (szybkie potęgowanie, wyszukiwanie binarne\npo odpowiedzi, potęgowanie macierzy) albo wzoru matematycznego. Dla n ≤ 10^12 przejdzie też O(√n) = 10^6."
+    },
+    {
+     "q": [
+      "jak policzyc zlozonosc algorytmu",
+      "jak szacowac zlozonosc",
+      "zlozonosc petli zagniezdzonych",
+      "big o c++"
+     ],
+     "a": "Policz, ile razy wykonuje się najczęściej powtarzana operacja, jako funkcję n. Dwie zagnieżdżone pętle do n → O(n²);\npętla, w której n dzieli się przez 2 → O(log n); sortowanie → O(n log n); każde wywołanie `set::insert` → O(log n).\nPrzy zagnieżdżonych pętlach zależnych (np. `j` od `i` do n) suma to nadal O(n²).",
+     "code": "int n = 1000;\nlong long ops = 0;\nfor (int i = 0; i < n; i++)\n    for (int j = i; j < n; j++) ops++;   // n(n+1)/2 = O(n^2)\nfor (int k = n; k > 0; k /= 2) ops++;    // O(log n)\ncout << ops << '\\n';"
+    },
+    {
+     "q": [
+      "stala w zlozonosci",
+      "dlaczego n log n z map jest wolne",
+      "constant factor c++"
+     ],
+     "a": "Notacja O pomija stałe, ale w praktyce mają znaczenie: `map`/`set` mają dużą stałą (alokacje, skakanie po pamięci),\n`unordered_map` — haszowanie, `vector` + sortowanie jest zwykle kilka razy szybsze od `map`. Przy 10^6 operacji na `map`\nspodziewaj się setek milisekund."
+    },
+    {
+     "q": [
+      "sqrt n dla 10^5",
+      "n pierwiastek z n",
+      "o(n sqrt n) kiedy"
+     ],
+     "a": "O(n √n) dla n = 10^5 to ~3·10^7 operacji — zwykle przejdzie. Typowe: dekompozycja pierwiastkowa, algorytm Mo."
+    },
+    {
+     "q": [
+      "limit 1 sekunda a 10^8",
+      "ile mozna zrobic w limicie czasu",
+      "czy zmieszcze sie w czasie"
+     ],
+     "a": "Najpewniej: zmierz. Wygeneruj maksymalny test i uruchom `time ./prog < duzy.in > /dev/null` (Windows: `Measure-Command`).\nJeśli lokalnie mieścisz się z zapasem ~2×, na sprawdzarce zwykle też. Pamiętaj, że sprawdzarka może być wolniejsza od\nTwojego komputera.",
+     "code": "time ./prog < duzy.in > /dev/null",
+     "lang": "bash"
+    },
+    {
+     "q": [
+      "zlozonosc pamieciowa",
+      "ile pamieci zajmie algorytm",
+      "space complexity"
+     ],
+     "a": "Zlicz rozmiary tablic: n = 10^6 elementów `int` = 4 MB, macierz n×n dla n = 5000 `int` = 100 MB. Szczegóły w artykule\no pamięci."
+    }
+   ],
+   "related": [
+    "oi-memory",
+    "oi-about",
+    "tool-measure-time",
+    "oi-strategy",
+    "cpp-ref-chrono-ctime",
+    "oi-py-performance"
+   ]
+  },
+  {
+   "id": "oi-memory",
+   "title": "Pamięć: ile MB zajmuje tablica, vector, map (limit pamięci w praktyce)",
+   "category": "OI praktyka",
+   "tags": [
+    "pamięć",
+    "MB",
+    "limit pamięci",
+    "MLE",
+    "sizeof",
+    "tablica",
+    "vector",
+    "map"
+   ],
+   "aliases": [
+    "ile pamieci zajmuje tablica",
+    "int[10^7] ile mb",
+    "limit pamieci 256 mb",
+    "ile zajmuje vector",
+    "ile zajmuje map",
+    "memory limit c++",
+    "jak policzyc zuzycie pamieci",
+    "mle co zrobic"
+   ],
+   "summary": "Pamięć tablicy = liczba elementów × rozmiar typu: `int[10^7]` ≈ 40 MB, `long long[10^7]` ≈ 80 MB, `int[5000][5000]` ≈ 100 MB, `bool[10^8]` ≈ 100 MB (bitset: 12,5 MB). `map`/`set` zużywają kilkadziesiąt bajtów na element.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Struktura",
+      "Rozmiar",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`int a[1000000]`",
+       "≈ 4 MB",
+       "4 B na element"
+      ],
+      [
+       "`int a[10000000]`",
+       "≈ 40 MB",
+       ""
+      ],
+      [
+       "`long long a[10000000]`",
+       "≈ 80 MB",
+       "8 B na element"
+      ],
+      [
+       "`int a[5000][5000]`",
+       "≈ 100 MB",
+       "25·10^6 elementów"
+      ],
+      [
+       "`bool a[100000000]`",
+       "≈ 100 MB",
+       "1 B na element"
+      ],
+      [
+       "`bitset<100000000>` / `vector<bool>`",
+       "≈ 12,5 MB",
+       "1 bit na element"
+      ],
+      [
+       "`vector<int> v(n)`",
+       "4n B + 24 B",
+       "przy `push_back` chwilowo do ~2× więcej"
+      ],
+      [
+       "`vector<vector<int>>` z 10^6 małymi wektorami",
+       "+ ≥ 24 MB narzutu",
+       "plus narzut alokatora na każdy wektor"
+      ],
+      [
+       "`set<int>` / `map<int,int>` z 10^6 el.",
+       "≈ 40–50 MB",
+       "węzeł drzewa ≈ 32 B + dane"
+      ],
+      [
+       "`pair<int,int>`",
+       "8 B",
+       "`pair<long long,int>` = 16 B (wyrównanie)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Liczenie w kodzie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    const long long N = 10000000;\n    cout << N * sizeof(int) / (1024.0 * 1024) << \" MB dla int[N]\\n\";          // ~38.1\n    cout << N * sizeof(long long) / (1024.0 * 1024) << \" MB dla long long[N]\\n\"; // ~76.3\n    cout << sizeof(pair<int,int>) << ' ' << sizeof(pair<long long,int>) << '\\n'; // 8 16\n}"
+    },
+    {
+     "type": "tip",
+     "md": "1 MB w limitach zwykle oznacza 2^20 B (1 048 576 B), więc 10^7 `int` to dokładnie ~38,1 MB. Zostaw zapas — do limitu\nliczy się cała pamięć procesu: stos, sterta, biblioteki."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "ile pamieci zajmuje tablica",
+      "int[10^7] ile mb",
+      "ile mb ma tablica int",
+      "rozmiar tablicy w mb",
+      "how much memory array c++"
+     ],
+     "a": "Pomnóż liczbę elementów przez rozmiar typu: `int` = 4 B, `long long`/`double` = 8 B, `char`/`bool` = 1 B. `int[10^7]` =\n4·10^7 B ≈ 38 MB, `long long[10^7]` ≈ 76 MB. Tablica 2D `int[n][m]` = 4·n·m B — dla 5000×5000 to ~95 MB.",
+     "code": "long long elementy = 10000000;\ncout << elementy * sizeof(int) / 1048576.0 << \" MB\\n\";"
+    },
+    {
+     "q": [
+      "mle co zrobic",
+      "przekroczony limit pamieci jak naprawic",
+      "za duzo pamieci c++",
+      "jak zmniejszyc zuzycie pamieci"
+     ],
+     "a": "(1) Policz tablice — może wystarczy `int` zamiast `long long` albo `char` zamiast `int`. (2) DP: trzymaj tylko potrzebne\nwiersze (np. dwa zamiast n). (3) Zamień `vector<vector<>>` z wieloma małymi wektorami na jedną tablicę + indeksy.\n(4) `bitset`/`vector<bool>` dla flag. (5) Unikaj `map`/`set` z milionami elementów — posortowany `vector` + wyszukiwanie\nbinarne zużywa wielokrotnie mniej.",
+     "code": "int n = 5000;\nvector<long long> poprz(n + 1, 0), akt(n + 1, 0);   // DP na dwóch wierszach zamiast n x n\nfor (int i = 1; i <= n; i++) {\n    for (int j = 1; j <= n; j++) akt[j] = max(poprz[j], akt[j - 1]);\n    swap(poprz, akt);\n}"
+    },
+    {
+     "q": [
+      "ile zajmuje vector",
+      "pamiec vector",
+      "vector capacity pamiec",
+      "push_back zuzywa wiecej pamieci"
+     ],
+     "a": "Elementy: `n × sizeof(T)`, plus 24 B na sam obiekt. Przy `push_back` wektor rośnie skokowo (np. ×2) i podczas przenoszenia\nchwilowo trzyma starą i nową tablicę — szczyt pamięci bywa ~3× rozmiaru danych. Jeśli znasz rozmiar, użyj\n`vector<int> v(n)` albo `v.reserve(n)`.",
+     "code": "vector<int> v;\nv.reserve(1000000);\nfor (int i = 0; i < 1000000; i++) v.push_back(i);\ncout << v.capacity() << '\\n';"
+    },
+    {
+     "q": [
+      "ile zajmuje map",
+      "pamiec set map",
+      "map milion elementow pamiec",
+      "czy map zuzywa duzo pamieci"
+     ],
+     "a": "Każdy element `set`/`map` to osobny węzeł drzewa: ok. 32 B narzutu (wskaźniki, kolor) + dane, zaokrąglone przez\nalokator. `map<int,int>` z 10^6 elementów to rząd 40–50 MB. `unordered_map` też ma duży narzut. Jeśli klucze są\ngęste (0..n), użyj zwykłej tablicy."
+    },
+    {
+     "q": [
+      "vector<vector<int>> pamiec",
+      "lista sasiedztwa pamiec",
+      "graf 10^6 wierzcholkow pamiec"
+     ],
+     "a": "Każdy wewnętrzny `vector` to 24 B + osobna alokacja (narzut alokatora kilkanaście bajtów) + zapas pojemności. Dla 10^6\nwierzchołków to dziesiątki MB samego narzutu. Przy ciasnym limicie użyj reprezentacji „CSR”: tablica krawędzi posortowana\npo początku + tablica początków."
+    },
+    {
+     "q": [
+      "mb czy mib",
+      "1 mb ile bajtow",
+      "limit 256 mb ile intow"
+     ],
+     "a": "W limitach pamięci zwykle 1 MB = 2^20 B. 256 MB = 268 435 456 B, czyli teoretycznie ~67 mln `int` — ale część pamięci\nzajmuje proces (stos, biblioteki, bufory I/O), więc planuj z zapasem."
+    },
+    {
+     "q": [
+      "czy globalna tablica zuzywa pamiec",
+      "nieuzywana tablica a limit pamieci",
+      "duza tablica na zapas"
+     ],
+     "a": "To zależy od sposobu mierzenia na sprawdzarce: część systemów liczy tylko faktycznie używane strony pamięci, inne całą\nzarezerwowaną pamięć. Bezpiecznie: nie deklaruj tablic dużo większych, niż wynika z ograniczeń."
+    },
+    {
+     "q": [
+      "rekurencja a pamiec",
+      "stos liczy sie do pamieci",
+      "rekurencja mle"
+     ],
+     "a": "Tak — pamięć stosu (ramki rekurencji) wlicza się do zużycia procesu. DFS o głębokości 10^6 z kilkoma zmiennymi lokalnymi\nto dziesiątki MB."
+    },
+    {
+     "q": [
+      "sizeof struct",
+      "ile zajmuje struktura",
+      "wyrownanie struktury pamiec"
+     ],
+     "a": "`sizeof(T)` podaje rozmiar z wyrównaniem. Pola układaj od największych do najmniejszych, żeby zmniejszyć „dziury”:\n`struct {char a; long long b; char c;}` zajmuje 24 B, a `struct {long long b; char a, c;}` — 16 B.",
+     "code": "struct A { char a; long long b; char c; };\nstruct B { long long b; char a, c; };\ncout << sizeof(A) << ' ' << sizeof(B) << '\\n';   // 24 16"
+    }
+   ],
+   "related": [
+    "oi-complexity-limits",
+    "pit-stack-overflow",
+    "num-int-types",
+    "pit-vector-bool",
+    "cpp-c-arrays"
+   ]
+  }
+ ]
+}

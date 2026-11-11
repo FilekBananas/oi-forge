@@ -1,0 +1,55 @@
+/* (h) Objaśniacz kodu */
+.view[data-view="explain"] .ex-body { flex: 1; min-height: 0; display: flex; }
+.view[data-view="explain"] .ex-body > .split { flex: 1; min-width: 0; }
+.ex-col { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; height: 100%; }
+.ex-right { overflow: hidden; }
+.ex-editor { flex: 1; min-height: 260px; display: flex; flex-direction: column; }
+.ex-actions { flex: none; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ex-toolbar { flex: none; }
+.ex-toolbar .input { width: 220px; }
+.ex-out { overflow: auto; display: flex; flex-direction: column; gap: 12px; padding: 0 4px 6px 2px; transition: opacity .15s; }
+.ex-out:empty { display: none; }
+.ex-out.busy, .ex-out.stale { opacity: .55; }
+.ex-notes { overflow: auto; display: flex; flex-direction: column; gap: 6px; padding: 0 4px 16px 2px; flex: 1; min-height: 0; }
+.ex-notes:empty { display: none; }
+
+.ex-overview { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--radius-l); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  background: linear-gradient(180deg, var(--accent-bg), var(--panel) 85%); box-shadow: var(--shadow); font-size: 14.5px; line-height: 1.6; }
+.ex-ov-icon { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex: none; color: var(--accent-2);
+  background: var(--panel-2); border: 1px solid var(--border); }
+.ex-overview p { margin: 0; }
+.ex-algos { display: flex; flex-wrap: wrap; gap: 6px; }
+.ex-algo { display: inline-flex; align-items: center; gap: 8px; padding: 5px 6px 5px 11px; border-radius: 999px; border: 1px solid var(--border-2);
+  background: var(--panel-2); color: var(--text); font-size: 12.5px; cursor: pointer; transition: border-color .12s, background .12s; }
+.ex-algo:hover { border-color: var(--accent); background: var(--accent-bg); }
+.ex-conf { font-family: var(--mono); font-size: 11px; padding: 2px 7px; border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) calc(var(--c, .5) * 40%), var(--panel-3)); color: var(--text); }
+
+.ex-sec { border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); }
+.ex-sec > summary { display: flex; align-items: center; gap: 9px; padding: 11px 14px; cursor: pointer; font-weight: 600; font-size: 14px; list-style: none; }
+.ex-sec > summary::-webkit-details-marker { display: none; }
+.ex-sec > summary svg { color: var(--accent-2); flex: none; }
+.ex-sec[open] > summary { border-bottom: 1px solid var(--border); }
+.ex-sec-body { padding: 10px 16px 14px; font-size: 13.5px; line-height: 1.6; }
+.ex-sec-body h3 { font-size: 15px; margin: 14px 0 6px; }
+.ex-sec-body h3:first-child { margin-top: 2px; }
+.ex-sec-body table { font-size: 12.5px; }
+.ex-ln { font-family: var(--mono); font-size: 12px; color: var(--accent-2); text-decoration: none; border-bottom: 1px dashed var(--accent-2); }
+.ex-ln:hover { color: var(--text); }
+.ex-hint { display: flex; align-items: center; gap: 6px; }
+
+.ex-note { display: flex; gap: 10px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel); cursor: pointer;
+  transition: border-color .12s, background .12s; }
+.ex-note:hover { border-color: var(--border-2); background: var(--panel-2); }
+.ex-note.active { border-color: var(--accent); background: var(--accent-bg); }
+.ex-note-ln { flex: none; width: 34px; text-align: right; color: var(--muted); font-size: 12px; padding-top: 1px; }
+.ex-note-code { display: block; font-family: var(--mono); font-size: 12px; color: var(--text-2); white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+.ex-note-text { font-size: 13px; margin-top: 3px; }
+.ex-note-text p { margin: 0; }
+
+/* wyjście tekstowe poza panelem .output */
+.view[data-view="explain"] pre.out { margin: 0; background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 12px; font-family: var(--mono); font-size: 12.5px; white-space: pre-wrap; overflow: auto; max-height: 320px; }
+.view[data-view="explain"] pre.out.err { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 25%, var(--border)); }
+.view[data-view="explain"] .out-label { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  display: flex; align-items: center; gap: 6px; margin: 4px 0; }

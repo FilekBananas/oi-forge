@@ -1,0 +1,1 @@
+"""Biblioteki współdzielone OI Forge."""

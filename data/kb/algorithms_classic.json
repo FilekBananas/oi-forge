@@ -1,0 +1,2613 @@
+{
+ "chunk": "algorithms_classic",
+ "articles": [
+  {
+   "id": "tech-kadane",
+   "title": "Maksymalna suma spójnego podciągu — algorytm Kadane (z przedziałem, cyklicznie i 2D)",
+   "category": "Techniki",
+   "tags": [
+    "kadane",
+    "maksymalna suma",
+    "spójny podciąg",
+    "podtablica",
+    "maximum subarray",
+    "sumy prefiksowe",
+    "dp",
+    "podmacierz",
+    "cykliczny"
+   ],
+   "aliases": [
+    "kadane",
+    "algorytm kadane",
+    "algorytm kadanego",
+    "maksymalna suma podciągu",
+    "maksymalna suma podciagu",
+    "maksymalna suma spójnego podciągu",
+    "maksymalna suma spojnego podciagu",
+    "największa suma spójnego fragmentu",
+    "najwieksza suma przedzialu",
+    "maksymalna suma podtablicy",
+    "maximum subarray",
+    "max subarray sum",
+    "maksymalna suma fragmentu",
+    "kadane cykliczny",
+    "maksymalna suma prostokąta w macierzy"
+   ],
+   "summary": "Algorytm Kadane znajduje w O(n) spójny fragment tablicy o największej sumie: `cur = max(a[i], cur + a[i])`, wynik = maksimum z `cur`. Łatwo dodać odtworzenie przedziału, wersję cykliczną (całość − minimalny fragment) i 2D (para wierszy + Kadane po kolumnach, O(n²·m)).",
+   "complexity": "Kadane: O(n) czasu, O(1) pamięci; cykliczny: O(n); prostokąt w macierzy n×m: O(n²·m)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Idea (DP).** Niech `cur` = największa suma fragmentu **kończącego się** na pozycji `i`. Taki fragment albo zaczyna się\nw `i` (sam `a[i]`), albo przedłuża najlepszy fragment kończący się na `i−1`:\n`cur_i = max(a[i], cur_{i−1} + a[i])`. Odpowiedź = maksimum ze wszystkich `cur_i`. Intuicja: jeśli dotychczasowa suma\njest ujemna (≤ 0), to tylko przeszkadza — zaczynamy od nowa.\n\nTo samo przez sumy prefiksowe: suma `[l, r] = p[r] − p[l−1]`, więc dla każdego `r` odejmujemy **najmniejszy** wcześniejszy\nprefiks: `best = max(best, p[r] − min_{j<r} p[j])`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: maksymalna suma i przedział [l, r]",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    vector<long long> a(n);\n    for (auto& x : a) cin >> x;\n\n    long long best = LLONG_MIN, cur = 0;\n    int start = 0, bl = 0, br = 0;             // [bl, br] — najlepszy przedział\n    for (int i = 0; i < n; i++) {\n        if (cur <= 0) { cur = a[i]; start = i; } // poprzednia suma nie pomaga — zaczynamy od i\n        else cur += a[i];\n        if (cur > best) { best = cur; bl = start; br = i; }\n    }\n    cout << best << '\\n' << bl + 1 << ' ' << br + 1 << '\\n';   // numeracja od 1\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Jak",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "fragment niepusty (klasyka)",
+       "`best` startuje od `LLONG_MIN` → przy samych ujemnych wynik = największy element",
+       "O(n)"
+      ],
+      [
+       "dozwolony pusty fragment",
+       "`best` startuje od `0`",
+       "O(n)"
+      ],
+      [
+       "minimalna suma fragmentu",
+       "to samo z `min` (albo Kadane na `−a[i]`)",
+       "O(n)"
+      ],
+      [
+       "tablica cykliczna (okrąg)",
+       "`max(Kadane_max, suma − Kadane_min)`; gdy wszystkie < 0 → `Kadane_max`",
+       "O(n)"
+      ],
+      [
+       "długość ≥ k",
+       "sumy prefiksowe: `p[r] − min(p[0..r−k])`",
+       "O(n)"
+      ],
+      [
+       "długość ≤ k",
+       "`p[r] − min(p[r−k..r−1])` — minimum w oknie kolejką monotoniczną",
+       "O(n)"
+      ],
+      [
+       "prostokąt w macierzy n×m",
+       "para wierszy (góra, dół) + Kadane na sumach kolumn",
+       "O(n²·m)"
+      ],
+      [
+       "maksymalny iloczyn fragmentu",
+       "trzymaj naraz maksimum i minimum (ujemna × ujemna)",
+       "O(n)"
+      ],
+      [
+       "z zapytaniami o przedział i zmianami",
+       "drzewo przedziałowe z (sum, pref, suf, best)",
+       "O(log n)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersja cykliczna (fragment może przejść przez koniec tablicy)",
+     "code": "long long kadaneMax(const vector<long long>& a) {\n    long long best = LLONG_MIN, cur = 0;\n    for (long long x : a) { cur = max(x, cur + x); best = max(best, cur); }\n    return best;\n}\nlong long kadaneMin(const vector<long long>& a) {\n    long long best = LLONG_MAX, cur = 0;\n    for (long long x : a) { cur = min(x, cur + x); best = min(best, cur); }\n    return best;\n}\nlong long maxCircular(const vector<long long>& a) {\n    long long mx = kadaneMax(a);\n    if (mx < 0) return mx;                         // same ujemne: nie wolno wziąć „pustego środka”\n    long long total = accumulate(a.begin(), a.end(), 0LL);\n    return max(mx, total - kadaneMin(a));          // zawinięty fragment = całość − najgorszy środek\n}",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "2D: prostokąt o największej sumie, O(n²·m)",
+     "code": "long long maxRect(const vector<vector<long long>>& a) {\n    int n = a.size(), m = a[0].size();\n    long long best = LLONG_MIN;\n    for (int top = 0; top < n; top++) {\n        vector<long long> col(m, 0);               // col[j] = suma a[top..bot][j]\n        for (int bot = top; bot < n; bot++) {\n            for (int j = 0; j < m; j++) col[j] += a[bot][j];\n            long long cur = 0;\n            for (int j = 0; j < m; j++) {          // zwykły Kadane na col\n                cur = max(col[j], cur + col[j]);\n                best = max(best, cur);\n            }\n        }\n    }\n    return best;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "W 2D ustaw pętle po **mniejszym** wymiarze: jeśli `n > m`, transponuj macierz — wtedy O(min² · max). Dla 300×300 to\nok. 1,4·10^7 operacji."
+    },
+    {
+     "type": "warn",
+     "md": "Sumy przekraczają `int` już przy n = 10^5 i |a[i]| ≤ 10^5 (10^10) — licz w `long long`. Inicjalizacja `best = 0` po cichu\nzmienia zadanie na „pusty fragment dozwolony” i daje 0 zamiast np. −3 dla `[-5, -3, -7]`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "cur = max(a[i], cur + a[i])",
+     "desc": "przejście Kadane: najlepsza suma fragmentu kończącego się w i",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "maxCircular(a)",
+     "desc": "maksymalna suma fragmentu w tablicy cyklicznej",
+     "complexity": "O(n)",
+     "returns": "long long"
+    },
+    {
+     "sig": "maxRect(a)",
+     "desc": "maksymalna suma prostokąta w macierzy",
+     "complexity": "O(n²·m)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Start `best = 0` zamiast `LLONG_MIN` — przy samych ujemnych liczbach wypisze 0 (pusty fragment).",
+    "Wersja cykliczna bez sprawdzenia „wszystkie ujemne” — `suma − min` daje wtedy 0 (pusty fragment).",
+    "Suma w `int` — przepełnienie przy dużych n i wartościach.",
+    "„Podciąg” bez słowa „spójny” to inne zadanie: wtedy bierzesz wszystkie dodatnie liczby."
+   ],
+   "qa": [
+    {
+     "q": [
+      "maksymalna suma podciągu",
+      "maksymalna suma podciagu",
+      "kadane",
+      "algorytm kadane kod",
+      "max subarray sum",
+      "maximum subarray c++",
+      "najwieksza suma spojnego fragmentu",
+      "największa suma spójnego fragmentu tablicy"
+     ],
+     "a": "Algorytm Kadane, O(n): `cur = max(x, cur + x)` (najlepszy fragment kończący się tutaj), `best = max(best, cur)`.\nLicz w `long long`; `best` zacznij od `LLONG_MIN`, jeśli fragment musi być niepusty.",
+     "code": "vector<long long> a = {-2, 1, -3, 4, -1, 2, 1, -5, 4};\nlong long best = LLONG_MIN, cur = 0;\nfor (long long x : a) {\n    cur = max(x, cur + x);\n    best = max(best, cur);\n}\ncout << best << '\\n';   // 6  (fragment 4 -1 2 1)"
+    },
+    {
+     "q": [
+      "kadane z indeksami",
+      "maksymalna suma podciągu odtworzenie przedziału",
+      "kadane gdzie zaczyna sie i konczy",
+      "kadane l r",
+      "max subarray indices",
+      "ktory fragment ma najwieksza sume"
+     ],
+     "a": "Zapamiętuj początek bieżącego fragmentu (`start`) w chwili, gdy zaczynasz od nowa, i przy każdej poprawie `best`\nzapisz `(start, i)`.",
+     "code": "vector<long long> a = {-2, 1, -3, 4, -1, 2, 1, -5, 4};\nlong long best = LLONG_MIN, cur = 0;\nint start = 0, bl = 0, br = 0;\nfor (int i = 0; i < (int)a.size(); i++) {\n    if (cur <= 0) { cur = a[i]; start = i; } else cur += a[i];\n    if (cur > best) { best = cur; bl = start; br = i; }\n}\ncout << best << \" [\" << bl << \", \" << br << \"]\\n\";   // 6 [3, 6]"
+    },
+    {
+     "q": [
+      "kadane same ujemne liczby",
+      "maksymalna suma podciągu wszystkie ujemne",
+      "kadane wypisuje 0",
+      "kadane ujemne",
+      "max subarray all negative",
+      "pusty podciag dozwolony"
+     ],
+     "a": "Jeśli fragment musi być **niepusty**, zacznij od `best = LLONG_MIN` — wynik to wtedy największy (najmniej ujemny)\nelement. Jeśli treść pozwala na pusty fragment (suma 0), zacznij od `best = 0`. Przeczytaj treść, którą wersję chcą.",
+     "code": "vector<long long> a = {-5, -3, -7};\nlong long best = LLONG_MIN, cur = 0;\nfor (long long x : a) { cur = max(x, cur + x); best = max(best, cur); }\ncout << best << ' ' << max(0LL, best) << '\\n';   // -3 (niepusty)  0 (pusty dozwolony)"
+    },
+    {
+     "q": [
+      "maksymalna suma podciągu cykliczna",
+      "kadane cykliczny",
+      "kadane na okręgu",
+      "maksymalna suma na okregu",
+      "circular subarray max sum",
+      "tablica cykliczna maksymalna suma fragmentu"
+     ],
+     "a": "Fragment albo się **nie zawija** (zwykły Kadane), albo zawija — wtedy jest dopełnieniem fragmentu środkowego, więc\n`suma_całości − minimalny_fragment`. Odpowiedź = maksimum obu. Wyjątek: wszystkie liczby ujemne → zwykły Kadane\n(inaczej wyszłoby 0 = pusty fragment).",
+     "code": "vector<long long> a = {5, -3, 5};\nlong long mx = LLONG_MIN, mn = LLONG_MAX, c1 = 0, c2 = 0, total = 0;\nfor (long long x : a) {\n    c1 = max(x, c1 + x); mx = max(mx, c1);\n    c2 = min(x, c2 + x); mn = min(mn, c2);\n    total += x;\n}\nlong long ans = (mx < 0) ? mx : max(mx, total - mn);\ncout << ans << '\\n';   // 10 (5 + 5 przez koniec tablicy)"
+    },
+    {
+     "q": [
+      "maksymalna suma podmacierzy",
+      "kadane 2d",
+      "prostokąt o największej sumie",
+      "prostokat o najwiekszej sumie w macierzy",
+      "max sum rectangle",
+      "maximum sum submatrix",
+      "maksymalna suma prostokata"
+     ],
+     "a": "Ustal parę wierszy `top ≤ bot`, zsumuj kolumny między nimi do tablicy `col` i puść na niej Kadane. Razem O(n²·m)\n(n ≤ ~400). Pętlę po parach rób po krótszym wymiarze.",
+     "code": "vector<vector<long long>> a = {{1, -2, 3}, {-4, 5, 6}, {7, -8, 9}};\nint n = a.size(), m = a[0].size();\nlong long best = LLONG_MIN;\nfor (int top = 0; top < n; top++) {\n    vector<long long> col(m, 0);\n    for (int bot = top; bot < n; bot++) {\n        long long cur = 0;\n        for (int j = 0; j < m; j++) {\n            col[j] += a[bot][j];\n            cur = max(col[j], cur + col[j]);\n            best = max(best, cur);\n        }\n    }\n}\ncout << best << '\\n';   // 18"
+    },
+    {
+     "q": [
+      "kadane sumy prefiksowe",
+      "maksymalna suma fragmentu przez prefiksy",
+      "max subarray prefix sums",
+      "p[r] - min p[l]",
+      "kadane inaczej"
+     ],
+     "a": "Suma fragmentu `[l+1, r]` to `p[r] − p[l]`. Idąc w prawo, trzymaj minimum dotychczasowych prefiksów (łącznie z `p[0] = 0`)\n— wynik to `max(p[r] − minPref)`. To ten sam Kadane, ale łatwiej go rozszerzyć (np. o warunek na długość).",
+     "code": "vector<long long> a = {2, -5, 3, 4, -1, 2};\nlong long pref = 0, mn = 0, best = LLONG_MIN;\nfor (long long x : a) {\n    pref += x;\n    best = max(best, pref - mn);   // najlepszy fragment kończący się tutaj\n    mn = min(mn, pref);            // dopiero potem aktualizujemy minimum (fragment niepusty)\n}\ncout << best << '\\n';   // 8"
+    },
+    {
+     "q": [
+      "maksymalna suma fragmentu o długości co najmniej k",
+      "maksymalna suma podciagu dlugosc co najmniej k",
+      "max subarray sum length at least k",
+      "kadane minimalna dlugosc",
+      "fragment dlugosci >= k najwieksza suma"
+     ],
+     "a": "Prefiksy: dla każdego `r ≥ k` weź `p[r] − min(p[0..r−k])`. Minimum rośnie przyrostowo, więc O(n). Dla długości **co\nnajwyżej** k potrzebujesz minimum w oknie `p[r−k..r−1]` — kolejka monotoniczna.",
+     "code": "vector<long long> a = {1, -10, 3, 4, -1, 5};\nint n = a.size(), k = 3;\nvector<long long> p(n + 1, 0);\nfor (int i = 0; i < n; i++) p[i + 1] = p[i] + a[i];\nlong long best = LLONG_MIN, mn = LLONG_MAX;\nfor (int r = k; r <= n; r++) {\n    mn = min(mn, p[r - k]);        // początek l ≤ r − k\n    best = max(best, p[r] - mn);\n}\ncout << best << '\\n';   // 11 (3 4 -1 5)"
+    },
+    {
+     "q": [
+      "minimalna suma podciągu",
+      "minimalna suma spojnego fragmentu",
+      "min subarray sum",
+      "najmniejsza suma przedzialu",
+      "kadane minimum"
+     ],
+     "a": "Ten sam Kadane z `min` zamiast `max`: `cur = min(x, cur + x)`, `best = min(best, cur)`. Albo zaneguj tablicę i policz\nzwykły Kadane.",
+     "code": "vector<long long> a = {3, -4, 2, -3, -1, 7, -5};\nlong long best = LLONG_MAX, cur = 0;\nfor (long long x : a) { cur = min(x, cur + x); best = min(best, cur); }\ncout << best << '\\n';   // -6 (-4 2 -3 -1)"
+    },
+    {
+     "q": [
+      "maksymalny iloczyn podciągu",
+      "maksymalny iloczyn spojnego fragmentu",
+      "max product subarray",
+      "kadane iloczyn",
+      "najwiekszy iloczyn przedzialu"
+     ],
+     "a": "Trzymaj naraz największy i najmniejszy iloczyn fragmentu kończącego się w `i` — liczba ujemna zamienia je rolami.\nUwaga na przepełnienie: iloczyny rosną wykładniczo (przy dużych danych zwykle liczy się logarytmy lub modulo).",
+     "code": "vector<long long> a = {2, 3, -2, 4, -1};\nlong long mx = a[0], mn = a[0], best = a[0];\nfor (size_t i = 1; i < a.size(); i++) {\n    long long x = a[i];\n    if (x < 0) swap(mx, mn);\n    mx = max(x, mx * x);\n    mn = min(x, mn * x);\n    best = max(best, mx);\n}\ncout << best << '\\n';   // 48 (cały ciąg)"
+    },
+    {
+     "q": [
+      "maksymalny zysk z akcji",
+      "kup tanio sprzedaj drogo",
+      "best time to buy and sell stock",
+      "max a[j] - a[i] dla i < j",
+      "najwieksza roznica i<j"
+     ],
+     "a": "Szukasz `max(a[j] − a[i])` dla `i < j`: idź w prawo, trzymaj minimum dotychczasowych cen. To Kadane na różnicach\nsąsiednich elementów (suma różnic na fragmencie = `a[j] − a[i]`).",
+     "code": "vector<long long> cena = {7, 1, 5, 3, 6, 4};\nlong long mn = cena[0], best = 0;              // 0 = nie opłaca się handlować\nfor (long long c : cena) {\n    mn = min(mn, c);                           // najtańszy dzień do dziś\n    best = max(best, c - mn);\n}\ncout << best << '\\n';   // 5 (kup za 1, sprzedaj za 6)"
+    },
+    {
+     "q": [
+      "maksymalna suma podciągu niespójnego",
+      "podciag nie musi byc spojny maksymalna suma",
+      "max subsequence sum not contiguous",
+      "podciąg a spójny podciąg różnica"
+     ],
+     "a": "Gdy fragment **nie musi być spójny** (dowolny podciąg), weź wszystkie dodatnie liczby. Jeśli dodatnich brak (a podciąg\nmusi być niepusty) — największy element. Kadane jest potrzebny tylko dla fragmentów spójnych.",
+     "code": "vector<long long> a = {-2, 5, -1, 3, -4};\nlong long s = 0, mx = LLONG_MIN;\nfor (long long x : a) { if (x > 0) s += x; mx = max(mx, x); }\ncout << (mx > 0 ? s : mx) << '\\n';   // 8"
+    }
+   ],
+   "related": [
+    "ds-prefix-sums",
+    "ds-prefix-sums-2d",
+    "dp-intro",
+    "dp-prefix-opt",
+    "ds-monotonic-queue",
+    "ds-segment-tree",
+    "tech-sliding-window"
+   ]
+  },
+  {
+   "id": "tech-elementary-sorts",
+   "title": "Sortowania elementarne: bąbelkowe, przez wstawianie, przez wybór (i liczba zamian = inwersje)",
+   "category": "Techniki",
+   "tags": [
+    "sortowanie bąbelkowe",
+    "bubble sort",
+    "insertion sort",
+    "selection sort",
+    "sortowanie przez wstawianie",
+    "sortowanie przez wybór",
+    "inwersje",
+    "zamiany",
+    "O(n^2)",
+    "stabilność"
+   ],
+   "aliases": [
+    "sortowanie bąbelkowe",
+    "sortowanie babelkowe",
+    "bubble sort",
+    "bubblesort",
+    "insertion sort",
+    "sortowanie przez wstawianie",
+    "selection sort",
+    "sortowanie przez wybór",
+    "sortowanie przez wybor",
+    "sortowanie przez wybieranie",
+    "sortowania elementarne",
+    "proste sortowania",
+    "ile zamian w sortowaniu babelkowym",
+    "minimalna liczba zamian do posortowania"
+   ],
+   "summary": "Trzy proste sortowania O(n²): bąbelkowe (zamiany sąsiadów), przez wstawianie (wsuwanie elementu w posortowany prefiks) i przez wybór (minimum na początek). Liczba zamian w bąbelkowym = liczba przesunięć we wstawianiu = liczba inwersji; minimalna liczba dowolnych zamian = n − liczba cykli permutacji.",
+   "complexity": "bąbelkowe/wstawianie: O(n²), najlepszy przypadek O(n); wybór: zawsze Θ(n²) porównań, ≤ n−1 zamian",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Na zawodach do sortowania używasz `sort` (O(n log n)). Sortowania elementarne są ważne z innego powodu — **zadania\npytają o ich przebieg**: „ile zamian wykona bąbelkowe”, „ile przejść”, „minimalna liczba zamian sąsiednich/dowolnych”.\nOdpowiedzi to klasyczne fakty o inwersjach i cyklach permutacji."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: trzy sortowania + licznik zamian",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nlong long bubbleSort(vector<int>& a) {            // zwraca liczbę zamian\n    int n = a.size();\n    long long swaps = 0;\n    for (int i = 0; i < n - 1; i++) {\n        bool zmiana = false;\n        for (int j = 0; j < n - 1 - i; j++)       // największy „wypływa” na koniec\n            if (a[j] > a[j + 1]) { swap(a[j], a[j + 1]); swaps++; zmiana = true; }\n        if (!zmiana) break;                        // przejście bez zamian → posortowane\n    }\n    return swaps;\n}\n\nvoid insertionSort(vector<int>& a) {\n    for (int i = 1; i < (int)a.size(); i++) {\n        int x = a[i], j = i - 1;\n        while (j >= 0 && a[j] > x) { a[j + 1] = a[j]; j--; }   // przesuń większe w prawo\n        a[j + 1] = x;\n    }\n}\n\nvoid selectionSort(vector<int>& a) {\n    int n = a.size();\n    for (int i = 0; i < n - 1; i++) {\n        int mn = i;\n        for (int j = i + 1; j < n; j++) if (a[j] < a[mn]) mn = j;\n        swap(a[i], a[mn]);                          // co najwyżej n − 1 zamian\n    }\n}\n\nint main() {\n    vector<int> a = {5, 1, 4, 2, 8}, b = a, c = a;\n    cout << \"zamiany: \" << bubbleSort(a) << '\\n';   // 4 = liczba inwersji\n    insertionSort(b);\n    selectionSort(c);\n    for (int x : b) cout << x << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Algorytm",
+      "Porównania",
+      "Zamiany / przesunięcia",
+      "Najlepszy przypadek",
+      "Stabilny"
+     ],
+     "rows": [
+      [
+       "bąbelkowe",
+       "O(n²)",
+       "= liczba inwersji",
+       "O(n) (z flagą `zmiana`)",
+       "tak"
+      ],
+      [
+       "przez wstawianie",
+       "O(n + inwersje)",
+       "przesunięcia = liczba inwersji",
+       "O(n) — prawie posortowane",
+       "tak"
+      ],
+      [
+       "przez wybór",
+       "zawsze n(n−1)/2",
+       "≤ n − 1 zamian",
+       "Θ(n²)",
+       "nie"
+      ],
+      [
+       "`std::sort`",
+       "O(n log n)",
+       "—",
+       "O(n log n)",
+       "nie (`stable_sort` — tak)"
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Pytanie w zadaniu",
+      "Odpowiedź",
+      "Jak policzyć"
+     ],
+     "rows": [
+      [
+       "ile zamian wykona bąbelkowe / min. liczba zamian **sąsiednich**",
+       "liczba inwersji (par i<j, a[i]>a[j])",
+       "merge sort lub Fenwick, O(n log n)"
+      ],
+      [
+       "min. liczba zamian **dowolnych** dwóch elementów",
+       "n − liczba cykli permutacji",
+       "O(n log n) (kompresja) + O(n)"
+      ],
+      [
+       "min. liczba przeniesień elementu w dowolne miejsce",
+       "n − długość LIS (podciągu rosnącego)",
+       "O(n log n)"
+      ],
+      [
+       "ile przejść (z zamianami) wykona bąbelkowe",
+       "max po elementach: ile większych stoi przed nim",
+       "Fenwick, O(n log n)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Minimalna liczba dowolnych zamian = n − liczba cykli",
+     "code": "// p — permutacja liczb 0..n−1; element p[i] powinien trafić na pozycję p[i]\nint minSwaps(const vector<int>& p) {\n    int n = p.size(), cycles = 0;\n    vector<bool> vis(n, false);\n    for (int i = 0; i < n; i++) {\n        if (vis[i]) continue;\n        cycles++;\n        for (int j = i; !vis[j]; j = p[j]) vis[j] = true;   // obejdź cały cykl\n    }\n    return n - cycles;                                       // cykl długości L naprawiamy L − 1 zamianami\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Liczba zamian w bąbelkowym dochodzi do n(n−1)/2 ≈ 5·10^9 dla n = 10^5 — **nie symuluj**, licz inwersje w O(n log n)\n(merge sort albo Fenwick) i trzymaj wynik w `long long`."
+    },
+    {
+     "type": "warn",
+     "md": "Bąbelkowe i wstawianie są stabilne tylko z **ostrym** porównaniem (`a[j] > a[j+1]`). Z `>=` zamieniają równe elementy\n(niestabilne, a licznik zamian przestaje być liczbą inwersji). Przy `int n = a.size()` pętla `i < n − 1` jest bezpieczna;\nz `a.size() - 1` dla pustego wektora dostaniesz ogromną liczbę (unsigned)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bubbleSort(a)",
+     "desc": "sortowanie bąbelkowe zwracające liczbę zamian (= inwersji)",
+     "complexity": "O(n²)",
+     "returns": "long long"
+    },
+    {
+     "sig": "insertionSort(a)",
+     "desc": "sortowanie przez wstawianie (szybkie dla prawie posortowanych)",
+     "complexity": "O(n + inwersje)"
+    },
+    {
+     "sig": "selectionSort(a)",
+     "desc": "sortowanie przez wybór, ≤ n−1 zamian",
+     "complexity": "Θ(n²)"
+    },
+    {
+     "sig": "minSwaps(p)",
+     "desc": "minimalna liczba zamian dowolnych dwóch elementów permutacji",
+     "complexity": "O(n)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Symulowanie bąbelkowego dla n = 10^5 tylko po to, by policzyć zamiany — TLE; licz inwersje w O(n log n).",
+    "Mylenie zamian sąsiednich (inwersje) z dowolnymi (n − cykle).",
+    "`>=` zamiast `>` — sortowanie przestaje być stabilne i liczy zamiany równych elementów.",
+    "Licznik zamian w `int` — dla n = 10^5 może wynieść ~5·10^9."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sortowanie bąbelkowe",
+      "sortowanie babelkowe c++",
+      "bubble sort c++",
+      "bubblesort kod",
+      "jak napisac sortowanie babelkowe",
+      "sortowanie bombelkowe"
+     ],
+     "a": "Porównuj sąsiadów i zamieniaj, gdy są w złej kolejności; po każdym przejściu największy element „wypływa” na koniec.\nFlaga `zmiana` kończy pracę, gdy przejście nic nie zamieniło (O(n) dla posortowanej tablicy). Ogólnie O(n²).",
+     "code": "vector<int> a = {5, 1, 4, 2, 8};\nint n = a.size();\nfor (int i = 0; i < n - 1; i++) {\n    bool zmiana = false;\n    for (int j = 0; j < n - 1 - i; j++)\n        if (a[j] > a[j + 1]) { swap(a[j], a[j + 1]); zmiana = true; }\n    if (!zmiana) break;\n}\nfor (int x : a) cout << x << ' ';   // 1 2 4 5 8"
+    },
+    {
+     "q": [
+      "sortowanie przez wstawianie",
+      "insertion sort c++",
+      "insertion sort kod",
+      "sortowanie przez wstawianie c++",
+      "insertsort"
+     ],
+     "a": "Dla każdego `i` wsuń `a[i]` w posortowany prefiks `a[0..i−1]`, przesuwając większe elementy o jedno w prawo.\nO(n + liczba inwersji) — świetne dla prawie posortowanych danych i małych n (std::sort używa go dla krótkich fragmentów).",
+     "code": "vector<int> a = {5, 2, 4, 6, 1, 3};\nfor (int i = 1; i < (int)a.size(); i++) {\n    int x = a[i], j = i - 1;\n    while (j >= 0 && a[j] > x) { a[j + 1] = a[j]; j--; }\n    a[j + 1] = x;\n}\nfor (int x : a) cout << x << ' ';   // 1 2 3 4 5 6"
+    },
+    {
+     "q": [
+      "sortowanie przez wybór",
+      "sortowanie przez wybor",
+      "selection sort c++",
+      "sortowanie przez wybieranie",
+      "selection sort kod"
+     ],
+     "a": "Dla każdej pozycji `i` znajdź minimum w `a[i..n−1]` i zamień je z `a[i]`. Zawsze n(n−1)/2 porównań, ale najwyżej n − 1\nzamian (przydatne, gdy zamiana jest droga). Nie jest stabilne.",
+     "code": "vector<int> a = {64, 25, 12, 22, 11};\nint n = a.size();\nfor (int i = 0; i < n - 1; i++) {\n    int mn = i;\n    for (int j = i + 1; j < n; j++) if (a[j] < a[mn]) mn = j;\n    swap(a[i], a[mn]);\n}\nfor (int x : a) cout << x << ' ';   // 11 12 22 25 64"
+    },
+    {
+     "q": [
+      "ile zamian wykona sortowanie bąbelkowe",
+      "ile zamian w sortowaniu babelkowym",
+      "liczba zamian bubble sort",
+      "bubble sort number of swaps",
+      "minimalna liczba zamian sąsiednich",
+      "zamiany sasiednich elementow ile",
+      "liczba inwersji a sortowanie babelkowe"
+     ],
+     "a": "Każda zamiana sąsiadów usuwa dokładnie jedną inwersję, więc liczba zamian w bąbelkowym = **liczba inwersji** = minimalna\nliczba zamian sąsiednich. Dla dużych n licz inwersje w O(n log n) — Fenwick (poniżej) albo merge sort.",
+     "code": "vector<int> a = {3, 1, 2, 5, 4};            // wartości 1..n (inaczej najpierw kompresja)\nint n = a.size();\nvector<int> bit(n + 1, 0);\nlong long inv = 0;\nfor (int i = n - 1; i >= 0; i--) {\n    for (int x = a[i] - 1; x > 0; x -= x & -x) inv += bit[x];   // ile mniejszych stoi na prawo\n    for (int x = a[i]; x <= n; x += x & -x) bit[x]++;\n}\ncout << inv << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "minimalna liczba zamian do posortowania",
+      "minimalna liczba zamian dowolnych elementow",
+      "min swaps to sort array",
+      "ile zamian zeby posortowac permutacje",
+      "cykle permutacji zamiany"
+     ],
+     "a": "Gdy wolno zamieniać **dowolne** dwa elementy: odpowiedź = n − liczba cykli permutacji (cykl długości L wymaga L − 1\nzamian). Dla dowolnych (różnych) wartości najpierw ustal, na którą pozycję ma trafić każdy element (sortowanie indeksów).",
+     "code": "vector<int> a = {40, 10, 30, 20};\nint n = a.size();\nvector<int> idx(n), p(n);\niota(idx.begin(), idx.end(), 0);\nsort(idx.begin(), idx.end(), [&](int i, int j) { return a[i] < a[j]; });\nfor (int k = 0; k < n; k++) p[idx[k]] = k;   // element z pozycji idx[k] ma trafić na k\nvector<bool> vis(n, false);\nint cycles = 0;\nfor (int i = 0; i < n; i++) {\n    if (vis[i]) continue;\n    cycles++;\n    for (int j = i; !vis[j]; j = p[j]) vis[j] = true;\n}\ncout << n - cycles << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "ile przejść wykona sortowanie bąbelkowe",
+      "ile przejsc bubble sort",
+      "liczba faz sortowania babelkowego",
+      "bubble sort passes",
+      "ile razy przejdzie petla w babelkowym"
+     ],
+     "a": "W jednym przejściu każdy element, przed którym stoi jakiś większy, przesuwa się w lewo **o dokładnie 1**. Liczba przejść\nz zamianami = max po elementach z liczby **większych elementów stojących przed nim** (dla różnych wartości: max(i − pozycja_w_posortowanej)).\nWersja z flagą `zmiana` robi zwykle jeszcze 1 przejście kontrolne (bez zamian).",
+     "code": "vector<int> a = {4, 3, 2, 1, 5};             // różne wartości\nint n = a.size();\nvector<int> idx(n);\niota(idx.begin(), idx.end(), 0);\nstable_sort(idx.begin(), idx.end(), [&](int i, int j) { return a[i] < a[j]; });\nint passes = 0;\nfor (int k = 0; k < n; k++) passes = max(passes, idx[k] - k);   // o ile element musi przejść w lewo\ncout << passes << '\\n';   // 3 przejścia z zamianami (+1 kontrolne z flagą)"
+    },
+    {
+     "q": [
+      "które sortowanie jest stabilne",
+      "stabilne sortowanie co to",
+      "stable sort co znaczy",
+      "czy bubble sort jest stabilny",
+      "sortowanie stabilne a niestabilne"
+     ],
+     "a": "Stabilne = elementy równe zachowują kolejność z wejścia. Stabilne: bąbelkowe, wstawianie, merge sort, `stable_sort`,\nsortowanie przez zliczanie. Niestabilne: przez wybór, `sort` (introsort), kopiec. Ważne, gdy sortujesz rekordy po kolei\npo kilku kluczach.",
+     "code": "vector<pair<int, char>> v = {{2, 'a'}, {1, 'b'}, {2, 'c'}, {1, 'd'}};\nstable_sort(v.begin(), v.end(), [](auto& x, auto& y) { return x.first < y.first; });\nfor (auto [k, c] : v) cout << k << c << ' ';   // 1b 1d 2a 2c — kolejność równych zachowana"
+    },
+    {
+     "q": [
+      "minimalna liczba przeniesień żeby posortować",
+      "ile elementow przestawic zeby bylo posortowane",
+      "min moves sort insert anywhere",
+      "wyjmij element i wstaw gdzie indziej posortuj"
+     ],
+     "a": "Jeśli ruch = wyjmij element i wstaw w dowolne miejsce, to elementy, których nie ruszamy, muszą tworzyć podciąg rosnący.\nOdpowiedź = n − długość najdłuższego podciągu rosnącego (LIS, O(n log n)).",
+     "code": "vector<int> a = {3, 1, 2, 5, 4};\nvector<int> d;                                   // d[k] = najmniejszy koniec rosnącego podciągu długości k+1\nfor (int x : a) {\n    auto it = lower_bound(d.begin(), d.end(), x);\n    if (it == d.end()) d.push_back(x); else *it = x;\n}\ncout << a.size() - d.size() << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "dlaczego bubble sort jest wolny",
+      "sortowanie babelkowe tle",
+      "kiedy można użyć sortowania o(n^2)",
+      "bubble sort vs sort",
+      "jakie sortowanie wybrac na olimpiadzie"
+     ],
+     "a": "O(n²) to ~10^8 operacji już dla n ≈ 10^4 — dla n ≥ 10^5 dostaniesz TLE. Na zawodach do samego sortowania zawsze `sort`\n(O(n log n)) albo `stable_sort`; sortowania elementarne piszesz, gdy zadanie pyta o ich przebieg albo n jest malutkie.",
+     "code": "vector<int> a = {5, 3, 8, 1};\nsort(a.begin(), a.end());          // O(n log n) — tego używaj na zawodach\nfor (int x : a) cout << x << ' ';"
+    }
+   ],
+   "related": [
+    "stl-sort",
+    "tech-divide-and-conquer",
+    "ds-fenwick",
+    "dp-lis",
+    "tech-counting-sort",
+    "stl-swap"
+   ]
+  },
+  {
+   "id": "tech-counting-sort",
+   "title": "Sortowanie przez zliczanie i pozycyjne (radix sort) — sortowanie w O(n + K)",
+   "category": "Techniki",
+   "tags": [
+    "counting sort",
+    "sortowanie przez zliczanie",
+    "radix sort",
+    "sortowanie pozycyjne",
+    "kubełkowe",
+    "bucket sort",
+    "stabilne",
+    "O(n+K)",
+    "LSD"
+   ],
+   "aliases": [
+    "sortowanie przez zliczanie",
+    "counting sort",
+    "countsort",
+    "sortowanie przez zliczanie c++",
+    "radix sort",
+    "sortowanie pozycyjne",
+    "radix sort c++",
+    "sortowanie kubełkowe",
+    "sortowanie kubelkowe",
+    "bucket sort",
+    "sortowanie w czasie liniowym",
+    "szybsze od sort",
+    "sort liniowy"
+   ],
+   "summary": "Gdy wartości są małymi liczbami całkowitymi (0..K), zliczasz wystąpienia w tablicy `cnt` i wypisujesz po kolei — O(n + K). Wersja stabilna (sumy prefiksowe pozycji) sortuje rekordy po kluczu; radix sort (LSD) to kilka stabilnych zliczań po kolejnych „cyfrach” (np. bajtach) i sortuje dowolne liczby 32/64-bitowe w O(n).",
+   "complexity": "zliczanie: O(n + K) czasu i O(K) pamięci; radix sort 32-bit (4 × 8 bitów): O(4·(n + 256))",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`sort` dla 10^7 liczb to ok. 0,6–1 s. Jeśli wartości są małe (np. 0..10^6) albo trzeba wielokrotnie sortować po kluczu\nz małego zakresu, liczenie w tablicy jest prostsze i wyraźnie szybsze. Typowe sygnały: „oceny 1–6”, „wiek 0–150”,\n„litery a–z”, „n = 10^7, a_i ≤ 10^6”."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: najprostsze zliczanie (liczby 0..10^6)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nconst int MAXV = 1000000;\nint cnt[MAXV + 1];                                   // globalnie → wyzerowana\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    for (int i = 0; i < n; i++) { int x; cin >> x; cnt[x]++; }\n    for (int v = 0; v <= MAXV; v++)\n        for (int k = 0; k < cnt[v]; k++) cout << v << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Stabilne sortowanie rekordów po kluczu z [0, K)",
+     "code": "// sortuje pary (klucz, wartość) po kluczu, zachowując kolejność równych kluczy\nvector<pair<int, int>> countingSort(const vector<pair<int, int>>& a, int K) {\n    vector<int> pos(K + 1, 0);\n    for (auto& e : a) pos[e.first + 1]++;\n    for (int k = 0; k < K; k++) pos[k + 1] += pos[k];   // pos[k] = pierwsze miejsce dla klucza k\n    vector<pair<int, int>> out(a.size());\n    for (auto& e : a) out[pos[e.first]++] = e;           // w kolejności wejścia → stabilnie\n    return out;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: radix sort liczb int (także ujemnych)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// LSD radix sort: 4 stabilne zliczania po 8 bitów, od najmłodszego bajtu\nvoid radixSort(vector<uint32_t>& a) {\n    vector<uint32_t> buf(a.size());\n    for (int shift = 0; shift < 32; shift += 8) {\n        int cnt[257] = {0};\n        for (uint32_t x : a) cnt[((x >> shift) & 255) + 1]++;\n        for (int i = 0; i < 256; i++) cnt[i + 1] += cnt[i];\n        for (uint32_t x : a) buf[cnt[(x >> shift) & 255]++] = x;\n        a.swap(buf);                                        // wynik przebiegu wraca do a\n    }\n}\n\nint main() {\n    vector<int> v = {170, -45, 75, -90, 802, 24, 2, 66};\n    vector<uint32_t> u(v.size());\n    for (size_t i = 0; i < v.size(); i++) u[i] = (uint32_t)v[i] ^ 0x80000000u;  // ujemne przed dodatnimi\n    radixSort(u);\n    for (size_t i = 0; i < v.size(); i++) v[i] = (int)(u[i] ^ 0x80000000u);\n    for (int x : v) cout << x << ' ';                       // -90 -45 2 24 66 75 170 802\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Metoda",
+      "Złożoność",
+      "Kiedy"
+     ],
+     "rows": [
+      [
+       "`sort`",
+       "O(n log n)",
+       "domyślnie — prawie zawsze wystarcza"
+      ],
+      [
+       "zliczanie `cnt[x]++`",
+       "O(n + K)",
+       "same liczby z małego zakresu K ≤ ~10^7"
+      ],
+      [
+       "zliczanie stabilne (pozycje)",
+       "O(n + K)",
+       "rekordy (pary, struktury) po małym kluczu; krok tablicy sufiksowej"
+      ],
+      [
+       "radix sort LSD",
+       "O(d·(n + B))",
+       "bardzo dużo liczb 32/64-bit (n ≥ 10^7), zakres duży"
+      ],
+      [
+       "kubełkowe (bucket)",
+       "średnio O(n)",
+       "liczby rzeczywiste równomiernie rozłożone w [0, 1)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Ujemne liczby w zliczaniu: przesuń o stałą (`cnt[x + OFFSET]`). W radix sorcie wystarczy odwrócić bit znaku\n(`x ^ 0x80000000`) — wtedy porządek bez znaku zgadza się ze zwykłym porządkiem `int`."
+    },
+    {
+     "type": "warn",
+     "md": "Tablica `cnt` ma rozmiar **zakresu wartości**, nie n: dla a_i ≤ 10^9 to 4 GB — wtedy zliczanie odpada (użyj `sort`,\nradix sortu albo najpierw kompresji). Pętla wypisująca przechodzi cały zakres K, nawet gdy n jest małe — przy wielu\ntestach w jednym wejściu kosztuje to O(K) na test."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "countingSort(a, K)",
+     "desc": "stabilne sortowanie par po kluczu z [0, K)",
+     "complexity": "O(n + K)",
+     "returns": "vector<pair<int,int>>"
+    },
+    {
+     "sig": "radixSort(a)",
+     "desc": "sortowanie liczb 32-bitowych bez znaku w 4 przebiegach",
+     "complexity": "O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Tablica `cnt` wielkości 10^9 — przekroczenie pamięci; zliczanie tylko dla małego zakresu wartości.",
+    "Lokalna tablica `int cnt[1000001]` w funkcji — przepełnienie stosu; daj ją globalnie albo jako vector.",
+    "Ujemne wartości jako indeks tablicy — UB; dodaj przesunięcie.",
+    "Niestabilne zliczanie (wypisywanie samych wartości) nie nadaje się do sortowania rekordów ani do radix sortu."
+   ],
+   "qa": [
+    {
+     "q": [
+      "sortowanie przez zliczanie",
+      "counting sort c++",
+      "sortowanie przez zliczanie c++",
+      "count sort",
+      "jak posortowac przez zliczanie",
+      "sortowanie zliczanie kod"
+     ],
+     "a": "Zlicz wystąpienia `cnt[x]++`, potem przejdź po wartościach od najmniejszej i wypisz każdą `cnt[v]` razy. O(n + K),\ngdzie K to zakres wartości. Tablicę daj globalnie (zera, brak problemu ze stosem).",
+     "code": "vector<int> a = {3, 1, 4, 1, 5, 2, 3};\nconst int K = 10;\nvector<int> cnt(K, 0);\nfor (int x : a) cnt[x]++;\nvector<int> out;\nfor (int v = 0; v < K; v++)\n    for (int k = 0; k < cnt[v]; k++) out.push_back(v);\nfor (int x : out) cout << x << ' ';   // 1 1 2 3 3 4 5"
+    },
+    {
+     "q": [
+      "stabilne sortowanie przez zliczanie",
+      "counting sort stabilny",
+      "sortowanie par przez zliczanie",
+      "counting sort pairs by key",
+      "sortowanie struktur po kluczu w O(n)"
+     ],
+     "a": "Policz, ile jest każdego klucza, zamień liczności na **pozycje startowe** (sumy prefiksowe) i rozłóż rekordy w kolejności\nwejścia: `out[pos[klucz]++] = rekord`. Równe klucze zachowują kolejność — to podstawa radix sortu.",
+     "code": "vector<pair<int, char>> a = {{2, 'a'}, {0, 'b'}, {2, 'c'}, {1, 'd'}, {0, 'e'}};\nint K = 3;\nvector<int> pos(K + 1, 0);\nfor (auto& e : a) pos[e.first + 1]++;\nfor (int k = 0; k < K; k++) pos[k + 1] += pos[k];\nvector<pair<int, char>> out(a.size());\nfor (auto& e : a) out[pos[e.first]++] = e;\nfor (auto [k, c] : out) cout << k << c << ' ';   // 0b 0e 1d 2a 2c"
+    },
+    {
+     "q": [
+      "radix sort",
+      "radix sort c++",
+      "sortowanie pozycyjne",
+      "sortowanie pozycyjne c++",
+      "lsd radix sort",
+      "radixsort kod"
+     ],
+     "a": "Sortuj stabilnie po najmłodszej „cyfrze”, potem po kolejnej… aż do najstarszej (LSD). Dla `uint32_t` wygodnie wziąć\n4 bajty: 4 zliczania po 256 kubełków. Każdy przebieg musi być stabilny.",
+     "code": "void radixSort(vector<uint32_t>& a) {\n    vector<uint32_t> buf(a.size());\n    for (int shift = 0; shift < 32; shift += 8) {\n        int cnt[257] = {0};\n        for (uint32_t x : a) cnt[((x >> shift) & 255) + 1]++;\n        for (int i = 0; i < 256; i++) cnt[i + 1] += cnt[i];\n        for (uint32_t x : a) buf[cnt[(x >> shift) & 255]++] = x;\n        a.swap(buf);\n    }\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "counting sort ujemne liczby",
+      "sortowanie przez zliczanie liczby ujemne",
+      "radix sort ujemne",
+      "negative numbers counting sort",
+      "cnt z ujemnym indeksem"
+     ],
+     "a": "Przesuń wartości o stałą: `cnt[x + OFFSET]++`, przy wypisywaniu odejmij `OFFSET`. W radix sorcie na `uint32_t` odwróć\nbit znaku: `u = (uint32_t)x ^ 0x80000000u` — ujemne trafią przed dodatnie.",
+     "code": "vector<int> a = {3, -2, 0, -2, 5};\nconst int OFFSET = 1000;                      // wartości z [-1000, 1000]\nvector<int> cnt(2 * OFFSET + 1, 0);\nfor (int x : a) cnt[x + OFFSET]++;\nfor (int v = 0; v <= 2 * OFFSET; v++)\n    for (int k = 0; k < cnt[v]; k++) cout << v - OFFSET << ' ';   // -2 -2 0 3 5"
+    },
+    {
+     "q": [
+      "kiedy counting sort jest szybszy niż sort",
+      "counting sort czy sort",
+      "kiedy uzyc sortowania przez zliczanie",
+      "sort za wolny 10^7 liczb",
+      "jak posortowac 10^7 liczb szybko",
+      "sortowanie w czasie liniowym"
+     ],
+     "a": "Gdy wartości mieszczą się w małym zakresie (K ≲ 10^7) i jest ich dużo — wtedy O(n + K) wygrywa z O(n log n). Dla\n10^7 liczb `sort` to zwykle 0,6–1 s, zliczanie kilkadziesiąt ms (sporo czasu zjada samo wczytywanie — użyj szybkiego\nI/O). Przy dużym zakresie (np. 10^9) — radix sort lub zwykły `sort`.",
+     "code": "// n = 10^7 liczb z [0, 10^6]: zliczanie zamiast sort\nstatic int cnt[1000001];\nvector<int> a = {7, 3, 7, 1};\nfor (int x : a) cnt[x]++;\nint i = 0;\nfor (int v = 0; v <= 1000000; v++)\n    while (cnt[v]--) a[i++] = v;              // a jest posortowane\nfor (int x : a) cout << x << ' ';"
+    },
+    {
+     "q": [
+      "sortowanie liter w napisie",
+      "posortuj litery w stringu",
+      "sort string characters counting",
+      "sortowanie znakow alfabetycznie szybko"
+     ],
+     "a": "26 małych liter → `cnt[26]`, potem zbuduj napis litera po literze. O(n + 26) zamiast O(n log n).",
+     "code": "string s = \"olimpiada\";\nint cnt[26] = {0};\nfor (char c : s) cnt[c - 'a']++;\nstring t;\nfor (int c = 0; c < 26; c++) t += string(cnt[c], char('a' + c));\ncout << t << '\\n';   // aadiilmop"
+    },
+    {
+     "q": [
+      "sortowanie kubełkowe",
+      "sortowanie kubelkowe",
+      "bucket sort c++",
+      "bucket sort liczby rzeczywiste",
+      "sortowanie kubełkowe double"
+     ],
+     "a": "Liczby z [0, 1) rozrzuć do n kubełków (`int(x * n)`), posortuj każdy (są małe) i sklej. Średnio O(n) przy równomiernym\nrozkładzie, pesymistycznie O(n log n). Na zawodach rzadko potrzebne — `sort` na double zwykle wystarcza.",
+     "code": "vector<double> a = {0.42, 0.32, 0.23, 0.52, 0.25, 0.47};\nint n = a.size();\nvector<vector<double>> b(n);\nfor (double x : a) b[min(n - 1, int(x * n))].push_back(x);\na.clear();\nfor (auto& k : b) { sort(k.begin(), k.end()); a.insert(a.end(), k.begin(), k.end()); }\nfor (double x : a) cout << x << ' ';"
+    },
+    {
+     "q": [
+      "counting sort pamięć",
+      "za duzy zakres counting sort",
+      "counting sort 10^9",
+      "memory limit counting sort",
+      "cnt tablica za duza"
+     ],
+     "a": "`cnt` potrzebuje K komórek: dla K = 10^6 to 4 MB (OK), dla 10^9 — 4 GB (nie). Gdy zakres jest duży, ale różnych\nwartości mało — najpierw kompresja współrzędnych (która i tak sortuje) albo `map<int,int>` jako licznik; w praktyce\nzwykły `sort` jest wtedy najprostszy.",
+     "code": "vector<int> a = {1000000000, 5, 1000000000, 7};\nmap<int, int> cnt;                       // zakres 10^9, ale mało różnych wartości\nfor (int x : a) cnt[x]++;\nfor (auto [v, c] : cnt)\n    for (int k = 0; k < c; k++) cout << v << ' ';"
+    }
+   ],
+   "related": [
+    "stl-sort",
+    "tech-elementary-sorts",
+    "tech-coordinate-compression",
+    "str-suffix-array",
+    "str-basic-count-letters",
+    "io-custom-fast-read"
+   ]
+  },
+  {
+   "id": "tech-josephus",
+   "title": "Problem Józefa Flawiusza — kto zostanie w kole (J(n,k), wzór dla k = 2, kolejność eliminacji)",
+   "category": "Techniki",
+   "tags": [
+    "józef flawiusz",
+    "josephus",
+    "koło",
+    "eliminacja co k-tego",
+    "wyliczanka",
+    "rekurencja",
+    "ordered_set",
+    "fenwick",
+    "symulacja"
+   ],
+   "aliases": [
+    "józef flawiusz",
+    "jozef flawiusz",
+    "problem józefa",
+    "problem jozefa",
+    "problem józefa flawiusza",
+    "josephus",
+    "josephus problem",
+    "flawiusz",
+    "co k-ta osoba odpada",
+    "kto zostanie ostatni w kole",
+    "wyliczanka w kole",
+    "eliminacja co k-tego w kółku",
+    "kolo co k-ty wypada"
+   ],
+   "summary": "n osób stoi w kole, liczymy po k i co k-ta odpada. Ocalały (numeracja od 0): J(1) = 0, J(n) = (J(n−1) + k) mod n — O(n). Dla k = 2: n = 2^m + L → ocalały 2L + 1. Pełną kolejność eliminacji dla n ≈ 10^5–10^6 daje Fenwick/ordered_set w O(n log n), a dla n do 10^18 i małego k jest rekurencja O(k log n).",
+   "complexity": "ocalały: O(n); k = 2: O(1); kolejność eliminacji: O(n log n); n ≤ 10^18, małe k: O(k log n); kolejka: O(n·k)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Rekurencja.** Numerujmy osoby od 0. Pierwsza odpada osoba `(k−1) mod n`, a liczenie rusza od następnej, czyli od\npozycji `k mod n`. Zostaje koło `n−1` osób — to ten sam problem, tylko z numeracją przesuniętą o `k`. Stąd:\n`J(1) = 0`, `J(n) = (J(n−1) + k) mod n`. Wynik w numeracji od 1 to `J(n) + 1`.\n\n**k = 2.** Zapisz `n = 2^m + L` (0 ≤ L < 2^m). Ocalały (od 1) to `2L + 1` — czyli „przenieś najstarszy bit n na koniec”."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Metoda",
+      "Złożoność",
+      "Kiedy"
+     ],
+     "rows": [
+      [
+       "symulacja kolejką (`k−1` razy przełóż, 1 usuń)",
+       "O(n·k)",
+       "n·k ≤ ~10^8, brut do testów"
+      ],
+      [
+       "rekurencja J(n) = (J(n−1) + k) mod n",
+       "O(n)",
+       "tylko ocalały, n ≤ ~10^8"
+      ],
+      [
+       "wzór dla k = 2",
+       "O(1)",
+       "n dowolnie duże"
+      ],
+      [
+       "Fenwick / `ordered_set`: k-ty żyjący",
+       "O(n log n)",
+       "cała kolejka eliminacji, n ≤ 10^6"
+      ],
+      [
+       "rekurencja ze skokami o ⌊n/k⌋",
+       "O(k log n)",
+       "n ≤ 10^18, małe k"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: kolejność eliminacji (Fenwick, O(n log n))",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint n, LOG;\nvector<int> bit;\n\nvoid add(int i, int v) { for (; i <= n; i += i & -i) bit[i] += v; }\nint kth(int k) {                                 // najmniejsze i, dla którego suma [1..i] = k\n    int pos = 0;\n    for (int pw = LOG; pw > 0; pw >>= 1)\n        if (pos + pw <= n && bit[pos + pw] < k) { pos += pw; k -= bit[pos]; }\n    return pos + 1;\n}\n\nint main() {\n    long long k;\n    cin >> n >> k;\n    bit.assign(n + 1, 0);\n    LOG = 1;\n    while (LOG * 2 <= n) LOG *= 2;\n    for (int i = 1; i <= n; i++) add(i, 1);       // wszyscy żyją\n    long long pos = 0;                            // indeks (od 0) wśród żyjących, od którego liczymy\n    for (int left = n; left > 0; left--) {\n        pos = (pos + k - 1) % left;\n        int who = kth(pos + 1);\n        cout << who << (left > 1 ? ' ' : '\\n');   // ostatni wypisany = ocalały\n        add(who, -1);\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Ocalały: O(n) i wzór dla k = 2",
+     "code": "// numer ocalałego (1..n), co k-ta osoba odpada, liczymy od osoby nr 1\nlong long josephus(long long n, long long k) {\n    long long r = 0;                              // J(1) = 0 (numeracja od 0)\n    for (long long m = 2; m <= n; m++) r = (r + k) % m;\n    return r + 1;\n}\n\n// k = 2: n = 2^m + L  →  ocalały 2L + 1\nlong long josephus2(long long n) {\n    long long p = 1LL << __lg(n);                 // największa potęga dwójki ≤ n\n    return 2 * (n - p) + 1;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "n do 10^18, małe k: O(k log n)",
+     "code": "// numeracja od 0; w jednym „okrążeniu” odpada ⌊n/k⌋ osób naraz\nlong long josephusBig(long long n, long long k) {\n    if (n == 1) return 0;\n    if (k == 1) return n - 1;\n    if (k > n) return (josephusBig(n - 1, k) + k) % n;\n    long long cnt = n / k;\n    long long res = josephusBig(n - cnt, k);\n    res -= n % k;\n    if (res < 0) res += n;\n    else res += res / (k - 1);\n    return res;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Liczenie zaczyna się od osoby `s` zamiast 1? Problem jest „obrotowy”: ocalały = `(J(n) + s − 1) mod n + 1`. To samo\nz kolejnością eliminacji — dodaj przesunięcie modulo n."
+    },
+    {
+     "type": "warn",
+     "md": "Najczęstsze błędy: pomieszanie numeracji od 0 i od 1 (rekurencja daje wynik od 0!), `(r + k) % m` w `int` przy dużym k\noraz rekurencja `J(n)` napisana rekurencyjnie dla n = 10^6 — przepełnienie stosu. Pisz pętlę."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "josephus(n, k)",
+     "desc": "numer ocalałego (od 1)",
+     "complexity": "O(n)",
+     "returns": "long long"
+    },
+    {
+     "sig": "josephus2(n)",
+     "desc": "ocalały dla k = 2: 2·(n − 2^⌊log n⌋) + 1",
+     "complexity": "O(1)",
+     "returns": "long long"
+    },
+    {
+     "sig": "josephusBig(n, k)",
+     "desc": "ocalały (od 0) dla ogromnego n i małego k",
+     "complexity": "O(k log n)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Wynik rekurencji jest numerowany od 0 — dodaj 1 przed wypisaniem.",
+    "Rekurencyjna funkcja J(n) dla n = 10^6 — za głęboki stos; użyj pętli.",
+    "Symulacja `vector::erase` dla n = 10^5 to O(n²) — użyj Fenwicka albo `ordered_set`.",
+    "Przepełnienie `pos + k` w `int`, gdy k jest duże (np. 10^9)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "problem józefa flawiusza",
+      "problem jozefa flawiusza",
+      "josephus problem c++",
+      "kto zostanie ostatni w kole",
+      "co k-ta osoba odpada kto przezyje",
+      "józef flawiusz kod",
+      "jozef flawiusz"
+     ],
+     "a": "Rekurencja w pętli (numeracja od 0): `r = 0; for m = 2..n: r = (r + k) % m;` — ocalały to `r + 1`. O(n), więc n do\n~10^8. Gdy potrzebujesz całej kolejności eliminacji — Fenwick lub `ordered_set` (O(n log n)).",
+     "code": "long long n = 7, k = 3;\nlong long r = 0;\nfor (long long m = 2; m <= n; m++) r = (r + k) % m;\ncout << r + 1 << '\\n';   // 4"
+    },
+    {
+     "q": [
+      "wzór rekurencyjny józef flawiusz",
+      "j(n,k) = (j(n-1,k)+k) mod n",
+      "rekurencja jozef dlaczego dziala",
+      "josephus recurrence",
+      "skąd się bierze wzór na józefa"
+     ],
+     "a": "Po pierwszej eliminacji (osoba `(k−1) mod n`) liczenie zaczyna się od pozycji `k mod n` i zostaje `n−1` osób — ten sam\nproblem przesunięty o `k`. Pozycja ocalałego w mniejszym kole `J(n−1)` przekłada się na `(J(n−1) + k) mod n` w większym.\nBaza: `J(1) = 0`.",
+     "code": "// J(n) dla wszystkich n od 1 do N naraz (np. gdy jest wiele zapytań)\nint N = 10, k = 3;\nvector<int> J(N + 1);\nJ[1] = 0;\nfor (int m = 2; m <= N; m++) J[m] = (J[m - 1] + k) % m;\nfor (int m = 1; m <= N; m++) cout << J[m] + 1 << ' ';   // ocalały dla n = 1..10"
+    },
+    {
+     "q": [
+      "józef flawiusz k=2",
+      "jozef flawiusz co druga osoba",
+      "josephus k 2 formula",
+      "co drugi odpada wzor",
+      "józef flawiusz wzór potęga dwójki"
+     ],
+     "a": "Dla k = 2: zapisz `n = 2^m + L`, gdzie `2^m` to największa potęga dwójki ≤ n. Ocalały (od 1) = `2L + 1`.\nBinarnie: przenieś najstarszą jedynkę n na koniec (n = 1011₂ → 0111₂ = 7).",
+     "code": "long long n = 41;\nlong long p = 1LL << __lg(n);        // 32\ncout << 2 * (n - p) + 1 << '\\n';     // 19"
+    },
+    {
+     "q": [
+      "kolejność eliminacji józef",
+      "kolejnosc odpadania w kole",
+      "josephus elimination order",
+      "wypisz kolejnosc wypadania co k-tego",
+      "józef flawiusz n=10^5 szybko",
+      "jozef fenwick"
+     ],
+     "a": "Trzymaj pozycję `pos` wśród żyjących: `pos = (pos + k − 1) % żyjących`, odpada `pos`-ty żyjący (licząc od 0). Szukanie\nk-tego żyjącego: Fenwick ze schodzeniem po bitach albo `ordered_set::find_by_order`. Całość O(n log n).",
+     "code": "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace std;\nusing namespace __gnu_pbds;\ntypedef tree<int, null_type, less<int>, rb_tree_tag, tree_order_statistics_node_update> ordered_set;\n\nint main() {\n    long long n = 7, k = 3;\n    ordered_set s;\n    for (int i = 1; i <= n; i++) s.insert(i);\n    long long pos = 0;\n    while (!s.empty()) {\n        pos = (pos + k - 1) % (long long)s.size();\n        auto it = s.find_by_order(pos);\n        cout << *it << ' ';              // 3 6 2 7 5 1 4\n        s.erase(it);\n    }\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "józef flawiusz duże n",
+      "josephus n 10^18",
+      "jozef flawiusz n do 10^18 male k",
+      "josephus large n small k",
+      "józef flawiusz szybciej niż O(n)"
+     ],
+     "a": "Gdy k jest małe, w jednym okrążeniu odpada `⌊n/k⌋` osób naraz — rekurencja przeskakuje je hurtem i ma głębokość\nO(k log n). Wynik numerowany od 0. Dla k = 2 użyj po prostu wzoru 2L + 1.",
+     "code": "long long josephusBig(long long n, long long k) {     // wynik od 0\n    if (n == 1) return 0;\n    if (k == 1) return n - 1;\n    if (k > n) return (josephusBig(n - 1, k) + k) % n;\n    long long cnt = n / k;\n    long long res = josephusBig(n - cnt, k);\n    res -= n % k;\n    if (res < 0) res += n;\n    else res += res / (k - 1);\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "józef flawiusz symulacja kolejką",
+      "symulacja kola kolejka",
+      "josephus queue simulation",
+      "jozef brut",
+      "wyliczanka symulacja c++"
+     ],
+     "a": "Wrzuć 1..n do kolejki; k−1 razy przełóż osobę z przodu na koniec, k-tą usuń. O(n·k) — dobre dla małych danych i jako\nbrut do stress-testów szybszej wersji.",
+     "code": "int n = 7, k = 3;\nqueue<int> q;\nfor (int i = 1; i <= n; i++) q.push(i);\nwhile (q.size() > 1) {\n    for (int i = 0; i < k - 1; i++) { q.push(q.front()); q.pop(); }\n    cout << q.front() << ' ';        // odpada: 3 6 2 7 5 1\n    q.pop();\n}\ncout << \"\\nocalal: \" << q.front() << '\\n';   // 4"
+    },
+    {
+     "q": [
+      "józef flawiusz start od innej osoby",
+      "liczenie zaczyna się od osoby s",
+      "josephus start position",
+      "jozef od ktorej osoby liczymy przesuniecie"
+     ],
+     "a": "Koło jest symetryczne względem obrotu: policz ocalałego `J` (od 0) dla startu od osoby 1 i przesuń: `(J + s − 1) % n + 1`.",
+     "code": "long long n = 7, k = 3, s = 3;         // liczymy od osoby nr 3\nlong long r = 0;\nfor (long long m = 2; m <= n; m++) r = (r + k) % m;\ncout << (r + s - 1) % n + 1 << '\\n';   // 6"
+    },
+    {
+     "q": [
+      "kto odpadnie jako m-ty józef",
+      "m-ta eliminowana osoba",
+      "josephus m-th eliminated",
+      "ktora osoba wypadnie jako druga trzecia"
+     ],
+     "a": "Ta sama sztuczka co dla ocalałego: `f(n, 1) = (k − 1) mod n`, `f(n, m) = (f(n−1, m−1) + k) mod n` (od 0). Liczysz\nw pętli od koła rozmiaru `n−m+1` w górę — O(m).",
+     "code": "long long n = 7, k = 3, m = 4;          // kto odpada jako 4.?\nlong long r = (k - 1) % (n - m + 1);    // f(n − m + 1, 1)\nfor (long long sz = n - m + 2; sz <= n; sz++) r = (r + k) % sz;\ncout << r + 1 << '\\n';   // 7  (kolejność: 3 6 2 7 ...)"
+    },
+    {
+     "q": [
+      "józef flawiusz od 0 czy od 1",
+      "jozef wynik o jeden za duzo",
+      "josephus off by one",
+      "josephus 0-indexed"
+     ],
+     "a": "Wzór `J(n) = (J(n−1) + k) mod n` działa na numeracji **od 0** (`J(1) = 0`). Jeśli osoby są numerowane od 1, wypisz\n`J(n) + 1`. Porównaj z symulacją dla n ≤ 10 — najszybszy sposób na złapanie przesunięcia.",
+     "code": "long long n = 5, k = 2, r = 0;\nfor (long long m = 2; m <= n; m++) r = (r + k) % m;\ncout << \"od 0: \" << r << \", od 1: \" << r + 1 << '\\n';   // od 0: 2, od 1: 3"
+    }
+   ],
+   "related": [
+    "cpp-pbds-ordered-set",
+    "ds-fenwick",
+    "stl-queue",
+    "tech-simulation",
+    "stl-deque",
+    "stl-list"
+   ]
+  },
+  {
+   "id": "tech-hanoi",
+   "title": "Wieże Hanoi — rekurencja, 2^n − 1 ruchów i wypisywanie ruchów",
+   "category": "Techniki",
+   "tags": [
+    "wieże hanoi",
+    "hanoi",
+    "rekurencja",
+    "2^n - 1",
+    "krążki",
+    "słupki",
+    "tower of hanoi",
+    "frame-stewart"
+   ],
+   "aliases": [
+    "wieże hanoi",
+    "wieze hanoi",
+    "wieza hanoi",
+    "hanoi",
+    "tower of hanoi",
+    "towers of hanoi",
+    "hanoi c++",
+    "hanoi rekurencja",
+    "przekładanie krążków",
+    "przekladanie krazkow",
+    "ile ruchow hanoi",
+    "hanoi 2^n-1"
+   ],
+   "summary": "Aby przenieść n krążków ze słupka A na C: przenieś n−1 na B, największy na C, potem n−1 z B na C. Liczba ruchów 2^n − 1 jest minimalna. Krążek w ruchu m to `ctz(m) + 1`; da się też policzyć minimum ruchów z dowolnego ułożenia w O(n).",
+   "complexity": "wypisanie ruchów: O(2^n) (n ≤ ~20); liczba ruchów: O(1) lub O(log n) modulo; z dowolnego ułożenia: O(n)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Rekurencja.** `hanoi(n, A, C, B)`: jeśli n = 0 — nic; inaczej `hanoi(n−1, A, B, C)` (odsłaniamy największy krążek),\nruch `A → C`, `hanoi(n−1, B, C, A)`. Liczba ruchów spełnia `T(n) = 2T(n−1) + 1`, `T(0) = 0`, czyli `T(n) = 2^n − 1`.\nTo minimum: największy krążek musi się ruszyć choć raz, a wtedy pozostałe n−1 leżą na jednym słupku — przed i po."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: liczba ruchów i wszystkie ruchy",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvoid hanoi(int n, int from, int to, int via) {\n    if (n == 0) return;\n    hanoi(n - 1, from, via, to);              // n−1 mniejszych na słupek pomocniczy\n    cout << from << ' ' << to << '\\n';        // największy na miejsce docelowe\n    hanoi(n - 1, via, to, from);              // n−1 mniejszych na największy\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;                                 // n ≤ ~20 (2^20 ≈ 10^6 wierszy)\n    cout << (1LL << n) - 1 << '\\n';\n    hanoi(n, 1, 3, 2);\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Minimalna liczba ruchów",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "klasyczny, 3 słupki",
+       "2^n − 1",
+       "n = 64 → 2^64 − 1 nie mieści się w `long long` (użyj `unsigned long long`/`__int128`)"
+      ],
+      [
+       "ruchy tylko między sąsiednimi słupkami (1↔2↔3), z 1 na 3",
+       "3^n − 1",
+       "każdy krążek przechodzi przez środek"
+      ],
+      [
+       "4 słupki (Frame–Stewart)",
+       "1, 3, 5, 9, 13, 17, 25, 33, 41, 49 (n = 1..10)",
+       "`T(n) = min_k 2·T(k) + 2^(n−k) − 1`"
+      ],
+      [
+       "z dowolnego (poprawnego) ułożenia na słupek T",
+       "suma 2^(i−1) po krążkach „nie na miejscu”",
+       "zachłannie od największego, O(n)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Minimum ruchów z dowolnego ułożenia (słupki 0, 1, 2)",
+     "code": "// pos[i] — słupek krążka i (1 = najmniejszy, n = największy); ile ruchów, by zebrać wszystko na słupku T\nlong long fromConfig(const vector<int>& pos, int n, int T) {\n    long long moves = 0;\n    for (int i = n; i >= 1; i--) {\n        if (pos[i] != T) {\n            moves += 1LL << (i - 1);          // ruch krążka i + przeniesienie i−1 mniejszych na niego\n            T = 3 - pos[i] - T;               // mniejsze muszą się najpierw zebrać na trzecim słupku\n        }\n    }\n    return moves;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Iteracyjnie: w ruchu `m` (od 1) przesuwasz krążek nr `ctz(m) + 1` (`__builtin_ctzll(m) + 1`). Najmniejszy krążek\nrusza się co drugi ruch, zawsze „w tę samą stronę” po okręgu słupków; w ruchach parzystych wykonujesz jedyny dozwolony\nruch niedotyczący najmniejszego."
+    },
+    {
+     "type": "warn",
+     "md": "Nie wypisuj ruchów dla dużych n — 2^30 to ~10^9 wierszy. Jeśli zadanie pyta tylko o liczbę ruchów dla n do 10^18,\nlicz `2^n − 1` modulo (szybkie potęgowanie). Przy wypisywaniu milionów wierszy używaj `'\\n'`, nie `endl`."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "hanoi(n, from, to, via)",
+     "desc": "wypisuje 2^n − 1 ruchów przeniesienia n krążków",
+     "complexity": "O(2^n)"
+    },
+    {
+     "sig": "fromConfig(pos, n, T)",
+     "desc": "minimum ruchów z dowolnego ułożenia na słupek T",
+     "complexity": "O(n)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "`1 << n` w `int` dla n ≥ 31 — przepełnienie; użyj `1LL << n` (a dla n = 64 — `unsigned long long`/`__int128`).",
+    "Pomylenie kolejności argumentów (from, to, via) w wywołaniach rekurencyjnych — ruchy będą niepoprawne.",
+    "`endl` przy 10^6 wierszach — TLE."
+   ],
+   "qa": [
+    {
+     "q": [
+      "wieże hanoi",
+      "wieze hanoi c++",
+      "tower of hanoi c++",
+      "hanoi kod",
+      "hanoi rekurencja",
+      "wieza hanoi program",
+      "hanoj"
+     ],
+     "a": "Rekurencja: przenieś n−1 krążków na słupek pomocniczy, największy na docelowy, n−1 z pomocniczego na docelowy.",
+     "code": "void hanoi(int n, int from, int to, int via) {\n    if (n == 0) return;\n    hanoi(n - 1, from, via, to);\n    cout << from << \" -> \" << to << '\\n';\n    hanoi(n - 1, via, to, from);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile ruchów wieże hanoi",
+      "ile ruchow hanoi",
+      "hanoi 2^n-1 dlaczego",
+      "minimalna liczba ruchow hanoi",
+      "number of moves tower of hanoi",
+      "hanoi liczba ruchów wzór"
+     ],
+     "a": "`T(n) = 2T(n−1) + 1`, `T(0) = 0` ⇒ `T(n) = 2^n − 1`. To minimum: zanim największy krążek się ruszy, pozostałe n−1 muszą\nleżeć na trzecim słupku (≥ T(n−1) ruchów), potem znowu trzeba je na niego przenieść (≥ T(n−1)).",
+     "code": "int n = 10;\nlong long ruchy = (1LL << n) - 1;\ncout << ruchy << '\\n';   // 1023"
+    },
+    {
+     "q": [
+      "wypisz ruchy wieże hanoi",
+      "hanoi wypisanie ruchow",
+      "hanoi output moves",
+      "hanoi lista ruchow",
+      "hanoi ruchy kod"
+     ],
+     "a": "Najpierw liczba ruchów `(1LL << n) − 1`, potem rekurencja wypisująca pary „skąd dokąd”. Dla n = 20 to ~10^6 wierszy —\nszybkie I/O i `'\\n'`.",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nvoid hanoi(int n, int a, int c, int b) {\n    if (!n) return;\n    hanoi(n - 1, a, b, c);\n    cout << a << ' ' << c << '\\n';\n    hanoi(n - 1, b, c, a);\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n = 3;\n    cout << (1LL << n) - 1 << '\\n';   // 7\n    hanoi(n, 1, 3, 2);\n}"
+    },
+    {
+     "q": [
+      "hanoi iteracyjnie",
+      "hanoi bez rekurencji",
+      "iterative tower of hanoi",
+      "hanoi petla",
+      "hanoi binarnie"
+     ],
+     "a": "Ruch nr `m` (1..2^n−1) przenosi krążek `ctz(m) + 1` ze słupka `(m & (m−1)) % 3` na `((m | (m−1)) + 1) % 3` (słupki 0, 1, 2).\nWieża ląduje na słupku 2 dla n nieparzystego, a na 1 dla parzystego — wtedy zamień etykiety 1 ↔ 2.",
+     "code": "int n = 4;\nfor (long long m = 1; m < (1LL << n); m++) {\n    int from = (m & (m - 1)) % 3, to = ((m | (m - 1)) + 1) % 3;\n    if (n % 2 == 0) { if (from) from = 3 - from; if (to) to = 3 - to; }   // cel zawsze: słupek 2\n    cout << \"krazek \" << __builtin_ctzll(m) + 1 << \": \" << from << \" -> \" << to << '\\n';\n}"
+    },
+    {
+     "q": [
+      "który krążek w m-tym ruchu",
+      "ktory krazek przesuwamy w ruchu m hanoi",
+      "hanoi m-ty ruch",
+      "hanoi which disk moves",
+      "hanoi k-ty ruch"
+     ],
+     "a": "W ruchu `m` rusza krążek o numerze `(liczba zer na końcu m w zapisie binarnym) + 1`, czyli `__builtin_ctzll(m) + 1`.\nNajmniejszy krążek rusza się w ruchach nieparzystych, drugi co 4 ruchy (2, 6, 10…), itd.",
+     "code": "long long m = 12;                          // 1100₂\ncout << __builtin_ctzll(m) + 1 << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "hanoi z dowolnego ułożenia",
+      "hanoi dowolna konfiguracja ile ruchow",
+      "hanoi z danego stanu",
+      "minimalna liczba ruchow hanoi z ulozenia",
+      "hanoi arbitrary configuration"
+     ],
+     "a": "Idź od największego krążka. Jeśli leży na docelowym słupku T — zostaw. Jeśli nie, musi wykonać ruch na T, a wszystkie\nmniejsze muszą wtedy leżeć na trzecim słupku: dodaj `2^(i−1)` (ruch + przeniesienie i−1 mniejszych) i zmień cel dla\nmniejszych na `3 − pos[i] − T`. O(n).",
+     "code": "int n = 3, T = 2;\nvector<int> pos = {0, 1, 0, 2};          // pos[1..3]: krążek 1 na słupku 1, krążek 2 na 0, krążek 3 na 2\nlong long moves = 0;\nfor (int i = n; i >= 1; i--)\n    if (pos[i] != T) { moves += 1LL << (i - 1); T = 3 - pos[i] - T; }\ncout << moves << '\\n';   // 2: krążek 2 na słupek 2, potem krążek 1"
+    },
+    {
+     "q": [
+      "hanoi 64 krążki przepełnienie",
+      "hanoi duże n modulo",
+      "2^n - 1 modulo 10^9+7",
+      "hanoi n do 10^18",
+      "ile ruchow hanoi dla n=64"
+     ],
+     "a": "`(1LL << 63)` to już przepełnienie `long long`. Dla n ≤ 63 użyj `(1ULL << n) − 1`, dla n = 64 `~0ULL`, dla większych —\n`__int128` albo modulo: `(pow(2, n) − 1 + MOD) % MOD` szybkim potęgowaniem.",
+     "code": "const long long MOD = 1'000'000'007;\nlong long n = 1'000'000'000'000LL, b = 2, r = 1;\nfor (long long e = n; e > 0; e >>= 1, b = b * b % MOD)\n    if (e & 1) r = r * b % MOD;\ncout << (r - 1 + MOD) % MOD << '\\n';     // 2^n − 1 mod p"
+    },
+    {
+     "q": [
+      "hanoi 4 słupki",
+      "hanoi cztery slupki",
+      "frame stewart",
+      "tower of hanoi 4 pegs",
+      "hanoi z czterema wiezami"
+     ],
+     "a": "Dla 4 słupków algorytm Frame–Stewarta: przenieś k górnych krążków (4 słupkami) na pomocniczy, resztę n−k klasycznie\n3 słupkami (`2^(n−k) − 1`), potem k z powrotem: `T4(n) = min_k (2·T4(k) + 2^(n−k) − 1)`. O(n²).",
+     "code": "int N = 10;\nvector<long long> T4(N + 1, LLONG_MAX);\nT4[0] = 0;\nfor (int n = 1; n <= N; n++)\n    for (int k = 0; k < n; k++)\n        T4[n] = min(T4[n], 2 * T4[k] + (1LL << (n - k)) - 1);\nfor (int n = 1; n <= N; n++) cout << T4[n] << ' ';   // 1 3 5 9 13 17 25 33 41 49"
+    },
+    {
+     "q": [
+      "hanoi tylko sąsiednie słupki",
+      "hanoi ruchy tylko przez środkowy",
+      "hanoi adjacent pegs 3^n-1",
+      "hanoi nie wolno z 1 na 3"
+     ],
+     "a": "Jeśli wolno przekładać tylko między sąsiednimi słupkami (1↔2, 2↔3), przeniesienie z 1 na 3 wymaga `3^n − 1` ruchów:\n`T(n) = 3·T(n−1) + 2` (n−1 na 3, największy na 2, n−1 na 1, największy na 3, n−1 na 3).",
+     "code": "void hanoiAdj(int n, int from, int to) {          // from, to ∈ {1, 3}, środek = 2\n    if (n == 0) return;\n    hanoiAdj(n - 1, from, to);\n    cout << from << \" -> 2\\n\";\n    hanoiAdj(n - 1, to, from);\n    cout << \"2 -> \" << to << '\\n';\n    hanoiAdj(n - 1, from, to);\n}",
+     "code_scope": "global"
+    }
+   ],
+   "related": [
+    "tech-backtracking",
+    "math-fast-pow",
+    "num-int128",
+    "stl-builtin-bits",
+    "io-fast-io",
+    "tech-bit-tricks"
+   ]
+  },
+  {
+   "id": "tech-intervals",
+   "title": "Zadania na przedziałach: scalanie, wybór rozłącznych, pokrycie odcinka, punkty przebijające",
+   "category": "Techniki",
+   "tags": [
+    "przedziały",
+    "odcinki",
+    "scalanie przedziałów",
+    "merge intervals",
+    "activity selection",
+    "wybór zajęć",
+    "pokrycie odcinka",
+    "interval covering",
+    "punkty przebijające",
+    "zachłanny",
+    "sortowanie po końcu"
+   ],
+   "aliases": [
+    "zadania na przedziałach",
+    "zadania na przedzialach",
+    "przedziały",
+    "przedzialy",
+    "scalanie przedziałów",
+    "scalanie przedzialow",
+    "łączenie przedziałów",
+    "merge intervals",
+    "wybór zajęć",
+    "wybor zajec",
+    "activity selection",
+    "maksymalna liczba rozłącznych przedziałów",
+    "pokrycie odcinka przedziałami",
+    "minimalna liczba przedziałów pokrywających",
+    "punkty przebijające przedziały",
+    "interval scheduling",
+    "interval covering"
+   ],
+   "summary": "Cztery klasyki zachłanne po posortowaniu: scalanie (sort po początku, przedłużaj koniec), maksymalna liczba rozłącznych (sort po końcu, bierz pierwszy pasujący), minimalna liczba punktów przebijających (punkt na końcu nieprzebitego) i minimalne pokrycie odcinka (z zaczynających się ≤ cur bierz sięgający najdalej). Każdy O(n log n).",
+   "complexity": "wszystkie warianty: O(n log n) na sortowanie + O(n); wersja z wagami (DP + binsearch): O(n log n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Najpierw ustal **rodzaj przedziałów**: domknięte `[l, r]` (dzielą punkt, gdy `r1 = l2`) czy półotwarte `[l, r)`\n(np. czas zajęć — koniec o 10:00 i start o 10:00 nie kolidują). Od tego zależy, czy w warunkach jest `<` czy `<=`.\nWszystkie poniższe algorytmy są zachłanne — klucz sortowania to cała trudność."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zadanie",
+      "Sortuj po",
+      "Reguła",
+      "Wynik"
+     ],
+     "rows": [
+      [
+       "scal nachodzące przedziały",
+       "początku",
+       "jeśli `l ≤ koniec_ostatniego` → przedłuż, inaczej nowy",
+       "lista rozłącznych"
+      ],
+      [
+       "max. liczba parami rozłącznych (wybór zajęć)",
+       "**końcu**",
+       "bierz, jeśli `l > koniec_ostatniego_wziętego`",
+       "liczba"
+      ],
+      [
+       "min. liczba usunięć, by reszta była rozłączna",
+       "końcu",
+       "n − (max. liczba rozłącznych)",
+       "liczba"
+      ],
+      [
+       "min. liczba punktów przebijających wszystkie",
+       "końcu",
+       "nieprzebity → postaw punkt na jego końcu",
+       "= max. rozłącznych"
+      ],
+      [
+       "min. liczba przedziałów pokrywających [A, B]",
+       "początku",
+       "spośród `l ≤ cur` weź max `r`, przesuń `cur`",
+       "liczba lub −1"
+      ],
+      [
+       "max. suma wag rozłącznych",
+       "końcu",
+       "DP: `dp[i] = max(dp[i−1], w_i + dp[p(i)])`",
+       "suma"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: cztery klasyki (przedziały domknięte)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\ntypedef pair<long long, long long> P;              // przedział domknięty [l, r]\n\n// 1) scalanie nachodzących (touch = true łączy też stykające się [1,3] i [4,5] na liczbach całkowitych)\nvector<P> mergeIntervals(vector<P> v, bool touch = false) {\n    sort(v.begin(), v.end());\n    vector<P> res;\n    for (auto [l, r] : v) {\n        if (!res.empty() && l <= res.back().second + (touch ? 1 : 0))\n            res.back().second = max(res.back().second, r);\n        else\n            res.push_back({l, r});\n    }\n    return res;\n}\n\n// 2) maksymalna liczba parami rozłącznych (wybór zajęć): sortuj po KOŃCU\nint maxDisjoint(vector<P> v) {\n    sort(v.begin(), v.end(), [](const P& a, const P& b) { return a.second < b.second; });\n    int cnt = 0;\n    long long lastEnd = LLONG_MIN;\n    for (auto [l, r] : v)\n        if (l > lastEnd) { cnt++; lastEnd = r; }   // dla [l, r) byłoby l >= lastEnd\n    return cnt;\n}\n\n// 3) minimalna liczba punktów przebijających wszystkie przedziały\nvector<long long> stabbingPoints(vector<P> v) {\n    sort(v.begin(), v.end(), [](const P& a, const P& b) { return a.second < b.second; });\n    vector<long long> pts;\n    for (auto [l, r] : v)\n        if (pts.empty() || pts.back() < l) pts.push_back(r);   // nieprzebity → punkt na jego końcu\n    return pts;\n}\n\n// 4) minimalna liczba przedziałów pokrywających wszystkie liczby całkowite A..B; −1 = niemożliwe\nint minCover(vector<P> v, long long A, long long B) {\n    sort(v.begin(), v.end());                      // po początku\n    int cnt = 0;\n    size_t i = 0;\n    long long cur = A;                             // pierwszy jeszcze niepokryty punkt\n    while (cur <= B) {\n        long long best = cur - 1;\n        while (i < v.size() && v[i].first <= cur) best = max(best, v[i++].second);\n        if (best < cur) return -1;                 // nikt nie pokrywa punktu cur\n        cnt++;\n        cur = best + 1;\n    }\n    return cnt;\n}\n\nint main() {\n    vector<P> v = {{1, 3}, {2, 6}, {8, 10}, {9, 12}, {15, 18}};\n    for (auto [l, r] : mergeIntervals(v)) cout << \"[\" << l << \",\" << r << \"] \";\n    cout << '\\n';                                  // [1,6] [8,12] [15,18]\n    cout << maxDisjoint(v) << '\\n';                // 3\n    for (long long p : stabbingPoints(v)) cout << p << ' ';\n    cout << '\\n';                                  // 3 10 18\n    cout << minCover({{1, 4}, {2, 7}, {5, 10}, {8, 12}}, 1, 12) << '\\n';   // 3\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Dlaczego sort po końcu?** Przedział, który kończy się najwcześniej, zostawia najwięcej miejsca na resztę — każde\noptymalne rozwiązanie można tak zamienić, by go zawierało (dowód przez wymianę). Sortowanie po początku lub po długości\ndaje złe wyniki (kontrprzykład: `[1,10], [2,3], [4,5]`).\n\n**Dualność:** minimalna liczba punktów przebijających = maksymalna liczba parami rozłącznych przedziałów — ten sam\nalgorytm daje oba wyniki."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wersja z wagami: maksymalna suma wag rozłącznych (DP + binsearch)",
+     "code": "struct Iv { long long l, r, w; };                  // przedział domknięty [l, r] z wagą w\nlong long weightedSchedule(vector<Iv> v) {\n    sort(v.begin(), v.end(), [](const Iv& a, const Iv& b) { return a.r < b.r; });\n    int n = v.size();\n    vector<long long> ends(n), dp(n + 1, 0);       // dp[i] = najlepszy wynik z pierwszych i przedziałów\n    for (int i = 0; i < n; i++) ends[i] = v[i].r;\n    for (int i = 0; i < n; i++) {\n        int j = lower_bound(ends.begin(), ends.end(), v[i].l) - ends.begin();   // ile kończy się przed l\n        dp[i + 1] = max(dp[i], dp[j] + v[i].w);\n    }\n    return dp[n];\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "Pokrycie **ciągłego** odcinka [A, B] (liczby rzeczywiste) różni się jednym szczegółem: `cur = A`, w pętli `while (cur < B)`\nbierzesz max `r` spośród `l ≤ cur`; jeśli `best ≤ cur` → −1, inaczej `cur = best` (bez `+1`)."
+    },
+    {
+     "type": "warn",
+     "md": "Komparator po końcu musi być ostry (`a.second < b.second`) — `<=` łamie `sort`. Przy zapisie przedziałów w `int` i warunku\n`r + 1` uważaj na `INT_MAX`. Wczytuj tak, jak podaje treść: czasem jest „początek i długość”, a nie „początek i koniec”."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "mergeIntervals(v, touch)",
+     "desc": "scala nachodzące (opcjonalnie stykające się) przedziały",
+     "complexity": "O(n log n)",
+     "returns": "vector<P>"
+    },
+    {
+     "sig": "maxDisjoint(v)",
+     "desc": "maksymalna liczba parami rozłącznych przedziałów",
+     "complexity": "O(n log n)",
+     "returns": "int"
+    },
+    {
+     "sig": "stabbingPoints(v)",
+     "desc": "minimalny zbiór punktów przebijających wszystkie przedziały",
+     "complexity": "O(n log n)",
+     "returns": "vector<long long>"
+    },
+    {
+     "sig": "minCover(v, A, B)",
+     "desc": "minimalna liczba przedziałów pokrywających A..B (−1 gdy się nie da)",
+     "complexity": "O(n log n)",
+     "returns": "int"
+    },
+    {
+     "sig": "weightedSchedule(v)",
+     "desc": "maksymalna suma wag parami rozłącznych przedziałów",
+     "complexity": "O(n log n)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Sortowanie po początku przy wyborze zajęć — złe; sortuj po końcu.",
+    "Pomieszanie przedziałów domkniętych i półotwartych (`<` vs `<=` przy stykających się końcach).",
+    "Przy pokryciu odcinka: zapominanie o przypadku „dziura” (żaden przedział nie zaczyna się ≤ cur) → pętla nieskończona.",
+    "Scalanie bez wcześniejszego sortowania po początku."
+   ],
+   "qa": [
+    {
+     "q": [
+      "scalanie przedziałów",
+      "scalanie przedzialow",
+      "merge intervals c++",
+      "połącz nachodzące przedziały",
+      "polacz nakladajace sie przedzialy",
+      "laczenie przedzialow",
+      "suma przedziałów jako rozłączne"
+     ],
+     "a": "Posortuj po początku i idź po kolei: jeśli przedział zaczyna się nie później niż koniec ostatniego scalonego —\nprzedłuż koniec (`max`), w przeciwnym razie zacznij nowy. O(n log n).",
+     "code": "vector<pair<int, int>> v = {{1, 3}, {8, 10}, {2, 6}, {15, 18}};\nsort(v.begin(), v.end());\nvector<pair<int, int>> res;\nfor (auto [l, r] : v) {\n    if (!res.empty() && l <= res.back().second) res.back().second = max(res.back().second, r);\n    else res.push_back({l, r});\n}\nfor (auto [l, r] : res) cout << l << '-' << r << ' ';   // 1-6 8-10 15-18"
+    },
+    {
+     "q": [
+      "maksymalna liczba rozłącznych przedziałów",
+      "maksymalna liczba rozlacznych przedzialow",
+      "wybór zajęć",
+      "wybor zajec",
+      "activity selection c++",
+      "interval scheduling",
+      "ile maksymalnie spotkań w jednej sali",
+      "najwiecej nienachodzacych sie przedzialow"
+     ],
+     "a": "Sortuj po **końcu**; bierz przedział, jeśli zaczyna się po końcu ostatnio wziętego. Zachłanny wybór najwcześniej\nkończącego się jest optymalny (dowód przez wymianę). Dla półotwartych `[l, r)` warunek to `l >= lastEnd`.",
+     "code": "vector<pair<int, int>> v = {{1, 4}, {3, 5}, {0, 6}, {5, 7}, {8, 9}, {5, 9}};\nsort(v.begin(), v.end(), [](auto& a, auto& b) { return a.second < b.second; });\nint cnt = 0, lastEnd = INT_MIN;\nfor (auto [l, r] : v)\n    if (l > lastEnd) { cnt++; lastEnd = r; }\ncout << cnt << '\\n';   // 3: [1,4], [5,7], [8,9]"
+    },
+    {
+     "q": [
+      "minimalna liczba usunięć przedziałów żeby się nie nakładały",
+      "ile przedzialow usunac zeby byly rozlaczne",
+      "non overlapping intervals minimum removal",
+      "usun najmniej przedzialow"
+     ],
+     "a": "Odpowiedź = n − (maksymalna liczba parami rozłącznych). Policz wybór zajęć (sort po końcu) i odejmij od n.",
+     "code": "vector<pair<int, int>> v = {{1, 2}, {2, 3}, {3, 4}, {1, 3}};   // półotwarte [l, r)\nsort(v.begin(), v.end(), [](auto& a, auto& b) { return a.second < b.second; });\nint keep = 0, lastEnd = INT_MIN;\nfor (auto [l, r] : v)\n    if (l >= lastEnd) { keep++; lastEnd = r; }\ncout << (int)v.size() - keep << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "minimalna liczba punktów przebijających przedziały",
+      "punkty przebijajace przedzialy",
+      "przebicie przedziałów punktami",
+      "minimum number of arrows to burst balloons",
+      "stabbing points intervals",
+      "ile punktow zeby kazdy przedzial mial punkt"
+     ],
+     "a": "Sortuj po końcu. Gdy bieżący przedział nie zawiera ostatniego postawionego punktu (`ostatni < l`), postaw nowy punkt\nna **jego końcu** `r`. Liczba punktów = maksymalna liczba rozłącznych przedziałów.",
+     "code": "vector<pair<int, int>> v = {{10, 16}, {2, 8}, {1, 6}, {7, 12}};\nsort(v.begin(), v.end(), [](auto& a, auto& b) { return a.second < b.second; });\nvector<int> pts;\nfor (auto [l, r] : v)\n    if (pts.empty() || pts.back() < l) pts.push_back(r);\ncout << pts.size() << '\\n';   // 2 (punkty 6 i 12)"
+    },
+    {
+     "q": [
+      "minimalna liczba przedziałów pokrywających odcinek",
+      "pokrycie odcinka przedzialami minimalna liczba",
+      "interval covering",
+      "minimum intervals to cover segment",
+      "pokryj odcinek od a do b najmniejsza liczba",
+      "video stitching",
+      "zmiany pracownikow pokrycie calego dnia"
+     ],
+     "a": "Sortuj po początku. `cur` = pierwszy niepokryty punkt. Spośród przedziałów z `l ≤ cur` wybierz ten z największym `r`;\njeśli `r < cur` — dziura, odpowiedź −1. Potem `cur = r + 1` (dla liczb całkowitych) i powtarzaj. O(n log n).",
+     "code": "vector<pair<int, int>> v = {{1, 4}, {2, 7}, {5, 10}, {8, 12}};\nint A = 1, B = 12, cnt = 0;\nsort(v.begin(), v.end());\nsize_t i = 0;\nlong long cur = A;\nwhile (cur <= B) {\n    long long best = cur - 1;\n    while (i < v.size() && v[i].first <= cur) best = max<long long>(best, v[i++].second);\n    if (best < cur) { cnt = -1; break; }\n    cnt++;\n    cur = best + 1;\n}\ncout << cnt << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "przedziały stykające się końcami",
+      "czy [1,3] i [3,5] się przecinają",
+      "przedzialy domkniete czy polotwarte",
+      "closed vs half open intervals",
+      "czy koniec rowny poczatkowi to kolizja"
+     ],
+     "a": "Dla domkniętych `[1,3]` i `[3,5]` mają wspólny punkt 3 → kolidują (warunek rozłączności `l2 > r1`). Dla półotwartych\n`[1,3)` i `[3,5)` — nie (`l2 >= r1`). Na liczbach całkowitych `[1,3]` i `[4,5]` są rozłączne, ale przy scalaniu „pokrytych\npól” zwykle chcesz je połączyć (`l <= r + 1`).",
+     "code": "auto przecinaja = [](long long l1, long long r1, long long l2, long long r2) {\n    return max(l1, l2) <= min(r1, r2);         // domknięte; dla [l, r) użyj <\n};\ncout << przecinaja(1, 3, 3, 5) << ' ' << przecinaja(1, 3, 4, 5) << '\\n';   // 1 0"
+    },
+    {
+     "q": [
+      "przecięcie dwóch przedziałów",
+      "przeciecie przedzialow",
+      "intersection of two intervals",
+      "czesc wspolna przedzialow",
+      "czy dwa przedzialy sie nakladaja"
+     ],
+     "a": "Część wspólna `[l1, r1]` i `[l2, r2]` to `[max(l1, l2), min(r1, r2)]` — niepusta, gdy `max(l1,l2) ≤ min(r1,r2)`.\nDla wielu przedziałów naraz: `[max wszystkich l, min wszystkich r]`. Długość części wspólnej: `max(0, min(r) − max(l))`.",
+     "code": "long long l1 = 2, r1 = 8, l2 = 5, r2 = 12;\nlong long L = max(l1, l2), R = min(r1, r2);\nif (L <= R) cout << \"[\" << L << \", \" << R << \"]\\n\";   // [5, 8]\nelse cout << \"rozlaczne\\n\";"
+    },
+    {
+     "q": [
+      "przedziały z wagami maksymalna suma",
+      "weighted interval scheduling",
+      "wybor zajec z zyskiem",
+      "rozłączne przedziały maksymalny zysk",
+      "przedzialy z wartoscia dp"
+     ],
+     "a": "Zachłanny tu nie działa — DP. Sortuj po końcu; `dp[i] = max(dp[i−1], w_i + dp[j])`, gdzie `j` = liczba przedziałów\nkończących się przed `l_i` (binsearch po końcach). O(n log n).",
+     "code": "struct Iv { long long l, r, w; };\nlong long weightedSchedule(vector<Iv> v) {\n    sort(v.begin(), v.end(), [](const Iv& a, const Iv& b) { return a.r < b.r; });\n    int n = v.size();\n    vector<long long> ends(n), dp(n + 1, 0);\n    for (int i = 0; i < n; i++) ends[i] = v[i].r;\n    for (int i = 0; i < n; i++) {\n        int j = lower_bound(ends.begin(), ends.end(), v[i].l) - ends.begin();\n        dp[i + 1] = max(dp[i], dp[j] + v[i].w);\n    }\n    return dp[n];\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "czy przedział zawiera się w innym",
+      "przedzial zawarty w innym",
+      "nested intervals",
+      "ktore przedzialy sa zawarte w innych"
+     ],
+     "a": "Sortuj po początku rosnąco, a przy równych początkach po końcu **malejąco**. Przedział jest zawarty w którymś wcześniejszym,\ngdy jego koniec ≤ maksimum dotychczasowych końców. O(n log n).",
+     "code": "vector<pair<int, int>> v = {{1, 6}, {2, 4}, {3, 8}, {5, 6}};\nsort(v.begin(), v.end(), [](auto& a, auto& b) {\n    return a.first != b.first ? a.first < b.first : a.second > b.second;\n});\nint maxR = INT_MIN;\nfor (auto [l, r] : v) {\n    if (r <= maxR) cout << \"[\" << l << \",\" << r << \"] zawarty\\n\";   // [2,4] i [5,6]\n    maxR = max(maxR, r);\n}"
+    },
+    {
+     "q": [
+      "ile przedziałów nakłada się naraz",
+      "minimalna liczba sal na spotkania",
+      "maksymalne pokrycie punktu przedzialami",
+      "meeting rooms ii"
+     ],
+     "a": "To zadanie na **zamiatanie**: zdarzenia `(l, +1)` i `(r, −1)`, posortuj i śledź licznik — maksimum to odpowiedź (i zarazem\nminimalna liczba sal). Szczegóły w artykule o zamiataniu.",
+     "code": "vector<pair<int, int>> v = {{0, 30}, {5, 10}, {15, 20}};   // półotwarte [l, r)\nvector<pair<int, int>> ev;\nfor (auto [l, r] : v) { ev.push_back({l, +1}); ev.push_back({r, -1}); }\nsort(ev.begin(), ev.end());            // przy remisie −1 przed +1: koniec zwalnia salę\nint cur = 0, best = 0;\nfor (auto [x, d] : ev) { cur += d; best = max(best, cur); }\ncout << best << '\\n';   // 2"
+    }
+   ],
+   "related": [
+    "tech-greedy",
+    "tech-sweep-line",
+    "stl-sort",
+    "tech-binary-search",
+    "dp-intro",
+    "ds-difference-array"
+   ]
+  },
+  {
+   "id": "tech-median-stream",
+   "title": "Mediana na bieżąco — dwa kopce (oraz k-ty element online i mediana w oknie)",
+   "category": "Techniki",
+   "tags": [
+    "mediana",
+    "running median",
+    "dwa kopce",
+    "two heaps",
+    "priority_queue",
+    "multiset",
+    "k-ty element",
+    "strumień",
+    "online",
+    "mediana w oknie"
+   ],
+   "aliases": [
+    "mediana na bieżąco",
+    "mediana na biezaco",
+    "mediana strumienia",
+    "running median",
+    "median of stream",
+    "dwa kopce mediana",
+    "mediana dwa kopce",
+    "two heaps median",
+    "mediana online",
+    "mediana dynamiczna",
+    "mediana po każdym elemencie",
+    "mediana w oknie przesuwnym",
+    "k-ty najmniejszy online",
+    "k-ty element online",
+    "sliding window median"
+   ],
+   "summary": "Mniejszą połowę trzymaj w max-kopcu `lo`, większą w min-kopcu `hi`, z `|lo| = |hi|` lub `|hi| + 1` — mediana to `lo.top()`, dodanie O(log n). Z usuwaniem (np. okno przesuwne) zamień kopce na dwa `multiset`. K-ty najmniejszy dla stałego k: max-kopiec rozmiaru k; dla dowolnego k: `ordered_set` albo Fenwick po wartościach.",
+   "complexity": "dodanie: O(log n), mediana: O(1); z usuwaniem (multisety): O(log n); okno długości k: O(n log k); k-ty dla dowolnego k: O(log n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Niezmiennik.** `lo` (max-kopiec) zawiera mniejszą połowę elementów, `hi` (min-kopiec) — większą; każdy element `lo`\n≤ każdy element `hi`, a rozmiary różnią się co najwyżej o 1 (`lo` może mieć o jeden więcej). Wtedy:\n- nieparzysta liczba elementów → mediana = `lo.top()`,\n- parzysta → dolna mediana `lo.top()`, górna `hi.top()`, średnia `(lo.top() + hi.top()) / 2.0`.\n\nNowy element wkładasz do `lo`, jeśli `x ≤ lo.top()`, inaczej do `hi`, a potem przerzucasz jeden szczyt, by przywrócić\nrozmiary."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: mediana po każdym wczytanym elemencie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\npriority_queue<int> lo;                                 // mniejsza połowa (max na górze)\npriority_queue<int, vector<int>, greater<int>> hi;      // większa połowa (min na górze)\n\nvoid add(int x) {\n    if (lo.empty() || x <= lo.top()) lo.push(x);\n    else hi.push(x);\n    // równoważenie: |lo| = |hi| albo |hi| + 1\n    if (lo.size() > hi.size() + 1) { hi.push(lo.top()); lo.pop(); }\n    else if (hi.size() > lo.size()) { lo.push(hi.top()); hi.pop(); }\n}\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    cin >> n;\n    for (int i = 0; i < n; i++) {\n        int x;\n        cin >> x;\n        add(x);\n        cout << lo.top() << '\\n';                       // dolna mediana\n    }\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zadanie",
+      "Struktura",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "mediana przy samym dodawaniu",
+       "dwa kopce (`priority_queue`)",
+       "O(log n) / O(1)"
+      ],
+      [
+       "mediana z usuwaniem dowolnych elementów",
+       "dwa `multiset` albo `ordered_set`",
+       "O(log n)"
+      ],
+      [
+       "mediana każdego okna długości k",
+       "dwa `multiset` (wstaw nowy, usuń stary)",
+       "O(n log k)"
+      ],
+      [
+       "k-ty najmniejszy w strumieniu, stałe k",
+       "max-kopiec rozmiaru k",
+       "O(log k)"
+      ],
+      [
+       "k-ty najmniejszy dla dowolnego k (z usuwaniem)",
+       "`ordered_set` / Fenwick po wartościach",
+       "O(log n)"
+      ],
+      [
+       "mediana statycznej tablicy",
+       "`nth_element`",
+       "O(n)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Mediana z usuwaniem: dwa multisety",
+     "code": "// L — mniejsza połowa, R — większa, |L| = |R| lub |R| + 1; mediana = max(L)\nstruct MedianSet {\n    multiset<long long> L, R;\n    void fix() {\n        if (L.size() > R.size() + 1) { R.insert(*L.rbegin()); L.erase(prev(L.end())); }\n        else if (R.size() > L.size()) { L.insert(*R.begin()); R.erase(R.begin()); }\n    }\n    void insert(long long x) {\n        if (L.empty() || x <= *L.rbegin()) L.insert(x); else R.insert(x);\n        fix();\n    }\n    void erase(long long x) {                            // x musi być w zbiorze\n        auto it = L.find(x);\n        if (it != L.end()) L.erase(it); else R.erase(R.find(x));\n        fix();\n    }\n    long long median() const { return *L.rbegin(); }     // dolna mediana (zbiór niepusty)\n};",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "K-ty najmniejszy dla dowolnego k: Fenwick po wartościach",
+     "code": "// wartości 1..MAXV (albo po kompresji): wstaw/usuń i „k-ty najmniejszy” w O(log MAXV)\nconst int MAXV = 1 << 20;\nint fw[MAXV + 1];\nvoid upd(int x, int d) { for (; x <= MAXV; x += x & -x) fw[x] += d; }\nint kth(int k) {                                         // k-ta najmniejsza wartość (k od 1)\n    int pos = 0;\n    for (int pw = MAXV; pw > 0; pw >>= 1)\n        if (pos + pw <= MAXV && fw[pos + pw] < k) { pos += pw; k -= fw[pos]; }\n    return pos + 1;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "`erase(x)` na `multiset` usuwa **wszystkie** kopie x — do usunięcia jednej używaj `s.erase(s.find(x))`. Przy średniej\nz dwóch środkowych liczb rzędu 10^18 suma się przepełni: licz `a + (b − a) / 2` albo w `__int128`/`long double`."
+    },
+    {
+     "type": "warn",
+     "md": "`priority_queue` nie umie usuwać dowolnego elementu. Jeśli zadanie usuwa (okno przesuwne, „usuń x”), użyj multisetów albo\nleniwego usuwania (kopiec „do usunięcia” porównywany ze szczytem) — inaczej mediana będzie liczona z elementów, których\njuż nie ma."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "add(x)",
+     "desc": "wstawia x do dwóch kopców i równoważy rozmiary",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "lo.top()",
+     "desc": "dolna mediana",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "MedianSet::erase(x)",
+     "desc": "usuwa jedną kopię x i równoważy połowy",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "kth(k)",
+     "desc": "k-ta najmniejsza wartość w Fenwicku (schodzenie po bitach)",
+     "complexity": "O(log MAXV)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Brak równoważenia po wstawieniu — `lo.top()` przestaje być medianą.",
+    "`ms.erase(x)` usuwa wszystkie kopie x; do jednej: `ms.erase(ms.find(x))`.",
+    "Średnia z dwóch `int` w `int` — dzielenie całkowite i możliwe przepełnienie; użyj `/ 2.0` lub `long long`.",
+    "Odwołanie do `lo.top()`, gdy kopiec jest pusty — UB."
+   ],
+   "qa": [
+    {
+     "q": [
+      "mediana na bieżąco",
+      "mediana na biezaco",
+      "running median c++",
+      "mediana strumienia",
+      "median of data stream",
+      "mediana po każdym dodaniu",
+      "mediana online dwa kopce",
+      "mediana dynamiczna kopce"
+     ],
+     "a": "Dwa kopce: max-kopiec `lo` (mniejsza połowa) i min-kopiec `hi` (większa). Wstaw do odpowiedniego, potem przełóż szczyt,\naby `|lo| ∈ {|hi|, |hi| + 1}`. Mediana = `lo.top()`. O(log n) na element.",
+     "code": "priority_queue<int> lo;\npriority_queue<int, vector<int>, greater<int>> hi;\nfor (int x : {5, 15, 1, 3, 8}) {\n    if (lo.empty() || x <= lo.top()) lo.push(x); else hi.push(x);\n    if (lo.size() > hi.size() + 1) { hi.push(lo.top()); lo.pop(); }\n    else if (hi.size() > lo.size()) { lo.push(hi.top()); hi.pop(); }\n    cout << lo.top() << ' ';   // 5 5 5 3 5\n}"
+    },
+    {
+     "q": [
+      "mediana parzystej liczby elementów",
+      "mediana parzysta ilosc",
+      "mediana srednia dwoch srodkowych",
+      "median even number of elements",
+      "dolna i gorna mediana"
+     ],
+     "a": "Przy parzystej liczbie elementów rozmiary kopców są równe: dolna mediana `lo.top()`, górna `hi.top()`, średnia\n`(lo.top() + hi.top()) / 2.0`. Sprawdź w treści, którą wersję chcą (OI często: „dolna” albo „⌊(n+1)/2⌋-ty element”).",
+     "code": "priority_queue<long long> lo;\npriority_queue<long long, vector<long long>, greater<long long>> hi;\nlo.push(3); lo.push(1);          // mniejsza połowa {1, 3}\nhi.push(7); hi.push(9);          // większa połowa {7, 9}\nif (lo.size() == hi.size()) cout << (lo.top() + hi.top()) / 2.0 << '\\n';   // 5\nelse cout << lo.top() << '\\n';"
+    },
+    {
+     "q": [
+      "mediana z usuwaniem",
+      "mediana z usuwaniem elementow",
+      "mediana insert erase",
+      "dwa multisety mediana",
+      "running median with deletion",
+      "mediana zbioru z usuwaniem"
+     ],
+     "a": "Zamiast kopców dwa `multiset`: `L` (mniejsza połowa, mediana = `*L.rbegin()`) i `R`. Usuwasz jedną kopię z tego,\nw którym jest element, i równoważysz rozmiary jak przy wstawianiu. Alternatywa: `ordered_set` z parami (wartość, id).",
+     "code": "struct MedianSet {\n    multiset<long long> L, R;\n    void fix() {\n        if (L.size() > R.size() + 1) { R.insert(*L.rbegin()); L.erase(prev(L.end())); }\n        else if (R.size() > L.size()) { L.insert(*R.begin()); R.erase(R.begin()); }\n    }\n    void insert(long long x) { if (L.empty() || x <= *L.rbegin()) L.insert(x); else R.insert(x); fix(); }\n    void erase(long long x) {\n        auto it = L.find(x);\n        if (it != L.end()) L.erase(it); else R.erase(R.find(x));\n        fix();\n    }\n    long long median() const { return *L.rbegin(); }\n};",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "mediana w oknie przesuwnym",
+      "mediana w oknie",
+      "sliding window median c++",
+      "mediana kazdego okna dlugosci k",
+      "mediana k kolejnych elementow"
+     ],
+     "a": "Okno długości k: dodaj nowy element do struktury z dwoma multisetami, usuń element `a[i−k]`, odczytaj medianę.\nO(n log k).",
+     "code": "vector<long long> slidingMedian(const vector<long long>& a, int k) {\n    multiset<long long> L, R;                    // |L| = |R| lub |R| + 1\n    auto fix = [&]() {\n        if (L.size() > R.size() + 1) { R.insert(*L.rbegin()); L.erase(prev(L.end())); }\n        else if (R.size() > L.size()) { L.insert(*R.begin()); R.erase(R.begin()); }\n    };\n    vector<long long> res;\n    for (int i = 0; i < (int)a.size(); i++) {\n        if (L.empty() || a[i] <= *L.rbegin()) L.insert(a[i]); else R.insert(a[i]);\n        fix();\n        if (i >= k) {                            // wypada a[i − k]\n            auto it = L.find(a[i - k]);\n            if (it != L.end()) L.erase(it); else R.erase(R.find(a[i - k]));\n            fix();\n        }\n        if (i >= k - 1) res.push_back(*L.rbegin());\n    }\n    return res;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "k-ty najmniejszy element online",
+      "k-ty najmniejszy w strumieniu",
+      "kth smallest in stream",
+      "k najmniejszych elementow na biezaco",
+      "k-ty najmniejszy kopiec"
+     ],
+     "a": "Dla stałego k trzymaj **max-kopiec** z k najmniejszymi dotychczas elementami: wstaw, a jeśli rozmiar > k — zdejmij\nszczyt. Szczyt to k-ty najmniejszy. O(log k) na element.",
+     "code": "int k = 3;\npriority_queue<int> pq;                      // max-kopiec: k najmniejszych\nfor (int x : {5, 1, 9, 3, 7, 2}) {\n    pq.push(x);\n    if ((int)pq.size() > k) pq.pop();\n    if ((int)pq.size() == k) cout << pq.top() << ' ';   // 9 5 5 3\n}"
+    },
+    {
+     "q": [
+      "k-ty największy element online",
+      "k-ty najwiekszy w strumieniu",
+      "kth largest element in a stream",
+      "top k na biezaco",
+      "k-ty najwiekszy kopiec min"
+     ],
+     "a": "Symetrycznie: **min-kopiec** z k największymi elementami; szczyt = k-ty największy.",
+     "code": "int k = 2;\npriority_queue<int, vector<int>, greater<int>> pq;   // min-kopiec: k największych\nfor (int x : {4, 5, 8, 2, 3, 10}) {\n    pq.push(x);\n    if ((int)pq.size() > k) pq.pop();\n    if ((int)pq.size() == k) cout << pq.top() << ' ';   // 4 5 5 5 8\n}"
+    },
+    {
+     "q": [
+      "k-ty element dla dowolnego k",
+      "k-ty najmniejszy z zapytaniami i usuwaniem",
+      "kth smallest dynamic fenwick",
+      "zapytania o k-ty element zbioru",
+      "k-ty element fenwick"
+     ],
+     "a": "Gdy k zmienia się w zapytaniach, a elementy są dodawane i usuwane: Fenwick po wartościach (po kompresji) ze schodzeniem\npo bitach — O(log n) — albo `ordered_set::find_by_order(k − 1)`.",
+     "code": "const int MAXV = 1 << 20;\nint fw[MAXV + 1];\nvoid upd(int x, int d) { for (; x <= MAXV; x += x & -x) fw[x] += d; }\nint kth(int k) {\n    int pos = 0;\n    for (int pw = MAXV; pw > 0; pw >>= 1)\n        if (pos + pw <= MAXV && fw[pos + pw] < k) { pos += pw; k -= fw[pos]; }\n    return pos + 1;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "mediana tablicy",
+      "mediana statyczna",
+      "mediana c++ nth_element",
+      "jak policzyc mediane tablicy",
+      "median of array"
+     ],
+     "a": "Jednorazowo dla całej tablicy: `nth_element(a.begin(), a.begin() + (n−1)/2, a.end())` — O(n) średnio, element\n`a[(n−1)/2]` to dolna mediana. Dwa kopce są potrzebne dopiero, gdy elementy dochodzą na bieżąco.",
+     "code": "vector<int> a = {7, 1, 5, 3, 9, 2};\nint n = a.size();\nnth_element(a.begin(), a.begin() + (n - 1) / 2, a.end());\ncout << a[(n - 1) / 2] << '\\n';   // 3 (dolna mediana z 1 2 3 5 7 9)"
+    },
+    {
+     "q": [
+      "dlaczego mediana minimalizuje sumę odległości",
+      "punkt minimalizujacy sume |x - a_i|",
+      "gdzie postawic sklep na prostej",
+      "minimize sum of absolute deviations",
+      "mediana suma modulow"
+     ],
+     "a": "Funkcja `f(x) = Σ|x − a_i|` maleje, dopóki po prawej stronie x jest więcej punktów niż po lewej — minimum osiąga się\nw medianie (przy parzystym n w każdym punkcie między dwoma środkowymi). Dla bieżącego zbioru: mediana z dwóch kopców.",
+     "code": "vector<long long> a = {1, 2, 9, 10, 12};\nsort(a.begin(), a.end());\nlong long med = a[(a.size() - 1) / 2], s = 0;\nfor (long long x : a) s += llabs(x - med);\ncout << med << ' ' << s << '\\n';   // 9 19"
+    },
+    {
+     "q": [
+      "dwa kopce jak równoważyć",
+      "dwa kopce rownowazenie rozmiarow",
+      "two heaps balance",
+      "ktory kopiec ma byc wiekszy"
+     ],
+     "a": "Ustal jedną regułę i jej się trzymaj: np. `lo` może mieć o 1 więcej. Po każdym wstawieniu wykonaj co najwyżej jedno\nprzełożenie szczytu (z `lo` do `hi` lub odwrotnie). Wtedy mediana zawsze jest w `lo.top()`.",
+     "code": "priority_queue<int> lo;\npriority_queue<int, vector<int>, greater<int>> hi;\nauto balance = [&]() {\n    if (lo.size() > hi.size() + 1) { hi.push(lo.top()); lo.pop(); }\n    else if (hi.size() > lo.size()) { lo.push(hi.top()); hi.pop(); }\n};\nlo.push(4); balance();\nhi.push(9); balance();\ncout << lo.top() << '\\n';   // 4"
+    }
+   ],
+   "related": [
+    "ds-heap",
+    "stl-priority-queue",
+    "stl-multiset",
+    "cpp-pbds-ordered-set",
+    "stl-nth-element",
+    "tech-sliding-window",
+    "ds-fenwick"
+   ]
+  },
+  {
+   "id": "tech-huffman",
+   "title": "Kodowanie Huffmana i łączenie elementów najmniejszym kosztem (priority_queue)",
+   "category": "Techniki",
+   "tags": [
+    "huffman",
+    "kodowanie huffmana",
+    "kompresja",
+    "priority_queue",
+    "zachłanny",
+    "łączenie lin",
+    "connect ropes",
+    "minimalny koszt łączenia",
+    "drzewo kodów",
+    "k-arny huffman"
+   ],
+   "aliases": [
+    "huffman",
+    "kodowanie huffmana",
+    "kod huffmana",
+    "algorytm huffmana",
+    "huffman coding",
+    "huffman c++",
+    "łączenie liczb najmniejszym kosztem",
+    "laczenie liczb najmniejszym kosztem",
+    "minimalny koszt łączenia",
+    "minimalny koszt laczenia",
+    "łączenie lin",
+    "laczenie lin",
+    "connect ropes minimum cost",
+    "laczenie dwoch najmniejszych",
+    "scalanie plikow minimalny koszt"
+   ],
+   "summary": "Zachłannie łącz dwa najmniejsze elementy (min-kopiec), koszt połączenia = ich suma; suma kosztów jest minimalna i równa długości tekstu zakodowanego kodem Huffmana. Wersja k-arna wymaga dopełnienia zerami, a łączenie tylko sąsiednich to już DP na przedziałach.",
+   "complexity": "O(n log n) z priority_queue; O(n) dwiema kolejkami, gdy wagi są posortowane",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Zadanie.** Mamy n liczb (częstości liter, długości lin, rozmiary plików). Łączenie dwóch kosztuje ich sumę, wynik wraca\ndo puli. Minimalny łączny koszt daje algorytm Huffmana: zawsze łącz **dwie najmniejsze**.\n\nKażde połączenie to węzeł drzewa binarnego; element o wadze `w` na głębokości `d` „płaci” `w·d`. Kod Huffmana litery to\nścieżka od korzenia (lewo = 0, prawo = 1), a łączny koszt = liczba bitów zakodowanego tekstu."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: minimalny koszt łączenia (= długość kodu Huffmana)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    priority_queue<long long, vector<long long>, greater<long long>> pq;   // min-kopiec\n    for (int i = 0; i < n; i++) { long long x; cin >> x; pq.push(x); }\n    long long cost = 0;\n    while (pq.size() > 1) {\n        long long a = pq.top(); pq.pop();\n        long long b = pq.top(); pq.pop();\n        cost += a + b;                          // koszt połączenia = suma\n        pq.push(a + b);\n    }\n    cout << cost << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: kody Huffmana dla liter",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string text = \"abracadabra\";\n    map<char, long long> freq;\n    for (char c : text) freq[c]++;\n    vector<int> L, R;                           // dzieci węzła (−1 = liść)\n    vector<char> sym;\n    priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;\n    for (auto [c, f] : freq) {\n        pq.push({f, (int)sym.size()});\n        sym.push_back(c); L.push_back(-1); R.push_back(-1);\n    }\n    while (pq.size() > 1) {\n        auto [fa, a] = pq.top(); pq.pop();      // kopie (nie referencje!) przed pop\n        auto [fb, b] = pq.top(); pq.pop();\n        pq.push({fa + fb, (int)sym.size()});\n        sym.push_back(0); L.push_back(a); R.push_back(b);\n    }\n    map<char, string> code;\n    auto dfs = [&](auto& self, int v, string cur) -> void {\n        if (L[v] == -1) { code[sym[v]] = cur.empty() ? \"0\" : cur; return; }   // jedna litera → kod \"0\"\n        self(self, L[v], cur + '0');\n        self(self, R[v], cur + '1');\n    };\n    dfs(dfs, pq.top().second, \"\");\n    long long bits = 0;\n    for (auto [c, s] : code) {\n        cout << c << \": \" << s << '\\n';\n        bits += freq[c] * (long long)s.size();\n    }\n    cout << \"bitow: \" << bits << '\\n';          // 23\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wariant",
+      "Rozwiązanie",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "łącz dowolne dwa, koszt = suma",
+       "Huffman: dwa najmniejsze z min-kopca",
+       "O(n log n)"
+      ],
+      [
+       "wagi już posortowane",
+       "dwie kolejki FIFO (sumy też rosną)",
+       "O(n)"
+      ],
+      [
+       "łącz po k naraz",
+       "dopełnij zerami do `(n − 1) % (k − 1) == 0`, łącz k najmniejszych",
+       "O(n log n)"
+      ],
+      [
+       "łącz tylko **sąsiednie** (stosy w rzędzie)",
+       "DP na przedziałach / Knuth (Garsia–Wachs O(n log n))",
+       "O(n³) / O(n²)"
+      ],
+      [
+       "maksymalny koszt",
+       "łącz dwa największe (max-kopiec)",
+       "O(n log n)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "O(n) dla posortowanych wag: dwie kolejki",
+     "code": "long long huffmanSorted(const vector<long long>& w) {     // w posortowane rosnąco\n    queue<long long> a, b;                                 // a — wejście, b — sumy (rosną!)\n    for (long long x : w) a.push(x);\n    auto takeMin = [&]() {\n        long long x;\n        if (b.empty() || (!a.empty() && a.front() <= b.front())) { x = a.front(); a.pop(); }\n        else { x = b.front(); b.pop(); }\n        return x;\n    };\n    long long cost = 0;\n    while (a.size() + b.size() > 1) {\n        long long x = takeMin();\n        long long y = takeMin();\n        cost += x + y;\n        b.push(x + y);\n    }\n    return cost;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "**Dlaczego zachłanny działa?** Dwa najrzadsze elementy można (przez wymianę) umieścić jako rodzeństwo na najgłębszym\npoziomie — zamiana z głębszym, cięższym elementem nie zwiększa kosztu. Po ich sklejeniu zostaje ten sam problem z n−1\nelementami."
+    },
+    {
+     "type": "warn",
+     "md": "Suma kosztów rośnie szybko (n = 10^5, wagi do 10^9 → nawet ~10^14·log n) — `long long` dla kopca i wyniku. Przy\n`auto& top = pq.top(); pq.pop();` referencja wisi — kopiuj wartość przed `pop()`. Dla n = 1 koszt łączenia to 0, ale\nkod Huffmana jedynej litery ma długość 1."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "priority_queue<long long, vector<long long>, greater<long long>>",
+     "desc": "min-kopiec do wybierania dwóch najmniejszych",
+     "complexity": "push/pop O(log n)"
+    },
+    {
+     "sig": "huffmanSorted(w)",
+     "desc": "koszt Huffmana dla posortowanych wag dwiema kolejkami",
+     "complexity": "O(n)",
+     "returns": "long long"
+    }
+   ],
+   "pitfalls": [
+    "Max-kopiec (domyślny `priority_queue`) zamiast min-kopca — łączy największe.",
+    "Łączenie tylko sąsiednich elementów to NIE Huffman — potrzebne DP na przedziałach.",
+    "Koszt w `int` — przepełnienie.",
+    "k-arny Huffman bez dopełnienia zerami daje zbyt duży koszt."
+   ],
+   "qa": [
+    {
+     "q": [
+      "kodowanie huffmana",
+      "kodowanie huffmana c++",
+      "huffman coding c++",
+      "algorytm huffmana",
+      "kod huffmana",
+      "huffman kod",
+      "hufman"
+     ],
+     "a": "Min-kopiec częstości; dopóki są ≥ 2 elementy, zdejmij dwa najmniejsze, dodaj ich sumę do kosztu i wrzuć sumę z powrotem.\nKoszt końcowy = liczba bitów zakodowanego tekstu. Kody liter: zbuduj drzewo (każde połączenie = węzeł) i przejdź DFS-em.",
+     "code": "vector<long long> freq = {5, 2, 2, 1, 1};   // a b r c d w \"abracadabra\"\npriority_queue<long long, vector<long long>, greater<long long>> pq(freq.begin(), freq.end());\nlong long bits = 0;\nwhile (pq.size() > 1) {\n    long long a = pq.top(); pq.pop();\n    long long b = pq.top(); pq.pop();\n    bits += a + b;\n    pq.push(a + b);\n}\ncout << bits << '\\n';   // 23"
+    },
+    {
+     "q": [
+      "łączenie liczb najmniejszym kosztem",
+      "laczenie liczb najmniejszym kosztem",
+      "minimalny koszt łączenia",
+      "minimalny koszt laczenia lin",
+      "connect ropes minimum cost",
+      "laczenie dwoch najmniejszych koszt suma",
+      "scalanie plikow minimalny koszt",
+      "minimum cost to merge"
+     ],
+     "a": "To dokładnie Huffman: zawsze łącz dwa najmniejsze (min-kopiec), koszt połączenia = suma. O(n log n). Jeśli wolno łączyć\n**tylko sąsiednie** — to inne zadanie (DP na przedziałach).",
+     "code": "vector<long long> liny = {4, 3, 2, 6};\npriority_queue<long long, vector<long long>, greater<long long>> pq(liny.begin(), liny.end());\nlong long cost = 0;\nwhile (pq.size() > 1) {\n    long long a = pq.top(); pq.pop();\n    long long b = pq.top(); pq.pop();\n    cost += a + b;\n    pq.push(a + b);\n}\ncout << cost << '\\n';   // 29"
+    },
+    {
+     "q": [
+      "łączenie sąsiednich stosów huffman",
+      "laczenie sasiednich elementow minimalny koszt",
+      "merge adjacent piles",
+      "huffman sasiednie nie dziala",
+      "laczenie kamieni w rzedzie"
+     ],
+     "a": "Gdy wolno łączyć tylko **sąsiednie** elementy, zachłanny Huffman jest błędny. Standard: DP na przedziałach\n`dp[l][r] = min_k dp[l][k] + dp[k+1][r] + suma(l, r)` w O(n³), z optymalizacją Knutha O(n²).",
+     "code": "vector<long long> a = {4, 1, 1, 4};\nint n = a.size();\nvector<long long> p(n + 1, 0);\nfor (int i = 0; i < n; i++) p[i + 1] = p[i] + a[i];\nvector<vector<long long>> dp(n, vector<long long>(n, 0));\nfor (int len = 2; len <= n; len++)\n    for (int l = 0; l + len - 1 < n; l++) {\n        int r = l + len - 1;\n        dp[l][r] = LLONG_MAX;\n        for (int k = l; k < r; k++) dp[l][r] = min(dp[l][r], dp[l][k] + dp[k + 1][r] + p[r + 1] - p[l]);\n    }\ncout << dp[0][n - 1] << '\\n';   // 18"
+    },
+    {
+     "q": [
+      "kody huffmana dla liter",
+      "jak wyznaczyc kody huffmana",
+      "huffman tree codes",
+      "drzewo huffmana budowa",
+      "huffman kody binarne liter"
+     ],
+     "a": "W kopcu trzymaj pary (częstość, numer węzła). Każde połączenie tworzy nowy węzeł z dziećmi (a, b). Na końcu DFS od\nkorzenia: w lewo dopisz `0`, w prawo `1`; w liściu masz kod litery. Pełny program jest w treści artykułu.",
+     "code": "// węzły: liście 0..k−1, potem wewnętrzne; L/R = dzieci (−1 = liść)\nvector<int> L = {-1, -1, -1, 0, 2}, R = {-1, -1, -1, 1, 3};\nvector<char> sym = {'c', 'd', 'a', 0, 0};\nvector<string> kod(5);\nauto dfs = [&](auto& self, int v, string cur) -> void {\n    if (L[v] == -1) { kod[v] = cur.empty() ? \"0\" : cur; return; }\n    self(self, L[v], cur + '0');\n    self(self, R[v], cur + '1');\n};\ndfs(dfs, 4, \"\");\nfor (int v = 0; v < 3; v++) cout << sym[v] << \": \" << kod[v] << '\\n';   // c: 10, d: 11, a: 0"
+    },
+    {
+     "q": [
+      "k-arny huffman",
+      "huffman k-arny",
+      "laczenie po k elementow naraz",
+      "k-ary huffman",
+      "huffman trojkowy"
+     ],
+     "a": "Łączysz po k elementów. Żeby ostatnie połączenie było „pełne”, dopełnij pulę zerami, aż `(n − 1) % (k − 1) == 0`, potem\nzawsze łącz k najmniejszych.",
+     "code": "long long huffmanK(vector<long long> w, int k) {           // w niepuste, k ≥ 2\n    while ((w.size() - 1) % (k - 1) != 0) w.push_back(0);\n    priority_queue<long long, vector<long long>, greater<long long>> pq(w.begin(), w.end());\n    long long cost = 0;\n    while (pq.size() > 1) {\n        long long s = 0;\n        for (int i = 0; i < k; i++) { s += pq.top(); pq.pop(); }\n        cost += s;\n        pq.push(s);\n    }\n    return cost;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "huffman w O(n)",
+      "huffman dwie kolejki",
+      "huffman posortowane wagi",
+      "huffman linear time two queues"
+     ],
+     "a": "Jeśli wagi są posortowane, sumy powstają w kolejności niemalejącej — wystarczą dwie kolejki FIFO (wejście i sumy),\na minimum to mniejszy z dwóch przodów. O(n) (np. gdy po sortowaniu przez zliczanie).",
+     "code": "vector<long long> w = {1, 1, 2, 2, 5};          // posortowane\nqueue<long long> a, b;\nfor (long long x : w) a.push(x);\nauto take = [&]() {\n    long long x;\n    if (b.empty() || (!a.empty() && a.front() <= b.front())) { x = a.front(); a.pop(); }\n    else { x = b.front(); b.pop(); }\n    return x;\n};\nlong long cost = 0;\nwhile (a.size() + b.size() > 1) {\n    long long x = take();\n    long long y = take();\n    cost += x + y;\n    b.push(x + y);\n}\ncout << cost << '\\n';   // 23"
+    },
+    {
+     "q": [
+      "huffman jeden znak",
+      "huffman n=1",
+      "huffman jedna litera dlugosc kodu",
+      "huffman edge case"
+     ],
+     "a": "Dla jednej litery pętla łączenia nie wykona się — koszt łączenia 0, ale zakodowanie tekstu wymaga co najmniej 1 bitu na\nznak (kod \"0\"). Sprawdź, czego chce treść: „koszt łączenia” (0) czy „długość kodu” (= długość tekstu).",
+     "code": "string text = \"aaaa\";\nmap<char, long long> f;\nfor (char c : text) f[c]++;\nlong long bits = (f.size() == 1) ? (long long)text.size() : -1;   // dla ≥ 2 liter: Huffman\ncout << bits << '\\n';   // 4"
+    },
+    {
+     "q": [
+      "dlaczego huffman jest optymalny",
+      "huffman dowod",
+      "why huffman greedy works",
+      "zachlanny huffman dlaczego dziala"
+     ],
+     "a": "Dowód przez wymianę: w pewnym optymalnym drzewie dwa najlżejsze elementy są rodzeństwem na najgłębszym poziomie (zamiana\nz cięższym, głębszym elementem nie zwiększa kosztu). Sklejenie ich w jeden element o sumie wag zmniejsza problem do n−1\nelementów, a koszt różni się dokładnie o tę sumę.",
+     "code": "// koszt drzewa = Σ waga · głębokość = suma wszystkich połączeń\nvector<long long> w = {1, 2, 3};\n// połączenia: 1+2=3 (koszt 3), 3+3=6 (koszt 6) → 9 = 1·2 + 2·2 + 3·1\ncout << 1 * 2 + 2 * 2 + 3 * 1 << '\\n';   // 9"
+    },
+    {
+     "q": [
+      "huffman przepełnienie",
+      "huffman long long",
+      "koszt laczenia przekracza int",
+      "huffman overflow"
+     ],
+     "a": "Koszt to suma wszystkich połączeń — dla n = 10^5 i wag do 10^9 łatwo przekroczyć `int` (i nawet 10^14). Typ kopca\ni licznika: `long long`.",
+     "code": "priority_queue<long long, vector<long long>, greater<long long>> pq;\nfor (int i = 0; i < 100000; i++) pq.push(1000000000LL);\nlong long cost = 0;\nwhile (pq.size() > 1) {\n    long long a = pq.top(); pq.pop();\n    long long b = pq.top(); pq.pop();\n    cost += a + b;\n    pq.push(a + b);\n}\ncout << cost << '\\n';   // ~1,7·10^15 — nie mieści się w int"
+    }
+   ],
+   "related": [
+    "ds-heap",
+    "stl-priority-queue",
+    "tech-greedy",
+    "dp-interval",
+    "dp-knuth",
+    "tech-counting-sort"
+   ]
+  },
+  {
+   "id": "oi-interactive",
+   "title": "Zadania interaktywne: flush, binsearch z pytaniami, limit zapytań i testowanie lokalne",
+   "category": "OI praktyka",
+   "tags": [
+    "interaktywne",
+    "interactive",
+    "flush",
+    "endl",
+    "fflush",
+    "interaktor",
+    "biblioteka",
+    "zapytania",
+    "idleness limit",
+    "binsearch interaktywny"
+   ],
+   "aliases": [
+    "zadania interaktywne",
+    "zadanie interaktywne",
+    "zadania interaktywne oi",
+    "interactive problem",
+    "interaktywne c++",
+    "interaktor",
+    "flush c++",
+    "cout flush",
+    "jak zrobić flush",
+    "jak zrobic flush",
+    "idleness limit exceeded",
+    "binsearch interaktywny",
+    "zgadnij liczbę interaktywne",
+    "limit zapytań",
+    "testowanie zadań interaktywnych"
+   ],
+   "summary": "W zadaniu interaktywnym program rozmawia z interaktorem: wypisuje pytanie, czyta odpowiedź. Po każdym pytaniu trzeba opróżnić bufor (`endl`, `cout.flush()`, `fflush(stdout)`), inaczej program „wisi” (Idleness limit / TLE). Na OI częściej dostajesz bibliotekę z funkcjami do wywołania. Pilnuj limitu zapytań (np. ⌈log₂ n⌉ dla binsearcha) i testuj lokalnie własną atrapą lub interaktorem.",
+   "complexity": "zgadywanie liczby z [1, n]: ⌈log₂ n⌉ zapytań (n = 10^9 → 30)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Dwa style zadań interaktywnych:**\n1. **Przez stdin/stdout** (Codeforces, część zadań OI/ONTAK): wypisujesz pytanie w ustalonym formacie, **flush**,\n   czytasz odpowiedź. Interaktor widzi twoje wyjście dopiero po opróżnieniu bufora.\n2. **Przez bibliotekę** (typowe na OI): w treści dostajesz nagłówek i funkcje (np. `int pytaj(int x)`, `void odpowiedz(int x)`)\n   oraz przykładową bibliotekę do testów. Nie czytasz wtedy wejścia sam i nie musisz flushować — rób dokładnie to,\n   co mówi treść (czasem implementujesz funkcję, którą wywołuje biblioteka, i **nie piszesz `main`**)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Jak opróżnić bufor",
+      "Kod",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`endl`",
+       "`cout << x << endl;`",
+       "`'\\n'` + flush — w interaktywnych to najprostsze"
+      ],
+      [
+       "`flush`",
+       "`cout << x << '\\n' << flush;`",
+       "to samo, jawnie"
+      ],
+      [
+       "`cout.flush()`",
+       "`cout << x << '\\n'; cout.flush();`",
+       "po całej porcji pytań"
+      ],
+      [
+       "`fflush(stdout)`",
+       "`printf(\"? %d\\n\", x); fflush(stdout);`",
+       "dla `printf`"
+      ],
+      [
+       "`cin.tie(nullptr)`",
+       "—",
+       "wyłącza automatyczny flush `cout` przed `cin` → flush musisz robić sam"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: zgadnij liczbę z [1, n] (protokół stdin/stdout)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// protokół (przykładowy): na wejściu n; pytanie \"? m\" → odpowiedź \"TAK\", gdy X ≤ m, inaczej \"NIE\"; wynik \"! X\"\nint main() {\n    long long n;\n    cin >> n;\n    long long lo = 1, hi = n;\n    while (lo < hi) {                          // ⌈log₂ n⌉ pytań\n        long long mid = lo + (hi - lo) / 2;\n        cout << \"? \" << mid << endl;           // endl = '\\n' + flush — KONIECZNE\n        string r;\n        cin >> r;\n        if (r == \"TAK\") hi = mid; else lo = mid + 1;\n    }\n    cout << \"! \" << lo << endl;\n}"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Lokalny interaktor w Pythonie (uruchom: python3 interaktor.py ./sol 1000000 4242)",
+     "code": "import subprocess, sys\n\nprog, n, x = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])\nLIMIT = (n - 1).bit_length()          # ⌈log2 n⌉ zapytań\np = subprocess.Popen([prog], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)\np.stdin.write(f\"{n}\\n\"); p.stdin.flush()\nzapytania = 0\nwhile True:\n    line = p.stdout.readline().split()   # zawiśnie tutaj, jeśli program nie zrobi flush\n    if not line:\n        print(\"program zakonczyl sie bez odpowiedzi\"); break\n    if line[0] == \"?\":\n        zapytania += 1\n        if zapytania > LIMIT:\n            print(\"za duzo zapytan\"); p.kill(); break\n        p.stdin.write((\"TAK\" if x <= int(line[1]) else \"NIE\") + \"\\n\"); p.stdin.flush()\n    else:\n        print(\"OK\" if int(line[1]) == x else \"ZLE\", \"zapytan:\", zapytania); break\np.wait()"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Styl OI: rozwiązanie z biblioteką + lokalna atrapa biblioteki",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n#if __has_include(\"zgadywanka.h\")\n#include \"zgadywanka.h\"                        // prawdziwa biblioteka z zadania (nazwa przykładowa)\n#else\n// ---- lokalna atrapa: tajna liczba z wejścia, licznik i limit zapytań ----\nstatic long long N_, X_, ile_ = 0;\nlong long dajN() { cin >> N_ >> X_; return N_; }\nbool pytaj(long long m) {                      // „czy X ≤ m?”\n    if (++ile_ > 64) { cerr << \"Za duzo zapytan!\\n\"; exit(1); }\n    return X_ <= m;\n}\nvoid odpowiedz(long long x) { cerr << (x == X_ ? \"OK\" : \"ZLE\") << \", zapytan: \" << ile_ << '\\n'; }\n#endif\n\nint main() {\n    long long n = dajN();\n    long long lo = 1, hi = n;\n    while (lo < hi) {\n        long long mid = lo + (hi - lo) / 2;\n        if (pytaj(mid)) hi = mid; else lo = mid + 1;\n    }\n    odpowiedz(lo);\n}"
+    },
+    {
+     "type": "tip",
+     "md": "**Limit zapytań liczy się z informacji:** odpowiedź TAK/NIE daje 1 bit, więc rozróżnienie n możliwości wymaga\n≥ ⌈log₂ n⌉ pytań; odpowiedź trójwartościowa (<, =, >; ważenie na wadze) — ⌈log₃ n⌉. Jeśli limit jest ciasny, policz\ndokładnie i sprawdź przypadek brzegowy (n = 1 → zero pytań)."
+    },
+    {
+     "type": "warn",
+     "md": "Interaktor bywa **adaptacyjny** — wybiera tajne dane w trakcie, tak by ci zaszkodzić (zgodnie z dotychczasowymi\nodpowiedziami). Nie licz na losowość ani „średni przypadek”; algorytm musi mieścić się w limicie zawsze. Po odpowiedzi\noznaczającej błąd (np. `-1`) zakończ program od razu — dalsze czytanie to TLE zamiast WA."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "cout << x << endl",
+     "desc": "wypisanie z opróżnieniem bufora",
+     "complexity": "O(1) (ale wolne w pętli dla zwykłych zadań)"
+    },
+    {
+     "sig": "cout.flush()",
+     "desc": "opróżnia bufor cout"
+    },
+    {
+     "sig": "fflush(stdout)",
+     "desc": "opróżnia bufor printf/stdout"
+    }
+   ],
+   "pitfalls": [
+    "Brak flush po pytaniu — program i interaktor czekają na siebie nawzajem (Idleness limit exceeded / TLE).",
+    "`cin.tie(nullptr)` bez ręcznego flushowania — `cout` nie opróżnia się przed `cin`.",
+    "Mieszanie `printf` i `cout` przy `sync_with_stdio(false)` — kolejność wyjścia się psuje.",
+    "Zły format pytania (np. brak `?` albo spacji) — interaktor zwraca błąd albo WA.",
+    "Za dużo zapytań przez `while (lo <= hi)` z dodatkowym pytaniem o `mid` „na wszelki wypadek”."
+   ],
+   "qa": [
+    {
+     "q": [
+      "zadanie interaktywne",
+      "co to zadanie interaktywne",
+      "zadania interaktywne oi",
+      "interactive problem c++",
+      "jak dziala zadanie interaktywne",
+      "interaktywne jak zrobic",
+      "interaktywne zadanie olimpiada"
+     ],
+     "a": "Program prowadzi dialog z interaktorem: wypisuje pytanie, **flush**, czyta odpowiedź, i tak w kółko; na końcu wypisuje\nwynik. Na OI zwykle zamiast stdin/stdout jest biblioteka z funkcjami (`pytaj`, `odpowiedz`) — wtedy wywołujesz funkcje\nzgodnie z treścią i nie flushujesz.",
+     "code": "long long mid = 500000;\ncout << \"? \" << mid << endl;     // pytanie + flush\nstring r;\ncin >> r;                         // odpowiedź interaktora"
+    },
+    {
+     "q": [
+      "flush c++",
+      "jak zrobić flush",
+      "jak zrobic flush cout",
+      "cout flush",
+      "cout.flush()",
+      "flush w c++ interaktywne",
+      "oproznienie bufora c++"
+     ],
+     "a": "`cout << endl` (nowa linia + flush), `cout << flush`, `cout.flush()`; dla `printf` — `fflush(stdout)`. Rób to po\n**każdym** pytaniu, zanim zaczniesz czytać odpowiedź.",
+     "code": "int x = 42;\ncout << \"? \" << x << '\\n';\ncout.flush();                     // albo: cout << \"? \" << x << endl;\nprintf(\"? %d\\n\", x);\nfflush(stdout);                   // wersja dla printf"
+    },
+    {
+     "q": [
+      "endl czy \\n w zadaniu interaktywnym",
+      "endl w interaktywnym",
+      "czy w interaktywnym uzywac endl",
+      "interaktywne bez endl",
+      "endl interactive"
+     ],
+     "a": "W zadaniach interaktywnych **używaj `endl`** (albo `'\\n'` + `flush`) po każdym pytaniu. Ostrzeżenie „nie używaj endl”\ndotyczy zwykłych zadań z dużym wyjściem — tu pytań jest mało (dziesiątki–tysiące), więc koszt flushowania nie ma\nznaczenia.",
+     "code": "for (int q = 1; q <= 3; q++) {\n    cout << \"? \" << q << endl;    // flush po każdym pytaniu\n    int odp;\n    cin >> odp;\n}"
+    },
+    {
+     "q": [
+      "idleness limit exceeded",
+      "program wisi zadanie interaktywne",
+      "interaktywne tle",
+      "interaktor czeka",
+      "idleness limit co to",
+      "interaktywne nic sie nie dzieje"
+     ],
+     "a": "Twój program czeka na odpowiedź, a interaktor wciąż nie dostał pytania, bo siedzi ono w buforze — brak flush. Inne\nprzyczyny: zły format pytania (interaktor czeka na coś innego), czytanie po zakończeniu dialogu, za dużo pytań.",
+     "code": "int m = 7;\ncout << \"? \" << m << '\\n';        // ŹLE: bez flush pytanie może utknąć w buforze\ncout << \"? \" << m << endl;        // DOBRZE"
+    },
+    {
+     "q": [
+      "printf fflush",
+      "fflush stdout",
+      "printf interaktywne",
+      "scanf printf interaktywne",
+      "fflush(stdout) c++"
+     ],
+     "a": "Przy `printf` bufor opróżnia `fflush(stdout)`. Nie mieszaj `printf` z `cout`, jeśli wyłączyłeś synchronizację\n(`sync_with_stdio(false)`) — kolejność wyjścia może się pomieszać.",
+     "code": "int x = 10;\nprintf(\"? %d\\n\", x);\nfflush(stdout);\nint odp;\nif (scanf(\"%d\", &odp) != 1) return 0;"
+    },
+    {
+     "q": [
+      "binsearch interaktywny",
+      "zgadnij liczbę interaktywne",
+      "zgadnij liczbe binsearch",
+      "guess the number interactive",
+      "wyszukiwanie binarne z pytaniami",
+      "binary search interactive"
+     ],
+     "a": "Zakres `[lo, hi]`; pytaj o `mid` i zawężaj: odpowiedź „X ≤ mid” → `hi = mid`, inaczej `lo = mid + 1`. Kończysz, gdy\n`lo == hi` — dokładnie ⌈log₂ n⌉ pytań (n = 10^9 → 30). Pełny program w treści artykułu.",
+     "code": "long long lo = 1, hi = 1000000000;\nwhile (lo < hi) {\n    long long mid = lo + (hi - lo) / 2;\n    cout << \"? \" << mid << endl;\n    string r;\n    cin >> r;\n    if (r == \"TAK\") hi = mid; else lo = mid + 1;   // TAK ⇔ X ≤ mid\n}\ncout << \"! \" << lo << endl;"
+    },
+    {
+     "q": [
+      "limit zapytań interaktywne",
+      "ile zapytan potrzeba",
+      "za duzo zapytan",
+      "query limit interactive",
+      "log2 zapytan",
+      "ile pytan w binsearchu"
+     ],
+     "a": "Odpowiedź TAK/NIE niesie 1 bit, więc potrzeba ≥ ⌈log₂(liczba możliwości)⌉ pytań: 10^6 → 20, 10^9 → 30, 10^18 → 60.\nPrzy odpowiedziach <, =, > — ⌈log₃⌉. Policz limit z treści i pilnuj go licznikiem w lokalnej atrapie.",
+     "code": "long long n = 1000000000;\nint pytan = 0;\nwhile ((1LL << pytan) < n) pytan++;   // ⌈log2 n⌉\ncout << pytan << '\\n';                // 30"
+    },
+    {
+     "q": [
+      "jak testować zadanie interaktywne",
+      "jak testowac interaktywne lokalnie",
+      "interaktor python",
+      "testowanie interaktywnych",
+      "lokalny interaktor",
+      "how to test interactive problem locally"
+     ],
+     "a": "Trzy sposoby: (1) uruchom program i odpowiadaj ręcznie w terminalu; (2) dopisz **atrapę biblioteki** (dla zadań\nz biblioteką) — czyta tajne dane z pliku i liczy zapytania; (3) napisz interaktor (np. w Pythonie), który uruchamia\nprogram przez `subprocess` i odpowiada automatycznie — wtedy zrobisz też stress-test na wielu losowych danych.",
+     "code": "// atrapa funkcji z biblioteki — tajna liczba i licznik zapytań\nstatic long long X_ = 4242, ile_ = 0;\nbool pytaj(long long m) {\n    if (++ile_ > 30) { cerr << \"limit!\\n\"; exit(1); }\n    return X_ <= m;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "biblioteka w zadaniu interaktywnym oi",
+      "zadanie z biblioteka oi",
+      "interaktywne lib.h",
+      "jak kompilowac z biblioteka",
+      "oi biblioteka przykladowa",
+      "interactive grader library"
+     ],
+     "a": "Na OI treść podaje nagłówek (np. `#include \"xyz.h\"`) i funkcje do wywołania; do testów dostajesz przykładową bibliotekę\n(`.h` + `.cpp`/`.c`), kompilujesz razem: `g++ -O2 sol.cpp xyzlib.cpp -o sol`. Nie czytaj wejścia sam, jeśli treść tego\nnie każe, i nie wypisuj nic na stdout poza tym, czego wymaga treść (debug → `cerr`).",
+     "code": "// sol.cpp — wywołujesz tylko funkcje z biblioteki (tu zadeklarowane, by fragment był kompletny)\nlong long dajN();\nbool pytaj(long long m);\nvoid odpowiedz(long long x);\nvoid rozwiaz() {\n    long long lo = 1, hi = dajN();\n    while (lo < hi) {\n        long long mid = lo + (hi - lo) / 2;\n        if (pytaj(mid)) hi = mid; else lo = mid + 1;\n    }\n    odpowiedz(lo);\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "sync_with_stdio false interaktywne",
+      "cin.tie(0) interaktywne",
+      "szybkie io w zadaniu interaktywnym",
+      "czy mozna uzywac ios::sync_with_stdio w interaktywnym"
+     ],
+     "a": "Można, ale pamiętaj: `cin.tie(nullptr)` wyłącza automatyczne opróżnianie `cout` przed każdym `cin`. Wtedy flush\n(`endl`/`cout.flush()`) po każdym pytaniu jest obowiązkowy. Nie mieszaj wtedy `printf` z `cout`.",
+     "code": "ios::sync_with_stdio(false);\ncin.tie(nullptr);                 // od teraz cout NIE flushuje się sam przed cin\ncout << \"? 5\" << endl;            // więc endl (flush) jest konieczny"
+    },
+    {
+     "q": [
+      "interaktor adaptacyjny",
+      "adaptive interactor",
+      "interaktor zmienia odpowiedz",
+      "czy interaktor oszukuje"
+     ],
+     "a": "Interaktor adaptacyjny nie ustala tajnych danych z góry — wybiera je w trakcie, spójnie z dotychczasowymi odpowiedziami,\nżeby zmaksymalizować twoją liczbę pytań. Rozwiązanie losowe „średnio” mieszczące się w limicie wtedy nie przejdzie;\nlicz pesymistyczny przypadek.",
+     "code": "// binsearch jest odporny: po każdym pytaniu zostaje ≤ ⌈połowa⌉ kandydatów, niezależnie od odpowiedzi\nlong long kandydaci = 1000, pytan = 0;\nwhile (kandydaci > 1) { kandydaci = (kandydaci + 1) / 2; pytan++; }   // najgorszy przypadek\ncout << pytan << '\\n';   // 10"
+    },
+    {
+     "q": [
+      "sortowanie przez zapytania",
+      "interaktywne porownania sortowanie",
+      "sort z pytaniami interaktora",
+      "sorting with comparison queries",
+      "ile porownan potrzeba do posortowania"
+     ],
+     "a": "Gdy porównanie to pytanie do interaktora, użyj `stable_sort`/merge sortu z komparatorem pytającym — ≤ n⌈log₂ n⌉\nporównań. Dolna granica to ⌈log₂ n!⌉. Zapamiętuj odpowiedzi (`map`), jeśli ta sama para może paść dwa razy.",
+     "code": "// cmp(a, b) pyta interaktora „czy a < b?” — tu atrapa\nauto cmp = [](int a, int b) {\n    cout << \"? \" << a << ' ' << b << endl;\n    string r;\n    cin >> r;\n    return r == \"<\";\n};\nvector<int> v = {1, 2, 3};\nstable_sort(v.begin(), v.end(), cmp);"
+    }
+   ],
+   "related": [
+    "io-fast-io",
+    "pit-endl-tle",
+    "tech-binary-search",
+    "oi-stress-test",
+    "oi-debugging",
+    "oi-sio2",
+    "io-printf-formats"
+   ]
+  },
+  {
+   "id": "tech-dates-time",
+   "title": "Daty i czas: rok przestępny, dzień tygodnia, liczba dni między datami, hh:mm:ss ↔ sekundy",
+   "category": "Techniki",
+   "tags": [
+    "daty",
+    "kalendarz",
+    "rok przestępny",
+    "dzień tygodnia",
+    "zeller",
+    "sakamoto",
+    "liczba dni",
+    "czas",
+    "hh:mm:ss",
+    "sekundy",
+    "zegar",
+    "chrono"
+   ],
+   "aliases": [
+    "rok przestępny",
+    "rok przestepny",
+    "leap year",
+    "dzień tygodnia",
+    "dzien tygodnia",
+    "day of week",
+    "ile dni między datami",
+    "ile dni miedzy datami",
+    "różnica dat",
+    "roznica dat",
+    "liczba dni miedzy datami",
+    "hh:mm:ss na sekundy",
+    "zamiana czasu na sekundy",
+    "daty c++",
+    "zeller",
+    "sakamoto",
+    "kalendarz",
+    "ile dni ma miesiąc",
+    "ile dni ma luty"
+   ],
+   "summary": "Rok przestępny: podzielny przez 4 i nie przez 100, albo przez 400. Różnice dat licz przez „numer dnia” od stałej daty (365·lata + poprawki + dni miesięcy) — wtedy różnica to odejmowanie, a dzień tygodnia to numer mod 7. Czas: `t = h·3600 + m·60 + s`, z powrotem `t/3600`, `t/60%60`, `t%60`, wypisywanie przez `%02d`.",
+   "complexity": "wszystkie operacje: O(1) (lub O(12) po miesiącach)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Kalendarz gregoriański:** rok jest przestępny, gdy `(y % 4 == 0 && y % 100 != 0) || y % 400 == 0` (2000 — tak,\n1900 — nie, 2024 — tak). Luty ma wtedy 29 dni. Rok ma 365 lub 366 dni, cykl 400 lat ma dokładnie 146097 dni\n(= 20871 tygodni), więc kalendarz powtarza się co 400 lat.\n\n**Najważniejsza sztuczka:** zamień datę na **numer dnia** liczony od stałego punktu. Wtedy „ile dni między datami” to\nodejmowanie, „dzień tygodnia” to `numer % 7`, a „data za k dni” to zamiana `numer + k` z powrotem na datę."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Pełny program: biblioteczka dat",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nbool przestepny(int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; }\n\nint dniWMiesiacu(int y, int m) {\n    static const int d[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};\n    return d[m - 1] + (m == 2 && przestepny(y));\n}\n\n// ile dni minęło od 1.01.0001 (kalendarz gregoriański rozciągnięty wstecz)\nlong long numerDnia(int y, int m, int d) {\n    long long n = 365LL * (y - 1) + (y - 1) / 4 - (y - 1) / 100 + (y - 1) / 400;\n    for (int i = 1; i < m; i++) n += dniWMiesiacu(y, i);\n    return n + d - 1;\n}\n\n// odwrotność: numer dnia → data\nvoid dataZNumeru(long long N, int& y, int& m, int& d) {\n    y = N / 366 + 1;                                 // przybliżenie z dołu\n    while (numerDnia(y + 1, 1, 1) <= N) y++;\n    long long r = N - numerDnia(y, 1, 1);            // dzień roku liczony od 0\n    m = 1;\n    while (r >= dniWMiesiacu(y, m)) { r -= dniWMiesiacu(y, m); m++; }\n    d = r + 1;\n}\n\n// 0 = poniedziałek, ..., 6 = niedziela (1.01.0001 to poniedziałek)\nint dzienTygodnia(int y, int m, int d) { return numerDnia(y, m, d) % 7; }\n\nint main() {\n    const char* nazwy[] = {\"poniedzialek\", \"wtorek\", \"sroda\", \"czwartek\", \"piatek\", \"sobota\", \"niedziela\"};\n    int d1, m1, y1, d2, m2, y2;\n    if (scanf(\"%d.%d.%d %d.%d.%d\", &d1, &m1, &y1, &d2, &m2, &y2) != 6) return 0;   // np. 01.09.2024 24.12.2024\n    printf(\"roznica: %lld dni\\n\", numerDnia(y2, m2, d2) - numerDnia(y1, m1, d1));\n    printf(\"%02d.%02d.%04d to %s\\n\", d1, m1, y1, nazwy[dzienTygodnia(y1, m1, d1)]);\n    int y, m, d;\n    dataZNumeru(numerDnia(y1, m1, d1) + 100, y, m, d);\n    printf(\"za 100 dni: %02d.%02d.%04d\\n\", d, m, y);\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zadanie",
+      "Wzór / sposób"
+     ],
+     "rows": [
+      [
+       "rok przestępny",
+       "`(y % 4 == 0 && y % 100 != 0) || y % 400 == 0`"
+      ],
+      [
+       "dni w miesiącu",
+       "tablica `{31,28,31,30,31,30,31,31,30,31,30,31}` + 1 dla lutego w roku przestępnym"
+      ],
+      [
+       "dzień roku (1..366)",
+       "suma dni poprzednich miesięcy + d"
+      ],
+      [
+       "dni między datami",
+       "`numerDnia(b) − numerDnia(a)`"
+      ],
+      [
+       "dzień tygodnia",
+       "`numerDnia % 7` z ustalonym dniem odniesienia albo wzór Sakamoto/Zellera"
+      ],
+      [
+       "hh:mm:ss → sekundy",
+       "`h·3600 + m·60 + s`"
+      ],
+      [
+       "sekundy → hh:mm:ss",
+       "`t / 3600`, `t / 60 % 60`, `t % 60`; wypisz `%02d`"
+      ],
+      [
+       "różnica czasu przez północ",
+       "`(t2 − t1 + 86400) % 86400`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Dzień tygodnia: Sakamoto i Zeller",
+     "code": "// Sakamoto: 0 = niedziela, 1 = poniedziałek, ..., 6 = sobota\nint sakamoto(int y, int m, int d) {\n    static const int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};\n    if (m < 3) y -= 1;\n    return (y + y / 4 - y / 100 + y / 400 + t[m - 1] + d) % 7;\n}\n\n// Zeller: 0 = sobota, 1 = niedziela, 2 = poniedziałek, ..., 6 = piątek\nint zeller(int y, int m, int d) {\n    if (m < 3) { m += 12; y -= 1; }       // styczeń i luty = 13. i 14. miesiąc poprzedniego roku\n    int K = y % 100, J = y / 100;\n    return (d + 13 * (m + 1) / 5 + K + K / 4 + J / 4 + 5 * J) % 7;\n}",
+     "scope": "global"
+    },
+    {
+     "type": "tip",
+     "md": "W C++20 jest `<chrono>` z kalendarzem: `year_month_day`, `sys_days`, `weekday` — odejmowanie dat i dodawanie dni\n„za darmo”. Wymaga nowego GCC (≥ 11); na zawodach bezpieczniej mieć własne `numerDnia`, które działa wszędzie."
+    },
+    {
+     "type": "warn",
+     "md": "Wzory gregoriańskie dla dat sprzed 1582 roku (a w niektórych krajach — późniejszych) nie zgadzają się z historycznym\nkalendarzem juliańskim. Zadania zwykle podają regułę przestępności — użyj tej z treści. Uważaj też na format wejścia\n(`dd.mm.yyyy` vs `yyyy-mm-dd`) i na zera wiodące na wyjściu (`%02d`)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "przestepny(y)",
+     "desc": "czy rok jest przestępny (gregoriański)",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "dniWMiesiacu(y, m)",
+     "desc": "liczba dni miesiąca m roku y",
+     "complexity": "O(1)",
+     "returns": "int"
+    },
+    {
+     "sig": "numerDnia(y, m, d)",
+     "desc": "liczba dni od 1.01.0001 — do różnic dat i dnia tygodnia",
+     "complexity": "O(12)",
+     "returns": "long long"
+    },
+    {
+     "sig": "dataZNumeru(N, y, m, d)",
+     "desc": "zamiana numeru dnia z powrotem na datę",
+     "complexity": "O(12) + kilka kroków",
+     "returns": "void"
+    },
+    {
+     "sig": "sakamoto(y, m, d)",
+     "desc": "dzień tygodnia, 0 = niedziela",
+     "complexity": "O(1)",
+     "returns": "int"
+    }
+   ],
+   "pitfalls": [
+    "Reguła przestępności tylko `y % 4 == 0` — błąd dla 1900, 2100.",
+    "Dzień tygodnia: zła numeracja (0 = niedziela czy poniedziałek?) — sprawdź na znanej dacie.",
+    "Różnica czasu przez północ wychodzi ujemna — dodaj 86400 i weź modulo.",
+    "Wypisywanie `9:5:3` zamiast `09:05:03` — użyj `%02d` albo `setw(2) << setfill('0')`.",
+    "Nazwa zmiennej `time` koliduje z funkcją z biblioteki — nazwij ją inaczej."
+   ],
+   "qa": [
+    {
+     "q": [
+      "rok przestępny",
+      "rok przestepny c++",
+      "jak sprawdzic czy rok jest przestepny",
+      "leap year c++",
+      "czy rok przestepny warunek",
+      "przestepny rok wzor",
+      "rok przestempny"
+     ],
+     "a": "Przestępny, gdy dzieli się przez 4 i nie przez 100, **albo** dzieli się przez 400. 2000 i 2024 — tak, 1900 i 2100 — nie.",
+     "code": "auto przestepny = [](int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; };\nfor (int y : {1900, 2000, 2023, 2024}) cout << y << \": \" << przestepny(y) << '\\n';   // 0 1 0 1"
+    },
+    {
+     "q": [
+      "ile dni ma miesiąc",
+      "ile dni ma luty",
+      "ile dni w miesiacu c++",
+      "days in month c++",
+      "dni w miesiacu tablica",
+      "ile dni ma dany miesiac"
+     ],
+     "a": "Tablica długości miesięcy + poprawka dla lutego w roku przestępnym.",
+     "code": "int y = 2024, m = 2;\nstatic const int dm[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};\nbool prz = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;\ncout << dm[m - 1] + (m == 2 && prz) << '\\n';   // 29"
+    },
+    {
+     "q": [
+      "dzień tygodnia dla daty",
+      "dzien tygodnia c++",
+      "jaki dzien tygodnia byl",
+      "day of week c++",
+      "wzor zellera",
+      "algorytm sakamoto",
+      "jaki to dzien tygodnia"
+     ],
+     "a": "Wzór Sakamoto (0 = niedziela … 6 = sobota) albo `numerDnia % 7` (przy liczeniu od 1.01.0001: 0 = poniedziałek). Zawsze\nsprawdź na znanej dacie, np. 1.01.2000 to sobota.",
+     "code": "int sakamoto(int y, int m, int d) {           // 0 = niedziela\n    static const int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};\n    if (m < 3) y -= 1;\n    return (y + y / 4 - y / 100 + y / 400 + t[m - 1] + d) % 7;\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "ile dni między datami",
+      "ile dni miedzy datami",
+      "różnica dat w dniach",
+      "roznica dat c++",
+      "days between two dates c++",
+      "liczba dni pomiedzy datami",
+      "ile dni minelo od daty"
+     ],
+     "a": "Zamień obie daty na numer dnia od stałego punktu i odejmij. `numerDnia` = 365·(y−1) + poprawki przestępne + dni pełnych\nmiesięcy + d.",
+     "code": "bool przestepny(int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; }\nlong long numerDnia(int y, int m, int d) {\n    static const int dm[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};\n    long long n = 365LL * (y - 1) + (y - 1) / 4 - (y - 1) / 100 + (y - 1) / 400;\n    for (int i = 1; i < m; i++) n += dm[i - 1] + (i == 2 && przestepny(y));\n    return n + d - 1;\n}\nlong long roznica(int y1, int m1, int d1, int y2, int m2, int d2) {\n    return numerDnia(y2, m2, d2) - numerDnia(y1, m1, d1);   // np. 1.01.2024 → 1.01.2025: 366\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "data za n dni",
+      "dodaj n dni do daty",
+      "jaka data bedzie za 100 dni",
+      "add days to date c++",
+      "przesun date o k dni"
+     ],
+     "a": "Dla małego k wystarczy przesuwać się po dniach (`d++`, przejście miesiąca/roku). Dla dużego: `numerDnia + k`\ni zamiana z powrotem (`dataZNumeru` z treści artykułu). Poniżej wersja krokowa.",
+     "code": "int y = 2024, m = 12, d = 25, k = 10;\nauto dni = [](int y, int m) {\n    static const int dm[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};\n    return dm[m - 1] + (m == 2 && ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0));\n};\nwhile (k--) {\n    if (++d > dni(y, m)) { d = 1; if (++m > 12) { m = 1; y++; } }\n}\nprintf(\"%02d.%02d.%d\\n\", d, m, y);   // 04.01.2025"
+    },
+    {
+     "q": [
+      "hh:mm:ss na sekundy",
+      "zamiana czasu na sekundy",
+      "godzina na sekundy c++",
+      "convert time to seconds",
+      "wczytaj godzine hh:mm:ss",
+      "czas na sekundy"
+     ],
+     "a": "Wczytaj z dwukropkami (`scanf(\"%d:%d:%d\", ...)`) i policz `h·3600 + m·60 + s`. W sekundach od północy łatwo dodawać,\nodejmować i porównywać czasy.",
+     "code": "int h, m, s;\nif (scanf(\"%d:%d:%d\", &h, &m, &s) == 3) {\n    int t = h * 3600 + m * 60 + s;\n    printf(\"%d\\n\", t);               // 01:02:03 → 3723\n}"
+    },
+    {
+     "q": [
+      "sekundy na hh:mm:ss",
+      "zamiana sekund na godziny minuty sekundy",
+      "seconds to hh mm ss c++",
+      "wypisz czas z zerami wiodacymi",
+      "format czasu 02d"
+     ],
+     "a": "`h = t / 3600`, `m = t / 60 % 60`, `s = t % 60`; wypisz z zerami wiodącymi `%02d` (albo `setw(2)` + `setfill('0')`).",
+     "code": "int t = 3723;\nprintf(\"%02d:%02d:%02d\\n\", t / 3600, t / 60 % 60, t % 60);   // 01:02:03\ncout << setfill('0') << setw(2) << t / 3600 << ':' << setw(2) << t / 60 % 60 << ':' << setw(2) << t % 60 << '\\n';"
+    },
+    {
+     "q": [
+      "różnica czasu przez północ",
+      "roznica czasu po polnocy",
+      "ile trwalo od 23:00 do 01:00",
+      "time difference over midnight",
+      "czas ujemny roznica godzin"
+     ],
+     "a": "W sekundach od północy: `(t2 − t1 + 86400) % 86400` — jeśli koniec jest „wcześniej” niż początek, znaczy, że minęła\npółnoc. Dla dodawania dowolnej (też ujemnej) liczby sekund: `((t + x) % 86400 + 86400) % 86400`.",
+     "code": "int t1 = 23 * 3600, t2 = 1 * 3600;\nint dt = (t2 - t1 + 86400) % 86400;\nprintf(\"%02d:%02d\\n\", dt / 3600, dt / 60 % 60);   // 02:00"
+    },
+    {
+     "q": [
+      "wczytywanie daty z kropkami",
+      "jak wczytac date dd.mm.yyyy",
+      "wczytaj date z myslnikami",
+      "read date c++ scanf",
+      "parsowanie daty c++"
+     ],
+     "a": "`scanf(\"%d.%d.%d\", &d, &m, &y)` dla `dd.mm.yyyy`, `scanf(\"%d-%d-%d\", &y, &m, &d)` dla `yyyy-mm-dd`. Z `cin`: czytaj\nseparator do zmiennej `char`.",
+     "code": "int d, m, y;\nchar c1, c2;\nif (cin >> d >> c1 >> m >> c2 >> y) cout << y << '-' << m << '-' << d << '\\n';   // 05.03.2024 → 2024-3-5"
+    },
+    {
+     "q": [
+      "kąt między wskazówkami zegara",
+      "kat miedzy wskazowkami zegara",
+      "angle between clock hands",
+      "zegar wskazowki kat",
+      "o ktorej wskazowki sie pokrywaja"
+     ],
+     "a": "Wskazówka godzinowa: `30·h + 0,5·m` stopni, minutowa: `6·m`. Kąt = `|30h − 5,5m|`, a mniejszy z dwóch: `min(x, 360 − x)`.\nBez ułamków licz w półstopniach: `|60h − 11m|`.",
+     "code": "int h = 3, m = 30;\nint x = abs(60 * (h % 12) - 11 * m);   // w półstopniach\nx = min(x, 720 - x);\nprintf(\"%.1f\\n\", x / 2.0);             // 75.0"
+    },
+    {
+     "q": [
+      "który dzień roku",
+      "ktory to dzien roku",
+      "numer dnia w roku",
+      "day of year c++",
+      "dzien roku z daty"
+     ],
+     "a": "Zsumuj dni poprzednich miesięcy i dodaj d (pamiętaj o 29 lutego w roku przestępnym).",
+     "code": "int d = 1, m = 3, y = 2024;\nstatic const int dm[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};\nint doy = d;\nfor (int i = 0; i < m - 1; i++) doy += dm[i];\nif (m > 2 && ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0)) doy++;\ncout << doy << '\\n';   // 61"
+    },
+    {
+     "q": [
+      "chrono daty c++20",
+      "year_month_day",
+      "biblioteka do dat c++",
+      "c++ date library chrono",
+      "sys_days c++"
+     ],
+     "a": "C++20 `<chrono>`: `year_month_day` (data), `sys_days` (numer dnia — można dodawać `days{k}` i odejmować),\n`weekday` (dzień tygodnia). Wymaga GCC ≥ 11 — sprawdź wersję kompilatora na zawodach.",
+     "code": "using namespace std::chrono;\nyear_month_day a{year{2024}, month{2}, day{29}};\ncout << a.ok() << '\\n';                                         // 1 — poprawna data\ncout << weekday{sys_days{a}}.c_encoding() << '\\n';              // 4 = czwartek (0 = niedziela)\nyear_month_day b{sys_days{a} + days{100}};\ncout << int(b.year()) << '-' << unsigned(b.month()) << '-' << unsigned(b.day()) << '\\n';   // 2024-6-8\ncout << (sys_days{year{2025} / 1 / 1} - sys_days{a}).count() << '\\n';                      // 307"
+    }
+   ],
+   "related": [
+    "io-printf-formats",
+    "io-setw-setfill",
+    "io-read-separated",
+    "num-negative-mod",
+    "pit-name-collisions",
+    "tech-simulation"
+   ]
+  }
+ ]
+}

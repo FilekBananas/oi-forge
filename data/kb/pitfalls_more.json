@@ -1,0 +1,1421 @@
+{
+ "chunk": "pitfalls-more",
+ "articles": [
+  {
+   "id": "pit-double-equal",
+   "title": "Pułapka: porównywanie double przez == i pętle na liczbach rzeczywistych",
+   "category": "Pułapki",
+   "tags": [
+    "double",
+    "==",
+    "epsilon",
+    "porównanie",
+    "float",
+    "pętla double"
+   ],
+   "aliases": [
+    "double ==",
+    "porownanie double nie dziala",
+    "0.1+0.2==0.3 false",
+    "petla z double nieskonczona",
+    "if (x == 0.3) nie dziala",
+    "floating point equality"
+   ],
+   "summary": "Wyniki obliczeń na `double` mają drobne błędy, więc `==` zwykle zawodzi (`0.1 + 0.2 == 0.3` jest fałszem). Porównuj z tolerancją `fabs(a - b) < EPS`, a liczniki pętli trzymaj w typach całkowitych.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Porównanie i pętla",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    const double EPS = 1e-9;\n    double x = 0.1 + 0.2;\n    cout << (x == 0.3) << ' ' << (fabs(x - 0.3) < EPS) << '\\n';   // 0 1\n\n    // ŹLE: for (double t = 0; t != 1.0; t += 0.1)  -> może nigdy nie trafić dokładnie w 1.0\n    for (int i = 0; i <= 10; i++) {          // DOBRZE: licznik całkowity\n        double t = i / 10.0;\n        if (i == 10) cout << t << '\\n';\n    }\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "double ==",
+      "porownanie double nie dziala",
+      "0.1+0.2==0.3 false",
+      "if x == 0.3 nie wchodzi",
+      "floating point equality c++"
+     ],
+     "a": "Liczby typu 0.1 nie są dokładnie reprezentowalne w systemie dwójkowym, więc wynik obliczeń różni się od „ładnej” stałej\no ~10^-17. Porównuj z tolerancją: `fabs(a - b) < 1e-9`. Dla nierówności: `a < b - EPS` („na pewno mniejsze”).",
+     "code": "double a = 0.1 + 0.2;\nif (fabs(a - 0.3) < 1e-9) cout << \"rowne\\n\";"
+    },
+    {
+     "q": [
+      "petla z double nieskonczona",
+      "for double t += 0.1",
+      "petla po liczbach rzeczywistych",
+      "double jako licznik petli"
+     ],
+     "a": "Suma `0.1` dodawana 10 razy to `0.9999999999999999`, nie `1.0` — warunek `t != 1.0` nigdy nie zajdzie. Licz pętlę na\n`int` i wyliczaj `t = i * krok` w każdym obrocie.",
+     "code": "for (int i = 0; i <= 10; i++) {\n    double t = i * 0.1;\n    cout << t << ' ';\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "double jako klucz mapy",
+      "map<double>",
+      "set double duplikaty"
+     ],
+     "a": "`map<double, ...>`/`set<double>` porównują dokładnie, więc 0.30000000000000004 i 0.3 to różne klucze. Jeśli wartości\nmają skończoną liczbę miejsc po przecinku, zamień je na liczby całkowite (np. pomnóż przez 1000 i zaokrąglij `llround`),\na ułamki trzymaj jako pary (licznik, mianownik) po skróceniu przez `gcd`.",
+     "code": "map<pair<long long,long long>, int> ulamki;\nlong long p = 2, q = 4, g = gcd(p, q);\nulamki[{p / g, q / g}]++;   // 1/2"
+    },
+    {
+     "q": [
+      "czy double jest calkowity",
+      "sprawdz czy liczba rzeczywista jest calkowita",
+      "is integer double c++"
+     ],
+     "a": "Porównaj z najbliższą liczbą całkowitą z tolerancją: `fabs(x - round(x)) < EPS`.",
+     "code": "double x = 0.1 * 3 * 10;\nbool calkowita = fabs(x - round(x)) < 1e-9;\ncout << calkowita << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "porownanie double z zerem",
+      "czy double rowne 0",
+      "x == 0.0 double"
+     ],
+     "a": "Jeśli `x` jest wynikiem obliczeń, `x == 0.0` może zawieść (`1e-17`). Pisz `fabs(x) < EPS`. Wyjątek: gdy wiesz, że `x`\nzostało dokładnie ustawione na 0.",
+     "code": "double x = 0.1 + 0.2 - 0.3;\ncout << (x == 0.0) << ' ' << (fabs(x) < 1e-9) << '\\n';   // 0 1"
+    },
+    {
+     "q": [
+      "eps za maly",
+      "eps za duzy",
+      "jak dobrac eps porownanie"
+     ],
+     "a": "EPS musi być większy niż błąd obliczeń, ale mniejszy niż najmniejsza „prawdziwa” różnica w zadaniu. Dla wartości rzędu\n10^9 błąd bezwzględny `double` to ~10^-7, więc `1e-9` jest za małe — użyj błędu względnego albo większego EPS."
+    },
+    {
+     "q": [
+      "unikanie double",
+      "jak liczyc bez liczb rzeczywistych",
+      "liczby calkowite zamiast double"
+     ],
+     "a": "Często da się całkiem uniknąć `double`: porównuj ułamki na krzyż (`a*d < c*b`), odległości przez kwadraty, pieniądze w\ngroszach, średnią przez porównanie sumy z `k * n`. Arytmetyka całkowita jest dokładna.",
+     "code": "long long suma = 17, n = 5, k = 3;\nbool sredniaWiekszaOdK = suma > k * n;   // zamiast (double)suma / n > k\ncout << sredniaWiekszaOdK << '\\n';"
+    },
+    {
+     "q": [
+      "sqrt kwadrat porownanie",
+      "sqrt(x) == int",
+      "czy pierwiastek jest calkowity"
+     ],
+     "a": "Nie porównuj `sqrt(x) == (int)sqrt(x)`. Policz całkowity pierwiastek `r` (z korektą) i sprawdź `r * r == x`.",
+     "code": "long long x = 49;\nlong long r = llround(sqrt((double)x));\nwhile (r * r > x) r--;\nwhile ((r + 1) * (r + 1) <= x) r++;\ncout << (r * r == x) << '\\n';"
+    }
+   ],
+   "related": [
+    "num-floating",
+    "num-rounding",
+    "num-sqrt-pow",
+    "cpp-ref-cmath"
+   ]
+  },
+  {
+   "id": "pit-integer-division",
+   "title": "Pułapka: dzielenie całkowite (1/2 == 0, średnia z intów)",
+   "category": "Pułapki",
+   "tags": [
+    "dzielenie całkowite",
+    "1/2",
+    "średnia",
+    "int",
+    "double",
+    "rzutowanie"
+   ],
+   "aliases": [
+    "1/2 daje 0",
+    "dzielenie int daje 0",
+    "srednia wychodzi calkowita",
+    "dlaczego 5/2 = 2",
+    "integer division c++",
+    "jak podzielic zeby wyszedl ulamek",
+    "double avg = sum / n"
+   ],
+   "summary": "Dzielenie dwóch liczb całkowitych daje liczbę całkowitą (obciętą w stronę zera): `5 / 2 == 2`, `1 / 2 == 0`. Żeby dostać ułamek, przynajmniej jeden argument musi być `double`: `(double)a / b` albo `a * 1.0 / b`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Gdzie ucieka ułamek",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int suma = 7, n = 2;\n    double zla = suma / n;              // 3.0 — dzielenie całkowite PRZED konwersją\n    double dobra = (double)suma / n;    // 3.5\n    double tez = suma * 1.0 / n;        // 3.5\n    cout << zla << ' ' << dobra << ' ' << tez << '\\n';\n    cout << 1 / 2 << ' ' << 1.0 / 2 << ' ' << pow(16, 1 / 2) << '\\n';   // 0 0.5 1 (!)\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "1/2 daje 0",
+      "dlaczego 1/2 = 0 w c++",
+      "dzielenie int daje 0",
+      "integer division c++",
+      "5/2 = 2 dlaczego"
+     ],
+     "a": "Gdy oba argumenty są całkowite, `/` wykonuje dzielenie całkowite i obcina część ułamkową: `1 / 2 == 0`, `5 / 2 == 2`,\n`-5 / 2 == -2`. Typ wyniku zależy od argumentów, nie od zmiennej, do której zapisujesz. Napisz `1.0 / 2` albo `(double)a / b`.",
+     "code": "int a = 1, b = 2;\ncout << a / b << ' ' << (double)a / b << '\\n';   // 0 0.5"
+    },
+    {
+     "q": [
+      "srednia wychodzi calkowita",
+      "double avg = sum / n",
+      "jak policzyc srednia c++",
+      "srednia arytmetyczna int"
+     ],
+     "a": "`double avg = sum / n;` najpierw dzieli całkowicie, potem zamienia wynik na `double` — ułamek już przepadł. Rzutuj przed\ndzieleniem: `(double)sum / n`.",
+     "code": "vector<int> a = {1, 2, 4};\nlong long sum = 0;\nfor (int x : a) sum += x;\ndouble avg = (double)sum / a.size();\ncout << avg << '\\n';   // 2.33333"
+    },
+    {
+     "q": [
+      "pow(x, 1/2)",
+      "pierwiastek przez pow 1/2",
+      "pow z ulamkiem calkowitym"
+     ],
+     "a": "`1 / 2` to `0`, więc `pow(x, 1 / 2)` = `pow(x, 0)` = 1. Pisz `pow(x, 0.5)` albo po prostu `sqrt(x)`.",
+     "code": "double x = 16;\ncout << pow(x, 1 / 2) << ' ' << pow(x, 0.5) << ' ' << sqrt(x) << '\\n';   // 1 4 4"
+    },
+    {
+     "q": [
+      "x * (1/2)",
+      "mnozenie przez ulamek int",
+      "a * 2 / 3 kolejnosc"
+     ],
+     "a": "`x * (1 / 2)` to `x * 0`. Kolejność ma znaczenie: `a * 2 / 3` liczy `(a*2)/3` (dokładniej), a `a / 3 * 2` najpierw obcina.\nPrzy liczbach całkowitych mnóż przed dzieleniem (uważając na przepełnienie).",
+     "code": "int x = 7;\ncout << x * (1 / 2) << ' ' << x / 2.0 << '\\n';     // 0 3.5\nint b = 5;\ncout << b * 2 / 3 << ' ' << b / 3 * 2 << '\\n';     // 3 2"
+    },
+    {
+     "q": [
+      "procent z liczby c++",
+      "ile procent",
+      "procenty dzielenie calkowite"
+     ],
+     "a": "Procent `a` z `b`: `100.0 * a / b` (double) albo całkowicie `100 * a / b` (obcięte). Mnożenie przez `100.0` na początku\nwymusza obliczenia zmiennoprzecinkowe.",
+     "code": "int a = 1, b = 3;\ncout << fixed << setprecision(2) << 100.0 * a / b << \"%\\n\";   // 33.33%"
+    },
+    {
+     "q": [
+      "dzielenie ujemnych liczb int",
+      "-7/2 = -3",
+      "obciecie do zera"
+     ],
+     "a": "C++ obcina w stronę zera: `-7 / 2 == -3` (nie -4). Jeśli potrzebujesz podłogi, patrz artykuł o dzieleniu z zaokrągleniem.",
+     "code": "cout << -7 / 2 << ' ' << (int)floor(-7 / 2.0) << '\\n';   // -3 -4"
+    },
+    {
+     "q": [
+      "kiedy dzielenie calkowite jest dobre",
+      "dzielenie calkowite zastosowania",
+      "a / b * b"
+     ],
+     "a": "Dzielenie całkowite jest przydatne: `a / b` = ile pełnych grup, `a % b` = reszta, `a / b * b` = największa wielokrotność `b`\n≤ `a` (dla a ≥ 0). Tylko pamiętaj, że to nie jest ułamek.",
+     "code": "int minuty = 135;\ncout << minuty / 60 << \" h \" << minuty % 60 << \" min\\n\";   // 2 h 15 min"
+    },
+    {
+     "q": [
+      "dzielenie przez zero",
+      "floating point exception",
+      "a / 0 crash"
+     ],
+     "a": "Dzielenie (i `%`) liczby całkowitej przez 0 to UB — zwykle program kończy się sygnałem SIGFPE („Floating point exception”).\nDla `double` dzielenie przez 0 daje `inf`/`nan`. Sprawdź dzielnik przed dzieleniem."
+    }
+   ],
+   "related": [
+    "num-rounding",
+    "num-ceil-div",
+    "num-negative-mod",
+    "pit-double-equal",
+    "cpp-casting",
+    "cpp-operators"
+   ]
+  },
+  {
+   "id": "pit-bit-ops",
+   "title": "Pułapka: priorytet operatorów bitowych (a & 1 == 0) i przesunięcia (1 << 40)",
+   "category": "Pułapki",
+   "tags": [
+    "operatory bitowe",
+    "priorytet",
+    "&",
+    "|",
+    "^",
+    "<<",
+    "przesunięcie",
+    "1LL",
+    "maska"
+   ],
+   "aliases": [
+    "a & 1 == 0",
+    "priorytet operatorow bitowych",
+    "1 << 40 nie dziala",
+    "przesuniecie bitowe long long",
+    "operator precedence bitwise c++",
+    "x & 1 parzystosc",
+    "1 << 31 ujemne",
+    "maska bitowa pulapki"
+   ],
+   "summary": "Operatory `&`, `|`, `^` mają NIŻSZY priorytet niż `==` i `<`: `a & 1 == 0` znaczy `a & (1 == 0)`. Zawsze bierz je w nawiasy: `(a & 1) == 0`. `1 << k` jest typu `int` — dla k ≥ 31 pisz `1LL << k`.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Nawiasy i 1LL",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int a = 4;\n    cout << (a & 1 == 0) << ' ' << ((a & 1) == 0) << '\\n';   // 0 1  (pierwsze to a & 0)\n    int mask = 5, i = 2;\n    if ((mask >> i) & 1) cout << \"bit \" << i << \" zapalony\\n\";\n    if (mask & (1 << i)) cout << \"to samo\\n\";\n    long long duza = 1LL << 40;          // nie: 1 << 40\n    cout << duza << ' ' << __builtin_popcountll(duza - 1) << '\\n';   // 1099511627776 40\n    cout << (1 << 2 + 1) << '\\n';        // 8 — dodawanie ma wyższy priorytet niż <<\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Wyrażenie",
+      "Jak C++ to czyta",
+      "Co chciałeś"
+     ],
+     "rows": [
+      [
+       "`a & 1 == 0`",
+       "`a & (1 == 0)` → zawsze 0",
+       "`(a & 1) == 0`"
+      ],
+      [
+       "`x ^ y == z`",
+       "`x ^ (y == z)`",
+       "`(x ^ y) == z`"
+      ],
+      [
+       "`1 << n - 1`",
+       "`1 << (n - 1)`",
+       "zwykle OK, ale dawaj nawiasy"
+      ],
+      [
+       "`x << 1 + 1`",
+       "`x << 2`",
+       "`(x << 1) + 1`"
+      ],
+      [
+       "`a | b < c`",
+       "`a | (b < c)`",
+       "`(a | b) < c`"
+      ],
+      [
+       "`cout << a & b`",
+       "błąd kompilacji / `(cout << a) & b`",
+       "`cout << (a & b)`"
+      ]
+     ]
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "a & 1 == 0",
+      "x & 1 == 0 nie dziala",
+      "sprawdzanie parzystosci bitowo zle",
+      "priorytet operatora &",
+      "operator precedence bitwise c++"
+     ],
+     "a": "`==` ma wyższy priorytet niż `&`, więc `a & 1 == 0` to `a & (1 == 0)` = `a & 0` = 0 — warunek zawsze fałszywy.\nNapisz `(a & 1) == 0`. `-Wall` ostrzega: „suggest parentheses around comparison in operand of '&'”.",
+     "code": "int a = 6;\nif ((a & 1) == 0) cout << \"parzysta\\n\";"
+    },
+    {
+     "q": [
+      "1 << 40 nie dziala",
+      "przesuniecie bitowe long long",
+      "1 << 32 daje 0 lub 1",
+      "shift overflow c++",
+      "1LL << k"
+     ],
+     "a": "Literał `1` jest typu `int` (32 bity), więc `1 << 40` to niezdefiniowane zachowanie (przesunięcie o ≥ 32 bity) — wynik\nbywa 256, 0 albo cokolwiek. Pisz `1LL << 40` (do 62) albo `1ULL << 63`.",
+     "code": "int k = 40;\nlong long p = 1LL << k;\ncout << p << '\\n';   // 1099511627776"
+    },
+    {
+     "q": [
+      "1 << 31 ujemne",
+      "dlaczego 1<<31 jest ujemne",
+      "1 << 31 int min"
+     ],
+     "a": "`1 << 31` ustawia bit znaku w 32-bitowym `int`, więc daje −2147483648 (w starszych standardach było to zachowanie niezdefiniowane lub zależne od implementacji). Dla masek na\n32 bitach używaj `1u << 31` (unsigned) albo `1LL << 31`.",
+     "code": "cout << (1 << 31) << ' ' << (1u << 31) << ' ' << (1LL << 31) << '\\n';"
+    },
+    {
+     "q": [
+      "jak sprawdzic czy bit jest zapalony",
+      "czy i-ty bit jest ustawiony",
+      "check bit c++",
+      "mask >> i & 1"
+     ],
+     "a": "`(mask >> i) & 1` albo `mask & (1 << i)` (dla `long long`: `1LL << i`). Zapalenie bitu: `mask |= 1 << i`, zgaszenie:\n`mask &= ~(1 << i)`, przełączenie: `mask ^= 1 << i`.",
+     "code": "int mask = 0;\nmask |= 1 << 3;\nmask ^= 1 << 0;\nmask &= ~(1 << 0);\ncout << ((mask >> 3) & 1) << ' ' << mask << '\\n';   // 1 8"
+    },
+    {
+     "q": [
+      "popcount long long",
+      "__builtin_popcount dla long long",
+      "liczba zapalonych bitow long long"
+     ],
+     "a": "`__builtin_popcount` przyjmuje `unsigned int` — dla `long long` obetnie górne 32 bity. Użyj `__builtin_popcountll(x)`\nalbo C++20 `popcount((unsigned long long)x)`. To samo z `__builtin_ctz`/`clz` → `ctzll`/`clzll`.",
+     "code": "long long x = (1LL << 40) | 1;\ncout << __builtin_popcount(x) << ' ' << __builtin_popcountll(x) << '\\n';   // 1 2"
+    },
+    {
+     "q": [
+      "xor potega",
+      "^ to nie potega",
+      "2^n w c++ zle"
+     ],
+     "a": "`^` to XOR bitowy, nie potęgowanie. `2 ^ 10` = 8. Potęga dwójki: `1 << n` / `1LL << n`.",
+     "code": "cout << (2 ^ 10) << ' ' << (1 << 10) << '\\n';   // 8 1024"
+    },
+    {
+     "q": [
+      "przesuniecie ujemnej liczby",
+      ">> dla ujemnych",
+      "shift negative number"
+     ],
+     "a": "Przesunięcie w prawo liczby ujemnej (`-8 >> 1`) w praktyce (i od C++20 gwarantowanie) jest arytmetyczne: `-4`.\nPrzesunięcie w lewo liczby ujemnej przed C++20 było UB. Przesunięcie o liczbę ujemną albo ≥ szerokości typu jest zawsze UB.",
+     "code": "cout << (-8 >> 1) << '\\n';   // -4"
+    },
+    {
+     "q": [
+      "iteracja po podzbiorach maski",
+      "wszystkie podzbiory bitmask",
+      "for mask < 1 << n"
+     ],
+     "a": "Pętla `for (int mask = 0; mask < (1 << n); mask++)` przechodzi wszystkie podzbiory n elementów (n ≤ ~25), a `(mask >> i) & 1`\nmówi, czy element `i` należy do podzbioru. `<<` i `>>` mają wyższy priorytet niż `<` i `&`, więc zapis bez nawiasów\nakurat zadziała — ale nawiasy chronią przed pomyłkami przy `&`, `|`, `^`, które mają priorytet niższy niż `==`.",
+     "code": "int n = 3;\nfor (int mask = 0; mask < (1 << n); mask++) {\n    for (int i = 0; i < n; i++) if ((mask >> i) & 1) cout << i;\n    cout << ' ';\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "cout << a & b blad",
+      "wypisanie wyniku and bitowego",
+      "cout z operatorem bitowym"
+     ],
+     "a": "`cout << a & b` to `(cout << a) & b` — błąd kompilacji (strumień & int). Weź wyrażenie w nawias: `cout << (a & b)`.\nTo samo z `|`, `^` i porównaniami.",
+     "code": "int a = 6, b = 3;\ncout << (a & b) << ' ' << (a | b) << ' ' << (a ^ b) << '\\n';   // 2 7 5"
+    }
+   ],
+   "related": [
+    "pit-assign-vs-compare",
+    "pit-int-overflow",
+    "io-hex-bin",
+    "cpp-operators",
+    "cpp-ref-bit",
+    "str-case-tricks"
+   ]
+  },
+  {
+   "id": "pit-memset",
+   "title": "Pułapka: memset działa na bajtach (tylko 0, -1 i wzorce bajtowe)",
+   "category": "Pułapki",
+   "tags": [
+    "memset",
+    "fill",
+    "inicjalizacja",
+    "bajty",
+    "0x3f",
+    "-1",
+    "sizeof"
+   ],
+   "aliases": [
+    "memset 1 nie dziala",
+    "memset z wartoscia",
+    "memset(a, 1, sizeof a)",
+    "memset inf",
+    "memset vector",
+    "memset sizeof wskaznik",
+    "jak wypelnic tablice wartoscia",
+    "fill vs memset"
+   ],
+   "summary": "`memset(a, v, n)` wpisuje bajt `v` w każdy z `n` **bajtów**. Dla `int` działa tylko z 0, -1 i wzorcami typu `0x3f`. `memset(a, 1, sizeof a)` daje 16843009 w każdym elemencie. Dowolną wartość ustawiaj przez `fill`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Co działa, a co nie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint a[100];\nlong long b[100];\nint dp[50][50];\n\nint main() {\n    memset(a, 0, sizeof a);       // OK: zera\n    memset(a, -1, sizeof a);      // OK: -1 (wszystkie bity 1)\n    memset(a, 1, sizeof a);       // ŹLE: 0x01010101 = 16843009\n    cout << a[0] << '\\n';\n    memset(b, 0x3f, sizeof b);    // ~4.56e18 — dobre jako INF dla long long\n    memset(dp, -1, sizeof dp);    // tablica 2D: OK, sizeof dp = cała tablica\n    fill(a, a + 100, 7);          // dowolna wartość\n    fill(&dp[0][0], &dp[0][0] + 50 * 50, 5);\n    cout << a[99] << ' ' << dp[49][49] << '\\n';   // 7 5\n}"
+    },
+    {
+     "type": "warn",
+     "md": "W funkcji z parametrem `int t[]` wyrażenie `sizeof t` to rozmiar **wskaźnika** (8 B), nie tablicy — `memset(t, 0, sizeof t)`\nwyzeruje tylko 2 elementy. Przekazuj rozmiar osobno albo używaj `vector`."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "memset 1 nie dziala",
+      "memset(a, 1, sizeof a)",
+      "memset ustawia dziwne liczby",
+      "16843009",
+      "memset z jedynka"
+     ],
+     "a": "`memset` ustawia każdy **bajt** na podaną wartość. `int` ma 4 bajty, więc z `1` dostajesz `0x01010101` = 16843009.\nDziała poprawnie tylko dla wartości, których wszystkie bajty są takie same: 0, -1 (`0xFF…`), `0x3f3f3f3f`. Inne wartości:\n`fill(a, a + n, x)`.",
+     "code": "int a[10];\nfill(a, a + 10, 1);\ncout << a[9] << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "jak wypelnic tablice wartoscia",
+      "fill c++",
+      "fill vs memset",
+      "wypelnienie tablicy liczba"
+     ],
+     "a": "`fill(a, a + n, x)` dla tablic, `fill(v.begin(), v.end(), x)` albo `v.assign(n, x)` dla `vector`. Działa dla każdego typu\ni wartości. `memset` jest dobry tylko do 0/-1/0x3f.",
+     "code": "vector<long long> v(5);\nfill(v.begin(), v.end(), 1000000000000LL);\nint t[3][4];\nfill(&t[0][0], &t[0][0] + 3 * 4, 9);"
+    },
+    {
+     "q": [
+      "memset -1 dp",
+      "memset(dp, -1, sizeof dp)",
+      "memoizacja -1 memset"
+     ],
+     "a": "`memset(dp, -1, sizeof dp)` jest poprawne dla `int`/`long long` (wszystkie bity 1 = -1) i działa dla tablic\nwielowymiarowych zadeklarowanych jako `int dp[N][M]` — `sizeof dp` to rozmiar całości. Popularne przy memoizacji\n(„-1 = jeszcze nie policzone”).",
+     "code": "int dp[100][100];\nmemset(dp, -1, sizeof dp);\ncout << dp[99][99] << '\\n';   // -1"
+    },
+    {
+     "q": [
+      "memset sizeof wskaznik",
+      "memset w funkcji nie czysci",
+      "sizeof tablicy w funkcji"
+     ],
+     "a": "Tablica przekazana do funkcji „zamienia się” we wskaźnik, więc `sizeof` daje 8. Podaj rozmiar: `memset(t, 0, n * sizeof(int))`\nalbo użyj `vector` i `assign`.",
+     "code": "void wyczysc(int t[], int n) {\n    memset(t, 0, n * sizeof(int));   // nie sizeof t\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "memset vector",
+      "memset na vectorze",
+      "memset(&v, 0, sizeof v)"
+     ],
+     "a": "Nigdy `memset(&v, 0, sizeof v)` — nadpiszesz wewnętrzne wskaźniki obiektu `vector` (crash). Dla danych: `v.assign(v.size(), 0)`\nalbo `fill`. Ewentualnie `memset(v.data(), 0, v.size() * sizeof(v[0]))` dla typów prostych.",
+     "code": "vector<int> v(100, 5);\nv.assign(v.size(), 0);"
+    },
+    {
+     "q": [
+      "memset double",
+      "memset na tablicy double",
+      "memset float wartosc"
+     ],
+     "a": "`memset(d, 0, sizeof d)` daje `0.0` (zera bajtów to 0.0 w IEEE 754). Inne wartości dają bezsensowne liczby. Dla `double`\nużywaj `fill`.",
+     "code": "double d[10];\nfill(d, d + 10, 1e18);"
+    },
+    {
+     "q": [
+      "memset 0x3f long long",
+      "memset inf long long",
+      "0x3f dla long long"
+     ],
+     "a": "`memset(b, 0x3f, sizeof b)` dla `long long` daje `0x3f3f3f3f3f3f3f3f` ≈ 4,56·10^18 — dobre INF (2·INF się mieści).\nDla `int` daje 1 061 109 567 ≈ 10^9.",
+     "code": "long long b[10];\nmemset(b, 0x3f, sizeof b);\ncout << b[0] << '\\n';   // 4557430888798830399"
+    },
+    {
+     "q": [
+      "memset w multitescie wolny",
+      "memset cala tablica kazdy test",
+      "memset tle"
+     ],
+     "a": "`memset` jest szybki, ale kosztuje O(rozmiar tablicy). Przy wielu testach czyść tylko używaną część — patrz pułapka\no multitestach."
+    },
+    {
+     "q": [
+      "memset bool",
+      "memset tablica bool true",
+      "memset odwiedzone"
+     ],
+     "a": "Dla `bool` (1 bajt) `memset(odw, 0, sizeof odw)` i `memset(odw, 1, sizeof odw)` działają poprawnie (false / true).",
+     "code": "bool odw[100];\nmemset(odw, 0, sizeof odw);\ncout << odw[50] << '\\n';"
+    }
+   ],
+   "related": [
+    "num-inf-constants",
+    "pit-uninitialized",
+    "pit-multitest-reset",
+    "cpp-c-arrays",
+    "cpp-ref-cstring-cstdlib"
+   ]
+  },
+  {
+   "id": "pit-endl-tle",
+   "title": "Pułapka: endl w pętli i inne powody TLE przy wypisywaniu",
+   "category": "Pułapki",
+   "tags": [
+    "endl",
+    "TLE",
+    "flush",
+    "wypisywanie",
+    "cerr",
+    "wolne wyjście"
+   ],
+   "aliases": [
+    "endl tle",
+    "endl wolne",
+    "dlaczego endl spowalnia",
+    "tle przez wypisywanie",
+    "za wolne cout",
+    "flush w petli",
+    "printf wolny"
+   ],
+   "summary": "`endl` = `'\\n'` + opróżnienie bufora. W pętli wypisującej 10^5–10^6 wierszy to tysiące wywołań systemowych i TLE. Używaj `'\\n'`, włącz szybkie I/O i usuń debug na `cerr`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Szybkie wypisywanie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n = 1000000;\n    for (int i = 0; i < n; i++)\n        cout << i << '\\n';      // szybko\n    // for (...) cout << i << endl;   // kilka razy wolniej\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "endl tle",
+      "dlaczego endl spowalnia",
+      "endl wolne",
+      "zamiana endl na \\n",
+      "endl w petli"
+     ],
+     "a": "Każde `endl` wymusza opróżnienie bufora (flush) — przy wyjściu do pliku to osobna operacja systemowa dla każdego wiersza.\n`'\\n'` dopisuje tylko znak do bufora, który zostanie wypisany dużymi blokami. Zamień wszystkie `endl` na `'\\n'`.",
+     "code": "int n = 5;\nfor (int i = 0; i < n; i++) cout << i << '\\n';"
+    },
+    {
+     "q": [
+      "czy trzeba endl na koncu programu",
+      "czy bufor sie wypisze bez endl",
+      "brak flush na koncu"
+     ],
+     "a": "Nie trzeba. Przy normalnym zakończeniu programu (`return` z `main` lub `exit`) bufory są opróżniane automatycznie. Wyjście\nprzepada tylko przy crashu (np. segfault) lub `_Exit`/`quick_exit`."
+    },
+    {
+     "q": [
+      "\\n czy \"\\n\"",
+      "'\\n' a \"\\n\" roznica",
+      "cudzyslow czy apostrof nowa linia"
+     ],
+     "a": "`'\\n'` to pojedynczy znak, `\"\\n\"` — napis z jednym znakiem. Oba działają tak samo szybko (różnica pomijalna); żadne nie\nrobi flush. Ważne tylko, żeby nie używać `endl` w pętli.",
+     "code": "cout << 1 << '\\n' << 2 << \"\\n\";"
+    },
+    {
+     "q": [
+      "cerr spowalnia",
+      "debug cerr tle",
+      "wypisywanie debugowania wolne"
+     ],
+     "a": "`cerr` jest niebuforowany — każdy `<<` od razu idzie do systemu. Tysiące wierszy debugowania mogą kosztować sekundy,\nnawet jeśli sprawdzarka ignoruje `stderr`. Usuń debug przed wysłaniem albo opakuj go w `#ifdef LOCAL`.",
+     "code": "#ifdef LOCAL\n#define DBG(x) cerr << #x << \" = \" << (x) << '\\n'\n#else\n#define DBG(x)\n#endif",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "printf z \\n wolny",
+      "printf flush",
+      "printf buforowanie"
+     ],
+     "a": "`printf` też jest buforowany. Gdy wyjście idzie do pliku/potoku (jak na sprawdzarce), `'\\n'` nie wymusza flush, więc\n`printf(\"%d\\n\", x)` jest szybkie. Nie wołaj `fflush(stdout)` w pętli (chyba że zadanie jest interaktywne)."
+    },
+    {
+     "q": [
+      "wypisywanie stringa po znaku wolne",
+      "cout znak po znaku",
+      "szybkie wypisanie dlugiego napisu"
+     ],
+     "a": "Wypisywanie znak po znaku przez `cout <<` jest OK z wyłączoną synchronizacją. Jeszcze szybciej: zbuduj `string` i wypisz go\njednym `cout << s`.",
+     "code": "string s;\nfor (int i = 0; i < 100000; i++) s += char('a' + i % 26);\ncout << s << '\\n';"
+    },
+    {
+     "q": [
+      "interaktywne bez endl",
+      "kiedy endl jest potrzebny",
+      "zadanie interaktywne flush"
+     ],
+     "a": "`endl` (albo `flush`) jest potrzebny w zadaniach interaktywnych — po każdym pytaniu do sprawdzarki. W zwykłych zadaniach\nnigdy.",
+     "code": "int x = 1;\ncout << \"? \" << x << endl;"
+    },
+    {
+     "q": [
+      "tle mimo dobrego algorytmu wyjscie",
+      "duzo wyjscia tle",
+      "wypisuje 10^6 liczb tle"
+     ],
+     "a": "Lista kontrolna: `ios::sync_with_stdio(false); cin.tie(nullptr);`, żadnego `endl`, brak debugowania na `cerr`, nie mieszaj\n`printf` i `cout`. Zmierz czas lokalnie z wyjściem przekierowanym do pliku (`./prog < in > out`), a nie na terminal — terminal\njest dużo wolniejszy.",
+     "code": "time ./prog < duzy.in > out.txt",
+     "lang": "bash"
+    }
+   ],
+   "related": [
+    "io-fast-io",
+    "oi-debugging",
+    "oi-interactive",
+    "oi-py-fast-io",
+    "str-escape-whitespace"
+   ]
+  },
+  {
+   "id": "pit-vector-bool",
+   "title": "Pułapka: vector<bool> nie jest zwykłym wektorem booli",
+   "category": "Pułapki",
+   "tags": [
+    "vector<bool>",
+    "bitset",
+    "proxy",
+    "referencja",
+    "vector<char>",
+    "pamięć"
+   ],
+   "aliases": [
+    "vector bool",
+    "vector<bool> auto& blad",
+    "vector bool referencja",
+    "vector<bool> wolny",
+    "vector bool czy bitset",
+    "cannot bind non-const lvalue reference vector bool"
+   ],
+   "summary": "`vector<bool>` jest specjalizacją pakującą 8 wartości w bajt. Oszczędza pamięć, ale `v[i]` zwraca obiekt-proxy, nie `bool&`: nie zadziała `bool& r = v[i]`, `for (auto& x : v)`, `&v[0]`. Gdy to przeszkadza, użyj `vector<char>` lub `bitset`.",
+   "level": 2,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Zachowanie vector<bool>",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    vector<bool> v(10, false);\n    v[3] = true;                 // OK\n    // bool& r = v[3];           // BŁĄD kompilacji: v[3] to proxy, nie bool&\n    // for (auto& x : v) x = 1;  // BŁĄD kompilacji\n    for (auto&& x : v) x = true; // OK (auto&& wiąże proxy)\n    auto p = v[0];               // p to proxy — zmiana p zmienia v[0]!\n    p = false;\n    cout << v[0] << '\\n';        // 0\n\n    vector<char> w(10, 0);       // zwykłe bajty: działa wszystko jak dla innych typów\n    char& r = w[3];\n    r = 1;\n    cout << (int)w[3] << '\\n';\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "vector<bool> auto& blad",
+      "cannot bind non-const lvalue reference vector bool",
+      "for auto& x : vector<bool>",
+      "referencja do elementu vector bool"
+     ],
+     "a": "`vector<bool>` przechowuje bity, więc nie istnieje prawdziwy `bool`, do którego można by dać referencję — `v[i]` zwraca\nobiekt-proxy. `bool& r = v[i]` i `for (auto& x : v)` się nie kompilują. Użyj `for (auto&& x : v)` albo zamień typ na\n`vector<char>`/`vector<int>`.",
+     "code": "vector<bool> v(5);\nfor (auto&& x : v) x = true;\ncout << v[4] << '\\n';"
+    },
+    {
+     "q": [
+      "vector bool czy bitset",
+      "kiedy bitset",
+      "vector<bool> vs bitset vs vector<char>"
+     ],
+     "a": "`bitset<N>` — rozmiar znany w czasie kompilacji, szybkie operacje na całości (`&`, `|`, `<<`, `count()`), np. 64× przyspieszenie\nDP na zbiorach. `vector<bool>` — rozmiar dynamiczny, 1 bit na element. `vector<char>` — 1 bajt na element, zachowuje się jak\nnormalny kontener (referencje, `data()`).",
+     "code": "bitset<1000> b;\nb[5] = 1;\nb |= b << 3;\ncout << b.count() << ' ' << b[8] << '\\n';   // 2 1"
+    },
+    {
+     "q": [
+      "vector<bool> wolny",
+      "czy vector bool jest szybki",
+      "sito vector bool"
+     ],
+     "a": "Pojedynczy dostęp jest nieco wolniejszy (operacje na bitach), ale tablica jest 8× mniejsza, co przy dużych rozmiarach\n(np. sito do 10^8) często daje lepszą wydajność dzięki pamięci podręcznej. Gdy liczy się każdy dostęp i pamięć nie jest\nproblemem, `vector<char>` bywa szybszy.",
+     "code": "int N = 100;\nvector<bool> pierwsza(N + 1, true);\npierwsza[0] = pierwsza[1] = false;\nfor (int i = 2; i * i <= N; i++)\n    if (pierwsza[i]) for (int j = i * i; j <= N; j += i) pierwsza[j] = false;\ncout << count(pierwsza.begin(), pierwsza.end(), true) << '\\n';   // 25"
+    },
+    {
+     "q": [
+      "auto x = v[i] vector bool zmienia oryginal",
+      "kopia elementu vector bool",
+      "proxy vector bool",
+      "vector<bool> dziwnie się zachowuje",
+      "vector bool dziwne zachowanie"
+     ],
+     "a": "`auto x = v[i];` dla `vector<bool>` kopiuje proxy, które dalej wskazuje na bit w `v` — przypisanie `x = false` zmieni `v[i]`.\nJeśli chcesz kopię wartości, napisz jawnie `bool x = v[i];`.",
+     "code": "vector<bool> v(3, true);\nbool kopia = v[0];\nkopia = false;\ncout << v[0] << '\\n';   // 1 — oryginał bez zmian"
+    },
+    {
+     "q": [
+      "vector bool data",
+      "wskaznik na vector bool",
+      "&v[0] vector bool"
+     ],
+     "a": "`vector<bool>` nie ma `data()`, a `&v[0]` nie daje `bool*`. Nie da się go przekazać do funkcji oczekującej tablicy `bool`.\nUżyj `vector<char>` albo zwykłej tablicy `bool`."
+    },
+    {
+     "q": [
+      "ile pamieci vector bool",
+      "vector bool 10^9 elementow",
+      "pamiec bitset"
+     ],
+     "a": "`vector<bool>` i `bitset` zużywają 1 bit na element: 10^8 elementów ≈ 12,5 MB (zamiast 100 MB dla `vector<char>`)."
+    },
+    {
+     "q": [
+      "vector<vector<bool>> odwiedzone",
+      "odwiedzone na planszy bool",
+      "visited grid vector bool"
+     ],
+     "a": "`vector<vector<bool>> odw(n, vector<bool>(m))` działa poprawnie do zwykłych odczytów i zapisów. Problemy pojawiają się\ndopiero przy referencjach (`auto&`) — wtedy `vector<vector<char>>`.",
+     "code": "int n = 3, m = 4;\nvector<vector<bool>> odw(n, vector<bool>(m, false));\nodw[1][2] = true;\ncout << odw[1][2] << '\\n';"
+    },
+    {
+     "q": [
+      "swap w vector bool",
+      "sortowanie vector bool",
+      "vector bool w algorytmach stl"
+     ],
+     "a": "`swap(v[i], v[j])` dla `vector<bool>` działa (biblioteka ma przeciążenie dla proxy), ale ogólne algorytmy na\nreferencjach (np. pisane przez Ciebie z `T&`) mogą się nie kompilować. W razie problemów — `vector<char>`."
+    }
+   ],
+   "related": [
+    "pit-memset"
+   ]
+  },
+  {
+   "id": "pit-abs-long-long",
+   "title": "Pułapka: abs, min, max dla long long i mieszanych typów",
+   "category": "Pułapki",
+   "tags": [
+    "abs",
+    "llabs",
+    "fabs",
+    "min",
+    "max",
+    "long long",
+    "typy",
+    "no matching function"
+   ],
+   "aliases": [
+    "abs long long",
+    "llabs",
+    "abs obcina liczbe",
+    "min int long long blad",
+    "no matching function for call to min",
+    "max(a, 0LL)",
+    "max z roznymi typami",
+    "fabs czy abs"
+   ],
+   "summary": "`min`/`max` wymagają argumentów TEGO SAMEGO typu: `max(x, 0)` dla `long long x` się nie skompiluje — pisz `max(x, 0LL)`. Wartość bezwzględną `long long` licz przez `llabs(x)` albo `std::abs(x)` (z `<cstdlib>`), dla `double` przez `fabs(x)`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Poprawne wywołania",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    long long x = -5000000000LL;\n    int a = 3;\n    cout << llabs(x) << ' ' << abs(x) << '\\n';     // oba OK z <cstdlib> / bits/stdc++.h\n    cout << fabs(-2.5) << '\\n';                     // 2.5\n    // cout << max(x, 0);                          // BŁĄD: max(long long, int)\n    cout << max(x, 0LL) << ' ' << max<long long>(a, x) << '\\n';\n    cout << max({3, 7, 1}) << '\\n';                 // kilka wartości naraz\n    vector<int> v(4);\n    cout << min((int)v.size(), a) << '\\n';          // size_t vs int — rzutuj\n}"
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "min int long long blad",
+      "no matching function for call to min",
+      "max z roznymi typami",
+      "max(a, 0) long long blad",
+      "min nie kompiluje sie"
+     ],
+     "a": "`std::min` i `std::max` są szablonami z jednym typem `T` — oba argumenty muszą mieć ten sam typ. `max(x, 0)` dla `long long x`\nto `max(long long, int)` → błąd „no matching function”. Popraw: `max(x, 0LL)`, `max<long long>(x, 0)` albo rzutuj.",
+     "code": "long long x = -7;\nint y = 3;\ncout << max(x, 0LL) << ' ' << min<long long>(x, y) << ' ' << max((long long)y, x) << '\\n';"
+    },
+    {
+     "q": [
+      "abs long long",
+      "abs obcina liczbe",
+      "abs dla duzych liczb",
+      "llabs",
+      "wartosc bezwzgledna long long"
+     ],
+     "a": "W C++ (`<cstdlib>`, `bits/stdc++.h`) `std::abs` ma przeciążenie dla `long long`, więc `abs(x)` działa. Problem pojawia się,\ngdy wywołasz C-owe `abs(int)` (np. tylko z `<stdlib.h>` albo `::abs` na niektórych kompilatorach) — wtedy liczba zostaje\nobcięta do `int`. Najbezpieczniej: `llabs(x)` dla `long long`, `fabs(x)` dla `double`.",
+     "code": "long long x = -9000000000LL;\ncout << llabs(x) << '\\n';"
+    },
+    {
+     "q": [
+      "fabs czy abs",
+      "abs dla double",
+      "abs(2.5) daje 2",
+      "wartosc bezwzgledna double"
+     ],
+     "a": "Dla `double` użyj `fabs(x)` (albo `std::abs` z `<cmath>`). Jeśli kompilator wybierze `abs(int)`, `abs(-2.5)` da 2.\nZ `bits/stdc++.h` `abs(-2.5)` zwraca poprawnie 2.5, ale `fabs` jest jednoznaczny.",
+     "code": "double d = -2.5;\ncout << fabs(d) << '\\n';   // 2.5"
+    },
+    {
+     "q": [
+      "max trzech liczb",
+      "max z wielu wartosci",
+      "max({a,b,c})",
+      "minimum z kilku liczb"
+     ],
+     "a": "`max({a, b, c})` / `min({a, b, c})` z listą inicjalizacyjną (wszystkie tego samego typu). Albo zagnieżdżone `max(a, max(b, c))`.",
+     "code": "int a = 4, b = 9, c = 2;\ncout << max({a, b, c}) << ' ' << min({a, b, c}) << '\\n';   // 9 2"
+    },
+    {
+     "q": [
+      "abs z roznicy unsigned",
+      "abs(a.size() - b.size())",
+      "abs size_t"
+     ],
+     "a": "Dla typów bez znaku różnica już się „zawinęła” (`2u - 5u` to ~4·10^9), więc `abs` nic nie pomoże (a dla `size_t` wywołanie\nbywa niejednoznaczne). Rzutuj na typ ze znakiem przed odejmowaniem.",
+     "code": "string a = \"ab\", b = \"abcde\";\nlong long d = llabs((long long)a.size() - (long long)b.size());\ncout << d << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "min z vector size",
+      "min(v.size(), k) blad",
+      "porownanie size z int min"
+     ],
+     "a": "`v.size()` to `size_t`, a `k` to `int` — różne typy. Napisz `min((int)v.size(), k)` albo `min<size_t>(v.size(), k)`.",
+     "code": "vector<int> v(10);\nint k = 3;\nint ile = min((int)v.size(), k);\ncout << ile << '\\n';"
+    },
+    {
+     "q": [
+      "abs(INT_MIN)",
+      "abs najmniejszej liczby",
+      "abs overflow"
+     ],
+     "a": "`abs(INT_MIN)` (i `llabs(LLONG_MIN)`) to UB — wynik nie mieści się w typie. Jeśli dane mogą zawierać skrajne wartości,\nlicz w szerszym typie.",
+     "code": "int x = INT_MIN;\nlong long ax = llabs((long long)x);\ncout << ax << '\\n';   // 2147483648"
+    },
+    {
+     "q": [
+      "gcd long long",
+      "__gcd czy gcd",
+      "std::gcd typy"
+     ],
+     "a": "C++17 `gcd(a, b)` (nagłówek `<numeric>`) działa dla `long long` i różnych typów całkowitych (wynik we wspólnym typie).\n`__gcd` to starsze rozszerzenie GCC. Dla liczb ujemnych `gcd` zwraca wartość nieujemną.",
+     "code": "long long a = 1000000000000LL, b = 750000000000LL;\ncout << gcd(a, b) << ' ' << lcm(4LL, 6LL) << '\\n';"
+    },
+    {
+     "q": [
+      "swap roznych typow",
+      "swap int long long blad",
+      "no matching function for call to swap"
+     ],
+     "a": "`swap(a, b)` wymaga zmiennych tego samego typu. Ujednolić typy (zwykle wszystko na `long long`).",
+     "code": "long long a = 1, b = 2;\nswap(a, b);\ncout << a << b << '\\n';"
+    }
+   ],
+   "related": [
+    "num-int-types",
+    "pit-unsigned-size",
+    "num-overflow",
+    "cpp-casting",
+    "cpp-ref-cmath"
+   ]
+  },
+  {
+   "id": "pit-input-format",
+   "title": "Pułapka: błędnie wczytane wejście (kolejność, typy, indeksy, format)",
+   "category": "Pułapki",
+   "tags": [
+    "wejście",
+    "format",
+    "wczytywanie",
+    "kolejność",
+    "indeksy od 1",
+    "typ",
+    "treść zadania"
+   ],
+   "aliases": [
+    "zle wczytywanie danych",
+    "wczytuje zle dane",
+    "format wejscia blad",
+    "kolejnosc n m",
+    "wierzcholki od 1",
+    "liczby do 10^18 w int",
+    "jak sprawdzic czy dobrze wczytuje"
+   ],
+   "summary": "Wiele WA bierze się z wczytywania: zamieniona kolejność `n` i `m`, `int` dla liczb do 10^18, wierzchołki numerowane od 1 w tablicy od 0, drzewo z `n-1` krawędziami zamiast `m`, zapytania różnej długości. Czytaj sekcję „Wejście” słowo po słowie i zawsze uruchamiaj program na przykładzie.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Błąd",
+      "Objaw",
+      "Poprawka"
+     ],
+     "rows": [
+      [
+       "`cin >> m >> n` zamiast `n >> m`",
+       "zła odpowiedź / crash",
+       "kopiuj kolejność z treści"
+      ],
+      [
+       "`int` dla liczb do 10^18",
+       "śmieci (strumień w stanie błędu)",
+       "`long long`"
+      ],
+      [
+       "wierzchołki 1..n w tablicy rozmiaru n",
+       "wyjście poza tablicę",
+       "rozmiar n+1 lub `--a`"
+      ],
+      [
+       "drzewo: pętla do `m`",
+       "czekanie na dane / zła liczba krawędzi",
+       "drzewo ma `n - 1` krawędzi"
+      ],
+      [
+       "zapytania `1 x y` i `2 x`",
+       "rozjechane wczytywanie",
+       "najpierw typ, potem argumenty"
+      ],
+      [
+       "cyfry bez spacji `0101`",
+       "jedna duża liczba",
+       "wczytaj jako `string`"
+      ],
+      [
+       "tekst ze spacjami",
+       "tylko pierwsze słowo",
+       "`getline`"
+      ],
+      [
+       "T testów",
+       "brak pętli po testach",
+       "pierwsza liczba to T"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Zapytania różnych typów",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n, q;\n    cin >> n >> q;\n    vector<long long> a(n + 1);               // wartości do 10^18, indeksy 1..n\n    for (int i = 1; i <= n; i++) cin >> a[i];\n    while (q--) {\n        int typ;\n        cin >> typ;                            // zapytania o różnej długości\n        if (typ == 1) {\n            int i; long long x;\n            cin >> i >> x;\n            a[i] = x;\n        } else {\n            int l, r;\n            cin >> l >> r;\n            long long s = 0;\n            for (int i = l; i <= r; i++) s += a[i];\n            cout << s << '\\n';\n        }\n    }\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Lokalnie dodaj asercje na ograniczenia z treści (`assert(1 <= n && n <= 200000);`, nagłówek `<cassert>` — w nowych GCC nie ma go w `bits/stdc++.h`) — błędne założenie o formacie wyjdzie\nod razu na przykładzie albo na teście z generatora."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "zle wczytywanie danych",
+      "jak sprawdzic czy dobrze wczytuje",
+      "program zle czyta wejscie",
+      "wczytuje bledne dane"
+     ],
+     "a": "Po wczytaniu wypisz dane na `cerr` (np. `n`, `m`, kilka pierwszych elementów) i porównaj z plikiem wejściowym. Sprawdź\nkolejność zmiennych z sekcji „Wejście”, typy (zakresy!), numerację (od 0 czy od 1) i liczbę wierszy/elementów.",
+     "code": "int n, m;\ncin >> n >> m;\ncerr << \"n=\" << n << \" m=\" << m << '\\n';"
+    },
+    {
+     "q": [
+      "wierzcholki od 1",
+      "numeracja od 1 a tablica od 0",
+      "graf indeksy od 1",
+      "1-indexed graph c++"
+     ],
+     "a": "Gdy wierzchołki są numerowane `1..n`, utwórz tablice rozmiaru `n + 1` i używaj numerów wprost — albo od razu po wczytaniu\nzmniejsz o 1 (`a--`) i pracuj od 0. Mieszanie obu konwencji to częsty błąd off-by-one.",
+     "code": "int n = 4, m = 2;\nvector<vector<int>> g(n + 1);\nint kraw[2][2] = {{1, 2}, {2, 4}};\nfor (int i = 0; i < m; i++) {\n    int a = kraw[i][0], b = kraw[i][1];\n    g[a].push_back(b);\n    g[b].push_back(a);\n}"
+    },
+    {
+     "q": [
+      "drzewo n-1 krawedzi",
+      "ile krawedzi ma drzewo wczytywanie",
+      "wczytywanie drzewa"
+     ],
+     "a": "Drzewo o `n` wierzchołkach ma `n - 1` krawędzi — treść często nie podaje osobno `m`. Pętla do `m` (niezdefiniowanego)\nalbo do `n` wczyta za dużo i zablokuje się na końcu wejścia.",
+     "code": "int n;\ncin >> n;\nvector<vector<int>> g(n + 1);\nfor (int i = 0; i < n - 1; i++) {\n    int a, b;\n    cin >> a >> b;\n    g[a].push_back(b);\n    g[b].push_back(a);\n}"
+    },
+    {
+     "q": [
+      "liczby do 10^18 w int",
+      "cin int za duza liczba",
+      "wczytanie duzej liczby do int",
+      "cin overflow"
+     ],
+     "a": "Gdy liczba nie mieści się w typie, `cin >> x` ustawia stan błędu (i maks./min. wartość), a **wszystkie kolejne** wczytania\nnic nie robią — dalsze zmienne mają śmieci. Sprawdź zakresy w treści i używaj `long long` dla wartości > 2·10^9.",
+     "code": "long long x;\ncin >> x;"
+    },
+    {
+     "q": [
+      "zapytania roznej dlugosci",
+      "wczytywanie zapytan typ 1 typ 2",
+      "query types input c++"
+     ],
+     "a": "Najpierw wczytaj typ zapytania, potem — w zależności od typu — odpowiednią liczbę argumentów. Nie wczytuj „na zapas”\ntrzech liczb dla każdego zapytania."
+    },
+    {
+     "q": [
+      "wczytuje tylko pierwsze slowo",
+      "nazwa ze spacja wczytywanie",
+      "cin ucina tekst"
+     ],
+     "a": "`cin >> s` czyta do białego znaku. Jeśli tekst może zawierać spacje, użyj `getline` (i pamiętaj o zjedzeniu `'\\n'` po\nwcześniejszym `cin >>`).",
+     "code": "int n;\nstring nazwa;\ncin >> n;\ngetline(cin >> ws, nazwa);"
+    },
+    {
+     "q": [
+      "czy wartosci moga byc ujemne",
+      "ujemne liczby na wejsciu",
+      "zakres wartosci z tresci"
+     ],
+     "a": "Zawsze sprawdź w treści dolne ograniczenia. Jeśli wartości mogą być ujemne, uważaj na: inicjalizację maksimum zerem,\n`%` liczb ujemnych, `unsigned`, tablice zliczające indeksowane wartością.",
+     "code": "vector<long long> a = {-5, -3, -8};\nlong long mx = LLONG_MIN;          // nie 0!\nfor (long long x : a) mx = max(mx, x);\ncout << mx << '\\n';   // -3"
+    },
+    {
+     "q": [
+      "przyklad dziala a testy nie",
+      "przyklad z tresci przechodzi wa",
+      "przechodzi przyklad"
+     ],
+     "a": "Przykład bywa za mały, by wykryć błędy formatu (np. wszystkie liczby jednocyfrowe, n = m). Napisz własne testy brzegowe:\nn = 1, maksymalne wartości, ujemne liczby, powtórzenia — i najlepiej stress-test z rozwiązaniem wzorcowym."
+    },
+    {
+     "q": [
+      "wiersz z liczba elementow i elementy",
+      "k a potem k liczb w wierszu",
+      "zmienna dlugosc wiersza wejscia"
+     ],
+     "a": "Typowy format „w wierszu najpierw `k`, potem `k` liczb” wczytujesz zwykłym `cin` — `cin` nie zwraca uwagi na podział na\nwiersze, więc nie potrzeba `getline`.",
+     "code": "int n;\ncin >> n;\nvector<vector<int>> listy(n);\nfor (auto& l : listy) {\n    int k;\n    cin >> k;\n    l.resize(k);\n    for (auto& x : l) cin >> x;\n}"
+    }
+   ],
+   "related": [
+    "io-read-until-eof",
+    "io-getline",
+    "oi-reading-statement",
+    "pit-off-by-one"
+   ]
+  },
+  {
+   "id": "pit-name-collisions",
+   "title": "Pułapka: nazwy zmiennych kolidujące z biblioteką (y1, next, count, index, time...)",
+   "category": "Pułapki",
+   "tags": [
+    "y1",
+    "next",
+    "count",
+    "using namespace std",
+    "ambiguous",
+    "redeclared",
+    "nazwy zmiennych",
+    "kolizja"
+   ],
+   "aliases": [
+    "reference to next is ambiguous",
+    "y1 redeclared as different kind of entity",
+    "zmienna y1 blad",
+    "count is ambiguous",
+    "kolizja nazw c++",
+    "zmienna globalna next blad",
+    "using namespace std konflikt",
+    "index redeclared"
+   ],
+   "summary": "Z `using namespace std;` i `bits/stdc++.h` globalne zmienne o nazwach `next`, `prev`, `count`, `distance`, `left`, `size`, `data`, `hash`, `rank`, `max` dają błąd „reference to ... is ambiguous”, a `y0`, `y1`, `j0`, `index`, `time` — „redeclared as different kind of entity”. Zmień nazwę (np. `nxt`, `cnt`, `yy1`) albo zrób zmienną lokalną.",
+   "level": 1,
+   "body": [
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Kod, który się NIE kompiluje",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint y1, next[100];        // BŁĄD: y1 (funkcja Bessela z math.h), next (std::next)\n\nint main() {\n    next[0] = y1;\n}",
+     "nocompile": true
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Poprawione nazwy",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint yy1, nxt[100], cnt[100];   // bezpieczne nazwy globalne\n\nint main() {\n    int count = 0;              // lokalna zmienna przesłania std::count — OK\n    nxt[0] = yy1 + cnt[0] + count;\n    cout << nxt[0] << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Nazwa globalna",
+      "Skąd konflikt",
+      "Błąd (GCC)"
+     ],
+     "rows": [
+      [
+       "`y0`, `y1`, `yn`, `j0`, `j1`, `jn`",
+       "funkcje Bessela z `<math.h>`",
+       "redeclared as different kind of entity"
+      ],
+      [
+       "`index`",
+       "funkcja POSIX z `<strings.h>`",
+       "redeclared as different kind of entity"
+      ],
+      [
+       "`time`",
+       "funkcja `time()` z `<ctime>`",
+       "redeclared as different kind of entity"
+      ],
+      [
+       "`exp`, `log`, `div`, `remove`",
+       "funkcje biblioteki C",
+       "redeclared as different kind of entity"
+      ],
+      [
+       "`next`, `prev`, `count`, `distance`",
+       "algorytmy `std::`",
+       "reference to '…' is ambiguous"
+      ],
+      [
+       "`left`, `right`, `size`, `data`, `hash`, `rank`, `max`, `min`, `array`, `list`",
+       "manipulatory/funkcje/typy `std::`",
+       "reference to '…' is ambiguous"
+      ]
+     ]
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "reference to next is ambiguous",
+      "next is ambiguous",
+      "blad next tablica globalna",
+      "zmienna next blad"
+     ],
+     "a": "Z `using namespace std;` nazwa `next` jest widoczna zarówno jako Twoja zmienna globalna, jak i jako `std::next` (funkcja\nz `<iterator>`) — kompilator nie wie, o którą chodzi. Zmień nazwę na `nxt`/`nast` albo zadeklaruj zmienną lokalnie\n(lokalna przesłania nazwy z `std`).",
+     "code": "int nxt[100];\nnxt[0] = 1;\ncout << nxt[0] << '\\n';"
+    },
+    {
+     "q": [
+      "y1 redeclared as different kind of entity",
+      "zmienna y1 blad",
+      "int y1 nie kompiluje",
+      "x1 y1 x2 y2 blad"
+     ],
+     "a": "`<math.h>` (dołączany przez `bits/stdc++.h`) deklaruje globalną funkcję `y1` (funkcja Bessela) — tak samo `y0`, `yn`, `j0`,\n`j1`, `jn`. Globalna zmienna o tej nazwie koliduje. Użyj innej nazwy (`ya`, `yy1`, `y_1`) albo zadeklaruj `y1` lokalnie\nw `main`.",
+     "code": "int x1 = 0, y1 = 5;          // lokalnie w main — kompiluje się (przesłania funkcję y1)\nint ya = 2, yb = 7;          // a globalnie bezpieczniej używać innych nazw\ncout << x1 + y1 + ya + yb << '\\n';"
+    },
+    {
+     "q": [
+      "count is ambiguous",
+      "zmienna count blad",
+      "int count globalnie",
+      "tablica count konflikt"
+     ],
+     "a": "`std::count` to algorytm, więc globalne `int count[...]` przy `using namespace std;` daje „reference to 'count' is ambiguous”.\nNazwij ją `cnt` albo `ile`.",
+     "code": "int cnt[26] = {};\nstring s = \"abca\";\nfor (char c : s) cnt[c - 'a']++;\ncout << cnt[0] << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "index redeclared",
+      "zmienna index blad",
+      "int index globalnie"
+     ],
+     "a": "Na Linuksie i macOS jest funkcja POSIX `index` (z `<strings.h>`), więc globalna zmienna `index` się nie kompiluje. Lokalnie\nw funkcji można jej używać. Bezpieczniej: `idx`.",
+     "code": "int idx = 5;\ncout << idx << '\\n';"
+    },
+    {
+     "q": [
+      "using namespace std zle",
+      "czy uzywac using namespace std",
+      "dlaczego using namespace std konflikty"
+     ],
+     "a": "Na zawodach `using namespace std;` jest powszechne i wygodne. Ceną są konflikty nazw globalnych z biblioteką. Wystarczy\nunikać „podejrzanych” nazw globalnych (lista w treści) albo trzymać zmienne lokalnie. Alternatywa: wypisać tylko potrzebne\nnazwy, np. `using std::cin; using std::cout;`."
+    },
+    {
+     "q": [
+      "zmienna left right blad",
+      "left is ambiguous",
+      "tablica left right drzewo"
+     ],
+     "a": "`std::left` i `std::right` to manipulatory strumieni. Globalne tablice `left[]`, `right[]` (np. dzieci w drzewie) dadzą\nniejednoznaczność. Użyj `lewy`/`prawy`, `L`/`R` albo `lc`/`rc`.",
+     "code": "const int MAXN = 1000;\nint lc[MAXN], rc[MAXN];\nlc[1] = 2; rc[1] = 3;"
+    },
+    {
+     "q": [
+      "time redeclared",
+      "zmienna time blad",
+      "int time globalnie"
+     ],
+     "a": "`time` to funkcja z `<ctime>` (np. `time(0)`), więc globalna zmienna `time` koliduje. Nazwij ją `czas` albo `t`.",
+     "code": "int czas = 0;\nczas++;\ncout << czas << '\\n';"
+    },
+    {
+     "q": [
+      "max jako nazwa zmiennej",
+      "zmienna max blad",
+      "int max globalnie",
+      "#define max"
+     ],
+     "a": "Globalne `int max;` przy `using namespace std;` koliduje z `std::max`. Lokalna zmienna `max` przesłania funkcję, więc\nw tym zakresie nie użyjesz już `max(a, b)`. Nigdy nie rób `#define max ...` — zepsujesz nagłówki STL. Nazwij zmienną `mx`/`best`.",
+     "code": "int mx = 0;\nvector<int> a = {3, 9, 4};\nfor (int x : a) mx = max(mx, x);\ncout << mx << '\\n';"
+    },
+    {
+     "q": [
+      "jak znalezc konflikt nazw",
+      "redeclared as different kind of entity co to",
+      "blad kompilacji przy nazwie zmiennej"
+     ],
+     "a": "Komunikaty „redeclared as different kind of entity” (nazwa zajęta przez funkcję z biblioteki C) albo „reference to 'X' is\nambiguous” (nazwa z `std`) wskazują dokładnie nazwę. Zmień ją w całym programie — np. dopisując przyrostek."
+    }
+   ],
+   "related": [
+    "oi-template",
+    "oi-compile-flags",
+    "cpp-functions",
+    "cpp-ref-chrono-ctime",
+    "cpp-scope",
+    "ds-linked-list-array",
+    "tech-dates-time"
+   ]
+  },
+  {
+   "id": "pit-off-by-one",
+   "title": "Pułapka: błąd o jeden (off-by-one) w pętlach, przedziałach i sumach prefiksowych",
+   "category": "Pułapki",
+   "tags": [
+    "off-by-one",
+    "błąd o jeden",
+    "<=",
+    "<",
+    "przedział",
+    "sumy prefiksowe",
+    "granice",
+    "fencepost"
+   ],
+   "aliases": [
+    "blad o jeden",
+    "off by one",
+    "<= czy <",
+    "petla o jeden za duzo",
+    "ile elementow w przedziale",
+    "sumy prefiksowe l-1",
+    "przedzial domkniety otwarty",
+    "fencepost error"
+   ],
+   "summary": "Większość błędów o jeden to pomylone granice: `<` vs `<=`, przedział domknięty `[l, r]` (r − l + 1 elementów) vs półotwarty `[l, r)` (r − l), `pre[r] - pre[l-1]` przy indeksowaniu od 1. Ustal konwencję i trzymaj się jej.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Sytuacja",
+      "Poprawnie"
+     ],
+     "rows": [
+      [
+       "liczba elementów w `[l, r]`",
+       "`r - l + 1`"
+      ],
+      [
+       "liczba elementów w `[l, r)`",
+       "`r - l`"
+      ],
+      [
+       "pętla po n elementach od 0",
+       "`for (int i = 0; i < n; i++)`"
+      ],
+      [
+       "pętla po n elementach od 1",
+       "`for (int i = 1; i <= n; i++)`"
+      ],
+      [
+       "suma `a[l..r]`, `pre[i] = a[1]+…+a[i]`",
+       "`pre[r] - pre[l - 1]`"
+      ],
+      [
+       "suma `a[l..r]`, `pre[i] = a[0]+…+a[i-1]`",
+       "`pre[r + 1] - pre[l]`"
+      ],
+      [
+       "okna długości k w tablicy n",
+       "`n - k + 1` okien, start `0..n-k`"
+      ],
+      [
+       "słupki płotu dla n przęseł",
+       "`n + 1` słupków"
+      ],
+      [
+       "`s.substr(pos, len)`",
+       "drugi argument to DŁUGOŚĆ, nie koniec"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Sumy prefiksowe, przedziały, okna",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n = 5;\n    vector<long long> a = {0, 3, 1, 4, 1, 5};      // a[1..n]\n    vector<long long> pre(n + 1, 0);\n    for (int i = 1; i <= n; i++) pre[i] = pre[i - 1] + a[i];\n    int l = 2, r = 4;\n    cout << pre[r] - pre[l - 1] << '\\n';           // 1 + 4 + 1 = 6\n    cout << r - l + 1 << \" elementow\\n\";           // 3\n\n    string s = \"abcdef\";\n    cout << s.substr(1, 3) << '\\n';                // \"bcd\" (od 1, długość 3)\n\n    int k = 2;\n    for (int i = 1; i + k - 1 <= n; i++)           // okna [i, i+k-1]\n        cout << pre[i + k - 1] - pre[i - 1] << ' ';\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Sprawdzaj kod na najmniejszych przypadkach: n = 1, przedział jednoelementowy `l == r`, pusty przedział. Błędy o jeden\nwychodzą tam natychmiast."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "<= czy <",
+      "petla <= czy <",
+      "kiedy <= w petli",
+      "for i <= n czy i < n"
+     ],
+     "a": "Zależy od indeksowania: od 0 do n−1 → `i < n`; od 1 do n → `i <= n`. Mieszanie konwencji (tablica od 0, pętla do `<= n`)\nczyta element za końcem tablicy. Wybierz jedną konwencję w całym programie.",
+     "code": "int n = 3;\nvector<int> a = {7, 8, 9};\nfor (int i = 0; i < n; i++) cout << a[i] << ' ';\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "ile elementow w przedziale",
+      "liczba liczb od a do b",
+      "r - l + 1",
+      "ile liczb w przedziale domknietym"
+     ],
+     "a": "W przedziale domkniętym `[l, r]` jest `r - l + 1` liczb całkowitych (np. od 3 do 7: 5 liczb). W półotwartym `[l, r)` — `r - l`.",
+     "code": "int l = 3, r = 7;\ncout << r - l + 1 << '\\n';   // 5"
+    },
+    {
+     "q": [
+      "sumy prefiksowe l-1",
+      "suma na przedziale prefiksy",
+      "pre[r] - pre[l-1]",
+      "prefix sum off by one"
+     ],
+     "a": "Przy `pre[i] = a[1] + … + a[i]` (i `pre[0] = 0`) suma `a[l..r]` to `pre[r] - pre[l - 1]`. Przy indeksowaniu od 0 wygodnie\nzdefiniować `pre[i]` jako sumę pierwszych `i` elementów — wtedy suma `a[l..r]` to `pre[r + 1] - pre[l]`.",
+     "code": "vector<int> a = {3, 1, 4, 1, 5};          // indeksy 0..4\nvector<long long> pre(a.size() + 1, 0);\nfor (size_t i = 0; i < a.size(); i++) pre[i + 1] = pre[i] + a[i];\nint l = 1, r = 3;\ncout << pre[r + 1] - pre[l] << '\\n';      // 1 + 4 + 1 = 6"
+    },
+    {
+     "q": [
+      "substr drugi argument",
+      "substr(pos, len)",
+      "substr od do",
+      "jak wyciac fragment stringa od i do j"
+     ],
+     "a": "`s.substr(pos, len)` — drugi argument to **długość**, nie indeks końca. Fragment od `i` do `j` włącznie to\n`s.substr(i, j - i + 1)`.",
+     "code": "string s = \"olimpiada\";\nint i = 2, j = 5;\ncout << s.substr(i, j - i + 1) << '\\n';   // \"impi\""
+    },
+    {
+     "q": [
+      "ile okien dlugosci k",
+      "sliding window granice",
+      "przesuwane okno off by one"
+     ],
+     "a": "W tablicy długości `n` jest `n - k + 1` okien długości `k` (dla k ≤ n). Okno startujące w `i` (od 0) kończy się w `i + k - 1`,\nwięc `i` przebiega `0..n-k`.",
+     "code": "vector<int> a = {1, 2, 3, 4, 5};\nint n = a.size(), k = 3;\nfor (int i = 0; i + k <= n; i++) cout << i << ' ';   // 0 1 2\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "wyszukiwanie binarne granice",
+      "binary search off by one",
+      "lo hi mid nieskonczona petla"
+     ],
+     "a": "Typowe błędy: `while (lo <= hi)` z `hi = mid` (pętla nieskończona) albo zły zwracany koniec. Jeden bezpieczny wzorzec: szukamy\nnajmniejszego `x` w `[lo, hi]` spełniającego `ok(x)` (monotoniczne), `while (lo < hi) { mid = lo + (hi - lo) / 2; if (ok(mid)) hi = mid; else lo = mid + 1; }`.",
+     "code": "long long lo = 0, hi = 1000000;               // szukamy najmniejszego x: x*x >= 1000\nwhile (lo < hi) {\n    long long mid = lo + (hi - lo) / 2;\n    if (mid * mid >= 1000) hi = mid;\n    else lo = mid + 1;\n}\ncout << lo << '\\n';   // 32"
+    },
+    {
+     "q": [
+      "ile wystapien x w posortowanej tablicy",
+      "upper_bound - lower_bound",
+      "lower bound upper bound roznica"
+     ],
+     "a": "`lower_bound(x)` — pierwszy element ≥ x, `upper_bound(x)` — pierwszy element > x. Liczba wystąpień `x` to ich różnica.\nPomylenie tych funkcji to częsty błąd o jeden.",
+     "code": "vector<int> a = {1, 2, 2, 2, 5};\nauto ile = upper_bound(a.begin(), a.end(), 2) - lower_bound(a.begin(), a.end(), 2);\ncout << ile << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "petla pomija ostatni element",
+      "for i = 1 i < n pomija",
+      "brakuje ostatniego elementu"
+     ],
+     "a": "Przy indeksowaniu od 1 pętla `for (int i = 1; i < n; i++)` pominie `a[n]`. Przy porównywaniu sąsiadów (`a[i]` z `a[i+1]`)\npętla powinna iść do `i + 1 < n` (od 0) — to celowo o jeden krócej.",
+     "code": "vector<int> a = {1, 3, 2};\nint spadki = 0;\nfor (int i = 0; i + 1 < (int)a.size(); i++) if (a[i] > a[i + 1]) spadki++;\ncout << spadki << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "ile dni miedzy datami",
+      "roznica dni wlacznie",
+      "fencepost error",
+      "slupki i przesla"
+     ],
+     "a": "„Od dnia 3 do dnia 7 włącznie” to 5 dni (7 − 3 + 1), ale „ile dni minęło” to 4. Płot z `n` przęsłami ma `n + 1` słupków.\nZawsze sprawdź na małym przykładzie, czy końce liczysz."
+    }
+   ],
+   "related": [
+    "pit-out-of-bounds",
+    "pit-input-format",
+    "pit-unsigned-size",
+    "cpp-loops"
+   ]
+  }
+ ]
+}

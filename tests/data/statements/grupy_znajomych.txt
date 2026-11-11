@@ -1,0 +1,42 @@
+Grupy znajomych
+
+W klasie jest n uczniów ponumerowanych od 1 do n. Wiemy o m parach uczniów, którzy się znają. Znajomość jest
+
+przechodnia w tym sensie, że grupę tworzą uczniowie, między którymi da się przejść po łańcuchu znajomości. Ile jest
+
+grup w klasie?
+
+Wejście
+
+W pierwszym wierszu znajdują się liczby n i m (1 ≤ n ≤ 200 000, 0 ≤ m ≤ 200 000). W kolejnych m wierszach znajdują się
+
+pary liczb a, b (1 ≤ a, b ≤ n, a ≠ b) oznaczające, że uczniowie a i b się znają.
+
+Wyjście
+
+Wypisz liczbę grup.
+
+Przykład
+
+
+Wejście dla testu grp0:
+
+6 3
+
+1 2
+
+2 3
+
+5 6
+
+Wyjście dla testu grp0:
+
+3
+
+Wejście dla testu grp1:
+
+3 0
+
+Wyjście dla testu grp1:
+
+3

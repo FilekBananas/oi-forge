@@ -1,0 +1,1500 @@
+{
+ "chunk": "stl-containers-3",
+ "articles": [
+  {
+   "id": "stl-priority-queue",
+   "title": "std::priority_queue — kopiec (kolejka priorytetowa)",
+   "category": "STL kontenery",
+   "tags": [
+    "priority_queue",
+    "kopiec",
+    "heap",
+    "kolejka priorytetowa",
+    "min-heap",
+    "max-heap",
+    "komparator",
+    "dijkstra"
+   ],
+   "aliases": [
+    "priority_queue",
+    "priority queue",
+    "std::priority_queue",
+    "kolejka priorytetowa",
+    "kopiec c++",
+    "heap c++",
+    "min heap c++",
+    "pq c++",
+    "priorytetowa kolejka",
+    "kopiec minimalny"
+   ],
+   "summary": "Kopiec binarny: daje dostęp do największego (domyślnie) elementu w O(1), a wstawianie i usuwanie szczytu kosztuje O(log n). Podstawa algorytmu Dijkstry, symulacji zdarzeń i zachłannych wyborów „zawsze bierz najlepszy”.",
+   "complexity": "push/pop: O(log n); top/size/empty: O(1); budowa z n elementów: O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`priority_queue<T>` to adapter na `vector<T>` utrzymujący strukturę kopca. **Domyślnie na szczycie jest element największy** (max-heap). Nie ma iteracji, wyszukiwania ani usuwania dowolnego elementu — tylko `push`, `top`, `pop`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Max-heap, min-heap i pary",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    priority_queue<int> maxh;                                  // największy na górze\n    priority_queue<int, vector<int>, greater<int>> minh;       // najmniejszy na górze\n    for (int x : {5, 1, 8, 3}) { maxh.push(x); minh.push(x); }\n\n    cout << maxh.top() << ' ' << minh.top() << '\\n';           // 8 1\n    while (!maxh.empty()) { cout << maxh.top() << ' '; maxh.pop(); }   // 8 5 3 1\n    cout << '\\n';\n\n    // pary: porównanie po first, potem second\n    priority_queue<pair<int, string>> zad;\n    zad.push({2, \"srednie\"});\n    zad.push({5, \"pilne\"});\n    zad.push({1, \"kiedys\"});\n    cout << zad.top().second << '\\n';                          // pilne\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`pq.push(x)` / `pq.emplace(...)`",
+       "O(log n)",
+       ""
+      ],
+      [
+       "`pq.top()`",
+       "O(1)",
+       "UB na pustym kopcu"
+      ],
+      [
+       "`pq.pop()`",
+       "O(log n)",
+       "zwraca `void` — najpierw odczytaj `top()`"
+      ],
+      [
+       "`pq.size()`, `pq.empty()`",
+       "O(1)",
+       ""
+      ],
+      [
+       "`priority_queue<int> pq(v.begin(), v.end())`",
+       "O(n)",
+       "szybsze niż n × push"
+      ],
+      [
+       "usunięcie dowolnego elementu",
+       "—",
+       "brak; leniwe usuwanie lub `multiset`"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Własny komparator.** Komparator `cmp(a, b)` zwraca `true`, gdy `a` ma **niższy priorytet** niż `b` (czyli `b` ma być bliżej szczytu). Dlatego `less` daje max-heap, a `greater` — min-heap. To odwrotnie niż w `sort`, co często myli."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Komparator jako struktura",
+     "code": "struct Zdarzenie {\n    long long czas;\n    int id;\n};\nstruct PozniejszeNizej {\n    bool operator()(const Zdarzenie& a, const Zdarzenie& b) const {\n        if (a.czas != b.czas) return a.czas > b.czas;   // mniejszy czas = wyższy priorytet\n        return a.id > b.id;\n    }\n};\npriority_queue<Zdarzenie, vector<Zdarzenie>, PozniejszeNizej> kolejka;   // najwcześniejsze na górze",
+     "scope": "global"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Dijkstra z min-kopcem par (odległość, wierzchołek)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n = 5;\n    vector<vector<pair<int, int>>> adj(n);                 // (sąsiad, waga)\n    auto kr = [&](int a, int b, int w) { adj[a].push_back({b, w}); adj[b].push_back({a, w}); };\n    kr(0, 1, 4); kr(0, 2, 1); kr(2, 1, 2); kr(1, 3, 5); kr(3, 4, 3);\n\n    const long long INF = LLONG_MAX;\n    vector<long long> dist(n, INF);\n    priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;\n    dist[0] = 0;\n    pq.push({0, 0});\n    while (!pq.empty()) {\n        auto [d, v] = pq.top();\n        pq.pop();\n        if (d > dist[v]) continue;                         // nieaktualny wpis — pomiń\n        for (auto [u, w] : adj[v])\n            if (dist[v] + w < dist[u]) {\n                dist[u] = dist[v] + w;\n                pq.push({dist[u], u});\n            }\n    }\n    for (int v = 0; v < n; v++) cout << dist[v] << ' ';    // 0 3 1 8 11\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "tip",
+     "md": "Zamiast min-kopca można wkładać liczby ze znakiem minus do zwykłego `priority_queue<long long>` i negować przy odczycie (`-pq.top()`). Działa, ale łatwo zapomnieć o minusie — `greater<>` jest czytelniejszy."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "priority_queue<T> pq;",
+     "desc": "max-heap (największy na górze)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "priority_queue<T, vector<T>, greater<T>> pq;",
+     "desc": "min-heap (najmniejszy na górze)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "priority_queue<T, vector<T>, Cmp> pq;",
+     "desc": "kopiec z własnym komparatorem (Cmp(a,b) = a niżej niż b)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "priority_queue<T> pq(v.begin(), v.end());",
+     "desc": "budowa kopca z zakresu",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "pq.push(x)",
+     "desc": "wstawia element",
+     "complexity": "O(log n)"
+    },
+    {
+     "sig": "pq.emplace(args...)",
+     "desc": "konstruuje element w kopcu",
+     "complexity": "O(log n)",
+     "example": "pq.emplace(dist, v);"
+    },
+    {
+     "sig": "pq.top()",
+     "desc": "element o najwyższym priorytecie (const&)",
+     "complexity": "O(1)",
+     "returns": "const T&"
+    },
+    {
+     "sig": "pq.pop()",
+     "desc": "usuwa szczyt (nic nie zwraca)",
+     "complexity": "O(log n)",
+     "returns": "void"
+    },
+    {
+     "sig": "pq.size() / pq.empty()",
+     "desc": "rozmiar / czy pusty",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "swap(pq1, pq2)",
+     "desc": "zamiana kopców",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "make_heap / push_heap / pop_heap (na vectorze)",
+     "desc": "ręczne operacje kopcowe na zwykłym vectorze",
+     "complexity": "O(n) / O(log n) / O(log n)"
+    }
+   ],
+   "pitfalls": [
+    "Domyślny `priority_queue` jest kopcem MAKSYMALNYM — w Dijkstrze bez `greater<>` (lub minusów) algorytm daje złe wyniki/TLE.",
+    "`pq.pop()` nic nie zwraca — `int x = pq.pop();` się nie skompiluje. Najpierw `top()`, potem `pop()`.",
+    "`pq.top()` i `pq.pop()` na pustym kopcu to UB.",
+    "Komparator w `priority_queue` działa „odwrotnie” niż w `sort`: `greater` daje najmniejszy na górze.",
+    "Nie da się zmienić priorytetu (decrease-key) ani usunąć dowolnego elementu — wstawia się nowy wpis, a stare pomija (leniwe usuwanie `if (d > dist[v]) continue;`).",
+    "Nie można iterować po `priority_queue` ani go wypisać bez opróżniania — zrób kopię, jeśli potrzebujesz zawartości.",
+    "Pary porównują się po `first`, potem `second` — w Dijkstrze odległość musi być na pierwszym miejscu."
+   ],
+   "qa": [
+    {
+     "q": [
+      "priority_queue min heap",
+      "kopiec minimalny c++",
+      "priority queue najmniejszy na górze",
+      "min heap c++",
+      "jak zrobić kolejkę priorytetową od najmniejszego",
+      "priority_queue greater"
+     ],
+     "a": "Podaj trzy parametry szablonu: `priority_queue<int, vector<int>, greater<int>> pq;` — wtedy `pq.top()` to minimum. Alternatywnie wkładaj `-x` do zwykłego (max) kopca i odczytuj `-pq.top()`. push/pop: O(log n).",
+     "code": "priority_queue<int, vector<int>, greater<int>> pq;\nfor (int x : {7, 2, 9}) pq.push(x);\ncout << pq.top() << '\\n';      // 2\npriority_queue<int> neg;       // trik z minusem\nfor (int x : {7, 2, 9}) neg.push(-x);\ncout << -neg.top() << '\\n';    // 2"
+    },
+    {
+     "q": [
+      "priority_queue c++",
+      "jak używać priority_queue",
+      "kolejka priorytetowa c++",
+      "pq cpp",
+      "how to use priority queue c++"
+     ],
+     "a": "`priority_queue<int> pq;` — `push(x)` wstawia (O(log n)), `top()` zwraca największy (O(1)), `pop()` go usuwa (O(log n)). Typowa pętla: `while (!pq.empty()) { auto x = pq.top(); pq.pop(); ... }`.",
+     "code": "priority_queue<int> pq;\npq.push(3); pq.push(10); pq.push(6);\nwhile (!pq.empty()) {\n    int x = pq.top();\n    pq.pop();\n    cout << x << ' ';          // 10 6 3\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "priority_queue własny komparator",
+      "priority queue custom comparator",
+      "komparator do kolejki priorytetowej",
+      "priority_queue lambda",
+      "priority_queue struktura"
+     ],
+     "a": "Komparator `cmp(a, b)` ma zwracać `true`, gdy `a` powinno być **niżej** (dalej od szczytu) niż `b`. Z lambdą: `priority_queue<T, vector<T>, decltype(cmp)> pq(cmp);`. Ze strukturą: wystarczy podać typ struktury.",
+     "code": "auto cmp = [](const pair<int, int>& a, const pair<int, int>& b) {\n    return a.second > b.second;          // mniejsze second = wyżej\n};\npriority_queue<pair<int, int>, vector<pair<int, int>>, decltype(cmp)> pq(cmp);\npq.push({1, 50});\npq.push({2, 10});\npq.push({3, 30});\ncout << pq.top().first << '\\n';          // 2 (second = 10)"
+    },
+    {
+     "q": [
+      "priority_queue struktura operator<",
+      "kolejka priorytetowa struktur",
+      "priority_queue struct c++",
+      "priority queue of structs"
+     ],
+     "a": "Domyślnie kopiec używa `operator<` typu, więc wystarczy go zdefiniować w strukturze. Na górze będzie element „największy” według tego operatora — jeśli chcesz, żeby wyżej był mniejszy koszt, odwróć porównanie w `operator<`.",
+     "code": "struct Stan {\n    long long koszt;\n    int v;\n    bool operator<(const Stan& o) const { return koszt > o.koszt; }   // odwrócone -> min-heap po koszcie\n};\npriority_queue<Stan> pq;\nvoid demo() {\n    pq.push({5, 1});\n    pq.push({2, 7});\n    cout << pq.top().v << '\\n';   // 7 — najmniejszy koszt\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "dijkstra priority_queue",
+      "kolejka priorytetowa w dijkstrze",
+      "dijkstra pary",
+      "dijkstra c++ pq"
+     ],
+     "a": "Używaj min-kopca par `(odległość, wierzchołek)` i leniwego usuwania: po zdjęciu pary sprawdź `if (d > dist[v]) continue;` — to stary wpis. Złożoność O((n + m) log m). Odległość na pierwszym miejscu, typ `long long`, jeśli wagi się sumują.",
+     "code": "int n = 3;\nvector<vector<pair<int, int>>> adj(n);\nadj[0].push_back({1, 5}); adj[0].push_back({2, 1}); adj[2].push_back({1, 1});\nvector<long long> dist(n, LLONG_MAX);\npriority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;\ndist[0] = 0; pq.push({0, 0});\nwhile (!pq.empty()) {\n    auto [d, v] = pq.top(); pq.pop();\n    if (d > dist[v]) continue;\n    for (auto [u, w] : adj[v])\n        if (d + w < dist[u]) { dist[u] = d + w; pq.push({dist[u], u}); }\n}\ncout << dist[1] << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "pop zwraca void",
+      "priority_queue pop nie zwraca",
+      "int x = pq.pop() błąd",
+      "void value not ignored as it ought to be"
+     ],
+     "a": "`pop()` w `priority_queue`, `queue` i `stack` nie zwraca usuwanego elementu (typ `void`). Najpierw odczytaj wartość przez `top()` (lub `front()` dla `queue`), dopiero potem wywołaj `pop()`.",
+     "code": "priority_queue<int> pq;\npq.push(4);\nint x = pq.top();   // odczyt\npq.pop();           // usunięcie\ncout << x << '\\n';"
+    },
+    {
+     "q": [
+      "k największych elementów",
+      "top k elementów c++",
+      "k najmniejszych priority_queue",
+      "k largest elements heap"
+     ],
+     "a": "Trzymaj min-kopiec o rozmiarze k: wstaw element, a gdy rozmiar przekroczy k — usuń minimum. Na końcu kopiec zawiera k największych. O(n log k) czasu i O(k) pamięci. Dla jednorazowego zapytania na tablicy można też `nth_element` (O(n)).",
+     "code": "vector<int> a = {5, 1, 9, 3, 7, 8};\nint k = 3;\npriority_queue<int, vector<int>, greater<int>> h;\nfor (int x : a) {\n    h.push(x);\n    if ((int)h.size() > k) h.pop();\n}\nwhile (!h.empty()) { cout << h.top() << ' '; h.pop(); }   // 7 8 9\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "usuń element z priority_queue",
+      "priority queue erase",
+      "usuwanie dowolnego elementu z kopca",
+      "lazy deletion heap"
+     ],
+     "a": "`priority_queue` nie usuwa dowolnych elementów. Rozwiązania: (1) leniwe usuwanie — drugi kopiec „do usunięcia” i zdejmowanie z obu, gdy szczyty są równe; (2) `multiset` z `erase(find(x))`. Oba O(log n) zamortyzowane.",
+     "code": "priority_queue<int> pq, usun;\nfor (int x : {5, 9, 7}) pq.push(x);\nusun.push(9);                                    // „usuń” 9\nwhile (!usun.empty() && pq.top() == usun.top()) { pq.pop(); usun.pop(); }\ncout << pq.top() << '\\n';                        // 7"
+    },
+    {
+     "q": [
+      "priority_queue z vectora",
+      "zbuduj kopiec z tablicy",
+      "priority_queue konstruktor z vector",
+      "heapify c++"
+     ],
+     "a": "Konstruktor z zakresu `priority_queue<int> pq(v.begin(), v.end());` buduje kopiec w O(n) — szybciej niż n wywołań `push` (O(n log n)). Dla min-kopca: `priority_queue<int, vector<int>, greater<int>> pq(v.begin(), v.end());`.",
+     "code": "vector<int> v = {4, 8, 1, 6};\npriority_queue<int> pq(v.begin(), v.end());\npriority_queue<int, vector<int>, greater<int>> mn(v.begin(), v.end());\ncout << pq.top() << ' ' << mn.top() << '\\n';   // 8 1"
+    },
+    {
+     "q": [
+      "wypisz zawartość priority_queue",
+      "iteracja po priority_queue",
+      "priority_queue for each",
+      "jak wyświetlić kopiec"
+     ],
+     "a": "Kopiec nie ma iteratorów. Żeby zobaczyć wszystkie elementy (np. przy debugowaniu), skopiuj go i opróżniaj kopię — O(n log n). Kolejność wewnętrzna kopca i tak nie jest posortowana.",
+     "code": "priority_queue<int> pq;\nfor (int x : {3, 1, 4}) pq.push(x);\nauto kopia = pq;\nwhile (!kopia.empty()) { cout << kopia.top() << ' '; kopia.pop(); }   // 4 3 1\ncout << '\\n' << pq.size() << '\\n';                                     // 3 — oryginał nietknięty"
+    },
+    {
+     "q": [
+      "priority_queue par po drugim",
+      "kolejka priorytetowa par najmniejszy second",
+      "priority queue pair second element"
+     ],
+     "a": "Pary porównują się po `first`. Najprościej ułożyć parę tak, by klucz priorytetu był pierwszy (`{koszt, id}`). Jeśli nie możesz, napisz komparator porównujący `second`.",
+     "code": "vector<pair<string, int>> osoby = {{\"Ala\", 30}, {\"Bob\", 10}};\npriority_queue<pair<int, string>, vector<pair<int, string>>, greater<>> pq;\nfor (auto& [imie, wiek] : osoby) pq.push({wiek, imie});   // klucz na pierwszym miejscu\ncout << pq.top().second << '\\n';                          // Bob"
+    },
+    {
+     "q": [
+      "make_heap push_heap pop_heap",
+      "kopiec na vectorze",
+      "heap algorithms c++"
+     ],
+     "a": "`make_heap(v.begin(), v.end())` zamienia vector w kopiec (O(n)), `push_heap` po `push_back` przywraca kopiec (O(log n)), `pop_heap` przenosi maksimum na koniec, po czym robisz `pop_back`. Przydatne, gdy chcesz mieć dostęp do wnętrza kopca.",
+     "code": "vector<int> v = {3, 1, 4, 1, 5};\nmake_heap(v.begin(), v.end());\ncout << v.front() << '\\n';                 // 5\nv.push_back(9); push_heap(v.begin(), v.end());\npop_heap(v.begin(), v.end()); v.pop_back(); // usunięto 9\ncout << v.front() << '\\n';                 // 5"
+    }
+   ],
+   "related": [
+    "stl-queue",
+    "stl-pair",
+    "graph-dijkstra",
+    "stl-multiset",
+    "cpp-struct",
+    "cpp-lambdas",
+    "ds-heap",
+    "ds-lazy-deletion-heap",
+    "oi-py-collections",
+    "oi-py-cpp-equivalents",
+    "stl-ref-adaptors-all",
+    "stl-ref-heap"
+   ]
+  },
+  {
+   "id": "stl-queue",
+   "title": "std::queue — kolejka FIFO",
+   "category": "STL kontenery",
+   "tags": [
+    "queue",
+    "kolejka",
+    "FIFO",
+    "BFS",
+    "front",
+    "push",
+    "pop"
+   ],
+   "aliases": [
+    "queue",
+    "std::queue",
+    "queue cpp",
+    "kolejka c++",
+    "kolejka fifo",
+    "kolejka bfs",
+    "jak używać queue"
+   ],
+   "summary": "Kolejka „pierwszy wszedł, pierwszy wyszedł”: wstawianie na koniec, zdejmowanie z początku, wszystko w O(1). Podstawa przeszukiwania wszerz (BFS) i symulacji kolejek.",
+   "complexity": "push, pop, front, back, size, empty: O(1)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`queue<T>` to adapter (domyślnie na `deque<T>`) udostępniający tylko: `push` (na koniec), `front` (pierwszy), `back` (ostatni), `pop` (usuwa pierwszy), `size`, `empty`. Nie ma indeksowania, iteracji ani `clear()`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "BFS na siatce",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // BFS na planszy: najkrótsza droga z (0,0) do (n-1,m-1), '#' = ściana\n    vector<string> g = {\"..#.\",\n                        \".#..\",\n                        \"....\"};\n    int n = g.size(), m = g[0].size();\n    vector<vector<int>> dist(n, vector<int>(m, -1));\n    queue<pair<int, int>> q;\n    dist[0][0] = 0;\n    q.push({0, 0});\n    int dx[] = {1, -1, 0, 0}, dy[] = {0, 0, 1, -1};\n    while (!q.empty()) {\n        auto [x, y] = q.front();\n        q.pop();\n        for (int k = 0; k < 4; k++) {\n            int nx = x + dx[k], ny = y + dy[k];\n            if (nx < 0 || ny < 0 || nx >= n || ny >= m) continue;\n            if (g[nx][ny] == '#' || dist[nx][ny] != -1) continue;\n            dist[nx][ny] = dist[x][y] + 1;\n            q.push({nx, ny});\n        }\n    }\n    cout << dist[n - 1][m - 1] << '\\n';   // 5\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`q.push(x)` / `q.emplace(...)`",
+       "O(1)",
+       "na koniec"
+      ],
+      [
+       "`q.front()` / `q.back()`",
+       "O(1)",
+       "UB na pustej"
+      ],
+      [
+       "`q.pop()`",
+       "O(1)",
+       "usuwa pierwszy, zwraca `void`"
+      ],
+      [
+       "`q.size()`, `q.empty()`",
+       "O(1)",
+       ""
+      ],
+      [
+       "czyszczenie `q = queue<int>();`",
+       "O(n)",
+       "brak metody `clear()`"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "W BFS oznaczaj wierzchołek jako odwiedzony **w momencie wstawienia** do kolejki, a nie zdjęcia — inaczej ten sam wierzchołek może trafić do kolejki wiele razy (dużo więcej pracy, czasem MLE)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "queue<T> q;",
+     "desc": "pusta kolejka",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "q.push(x) / q.emplace(args...)",
+     "desc": "dodaje na koniec",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "q.front()",
+     "desc": "pierwszy element (najstarszy)",
+     "complexity": "O(1)",
+     "returns": "T&"
+    },
+    {
+     "sig": "q.back()",
+     "desc": "ostatni element (najnowszy)",
+     "complexity": "O(1)",
+     "returns": "T&"
+    },
+    {
+     "sig": "q.pop()",
+     "desc": "usuwa pierwszy element",
+     "complexity": "O(1)",
+     "returns": "void"
+    },
+    {
+     "sig": "q.size() / q.empty()",
+     "desc": "rozmiar / czy pusta",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "swap(q1, q2)",
+     "desc": "zamiana kolejek",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`q.pop()` nie zwraca wartości — najpierw `q.front()`.",
+    "`q.front()` / `q.pop()` na pustej kolejce to UB.",
+    "Brak `q.clear()` — użyj `q = queue<T>();` albo `while (!q.empty()) q.pop();`.",
+    "W BFS zaznaczaj odwiedzenie przy wstawieniu do kolejki, nie przy zdjęciu.",
+    "Nie da się iterować po `queue` — jeśli potrzebujesz dostępu do środka, użyj `deque` albo vectora z indeksem głowy."
+   ],
+   "qa": [
+    {
+     "q": [
+      "queue c++",
+      "jak używać kolejki",
+      "kolejka c++",
+      "queue cpp przykład",
+      "how to use queue c++"
+     ],
+     "a": "`queue<int> q;` — `q.push(x)` dodaje na koniec, `q.front()` odczytuje pierwszy, `q.pop()` go usuwa. Wszystko O(1). Kolejność wyjmowania jest taka sama jak wstawiania (FIFO).",
+     "code": "queue<int> q;\nq.push(1); q.push(2); q.push(3);\nwhile (!q.empty()) {\n    cout << q.front() << ' ';   // 1 2 3\n    q.pop();\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "bfs c++",
+      "bfs kolejka",
+      "przeszukiwanie wszerz kod",
+      "bfs graf c++",
+      "najkrótsza ścieżka bfs"
+     ],
+     "a": "BFS: wstaw źródło do kolejki, a następnie dopóki kolejka niepusta — zdejmij wierzchołek i wstaw nieodwiedzonych sąsiadów, ustawiając `dist[u] = dist[v] + 1`. Złożoność O(n + m). Daje najkrótsze ścieżki w grafie nieważonym.",
+     "code": "int n = 5;\nvector<vector<int>> adj = {{1, 2}, {0, 3}, {0, 3}, {1, 2, 4}, {3}};\nvector<int> dist(n, -1);\nqueue<int> q;\ndist[0] = 0; q.push(0);\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    for (int u : adj[v])\n        if (dist[u] == -1) { dist[u] = dist[v] + 1; q.push(u); }\n}\ncout << dist[4] << '\\n';   // 3"
+    },
+    {
+     "q": [
+      "queue clear",
+      "jak wyczyścić kolejkę",
+      "kolejka clear nie istnieje",
+      "queue has no member named clear"
+     ],
+     "a": "`queue` nie ma `clear()`. Przypisz pustą kolejkę: `q = queue<int>();` (albo `queue<int>().swap(q);`), lub zdejmuj w pętli. Wszystkie sposoby są O(n).",
+     "code": "queue<int> q;\nfor (int i = 0; i < 5; i++) q.push(i);\nq = queue<int>();\ncout << q.size() << '\\n';   // 0"
+    },
+    {
+     "q": [
+      "queue par",
+      "kolejka par bfs",
+      "queue<pair<int,int>>",
+      "bfs na siatce kolejka par"
+     ],
+     "a": "Na planszy wstawiaj współrzędne: `queue<pair<int,int>> q; q.push({x, y});`, a przy zdejmowaniu rozpakuj `auto [x, y] = q.front();`. Możesz też zakodować pole jako jeden int `x * m + y` — mniej pamięci.",
+     "code": "queue<pair<int, int>> q;\nq.push({2, 3});\nq.emplace(4, 5);\nauto [x, y] = q.front();\nq.pop();\ncout << x << ' ' << y << ' ' << q.size() << '\\n';   // 2 3 1"
+    },
+    {
+     "q": [
+      "queue front back",
+      "pierwszy i ostatni element kolejki",
+      "queue top",
+      "queue has no member top"
+     ],
+     "a": "Kolejka ma `front()` (najstarszy element, który wyjdzie jako następny) i `back()` (ostatnio dodany). Metoda `top()` istnieje w `stack` i `priority_queue`, nie w `queue`.",
+     "code": "queue<int> q;\nq.push(7); q.push(9);\ncout << q.front() << ' ' << q.back() << '\\n';   // 7 9"
+    },
+    {
+     "q": [
+      "kolejka na tablicy",
+      "queue szybsza implementacja",
+      "bfs bez queue",
+      "własna kolejka vector"
+     ],
+     "a": "Gdy z góry wiadomo, że do kolejki trafi co najwyżej N elementów (np. każdy wierzchołek raz w BFS), wystarczy vector i indeks głowy. Jest minimalnie szybsze od `queue` i pozwala potem przejrzeć kolejność odwiedzin.",
+     "code": "int n = 4;\nvector<vector<int>> adj = {{1}, {2}, {3}, {}};\nvector<int> kol;\nkol.reserve(n);\nvector<char> odw(n, 0);\nkol.push_back(0); odw[0] = 1;\nfor (size_t glowa = 0; glowa < kol.size(); glowa++) {\n    int v = kol[glowa];\n    for (int u : adj[v]) if (!odw[u]) { odw[u] = 1; kol.push_back(u); }\n}\nfor (int v : kol) cout << v << ' ';   // 0 1 2 3 — kolejność BFS\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "bfs wielu źródeł",
+      "multi source bfs",
+      "bfs z kilku punktów naraz"
+     ],
+     "a": "Wstaw wszystkie źródła do kolejki na początku z odległością 0, potem zwykły BFS. Każde pole dostaje odległość do najbliższego źródła. Złożoność nadal O(n + m).",
+     "code": "int n = 6;\nvector<vector<int>> adj(n);\nfor (int i = 0; i + 1 < n; i++) { adj[i].push_back(i + 1); adj[i + 1].push_back(i); }   // ścieżka\nvector<int> dist(n, -1);\nqueue<int> q;\nfor (int s : {0, 5}) { dist[s] = 0; q.push(s); }\nwhile (!q.empty()) {\n    int v = q.front(); q.pop();\n    for (int u : adj[v]) if (dist[u] == -1) { dist[u] = dist[v] + 1; q.push(u); }\n}\nfor (int d : dist) cout << d << ' ';   // 0 1 2 2 1 0\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "queue vs priority_queue",
+      "różnica kolejka i kolejka priorytetowa",
+      "queue czy priority queue",
+      "kiedy priority_queue zamiast queue"
+     ],
+     "a": "`queue` zwraca elementy w kolejności wstawienia (FIFO) — O(1), idealna do BFS w grafie nieważonym. `priority_queue` zawsze zwraca element o najwyższym priorytecie — O(log n), potrzebna w Dijkstrze i zachłannych wyborach. Wagi 0/1 obsługuje deque (0-1 BFS).",
+     "code": "queue<int> q;\npriority_queue<int> pq;\nfor (int x : {3, 9, 1}) { q.push(x); pq.push(x); }\ncout << q.front() << ' ' << pq.top() << '\\n';   // 3 9"
+    },
+    {
+     "q": [
+      "bfs ze stanem",
+      "kolejka ze strukturą",
+      "queue tuple bfs",
+      "bfs po stanach (wierzchołek, maska)"
+     ],
+     "a": "Gdy stan to więcej niż wierzchołek (np. pozycja + liczba użytych kluczy), wkładaj do kolejki strukturę/krotkę, a odległości trzymaj w tablicy indeksowanej całym stanem. Złożoność O(liczba stanów + przejść).",
+     "code": "int n = 3, K = 2;                                   // wierzchołki × liczba „przeskoków”\nvector<vector<int>> adj = {{1}, {2}, {}};\nvector<vector<int>> dist(n, vector<int>(K + 1, -1));\nqueue<tuple<int, int>> q;\ndist[0][0] = 0;\nq.push({0, 0});\nwhile (!q.empty()) {\n    auto [v, k] = q.front(); q.pop();\n    for (int u : adj[v])\n        if (dist[u][k] == -1) { dist[u][k] = dist[v][k] + 1; q.push({u, k}); }\n}\ncout << dist[2][0] << '\\n';   // 2"
+    },
+    {
+     "q": [
+      "symulacja kolejki",
+      "kolejka do kasy symulacja",
+      "queue simulation c++",
+      "obsługa klientów kolejka"
+     ],
+     "a": "Kolejkę FIFO naturalnie modeluje `queue`: nowi przychodzą `push`, obsługiwany jest `front`, po obsłudze `pop`. Każda operacja O(1), więc symulacja n zdarzeń to O(n).",
+     "code": "queue<pair<string, int>> kasa;               // (imię, czas obsługi)\nkasa.push({\"Ala\", 3}); kasa.push({\"Bob\", 2}); kasa.push({\"Cyp\", 4});\nint czas = 0;\nwhile (!kasa.empty()) {\n    auto [kto, t] = kasa.front(); kasa.pop();\n    czas += t;\n    cout << kto << \" wychodzi w chwili \" << czas << '\\n';   // 3, 5, 9\n}"
+    }
+   ],
+   "related": [
+    "stl-deque",
+    "stl-stack",
+    "stl-priority-queue",
+    "graph-bfs",
+    "ds-min-stack-queue",
+    "oi-py-collections",
+    "stl-ref-adaptors-all",
+    "tech-josephus"
+   ]
+  },
+  {
+   "id": "stl-stack",
+   "title": "std::stack — stos LIFO",
+   "category": "STL kontenery",
+   "tags": [
+    "stack",
+    "stos",
+    "LIFO",
+    "nawiasy",
+    "stos monotoniczny",
+    "dfs iteracyjny"
+   ],
+   "aliases": [
+    "stack",
+    "std::stack",
+    "stack cpp",
+    "stos c++",
+    "stos",
+    "lifo",
+    "jak używać stosu"
+   ],
+   "summary": "Stos „ostatni wszedł, pierwszy wyszedł”: `push`, `top`, `pop` w O(1). Używany do sprawdzania nawiasów, stosu monotonicznego (najbliższy większy element), iteracyjnego DFS i obliczania wyrażeń.",
+   "complexity": "push, pop, top, size, empty: O(1)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "`stack<T>` (adapter, domyślnie na `deque`) udostępnia tylko szczyt: `push(x)`, `top()`, `pop()`, `size()`, `empty()`. W praktyce równie dobrze działa `vector` z `push_back`/`back`/`pop_back` — i daje dodatkowo podgląd całej zawartości."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Poprawność nawiasowania",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nbool poprawne(const string& s) {\n    stack<char> st;\n    for (char c : s) {\n        if (c == '(' || c == '[' || c == '{') st.push(c);\n        else {\n            if (st.empty()) return false;\n            char o = st.top();\n            st.pop();\n            if ((c == ')' && o != '(') || (c == ']' && o != '[') || (c == '}' && o != '{')) return false;\n        }\n    }\n    return st.empty();\n}\n\nint main() {\n    cout << poprawne(\"([]{})\") << poprawne(\"(]\") << poprawne(\"((\") << '\\n';   // 100\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Stos monotoniczny — O(n) łącznie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// dla każdego i: indeks najbliższego elementu na prawo, który jest większy (-1 gdy brak)\nint main() {\n    vector<int> a = {2, 7, 3, 5, 4, 6, 8};\n    int n = a.size();\n    vector<int> nast(n, -1);\n    stack<int> st;                       // indeksy, wartości malejące od dołu do góry\n    for (int i = 0; i < n; i++) {\n        while (!st.empty() && a[st.top()] < a[i]) {\n            nast[st.top()] = i;\n            st.pop();\n        }\n        st.push(i);\n    }\n    for (int x : nast) cout << x << ' ';   // 1 6 3 5 5 6 -1\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`st.push(x)` / `st.emplace(...)`",
+       "O(1)",
+       ""
+      ],
+      [
+       "`st.top()`",
+       "O(1)",
+       "UB na pustym"
+      ],
+      [
+       "`st.pop()`",
+       "O(1)",
+       "zwraca `void`"
+      ],
+      [
+       "`st.size()`, `st.empty()`",
+       "O(1)",
+       ""
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Głęboka rekurencja (DFS na ścieżce 10^6 wierzchołków) może przepełnić stos wywołań. Iteracyjny DFS z jawnym `stack`/`vector` używa pamięci sterty i nie ma tego problemu."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "stack<T> st;",
+     "desc": "pusty stos",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "st.push(x) / st.emplace(args...)",
+     "desc": "kładzie element na szczyt",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "st.top()",
+     "desc": "element na szczycie",
+     "complexity": "O(1)",
+     "returns": "T&"
+    },
+    {
+     "sig": "st.pop()",
+     "desc": "zdejmuje szczyt",
+     "complexity": "O(1)",
+     "returns": "void"
+    },
+    {
+     "sig": "st.size() / st.empty()",
+     "desc": "rozmiar / czy pusty",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "swap(s1, s2)",
+     "desc": "zamiana stosów",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "`st.pop()` nie zwraca wartości — najpierw `st.top()`.",
+    "`st.top()` / `st.pop()` na pustym stosie to UB — w zadaniach z nawiasami zawsze sprawdzaj `st.empty()` przed zdjęciem.",
+    "Brak `clear()` i iteracji — w razie potrzeby użyj `vector` jako stosu.",
+    "Stos monotoniczny: każdy element jest wstawiany i zdejmowany najwyżej raz, więc całość to O(n), mimo pętli `while` w środku."
+   ],
+   "qa": [
+    {
+     "q": [
+      "stack c++",
+      "jak używać stosu",
+      "stos c++",
+      "stack cpp przykład",
+      "how to use stack c++"
+     ],
+     "a": "`stack<int> st;` — `push(x)` kładzie na wierzch, `top()` odczytuje wierzch, `pop()` go zdejmuje. Wszystko O(1). Elementy wychodzą w odwrotnej kolejności niż weszły (LIFO).",
+     "code": "stack<int> st;\nst.push(1); st.push(2); st.push(3);\nwhile (!st.empty()) { cout << st.top() << ' '; st.pop(); }   // 3 2 1\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "nawiasy stos",
+      "poprawne nawiasowanie c++",
+      "sprawdzanie nawiasów",
+      "balanced parentheses c++"
+     ],
+     "a": "Otwierający nawias wkładaj na stos, zamykający musi pasować do szczytu (który zdejmujesz). Na końcu stos musi być pusty. O(n). Dla jednego rodzaju nawiasów wystarczy licznik „głębokości” (nie może spaść poniżej 0).",
+     "code": "string s = \"(()())\";\nint gl = 0;\nbool ok = true;\nfor (char c : s) {\n    gl += (c == '(') ? 1 : -1;\n    if (gl < 0) ok = false;\n}\nok = ok && gl == 0;\ncout << ok << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "stos monotoniczny",
+      "najbliższy większy element",
+      "next greater element",
+      "monotonic stack c++",
+      "najbliższy mniejszy po lewej"
+     ],
+     "a": "Przechodź tablicę, trzymając na stosie indeksy o wartościach monotonicznych. Przed wstawieniem a[i] zdejmij elementy, które a[i] „przykrywa” — to dla nich a[i] jest odpowiedzią. Każdy indeks wchodzi i wychodzi raz → O(n).",
+     "code": "vector<int> a = {4, 2, 5, 1, 3};\nint n = a.size();\nvector<int> lewy_mniejszy(n, -1);    // wartość najbliższego mniejszego po lewej\nstack<int> st;\nfor (int i = 0; i < n; i++) {\n    while (!st.empty() && st.top() >= a[i]) st.pop();\n    if (!st.empty()) lewy_mniejszy[i] = st.top();\n    st.push(a[i]);\n}\nfor (int x : lewy_mniejszy) cout << x << ' ';   // -1 -1 2 -1 1\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "dfs iteracyjny",
+      "dfs bez rekurencji",
+      "dfs stos c++",
+      "iterative dfs",
+      "rekurencja stack overflow dfs"
+     ],
+     "a": "Zamiast rekurencji użyj jawnego stosu: wkładaj wierzchołki, zdejmuj i przetwarzaj sąsiadów. Kolejność odwiedzin jest nieco inna niż w rekurencyjnym DFS, ale osiągalność i spójne składowe wychodzą tak samo. O(n + m), bez ryzyka przepełnienia stosu wywołań.",
+     "code": "int n = 5;\nvector<vector<int>> adj = {{1, 2}, {3}, {}, {4}, {}};\nvector<char> odw(n, 0);\nstack<int> st;\nst.push(0);\nwhile (!st.empty()) {\n    int v = st.top(); st.pop();\n    if (odw[v]) continue;\n    odw[v] = 1;\n    cout << v << ' ';\n    for (int u : adj[v]) if (!odw[u]) st.push(u);\n}\ncout << '\\n';   // 0 2 1 3 4"
+    },
+    {
+     "q": [
+      "stack czy vector",
+      "vector jako stos",
+      "czy używać stack czy vectora",
+      "stos na vectorze"
+     ],
+     "a": "`vector` z `push_back`, `back`, `pop_back` działa jak stos (O(1)), a dodatkowo pozwala zajrzeć do środka (`v[i]`), wypisać zawartość i wyczyścić (`clear`). `stack` jest czytelniejszy, ale bardziej ograniczony. Wydajność podobna.",
+     "code": "vector<int> st;\nst.push_back(5); st.push_back(8);\ncout << st.back() << ' ' << st[0] << '\\n';   // 8 5\nst.pop_back();"
+    },
+    {
+     "q": [
+      "stack top pusty segfault",
+      "stos pusty błąd",
+      "top na pustym stosie",
+      "stack empty crash"
+     ],
+     "a": "`top()` i `pop()` na pustym stosie to UB — zwykle segfault lub śmieciowa wartość. Zawsze sprawdzaj `!st.empty()` przed odczytem, szczególnie w pętlach `while (... && st.top() ...)` — warunek `!st.empty()` musi być pierwszy (skrócone wartościowanie).",
+     "code": "stack<int> st;\nint x = 3;\nwhile (!st.empty() && st.top() < x) st.pop();   // najpierw empty()\nif (!st.empty()) cout << st.top() << '\\n';\nelse cout << \"pusty\\n\";"
+    },
+    {
+     "q": [
+      "największy prostokąt w histogramie",
+      "largest rectangle histogram",
+      "stos histogram"
+     ],
+     "a": "Klasyczne zastosowanie stosu monotonicznego: dla każdego słupka znajdź najbliższy niższy po lewej i po prawej; pole = h[i] · (prawy − lewy − 1). O(n).",
+     "code": "vector<long long> h = {2, 1, 5, 6, 2, 3};\nint n = h.size();\nvector<int> L(n), R(n);\nstack<int> st;\nfor (int i = 0; i < n; i++) {\n    while (!st.empty() && h[st.top()] >= h[i]) st.pop();\n    L[i] = st.empty() ? -1 : st.top();\n    st.push(i);\n}\nst = stack<int>();\nfor (int i = n - 1; i >= 0; i--) {\n    while (!st.empty() && h[st.top()] >= h[i]) st.pop();\n    R[i] = st.empty() ? n : st.top();\n    st.push(i);\n}\nlong long best = 0;\nfor (int i = 0; i < n; i++) best = max(best, h[i] * (R[i] - L[i] - 1));\ncout << best << '\\n';   // 10"
+    }
+   ],
+   "related": [
+    "stl-queue",
+    "stl-deque",
+    "stl-vector",
+    "ds-monotonic-stack",
+    "cpp-stack-overflow",
+    "graph-dfs",
+    "ds-min-stack-queue",
+    "oi-py-collections",
+    "stl-ref-adaptors-all"
+   ]
+  },
+  {
+   "id": "stl-deque",
+   "title": "std::deque — kolejka dwustronna",
+   "category": "STL kontenery",
+   "tags": [
+    "deque",
+    "kolejka dwustronna",
+    "push_front",
+    "0-1 BFS",
+    "okno przesuwne",
+    "kolejka monotoniczna"
+   ],
+   "aliases": [
+    "deque",
+    "std::deque",
+    "deque cpp",
+    "kolejka dwustronna",
+    "dek",
+    "push_front",
+    "deque c++",
+    "double ended queue"
+   ],
+   "summary": "Kolejka dwustronna: dodawanie i usuwanie z obu końców w O(1) oraz indeksowanie `d[i]` w O(1). Używana w 0-1 BFS i w kolejce monotonicznej (maksimum w oknie przesuwnym w O(n)).",
+   "complexity": "push_front/push_back/pop_front/pop_back: O(1); d[i]: O(1); insert/erase w środku: O(n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`deque<T>` przechowuje elementy w kilku blokach pamięci, dzięki czemu może rosnąć w obie strony bez przesuwania wszystkiego. Ma `[]` jak vector, ale elementy **nie** leżą w jednym ciągłym bloku (brak `data()`), a stała jest nieco większa."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Kolejka monotoniczna (sliding window maximum)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// maksimum w każdym oknie długości k w O(n) — kolejka monotoniczna\nint main() {\n    vector<int> a = {1, 3, -1, -3, 5, 3, 6, 7};\n    int k = 3;\n    deque<int> dq;                 // indeksy; wartości a[] malejące od przodu\n    for (int i = 0; i < (int)a.size(); i++) {\n        while (!dq.empty() && a[dq.back()] <= a[i]) dq.pop_back();\n        dq.push_back(i);\n        if (dq.front() <= i - k) dq.pop_front();   // wypadł z okna\n        if (i >= k - 1) cout << a[dq.front()] << ' ';\n    }\n    cout << '\\n';                  // 3 3 5 5 6 7\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "0-1 BFS",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// 0-1 BFS: krawędzie o wagach 0 lub 1, najkrótsze ścieżki w O(n + m)\nint main() {\n    int n = 4;\n    vector<vector<pair<int, int>>> adj(n);   // (sąsiad, waga 0/1)\n    adj[0] = {{1, 1}, {2, 0}};\n    adj[2] = {{1, 0}, {3, 1}};\n    adj[1] = {{3, 1}};\n    vector<int> dist(n, INT_MAX);\n    deque<int> dq;\n    dist[0] = 0;\n    dq.push_back(0);\n    while (!dq.empty()) {\n        int v = dq.front();\n        dq.pop_front();\n        for (auto [u, w] : adj[v])\n            if (dist[v] + w < dist[u]) {\n                dist[u] = dist[v] + w;\n                if (w == 0) dq.push_front(u);\n                else dq.push_back(u);\n            }\n    }\n    for (int d : dist) cout << d << ' ';     // 0 0 0 1\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "deque",
+      "vector"
+     ],
+     "rows": [
+      [
+       "`push_back` / `pop_back`",
+       "O(1)",
+       "O(1) zamortyzowane"
+      ],
+      [
+       "`push_front` / `pop_front`",
+       "O(1)",
+       "O(n)"
+      ],
+      [
+       "`[i]`",
+       "O(1) (wolniej niż vector)",
+       "O(1)"
+      ],
+      [
+       "`insert`/`erase` w środku",
+       "O(n)",
+       "O(n)"
+      ],
+      [
+       "ciągła pamięć",
+       "nie",
+       "tak"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "md": "W libstdc++ każdy `deque` już przy utworzeniu alokuje blok rzędu kilkuset bajtów. `vector<deque<int>> d(1000000)` potrafi zużyć setki MB — nie twórz milionów deque (np. jako list sąsiedztwa)."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "deque<T> d; / deque<T> d(n, x);",
+     "desc": "pusty / n kopii x",
+     "complexity": "O(1) / O(n)"
+    },
+    {
+     "sig": "d.push_back(x) / d.emplace_back(...)",
+     "desc": "dodaje na koniec",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "d.push_front(x) / d.emplace_front(...)",
+     "desc": "dodaje na początek",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "d.pop_back() / d.pop_front()",
+     "desc": "usuwa z końca / z początku (UB na pustym)",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "d.front() / d.back()",
+     "desc": "pierwszy / ostatni element",
+     "complexity": "O(1)",
+     "returns": "T&"
+    },
+    {
+     "sig": "d[i] / d.at(i)",
+     "desc": "dostęp po indeksie",
+     "complexity": "O(1)",
+     "returns": "T&"
+    },
+    {
+     "sig": "d.insert(it, x) / d.erase(it)",
+     "desc": "wstawienie / usunięcie w środku",
+     "complexity": "O(n)",
+     "returns": "iterator"
+    },
+    {
+     "sig": "d.size() / d.empty() / d.clear()",
+     "desc": "rozmiar / czy pusty / czyszczenie",
+     "complexity": "O(1) / O(1) / O(n)"
+    },
+    {
+     "sig": "d.resize(n) / d.assign(n, x)",
+     "desc": "zmiana rozmiaru / wypełnienie",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "d.begin(), d.end(), d.rbegin(), d.rend()",
+     "desc": "iteratory random access",
+     "complexity": "O(1)"
+    }
+   ],
+   "pitfalls": [
+    "Każdy deque w libstdc++ od razu zajmuje kilkaset bajtów — miliony deque to MLE.",
+    "Wstawienie na którymkolwiek końcu unieważnia wszystkie iteratory (referencje do elementów zostają ważne); wstawienie w środek unieważnia wszystko.",
+    "`d.front()`, `d.back()`, `pop_front()`, `pop_back()` na pustym deque to UB.",
+    "Brak `data()` i ciągłej pamięci — nie przekazuj `&d[0]` jako tablicy.",
+    "W kolejce monotonicznej trzymaj INDEKSY (żeby wiedzieć, kiedy element wypada z okna), nie wartości."
+   ],
+   "qa": [
+    {
+     "q": [
+      "deque c++",
+      "jak używać deque",
+      "kolejka dwustronna c++",
+      "deque cpp przykład",
+      "how to use deque"
+     ],
+     "a": "`deque<int> d;` — `push_front`/`push_back` dodają na początek/koniec, `pop_front`/`pop_back` usuwają, `front()`/`back()`/`d[i]` odczytują. Wszystkie te operacje są O(1). Używaj, gdy potrzebujesz operacji na obu końcach.",
+     "code": "deque<int> d;\nd.push_back(2);\nd.push_front(1);\nd.push_back(3);           // 1 2 3\nd.pop_front();            // 2 3\ncout << d.front() << ' ' << d.back() << ' ' << d[1] << '\\n';   // 2 3 3"
+    },
+    {
+     "q": [
+      "maksimum w oknie przesuwnym",
+      "sliding window maximum",
+      "kolejka monotoniczna",
+      "minimum w oknie o długości k",
+      "deque okno"
+     ],
+     "a": "Trzymaj w deque indeksy, których wartości maleją od przodu. Nowy element usuwa z tyłu wszystkie mniejsze/równe (nigdy już nie będą maksimum), z przodu usuwasz indeksy spoza okna. Maksimum to `a[dq.front()]`. Każdy indeks wchodzi i wychodzi raz → O(n).",
+     "code": "vector<int> a = {4, 2, 12, 3, 8, 1};\nint k = 2;\ndeque<int> dq;     // minimum: wartości ROSNĄCE od przodu\nfor (int i = 0; i < (int)a.size(); i++) {\n    while (!dq.empty() && a[dq.back()] >= a[i]) dq.pop_back();\n    dq.push_back(i);\n    if (dq.front() <= i - k) dq.pop_front();\n    if (i >= k - 1) cout << a[dq.front()] << ' ';   // 2 2 3 3 1\n}\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "0-1 bfs",
+      "bfs z wagami 0 i 1",
+      "01 bfs deque",
+      "zero one bfs"
+     ],
+     "a": "Gdy krawędzie mają wagi 0 lub 1, zamiast Dijkstry użyj deque: po relaksacji krawędzią 0 wstaw wierzchołek na przód, krawędzią 1 — na tył. Deque zawsze zawiera odległości d i d+1 w kolejności, więc całość działa w O(n + m).",
+     "code": "int n = 3;\nvector<vector<pair<int, int>>> adj(n);\nadj[0] = {{1, 1}, {2, 0}};\nadj[2] = {{1, 0}};\nvector<int> dist(n, INT_MAX);\ndeque<int> dq;\ndist[0] = 0; dq.push_back(0);\nwhile (!dq.empty()) {\n    int v = dq.front(); dq.pop_front();\n    for (auto [u, w] : adj[v])\n        if (dist[v] + w < dist[u]) {\n            dist[u] = dist[v] + w;\n            w == 0 ? dq.push_front(u) : dq.push_back(u);\n        }\n}\ncout << dist[1] << '\\n';   // 0"
+    },
+    {
+     "q": [
+      "deque vs vector",
+      "deque czy vector",
+      "kiedy deque",
+      "czy deque jest wolniejszy od vectora"
+     ],
+     "a": "Deque wygrywa, gdy dodajesz/usuwasz na początku (O(1) zamiast O(n)). Vector jest szybszy przy samym indeksowaniu i iterowaniu (ciągła pamięć, mniejszy narzut) i zużywa mniej pamięci. Domyślnie wybieraj vector, deque tylko gdy potrzebujesz przodu.",
+     "code": "deque<int> d;\nfor (int i = 0; i < 5; i++) d.push_front(i);   // O(1) każde\nvector<int> v(d.begin(), d.end());             // 4 3 2 1 0\ncout << v[0] << '\\n';                          // 4"
+    },
+    {
+     "q": [
+      "deque pamięć",
+      "vector deque mle",
+      "dużo deque memory limit",
+      "deque memory usage"
+     ],
+     "a": "Implementacja libstdc++ przy tworzeniu deque alokuje mapę bloków i jeden blok danych (rzędu kilkuset bajtów). Dla jednego deque to nic, ale `vector<deque<int>>` z milionem elementów może przekroczyć limit pamięci. Na listy sąsiedztwa używaj `vector<vector<int>>`.",
+     "code": "int n = 1000;\nvector<vector<int>> adj(n);      // OK: pusty vector nie alokuje\nadj[0].push_back(1);\ncout << adj[0].size() << '\\n';"
+    },
+    {
+     "q": [
+      "deque push_front",
+      "dodaj na początek c++",
+      "wstaw element na początek vectora",
+      "push front vector"
+     ],
+     "a": "Vector nie ma `push_front`, a `v.insert(v.begin(), x)` kosztuje O(n). Jeśli wstawiasz na początek często — użyj `deque` (`push_front` O(1)). Albo dopisuj na koniec vectora i na końcu wykonaj `reverse`.",
+     "code": "deque<int> d = {2, 3};\nd.push_front(1);                 // O(1)\nvector<int> v = {2, 3};\nv.insert(v.begin(), 1);          // O(n)\ncout << d[0] << v[0] << '\\n';    // 11"
+    },
+    {
+     "q": [
+      "deque rotacja",
+      "obracanie kolejki",
+      "przesuń cyklicznie deque",
+      "symulacja kolejki w kółko"
+     ],
+     "a": "Przesunięcie cykliczne o jeden w lewo: `d.push_back(d.front()); d.pop_front();` — O(1). Przydatne w symulacjach (np. odliczanka Józefa Flawiusza dla małych n).",
+     "code": "deque<int> d = {1, 2, 3, 4};\nd.push_back(d.front());\nd.pop_front();\nfor (int x : d) cout << x << ' ';   // 2 3 4 1\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "stl-queue",
+    "stl-stack",
+    "stl-vector",
+    "graph-01-bfs",
+    "tech-sliding-window",
+    "ds-monotonic-queue",
+    "oi-py-collections",
+    "stl-ref-deque-list-all",
+    "tech-josephus"
+   ]
+  },
+  {
+   "id": "stl-bitset",
+   "title": "std::bitset — tablica bitów i przyspieszenie /64",
+   "category": "STL kontenery",
+   "tags": [
+    "bitset",
+    "bity",
+    "maska",
+    "przyspieszenie 64",
+    "plecak bitset",
+    "count",
+    "operacje bitowe"
+   ],
+   "aliases": [
+    "bitset",
+    "std::bitset",
+    "bitset cpp",
+    "bitset c++",
+    "tablica bitów",
+    "bitset count",
+    "bitset plecak",
+    "bitset optymalizacja"
+   ],
+   "summary": "Tablica N bitów o rozmiarze stałym w czasie kompilacji. Operacje `&`, `|`, `^`, `<<`, `count()` działają na 64 bitach naraz, co daje przyspieszenie ~64× — klasyczny trik w zadaniach plecakowych i na zbiorach.",
+   "complexity": "b[i], set(i), test(i): O(1); &, |, ^, ~, <<, >>, count, any, none: O(N/64)",
+   "level": 3,
+   "body": [
+    {
+     "type": "text",
+     "md": "`bitset<N>` przechowuje N bitów upakowanych w słowach 64-bitowych. Pojedynczy bit kosztuje O(1), a operacje na całym bitsecie — O(N/64) (tzw. „przyspieszenie przez długość słowa”). **N musi być stałą czasu kompilacji.**"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Podstawowe operacje",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    bitset<8> a(\"10110000\");          // z napisu: bit 7 to pierwszy znak\n    bitset<8> b(13);                  // 00001101\n    cout << a << ' ' << b << '\\n';    // 10110000 00001101\n    cout << (a | b) << ' ' << (a & b) << ' ' << (a ^ b) << '\\n';\n    cout << a.count() << ' ' << b.test(0) << ' ' << b[1] << '\\n';   // 3 1 0\n    b.set(1); b.reset(0); b.flip(7);\n    cout << b << ' ' << b.to_ulong() << '\\n';   // 10001110 142\n    cout << (b << 1) << '\\n';                   // 00011100 — bit 7 wypada\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Plecak (subset sum) bitsetem: O(n · S / 64)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// Czy da się wybrać podzbiór o sumie S? n przedmiotów, suma do 10^6.\nint main() {\n    const int MAXS = 1000001;\n    vector<int> w = {3, 34, 4, 12, 5, 2};\n    bitset<MAXS> dp;\n    dp[0] = 1;\n    for (int x : w) dp |= dp << x;     // O(MAXS / 64) na przedmiot\n    cout << dp[9] << ' ' << dp[30] << '\\n';   // 1 0\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność",
+      "Opis"
+     ],
+     "rows": [
+      [
+       "`b[i]`, `b.test(i)`",
+       "O(1)",
+       "odczyt (test sprawdza zakres)"
+      ],
+      [
+       "`b.set(i)`, `b.reset(i)`, `b.flip(i)`",
+       "O(1)",
+       "ustaw / wyzeruj / odwróć bit"
+      ],
+      [
+       "`b.set()`, `b.reset()`, `b.flip()`",
+       "O(N/64)",
+       "wszystkie bity"
+      ],
+      [
+       "`a & b`, `a | b`, `a ^ b`, `~a`",
+       "O(N/64)",
+       "operacje bitowe"
+      ],
+      [
+       "`a << k`, `a >> k`",
+       "O(N/64)",
+       "przesunięcia"
+      ],
+      [
+       "`b.count()`",
+       "O(N/64)",
+       "liczba jedynek"
+      ],
+      [
+       "`b.any()`, `b.none()`, `b.all()`",
+       "O(N/64)",
+       "czy jest jakaś / żadna / wszystkie"
+      ],
+      [
+       "`b._Find_first()`, `b._Find_next(i)`",
+       "O(N/64)",
+       "rozszerzenie GCC: pierwsza jedynka / następna po i"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Rozmiar musi być stały, więc deklaruj bitset z maksymalnym rozmiarem z treści zadania (np. `bitset<100001>`). Gdy potrzebujesz wielu bitsetów (np. macierz osiągalności), użyj `vector<bitset<N>>` albo globalnej tablicy."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "bitset<N> b; / bitset<N> b(x); / bitset<N> b(\"0101\");",
+     "desc": "zera / z liczby (unsigned long long) / z napisu",
+     "complexity": "O(N/64)"
+    },
+    {
+     "sig": "b[i]",
+     "desc": "dostęp do bitu i (bez sprawdzania zakresu)",
+     "complexity": "O(1)",
+     "returns": "reference / bool"
+    },
+    {
+     "sig": "b.test(i)",
+     "desc": "odczyt bitu ze sprawdzaniem zakresu (wyjątek)",
+     "complexity": "O(1)",
+     "returns": "bool"
+    },
+    {
+     "sig": "b.set(i) / b.set()",
+     "desc": "ustawia bit i / wszystkie",
+     "complexity": "O(1) / O(N/64)"
+    },
+    {
+     "sig": "b.set(i, v)",
+     "desc": "ustawia bit i na wartość v",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "b.reset(i) / b.reset()",
+     "desc": "zeruje bit i / wszystkie",
+     "complexity": "O(1) / O(N/64)"
+    },
+    {
+     "sig": "b.flip(i) / b.flip()",
+     "desc": "odwraca bit i / wszystkie",
+     "complexity": "O(1) / O(N/64)"
+    },
+    {
+     "sig": "b.count()",
+     "desc": "liczba ustawionych bitów",
+     "complexity": "O(N/64)",
+     "returns": "size_t"
+    },
+    {
+     "sig": "b.size()",
+     "desc": "N",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "b.any() / b.none() / b.all()",
+     "desc": "czy jakikolwiek / żaden / wszystkie bity ustawione",
+     "complexity": "O(N/64)",
+     "returns": "bool"
+    },
+    {
+     "sig": "a & b, a | b, a ^ b, ~a, a &= b, a |= b, a ^= b",
+     "desc": "operacje bitowe na całych zbiorach",
+     "complexity": "O(N/64)"
+    },
+    {
+     "sig": "a << k, a >> k, a <<= k, a >>= k",
+     "desc": "przesunięcia bitów",
+     "complexity": "O(N/64)"
+    },
+    {
+     "sig": "a == b, a != b",
+     "desc": "porównanie",
+     "complexity": "O(N/64)",
+     "returns": "bool"
+    },
+    {
+     "sig": "b.to_string() / b.to_ulong() / b.to_ullong()",
+     "desc": "konwersja na napis / liczbę (wyjątek, gdy nie mieści się)",
+     "complexity": "O(N)"
+    },
+    {
+     "sig": "b._Find_first() / b._Find_next(i)",
+     "desc": "GCC: indeks pierwszej jedynki / pierwszej po i (albo N, gdy brak)",
+     "complexity": "O(N/64)",
+     "returns": "size_t"
+    }
+   ],
+   "pitfalls": [
+    "Rozmiar `bitset<N>` musi być stałą — `bitset<n>` z wczytanym n się nie skompiluje.",
+    "Wypisywanie i konstrukcja z napisu: bit 0 jest NA KOŃCU napisu (najmłodszy bit po prawej).",
+    "Duży bitset lokalnie (np. `bitset<100000000>` = 12,5 MB) może przepełnić stos — deklaruj globalnie.",
+    "`b.to_ulong()` / `b.to_ullong()` rzucają wyjątek `overflow_error`, gdy wartość nie mieści się w `unsigned long` / `unsigned long long`.",
+    "`_Find_first`/`_Find_next` to niestandardowe rozszerzenia GCC (działają z g++, nie w MSVC).",
+    "Przesunięcie `dp << x` gubi bity wychodzące poza N — dobierz N z zapasem (np. maksymalna suma + 1)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "bitset c++",
+      "jak używać bitset",
+      "bitset cpp przykład",
+      "co to bitset",
+      "how to use bitset"
+     ],
+     "a": "`bitset<N> b;` to N bitów (zera). `b[i] = 1` / `b.set(i)` ustawia bit, `b.count()` liczy jedynki, operatory `& | ^ ~ << >>` działają na całych bitsetach w O(N/64). N musi być stałą czasu kompilacji.",
+     "code": "bitset<10> b;\nb[2] = 1;\nb.set(5);\ncout << b << ' ' << b.count() << '\\n';   // 0000100100 2"
+    },
+    {
+     "q": [
+      "plecak bitset",
+      "subset sum bitset",
+      "suma podzbioru bitset",
+      "knapsack bitset optymalizacja",
+      "dp |= dp << x"
+     ],
+     "a": "Bit `dp[s]` mówi, czy suma s jest osiągalna. Dodanie przedmiotu o wadze x to `dp |= dp << x` — wszystkie sumy przesunięte o x. Złożoność O(n · S / 64), czyli ~64× szybciej niż zwykła pętla po sumach. Dla S = 10^6 i n = 10^4 to ok. 1,6·10^8 prostych operacji na słowach.",
+     "code": "const int S = 100001;\nbitset<S> dp;\ndp[0] = 1;\nfor (int x : {5, 7, 11}) dp |= dp << x;\ncout << dp[12] << dp[13] << dp[23] << '\\n';   // 101"
+    },
+    {
+     "q": [
+      "bitset count",
+      "liczba jedynek bitset",
+      "ile bitów ustawionych",
+      "popcount bitset"
+     ],
+     "a": "`b.count()` zwraca liczbę ustawionych bitów w O(N/64) (sprzętowy popcount na słowach). Dla pojedynczej liczby `int`/`long long` użyj `__builtin_popcount(x)` / `__builtin_popcountll(x)` albo C++20 `popcount`.",
+     "code": "bitset<64> b(0b101101);\ncout << b.count() << ' ' << __builtin_popcount(0b101101) << '\\n';   // 4 4"
+    },
+    {
+     "q": [
+      "bitset rozmiar ze zmiennej",
+      "bitset<n> nie działa",
+      "dynamiczny bitset",
+      "bitset zmienny rozmiar"
+     ],
+     "a": "Rozmiar bitsetu jest parametrem szablonu, więc musi być stałą. Zadeklaruj maksymalny rozmiar z ograniczeń zadania i używaj tylko pierwszych n bitów. Prawdziwie dynamiczna alternatywa to `vector<bool>` (bez szybkich operacji na całości) albo `boost::dynamic_bitset` (niedostępny na OI).",
+     "code": "const int MAXN = 2005;\nbitset<MAXN> wiersz[MAXN];       // globalnie: macierz bitów\nint main() {\n    int n = 10;                  // rzeczywisty rozmiar z wejścia\n    wiersz[0][n - 1] = 1;\n    cout << wiersz[0].count() << '\\n';\n}",
+     "code_scope": "global"
+    },
+    {
+     "q": [
+      "bitset to string",
+      "bitset wypisz",
+      "bitset z liczby",
+      "zamiana liczby na binarny c++",
+      "liczba binarnie c++"
+     ],
+     "a": "`bitset<N>(x)` tworzy bitset z liczby, `cout << b` albo `b.to_string()` daje zapis binarny (najstarszy bit z lewej, z zerami wiodącymi). Konstruktor z napisu `bitset<N>(\"1011\")` interpretuje ostatni znak jako bit 0.",
+     "code": "int x = 37;\ncout << bitset<8>(x) << '\\n';                  // 00100101\nstring s = bitset<16>(x).to_string();\ncout << s.substr(s.find('1')) << '\\n';         // 100101 — bez zer wiodących\ncout << bitset<8>(\"101\").to_ulong() << '\\n';   // 5"
+    },
+    {
+     "q": [
+      "bitset domknięcie przechodnie",
+      "osiągalność bitset",
+      "transitive closure bitset",
+      "floyd warshall bitset"
+     ],
+     "a": "Wiersz `reach[v]` to bitset wierzchołków osiągalnych z v. W wersji Floyda: jeśli `reach[i][k]`, to `reach[i] |= reach[k]` — O(n³/64). Dla n = 2000 to ok. 1,25·10^8 operacji na słowach — mieści się w limitach.",
+     "code": "const int N = 4;\nbitset<N> reach[N];\nreach[0][1] = reach[1][2] = reach[2][3] = 1;\nfor (int k = 0; k < N; k++)\n    for (int i = 0; i < N; i++)\n        if (reach[i][k]) reach[i] |= reach[k];\ncout << reach[0] << '\\n';   // 1110 — z 0 osiągalne 1, 2, 3"
+    },
+    {
+     "q": [
+      "bitset find first",
+      "_Find_first",
+      "_Find_next",
+      "iteracja po jedynkach bitset",
+      "przejdź po ustawionych bitach"
+     ],
+     "a": "W GCC: `b._Find_first()` zwraca indeks pierwszej jedynki, `b._Find_next(i)` — pierwszej jedynki o indeksie > i; gdy brak, zwracają `b.size()`. Przejście po wszystkich jedynkach kosztuje O(N/64 + liczba jedynek).",
+     "code": "bitset<100> b;\nb[3] = b[40] = b[77] = 1;\nfor (size_t i = b._Find_first(); i < b.size(); i = b._Find_next(i)) cout << i << ' ';   // 3 40 77\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "bitset vs vector bool",
+      "bitset czy vector<bool>",
+      "co lepsze bitset czy tablica bool"
+     ],
+     "a": "Obie struktury zajmują 1 bit na wartość. `bitset` ma stały rozmiar, ale oferuje szybkie operacje na całości (`|`, `&`, `<<`, `count` w O(N/64)). `vector<bool>` ma dynamiczny rozmiar, lecz operacje na wszystkich bitach trzeba robić pętlą. Zwykła tablica `bool` zajmuje 8× więcej pamięci, ale pojedynczy dostęp jest najprostszy.",
+     "code": "bitset<1000> a, b;\na[1] = b[1] = b[2] = 1;\ncout << (a & b).count() << '\\n';   // 1 — część wspólna w O(N/64)\nvector<bool> v(1000);\nv[1] = true;"
+    },
+    {
+     "q": [
+      "bitset przecięcie zbiorów",
+      "część wspólna bitset",
+      "liczba wspólnych elementów bitset",
+      "trójkąty w grafie bitset"
+     ],
+     "a": "Zbiory jako bitsety: przecięcie `a & b`, suma `a | b`, różnica `a & ~b`, liczność `.count()` — każda operacja O(N/64). Np. liczba wspólnych sąsiadów dwóch wierzchołków to `(adj[u] & adj[v]).count()`.",
+     "code": "const int N = 6;\nbitset<N> adj[N];\nauto kr = [&](int a, int b) { adj[a][b] = adj[b][a] = 1; };\nkr(0, 1); kr(0, 2); kr(1, 2); kr(1, 3); kr(2, 3);\ncout << (adj[1] & adj[2]).count() << '\\n';   // 2 (wspólni sąsiedzi: 0 i 3)"
+    }
+   ],
+   "related": [
+    "stl-builtin-bits",
+    "dp-knapsack-01",
+    "tech-bit-tricks",
+    "stl-vector",
+    "ds-bitset",
+    "cpp-ref-bit",
+    "stl-ref-bitset-all"
+   ]
+  },
+  {
+   "id": "stl-list",
+   "title": "std::list — lista dwukierunkowa",
+   "category": "STL kontenery",
+   "tags": [
+    "list",
+    "lista",
+    "lista dwukierunkowa",
+    "linked list",
+    "splice"
+   ],
+   "aliases": [
+    "list",
+    "std::list",
+    "list cpp",
+    "lista c++",
+    "linked list c++",
+    "lista dwukierunkowa",
+    "lista wiązana"
+   ],
+   "summary": "Lista dwukierunkowa: wstawianie i usuwanie w dowolnym miejscu w O(1) (gdy masz iterator), iteratory nie tracą ważności. Brak dostępu po indeksie. W zadaniach rzadko potrzebna — zwykle wystarczy vector lub tablice next/prev.",
+   "complexity": "insert/erase przy iteratorze, push/pop na końcach, splice: O(1); dostęp do k-tego: O(k); sort: O(n log n)",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`list<T>` przechowuje każdy element w osobnym węźle z wskaźnikami na sąsiadów. Daje O(1) wstawianie/usuwanie w miejscu wskazanym iteratorem i przenoszenie fragmentów między listami (`splice`). Ceną jest brak `l[i]`, duża pamięć (2 wskaźniki na element) i słaba lokalność — iteracja jest kilka razy wolniejsza niż po vectorze."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Operacje na liście",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    list<int> l = {1, 2, 3, 4};\n    auto it = next(l.begin(), 2);     // wskazuje 3 (O(k))\n    l.insert(it, 10);                 // 1 2 10 3 4 — O(1)\n    it = l.erase(it);                 // usuwa 3, it -> 4\n    l.push_front(0);\n    for (int x : l) cout << x << ' '; // 0 1 2 10 4\n    cout << '\\n';\n\n    list<int> inna = {7, 8};\n    l.splice(l.end(), inna);          // przeniesienie całej listy w O(1)\n    l.remove(10);                     // usuwa wszystkie 10\n    l.sort();                         // metoda list::sort (std::sort nie działa)\n    for (int x : l) cout << x << ' '; // 0 1 2 4 7 8\n    cout << '\\n' << inna.size() << '\\n';   // 0\n}"
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Operacja",
+      "Złożoność"
+     ],
+     "rows": [
+      [
+       "`push_front`, `push_back`, `pop_front`, `pop_back`",
+       "O(1)"
+      ],
+      [
+       "`insert(it, x)`, `erase(it)`",
+       "O(1)"
+      ],
+      [
+       "`splice(pos, inna)`",
+       "O(1)"
+      ],
+      [
+       "dostęp do k-tego elementu",
+       "O(k)"
+      ],
+      [
+       "`l.sort()`",
+       "O(n log n)"
+      ],
+      [
+       "`l.remove(x)`, `l.unique()`, `l.reverse()`",
+       "O(n)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Na OI listę zwykle zastępuje się tablicami `nxt[i]`, `prv[i]` (lista na indeksach) — usuwanie elementu i to `nxt[prv[i]] = nxt[i]; prv[nxt[i]] = prv[i];`. Jest szybsze i łatwiejsze do debugowania."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "list<T> l;",
+     "desc": "pusta lista",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "l.push_front(x) / l.push_back(x) / emplace_front / emplace_back",
+     "desc": "dodanie na początek / koniec",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "l.pop_front() / l.pop_back()",
+     "desc": "usunięcie z początku / końca",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "l.front() / l.back()",
+     "desc": "pierwszy / ostatni element",
+     "complexity": "O(1)",
+     "returns": "T&"
+    },
+    {
+     "sig": "l.insert(it, x)",
+     "desc": "wstawia x przed it",
+     "complexity": "O(1)",
+     "returns": "iterator na wstawiony"
+    },
+    {
+     "sig": "l.erase(it)",
+     "desc": "usuwa element",
+     "complexity": "O(1)",
+     "returns": "iterator na następny"
+    },
+    {
+     "sig": "l.splice(pos, other) / l.splice(pos, other, it)",
+     "desc": "przenosi całą listę / jeden element z other przed pos",
+     "complexity": "O(1)"
+    },
+    {
+     "sig": "l.remove(x) / l.remove_if(pred)",
+     "desc": "usuwa wszystkie równe x / spełniające warunek",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "l.sort() / l.sort(cmp)",
+     "desc": "sortowanie (stabilne)",
+     "complexity": "O(n log n)"
+    },
+    {
+     "sig": "l.unique()",
+     "desc": "usuwa kolejne duplikaty",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "l.reverse()",
+     "desc": "odwraca listę",
+     "complexity": "O(n)"
+    },
+    {
+     "sig": "l.merge(other)",
+     "desc": "scala dwie posortowane listy",
+     "complexity": "O(n + m)"
+    },
+    {
+     "sig": "l.size() / l.empty() / l.clear()",
+     "desc": "rozmiar / czy pusta / czyszczenie",
+     "complexity": "O(1) / O(1) / O(n)"
+    }
+   ],
+   "pitfalls": [
+    "Brak `l[i]` — dostęp do k-tego elementu przez `next(l.begin(), k)` jest O(k).",
+    "`std::sort(l.begin(), l.end())` się nie skompiluje (wymaga iteratorów random access) — użyj `l.sort()`.",
+    "Duży narzut pamięci (~24 B na węzeł + element) i wolna iteracja — rzadko opłaca się w zadaniach.",
+    "Iteratory pozostają ważne po wstawieniach i usunięciach (poza usuniętym elementem) — to główna zaleta listy."
+   ],
+   "qa": [
+    {
+     "q": [
+      "list c++",
+      "jak używać list",
+      "lista c++ stl",
+      "std::list przykład",
+      "linked list c++ stl"
+     ],
+     "a": "`list<int> l;` — dwukierunkowa lista z `push_front/push_back`, `insert(it, x)` i `erase(it)` w O(1). Nie ma indeksowania; po elementach przechodzisz iteratorem lub pętlą zakresową.",
+     "code": "list<int> l = {2, 3};\nl.push_front(1);\nl.push_back(4);\nfor (int x : l) cout << x << ' ';   // 1 2 3 4\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "list vs vector",
+      "kiedy używać list",
+      "czy lista jest szybsza od vectora",
+      "lista czy vector c++"
+     ],
+     "a": "Lista ma O(1) wstawianie/usuwanie w środku (gdy masz iterator) i stabilne iteratory. Vector ma O(1) dostęp po indeksie, zwartą pamięć i jest kilka razy szybszy w przeglądaniu. W praktyce zadań wybieraj vector, a listę (lub tablice next/prev) tylko przy wielu wstawieniach/usunięciach w środku, gdy pozycje znasz z góry.",
+     "code": "vector<int> v = {1, 2, 3};\ncout << v[1] << '\\n';                    // O(1)\nlist<int> l = {1, 2, 3};\ncout << *next(l.begin(), 1) << '\\n';     // O(k)"
+    },
+    {
+     "q": [
+      "sortowanie listy",
+      "sort list c++",
+      "std::sort list błąd",
+      "list sort nie działa"
+     ],
+     "a": "`std::sort` wymaga iteratorów random access, których lista nie ma — kompilator zgłosi długi błąd. Lista ma własną metodę `l.sort()` (stabilna, O(n log n)); można podać komparator: `l.sort(greater<int>())`.",
+     "code": "list<int> l = {3, 1, 2};\nl.sort();\nl.sort(greater<int>());\nfor (int x : l) cout << x << ' ';   // 3 2 1\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "lista na tablicach",
+      "next prev tablice",
+      "usuwanie z listy w O(1) indeksy",
+      "linked list arrays c++"
+     ],
+     "a": "Zamiast `std::list` trzymaj `nxt[i]` i `prv[i]`. Usunięcie elementu i: `nxt[prv[i]] = nxt[i]; prv[nxt[i]] = prv[i];` — O(1), bez alokacji. Dodaj strażników na końcach (np. 0 i n+1), żeby nie sprawdzać brzegów.",
+     "code": "int n = 5;\nvector<int> nxt(n + 2), prv(n + 2);\nfor (int i = 0; i <= n + 1; i++) { nxt[i] = i + 1; prv[i] = i - 1; }   // 0 i n+1 to strażnicy\nauto usun = [&](int i) { nxt[prv[i]] = nxt[i]; prv[nxt[i]] = prv[i]; };\nusun(3);\nusun(1);\nfor (int i = nxt[0]; i <= n; i = nxt[i]) cout << i << ' ';   // 2 4 5\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "list splice",
+      "przenieś elementy między listami",
+      "splice c++",
+      "łączenie list w O(1)"
+     ],
+     "a": "`a.splice(pos, b)` przenosi wszystkie elementy z `b` do `a` przed pozycję `pos` w O(1) (bez kopiowania; `b` staje się pusta). `a.splice(pos, b, it)` przenosi jeden element. Iteratory do przeniesionych elementów pozostają ważne.",
+     "code": "list<int> a = {1, 2}, b = {8, 9};\na.splice(a.begin(), b);            // 8 9 1 2\nfor (int x : a) cout << x << ' ';\ncout << '\\n' << b.empty() << '\\n'; // 1"
+    },
+    {
+     "q": [
+      "list remove",
+      "usuń wszystkie wartości z listy",
+      "list remove_if",
+      "list erase w pętli"
+     ],
+     "a": "`l.remove(x)` usuwa wszystkie elementy równe x, `l.remove_if(pred)` — spełniające warunek (O(n)). Przy ręcznym usuwaniu w pętli używaj `it = l.erase(it)`.",
+     "code": "list<int> l = {1, 2, 3, 2, 4};\nl.remove(2);\nl.remove_if([](int x) { return x > 3; });\nfor (int x : l) cout << x << ' ';   // 1 3\ncout << '\\n';"
+    }
+   ],
+   "related": [
+    "stl-vector",
+    "stl-deque",
+    "stl-iterators",
+    "ds-linked-list-array",
+    "stl-ref-deque-list-all",
+    "tech-josephus"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,2798 @@
+{
+ "chunk": "chars_ascii",
+ "articles": [
+  {
+   "id": "str-ascii-table",
+   "title": "Kody ASCII: tabela znaków i najważniejsze wartości ('0' = 48, 'A' = 65, 'a' = 97, ' ' = 32)",
+   "category": "Teksty",
+   "tags": [
+    "ASCII",
+    "kody ASCII",
+    "tabela ASCII",
+    "kod znaku",
+    "char",
+    "znaki drukowalne",
+    "znaki sterujące",
+    "hex",
+    "zakres liter",
+    "zakres cyfr"
+   ],
+   "aliases": [
+    "kody ascii",
+    "kod ascii",
+    "tabela ascii",
+    "tablica ascii",
+    "ascii table",
+    "ascii codes",
+    "kody znaków ascii",
+    "kod znaku",
+    "jaki kod ma litera",
+    "wartości ascii",
+    "ascii",
+    "tabela kodów ascii",
+    "lista znaków ascii"
+   ],
+   "summary": "ASCII przypisuje znakom liczby 0–127: spacja to 32, cyfry `'0'`–`'9'` to 48–57, wielkie litery `'A'`–`'Z'` to 65–90, małe `'a'`–`'z'` to 97–122, a `'\\n'` to 10. W C++ `char` jest małą liczbą całkowitą, więc kod znaku to po prostu `(int)c`, a znak o kodzie `n` to `char(n)`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**ASCII** to 7-bitowe kodowanie: 128 kodów (0–127). Kody **0–31 i 127** to znaki sterujące (niewidoczne, np. `'\\n'`), kody **32–126** to znaki drukowalne. W C++ literał `'A'` *jest* liczbą 65 typu `char` — dlatego na znakach można liczyć ([[kb:str-char-arithmetic|arytmetyka na znakach]]), a `(int)'A'` wypisuje 65 ([[kb:str-char-print|char vs int przy wypisywaniu]])."
+    },
+    {
+     "type": "table",
+     "title": "Najważniejsze wartości (warto znać)",
+     "headers": [
+      "Znak",
+      "Dziesiętnie",
+      "Hex",
+      "Do zapamiętania"
+     ],
+     "rows": [
+      [
+       "`'\\0'` (NUL)",
+       "0",
+       "0x00",
+       "koniec napisu w stylu C"
+      ],
+      [
+       "`'\\t'` (tab)",
+       "9",
+       "0x09",
+       "tabulator, biały znak"
+      ],
+      [
+       "`'\\n'` (LF)",
+       "10",
+       "0x0A",
+       "koniec wiersza (Linux, macOS, testy OI)"
+      ],
+      [
+       "`'\\r'` (CR)",
+       "13",
+       "0x0D",
+       "Windows kończy wiersz parą `\\r\\n`"
+      ],
+      [
+       "`' '` (spacja)",
+       "32",
+       "0x20",
+       "pierwszy znak drukowalny; tyle wynosi `'a' - 'A'`"
+      ],
+      [
+       "`'0'`",
+       "48",
+       "0x30",
+       "cyfra `d` ma kod `48 + d`, czyli `'0' + d`"
+      ],
+      [
+       "`'9'`",
+       "57",
+       "0x39",
+       "cyfry: 48…57"
+      ],
+      [
+       "`'A'`",
+       "65",
+       "0x41",
+       "`'A' + k` to k-ta (od 0) wielka litera"
+      ],
+      [
+       "`'Z'`",
+       "90",
+       "0x5A",
+       "wielkie litery: 65…90"
+      ],
+      [
+       "`'a'`",
+       "97",
+       "0x61",
+       "`'a' - 'A' == 32`"
+      ],
+      [
+       "`'z'`",
+       "122",
+       "0x7A",
+       "małe litery: 97…122"
+      ],
+      [
+       "`'~'`",
+       "126",
+       "0x7E",
+       "ostatni znak drukowalny"
+      ],
+      [
+       "DEL",
+       "127",
+       "0x7F",
+       "znak sterujący"
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Zakresy",
+     "headers": [
+      "Grupa",
+      "Kody",
+      "Warunek w C++"
+     ],
+     "rows": [
+      [
+       "cyfry `0`–`9`",
+       "48–57",
+       "`c >= '0' && c <= '9'` (albo `isdigit`)"
+      ],
+      [
+       "wielkie litery `A`–`Z`",
+       "65–90",
+       "`c >= 'A' && c <= 'Z'` (albo `isupper`)"
+      ],
+      [
+       "małe litery `a`–`z`",
+       "97–122",
+       "`c >= 'a' && c <= 'z'` (albo `islower`)"
+      ],
+      [
+       "znaki drukowalne",
+       "32–126",
+       "`c >= 32 && c < 127` (albo `isprint`)"
+      ],
+      [
+       "znaki sterujące",
+       "0–31 i 127",
+       "`c < 32 || c == 127` (albo `iscntrl`)"
+      ],
+      [
+       "interpunkcja i symbole",
+       "33–47, 58–64, 91–96, 123–126",
+       "`ispunct(c)`"
+      ],
+      [
+       "poza ASCII (np. bajty polskich liter w UTF-8)",
+       "128–255",
+       "`(unsigned char)c >= 128`"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Pełna tabela znaków drukowalnych.** Kolumny to kolejne trzydziestki dwójki, więc w jednym wierszu stoją znaki różniące się o 32 — np. `A` (65) i `a` (97), `@` (64) i grawis (96)."
+    },
+    {
+     "type": "table",
+     "title": "ASCII 32–127",
+     "headers": [
+      "Kod",
+      "Znak",
+      "Kod",
+      "Znak",
+      "Kod",
+      "Znak"
+     ],
+     "rows": [
+      [
+       "32 (0x20)",
+       "spacja",
+       "64 (0x40)",
+       "`@`",
+       "96 (0x60)",
+       "` (grawis)"
+      ],
+      [
+       "33 (0x21)",
+       "`!`",
+       "65 (0x41)",
+       "`A`",
+       "97 (0x61)",
+       "`a`"
+      ],
+      [
+       "34 (0x22)",
+       "`\"`",
+       "66 (0x42)",
+       "`B`",
+       "98 (0x62)",
+       "`b`"
+      ],
+      [
+       "35 (0x23)",
+       "`#`",
+       "67 (0x43)",
+       "`C`",
+       "99 (0x63)",
+       "`c`"
+      ],
+      [
+       "36 (0x24)",
+       "`$`",
+       "68 (0x44)",
+       "`D`",
+       "100 (0x64)",
+       "`d`"
+      ],
+      [
+       "37 (0x25)",
+       "`%`",
+       "69 (0x45)",
+       "`E`",
+       "101 (0x65)",
+       "`e`"
+      ],
+      [
+       "38 (0x26)",
+       "`&`",
+       "70 (0x46)",
+       "`F`",
+       "102 (0x66)",
+       "`f`"
+      ],
+      [
+       "39 (0x27)",
+       "`'`",
+       "71 (0x47)",
+       "`G`",
+       "103 (0x67)",
+       "`g`"
+      ],
+      [
+       "40 (0x28)",
+       "`(`",
+       "72 (0x48)",
+       "`H`",
+       "104 (0x68)",
+       "`h`"
+      ],
+      [
+       "41 (0x29)",
+       "`)`",
+       "73 (0x49)",
+       "`I`",
+       "105 (0x69)",
+       "`i`"
+      ],
+      [
+       "42 (0x2A)",
+       "`*`",
+       "74 (0x4A)",
+       "`J`",
+       "106 (0x6A)",
+       "`j`"
+      ],
+      [
+       "43 (0x2B)",
+       "`+`",
+       "75 (0x4B)",
+       "`K`",
+       "107 (0x6B)",
+       "`k`"
+      ],
+      [
+       "44 (0x2C)",
+       "`,`",
+       "76 (0x4C)",
+       "`L`",
+       "108 (0x6C)",
+       "`l`"
+      ],
+      [
+       "45 (0x2D)",
+       "`-`",
+       "77 (0x4D)",
+       "`M`",
+       "109 (0x6D)",
+       "`m`"
+      ],
+      [
+       "46 (0x2E)",
+       "`.`",
+       "78 (0x4E)",
+       "`N`",
+       "110 (0x6E)",
+       "`n`"
+      ],
+      [
+       "47 (0x2F)",
+       "`/`",
+       "79 (0x4F)",
+       "`O`",
+       "111 (0x6F)",
+       "`o`"
+      ],
+      [
+       "48 (0x30)",
+       "`0`",
+       "80 (0x50)",
+       "`P`",
+       "112 (0x70)",
+       "`p`"
+      ],
+      [
+       "49 (0x31)",
+       "`1`",
+       "81 (0x51)",
+       "`Q`",
+       "113 (0x71)",
+       "`q`"
+      ],
+      [
+       "50 (0x32)",
+       "`2`",
+       "82 (0x52)",
+       "`R`",
+       "114 (0x72)",
+       "`r`"
+      ],
+      [
+       "51 (0x33)",
+       "`3`",
+       "83 (0x53)",
+       "`S`",
+       "115 (0x73)",
+       "`s`"
+      ],
+      [
+       "52 (0x34)",
+       "`4`",
+       "84 (0x54)",
+       "`T`",
+       "116 (0x74)",
+       "`t`"
+      ],
+      [
+       "53 (0x35)",
+       "`5`",
+       "85 (0x55)",
+       "`U`",
+       "117 (0x75)",
+       "`u`"
+      ],
+      [
+       "54 (0x36)",
+       "`6`",
+       "86 (0x56)",
+       "`V`",
+       "118 (0x76)",
+       "`v`"
+      ],
+      [
+       "55 (0x37)",
+       "`7`",
+       "87 (0x57)",
+       "`W`",
+       "119 (0x77)",
+       "`w`"
+      ],
+      [
+       "56 (0x38)",
+       "`8`",
+       "88 (0x58)",
+       "`X`",
+       "120 (0x78)",
+       "`x`"
+      ],
+      [
+       "57 (0x39)",
+       "`9`",
+       "89 (0x59)",
+       "`Y`",
+       "121 (0x79)",
+       "`y`"
+      ],
+      [
+       "58 (0x3A)",
+       "`:`",
+       "90 (0x5A)",
+       "`Z`",
+       "122 (0x7A)",
+       "`z`"
+      ],
+      [
+       "59 (0x3B)",
+       "`;`",
+       "91 (0x5B)",
+       "`[`",
+       "123 (0x7B)",
+       "`{`"
+      ],
+      [
+       "60 (0x3C)",
+       "`<`",
+       "92 (0x5C)",
+       "`\\`",
+       "124 (0x7C)",
+       "`|`"
+      ],
+      [
+       "61 (0x3D)",
+       "`=`",
+       "93 (0x5D)",
+       "`]`",
+       "125 (0x7D)",
+       "`}`"
+      ],
+      [
+       "62 (0x3E)",
+       "`>`",
+       "94 (0x5E)",
+       "`^`",
+       "126 (0x7E)",
+       "`~`"
+      ],
+      [
+       "63 (0x3F)",
+       "`?`",
+       "95 (0x5F)",
+       "`_`",
+       "127 (0x7F)",
+       "DEL (sterujący)"
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Znaki sterujące, które spotkasz",
+     "headers": [
+      "Kod",
+      "Nazwa",
+      "W C++",
+      "Gdzie się pojawia"
+     ],
+     "rows": [
+      [
+       "0",
+       "NUL",
+       "`'\\0'`",
+       "koniec C-stringa (`char s[]`); `strlen` zatrzymuje się na nim"
+      ],
+      [
+       "7",
+       "BEL",
+       "`'\\a'`",
+       "„dzwonek” terminala — praktycznie nieużywany"
+      ],
+      [
+       "8",
+       "BS",
+       "`'\\b'`",
+       "cofnięcie kursora (backspace) w terminalu"
+      ],
+      [
+       "9",
+       "TAB",
+       "`'\\t'`",
+       "tabulator; biały znak"
+      ],
+      [
+       "10",
+       "LF",
+       "`'\\n'`",
+       "koniec wiersza w Linuksie/macOS i w testach OI"
+      ],
+      [
+       "11",
+       "VT",
+       "`'\\v'`",
+       "biały znak (rzadki)"
+      ],
+      [
+       "12",
+       "FF",
+       "`'\\f'`",
+       "biały znak (rzadki)"
+      ],
+      [
+       "13",
+       "CR",
+       "`'\\r'`",
+       "pliki z Windows: wiersz kończy się `\\r\\n`"
+      ],
+      [
+       "26",
+       "SUB",
+       "`'\\x1a'`",
+       "Ctrl+Z — koniec wejścia w konsoli Windows"
+      ],
+      [
+       "27",
+       "ESC",
+       "`'\\x1b'`",
+       "kolory w terminalu, np. `\\x1b[31m`"
+      ],
+      [
+       "127",
+       "DEL",
+       "`'\\x7f'`",
+       "„delete”"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Program wypisujący tabelę ASCII (32–127)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // 3 kolumny po 32 kody: dziesiętnie, szesnastkowo i sam znak\n    for (int i = 0; i < 32; i++) {\n        for (int k = 0; k < 3; k++) {\n            int c = 32 + 32 * k + i;\n            if (c == 127) printf(\"%3d 0x%02X DEL\", c, c);\n            else printf(\"%3d 0x%02X %c\", c, c, c);\n            printf(k < 2 ? \"   |   \" : \"\\n\");\n        }\n    }\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Kody znaków napisu i znak o danym kodzie",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s = \"Az09 ~\";\n    for (char c : s) cout << '\\'' << c << \"' = \" << (int)c << '\\n';\n    cout << char(72) << char(105) << '\\n';             // Hi\n    cout << 'a' - 'A' << ' ' << '9' - '0' << '\\n';     // 32 9\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Kolejność ma znaczenie** przy sortowaniu i porównywaniu napisów: **spacja < cyfry < wielkie litery < małe litery**. Dlatego `\"Zebra\" < \"apple\"`, `\"10\" < \"9\"` (porównanie znak po znaku), a `'_'` (95) leży między wielkimi i małymi literami. Szczegóły: [[kb:str-basic-lex-compare|porównywanie napisów]], bez rozróżniania wielkości liter: [[kb:str-case-tricks|wielkie i małe litery]]."
+    },
+    {
+     "type": "tip",
+     "md": "Nie wpisuj kodów do programu — pisz `'a'` zamiast `97` i `'0'` zamiast `48`. Znaczy to samo, a trudniej o pomyłkę. Wystarczy zapamiętać trzy kotwice: `'0'` = 48, `'A'` = 65, `'a'` = 97 (hex: 0x30, 0x41, 0x61) — resztę policzysz."
+    },
+    {
+     "type": "warn",
+     "md": "ASCII kończy się na 127. Polskie litery (`ą`, `ż`…) w UTF-8 to **dwa bajty o wartościach 128–255**, które w `char` (na x86 i macOS ze znakiem) są ujemne — patrz [[kb:str-utf8-polish|polskie znaki i UTF-8]] oraz [[kb:str-signed-char|char ze znakiem]]."
+    }
+   ],
+   "pitfalls": [
+    "Mylenie `'0'` (cyfra, kod 48) z `0` / `'\\0'` (NUL, kod 0): `s += 5;` dopisuje niewidoczny znak o kodzie 5, a nie cyfrę 5.",
+    "`'z' + 1` to `'{'`, a nie `'a'` — alfabet nie zawija się sam; licz modulo 26.",
+    "Porównywanie znaków i napisów rozróżnia wielkość liter: `'Z'` (90) < `'a'` (97).",
+    "Magiczne liczby w kodzie (`c - 48`, `c >= 97`) są poprawne, ale nieczytelne — pisz `c - '0'`, `c >= 'a'`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "kody ascii",
+      "tabela ascii",
+      "tablica kodów ascii",
+      "ascii table",
+      "pokaż tabelę kodów ASCII",
+      "kody ascii c++",
+      "lista znaków ascii",
+      "ascii kody znakow"
+     ],
+     "a": "Najważniejsze: `' '` = 32, `'0'`…`'9'` = 48…57, `'A'`…`'Z'` = 65…90, `'a'`…`'z'` = 97…122, `'\\n'` = 10, `'\\r'` = 13, `'\\t'` = 9, `'\\0'` = 0. Kody 0–31 i 127 są sterujące, 32–126 drukowalne. Pełna tabela 32–127 jest w artykule; ta pętla wypisze ją sama:",
+     "code": "for (int c = 32; c < 127; c++)\n    printf(\"%3d %c%s\", c, c, (c - 31) % 8 == 0 ? \"\\n\" : \"   \");\nprintf(\"\\n\");"
+    },
+    {
+     "q": [
+      "jaki kod ascii ma litera a",
+      "kod ascii litery a",
+      "ile wynosi 'a' w ascii",
+      "ascii code of a",
+      "jaki numer ma litera A",
+      "kod ascii A",
+      "'a' to 97?"
+     ],
+     "a": "`'a'` = 97, `'A'` = 65 (różnica 32). Kolejne litery mają kolejne kody: `'b'` = 98, …, `'z'` = 122; `'B'` = 66, …, `'Z'` = 90.",
+     "code": "cout << (int)'a' << ' ' << (int)'A' << ' ' << (int)'z' << ' ' << (int)'Z' << '\\n';   // 97 65 122 90"
+    },
+    {
+     "q": [
+      "jaki kod ascii ma 0",
+      "kod ascii cyfry zero",
+      "ile to '0' w ascii",
+      "kody ascii cyfr",
+      "ascii code of digit 0",
+      "48 w ascii to co",
+      "dlaczego '0' to 48"
+     ],
+     "a": "Cyfry mają kody 48–57: `'0'` = 48, `'1'` = 49, …, `'9'` = 57. Dlatego wartość cyfry to `c - '0'`, a znak cyfry `d` to `char('0' + d)`. Uwaga: `'0'` (48) to co innego niż `0` / `'\\0'` (kod 0, NUL).",
+     "code": "char c = '7';\ncout << (int)c << ' ' << c - '0' << ' ' << char('0' + 3) << '\\n';   // 55 7 3"
+    },
+    {
+     "q": [
+      "kod ascii spacji",
+      "jaki kod ma spacja",
+      "spacja ascii",
+      "space ascii code",
+      "ascii 32",
+      "ile wynosi ' ' w ascii"
+     ],
+     "a": "Spacja `' '` ma kod 32 (0x20) — to pierwszy znak drukowalny i zarazem różnica między małą a wielką literą (`'a' - 'A' == 32`). Wszystkie znaki o kodach poniżej 32 są sterujące.",
+     "code": "cout << (int)' ' << ' ' << ('a' - 'A') << '\\n';   // 32 32"
+    },
+    {
+     "q": [
+      "kod ascii entera",
+      "jaki kod ma \\n",
+      "kod nowej linii",
+      "newline ascii code",
+      "ascii 10",
+      "kod ascii enter",
+      "ascii 13"
+     ],
+     "a": "`'\\n'` (LF, nowa linia) = 10, `'\\r'` (CR) = 13. W Linuksie i w testach OI wiersz kończy się samym `\\n`; pliki z Windows mają `\\r\\n` (13, 10). Tabulator `'\\t'` = 9. Więcej: [[kb:str-escape-whitespace|znaki specjalne i białe znaki]].",
+     "code": "cout << (int)'\\n' << ' ' << (int)'\\r' << ' ' << (int)'\\t' << '\\n';   // 10 13 9"
+    },
+    {
+     "q": [
+      "zakres liter w ascii",
+      "od ilu do ilu są litery w ascii",
+      "zakres cyfr ascii",
+      "ascii range letters digits",
+      "ascii 65-90 i 97-122",
+      "jakie kody mają litery"
+     ],
+     "a": "Cyfry 48–57, wielkie litery 65–90, małe litery 97–122. W kodzie nie pisz liczb — porównuj ze znakami:",
+     "code": "char c = 'q';\nbool cyfra = c >= '0' && c <= '9';\nbool wielka = c >= 'A' && c <= 'Z';\nbool mala = c >= 'a' && c <= 'z';\ncout << cyfra << wielka << mala << '\\n';   // 001"
+    },
+    {
+     "q": [
+      "jak wypisać tabelę ascii",
+      "program wypisujący kody ascii",
+      "wypisz wszystkie znaki ascii",
+      "print ascii table c++",
+      "pętla po wszystkich znakach ascii",
+      "wypisz znaki od 32 do 126"
+     ],
+     "a": "Przejdź pętlą po `int` od 32 do 126 i wypisz liczbę oraz `char(c)`. Znaków 0–31 nie wypisuj — są niewidoczne albo psują terminal. Licznik musi być `int` (pętla po `char` do 127 nigdy się nie kończy — [[kb:str-signed-char|char ze znakiem]]).",
+     "code": "for (int c = 32; c <= 126; c++)\n    cout << c << ' ' << char(c) << (c % 8 == 7 ? '\\n' : '\\t');\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "jak sprawdzić kod ascii znaku",
+      "kod ascii znaku c++",
+      "jak poznać kod ascii",
+      "how to get ascii value of char c++",
+      "wartość ascii chara",
+      "ascii value c++"
+     ],
+     "a": "Rzutuj znak na `int`: `(int)c` albo `int(c)` (albo przypisz do zmiennej `int`). Odwrotnie: `char(65)` daje `'A'`. Dlaczego `cout` raz wypisuje literę, a raz liczbę: [[kb:str-char-print|char vs int]].",
+     "code": "char c = 'K';\nint kod = c;   // niejawna konwersja na int\ncout << kod << ' ' << (int)c << ' ' << char(kod + 1) << '\\n';   // 75 75 L"
+    },
+    {
+     "q": [
+      "ile jest znaków ascii",
+      "ascii ma 127 czy 255 znaków",
+      "rozszerzone ascii",
+      "extended ascii",
+      "ascii 128-255",
+      "ile bitów ma ascii",
+      "czy ascii ma polskie litery"
+     ],
+     "a": "ASCII to 128 kodów (0–127, 7 bitów). Kody 128–255 to już nie ASCII, tylko różne „strony kodowe” (np. Windows-1250) — dziś zamiast nich używa się UTF-8, w którym polska litera to 2 bajty z zakresu 128–255. ASCII nie ma polskich liter ([[kb:str-utf8-polish|polskie znaki i UTF-8]]).",
+     "code": "string s = \"ą\";\ncout << s.size() << ' ' << (int)(unsigned char)s[0] << ' ' << (int)(unsigned char)s[1] << '\\n';   // 2 196 133"
+    },
+    {
+     "q": [
+      "kolejność znaków w ascii",
+      "czy wielkie litery są przed małymi",
+      "dlaczego Z jest mniejsze od a",
+      "sortowanie a kody ascii",
+      "cyfry przed literami ascii",
+      "ascii order sort"
+     ],
+     "a": "Znaki porównują się kodami: spacja (32) < cyfry (48–57) < wielkie litery (65–90) < małe litery (97–122). Dlatego `sort` stawia `\"Zebra\"` przed `\"apple\"`, a `\"10\"` przed `\"9\"`. Sortowanie bez rozróżniania wielkości liter: [[kb:str-case-tricks|wielkie i małe litery]].",
+     "code": "vector<string> v = {\"apple\", \"Zebra\", \"9\", \"10\", \"banan\"};\nsort(v.begin(), v.end());\nfor (auto& x : v) cout << x << ' ';   // 10 9 Zebra apple banan"
+    },
+    {
+     "q": [
+      "znaki sterujące ascii",
+      "niedrukowalne znaki",
+      "control characters ascii",
+      "kody ascii 0-31",
+      "co to jest ascii 0",
+      "znak NUL ascii"
+     ],
+     "a": "Kody 0–31 i 127 to znaki sterujące. Na zawodach spotkasz praktycznie tylko: `'\\0'` (0, koniec C-stringa), `'\\t'` (9), `'\\n'` (10) i `'\\r'` (13, pliki z Windows). `iscntrl(c)` sprawdza, czy znak jest sterujący, `isprint(c)` — czy drukowalny.",
+     "code": "string s = \"a\\tb\\r\\n\";\nfor (char c : s) cout << (int)c << (iscntrl((unsigned char)c) ? \"(ster) \" : \" \");\ncout << '\\n';   // 97 9(ster) 98 13(ster) 10(ster)"
+    },
+    {
+     "q": [
+      "ascii hex",
+      "kody ascii szesnastkowo",
+      "0x41 to jaki znak",
+      "ascii w hex",
+      "kod ascii w systemie szesnastkowym",
+      "wypisz kod znaku w hex"
+     ],
+     "a": "W hex łatwo zapamiętać: cyfry to `0x30`–`0x39`, wielkie litery zaczynają się od `0x41`, małe od `0x61`, spacja to `0x20`. Wypisanie kodu w hex: `printf(\"%02X\", c)` albo `cout << hex << (int)c`.",
+     "code": "char c = 'A';\nprintf(\"%d 0x%02X\\n\", c, c);              // 65 0x41\ncout << hex << (int)'a' << dec << '\\n';   // 61\ncout << char(0x41) << '\\n';               // A"
+    },
+    {
+     "q": [
+      "jaki znak ma kod 65",
+      "65 to jaki znak",
+      "znak o kodzie 97",
+      "co to za znak ascii 33",
+      "what char is 65",
+      "kod ascii na znak"
+     ],
+     "a": "Zamień liczbę na `char`: `char(65)` to `'A'`, `char(97)` to `'a'`, `char(48)` to `'0'`, `char(33)` to `'!'`. Albo zajrzyj do pełnej tabeli 32–127 w artykule.",
+     "code": "for (int k : {65, 97, 48, 33, 126}) cout << k << \" -> \" << char(k) << '\\n';"
+    }
+   ],
+   "related": [
+    "str-char-arithmetic",
+    "str-char-print",
+    "str-case-tricks",
+    "str-escape-whitespace",
+    "str-utf8-polish",
+    "str-basic-char-ops",
+    "num-conversions"
+   ]
+  },
+  {
+   "id": "str-char-arithmetic",
+   "title": "Arytmetyka na znakach: c - 'a', 'a' + i, cyfra ↔ znak, przesunięcia i porównywanie znaków",
+   "category": "Teksty",
+   "tags": [
+    "arytmetyka znaków",
+    "c - 'a'",
+    "'a' + i",
+    "c - '0'",
+    "indeks litery",
+    "alfabet",
+    "char",
+    "przesunięcie",
+    "porównywanie znaków",
+    "promocja do int"
+   ],
+   "aliases": [
+    "arytmetyka na znakach",
+    "c - 'a'",
+    "'a' + i",
+    "indeks litery w alfabecie",
+    "numer litery w alfabecie",
+    "pozycja litery w alfabecie",
+    "litera na liczbę",
+    "liczba na literę",
+    "dodawanie do chara",
+    "odejmowanie znaków",
+    "char arithmetic c++",
+    "operacje matematyczne na charach",
+    "porównywanie znaków"
+   ],
+   "summary": "Znak to liczba (kod ASCII), więc można go dodawać i odejmować: `c - 'a'` daje numer litery 0–25, `char('a' + i)` — i-tą literę, `c - '0'` — wartość cyfry, a `c1 < c2` porównuje kody. Wynik działań na `char` ma typ `int`.",
+   "complexity": "każda operacja O(1)",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Litery `'a'`…`'z'` mają kolejne kody 97…122, a cyfry `'0'`…`'9'` — 48…57 ([[kb:str-ascii-table|tabela ASCII]]). Dzięki temu **różnica** dwóch znaków to ich odległość w alfabecie, a **znak + liczba** to znak przesunięty o tyle pozycji. Kodów nie musisz znać — zawsze odejmuj i dodawaj literał (`'a'`, `'A'`, `'0'`)."
+    },
+    {
+     "type": "table",
+     "title": "Ściąga",
+     "headers": [
+      "Cel",
+      "Wyrażenie",
+      "Przykład"
+     ],
+     "rows": [
+      [
+       "litera → indeks 0–25",
+       "`c - 'a'`",
+       "`'d' - 'a' == 3`"
+      ],
+      [
+       "indeks 0–25 → litera",
+       "`char('a' + i)`",
+       "`char('a' + 3) == 'd'`"
+      ],
+      [
+       "numer w alfabecie 1–26",
+       "`c - 'a' + 1`",
+       "`'z' - 'a' + 1 == 26`"
+      ],
+      [
+       "wielka litera → indeks",
+       "`c - 'A'`",
+       "`'C' - 'A' == 2`"
+      ],
+      [
+       "cyfra (znak) → wartość",
+       "`c - '0'`",
+       "`'7' - '0' == 7`"
+      ],
+      [
+       "wartość 0–9 → znak cyfry",
+       "`char('0' + d)`",
+       "`char('0' + 5) == '5'`"
+      ],
+      [
+       "mała → wielka",
+       "`char(c - 'a' + 'A')`",
+       "`'q'` → `'Q'`"
+      ],
+      [
+       "wielka → mała",
+       "`char(c - 'A' + 'a')`",
+       "`'Q'` → `'q'`"
+      ],
+      [
+       "przesunięcie cykliczne o k",
+       "`char('a' + (c - 'a' + k) % 26)`",
+       "`'y'` + 3 → `'b'`"
+      ],
+      [
+       "odległość liter",
+       "`abs(c1 - c2)`",
+       "`abs('a' - 'e') == 4`"
+      ],
+      [
+       "cyfra hex → wartość",
+       "`isdigit(c) ? c - '0' : c - 'a' + 10`",
+       "`'f'` → 15"
+      ],
+      [
+       "czy mała litera",
+       "`c >= 'a' && c <= 'z'`",
+       "`'m'` → prawda"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Typ wyniku.** W `c - 'a'`, `'a' + i` czy `c + 1` oba argumenty są najpierw promowane do `int`, więc wynik jest `int`. To dobrze przy indeksowaniu (`cnt[c - 'a']`), ale przy wypisywaniu dostaniesz liczbę — zamień na `char`: `char('a' + i)`. Przypisanie `char d = c + 1;` oraz `c += 1` i `c++` zostawiają typ `char`. Więcej: [[kb:str-char-print|char vs int przy wypisywaniu]]."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Typowe zastosowania",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s = \"olimpiada\";\n    // 1) zliczanie liter: indeks = c - 'a'\n    int cnt[26] = {};\n    for (char c : s) cnt[c - 'a']++;\n    for (int i = 0; i < 26; i++)\n        if (cnt[i]) cout << char('a' + i) << ':' << cnt[i] << ' ';\n    cout << '\\n';                       // a:2 d:1 i:2 l:1 m:1 o:1 p:1\n\n    // 2) napis z cyfr -> liczba (ręcznie) i suma cyfr\n    string t = \"90417\";\n    long long x = 0;\n    int suma = 0;\n    for (char c : t) { x = x * 10 + (c - '0'); suma += c - '0'; }\n    cout << x << ' ' << suma << '\\n';   // 90417 21\n\n    // 3) liczba -> napis z cyfr (od końca)\n    int n = 3051;\n    string u;\n    do { u += char('0' + n % 10); n /= 10; } while (n > 0);\n    reverse(u.begin(), u.end());\n    cout << u << '\\n';                  // 3051\n\n    // 4) przesunięcie cykliczne o k i alfabet\n    int k = 3;\n    string w = \"xyzabc\";\n    for (char& c : w) c = char('a' + (c - 'a' + k) % 26);\n    cout << w << '\\n';                  // abcdef\n    for (char c = 'a'; c <= 'z'; c++) cout << c;\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Porównywanie znaków** działa na kodach: `'a' < 'b'`, `'9' < 'A'`, `'Z' < 'a'`. Sprawdzenie zakresu `c >= 'a' && c <= 'z'` jest poprawne, bo litery leżą w ASCII kolejno, bez przerw. Znak porównuj ze znakiem (`c == 'x'`), nie z napisem (`c == \"x\"` się nie skompiluje)."
+    },
+    {
+     "type": "warn",
+     "md": "`c - 'a'` ma sens tylko dla małej litery. Dla `'A'` daje −32, dla spacji −65 — a `cnt[c - 'a']++` z ujemnym indeksem to wyjście poza tablicę (losowe WA albo crash). Gdy w danych mogą być inne znaki, sprawdź zakres albo najpierw zrób `tolower`."
+    },
+    {
+     "type": "warn",
+     "md": "`'z' + 1` to `'{'`, nie `'a'` — alfabet zawija się tylko przez `% 26`. Przy ujemnym przesunięciu `(c - 'a' + k) % 26` może być ujemne; użyj `((c - 'a' + k) % 26 + 26) % 26` ([[kb:str-basic-caesar|szyfr Cezara]])."
+    },
+    {
+     "type": "tip",
+     "md": "Dla liczby zapisanej jako napis `c - '0'` jest prostsze niż `stoi` i działa dla dowolnej długości: suma cyfr liczby o 10⁶ cyfrach albo reszta z dzielenia `r = (r * 10 + (c - '0')) % m`. Konwersje napis ↔ liczba (`stoi`, `to_string`): [[kb:num-conversions|konwersje]]."
+    }
+   ],
+   "pitfalls": [
+    "`cout << 'a' + i` wypisuje liczbę (typ `int`) — pisz `char('a' + i)`.",
+    "`cnt[c - 'a']` dla wielkiej litery, cyfry albo spacji to ujemny indeks.",
+    "`(c - 'a' + k) % 26` przy ujemnym `k` daje ujemną resztę — dodaj 26 przed `%`.",
+    "`char c = 'z' + 10;` przekracza 127 — w `char` ze znakiem wychodzi liczba ujemna; zawijaj modulo przed zapisem.",
+    "`c - '0'` dla znaku, który nie jest cyfrą (np. `'-'` albo `'\\r'`), daje śmieci — sprawdź `isdigit`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "numer litery w alfabecie",
+      "indeks litery c++",
+      "c - 'a' co to znaczy",
+      "litera na liczbę 0-25",
+      "pozycja litery w alfabecie",
+      "jak zamienić literę na jej numer",
+      "letter index in alphabet c++",
+      "która to litera alfabetu",
+      "co robi c - 'a'"
+     ],
+     "a": "`c - 'a'` to odległość litery od `'a'`: `'a'` → 0, `'b'` → 1, …, `'z'` → 25 (kody liter są kolejne: 97…122). Numer od 1: `c - 'a' + 1`. Dla wielkich liter odejmuj `'A'`.",
+     "code": "char c = 'h';\ncout << c - 'a' << ' ' << c - 'a' + 1 << ' ' << 'H' - 'A' << '\\n';   // 7 8 7"
+    },
+    {
+     "q": [
+      "liczba na literę",
+      "jak z numeru zrobić literę",
+      "'a' + i",
+      "i-ta litera alfabetu",
+      "int na literę c++",
+      "number to letter c++",
+      "numer na literę"
+     ],
+     "a": "`char('a' + i)` dla `i` = 0…25 (`char('A' + i)` dla wielkich). Rzutowanie na `char` jest potrzebne, bo `'a' + i` ma typ `int` i `cout` wypisałby liczbę.",
+     "code": "int i = 4;\ncout << char('a' + i) << ' ' << char('A' + i) << ' ' << 'a' + i << '\\n';   // e E 101"
+    },
+    {
+     "q": [
+      "dlaczego c - '0' działa",
+      "cyfra ze znaku",
+      "zamiana '7' na 7",
+      "znak cyfry na int",
+      "char digit to int c++",
+      "wartość cyfry z chara",
+      "c - 48"
+     ],
+     "a": "Cyfry `'0'`…`'9'` mają kody 48…57, więc `c - '0'` daje 0…9. Działa tylko dla znaku cyfry. `c - 48` robi to samo, ale `c - '0'` jest czytelniejsze. Odwrotnie: `char('0' + d)`.",
+     "code": "string s = \"2024\";\nint suma = 0;\nfor (char c : s) suma += c - '0';\ncout << suma << ' ' << char('0' + 7) << '\\n';   // 8 7"
+    },
+    {
+     "q": [
+      "suma cyfr liczby zapisanej jako string",
+      "suma cyfr w stringu",
+      "duża liczba jako napis",
+      "sum of digits of string c++",
+      "reszta z dzielenia długiej liczby",
+      "liczba z 1000 cyfr modulo"
+     ],
+     "a": "Wczytaj liczbę jako `string` i przejdź po znakach: wartość cyfry to `c - '0'`. Tak samo policzysz resztę z dzielenia liczby, która nie mieści się w `long long`.",
+     "code": "string s = \"98765432109876543210\";\nlong long suma = 0, r = 0, m = 7;\nfor (char c : s) {\n    suma += c - '0';\n    r = (r * 10 + (c - '0')) % m;\n}\ncout << suma << ' ' << r << '\\n';   // 90 3"
+    },
+    {
+     "q": [
+      "pętla po literach alfabetu",
+      "for od a do z",
+      "wypisz alfabet c++",
+      "jak wypisać wszystkie litery",
+      "loop through alphabet c++",
+      "for (char c = 'a'; c <= 'z'; c++)",
+      "alfabet w pętli"
+     ],
+     "a": "Licznik pętli może być `char`: `for (char c = 'a'; c <= 'z'; c++)`. Albo `int i` od 0 do 25 i `char('a' + i)` — wygodne, gdy jednocześnie indeksujesz tablicę `cnt[i]`.",
+     "code": "for (char c = 'a'; c <= 'z'; c++) cout << c;\ncout << '\\n';\nfor (int i = 25; i >= 0; i--) cout << char('A' + i);\ncout << '\\n';   // ZYX...A"
+    },
+    {
+     "q": [
+      "porównywanie znaków",
+      "czy można porównać char <",
+      "jak porównać dwie litery",
+      "compare chars c++",
+      "char == char",
+      "czy litera jest wcześniej w alfabecie",
+      "porównanie liter c++"
+     ],
+     "a": "Znaki porównujesz zwykłymi `==`, `<`, `>` — porównywane są kody ASCII. Wśród samych małych (albo samych wielkich) liter to kolejność alfabetyczna, ale `'Z' < 'a'` i `'9' < 'A'`. Znak porównuj ze znakiem (`c == 'x'`), nie z napisem.",
+     "code": "char a = 'k', b = 'p';\ncout << (a < b) << (a == 'k') << ('Z' < 'a') << ('9' < 'A') << '\\n';   // 1111\ncout << min(a, b) << '\\n';   // k"
+    },
+    {
+     "q": [
+      "następna litera",
+      "litera po z",
+      "'z' + 1",
+      "przesuń literę o jeden",
+      "next letter c++",
+      "poprzednia litera alfabetu",
+      "c + 1 litera"
+     ],
+     "a": "`char(c + 1)` to następny znak w ASCII. Po `'z'` jest `'{'`, więc jeśli alfabet ma się zawijać, licz modulo 26. Poprzednia litera: `char(c - 1)`, z zawijaniem `char('a' + (c - 'a' + 25) % 26)`.",
+     "code": "char c = 'z';\ncout << char(c + 1) << ' ' << char('a' + (c - 'a' + 1) % 26) << '\\n';   // { a\nc = 'a';\ncout << char('a' + (c - 'a' + 25) % 26) << '\\n';   // z"
+    },
+    {
+     "q": [
+      "c - 'a' daje ujemną liczbę",
+      "c - 'a' dla wielkiej litery",
+      "ujemny wynik odejmowania znaków",
+      "cnt[c-'a'] wielkie litery",
+      "indeks litery ujemny"
+     ],
+     "a": "`c - 'a'` jest ujemne dla wszystkiego, co w ASCII leży „przed” `'a'`: wielkich liter (`'A' - 'a' == -32`), cyfr, spacji. Najpierw sprawdź zakres albo sprowadź literę do małej.",
+     "code": "string s = \"Ala ma 2 Koty\";\nint cnt[26] = {};\nfor (char c : s) {\n    if (!isalpha((unsigned char)c)) continue;\n    cnt[tolower((unsigned char)c) - 'a']++;\n}\ncout << cnt['a' - 'a'] << ' ' << cnt['k' - 'a'] << '\\n';   // 3 1"
+    },
+    {
+     "q": [
+      "odległość między literami",
+      "ile liter między a i z",
+      "różnica dwóch znaków",
+      "distance between letters c++",
+      "o ile litery się różnią",
+      "odejmowanie dwóch charów"
+     ],
+     "a": "Różnica znaków to różnica ich kodów (typ `int`): `'e' - 'a' == 4`. Odległość bez znaku: `abs(c1 - c2)`; na „kole” alfabetu (z zawijaniem): `min(d, 26 - d)`.",
+     "code": "char x = 'b', y = 'y';\nint d = abs(x - y);\ncout << d << ' ' << min(d, 26 - d) << '\\n';   // 23 3"
+    },
+    {
+     "q": [
+      "cyfra szesnastkowa na liczbę",
+      "hex char to int",
+      "zamiana 'f' na 15",
+      "znak hex na wartość",
+      "a-f na 10-15",
+      "parsowanie liczby hex ręcznie"
+     ],
+     "a": "Cyfry 0–9 to `c - '0'`, litery a–f to `c - 'a' + 10` (wielkie: `c - 'A' + 10`). Odwrotnie: `\"0123456789abcdef\"[v]`.",
+     "code": "auto val = [](char c) { return isdigit((unsigned char)c) ? c - '0' : tolower((unsigned char)c) - 'a' + 10; };\nstring h = \"1fA\";\nlong long x = 0;\nfor (char c : h) x = x * 16 + val(c);\ncout << x << ' ' << \"0123456789abcdef\"[13] << '\\n';   // 506 d"
+    },
+    {
+     "q": [
+      "typ wyniku c - 'a'",
+      "char + int jaki typ",
+      "dlaczego 'a' + 1 to int",
+      "promocja char do int",
+      "integer promotion char",
+      "char plus char typ"
+     ],
+     "a": "Przed działaniem arytmetycznym `char` jest promowany do `int` (*integral promotion*), więc `c - 'a'`, `'a' + 1`, a nawet `'a' + 'b'` mają typ `int`. Do `char` wynik wraca dopiero przy przypisaniu do zmiennej `char` lub rzutowaniu. `c++` i `c += 1` nie zmieniają typu zmiennej.",
+     "code": "char c = 'a';\nauto x = c + 1;   // int\nchar y = c + 1;   // char\nc += 2;           // nadal char\ncout << x << ' ' << y << ' ' << c << '\\n';   // 98 b c\nstatic_assert(is_same_v<decltype(c + 1), int>);"
+    },
+    {
+     "q": [
+      "ściąga konwersji znaków",
+      "c - 'a' c - '0' 'a' + i",
+      "wszystkie konwersje char int",
+      "zamiana litera cyfra liczba",
+      "char conversions cheat sheet"
+     ],
+     "a": "Najczęstsze: litera → indeks `c - 'a'`, indeks → litera `char('a' + i)`, cyfra → liczba `c - '0'`, liczba → cyfra `char('0' + d)`, mała → wielka `char(c - 'a' + 'A')` (albo `toupper`), kod ASCII `(int)c`. Napis ↔ liczba (`stoi`, `to_string`): [[kb:num-conversions|konwersje]].",
+     "code": "char c = 'm';\nint i = 2, d = 9;\ncout << c - 'a' << ' ' << char('a' + i) << ' ' << '5' - '0' << ' ' << char('0' + d)\n     << ' ' << char(c - 'a' + 'A') << ' ' << (int)c << '\\n';   // 12 c 5 9 M 109"
+    }
+   ],
+   "related": [
+    "str-ascii-table",
+    "str-char-print",
+    "num-conversions",
+    "str-basic-count-letters",
+    "str-basic-caesar",
+    "str-case-tricks"
+   ]
+  },
+  {
+   "id": "str-char-print",
+   "title": "char vs int przy wypisywaniu: dlaczego cout << 'a' + 1 daje 98, char(98), (int)'a', printf %c/%d, ord/chr",
+   "category": "Teksty",
+   "tags": [
+    "char",
+    "int",
+    "cout",
+    "rzutowanie",
+    "printf %c",
+    "ord",
+    "chr",
+    "kod znaku",
+    "int8_t",
+    "wypisywanie znaku",
+    "static_cast"
+   ],
+   "aliases": [
+    "cout 'a' + 1 wypisuje 98",
+    "char czy int cout",
+    "wypisuje liczbę zamiast litery",
+    "wypisuje literę zamiast liczby",
+    "jak wypisać znak zamiast liczby",
+    "(int)c",
+    "char(98)",
+    "rzutowanie char na int",
+    "print char as int c++",
+    "ord chr python",
+    "printf %c",
+    "dlaczego wypisuje 98",
+    "char to int cout"
+   ],
+   "summary": "`cout` wybiera sposób wypisania po **typie**: `char` wypisuje jako znak, `int` jako liczbę. Działanie na znaku (`'a' + 1`) daje `int`, więc wypisze się 98 — użyj `char('a' + 1)`. W drugą stronę `(int)c` wypisze kod znaku. W `printf` decyduje format (`%c` / `%d`), w Pythonie — `ord` i `chr`.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Znak i liczba to w pamięci to samo (`'b'` = 98), różni je **typ**. `cout << x` dla `char` wypisuje znak, dla `int`/`long long` — liczbę. A każde działanie arytmetyczne na `char` (`+`, `-`, `*`, unarny `+`) daje `int` (promocja całkowita) — stąd 98 zamiast `b`."
+    },
+    {
+     "type": "table",
+     "title": "Co wypisze cout?",
+     "headers": [
+      "Wyrażenie",
+      "Typ",
+      "`cout <<` wypisze"
+     ],
+     "rows": [
+      [
+       "`'a'`",
+       "`char`",
+       "`a`"
+      ],
+      [
+       "`'a' + 1`",
+       "`int`",
+       "`98`"
+      ],
+      [
+       "`char('a' + 1)`",
+       "`char`",
+       "`b`"
+      ],
+      [
+       "`(int)'a'` / `int('a')`",
+       "`int`",
+       "`97`"
+      ],
+      [
+       "`+c` (unarny plus)",
+       "`int`",
+       "kod znaku `c`"
+      ],
+      [
+       "`c - '0'` dla `c = '7'`",
+       "`int`",
+       "`7`"
+      ],
+      [
+       "`'a' + 'b'`",
+       "`int`",
+       "`195`"
+      ],
+      [
+       "`c++`, `c += 1` (`c` typu `char`)",
+       "`char`",
+       "znak"
+      ],
+      [
+       "`s[i]` (`s` typu `string`)",
+       "`char`",
+       "znak"
+      ],
+      [
+       "`toupper('a')`",
+       "`int`",
+       "`65`"
+      ],
+      [
+       "`int8_t x = 65;` → `x`",
+       "`signed char`",
+       "`A` (!)"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Demonstracja",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    char c = 'a';\n    cout << c << ' ' << c + 1 << ' ' << char(c + 1) << '\\n';   // a 98 b\n    cout << (int)c << ' ' << int(c) << ' ' << +c << '\\n';       // 97 97 97\n    char d = c + 2;    // przypisanie do char -> znak\n    c++;               // c nadal jest char\n    cout << d << ' ' << c << '\\n';                              // c b\n    int kod = 'Z';\n    cout << kod << ' ' << char(kod) << ' ' << static_cast<char>(kod + 1) << '\\n';   // 90 Z [\n    printf(\"%c %d %c %d\\n\", 'x', 'x', 120, 120);                // x 120 x 120\n}"
+    },
+    {
+     "type": "text",
+     "md": "**printf** nie patrzy na typ, tylko na format: `%c` wypisze znak, `%d` — liczbę, niezależnie od tego, czy podasz `char`, czy `int` (`char` i tak jest promowany do `int`). W `scanf` `%c` wymaga `char*`, a `%d` — `int*`: [[kb:io-printf-formats|formaty printf/scanf]]."
+    },
+    {
+     "type": "warn",
+     "md": "`int8_t` i `uint8_t` to w praktyce `signed char` / `unsigned char`. `cout << x` wypisze **znak**, a `cin >> x` wczyta **jeden znak** (dla wejścia `65` dostaniesz `'6'`, czyli 54). Do małych liczb używaj `int` albo wypisuj `+x` / `(int)x`."
+    },
+    {
+     "type": "warn",
+     "md": "`\"abc\" + 'd'` to **nie** sklejenie napisów: `\"abc\"` jest wskaźnikiem `const char*`, a `'d'` (100) przesuwa go o 100 bajtów — dostajesz śmieci albo crash. Pisz `string(\"abc\") + 'd'` albo `\"abc\"s + 'd'`. Podobnie `to_string('a')` daje `\"97\"`, a nie `\"a\"` — napis z jednego znaku to `string(1, c)`."
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Python: ord i chr",
+     "code": "c = 'a'\nprint(ord(c))               # 97 - kod znaku\nprint(chr(98))              # b  - znak o kodzie\nprint(chr(ord(c) + 1))      # b  - 'a' + 1 w Pythonie to TypeError\nprint(ord('h') - ord('a'))  # 7  - numer litery\nprint(''.join(chr(ord('a') + i) for i in range(26)))\nprint(ord('ą'))             # 261 - Python zna Unicode (to nie bajt)"
+    }
+   ],
+   "functions": [
+    {
+     "sig": "(int)c / int(c)",
+     "desc": "kod znaku jako liczba (do wypisania lub obliczeń)",
+     "returns": "int",
+     "example": "cout << (int)'A';   // 65"
+    },
+    {
+     "sig": "char(n) / (char)n",
+     "desc": "znak o kodzie n",
+     "returns": "char",
+     "example": "cout << char(97);   // a"
+    },
+    {
+     "sig": "static_cast<char>(n)",
+     "desc": "to samo co char(n), w stylu C++",
+     "returns": "char",
+     "example": "char c = static_cast<char>('a' + i);"
+    },
+    {
+     "sig": "+c",
+     "desc": "unarny plus: promuje char do int (najkrótszy sposób wypisania kodu)",
+     "returns": "int",
+     "example": "cout << +c;"
+    },
+    {
+     "sig": "printf(\"%c\", x) / printf(\"%d\", x)",
+     "desc": "wypisuje x jako znak / jako liczbę",
+     "example": "printf(\"%c=%d\\n\", c, c);"
+    },
+    {
+     "sig": "string(1, c)",
+     "desc": "napis z jednego znaku (zamiast to_string(c))",
+     "returns": "string",
+     "example": "string s = string(1, 'x');"
+    }
+   ],
+   "pitfalls": [
+    "`cout << 'a' + i` wypisuje liczbę — potrzebne `char('a' + i)`.",
+    "`cout << toupper(c)` wypisuje liczbę, bo `toupper` zwraca `int`.",
+    "`int8_t` / `uint8_t` wypisują się i wczytują jako znaki.",
+    "`\"abc\" + 'd'` to arytmetyka wskaźników, a nie sklejanie napisów.",
+    "`to_string(c)` daje kod znaku zapisany cyframi (`\"97\"`)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "cout 'a' + 1 wypisuje 98",
+      "dlaczego wypisuje 98 zamiast b",
+      "dlaczego cout wypisuje liczbę zamiast litery",
+      "char plus int wypisuje liczbę",
+      "'a'+1 daje liczbę",
+      "cout c + 1 wypisuje liczbe",
+      "why does cout print number instead of char"
+     ],
+     "a": "`'a' + 1` ma typ `int` (`char` jest promowany do `int` przed dodawaniem), a `cout` wypisuje `int` jako liczbę. Zamień wynik na `char`: `char('a' + 1)` albo przypisz go do zmiennej `char`.",
+     "code": "char c = 'a';\ncout << c + 1 << ' ' << char(c + 1) << '\\n';   // 98 b\nchar d = c + 1;\ncout << d << '\\n';                             // b"
+    },
+    {
+     "q": [
+      "wypisz char jako liczbę",
+      "jak wypisać kod znaku",
+      "(int)c",
+      "print char as int c++",
+      "cout char jako int",
+      "jak wypisać wartość chara",
+      "wypisuje literę zamiast liczby"
+     ],
+     "a": "Rzutuj na `int`: `cout << (int)c`, `int(c)` albo krótko `+c`. W `printf` użyj `%d`.",
+     "code": "char c = 'A';\ncout << (int)c << ' ' << int(c) << ' ' << +c << '\\n';   // 65 65 65\nprintf(\"%d\\n\", c);                                      // 65"
+    },
+    {
+     "q": [
+      "jak wypisać znak o danym kodzie",
+      "char(98)",
+      "liczba na char",
+      "zamień 65 na A",
+      "wypisz znak z liczby",
+      "int to char ascii c++",
+      "znak z kodu ascii"
+     ],
+     "a": "`char(n)` (albo `(char)n`, `static_cast<char>(n)`) to znak o kodzie `n`. W `printf` wystarczy `%c` z liczbą.",
+     "code": "int n = 66;\ncout << char(n) << ' ' << (char)97 << ' ' << static_cast<char>(n + 1) << '\\n';   // B a C\nprintf(\"%c\\n\", 72);   // H"
+    },
+    {
+     "q": [
+      "printf %c",
+      "printf char",
+      "printf %c i %d różnica",
+      "wypisz znak printf",
+      "printf znak czy liczba",
+      "printf %c int"
+     ],
+     "a": "W `printf` decyduje format, nie typ: `%c` wypisuje znak o danym kodzie, `%d` — liczbę. Tę samą zmienną możesz wypisać na oba sposoby.",
+     "code": "char c = 'q';\nint k = 113;\nprintf(\"%c %d | %c %d\\n\", c, c, k, k);   // q 113 | q 113"
+    },
+    {
+     "q": [
+      "int8_t wypisuje znak",
+      "uint8_t cout dziwne znaki",
+      "cout uint8_t nie liczba",
+      "int8_t cin wczytuje znak",
+      "unsigned char cout wypisuje znak",
+      "int8_t zamiast liczby krzaczki"
+     ],
+     "a": "`int8_t` / `uint8_t` to aliasy `signed char` / `unsigned char`, więc `cout` wypisuje je jako znaki, a `cin >>` wczytuje jeden znak. Wypisuj `+x` lub `(int)x`; wczytuj do `int` i dopiero potem przypisz.",
+     "code": "uint8_t x = 65;\ncout << x << ' ' << +x << ' ' << (int)x << '\\n';   // A 65 65\nint tmp = 200;   // zamiast cin >> x: cin >> tmp; x = tmp;\nx = tmp;\ncout << +x << '\\n';   // 200"
+    },
+    {
+     "q": [
+      "ord chr python",
+      "ord w pythonie",
+      "chr python",
+      "kod ascii python",
+      "python ascii value of char",
+      "python litera na liczbę",
+      "python char + 1"
+     ],
+     "a": "W Pythonie `ord(c)` daje kod znaku, a `chr(n)` — znak o kodzie `n`. `'a' + 1` to błąd `TypeError`; pisz `chr(ord('a') + 1)`.",
+     "code": "c = 'a'\nprint(ord(c), chr(98), chr(ord(c) + 1))   # 97 b b\nprint(ord('h') - ord('a'))                # 7\nprint(''.join(chr(ord('a') + i) for i in range(26)))",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "c += 1 a c = c + 1",
+      "c++ na charze",
+      "inkrementacja chara",
+      "zwiększanie chara wypisuje literę",
+      "char c++ jaki typ",
+      "c++ char litera czy liczba"
+     ],
+     "a": "`c++`, `c += 1` i `c = c + 1` zostawiają zmienną typu `char` (wynik `int` jest zawężany z powrotem przy przypisaniu), więc `cout << c` wypisze znak. Liczbę dostaniesz tylko z wyrażenia, którego nigdzie nie przypisujesz: `cout << c + 1`.",
+     "code": "char c = 'x';\nc++;\nc += 1;\ncout << c << ' ' << c + 1 << '\\n';   // z 123"
+    },
+    {
+     "q": [
+      "\"abc\" + 'd' dziwny wynik",
+      "dodawanie znaku do napisu w cudzysłowie",
+      "napis + znak śmieci",
+      "\"ab\" + 'c' crash",
+      "string literal plus char",
+      "sklejanie napisu ze znakiem nie działa"
+     ],
+     "a": "`\"abc\"` to `const char*`, nie `string`, więc `\"abc\" + 'd'` przesuwa wskaźnik o 100 (kod `'d'`) — wynik to śmieci albo crash. Zrób z pierwszego argumentu `string`.",
+     "code": "string a = string(\"abc\") + 'd';\nstring b = \"abc\"s + 'd';   // literał std::string (C++14)\nstring c = \"abc\";\nc += 'd';\ncout << a << ' ' << b << ' ' << c << '\\n';   // abcd abcd abcd"
+    },
+    {
+     "q": [
+      "to_string char",
+      "to_string('a') daje 97",
+      "to_string znak liczba",
+      "char na string to_string",
+      "zamiana znaku na napis",
+      "char to string c++ to_string"
+     ],
+     "a": "`to_string` przyjmuje liczby, więc `to_string('a')` zamienia kod 97 na napis `\"97\"`. Napis z jednego znaku: `string(1, c)` albo `string{c}`; dopisanie do napisu: `s += c`.",
+     "code": "char c = 'a';\ncout << to_string(c) << ' ' << string(1, c) << ' ' << string{c} << '\\n';   // 97 a a"
+    },
+    {
+     "q": [
+      "cout << +c",
+      "unarny plus char",
+      "+c wypisuje liczbę",
+      "najkrótszy sposób wypisania kodu znaku",
+      "plus przed charem"
+     ],
+     "a": "Unarny `+` wykonuje promocję całkowitą, więc `+c` ma typ `int`: `cout << +c` wypisze kod znaku. Przydaje się zwłaszcza dla `int8_t` / `uint8_t`.",
+     "code": "char c = '0';\nuint8_t b = 7;\ncout << +c << ' ' << +b << '\\n';   // 48 7"
+    },
+    {
+     "q": [
+      "static_cast<char>",
+      "(char) czy char() czy static_cast",
+      "rzutowanie na char",
+      "jak rzutować int na char c++",
+      "cast int to char c++",
+      "rzutowanie c++ char"
+     ],
+     "a": "`(char)x`, `char(x)` i `static_cast<char>(x)` robią dla liczb to samo. `static_cast` jest najbardziej „C++-owy” i łatwo go wyszukać, ale na zawodach krótsze `char(x)` jest w porządku. Wartość spoza zakresu `char` (np. 200) da znak ujemny — [[kb:str-signed-char|char ze znakiem]].",
+     "code": "int i = 3;\nchar a = (char)('a' + i), b = char('a' + i), c = static_cast<char>('a' + i);\ncout << a << b << c << '\\n';   // ddd"
+    }
+   ],
+   "related": [
+    "str-ascii-table",
+    "str-char-arithmetic",
+    "num-conversions",
+    "io-printf-formats",
+    "str-signed-char"
+   ]
+  },
+  {
+   "id": "str-case-tricks",
+   "title": "Wielkie i małe litery: różnica 32, triki c ^ 32, c | 32, c & ~32 i porównywanie bez wielkości liter",
+   "category": "Teksty",
+   "tags": [
+    "wielkie litery",
+    "małe litery",
+    "32",
+    "xor",
+    "bity",
+    "case insensitive",
+    "tolower",
+    "toupper",
+    "swap case",
+    "sortowanie bez wielkości liter"
+   ],
+   "aliases": [
+    "wielkie i małe litery różnica 32",
+    "różnica 32 ascii",
+    "c ^ 32",
+    "c | 32",
+    "c & ~32",
+    "xor 32 litery",
+    "case insensitive compare c++",
+    "porównanie bez wielkości liter",
+    "swap case c++",
+    "trik bitowy na wielkość liter",
+    "bitowa zamiana wielkości liter",
+    "ignore case c++",
+    "z małej litery dużą bitowo"
+   ],
+   "summary": "Wielka i mała litera różnią się w ASCII dokładnie o 32 (`'a' - 'A' == 32`), czyli jednym bitem (bit 5). Stąd triki: `c | 32` — na małą, `c & ~32` — na wielką, `c ^ 32` — zamiana. Działają **tylko dla liter**. Do porównań bez rozróżniania wielkości sprowadź oba znaki przez `tolower`.",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "`'A'` = 65 = `0100 0001`, `'a'` = 97 = `0110 0001`. Każda wielka litera różni się od swojej małej tylko bitem o wartości 32 (`0x20`, bit nr 5): wielkie mają go zgaszonego, małe — zapalonego. Kody: [[kb:str-ascii-table|tabela ASCII]]."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Cel",
+      "Funkcja",
+      "Ręcznie",
+      "Bitowo (tylko litery!)"
+     ],
+     "rows": [
+      [
+       "na małą",
+       "`tolower(c)`",
+       "`c + 32` (gdy wielka)",
+       "`c | 32`"
+      ],
+      [
+       "na wielką",
+       "`toupper(c)`",
+       "`c - 32` (gdy mała)",
+       "`c & ~32`"
+      ],
+      [
+       "zamień wielkość",
+       "`isupper(c) ? tolower(c) : toupper(c)`",
+       "`c ± 32`",
+       "`c ^ 32`"
+      ],
+      [
+       "czy mała",
+       "`islower(c)`",
+       "`c >= 'a' && c <= 'z'`",
+       "`(c & 32) != 0` (gdy to litera)"
+      ],
+      [
+       "indeks 0–25 bez względu na wielkość",
+       "`tolower(c) - 'a'`",
+       "—",
+       "`(c | 32) - 'a'`"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Triki bitowe w praktyce",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    char c = 'G';\n    cout << bitset<8>('A') << ' ' << bitset<8>('a') << '\\n';          // 01000001 01100001\n    cout << char(c | 32) << char(c & ~32) << char(c ^ 32) << '\\n';    // gGg\n    string s = \"Hello, World 42!\";\n    for (char& x : s)\n        if (isalpha((unsigned char)x)) x ^= 32;   // zamień wielkość tylko liter\n    cout << s << '\\n';                             // hELLO, wORLD 42!\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Porównywanie bez rozróżniania wielkości liter** — sprowadź oba znaki do jednej wielkości. Dla całych napisów: najpierw porównaj długości, potem znak po znaku. Do sortowania użyj `lexicographical_compare` z porównaniem znaków po `tolower`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Porównywanie i sortowanie bez wielkości liter",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nbool rowne(const string& a, const string& b) {\n    if (a.size() != b.size()) return false;\n    for (size_t i = 0; i < a.size(); i++)\n        if (tolower((unsigned char)a[i]) != tolower((unsigned char)b[i])) return false;\n    return true;\n}\n\nbool mniejsze(const string& a, const string& b) {\n    return lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(),\n        [](unsigned char x, unsigned char y) { return tolower(x) < tolower(y); });\n}\n\nint main() {\n    cout << rowne(\"OlImP\", \"olimp\") << rowne(\"abc\", \"abd\") << '\\n';   // 10\n    vector<string> v = {\"banan\", \"Ananas\", \"cytryna\", \"Arbuz\"};\n    sort(v.begin(), v.end(), mniejsze);\n    for (auto& x : v) cout << x << ' ';   // Ananas Arbuz banan cytryna\n    cout << '\\n';\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Triki bitowe psują znaki, które nie są literami: `' ' ^ 32` to `'\\0'`, `'[' ^ 32` to `'{'`, `'@' | 32` to grawis (kod 96). Zawsze najpierw sprawdź `isalpha`. Cyfry mają bit 32 zapalony, więc `'5' | 32 == '5'`, ale `'5' & ~32` to `'\\x15'` (znak sterujący)."
+    },
+    {
+     "type": "warn",
+     "md": "`c & ~32` ma typ `int` (bo `~32` to `int`), więc `cout << (c & ~32)` wypisze liczbę — przypisz wynik do `char` albo rzutuj `char(c & ~32)`. Uwaga na priorytet: `c & 32 == 0` to `c & (32 == 0)`; pisz `(c & 32) == 0` ([[kb:pit-bit-ops|priorytety operatorów bitowych]])."
+    },
+    {
+     "type": "tip",
+     "md": "Na zawodach `tolower` / `toupper` w zupełności wystarczą i są czytelne ([[kb:str-basic-char-ops|funkcje cctype]]). Trik `c ^ 32` warto znać, bo pojawia się w zadaniach typu „zamień wielkość liter” i w cudzych rozwiązaniach. Zliczanie liter bez względu na wielkość: `cnt[tolower(c) - 'a']++` ([[kb:str-basic-count-letters|zliczanie liter]])."
+    }
+   ],
+   "pitfalls": [
+    "`x ^= 32` dla spacji, cyfr i interpunkcji zmienia je w inne znaki — najpierw sprawdź `isalpha`.",
+    "`cout << (c | 32)` wypisuje liczbę (typ `int`) — rzutuj na `char`.",
+    "`c & 32 == 0` bez nawiasów ma zły priorytet — pisz `(c & 32) == 0`.",
+    "`==` dla napisów rozróżnia wielkość liter: `\"Ala\" != \"ala\"`; zwykły `sort` stawia wszystkie wielkie litery przed małymi."
+   ],
+   "qa": [
+    {
+     "q": [
+      "różnica między wielką a małą literą w ascii",
+      "dlaczego 32",
+      "'a' - 'A'",
+      "o ile różnią się małe i duże litery",
+      "difference between uppercase and lowercase ascii",
+      "ile wynosi 'a' - 'A'",
+      "duża i mała litera różnica kodu"
+     ],
+     "a": "Dokładnie 32: `'a' - 'A' == 32` (97 − 65), tak samo dla każdej pary liter. 32 to jeden bit (`0x20`), więc wielka i mała litera różnią się tylko bitem nr 5.",
+     "code": "cout << 'a' - 'A' << ' ' << 'z' - 'Z' << ' ' << char('k' - 32) << ' ' << char('K' + 32) << '\\n';   // 32 32 K k"
+    },
+    {
+     "q": [
+      "c ^ 32",
+      "xor 32 litera",
+      "zamiana wielkości litery xor",
+      "swap case c++",
+      "odwróć wielkość liter",
+      "zamień małe litery na wielkie, a wielkie na małe",
+      "swapcase",
+      "zamiana wielkości wszystkich liter"
+     ],
+     "a": "`c ^ 32` przełącza bit 32: wielka ↔ mała. Stosuj tylko do liter (sprawdź `isalpha`), inaczej zepsujesz np. spacje.",
+     "code": "string s = \"Ala Ma KOTA\";\nfor (char& c : s) if (isalpha((unsigned char)c)) c ^= 32;\ncout << s << '\\n';   // aLA mA kota"
+    },
+    {
+     "q": [
+      "c | 32",
+      "na małą literę bitowo",
+      "jak zrobić z dużej litery małą bitowo",
+      "lowercase bit trick",
+      "or 32 litera",
+      "tolower bitowo bez funkcji",
+      "c | ' '"
+     ],
+     "a": "`c | 32` zapala bit 32, więc każda litera staje się mała (mała zostaje małą). Ponieważ `' '` ma kod 32, czasem pisze się `c | ' '`. Tylko dla liter!",
+     "code": "char a = 'Q', b = 'q';\ncout << char(a | 32) << char(b | 32) << char(a | ' ') << '\\n';   // qqq"
+    },
+    {
+     "q": [
+      "c & ~32",
+      "na wielką literę bitowo",
+      "jak zrobić z małej litery dużą bitowo",
+      "uppercase bit trick",
+      "c & 95",
+      "toupper bitowo bez funkcji",
+      "and ~32 litera",
+      "mała na dużą operacją bitową"
+     ],
+     "a": "`c & ~32` gasi bit 32 — litera staje się wielka. `~32` to `-33`; dla znaków ASCII to samo co `c & 0x5F` (95). Wynik ma typ `int`, więc rzutuj na `char`.",
+     "code": "char c = 'm';\ncout << char(c & ~32) << ' ' << char(c & 95) << ' ' << (c & ~32) << '\\n';   // M M 77"
+    },
+    {
+     "q": [
+      "porównanie bez wielkości liter",
+      "case insensitive compare c++",
+      "czy napisy równe ignorując wielkość liter",
+      "porównać stringi bez rozróżniania wielkości",
+      "equalsIgnoreCase c++",
+      "strcasecmp",
+      "porównanie stringów ignore case"
+     ],
+     "a": "Porównaj długości, a potem znaki po `tolower`. Najprościej: zrób małe kopie obu napisów i porównaj `==`. (`strcasecmp` z `<strings.h>` to POSIX — działa na Linuksie i macOS, ale nie jest standardem C++.)",
+     "code": "auto low = [](string s) { for (char& c : s) c = tolower((unsigned char)c); return s; };\nstring a = \"OlImPiAdA\", b = \"olimpiada\";\ncout << (low(a) == low(b)) << '\\n';   // 1"
+    },
+    {
+     "q": [
+      "sortowanie bez wielkości liter",
+      "sort ignorując wielkość liter",
+      "case insensitive sort c++",
+      "sortuj alfabetycznie a i A razem",
+      "sort stringów bez rozróżniania wielkości"
+     ],
+     "a": "Zwykły `sort` stawia wszystkie wielkie litery przed małymi (`\"Zebra\" < \"apple\"`). Podaj komparator, który porównuje znaki po `tolower`:",
+     "code": "vector<string> v = {\"banan\", \"Zebra\", \"apple\", \"Arbuz\"};\nsort(v.begin(), v.end(), [](const string& a, const string& b) {\n    return lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(),\n        [](unsigned char x, unsigned char y) { return tolower(x) < tolower(y); });\n});\nfor (auto& s : v) cout << s << ' ';   // apple Arbuz banan Zebra"
+    },
+    {
+     "q": [
+      "c + 32 litera",
+      "c - 32 litera",
+      "c - 'A' + 'a'",
+      "duża na małą bez biblioteki przez 32",
+      "jak zamienić wielką literę na małą bez tolower"
+     ],
+     "a": "Dla wielkiej litery `c + 32` (czytelniej: `c - 'A' + 'a'`), dla małej → wielka `c - 32` (`c - 'a' + 'A'`). Najpierw sprawdź, czy znak jest odpowiednią literą — inaczej zepsujesz inne znaki.",
+     "code": "string s = \"KoT 9\";\nfor (char& c : s) if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';\ncout << s << '\\n';   // kot 9"
+    },
+    {
+     "q": [
+      "pierwsza litera wielka",
+      "każde słowo z wielkiej litery",
+      "capitalize c++",
+      "zamień pierwszą literę na dużą",
+      "title case c++",
+      "wielka litera na początku zdania"
+     ],
+     "a": "Zamień na wielką każdą literę na początku napisu lub po spacji, a pozostałe na małe.",
+     "code": "string s = \"ala MA kota\";\nfor (size_t i = 0; i < s.size(); i++) {\n    unsigned char c = s[i];\n    s[i] = (i == 0 || s[i - 1] == ' ') ? toupper(c) : tolower(c);\n}\ncout << s << '\\n';   // Ala Ma Kota"
+    },
+    {
+     "q": [
+      "czy litera jest wielka bitowo",
+      "c & 32 sprawdzenie",
+      "sprawdź wielkość litery bez isupper",
+      "test bitu 5 litery",
+      "czy mała litera bitowo"
+     ],
+     "a": "Dla litery: `(c & 32) != 0` oznacza małą, `(c & 32) == 0` — wielką. Nawiasy są konieczne, bo `==` wiąże mocniej niż `&`.",
+     "code": "for (char c : string(\"aZ\"))\n    cout << c << ((c & 32) ? \" mala\" : \" wielka\") << '\\n';"
+    },
+    {
+     "q": [
+      "c ^ 32 psuje znaki",
+      "xor 32 dla spacji",
+      "dlaczego c | 32 zepsuło nawias",
+      "trik 32 dla cyfr i spacji",
+      "zamiana wielkości liter psuje interpunkcję",
+      "toupper bitowo błędy"
+     ],
+     "a": "Triki z 32 działają tylko dla liter: `' ' ^ 32` = `'\\0'`, `'[' ^ 32` = `'{'`, `'@' | 32` = grawis. Sprawdzaj `isalpha(c)` przed operacją albo używaj `tolower` / `toupper`, które inne znaki zostawiają bez zmian.",
+     "code": "cout << (int)(' ' ^ 32) << ' ' << char('[' ^ 32) << ' ' << char(toupper('[')) << '\\n';   // 0 { ["
+    }
+   ],
+   "related": [
+    "str-basic-char-ops",
+    "str-ascii-table",
+    "str-basic-lex-compare",
+    "pit-bit-ops",
+    "str-basic-count-letters",
+    "str-char-arithmetic"
+   ]
+  },
+  {
+   "id": "str-escape-whitespace",
+   "title": "Znaki specjalne i białe znaki: \\n, \\t, \\r, \\\\, \\', \\\", \\0 i końce linii z Windows (CRLF)",
+   "category": "Teksty",
+   "tags": [
+    "escape",
+    "sekwencje ucieczki",
+    "znaki specjalne",
+    "\\n",
+    "\\t",
+    "\\r",
+    "\\0",
+    "biały znak",
+    "isspace",
+    "CRLF",
+    "raw string",
+    "cudzysłów",
+    "backslash"
+   ],
+   "aliases": [
+    "znaki specjalne c++",
+    "escape sequences c++",
+    "sekwencje ucieczki",
+    "jak wypisać cudzysłów",
+    "jak wypisać backslash",
+    "biały znak",
+    "białe znaki",
+    "crlf",
+    "\\r\\n windows",
+    "tabulator c++",
+    "znak \\0",
+    "raw string c++",
+    "znak nowej linii",
+    "whitespace c++"
+   ],
+   "summary": "Znaki, których nie da się wpisać wprost, zapisujesz z backslashem: `\\n` (nowa linia, 10), `\\t` (tab, 9), `\\r` (powrót karetki, 13), `\\\\` (backslash), `\\'`, `\\\"`, `\\0` (NUL). Białe znaki to spacja, `\\t`, `\\n`, `\\v`, `\\f`, `\\r` — `cin >>` je pomija. Pliki z Windows kończą wiersze parą `\\r\\n`, przez co `getline` zostawia `\\r` na końcu napisu.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "title": "Sekwencje specjalne (escape)",
+     "headers": [
+      "Zapis",
+      "Kod",
+      "Nazwa",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`\\n`",
+       "10",
+       "LF, nowa linia",
+       "koniec wiersza (Linux, macOS, testy OI)"
+      ],
+      [
+       "`\\t`",
+       "9",
+       "TAB, tabulator",
+       "biały znak"
+      ],
+      [
+       "`\\r`",
+       "13",
+       "CR, powrót karetki",
+       "Windows kończy wiersz parą `\\r\\n`"
+      ],
+      [
+       "`\\\\`",
+       "92",
+       "backslash",
+       "pojedynczy `\\` rozpoczyna sekwencję"
+      ],
+      [
+       "`\\'`",
+       "39",
+       "apostrof",
+       "potrzebny w literale znakowym: `'\\''`; w napisie można pisać `'`"
+      ],
+      [
+       "`\\\"`",
+       "34",
+       "cudzysłów",
+       "potrzebny w napisie: `\"Ala \\\"Kot\\\"\"`; jako znak: `'\"'`"
+      ],
+      [
+       "`\\0`",
+       "0",
+       "NUL",
+       "koniec napisu w stylu C (`char[]`)"
+      ],
+      [
+       "`\\a` `\\b` `\\f` `\\v`",
+       "7, 8, 12, 11",
+       "dzwonek, backspace, nowa strona, tab pionowy",
+       "praktycznie nieużywane"
+      ],
+      [
+       "`\\x41`",
+       "0x41 = 65",
+       "kod szesnastkowy",
+       "`'\\x41' == 'A'`"
+      ],
+      [
+       "`\\101`",
+       "65 (ósemkowo 101)",
+       "kod ósemkowy",
+       "`'\\101' == 'A'`; `\\0` to szczególny przypadek"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Białe znaki** (*whitespace*): spacja `' '`, `'\\t'`, `'\\n'`, `'\\v'`, `'\\f'`, `'\\r'` — dla nich `isspace(c)` jest prawdą. `cin >> x` (liczby, słowa, pojedyncze znaki) pomija wszystkie białe znaki przed wartością, dlatego nie widzi różnicy między spacją, tabem i nową linią. `getline` i `cin.get` ich **nie** pomijają ([[kb:str-read-chars|wczytywanie znak po znaku]])."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Wypisywanie znaków specjalnych",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    cout << \"Powiedzial: \\\"TAK\\\"\\n\";              // Powiedzial: \"TAK\"\n    cout << \"Sciezka: C:\\\\oi\\\\zad.cpp\\n\";         // Sciezka: C:\\oi\\zad.cpp\n    cout << \"a\\tb\\tc\\n\";                          // kolumny oddzielone tabem\n    cout << '\\'' << ' ' << '\"' << ' ' << \"'\" << '\\n';   // ' \" '\n    cout << R\"(surowy napis: \\n \"bez\" escapowania)\" << '\\n';\n    string s = \"ab\";\n    s += '\\0';\n    s += \"cd\";\n    cout << s.size() << ' ' << strlen(s.c_str()) << '\\n';   // 5 2\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Końce linii z Windows (CRLF).** W Linuksie, macOS i w testach OI wiersz kończy się znakiem `'\\n'`. Pliki zapisane w Notatniku na Windows kończą wiersze dwoma znakami: `'\\r'` `'\\n'`. `cin >>` nie ma z tym problemu (`'\\r'` to biały znak), ale `getline` zostawia `'\\r'` na końcu napisu: długość jest o 1 większa, porównanie z `\"TAK\"` nie wychodzi, a wypisany tekst „cofa kursor” na początek wiersza."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Usuwanie \\r i białych znaków z końca wiersza",
+     "code": "string line;\nwhile (getline(cin, line)) {\n    if (!line.empty() && line.back() == '\\r') line.pop_back();                     // CRLF -> LF\n    while (!line.empty() && isspace((unsigned char)line.back())) line.pop_back();   // obcięcie z prawej\n    cout << '[' << line << \"] \" << line.size() << '\\n';\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Jak zobaczyć niewidoczne znaki (debug)",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nstring widoczne(const string& s) {\n    const char* hx = \"0123456789abcdef\";\n    string r;\n    for (unsigned char c : s) {\n        if (c == '\\n') r += \"\\\\n\";\n        else if (c == '\\r') r += \"\\\\r\";\n        else if (c == '\\t') r += \"\\\\t\";\n        else if (c < 32 || c >= 127) { r += \"\\\\x\"; r += hx[c / 16]; r += hx[c % 16]; }\n        else r += char(c);\n    }\n    return r;\n}\n\nint main() {\n    string s = \"TAK \\r\\n\\tok\\x01\";\n    cout << widoczne(s) << '\\n';   // TAK \\r\\n\\tok\\x01\n}"
+    },
+    {
+     "type": "warn",
+     "md": "Ścieżki Windows w napisie: `\"C:\\nowy\\test.in\"` zawiera `\\n` i `\\t`! Pisz `\"C:\\\\nowy\\\\test.in\"` (podwójny backslash), `\"C:/nowy/test.in\"` (zwykły ukośnik działa też na Windows) albo surowy napis `R\"(C:\\nowy\\test.in)\"`."
+    },
+    {
+     "type": "tip",
+     "md": "Niewidoczne znaki w pliku podejrzysz w terminalu: `cat -vet plik.in` (koniec wiersza to `$`, `\\r` to `^M`, tab to `^I`) albo `od -c plik.in`. Plik z CRLF przerobisz na LF poleceniem `tr -d '\\r' < plik.in > nowy.in`."
+    }
+   ],
+   "pitfalls": [
+    "`'\\n'` (znak, `char`) a `\"\\n\"` (napis, `const char*`) — w `cout` działają tak samo, ale `c == \"\\n\"` się nie skompiluje.",
+    "`getline` z pliku z Windows zostawia `'\\r'` na końcu wiersza.",
+    "Pojedynczy `\\` w napisie rozpoczyna sekwencję: `\"C:\\new\"` to `C:` + nowa linia + `ew`.",
+    "`'\\0'` w `std::string` jest zwykłym znakiem (liczy się do `size()`), ale `c_str()` / `printf(\"%s\")` utną napis na nim.",
+    "Sekwencja `\\x` jest zachłanna: `\"\\x41BC\"` to próba jednego znaku o kodzie 0x41BC (błąd lub ostrzeżenie), a nie `\"ABC\"` — rozdziel: `\"\\x41\" \"BC\"`."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wypisać cudzysłów",
+      "cudzysłów w stringu c++",
+      "\\\" w cout",
+      "print quote c++",
+      "jak wypisac \" w napisie",
+      "cudzysłów w cout"
+     ],
+     "a": "Wewnątrz napisu poprzedź cudzysłów backslashem: `\\\"`. Jako pojedynczy znak możesz pisać `'\"'` bez backslasha. Alternatywa: surowy napis `R\"(...)\"`.",
+     "code": "cout << \"Odpowiedz: \\\"TAK\\\"\" << '\\n';    // Odpowiedz: \"TAK\"\ncout << '\"' << R\"(i \"tak\" tez)\" << '\\n';   // \"i \"tak\" tez"
+    },
+    {
+     "q": [
+      "jak wypisać backslash",
+      "backslash w stringu",
+      "ukośnik wsteczny c++",
+      "print backslash c++",
+      "\\\\ w c++",
+      "jak wypisac \\ w cout"
+     ],
+     "a": "Backslash zapisujesz podwójnie: `\\\\` (w napisie `\"a\\\\b\"`, jako znak `'\\\\'`). Pojedynczy `\\` zaczyna sekwencję specjalną (`\\n`, `\\t`…). Bez podwajania: surowy napis `R\"(a\\b)\"`.",
+     "code": "cout << \"C:\\\\oi\\\\zad.cpp\" << '\\n';   // C:\\oi\\zad.cpp\ncout << '\\\\' << R\"( i \\n doslownie)\" << '\\n';"
+    },
+    {
+     "q": [
+      "co to \\n",
+      "znak nowej linii",
+      "nowa linia c++",
+      "newline character c++",
+      "enter w stringu",
+      "\\n czy endl",
+      "jak zrobić nową linię w cout"
+     ],
+     "a": "`'\\n'` to jeden znak o kodzie 10 — koniec wiersza. `cout << '\\n'` przechodzi do nowej linii; `endl` robi to samo **i** opróżnia bufor (wolne w pętli — [[kb:pit-endl-tle|endl i TLE]]). `\"\\n\"` to napis jednoznakowy — w `cout` działa tak samo.",
+     "code": "cout << \"pierwsza\\ndruga\" << '\\n';\ncout << (int)'\\n' << ' ' << string(\"ab\\ncd\").size() << '\\n';   // 10 5"
+    },
+    {
+     "q": [
+      "co to \\r",
+      "\\r\\n windows",
+      "crlf a lf",
+      "znak \\r na końcu linii",
+      "windows line endings c++",
+      "carriage return c++",
+      "plik z windowsa źle się wczytuje"
+     ],
+     "a": "`'\\r'` (CR, kod 13) to „powrót karetki”. Windows kończy wiersze parą `\\r\\n` (CRLF), Linux i testy OI — samym `\\n` (LF). `cin >>` traktuje `\\r` jak biały znak, ale `getline` zostawia go na końcu wiersza — usuń go ręcznie.",
+     "code": "string line;\ngetline(cin, line);\nif (!line.empty() && line.back() == '\\r') line.pop_back();"
+    },
+    {
+     "q": [
+      "co to \\0",
+      "znak null c++",
+      "\\0 koniec napisu",
+      "null terminator c++",
+      "nul character",
+      "znak o kodzie 0"
+     ],
+     "a": "`'\\0'` to znak o kodzie 0 (NUL). Kończy napisy w stylu C (`char s[]`): `strlen`, `printf(\"%s\")` i `cout` dla `char*` zatrzymują się na nim — dlatego tablica na słowo długości n musi mieć n + 1 miejsc. W `std::string` `'\\0'` jest zwykłym znakiem. Nie myl z `'0'` (cyfra, kod 48).",
+     "code": "char s[6] = \"Ala\";   // A l a \\0 \\0 \\0\ncout << strlen(s) << ' ' << sizeof(s) << '\\n';   // 3 6\ns[1] = '\\0';\ncout << s << '\\n';   // A"
+    },
+    {
+     "q": [
+      "tabulator c++",
+      "\\t",
+      "jak wypisać tab",
+      "tab character c++",
+      "wcięcie tabulatorem w cout",
+      "znak tab kod"
+     ],
+     "a": "`'\\t'` (kod 9) przesuwa kursor do najbliższej kolumny tabulacji (zwykle co 8 znaków). Do równych kolumn lepszy jest `setw` ([[kb:io-setw-setfill|setw i setfill]]). Uwaga: jeśli zadanie każe oddzielać liczby spacją, nie wypisuj tabów.",
+     "code": "cout << \"imie\\twynik\\n\" << \"Ala\\t100\\n\";\ncout << (int)'\\t' << '\\n';   // 9"
+    },
+    {
+     "q": [
+      "sekwencje ucieczki",
+      "escape sequences c++",
+      "znaki specjalne w c++",
+      "lista znaków z backslashem",
+      "znaki specjalne cout",
+      "backslash sekwencje"
+     ],
+     "a": "Najważniejsze: `\\n` (nowa linia), `\\t` (tab), `\\r` (CR), `\\\\` (backslash), `\\'` (apostrof), `\\\"` (cudzysłów), `\\0` (NUL). Dowolny kod: `\\x41` (hex) albo `\\101` (ósemkowo) — oba to `'A'`. Pełna tabela jest w artykule.",
+     "code": "cout << \"tab:\\t| cudz: \\\" | apos: \\' | bs: \\\\ | hex: \\x41\\n\";"
+    },
+    {
+     "q": [
+      "raw string c++",
+      "R\"()\"",
+      "napis bez escapowania",
+      "surowy napis c++",
+      "raw string literal c++",
+      "jak wypisać dużo backslashy"
+     ],
+     "a": "Surowy literał `R\"(…)\"` (C++11) zawiera dokładnie to, co jest między nawiasami — backslashe i cudzysłowy nie są interpretowane. Przydatny do ASCII-artów, ścieżek i wzorców. Jeśli tekst zawiera `)\"`, dodaj własny ogranicznik: `R\"x(…)x\"`.",
+     "code": "cout << R\"(C:\\oi\\test.in \"cudzyslow\" \\n)\" << '\\n';\ncout << R\"x(nawias i cudzyslow: )\")x\" << '\\n';"
+    },
+    {
+     "q": [
+      "jakie są białe znaki",
+      "lista białych znaków",
+      "whitespace characters c++",
+      "co pomija cin >>",
+      "co to biały znak",
+      "isspace jakie znaki"
+     ],
+     "a": "Białe znaki: spacja (32), `\\t` (9), `\\n` (10), `\\v` (11), `\\f` (12), `\\r` (13) — dla nich `isspace(c)` zwraca prawdę. `cin >> x` pomija je wszystkie przed wartością, więc liczby mogą być oddzielone spacjami, tabami albo nowymi liniami.",
+     "code": "for (char c : string(\" \\t\\n\\v\\f\\rx\"))\n    cout << (int)c << (isspace((unsigned char)c) ? \" bialy\\n\" : \" nie\\n\");"
+    },
+    {
+     "q": [
+      "jak zobaczyć niewidoczne znaki",
+      "jak wykryć \\r w danych",
+      "wypisz znaki specjalne widocznie",
+      "debug białych znaków",
+      "show invisible characters c++",
+      "sprawdź czy na końcu linii jest spacja"
+     ],
+     "a": "Wypisz kody znaków albo zamień je na widoczne zapisy (funkcja `widoczne` w artykule). W terminalu: `cat -vet plik.in` pokazuje koniec wiersza jako `$`, `\\r` jako `^M`, tab jako `^I`.",
+     "code": "string s = \"TAK \\r\";\nfor (unsigned char c : s) cout << (int)c << ' ';\ncout << '\\n';   // 84 65 75 32 13"
+    },
+    {
+     "q": [
+      "ścieżka windows w stringu",
+      "C:\\new w stringu nie działa",
+      "backslash w ścieżce pliku",
+      "freopen ścieżka windows",
+      "ścieżka do pliku z ukośnikiem"
+     ],
+     "a": "W `\"C:\\nowy\\test.in\"` kompilator widzi `\\n` i `\\t`! Podwój backslashe (`\"C:\\\\nowy\\\\test.in\"`), użyj zwykłego ukośnika (`\"C:/nowy/test.in\"` — działa też na Windows) albo surowego napisu `R\"(C:\\nowy\\test.in)\"`. Najprościej podawaj plik z bieżącego katalogu: `freopen(\"test.in\", \"r\", stdin)`.",
+     "code": "string a = \"C:\\\\oi\\\\test.in\", b = \"C:/oi/test.in\", c = R\"(C:\\oi\\test.in)\";\ncout << a << '\\n' << b << '\\n' << c << '\\n';"
+    },
+    {
+     "q": [
+      "apostrof jako char",
+      "'\\''",
+      "jak zapisać apostrof w char",
+      "char apostrof c++",
+      "apostrof w napisie"
+     ],
+     "a": "W literale znakowym apostrof trzeba poprzedzić backslashem: `'\\''`. W napisie nie trzeba: `\"it's\"`. Z cudzysłowem odwrotnie: `'\"'` bez backslasha, w napisie `\\\"`.",
+     "code": "char a = '\\'';\ncout << a << ' ' << \"it's\" << ' ' << (int)a << '\\n';   // ' it's 39"
+    }
+   ],
+   "related": [
+    "str-ascii-table",
+    "io-getline",
+    "str-read-chars",
+    "io-print-separators",
+    "pit-endl-tle",
+    "io-freopen"
+   ]
+  },
+  {
+   "id": "str-read-chars",
+   "title": "Wczytywanie znak po znaku: getchar, cin.get, noskipws, peek, EOF i pomijanie białych znaków",
+   "category": "Teksty",
+   "tags": [
+    "getchar",
+    "cin.get",
+    "noskipws",
+    "peek",
+    "EOF",
+    "wczytywanie znaków",
+    "białe znaki",
+    "putchar",
+    "znak po znaku",
+    "cin >> ws"
+   ],
+   "aliases": [
+    "wczytywanie znak po znaku",
+    "czytanie znak po znaku",
+    "getchar",
+    "cin.get",
+    "noskipws",
+    "jak wczytać jeden znak",
+    "wczytaj znak ze spacją",
+    "read char by char c++",
+    "czytanie pojedynczych znaków",
+    "cin >> char",
+    "cin.peek",
+    "getchar eof",
+    "putchar",
+    "wczytywanie znaków c++"
+   ],
+   "summary": "`cin >> c` wczytuje jeden znak, ale pomija białe znaki (spacje, entery). Żeby czytać **każdy** znak, użyj `cin.get(c)`, `getchar()` albo `cin >> noskipws`. `getchar()` i `cin.get()` zwracają `int` — wartość `EOF` (−1) oznacza koniec wejścia, więc wynik trzymaj w `int`, nie w `char`.",
+   "complexity": "O(1) na znak, całe wejście O(n); getchar jest szybkie, cin.get — po sync_with_stdio(false)",
+   "level": 2,
+   "body": [
+    {
+     "type": "table",
+     "title": "Sposoby wczytania znaku",
+     "headers": [
+      "Sposób",
+      "Białe znaki",
+      "Koniec wejścia",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`cin >> c`",
+       "pomija",
+       "`cin` staje się fałszem",
+       "najprostszy do siatek i cyfr bez spacji"
+      ],
+      [
+       "`cin >> noskipws >> c`",
+       "**nie** pomija",
+       "jak wyżej",
+       "działa aż do `cin >> skipws`"
+      ],
+      [
+       "`cin.get(c)`",
+       "nie pomija",
+       "zwraca `cin` (fałsz)",
+       "`while (cin.get(c))`"
+      ],
+      [
+       "`int c = cin.get()`",
+       "nie pomija",
+       "zwraca `EOF`",
+       "wynik typu `int`"
+      ],
+      [
+       "`int c = getchar()`",
+       "nie pomija",
+       "zwraca `EOF`",
+       "`<cstdio>`; nie mieszaj z `sync_with_stdio(false)`"
+      ],
+      [
+       "`scanf(\"%c\", &c)`",
+       "nie pomija",
+       "zwraca `EOF`",
+       "`scanf(\" %c\", &c)` — spacja w formacie pomija białe znaki"
+      ],
+      [
+       "`cin.peek()`",
+       "—",
+       "zwraca `EOF`",
+       "podgląda następny znak bez wczytywania"
+      ],
+      [
+       "`getchar_unlocked()`",
+       "nie pomija",
+       "zwraca `EOF`",
+       "najszybsze (POSIX): [[kb:io-custom-fast-read|szybkie wczytywanie]]"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Każdy znak aż do końca wejścia (getchar): wiersze, słowa, znaki",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    long long znaki = 0, slowa = 0, wiersze = 0;\n    bool wSlowie = false;\n    int c;   // int, nie char — musi pomieścić EOF\n    while ((c = getchar()) != EOF) {\n        znaki++;\n        if (c == '\\n') wiersze++;\n        if (isspace(c)) wSlowie = false;\n        else if (!wSlowie) { wSlowie = true; slowa++; }\n    }\n    printf(\"%lld %lld %lld\\n\", wiersze, slowa, znaki);\n}"
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "To samo przez cin: cin.get i cin >> c",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    char c;\n    // 1) cin.get — każdy znak, łącznie ze spacjami i '\\n'\n    string pierwszyWiersz;\n    while (cin.get(c) && c != '\\n') pierwszyWiersz += c;\n    // 2) cin >> c — pomija białe znaki: np. cyfry sklejone w wierszach \"0110\"\n    int jedynki = 0;\n    while (cin >> c)\n        if (c == '1') jedynki++;\n    cout << pierwszyWiersz << ' ' << jedynki << '\\n';\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Podgląd i cofanie.** `cin.peek()` zwraca następny znak bez wczytywania go (albo `EOF`), `cin.ignore()` pomija jeden znak, `cin.ignore(n, '\\n')` — do końca wiersza, a `cin.unget()` cofa ostatnio wczytany znak. Przydatne, gdy rodzaj danych zależy od pierwszego znaku (liczba czy słowo)."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "peek: liczba czy słowo?",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // wejście np.: 12 abc 7 x\n    while (cin >> ws && cin.peek() != EOF) {\n        if (isdigit(cin.peek())) { long long x; cin >> x; cout << \"liczba \" << x << '\\n'; }\n        else { string s; cin >> s; cout << \"slowo \" << s << '\\n'; }\n    }\n}"
+    },
+    {
+     "type": "warn",
+     "md": "`char c = getchar(); while (c != EOF)` to klasyczny błąd: `EOF` to −1 typu `int`. Gdy `char` jest ze znakiem, bajt 255 zostanie wzięty za koniec pliku; gdy bez znaku (np. ARM Linux), `c != EOF` jest zawsze prawdą — **nieskończona pętla**. Wynik `getchar()` / `cin.get()` trzymaj w `int`."
+    },
+    {
+     "type": "warn",
+     "md": "Nie mieszaj `getchar` / `scanf` z `cin` po `ios::sync_with_stdio(false)` — mają wtedy osobne bufory i znaki „giną” albo przychodzą w złej kolejności. Wybierz jeden styl wczytywania."
+    },
+    {
+     "type": "tip",
+     "md": "Do planszy znaków albo cyfr sklejonych bez spacji (`0110`) najprostsze jest `cin >> c` — samo pominie `'\\n'` między wierszami ([[kb:io-read-grid|wczytywanie siatki]]). `cin.get` / `getchar` są potrzebne, gdy spacje i końce wierszy **niosą informację**. Czytanie do końca pliku liczb i wierszy: [[kb:io-read-until-eof|wczytywanie do EOF]]."
+    }
+   ],
+   "functions": [
+    {
+     "sig": "int getchar()",
+     "desc": "następny znak z stdin (0–255) albo EOF",
+     "returns": "int",
+     "complexity": "O(1)",
+     "example": "int c; while ((c = getchar()) != EOF) putchar(c);"
+    },
+    {
+     "sig": "int putchar(int c)",
+     "desc": "wypisuje jeden znak na stdout",
+     "returns": "int",
+     "example": "putchar('\\n');"
+    },
+    {
+     "sig": "cin.get(c)",
+     "desc": "wczytuje dowolny znak (także spację i '\\n') do char c",
+     "returns": "istream& (fałsz na końcu wejścia)",
+     "example": "char c; while (cin.get(c)) { ... }"
+    },
+    {
+     "sig": "cin.get()",
+     "desc": "zwraca następny znak jako int albo EOF",
+     "returns": "int"
+    },
+    {
+     "sig": "cin.peek()",
+     "desc": "podgląda następny znak bez wczytywania",
+     "returns": "int (EOF na końcu)",
+     "example": "if (isdigit(cin.peek())) cin >> x;"
+    },
+    {
+     "sig": "cin.ignore(n, delim)",
+     "desc": "pomija do n znaków albo do znaku delim włącznie",
+     "returns": "istream&",
+     "example": "cin.ignore(numeric_limits<streamsize>::max(), '\\n');"
+    },
+    {
+     "sig": "cin.unget() / cin.putback(c)",
+     "desc": "cofa ostatnio wczytany znak do strumienia",
+     "returns": "istream&"
+    },
+    {
+     "sig": "cin >> noskipws / cin >> skipws",
+     "desc": "wyłącza / włącza pomijanie białych znaków przez >>",
+     "returns": "istream&"
+    },
+    {
+     "sig": "cin >> ws",
+     "desc": "pomija wszystkie białe znaki",
+     "returns": "istream&"
+    }
+   ],
+   "pitfalls": [
+    "Wynik `getchar()` w zmiennej `char` — nie da się odróżnić `EOF` (program może się zapętlić).",
+    "`cin >> c` nie wczyta spacji ani `'\\n'` — do tego służy `cin.get(c)` albo `noskipws`.",
+    "Po `cin >> n` w buforze zostaje `'\\n'` — następne `cin.get(c)` / `getchar()` zwróci właśnie go.",
+    "Mieszanie `getchar` / `scanf` z `cin` po `sync_with_stdio(false)`.",
+    "`noskipws` zostaje włączone na stałe — kolejne `cin >> liczba` nie pominie spacji i się nie powiedzie."
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wczytać jeden znak",
+      "wczytaj char c++",
+      "cin >> char",
+      "read single char c++",
+      "wczytanie litery c++",
+      "jak wczytać pojedynczy znak"
+     ],
+     "a": "`char c; cin >> c;` — wczyta pierwszy znak, który nie jest biały (spacje i entery pominie). Jeśli spacja też się liczy, użyj `cin.get(c)`.",
+     "code": "char c, d;\ncin >> c;     // wejście \"  x y\" -> c = 'x'\ncin.get(d);   // d = ' ' (cin.get nie pomija spacji)"
+    },
+    {
+     "q": [
+      "jak wczytać spację jako znak",
+      "cin >> char pomija spacje",
+      "wczytaj znak ze spacją",
+      "char nie wczytuje spacji",
+      "cin pomija spacje i entery",
+      "jak wczytać enter jako znak"
+     ],
+     "a": "`cin >>` zawsze pomija białe znaki. Każdy znak wczytasz przez `cin.get(c)`, `c = getchar()` albo po przełączeniu `cin >> noskipws`.",
+     "code": "char c;\ncin.get(c);             // dowolny znak, także ' ' i '\\n'\ncin >> noskipws >> c;   // od teraz >> nie pomija białych znaków\ncin >> skipws;          // przywrócenie domyślnego zachowania"
+    },
+    {
+     "q": [
+      "getchar",
+      "jak działa getchar",
+      "getchar c++",
+      "co zwraca getchar",
+      "getchar zwraca int",
+      "getchar przykład"
+     ],
+     "a": "`getchar()` (z `<cstdio>`) zwraca następny znak wejścia jako `int` (0–255) albo `EOF` (−1) na końcu. Nie pomija białych znaków. Para do wypisywania: `putchar(c)`.",
+     "code": "int c;\nwhile ((c = getchar()) != EOF)\n    putchar(toupper(c));   // kopiuje wejście, zamieniając litery na wielkie"
+    },
+    {
+     "q": [
+      "cin.get",
+      "cin.get(c)",
+      "cin.get a cin >>",
+      "różnica cin.get i getchar",
+      "cin get c++",
+      "cin.get() co zwraca"
+     ],
+     "a": "`cin.get(c)` wczytuje do `char c` dowolny znak i zwraca strumień (fałsz na końcu wejścia) — wygodne w `while (cin.get(c))`. `cin.get()` bez argumentu zwraca `int` (albo `EOF`), jak `getchar()`. W przeciwieństwie do `getchar`, `cin.get` działa razem z `sync_with_stdio(false)`.",
+     "code": "char c;\nint spacje = 0;\nwhile (cin.get(c))\n    if (c == ' ') spacje++;\ncout << spacje << '\\n';"
+    },
+    {
+     "q": [
+      "noskipws",
+      "cin >> noskipws",
+      "co robi noskipws",
+      "skipws noskipws",
+      "noskipws c++"
+     ],
+     "a": "Manipulator `noskipws` wyłącza pomijanie białych znaków przez `>>` — `cin >> c` wczyta wtedy także spacje i `'\\n'`. Działa do odwołania (`skipws`); w tym czasie `cin >> liczba` nie pominie spacji przed liczbą i się nie powiedzie.",
+     "code": "char c;\nstring s;\ncin >> noskipws;\nwhile (cin >> c) s += c;   // całe wejście, ze spacjami i enterami\ncin >> skipws;\ncout << s.size() << '\\n';"
+    },
+    {
+     "q": [
+      "wczytywanie znak po znaku do końca",
+      "getchar do eof",
+      "czytaj wszystkie znaki do końca pliku",
+      "while getchar != EOF",
+      "read chars until eof c++",
+      "znak po znaku aż do końca wejścia"
+     ],
+     "a": "Pętla `while ((c = getchar()) != EOF)` z `int c` albo `while (cin.get(c))` z `char c`. Obie kończą się na końcu wejścia (w terminalu: Ctrl+D na macOS/Linuksie, Ctrl+Z i Enter na Windows).",
+     "code": "int c;\nlong long ile = 0;\nwhile ((c = getchar()) != EOF) ile++;\nprintf(\"%lld\\n\", ile);"
+    },
+    {
+     "q": [
+      "char c = getchar() nieskończona pętla",
+      "getchar eof char",
+      "dlaczego getchar w int",
+      "EOF w char",
+      "pętla getchar się nie kończy",
+      "getchar != EOF nie działa"
+     ],
+     "a": "`EOF` to −1 typu `int`, a `getchar()` zwraca 0–255 **albo** −1 — to 257 możliwości, nie mieszczą się w `char`. Jeśli `char` jest bez znaku, `c != EOF` jest zawsze prawdą (nieskończona pętla); jeśli ze znakiem — bajt 255 zakończy czytanie za wcześnie. Zawsze `int c`.",
+     "code": "int c;   // dobrze: int\nwhile ((c = getchar()) != EOF) { /* ... */ }\n// char c; while ((c = getchar()) != EOF)   <- ŹLE"
+    },
+    {
+     "q": [
+      "cin.peek",
+      "podejrzyj następny znak",
+      "peek c++",
+      "sprawdź następny znak bez wczytywania",
+      "jaki jest następny znak na wejściu",
+      "cin.unget"
+     ],
+     "a": "`cin.peek()` zwraca następny znak (jako `int`) bez zabierania go ze strumienia, albo `EOF`. `cin.unget()` cofa ostatnio wczytany znak. Typowe użycie: po pierwszym znaku zdecyduj, czy wczytać liczbę, czy słowo.",
+     "code": "cin >> ws;   // pomiń białe znaki\nif (isdigit(cin.peek())) { int x; cin >> x; cout << \"liczba \" << x << '\\n'; }\nelse { string s; cin >> s; cout << \"slowo \" << s << '\\n'; }"
+    },
+    {
+     "q": [
+      "pomijanie białych znaków",
+      "pomiń spacje i entery",
+      "skip whitespace c++",
+      "jak pominąć białe znaki getchar",
+      "scanf \" %c\"",
+      "cin >> ws"
+     ],
+     "a": "Z `cin`: `cin >> ws` (pomija wszystkie białe znaki) albo po prostu `cin >> c`. Z `getchar`: pętla aż do znaku, który nie jest biały. W `scanf` spacja w formacie pomija białe znaki: `scanf(\" %c\", &c)`.",
+     "code": "int c;\nwhile ((c = getchar()) != EOF && isspace(c)) {}   // c = pierwszy niebiały znak albo EOF\nchar d;\nif (scanf(\" %c\", &d) == 1) printf(\"%c\\n\", d);"
+    },
+    {
+     "q": [
+      "policz linie i słowa",
+      "ile linii ma wejście",
+      "zlicz znaki słowa linie",
+      "wc w c++",
+      "liczba wierszy na wejściu",
+      "policz słowa w tekście"
+     ],
+     "a": "Czytaj znak po znaku: wiersz kończy się `'\\n'`, a nowe słowo zaczyna się, gdy po białym znaku pojawia się niebiały. (Same słowa łatwiej policzyć przez `while (cin >> s)`.)",
+     "code": "int c;\nlong long wiersze = 0, slowa = 0;\nbool w = false;\nwhile ((c = getchar()) != EOF) {\n    if (c == '\\n') wiersze++;\n    if (isspace(c)) w = false;\n    else if (!w) { w = true; slowa++; }\n}\nprintf(\"%lld %lld\\n\", wiersze, slowa);"
+    },
+    {
+     "q": [
+      "getchar i cin razem",
+      "mieszanie getchar z cin",
+      "getchar po sync_with_stdio false",
+      "getchar nie działa z szybkim cin",
+      "scanf i cin razem znaki giną"
+     ],
+     "a": "Po `ios::sync_with_stdio(false)` `cin` ma własny bufor, niezależny od `stdio` — `getchar` / `scanf` i `cin` „podkradają” sobie dane. Wybierz jedno: albo `cin` + `cin.get`, albo `getchar` / `scanf` (bez wyłączania synchronizacji).",
+     "code": "ios::sync_with_stdio(false);\ncin.tie(nullptr);\nchar c;\ncin.get(c);   // dobrze: zostajemy przy cin\n// c = getchar();   <- ŹLE po sync_with_stdio(false)"
+    },
+    {
+     "q": [
+      "getchar po cin wczytuje enter",
+      "cin.get po cin >> n zwraca \\n",
+      "pierwszy wczytany znak to enter",
+      "getchar zwraca 10",
+      "zostaje enter w buforze"
+     ],
+     "a": "`cin >> n` zostawia w buforze `'\\n'` kończący wiersz, więc następne `cin.get(c)` zwróci właśnie go (kod 10). Pomiń go: `cin.ignore()` (jeden znak) albo `cin >> ws` (wszystkie białe znaki). To ta sama pułapka co [[kb:io-getline|getline po cin]].",
+     "code": "int n;\nchar c;\ncin >> n;\ncin.ignore();   // zjada '\\n' po liczbie\ncin.get(c);     // pierwszy znak następnego wiersza"
+    }
+   ],
+   "related": [
+    "io-read-until-eof",
+    "io-read-grid",
+    "io-getline",
+    "io-custom-fast-read",
+    "str-escape-whitespace",
+    "str-signed-char"
+   ]
+  },
+  {
+   "id": "str-signed-char",
+   "title": "Pułapka: char ze znakiem — ujemne znaki, indeksowanie tablicy charem, unsigned char i bajty > 127",
+   "category": "Pułapki",
+   "tags": [
+    "signed char",
+    "unsigned char",
+    "char",
+    "ujemny indeks",
+    "Wchar-subscripts",
+    "bajty",
+    "UTF-8",
+    "przepełnienie",
+    "EOF",
+    "pułapka"
+   ],
+   "aliases": [
+    "char ze znakiem",
+    "signed char",
+    "unsigned char",
+    "char ujemny",
+    "cnt[c] ujemny indeks",
+    "indeksowanie tablicy charem",
+    "char większy niż 127",
+    "zakres char",
+    "array subscript has type char",
+    "char overflow",
+    "is char signed",
+    "przepełnienie char"
+   ],
+   "summary": "Na x86 i na macOS `char` ma znak: zakres −128…127. Bajty 128–255 (np. polskie litery w UTF-8) stają się ujemne, więc `cnt[c]` wychodzi poza tablicę, `isalpha(c)` to UB, a `c > 127` nigdy nie jest prawdą. Do bajtów i indeksowania używaj `unsigned char`, a liczniki pętli po kodach rób typu `int`.",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "W C++ są **trzy** typy znakowe: `char`, `signed char` i `unsigned char`. Zwykły `char` zachowuje się jak jeden z dwóch pozostałych — zależnie od platformy: na x86/x86-64 (Linux, Windows, sprawdzarka OI) i na macOS (także Apple M1/M2…) jest **ze znakiem**, na ARM-owym Linuksie — bez znaku. Dla ASCII (0–127) nie ma to znaczenia; kłopoty zaczynają się przy bajtach ≥ 128 i przy arytmetyce."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Typ",
+      "Zakres",
+      "Uwagi"
+     ],
+     "rows": [
+      [
+       "`signed char`",
+       "−128…127",
+       "= `int8_t`"
+      ],
+      [
+       "`unsigned char`",
+       "0…255",
+       "= `uint8_t`; bezpieczny do bajtów i indeksów"
+      ],
+      [
+       "`char`",
+       "jak `signed char` (x86, macOS) albo `unsigned char` (ARM Linux)",
+       "osobny typ; g++: `-fsigned-char` / `-funsigned-char`"
+      ],
+      [
+       "`int`",
+       "ok. ±2·10⁹",
+       "typ wyniku każdej arytmetyki na znakach"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Co się psuje i jak to naprawić",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    string s = \"zó\";   // 'ó' w UTF-8 to 2 bajty: 0xC3 0xB3\n    for (char c : s) cout << (int)c << ' ';\n    cout << '\\n';      // 122 -61 -77   (char ze znakiem!)\n\n    int cnt[256] = {};\n    // for (char c : s) cnt[c]++;                // ŹLE: cnt[-61] -> wyjście poza tablicę\n    for (unsigned char c : s) cnt[c]++;          // dobrze: indeksy 0..255\n    for (char c : s) cnt[(unsigned char)c]++;    // też dobrze\n    cout << cnt[0xC3] << '\\n';                   // 2\n\n    char x = 200;            // nie mieści się: x == -56\n    unsigned char y = 200;   // y == 200\n    cout << (int)x << ' ' << (int)y << ' ' << (x > 127) << '\\n';   // -56 200 0\n}"
+    },
+    {
+     "type": "text",
+     "md": "**Typowe objawy:**\n- `cnt[c]++` / `vis[s[i]]` dla znaku ≥ 128 → ujemny indeks, losowe WA albo `SIGSEGV` (g++ z `-Wall` ostrzega: `array subscript has type 'char' [-Wchar-subscripts]`).\n- `isalpha(c)`, `tolower(c)` itp. z ujemnym argumentem → niezdefiniowane zachowanie.\n- `c >= 128` / `c > 127` jest dla `char` ze znakiem zawsze fałszem.\n- `char c = 'z' + 10;` → 132 się nie mieści, wychodzi −124.\n- `for (char c = 0; c < 128; c++)` → **nieskończona pętla**, bo `char` nigdy nie osiągnie 128.\n- `char c = getchar();` → `EOF` myli się z bajtem 255 ([[kb:str-read-chars|wczytywanie znaków]])."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Bezpieczne wzorce",
+     "code": "string s = \"Ala ma kota\";\nint cnt[256] = {};\nfor (unsigned char c : s) cnt[c]++;    // histogram dowolnych bajtów\nfor (int c = 0; c < 128; c++)          // pętla po kodach: licznik typu int\n    if (cnt[c]) cout << char(c) << ':' << cnt[c] << ' ';\ncout << '\\n';\nbool ascii = all_of(s.begin(), s.end(), [](unsigned char c) { return c < 128; });\ncout << ascii << '\\n';                 // 1"
+    },
+    {
+     "type": "warn",
+     "md": "Ten sam program może działać inaczej na różnych platformach (np. na ARM Linux `char` jest bez znaku). Nie zakładaj znaku `char` — jeśli liczy się wartość bajtu, rzutuj na `unsigned char`. Małych liczb nie trzymaj w `char`, tylko w `int`."
+    },
+    {
+     "type": "tip",
+     "md": "Dla danych z zadania (zwykle tylko `a`–`z`, cyfry, `.` i `#`) najczytelniej `cnt[c - 'a']` z tablicą `[26]`. Tablicę `[256]` z `(unsigned char)c` stosuj, gdy w danych może być **dowolny** znak. Kompiluj z `-Wall` — ostrzeżenie `-Wchar-subscripts` łapie `tab[c]` z `char`. Polskie litery i UTF-8: [[kb:str-utf8-polish|polskie znaki]]."
+    }
+   ],
+   "pitfalls": [
+    "`cnt[c]` z `char c` ≥ 128 to ujemny indeks — indeksuj `(unsigned char)c`.",
+    "`for (char c = 0; c < 128; c++)` nigdy się nie kończy — licznik musi być `int`.",
+    "`c > 127` dla `char` ze znakiem jest zawsze fałszem.",
+    "`int8_t` / `uint8_t` to typy znakowe — `cout` wypisze znak, nie liczbę.",
+    "Funkcje z `<cctype>` z ujemnym `char` to UB — przekazuj `(unsigned char)c`.",
+    "Zapis wyniku arytmetyki do `char` obcina go do −128…127 (`char c = 'z' + 10;` → −124)."
+   ],
+   "qa": [
+    {
+     "q": [
+      "czy char jest ze znakiem",
+      "char signed czy unsigned",
+      "zakres char",
+      "is char signed c++",
+      "char -128 do 127",
+      "jaki zakres ma char",
+      "char ma znak"
+     ],
+     "a": "Zależy od platformy: na x86/x86-64 (także sprawdzarka OI) i na macOS `char` jest **ze znakiem** (−128…127), na ARM Linux — bez znaku (0…255). Sprawdzisz to przez `numeric_limits<char>::is_signed` albo `CHAR_MIN`. Jeśli potrzebujesz pewności, pisz wprost `signed char` / `unsigned char`.",
+     "code": "cout << numeric_limits<char>::is_signed << ' ' << CHAR_MIN << ' ' << CHAR_MAX << '\\n';   // 1 -128 127 (x86)"
+    },
+    {
+     "q": [
+      "indeksowanie tablicy charem",
+      "cnt[c] ujemny indeks",
+      "array subscript has type char",
+      "Wchar-subscripts",
+      "tablica indeksowana znakiem crash",
+      "cnt[s[i]] błąd",
+      "warning array subscript has type char"
+     ],
+     "a": "`tab[c]` z `char c` działa dla ASCII, ale bajt ≥ 128 (np. z polskiej litery) to ujemny indeks → wyjście poza tablicę. Kompilator ostrzega `-Wchar-subscripts`. Indeksuj `(unsigned char)c` (tablica `[256]`) albo `c - 'a'` (tablica `[26]`, gdy są tylko małe litery).",
+     "code": "string s = \"abcó\";\nint cnt[256] = {};\nfor (unsigned char c : s) cnt[c]++;   // zamiast: for (char c : s) cnt[c]++;\ncout << cnt['a'] << '\\n';              // 1"
+    },
+    {
+     "q": [
+      "unsigned char",
+      "kiedy używać unsigned char",
+      "unsigned char a char",
+      "bajty 0-255 c++",
+      "typ na bajt c++",
+      "uint8_t czy unsigned char"
+     ],
+     "a": "`unsigned char` ma zakres 0…255 — używaj go, gdy liczy się **wartość bajtu**: indeksowanie tablicy znakiem, argument dla `isalpha` / `tolower`, analiza UTF-8, hashowanie bajtów. `uint8_t` to to samo, ale `cout` wypisze go jako znak — przy wypisywaniu dodaj `+` ([[kb:str-char-print|char vs int]]).",
+     "code": "string s = \"ż\";\nfor (unsigned char c : s) cout << (int)c << ' ';   // 197 188\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "char większy niż 127",
+      "char c = 200 daje -56",
+      "char ujemny",
+      "znak ma ujemny kod",
+      "negative char value c++",
+      "dlaczego (int)c jest ujemne"
+     ],
+     "a": "`char` ze znakiem mieści tylko −128…127; wartość 128–255 „zawija się” o 256 (200 → −56). Ujemne kody zobaczysz najczęściej, wypisując bajty polskich liter w UTF-8. Prawdziwą wartość bajtu daje `(unsigned char)c` albo `c & 0xFF`.",
+     "code": "char c = 200;\ncout << (int)c << ' ' << (int)(unsigned char)c << ' ' << (c & 0xFF) << '\\n';   // -56 200 200"
+    },
+    {
+     "q": [
+      "pętla for po char nieskończona",
+      "for char c od 0 do 127",
+      "char jako licznik pętli",
+      "for (char c = 0; c < 128; c++)",
+      "infinite loop char c++",
+      "pętla po wszystkich znakach się nie kończy"
+     ],
+     "a": "`char` ze znakiem nigdy nie osiągnie 128 — po 127 `c++` daje −128 i warunek `c < 128` jest zawsze prawdziwy. Tak samo `unsigned char` i `c < 256`. Licznik pętli po kodach rób typu `int`, a w środku zamieniaj na `char`.",
+     "code": "for (int c = 0; c < 128; c++)   // int, nie char\n    if (isprint(c)) cout << char(c);\ncout << '\\n';"
+    },
+    {
+     "q": [
+      "przepełnienie char",
+      "char overflow",
+      "'z' + 10 ujemne",
+      "dodawanie do chara daje ujemny wynik",
+      "char arytmetyka przepełnienie",
+      "suma w char"
+     ],
+     "a": "Samo działanie odbywa się w `int` (bez problemu), ale zapis wyniku z powrotem do `char` obcina go do −128…127: `char c = 'z' + 10;` daje −124. Zawijaj alfabet modulo 26 **przed** zapisem do `char`, a sum i liczników nie trzymaj w `char`.",
+     "code": "char c = 'z';\nchar zle = c + 10;                         // 132 -> -124\nchar dobrze = 'a' + (c - 'a' + 10) % 26;   // 'j'\ncout << (int)zle << ' ' << dobrze << '\\n'; // -124 j"
+    },
+    {
+     "q": [
+      "isalpha z ujemnym charem",
+      "isalpha crash polskie litery",
+      "tolower ujemny argument",
+      "dlaczego rzutować na unsigned char isalpha",
+      "cctype ujemny char ub"
+     ],
+     "a": "Funkcje z `<cctype>` przyjmują wartości z zakresu `unsigned char` albo `EOF`. Ujemny `char` (bajt ≥ 128) to niezdefiniowane zachowanie — w niektórych bibliotekach crash. Bezpieczny nawyk: `isalpha((unsigned char)c)` albo pętla `for (unsigned char c : s)`.",
+     "code": "string s = \"zażółć\";\nint litery = 0;\nfor (unsigned char c : s)\n    if (isalpha(c)) litery++;\ncout << litery << '\\n';   // 2 (literami ASCII są tylko 'z' i 'a')"
+    },
+    {
+     "q": [
+      "-funsigned-char",
+      "char na arm jest unsigned",
+      "char na macu ze znakiem",
+      "różne wyniki char na różnych komputerach",
+      "char zależy od platformy",
+      "fsigned-char"
+     ],
+     "a": "Znak typu `char` ustala platforma (ABI): x86, x86-64 i macOS na Apple Silicon — ze znakiem; ARM/PowerPC Linux — bez znaku. W g++ możesz to wymusić flagą `-fsigned-char` albo `-funsigned-char` (np. żeby przetestować kod w obu wariantach). Lepiej jednak pisać kod, który od tego nie zależy.",
+     "code": "#if CHAR_MIN < 0\nconst char* znak = \"char ze znakiem\";\n#else\nconst char* znak = \"char bez znaku\";\n#endif\ncout << znak << '\\n';"
+    },
+    {
+     "q": [
+      "zliczanie wszystkich bajtów",
+      "histogram znaków 256",
+      "tablica 256 dla znaków",
+      "licz dowolne znaki tablica",
+      "cnt[256] unsigned char"
+     ],
+     "a": "Tablica `int cnt[256]` i indeks `(unsigned char)c` obsłużą każdy bajt — także znaki spoza ASCII. Przy wypisywaniu przechodź licznikiem typu `int`.",
+     "code": "string s = \"aab!!\";\nint cnt[256] = {};\nfor (unsigned char c : s) cnt[c]++;\nfor (int c = 0; c < 256; c++)\n    if (cnt[c]) cout << char(c) << ' ' << cnt[c] << '\\n';   // ! 2 / a 2 / b 1"
+    }
+   ],
+   "related": [
+    "str-utf8-polish",
+    "str-basic-char-ops",
+    "str-char-print",
+    "str-read-chars",
+    "pit-out-of-bounds",
+    "str-ascii-table"
+   ]
+  },
+  {
+   "id": "str-utf8-polish",
+   "title": "Polskie znaki i UTF-8: ą, ę, ż zajmują 2 bajty, długość napisu, wstring i u32string",
+   "category": "Teksty",
+   "tags": [
+    "UTF-8",
+    "Unicode",
+    "polskie znaki",
+    "polskie litery",
+    "ą",
+    "ę",
+    "wstring",
+    "u32string",
+    "char32_t",
+    "kodowanie",
+    "bajty"
+   ],
+   "aliases": [
+    "polskie znaki c++",
+    "polskie litery c++",
+    "polskie znaki",
+    "utf-8 c++",
+    "utf8",
+    "ą ę w c++",
+    "długość stringa z polskimi znakami",
+    "wstring",
+    "u32string",
+    "unicode c++",
+    "kodowanie znaków",
+    "krzaki zamiast polskich liter",
+    "polish characters c++",
+    "polskie litery w stringu"
+   ],
+   "summary": "W UTF-8 znaki ASCII zajmują 1 bajt, a polskie litery (`ą`, `ę`, `ó`, `ł`, `ż`…) — **2 bajty**. `std::string` przechowuje bajty, więc `s.size()` liczy bajty (`\"żółw\"` ma 7), `s[i]` daje pół litery, a `isalpha` / `tolower` ich nie obsługują. Na OI dane są w ASCII; gdy naprawdę potrzebujesz znaków Unicode — `u32string` albo Python.",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "**UTF-8** to dziś domyślne kodowanie tekstu (pliki źródłowe, terminal macOS/Linux, większość edytorów). Każdy znak Unicode (*code point*, np. U+0105 dla `ą`) zapisuje na 1–4 bajtach: ASCII (0–127) bez zmian w 1 bajcie, polskie litery w 2, `€` w 3, emoji w 4. Bajty znaków wielobajtowych mają wartości ≥ 128, więc w `char` (ze znakiem) są ujemne ([[kb:str-signed-char|char ze znakiem]])."
+    },
+    {
+     "type": "table",
+     "title": "Polskie litery w UTF-8",
+     "headers": [
+      "Znak",
+      "Unicode",
+      "Bajty UTF-8 (hex)",
+      "`size()`"
+     ],
+     "rows": [
+      [
+       "`a`",
+       "U+0061",
+       "61",
+       "1"
+      ],
+      [
+       "`ą`",
+       "U+0105",
+       "C4 85",
+       "2"
+      ],
+      [
+       "`ć`",
+       "U+0107",
+       "C4 87",
+       "2"
+      ],
+      [
+       "`ę`",
+       "U+0119",
+       "C4 99",
+       "2"
+      ],
+      [
+       "`ł`",
+       "U+0142",
+       "C5 82",
+       "2"
+      ],
+      [
+       "`ń`",
+       "U+0144",
+       "C5 84",
+       "2"
+      ],
+      [
+       "`ó`",
+       "U+00F3",
+       "C3 B3",
+       "2"
+      ],
+      [
+       "`ś`",
+       "U+015B",
+       "C5 9B",
+       "2"
+      ],
+      [
+       "`ź`",
+       "U+017A",
+       "C5 BA",
+       "2"
+      ],
+      [
+       "`ż`",
+       "U+017C",
+       "C5 BC",
+       "2"
+      ],
+      [
+       "`Ą`",
+       "U+0104",
+       "C4 84",
+       "2"
+      ],
+      [
+       "`Ł`",
+       "U+0141",
+       "C5 81",
+       "2"
+      ],
+      [
+       "`Ż`",
+       "U+017B",
+       "C5 BB",
+       "2"
+      ],
+      [
+       "`€`",
+       "U+20AC",
+       "E2 82 AC",
+       "3"
+      ],
+      [
+       "`😀`",
+       "U+1F600",
+       "F0 9F 98 80",
+       "4"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Budowa UTF-8.** Bajt `0xxxxxxx` to cały znak ASCII. Znak wielobajtowy zaczyna się bajtem `110xxxxx` (2 bajty), `1110xxxx` (3) albo `11110xxx` (4), a kolejne bajty mają postać `10xxxxxx` (bajty kontynuacji). Liczba **znaków** = liczba bajtów, które **nie** są postaci `10xxxxxx`, czyli spełniają `(c & 0xC0) != 0x80`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "title": "Liczenie znaków, dekodowanie do u32string i z powrotem",
+     "code": "#include <bits/stdc++.h>\nusing namespace std;\n\n// liczba znaków (code pointów) w napisie UTF-8\nsize_t dlugoscUtf8(const string& s) {\n    size_t n = 0;\n    for (unsigned char c : s)\n        if ((c & 0xC0) != 0x80) n++;\n    return n;\n}\n\n// UTF-8 -> UTF-32 (zakłada poprawne dane)\nu32string dekoduj(const string& s) {\n    u32string r;\n    for (size_t i = 0; i < s.size();) {\n        unsigned char c = s[i];\n        int len = c < 0x80 ? 1 : c < 0xE0 ? 2 : c < 0xF0 ? 3 : 4;\n        char32_t cp = len == 1 ? c : c & (0xFF >> (len + 1));\n        for (int k = 1; k < len; k++) cp = (cp << 6) | ((unsigned char)s[i + k] & 0x3F);\n        r += cp;\n        i += len;\n    }\n    return r;\n}\n\n// UTF-32 -> UTF-8\nstring koduj(const u32string& u) {\n    string r;\n    for (char32_t cp : u) {\n        if (cp < 0x80) r += char(cp);\n        else if (cp < 0x800) { r += char(0xC0 | (cp >> 6)); r += char(0x80 | (cp & 0x3F)); }\n        else if (cp < 0x10000) { r += char(0xE0 | (cp >> 12)); r += char(0x80 | ((cp >> 6) & 0x3F)); r += char(0x80 | (cp & 0x3F)); }\n        else { r += char(0xF0 | (cp >> 18)); r += char(0x80 | ((cp >> 12) & 0x3F));\n               r += char(0x80 | ((cp >> 6) & 0x3F)); r += char(0x80 | (cp & 0x3F)); }\n    }\n    return r;\n}\n\nint main() {\n    string s = \"żółw\";\n    cout << s.size() << ' ' << dlugoscUtf8(s) << '\\n';   // 7 4\n    u32string u = dekoduj(s);\n    for (char32_t cp : u) cout << \"U+\" << hex << uppercase << (unsigned)cp << ' ';\n    cout << dec << '\\n';                                 // U+17C U+F3 U+142 U+77\n    reverse(u.begin(), u.end());                         // odwracamy znaki, nie bajty\n    cout << koduj(u) << '\\n';                            // wółż\n}"
+    },
+    {
+     "type": "text",
+     "md": "**`wstring` i `u32string`:**\n- `u32string` / `char32_t` — jeden element = jeden znak Unicode; literał `U\"zażółć\"` ma `size() == 6`. Nie wypiszesz go przez `cout` — trzeba zakodować z powrotem do UTF-8 (funkcja `koduj` wyżej).\n- `wstring` / `wchar_t` — 4 bajty na Linuksie i macOS, ale **2 bajty (UTF-16) na Windows**; do tego `wcout` wymaga ustawienia locale. Nieprzenośne — na zawodach nie warto.\n- `u8\"...\"` (w C++20 typ `char8_t`) i `std::wstring_convert` (przestarzałe od C++17) — też raczej omijaj."
+    },
+    {
+     "type": "text",
+     "md": "**Dlaczego na OI to zwykle nie problem.** Treści zadań opisują dane wprost („napis składa się z małych liter alfabetu angielskiego”, „znaki `.` i `#`”), a odpowiedzi to liczby albo słowa w rodzaju `TAK` / `NIE` — **bez polskich znaków**. Sprawdzarka porównuje bajty, więc `NIE` ≠ `Nie`, a tym bardziej ≠ `NIĘ`. Polskie znaki w komentarzach i nazwach plików nie szkodzą, ale w tym, co wypisujesz, ich unikaj."
+    },
+    {
+     "type": "warn",
+     "md": "Na napisie z polskimi literami **nie** działają operacje bajtowe: `s[i]` zwraca połowę litery, `reverse` i `substr` mogą rozciąć znak (powstają „krzaki”), `toupper` nie zmieni `ą`, a `sort` porządkuje po bajtach (`ą` trafi za `z`). Przerób napis na `u32string` albo użyj Pythona."
+    },
+    {
+     "type": "warn",
+     "md": "„Krzaki” zamiast polskich liter w konsoli Windows to skutek innej strony kodowej (CP852/CP1250) niż UTF-8 pliku. Pomaga `chcp 65001` w konsoli albo `SetConsoleOutputCP(65001)` z `<windows.h>`. W terminalu macOS/Linux UTF-8 działa od razu."
+    },
+    {
+     "type": "tip",
+     "md": "Python 3 operuje na znakach Unicode: `len(\"żółw\") == 4`, `\"żółw\"[::-1] == \"wółż\"`, `\"ą\".upper() == \"Ą\"`. Bajty zobaczysz przez `\"ą\".encode()` → `b'\\xc4\\x85'`."
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "title": "Python: znaki, bajty i kody",
+     "code": "s = \"żółw\"\nprint(len(s), len(s.encode(\"utf-8\")))   # 4 7\nprint(s[::-1], s.upper())               # wółż ŻÓŁW\nprint([hex(ord(c)) for c in s])         # ['0x17c', '0xf3', '0x142', '0x77']\nprint(list(\"ą\".encode()))               # [196, 133]"
+    }
+   ],
+   "pitfalls": [
+    "`s.size()` / `s.length()` / `strlen` liczą **bajty**, nie litery.",
+    "`s[i]` na polskiej literze to jeden z dwóch bajtów (w `char` ujemny).",
+    "`reverse`, `substr`, `pop_back` mogą przeciąć wielobajtowy znak.",
+    "`isalpha`, `tolower`, `toupper` nie obsługują polskich liter.",
+    "Wypisanie `NIE` z polską literą albo w innej wielkości liter niż w treści to WA."
+   ],
+   "qa": [
+    {
+     "q": [
+      "polskie znaki c++",
+      "polskie litery w c++",
+      "ą ę w c++",
+      "jak obsługiwać polskie znaki",
+      "polish characters c++",
+      "polskie znaki w stringu",
+      "c++ polskie litery nie działają"
+     ],
+     "a": "W UTF-8 każda polska litera to **2 bajty**, a `string` przechowuje bajty — stąd zła długość, „połówki” liter i niedziałające `tolower`. Jeśli dane mogą zawierać polskie znaki: licz znaki jako bajty inne niż `10xxxxxx` albo zdekoduj napis do `u32string`. Na OI dane są w ASCII, więc zwykle nie musisz nic robić.",
+     "code": "string s = \"zażółć\";\nint znaki = 0;\nfor (unsigned char c : s)\n    if ((c & 0xC0) != 0x80) znaki++;\ncout << s.size() << ' ' << znaki << '\\n';   // 10 6"
+    },
+    {
+     "q": [
+      "długość stringa z polskimi znakami",
+      "size() zwraca za dużo",
+      "żółw size 7",
+      "ile znaków ma napis utf-8",
+      "strlen polskie litery",
+      "length of utf8 string c++",
+      "zła długość napisu z ą"
+     ],
+     "a": "`size()`, `length()` i `strlen` zwracają liczbę **bajtów**. Liczbę znaków policzysz, pomijając bajty kontynuacji (`(c & 0xC0) == 0x80`).",
+     "code": "string s = \"żółw\";\nsize_t n = count_if(s.begin(), s.end(), [](unsigned char c) { return (c & 0xC0) != 0x80; });\ncout << s.size() << ' ' << n << '\\n';   // 7 4"
+    },
+    {
+     "q": [
+      "co to utf-8",
+      "jak działa utf8",
+      "kodowanie utf-8",
+      "what is utf-8",
+      "ile bajtów ma ą",
+      "utf-8 a ascii"
+     ],
+     "a": "UTF-8 zapisuje znaki Unicode na 1–4 bajtach: ASCII w 1 bajcie (te same kody), polskie litery w 2 (`ą` = `C4 85`), `€` w 3, emoji w 4. Dzięki temu każdy tekst ASCII jest jednocześnie poprawnym UTF-8.",
+     "code": "for (string s : {\"a\", \"ą\", \"€\"}) {\n    cout << s << \": \" << s.size() << \" B:\";\n    for (unsigned char c : s) cout << ' ' << hex << (int)c << dec;\n    cout << '\\n';\n}"
+    },
+    {
+     "q": [
+      "wstring",
+      "wchar_t",
+      "wstring polskie znaki",
+      "wcout",
+      "wide string c++",
+      "wstring czy string"
+     ],
+     "a": "`wstring` przechowuje `wchar_t`: 4 bajty na Linuksie/macOS, ale 2 bajty (UTF-16) na Windows, a `wcout` bez ustawienia locale wypisuje śmieci albo nic. To nieprzenośne — jeśli potrzebujesz pojedynczych znaków Unicode, wybierz `u32string`; na OI zostań przy `string` i ASCII.",
+     "code": "wstring w = L\"żółw\";\ncout << w.size() << ' ' << sizeof(wchar_t) << '\\n';   // 4 4 (Linux/macOS)"
+    },
+    {
+     "q": [
+      "u32string",
+      "char32_t",
+      "U\"\" literał",
+      "utf-32 c++",
+      "napis ze znaków unicode c++",
+      "jak indeksować polskie litery"
+     ],
+     "a": "`u32string` to napis z `char32_t` — każdy element to jeden znak Unicode, więc `size()`, `s[i]` i `reverse` działają „po literach”. Literał: `U\"…\"`. Nie wypiszesz go wprost przez `cout` — zakoduj do UTF-8 (funkcja `koduj` w artykule) albo wypisuj kody.",
+     "code": "u32string u = U\"zażółć\";\ncout << u.size() << ' ' << (u[2] == U'ż') << ' ' << (unsigned)u[2] << '\\n';   // 6 1 380"
+    },
+    {
+     "q": [
+      "krzaki zamiast polskich liter",
+      "dziwne znaki zamiast ą",
+      "konsola windows polskie znaki",
+      "mojibake",
+      "chcp 65001",
+      "cout polskie litery źle się wyświetlają",
+      "polskie znaki w konsoli"
+     ],
+     "a": "Plik źródłowy jest w UTF-8, a konsola Windows domyślnie używa innej strony kodowej (CP852) — bajty są te same, ale wyświetlane jako inne znaki. Rozwiązania: `chcp 65001` w konsoli przed uruchomieniem albo `SetConsoleOutputCP(65001);` na początku programu (Windows). Na macOS/Linux działa od razu. W rozwiązaniach na OI po prostu nie wypisuj polskich znaków.",
+     "code": "#ifdef _WIN32\n// na górze pliku: #include <windows.h>, a tutaj: SetConsoleOutputCP(65001);\n#endif\ncout << \"zażółć gęślą jaźń\\n\";"
+    },
+    {
+     "q": [
+      "dlaczego na oi dane są w ascii",
+      "czy na olimpiadzie będą polskie znaki",
+      "czy mogę wypisać polskie litery",
+      "polskie znaki w odpowiedzi oi",
+      "TAK NIE z polskimi znakami",
+      "polskie litery na sio2"
+     ],
+     "a": "Zadania OI opisują dane wprost („małe litery alfabetu angielskiego”, „znaki `.` i `#`”), więc na wejściu nie ma polskich liter, a odpowiedzi to liczby albo słowa bez znaków diakrytycznych (`TAK`, `NIE`). Sprawdzarka porównuje bajty — wypisz dokładnie to, co jest w treści. Polskie znaki w komentarzach kodu nie przeszkadzają.",
+     "code": "bool ok = true;\ncout << (ok ? \"TAK\" : \"NIE\") << '\\n';   // dokładnie jak w treści, bez polskich liter"
+    },
+    {
+     "q": [
+      "odwracanie napisu z polskimi znakami",
+      "reverse utf8 psuje litery",
+      "s[i] polska litera",
+      "substr utnie polską literę",
+      "indeksowanie utf-8 c++",
+      "reverse string z ą krzaki"
+     ],
+     "a": "`reverse` odwraca bajty, więc dwa bajty `ą` zamieniają się miejscami i powstaje niepoprawny UTF-8. Podobnie `s[i]` i `substr` liczą w bajtach. Zdekoduj napis do `u32string`, operuj na nim i zakoduj z powrotem — albo podziel go na znaki-napisy:",
+     "code": "string s = \"kółko\";\nvector<string> z;   // każdy element = jeden znak (1-4 bajty)\nfor (size_t i = 0; i < s.size(); i++) {\n    if (((unsigned char)s[i] & 0xC0) != 0x80) z.push_back(\"\");\n    z.back() += s[i];\n}\nreverse(z.begin(), z.end());\nfor (auto& x : z) cout << x;\ncout << '\\n';   // okłók"
+    },
+    {
+     "q": [
+      "python polskie znaki",
+      "len w pythonie polskie litery",
+      "python utf-8 encode",
+      "ord('ą')",
+      "python unicode string",
+      "python czy c++ do tekstu z polskimi literami"
+     ],
+     "a": "W Pythonie 3 `str` to ciąg znaków Unicode: `len(\"żółw\") == 4`, odwracanie i `upper()` działają poprawnie. Bajty dostaniesz przez `.encode()`, kod znaku — przez `ord`.",
+     "code": "s = \"żółw\"\nprint(len(s), len(s.encode()))   # 4 7\nprint(s[::-1], s.upper())        # wółż ŻÓŁW\nprint(ord(\"ą\"), chr(261))        # 261 ą",
+     "lang": "python"
+    },
+    {
+     "q": [
+      "polskie litery w nazwach zmiennych",
+      "zmienna z ą",
+      "czy można używać polskich znaków w kodzie",
+      "komentarze po polsku c++",
+      "polskie znaki w kodzie źródłowym"
+     ],
+     "a": "Komentarze i napisy z polskimi znakami są w porządku (plik w UTF-8). Nazwy zmiennych z `ą`, `ł` itp. nowy g++ akceptuje, ale to proszenie się o kłopoty (inne kompilatory, kodowanie pliku, klawiatura) — używaj liter ASCII: `liczba`, `wynik`, `zolw`.",
+     "code": "int wynik = 0;          // komentarz po polsku: zażółć — OK\nstring tekst = \"gęś\";   // napis w UTF-8: 5 bajtów\ncout << wynik << ' ' << tekst.size() << '\\n';   // 0 5"
+    }
+   ],
+   "related": [
+    "str-signed-char",
+    "str-ascii-table",
+    "str-basic-char-ops",
+    "str-basic-reverse",
+    "str-escape-whitespace"
+   ]
+  }
+ ]
+}

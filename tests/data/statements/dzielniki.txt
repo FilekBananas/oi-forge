@@ -1,0 +1,17 @@
+Dzielniki
+Ile dzielników naturalnych ma liczba n?
+Wejście
+W pierwszym wierszu wejścia znajduje się liczba naturalna n (1 ≤ n ≤ 10^12).
+Wyjście
+Wypisz liczbę dzielników liczby n.
+Przykład 1
+Wejście:
+12
+Wyjście:
+6
+
+Przykład 2
+Wejście:
+1000000007
+Wyjście:
+2
