@@ -244,15 +244,48 @@ export function textarea({ value = '', placeholder = '', rows = 5, mono = true, 
   const el = h('textarea', { class: ['textarea', mono ? 'mono' : '', cls].filter(Boolean).join(' '), placeholder, rows, spellcheck: 'false', ...attrs });
   el.value = value;
   if (onInput) el.addEventListener('input', () => onInput(el.value, el));
-  el.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab' && !e.shiftKey && mono) {
-      e.preventDefault();
-      const s = el.selectionStart;
-      el.setRangeText('    ', s, el.selectionEnd, 'end');
-      el.dispatchEvent(new Event('input'));
-    }
-  });
+  if (mono) indentKeys(el);
   return el;
+}
+
+/** Tab / Shift+Tab w polu tekstowym jak w edytorze: zaznaczone linie dostają (tracą) jedno wcięcie (4 spacje),
+ *  bez zaznaczenia Tab wstawia 4 spacje, a Shift+Tab cofa wcięcie bieżącej linii. Działa z Ctrl+Z. */
+export function indentKeys(el) {
+  const put = (text, a, b) => {
+    el.setSelectionRange(a, b);
+    let ok = false;
+    try { ok = document.execCommand('insertText', false, text); } catch { ok = false; }
+    if (!ok || el.value.slice(a, a + text.length) !== text) { el.setRangeText(text, a, b, 'end'); el.dispatchEvent(new Event('input', { bubbles: true })); }
+  };
+  el.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab' || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+    const v = el.value;
+    const s = el.selectionStart, en = el.selectionEnd;
+    const multi = v.slice(s, en).includes('\n');
+    e.preventDefault();
+    if (!e.shiftKey && !multi) { put('    ', s, en); return; }
+    const ls = v.lastIndexOf('\n', s - 1) + 1;
+    const lastPos = multi && v[en - 1] === '\n' ? en - 1 : en;      // zaznaczenie kończy się na początku linii → bez niej
+    const nl = v.indexOf('\n', lastPos);
+    const be = nl < 0 ? v.length : nl;
+    let first = 0, total = 0;
+    const lines = v.slice(ls, be).split('\n').map((ln, i) => {
+      if (e.shiftKey) {
+        const d = (/^(?: {1,4}|\t)/.exec(ln) || [''])[0].length;
+        if (i === 0) first = -d;
+        total -= d;
+        return ln.slice(d);
+      }
+      if (!ln.trim()) return ln;
+      if (i === 0) first = 4;
+      total += 4;
+      return '    ' + ln;
+    });
+    if (!total) return;
+    put(lines.join('\n'), ls, be);
+    const ns = Math.max(ls, s + first);
+    el.setSelectionRange(ns, Math.max(ns, en + total));
+  });
 }
 
 export function select(options, { value, onChange, size, attrs = {} } = {}) {
@@ -450,7 +483,52 @@ export function promptDialog(message, { title = 'Podaj wartość', value = '', p
 
 // ------------------------------------------------------------------------------------------- kod i markdown
 const MODES = { cpp: 'text/x-c++src', 'c++': 'text/x-c++src', c: 'text/x-csrc', python: 'python', py: 'python', text: 'text/plain', txt: 'text/plain', bash: 'text/plain', sh: 'text/plain', json: 'text/plain', plain: 'text/plain' };
-export function cmMode(lang) { return MODES[(lang || 'cpp').toLowerCase()] || 'text/plain'; }
+// Podświetlanie funkcji: tryb-nakładka na clike/python — nazwa przed „(” dostaje dodatkową klasę cm-fn
+// (wywołania, definicje, metody .push_back(), print(…)). Deklaracje zmiennych z konstruktorem („vector<int> v(n)”,
+// „ll x(0)”) zostają zmiennymi: po typie nazwa jest funkcją tylko wtedy, gdy w nawiasie stoją parametry („int l, …”).
+const FN_STYLE = /^(variable|variable-2|def|property|builtin)$/;
+const FN_PARAMS = /^\s*\(\s*(?:\)|$|(?:const\s+)?[A-Za-z_][\w:]*(?:\s*<[^()]*>)?(?:\s+[A-Za-z_]\w*)*[\s&*]+[A-Za-z_]\w*\s*(?:[,)=[]|$))/;
+const FN_DECL_LIST = /^\s*(?:(?:const|static|unsigned|signed|long|short)\s+)*[A-Za-z_][\w:]*(?:\s*<[^;]*>)?[\s&*]+[A-Za-z_]\w*/;
+const FN_WRAPPED = { 'text/x-c++src': 'text/x-oif-c++src', 'text/x-csrc': 'text/x-oif-csrc', python: 'text/x-oif-python' };
+let fnModes = null;
+function ensureFnModes() {
+  if (fnModes !== null) return fnModes;
+  const CM = window.CodeMirror;
+  if (!CM || !CM.defineMode || !CM.modes.clike || !CM.modes.python) return false;
+  CM.defineMode('oif-fn', (config, pc) => {
+    const inner = CM.getMode(config, pc.inner);
+    const cpp = pc.lang === 'cpp';
+    const token = (stream, state) => {
+      const style = inner.token(stream, state);
+      const text = stream.current();
+      const prev = state.__oifPrev;
+      if (/\S/.test(text)) state.__oifPrev = { s: style || '', t: text };
+      if (!style || !FN_STYLE.test(style) || !stream.match(/^\s*\(/, false)) return style;
+      if (prev && (prev.t === 'class' || prev.t === 'struct')) return style;
+      if (cpp && prev) {
+        // po typie / nazwie typu / „>” szablonu to deklaracja: funkcja tylko z listą parametrów
+        const before = stream.string.slice(0, stream.start);
+        const declCtx = prev.s === 'type' || prev.s === 'variable-3'
+          || (/^(variable|def|builtin)$/.test(prev.s) && /^[A-Za-z_]\w*$/.test(prev.t) && before.trimEnd().endsWith(prev.t))
+          || (/^>+$/.test(prev.t) && /\w\s*<[^;()]*>\s*$/.test(before))
+          || (prev.t === ',' && FN_DECL_LIST.test(before) && !/^\s*(return|else|case|throw|delete|new|goto)\b/.test(before)
+            && (before.match(/\(/g) || []).length === (before.match(/\)/g) || []).length);   // „vector<int> a(n), b(n, 0)”
+        if (declCtx && !FN_PARAMS.test(stream.string.slice(stream.pos))) return style;
+      }
+      return `${style} fn`;
+    };
+    return Object.assign({}, inner, { token });
+  });
+  CM.defineMIME('text/x-oif-c++src', { name: 'oif-fn', inner: 'text/x-c++src', lang: 'cpp' });
+  CM.defineMIME('text/x-oif-csrc', { name: 'oif-fn', inner: 'text/x-csrc', lang: 'cpp' });
+  CM.defineMIME('text/x-oif-python', { name: 'oif-fn', inner: 'python', lang: 'python' });
+  fnModes = true;
+  return true;
+}
+export function cmMode(lang) {
+  const m = MODES[(lang || 'cpp').toLowerCase()] || 'text/plain';
+  return FN_WRAPPED[m] && ensureFnModes() ? FN_WRAPPED[m] : m;
+}
 
 export function highlightInto(target, code, lang = 'cpp') {
   const CM = window.CodeMirror;

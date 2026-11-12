@@ -19,7 +19,7 @@ const SEV = {
 
 const GROUPS = [
   { id: 'kod', label: 'Kod', items: [
-    { id: 'checker', label: 'Sprawdź błędy', icon: 'bug', hint: 'Statyczna analiza: przepełnienia, wyjście poza tablicę, niezainicjowane zmienne…' },
+    { id: 'checker', label: 'Sprawdź błędy', icon: 'bug', hint: 'Analiza statyczna + uruchomienie z sanitizerami (ASan/UBSan) na testach: wyjście poza tablicę, przepełnienia, niezainicjowane zmienne…' },
     { id: 'complexity', label: 'Złożoność', icon: 'gauge', hint: 'Szacowana złożoność, hot-spoty i czy zmieści się w limicie' },
     { id: 'explain', label: 'Objaśnij kod', icon: 'book-open', hint: 'Co robi program — opis i notatki przy liniach' },
     { id: 'optimize', label: 'Optymalizuj', icon: 'zap', hint: 'Bezpieczne przyspieszenia (szybkie IO, endl, kopiowanie…)' },
@@ -208,6 +208,53 @@ export function createTools(app) {
     toast(`Zapisano ${r.path}`, 'success', { timeout: 1600 });
     return r;
   }
+  // wejścia do sprawdzania: dolny panel → testy z folderu zadania → przykłady z tresc.md → puste wejście
+  async function checkInputs(f) {
+    const inputs = [];
+    const from = [];
+    const custom = app.bottom?.input || '';
+    if (custom.trim()) { inputs.push({ input: custom, expected: null }); from.push('dolny panel'); }
+    try {
+      const tests = ((await ws.tests(f.path)).tests || []).filter((t) => (t.in_size ?? 0) <= 200000).slice(0, 4);
+      const files = await Promise.all(tests.map(async (t) => {
+        const fin = await ws.file(t.in, { quiet: true }).catch(() => null);
+        const fout = t.out && (t.out_size ?? 0) <= 200000 ? await ws.file(t.out, { quiet: true }).catch(() => null) : null;
+        return fin && !fin.binary ? { input: fin.content || '', expected: fout && !fout.binary && (fout.content || '').trim() ? fout.content : null } : null;
+      }));
+      const ok = files.filter((x) => x && x.input !== custom);
+      if (ok.length) { inputs.push(...ok); from.push(`testy (${ok.length})`); }
+    } catch { /* brak testów */ }
+    if (!inputs.length) {
+      try {
+        const t = await taskCtx(true);
+        const st = t?.statement?.content || '';
+        if (!isTemplateStatement(st)) {
+          const p = (await api.post('/api/statement/parse', { statement: mdToStatement(st) }, { quiet: true })).parsed || {};
+          const samples = (p.samples || []).filter((s) => (s.input || '').trim()).slice(0, 4);
+          if (samples.length) {
+            inputs.push(...samples.map((s) => ({ input: s.input, expected: (s.output || '').trim() ? s.output : null })));
+            from.push(`przykłady z treści (${samples.length})`);
+          }
+        }
+      } catch { /* brak treści */ }
+    }
+    if (!inputs.length) { inputs.push({ input: '', expected: null }); from.push('puste wejście — wpisz dane w dolnym panelu albo dodaj testy'); }
+    return { inputs, from: from.join(' + ') };
+  }
+  async function runDynamicCheck(f, code, inputs, pb, from) {
+    pb.indeterminate(f.lang === 'cpp' ? 'Kompiluję z ASan/UBSan…' : 'Uruchamiam…');
+    const ctl = api.job('/api/checker/run', { code, inputs }, { quiet: true, onProgress: (p, m) => pb.set(p, m) });
+    running = ctl;
+    try {
+      const r = await ctl.promise;
+      running = null;
+      const s = r.summary || {};
+      const head = h('div', { class: 'row gap-s wrap' }, s.health ? badge(s.health.sure ? s.health.label : `${s.health.score}/100 · ${s.health.label}`, s.health.tone) : null,
+        s.verdict ? h('span', { class: 'small' }, s.verdict) : null, s.sanitizers === false ? badge('bez sanitizerów', 'warn') : null,
+        from ? h('span', { class: 'muted tiny' }, `Wejścia: ${from}`) : null);
+      renderIssues(f, r.issues || [], null, null, head, (r.notes || []).join('\n\n'));
+    } catch (e) { running = null; fail(e); }
+  }
   const copyText = async (text) => { await navigator.clipboard.writeText(text).catch(() => {}); toast('Skopiowano', 'success', { timeout: 1000 }); };
   const codeActions = (s, name, code) => h('div', { class: 'row gap-s' },
     button(`Zapisz jako ${name}`, { icon: 'save', size: 'sm', variant: 'primary', onClick: () => saveAsFile(s.task.dir, name, code) }),
@@ -230,35 +277,29 @@ export function createTools(app) {
   // ---------------------------------------------------------------- narzędzia
   const TOOLS = {
     // ---------------------------------- Sprawdź błędy
+    // Domyślnie pełne sprawdzenie: analiza statyczna + uruchomienie z sanitizerami (ASan/UBSan, kontrola STL,
+    // śmieci kontra zera) na wejściu z dolnego panelu, testach zadania albo przykładach z treści.
     async checker() {
       const f = file(); if (!f) return;
       const code = needCode(f); if (!code) return;
-      start('checker', 'Sprawdź błędy', f.name);
-      try {
-        const r = await api.post('/api/checker/analyze', { code }, { quiet: true });
-        renderIssues(f, r.issues || [], r.stats, r.note);
-      } catch (e) { fail(e); }
+      start('checker', 'Sprawdź błędy', `${f.name} · analiza + sanitizery`);
+      const pb = progressBar();
+      pb.indeterminate('Zbieram wejścia testowe…');
+      done(pb.el);
+      const { inputs, from } = await checkInputs(f);
+      if (current !== 'checker') return;
+      await runDynamicCheck(f, code, inputs, pb, from);
     },
 
-    // ---------------------------------- Sanitizery (dynamicznie)
+    // ---------------------------------- Sanitizery (dynamicznie, tylko wejście z dolnego panelu)
     async sanitize() {
       const f = file(); if (!f) return;
       const code = needCode(f); if (!code) return;
       if (f.lang !== 'cpp') { toast('Sanitizery działają dla C++.', 'info'); return; }
       start('sanitize', 'Uruchom z sanitizerami', `${f.name} · wejście z dolnego panelu`);
       const pb = progressBar();
-      pb.indeterminate('Kompiluję z ASan/UBSan…');
       done(pb.el);
-      const ctl = api.job('/api/checker/run', { code, inputs: [app.bottom.input || ''] }, { quiet: true, onProgress: (p, m) => pb.set(p, m) });
-      running = ctl;
-      try {
-        const r = await ctl.promise;
-        running = null;
-        const s = r.summary || {};
-        const head = h('div', { class: 'row gap-s' }, s.health ? badge(s.health.sure ? s.health.label : `${s.health.score}/100 · ${s.health.label}`, s.health.tone) : null,
-          s.verdict ? h('span', { class: 'small' }, s.verdict) : null, s.sanitizers === false ? badge('bez sanitizerów', 'warn') : null);
-        renderIssues(f, r.issues || [], null, null, head, (r.notes || []).join('\n\n'));
-      } catch (e) { running = null; fail(e); }
+      await runDynamicCheck(f, code, [app.bottom.input || ''], pb, 'wejście z dolnego panelu');
     },
 
     // ---------------------------------- Złożoność
@@ -684,7 +725,7 @@ export function createTools(app) {
     done(extraHead || null, head, note ? callout(note, 'info') : null, notesMd ? h('div', { class: 'md small muted' }, markdown(notesMd)) : null,
       shown.length ? list : callout('Nie znalazłem problemów. 👍 (To nie gwarancja poprawności — przetestuj na testach!)', 'tip'),
       f.lang === 'cpp' && current === 'checker' ? h('div', { class: 'row gap-s' },
-        button('Uruchom z sanitizerami', { icon: 'microscope', size: 'sm', onClick: () => TOOLS.sanitize() }),
+        button('Sprawdź ponownie', { icon: 'refresh-cw', size: 'sm', onClick: () => TOOLS.checker() }),
         more('checker', { code: app.code() })) : null);
   }
 

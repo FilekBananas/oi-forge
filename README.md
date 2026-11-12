@@ -173,7 +173,9 @@ i testy brzegowe (97% testów poprawnych). Działają, ale ich wynik trzeba spra
   przedziałowe, Fenwick, KMP, plecak, LCS…), **Kalkulatory** (modulo, nCr, rozkład na czynniki do 10¹⁸, bity,
   systemy liczbowe, limity → złożoność, pamięć tablic), **Ustawienia**.
 
-Paleta komend: `Ctrl+K` / `⌘K`. Edytor: `Ctrl+Enter` uruchamia, `Tab` rozwija snippet, `Ctrl+Shift+F` formatuje.
+Paleta komend: `Ctrl+K` / `⌘K`. Edytor: `Ctrl+Enter` uruchamia, `Tab` rozwija snippet, `Ctrl+Shift+F` formatuje,
+`Ctrl+F` / `⌘F` otwiera pasek **Znajdź i zamień** (wielkość liter, całe słowa, wyrażenia regularne; `Ctrl+H` — od razu zamiana),
+`Tab` / `Shift+Tab` na zaznaczonych liniach dodaje / cofa wcięcie. Nazwy funkcji są w kodzie wyróżnione kolorem.
 
 ---
 

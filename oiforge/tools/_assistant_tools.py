@@ -361,12 +361,23 @@ def tool_blocks(name: str, arg: str, code: str, lang: str) -> tuple[list[dict], 
             fix_line = _line_mapper(src, orig)
             code = src
     if name == "sprawdz":
-        r = call_tool("checker", "POST /api/checker/analyze", {"code": code, "lang": lang})
-        issues = (r or {}).get("issues") or []
+        # domyślnie pełne sprawdzenie: analiza statyczna + uruchomienie z sanitizerami (sama statyczna mało łapie)
+        r, ran = None, False
+        if lang == "cpp" and code:
+            try:
+                from oiforge.tools import checker as _ck
+                r = _ck.run_dynamic(code, [""])
+                ran = True
+            except Exception:  # noqa: BLE001 — brak kompilatora itp. → zostaje analiza statyczna
+                r = None
+        if r is None:
+            r = call_tool("checker", "POST /api/checker/analyze", {"code": code, "lang": lang})
+        issues = [i for i in ((r or {}).get("issues") or []) if i.get("severity") != "info" or i.get("line")]
         if not issues:
-            b.append({"type": "notice", "tone": "success", "md": "**Sprawdzarka:** nie znalazłem typowych błędów w tym kodzie."})
+            b.append({"type": "notice", "tone": "success", "md": "**Sprawdzarka:** nie znalazłem błędów"
+                      + (" — ani w kodzie, ani po uruchomieniu z sanitizerami." if ran else " w tym kodzie.")})
         else:
-            b.append({"type": "text", "md": f"**Sprawdzarka** znalazła {len(issues)} "
+            b.append({"type": "text", "md": f"**Sprawdzarka** {'(z sanitizerami) ' if ran else ''}znalazła {len(issues)} "
                                             f"{'uwagę' if len(issues) == 1 else 'uwagi' if len(issues) < 5 else 'uwag'}:"})
             b.append({"type": "errors", "items": [{"line": fix_line(i.get("line")), "col": i.get("col"), "severity": i.get("severity"),
                                                     "title": i.get("title"), "explanation": i.get("message"), "fix": i.get("fix")}

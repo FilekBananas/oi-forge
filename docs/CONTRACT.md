@@ -311,7 +311,8 @@ ed.getValue(); ed.setValue(s); ed.setLang(l); ed.focus(); ed.format(); ed.cm (Co
 ed.markLines([{line, type:'error'|'warn'|'info'|'hint', message}]); ed.clearMarks(); ed.highlightLine(n, cls); ed.scrollToLine(n)
 ed.addGutter(name); ed.setGutterMarker(line, name, el); ed.clearGutter(name); ed.onGutterClick((line, gutter, ev) => …)
 ```
-Edytor ma wbudowane: snippety na Tab (`seg`+Tab → drzewo przedziałowe), Ctrl+Enter = onRun, Ctrl+Shift+F = formatowanie,
+Edytor ma wbudowane: snippety na Tab (`seg`+Tab → drzewo przedziałowe), Ctrl+Enter = onRun, Ctrl+Shift+F = formatowanie, Ctrl/⌘+F = pasek „Znajdź i zamień” (`web/js/findbar.js`, `ed.find(replace)`),
+Shift+Tab = cofnięcie wcięcia zaznaczonych linii,
 Ctrl+/ komentarz, dopasowanie nawiasów, autozamykanie, wyszukiwanie, zwijanie bloków.
 Podpowiedzi biorą TYLKO bieżący plik (zmienne widoczne w danym miejscu z typem, funkcje zdefiniowane/użyte, typy, makra)
 + słowa C++ — nie nazwy z innych programów ucznia. Kolejność heurystyczna: zasięg i bliskość, po `cin >>` niewczytane zmienne

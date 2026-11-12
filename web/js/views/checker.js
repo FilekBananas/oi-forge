@@ -196,9 +196,9 @@ export default {
     const timeoutSel = select([{ value: '1', label: 'limit 1 s' }, { value: '2', label: 'limit 2 s' }, { value: '5', label: 'limit 5 s' },
       { value: '10', label: 'limit 10 s' }], { value: local.get('checker:timeout', '2'), size: 'sm', onChange: (v) => local.set('checker:timeout', v) });
     const liveBox = checkbox('Analizuj na bieżąco', { checked: live, onChange: (v) => { local.set('checker:live', v); if (v) liveAnalyze(); } });
-    const staticBtn = button('Analiza statyczna', { icon: 'scan-search', onClick: () => runStatic(), title: 'Szybka analiza bez uruchamiania (Ctrl+Enter)' });
-    const dynBtn = button('Uruchom z sanitizerami', { icon: 'microscope', variant: 'primary', onClick: () => runDynamic(),
-      title: 'Kompiluje kilka wariantów programu i uruchamia na wejściach testowych' });
+    const staticBtn = button('Tylko analiza statyczna', { icon: 'scan-search', variant: 'ghost', onClick: () => runStatic(), title: 'Szybka analiza bez uruchamiania programu' });
+    const dynBtn = button('Sprawdź (z sanitizerami)', { icon: 'microscope', variant: 'primary', onClick: () => runDynamic(),
+      title: 'Analiza statyczna + kilka wariantów kompilacji (ASan/UBSan, kontrola STL) uruchomionych na wejściach testowych (Ctrl+Enter)' });
     const cancelBtn = button('Anuluj', { icon: 'circle-stop', variant: 'danger', onClick: () => job && job.cancel() });
     cancelBtn.hidden = true;
 
@@ -225,7 +225,7 @@ export default {
 
     const ed = createEditor(edHost, {
       value: '', lang: 'cpp', height: '100%', storageKey: 'checker', toolbar: true, title: 'Twój kod',
-      placeholder: 'Wklej tu rozwiązanie w C++ (albo Pythonie)…', onRun: () => runStatic(),
+      placeholder: 'Wklej tu rozwiązanie w C++ (albo Pythonie)…', onRun: () => runDynamic(),
       onChange: () => {
         if (result && !(liveBox.checked && result.mode === 'static')) { stale = true; markStale(); }
         if (liveBox.checked) liveAnalyze();
@@ -363,7 +363,7 @@ export default {
       const listEl = h('div', { class: 'ck-list' });
       if (!issues.length) {
         listEl.append(emptyState({ icon: 'circle-check', title: 'Nie znaleziono problemów',
-          text: result.mode === 'static' ? 'Analiza statyczna nic nie znalazła. Uruchom z sanitizerami na testach (najlepiej brzegowych: max n, zera, liczby ujemne), żeby sprawdzić zachowanie w praktyce.'
+          text: result.mode === 'static' ? 'Analiza statyczna nic nie znalazła. Kliknij „Sprawdź (z sanitizerami)” (Ctrl+Enter), żeby uruchomić program na testach — najlepiej brzegowych: max n, zera, liczby ujemne.'
             : 'Na podanych testach program zachował się poprawnie we wszystkich wariantach kompilacji.' }));
       } else if (!list.length) {
         listEl.append(h('div', { class: 'muted small pad' }, 'Brak zgłoszeń w tym filtrze.'));
@@ -394,7 +394,7 @@ export default {
       const verdictText = result.mode === 'dynamic' ? result.summary?.verdict
         : (by.error ? 'Analiza statyczna widzi prawdopodobne błędy. Potwierdź je, uruchamiając program z sanitizerami na testach.'
           : by.warning ? 'Brak pewnych błędów, ale są ryzykowne miejsca warte sprawdzenia.'
-            : 'Analiza statyczna nie widzi błędów. Uruchom z sanitizerami, żeby sprawdzić zachowanie na danych.');
+            : 'Analiza statyczna nie widzi błędów. Kliknij „Sprawdź (z sanitizerami)”, żeby sprawdzić zachowanie na danych.');
       const chips = SEV_ORDER.filter((s) => by[s]).map((s) => h('button', {
         class: `chip ck-sevchip ${filter === s ? 'active' : ''}`, type: 'button',
         onclick: () => { filter = filter === s ? 'all' : s; local.set('checker:filter', filter); renderResults(); },
@@ -502,7 +502,7 @@ export default {
         ['languages', 'Ostrzeżenia kompilatora', '-Wall -Wextra -Wshadow -Wconversion… przetłumaczone na polski.'],
       ];
       return h('div', { class: 'ck-intro' },
-        emptyState({ icon: 'bug', title: 'Wklej kod — błędy pokażą się tutaj', text: 'Ctrl+Enter = szybka analiza. „Uruchom z sanitizerami” = dokładne sprawdzenie na testach.',
+        emptyState({ icon: 'bug', title: 'Wklej kod — błędy pokażą się tutaj', text: 'Ctrl+Enter = pełne sprawdzenie: analiza statyczna + uruchomienie z sanitizerami na testach.',
           action: button('Wczytaj przykład z błędami', { icon: 'library', onClick: () => gallery() }) }),
         // opisy sztuczek schowane — kto chce, rozwinie
         more('Co dokładnie sprawdzam?', [h('div', { class: 'ck-tricks' }, tricks.map(([ic, t, d]) => h('div', { class: 'ck-trick' }, h('div', { class: 'ck-trick-icon' }, icon(ic, 16)),
@@ -560,7 +560,7 @@ export default {
           renderInputs();
         }
         renderResults();
-        if (params.run) runDynamic(); else runStatic({ quiet: true });
+        if (params.run !== false) runDynamic(); else runStatic({ quiet: true });
       }
     };
   },

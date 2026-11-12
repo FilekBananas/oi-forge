@@ -1,7 +1,9 @@
 // Edytor kodu (CodeMirror 5) z snippetami (Tab), formatowaniem (Ctrl+Shift+F), uruchamianiem (Ctrl+Enter),
+// paskiem „Znajdź i zamień” (Ctrl/⌘+F, Ctrl+H — web/js/findbar.js),
 // znacznikami błędów i autosave. Patrz docs/CONTRACT.md 4.4.
 import { h, icon, iconButton, toast, cmMode, select } from './ui.js';
 import { api, local, settings, onSettings } from './api.js';
+import { attachFindBar } from './findbar.js';
 
 const CM = () => window.CodeMirror;
 let snippetCache = null;
@@ -139,7 +141,7 @@ export function createEditor(parent, opts = {}) {
   } = opts;
   if (!CM()) throw new Error('CodeMirror nie został załadowany');
   const initial = storageKey ? (local.get('ed:' + storageKey) ?? value) : value;
-  const host = h('div', { class: 'ed-host', style: 'flex:1;min-height:0;display:flex;flex-direction:column' });
+  const host = h('div', { class: 'ed-host', style: 'flex:1;min-height:0;display:flex;flex-direction:column;position:relative' });
   const hint = h('div', { class: 'ed-hint', style: 'position:absolute;right:10px;bottom:8px;z-index:5;font-size:11.5px;pointer-events:none;opacity:0;transition:opacity .15s' });
   const wrapEl = h('div', { class: ['editor', height === 'auto' ? 'auto' : ''].join(' ') });
   if (height !== 'auto' && height !== '100%') wrapEl.style.height = height;
@@ -153,6 +155,7 @@ export function createEditor(parent, opts = {}) {
       bar.append(langSel);
     }
     const acts = h('div', { class: 'ed-actions' }, actions,
+      iconButton('search', { title: 'Znajdź i zamień (Ctrl+F)', onClick: () => ed.find(!readOnly) }),
       !readOnly ? iconButton('align-left', { title: 'Formatuj kod (Ctrl+Shift+F)', onClick: () => ed.format() }) : null,
       iconButton('copy', { title: 'Kopiuj', onClick: async () => { await navigator.clipboard.writeText(ed.getValue()).catch(() => {}); toast('Skopiowano', 'success', { timeout: 1200 }); } }));
     bar.append(acts);
@@ -237,10 +240,13 @@ export function createEditor(parent, opts = {}) {
     clearGutter(gutter) { cm.clearGutter(gutter); },
     onGutterClick(fn) { cm.on('gutterClick', (_c, ln, gutter, ev) => fn(ln + 1, gutter, ev)); },
     _clearSnippet() { if (ed._snip) { ed._snip.marks.forEach((m) => m.clear()); ed._snip = null; } },
+    /** Pasek „Znajdź i zamień”; replace=true — od razu w polu „Zamień na”. */
+    find(replace = false) { ed._find.open(replace); },
     destroy() { editors.delete(ed); wrapEl.remove(); },
   };
   editors.add(ed);
   wrapEl.editor = ed;
+  ed._find = attachFindBar(ed, host, { readOnly });
 
   // Tab: snippet / następny placeholder / wcięcie
   // następne pole wstawki (Tab, a w „vector<int|>” także „>”); poza wstawką — zwykłe zachowanie
@@ -305,7 +311,17 @@ export function createEditor(parent, opts = {}) {
     "'>'": overtype('>'),
     "';'": overtype(';'),
     'Shift-Tab': (c) => c.execCommand('indentLess'),
-    Esc: () => { ed._clearSnippet(); },
+    Esc: () => { if (ed._find.isOpen()) ed._find.close(); ed._clearSnippet(); },
+    // Znajdź i zamień (na Macu działa i ⌘+F, i Ctrl+F)
+    [`${mod}-F`]: () => ed._find.open(false),
+    'Ctrl-F': () => ed._find.open(false),
+    'Ctrl-H': () => ed._find.open(!readOnly),
+    [`${mod}-Alt-F`]: () => ed._find.open(!readOnly),
+    'Shift-Ctrl-R': () => ed._find.open(!readOnly),
+    [`${mod}-G`]: () => ed._find.next(),
+    [`Shift-${mod}-G`]: () => ed._find.prev(),
+    F3: () => ed._find.next(),
+    'Shift-F3': () => ed._find.prev(),
     [`${mod}-Enter`]: () => { onRun && onRun(ed); },
     'Ctrl-Enter': () => { onRun && onRun(ed); },
     [`Shift-${mod}-F`]: () => ed.format(),
