@@ -15,7 +15,8 @@ i ponad 30 innych narzędzi.
 chmury i żadnego generowania tekstu.
 
 - **Odpowiedzi asystenta są napisane, nie wygenerowane.** Każda pochodzi z ręcznie przygotowanej bazy wiedzy:
-  370 artykułów, 3326 pytań z odpowiedziami i 1726 opisanych funkcji. Każdy fragment kodu w bazie kompiluje się.
+  379 artykułów (także regulamin i zasady OI), 3391 pytań z odpowiedziami i 1726 opisanych funkcji. Każdy fragment
+  kodu w bazie kompiluje się.
 - **Bez internetu.** Program łączy się z siecią tylko wtedy, gdy sam każesz mu zaimportować swoje programy ze Szkopułu
   albo z SIO2. Żadnych kont, reklam ani telemetrii.
 - **Bez karty graficznej i bez mielenia procesora.** Nie ma modelu AI, który liczyłby odpowiedzi — szukanie w bazie trwa
@@ -119,7 +120,8 @@ i testy brzegowe (97% testów poprawnych). Działają, ale ich wynik trzeba spra
   - **Personalizacja bez AI** — pamięta (lokalnie, w `user_data/store`), o co pytasz i czego nie rozumiałeś: przy
     powrocie do trudnego tematu zaczyna od najprostszego wyjaśnienia, ostrzega przed tematami dużo powyżej Twojego
     poziomu i — jeśli piszesz głównie w Pythonie — dokłada przykłady w Pythonie.
-- **Dokumentacja** — lokalna baza wiedzy: 370 artykułów, 3326 pytań z odpowiedziami i 1726 opisanych funkcji.
+- **Dokumentacja** — lokalna baza wiedzy: 379 artykułów, 3391 pytań z odpowiedziami i 1726 opisanych funkcji.
+  Regulamin i zasady OI (terminy, punktacja, kompilator, co wolno na turze szkolnej i w finale, uprawnienia finalistów),
   C++ od podstaw (pętle, warunki, funkcje, tablice, operatory, rzutowanie), znaki i kody ASCII, STL, I/O, liczby,
   pułapki, praktyka OI (także zadania interaktywne i Python na zawodach), grafy, drzewa, struktury danych, techniki,
   DP, teksty, matematyka (z FFT/NTT, eliminacją Gaussa, bazą XOR, Möbiusem), geometria i gry. Do tego pełna

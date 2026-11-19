@@ -1,0 +1,1234 @@
+{
+ "chunk": "oi-rules",
+ "articles": [
+  {
+   "id": "oi-rules-overview",
+   "title": "Regulamin OI w pigułce: etapy, terminy, limity zgłoszeń, punktacja (XXXIV OI 2026/2027)",
+   "category": "OI praktyka",
+   "tags": [
+    "regulamin",
+    "zasady organizacji zawodów",
+    "ZOZ",
+    "przepisy",
+    "OI",
+    "terminarz",
+    "etapy",
+    "tura zdalna",
+    "tura szkolna",
+    "II etap",
+    "III etap",
+    "XXXIV OI"
+   ],
+   "aliases": [
+    "regulamin oi",
+    "zasady oi",
+    "przepisy oi",
+    "regulamin olimpiady informatycznej",
+    "zasady organizacji zawodow",
+    "zoz oi",
+    "terminarz oi",
+    "kiedy jest oi",
+    "harmonogram olimpiady",
+    "najwazniejsze zasady olimpiady informatycznej",
+    "regulamin olimpiady"
+   ],
+   "summary": "OI ma trzy stopnie. I etap = tura zdalna (12.10–16.11.2026, w domu) + tura szkolna (20.11.2026, 3 godziny w szkole); II etap 9–11.02.2027; finał (III etap) 6–9.04.2027. Do II etapu przechodzi ok. 450 osób, do finału ok. 100. Za zadanie 0–100 pkt, liczy się najlepsze zgłoszenie, języki: C++ lub Python.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "Olimpiadę prowadzą dwa dokumenty: **Regulamin Olimpiady Informatycznej** (stały: kto organizuje, kto może startować, tytuły, odwołania) i **Zasady organizacji zawodów** (ZOZ, co roku nowe: terminy, języki, punktacja, limity). Do ZOZ dochodzą załączniki: **Ustalenia techniczne** (kompilator, flagi, czego program nie może robić) i **Zasady organizacji zawodów II i III stopnia**. Udział w I etapie oznacza akceptację regulaminu, a w trakcie edycji nie wolno go zmieniać (poza szczególnymi przypadkami)."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Etap",
+      "Termin (XXXIV OI)",
+      "Forma",
+      "Limit zgłoszeń na zadanie"
+     ],
+     "rows": [
+      [
+       "I etap, tura zdalna",
+       "12.10–16.11.2026 (wysyłka do 16.11, 12:00)",
+       "w domu, wolno korzystać ze źródeł (podaj je w komentarzu)",
+       "50 zgłoszeń + 50 uruchomień próbnych"
+      ],
+      [
+       "I etap, tura szkolna",
+       "20.11.2026, 12:00–15:00 (sesja próbna 11:00–11:30)",
+       "w szkole, 2 zadania, tylko komputer od szkoły",
+       "50 zgłoszeń + 50 uruchomień próbnych"
+      ],
+      [
+       "Wyniki I etapu",
+       "4.12.2026 po 20:00",
+       "ok. 450 najlepszych → II etap",
+       "—"
+      ],
+      [
+       "II etap",
+       "9–11.02.2027",
+       "sesja próbna 3 h + dwie sesje po 5 h",
+       "25 zgłoszeń + 25 uruchomień próbnych"
+      ],
+      [
+       "Wyniki II etapu",
+       "19.02.2027 po 20:00",
+       "ok. 100 najlepszych → finał (tytuł finalisty)",
+       "—"
+      ],
+      [
+       "III etap (finał)",
+       "6–9.04.2027",
+       "sesja próbna 3 h + dwie sesje po 5 h",
+       "25 zgłoszeń + 25 uruchomień próbnych"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Najważniejsze zasady:**\n- Języki: **C++** (plik `.cpp`) lub **Python** (plik `.py`); jeden plik źródłowy na zadanie. Limity czasu są wspólne i dobierane pod C++.\n- Kompilacja: `g++ -O3 -static abc.cpp -std=c++23` (G++ 14.2.0); Python 3.13.5 z NumPy 2.2.4.\n- Zadanie: 0–100 pkt, testy w grupach; grupa = minimum z punktów za jej testy. Powyżej **połowy limitu czasu** punkty za test maleją liniowo do zera.\n- Wynik za zadanie = **najlepsze** z Twoich zgłoszeń.\n- Liczba osób przechodzących dalej (450 i 100) może się zmienić najwyżej o 30%.\n- Zawody są indywidualne: rozwiązania zespołowe lub niesamodzielne nie są oceniane, grozi dyskwalifikacja.\n- Finaliści i laureaci są zwolnieni z matury z informatyki i dostają najwyższą ocenę z informatyki."
+    },
+    {
+     "type": "tip",
+     "md": "Źródło: regulamin i „Zasady organizacji zawodów” XXXIV OI (rok szkolny 2026/2027) ze strony `oi.edu.pl` (zakładka **Przepisy**), stan na 19.11.2026. Daty, wersje kompilatorów i limity zmieniają się co roku — przed zawodami sprawdź aktualną wersję."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "regulamin oi",
+      "zasady olimpiady informatycznej",
+      "jakie sa zasady oi",
+      "przepisy olimpiady",
+      "regulamin olimpiady informatycznej najwazniejsze"
+     ],
+     "a": "W skrócie (XXXIV OI, 2026/2027): trzy etapy — I (tura zdalna w domu 12.10–16.11.2026 i tura szkolna 20.11.2026), II (9–11.02.2027) i finał (6–9.04.2027). Piszesz w C++ albo Pythonie, za zadanie 0–100 pkt, liczy się najlepsze zgłoszenie, a powyżej połowy limitu czasu punkty za test maleją. Do II etapu przechodzi ok. 450 osób, do finału ok. 100. Pełne dokumenty: `oi.edu.pl`, zakładka **Przepisy** (Regulamin, Zasady organizacji, Ustalenia techniczne, Zasady II i III etap)."
+    },
+    {
+     "q": [
+      "kiedy jest oi",
+      "terminarz oi",
+      "kiedy jest pierwszy etap oi",
+      "kiedy jest drugi etap oi",
+      "kiedy jest final oi",
+      "daty olimpiady informatycznej",
+      "harmonogram oi"
+     ],
+     "a": "Terminarz XXXIV OI: tura zdalna I etapu 12.10–16.11.2026 (rozwiązania do 16.11, godz. 12:00), tura szkolna 20.11.2026 (12:00–15:00, sesja próbna 11:00–11:30), wyniki I etapu 4.12.2026 po 20:00, II etap 9–11.02.2027, wyniki II etapu 19.02.2027 po 20:00, finał (III etap) 6–9.04.2027."
+    },
+    {
+     "q": [
+      "ile osob przechodzi do drugiego etapu",
+      "ile osob przechodzi do finalu oi",
+      "ile osob kwalifikuje sie do ii etapu",
+      "ile trzeba punktow zeby przejsc do drugiego etapu",
+      "prog do drugiego etapu oi"
+     ],
+     "a": "Według ZOZ XXXIV OI do II etapu kwalifikuje się 450 osób z najlepszymi wynikami I etapu, a do finału 100 osób z najlepszymi wynikami II etapu. Komitet może zmienić te liczby najwyżej o 30%. Progu punktowego nie ma z góry — wynika z wyników wszystkich zawodników."
+    },
+    {
+     "q": [
+      "jakie dokumenty reguluja oi",
+      "co to jest zoz",
+      "zasady organizacji zawodow co to",
+      "ustalenia techniczne oi"
+     ],
+     "a": "Regulamin OI opisuje stałe zasady (organizator, komitet, uczestnicy, tytuły, odwołania). Co roku Komitet publikuje **Zasady organizacji zawodów** (ZOZ) z terminami, językami i punktacją oraz załączniki: **Ustalenia techniczne** (kompilator, polecenie kompilacji, zakazy w programie) i **Zasady organizacji zawodów II i III stopnia**. Wszystko jest na `oi.edu.pl` w zakładce Przepisy."
+    },
+    {
+     "q": [
+      "czy regulamin oi moze sie zmienic w trakcie",
+      "czy zasady oi zmieniaja sie co roku"
+     ],
+     "a": "ZOZ są nowe na każdą edycję (terminy, wersje kompilatorów, limity), dlatego przed zawodami czytaj aktualną wersję. W trakcie trwania edycji regulaminu ani ZOZ nie wolno zmieniać, poza szczególnie uzasadnionymi przypadkami."
+    },
+    {
+     "q": [
+      "jaki jest najwazniejszy przepis na oi",
+      "o czym pamietac z regulaminu oi"
+     ],
+     "a": "Najczęściej przydaje się: jeden plik źródłowy (`.cpp` lub `.py`), wejście ze stdin i wyjście na stdout, kod wyjścia 0, brak plików i wątków, limit 50 zgłoszeń w I etapie i 25 w II i III, liczy się najlepsze zgłoszenie, a czas powyżej połowy limitu obniża punkty. Zawody są indywidualne — współpraca grozi dyskwalifikacją."
+    }
+   ],
+   "related": [
+    "oi-rules-scoring",
+    "oi-rules-technical",
+    "oi-rules-stage1",
+    "oi-rules-stage23",
+    "oi-rules-titles",
+    "oi-rules-conduct",
+    "oi-rules-participation",
+    "oi-about"
+   ]
+  },
+  {
+   "id": "oi-rules-scoring",
+   "title": "Punktacja na OI według regulaminu: grupy testów, połowa limitu czasu, najlepsze zgłoszenie, format wyjścia",
+   "category": "OI praktyka",
+   "tags": [
+    "regulamin",
+    "punktacja",
+    "ocenianie",
+    "grupa testów",
+    "podzadania",
+    "połowa limitu czasu",
+    "najlepsze zgłoszenie",
+    "białe znaki",
+    "format wyjścia",
+    "ZOZ"
+   ],
+   "aliases": [
+    "jak sa liczone punkty wedlug regulaminu oi",
+    "polowa limitu czasu oi",
+    "punkty a czas dzialania oi",
+    "czy liczy sie ostatnie zgloszenie",
+    "czy liczy sie najlepsze zgloszenie",
+    "biale znaki na wyjsciu oi",
+    "spacja na koncu linii oi",
+    "ocenianie rozwiazan oi",
+    "punktacja za czas"
+   ],
+   "summary": "Za zadanie 0–100 pkt w grupach testów. Test zaliczony w ≤ połowie limitu czasu daje pełne punkty grupy, między T/2 a T punkty maleją liniowo do zera. Grupa = minimum z testów, wynik za zadanie = najlepsze zgłoszenie. Na wyjściu tolerowane są nadmiarowe spacje/tabulatory i puste znaki na końcu pliku.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Jak SIO liczy punkty (ZOZ XXXIV OI, § 3):**\n1. Program (C++ jest kompilowany, Python nie) uruchamia się na grupach testów; każda grupa ma swoją pulę punktów i odpowiada podzadaniu. Suma pul = 100.\n2. Test jest sprawdzany, jeśli program nie zakończył się błędem i zmieścił się w limicie czasu i pamięci.\n3. Poprawna odpowiedź w czasie **t ≤ T/2** (T = limit) → pełna pula grupy. Dla **T/2 < t ≤ T** punkty spadają liniowo: `pula · 2·(T − t) / T`. Przy t = T jest 0.\n4. Za grupę dostajesz **minimum** z punktów za jej testy — jeden zły test zeruje grupę.\n5. Wynik zadania = suma za grupy. Twój wynik za zadanie = **najwyższy** wynik spośród Twoich zgłoszeń.\n6. Jeśli treść przewiduje punktację częściową (np. za samą poprawną liczbę bez konstrukcji), test może być zaliczony częściowo i punkty są dodatkowo skalowane."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Czas działania (limit T = 1 s)",
+      "Punkty za test (z puli grupy)"
+     ],
+     "rows": [
+      [
+       "0,3 s",
+       "100%"
+      ],
+      [
+       "0,5 s",
+       "100%"
+      ],
+      [
+       "0,6 s",
+       "80%"
+      ],
+      [
+       "0,75 s",
+       "50%"
+      ],
+      [
+       "0,9 s",
+       "20%"
+      ],
+      [
+       "1,0 s lub więcej",
+       "0% (TLE)"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Format wyjścia.** Dane testowe są poprawne i zgodne z treścią. Wyjście musi być zgodne ze specyfikacją; jedyne tolerowane odstępstwa to: spacje/tabulatory na początku i końcu wiersza, kilka spacji/tabulatorów zamiast jednej wewnątrz wiersza oraz białe znaki (także końce linii) na końcu pliku. Wypisywanie na `stderr` jest ignorowane, ale zabiera czas.\n\n**Limity czasu** są wspólne dla C++ i Pythona i dobierane względem rozwiązań w C++ — rozwiązanie w Pythonie może dostać mniej punktów tylko dlatego, że jest wolniejsze. Dane testowe i ostateczne wyniki są ujawniane po zakończeniu danego etapu."
+    },
+    {
+     "type": "warn",
+     "md": "Program „na styk” traci punkty: zaliczenie w 90% limitu daje tylko 20% punktów za test, a przez minimum w grupie — za całą grupę. Celuj w czas poniżej połowy limitu."
+    },
+    {
+     "type": "tip",
+     "md": "Źródło: regulamin i „Zasady organizacji zawodów” XXXIV OI (rok szkolny 2026/2027) ze strony `oi.edu.pl` (zakładka **Przepisy**), stan na 19.11.2026. Daty, wersje kompilatorów i limity zmieniają się co roku — przed zawodami sprawdź aktualną wersję."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak sa liczone punkty na oi wedlug regulaminu",
+      "punktacja za czas oi",
+      "polowa limitu czasu",
+      "dlaczego dostalem mniej punktow chociaz test przeszedl",
+      "czemu mam 60 punktow a wszystko ok",
+      "punkty maleja z czasem oi"
+     ],
+     "a": "Na OI test zaliczony w czasie nie większym niż **połowa limitu** daje pełne punkty. Między T/2 a T punkty maleją liniowo: `pula · 2·(T − t)/T` (np. limit 1 s, czas 0,75 s → 50%). Za grupę liczy się minimum z testów, więc jeden wolny test obniża całą grupę. Celuj w czas poniżej połowy limitu."
+    },
+    {
+     "q": [
+      "czy liczy sie ostatnie zgloszenie czy najlepsze",
+      "ktore zgloszenie sie liczy na oi",
+      "czy moge wyslac gorsze rozwiazanie po lepszym",
+      "czy pogorszenie wyniku cos zmienia"
+     ],
+     "a": "Według ZOZ XXXIV OI wynikiem za zadanie jest **najwyższy** wynik spośród Twoich zgłoszeń. Wysłanie gorszego rozwiązania po lepszym nie obniża wyniku — pamiętaj tylko o limicie zgłoszeń (50 w I etapie, 25 w II i III)."
+    },
+    {
+     "q": [
+      "czy spacja na koncu linii to blad na oi",
+      "biale znaki na wyjsciu",
+      "czy enter na koncu pliku jest ok",
+      "czy dodatkowe spacje psuja odpowiedz",
+      "format wyjscia na oi"
+     ],
+     "a": "Nie szkodzą: spacje i tabulatory na początku i na końcu wiersza, kilka spacji/tabulatorów zamiast jednej wewnątrz wiersza oraz białe znaki i końce linii na końcu pliku. Wszystko inne (np. brakujący wiersz, dodatkowy tekst „Wynik:”) jest złą odpowiedzią."
+    },
+    {
+     "q": [
+      "co to jest grupa testow wedlug regulaminu",
+      "jak liczone sa punkty za grupe testow",
+      "minimum w grupie testow"
+     ],
+     "a": "Każda grupa ma przypisaną pulę punktów i podzadanie. Za grupę dostajesz **minimum** z punktów za jej testy: jeden niezaliczony test (WA, TLE, RE, MLE) daje 0 za całą grupę, a jeden wolny test (powyżej T/2) obniża punkty całej grupy."
+    },
+    {
+     "q": [
+      "czy python ma dluzszy limit czasu na oi",
+      "limit czasu dla pythona oi",
+      "czy limity sa takie same dla c++ i pythona"
+     ],
+     "a": "Nie. Limity czasu są wspólne dla wszystkich języków i dobierane względem rozwiązań w C++. Rozwiązanie w Pythonie może więc dostać mniej punktów tylko z powodu wolniejszego działania."
+    },
+    {
+     "q": [
+      "czy wypisywanie na stderr jest dozwolone",
+      "czy cerr psuje odpowiedz na oi",
+      "debug na stderr oi"
+     ],
+     "a": "Tak, to dozwolone: SIO ignoruje `stderr`. Wypisywanie zużywa jednak czas, więc przed wysłaniem usuń lub wyłącz debug w pętlach."
+    },
+    {
+     "q": [
+      "kiedy poznam wyniki na oi",
+      "kiedy sa testy po oi",
+      "czy testy sa jawne"
+     ],
+     "a": "W trakcie zawodów widzisz zwykle tylko wynik na testach przykładowych (w niektórych zadaniach i w finale także punkty od razu). Dane testowe i ostateczne wyniki są ujawniane po zakończeniu danego etapu."
+    },
+    {
+     "q": [
+      "czy moga byc bledne dane na oi",
+      "czy trzeba sprawdzac poprawnosc wejscia"
+     ],
+     "a": "Nie trzeba. Regulamin mówi, że dane testowe są bezbłędne i zgodne ze specyfikacją wejścia z treści."
+    }
+   ],
+   "related": [
+    "oi-rules-overview",
+    "oi-rules-timing",
+    "oi-about",
+    "oi-sio2",
+    "oi-rules-technical"
+   ]
+  },
+  {
+   "id": "oi-rules-technical",
+   "title": "Ustalenia techniczne OI: kompilator G++ 14.2, polecenie kompilacji, Python 3.13, limity i zakazy w programie",
+   "category": "OI praktyka",
+   "tags": [
+    "regulamin",
+    "ustalenia techniczne",
+    "kompilator",
+    "g++",
+    "-O3",
+    "-static",
+    "c++23",
+    "python 3.13",
+    "numpy",
+    "pliki",
+    "wątki",
+    "kod wyjścia",
+    "limit pamięci",
+    "ZOZ"
+   ],
+   "aliases": [
+    "jaki kompilator na oi",
+    "jakie flagi kompilacji na oi",
+    "jak kompiluja na oi",
+    "jaki standard c++ na oi",
+    "czy na oi jest c++23",
+    "czy na oi jest c++20",
+    "wersja pythona na oi",
+    "czy moge uzyc numpy na oi",
+    "czy mozna uzywac watkow na oi",
+    "czy mozna otwierac pliki na oi",
+    "ustalenia techniczne oi",
+    "czy bits/stdc++.h dziala na oi"
+   ],
+   "summary": "XXXIV OI: C++ kompilowany przez G++ 14.2.0 poleceniem `g++ -O3 -static abc.cpp -std=c++23`, Python 3.13.5 (`python3 abc.py`, wolno NumPy 2.2.4). Jeden plik, stdin/stdout, kod wyjścia 0, bez plików, wątków, procesów i sieci. Limit pamięci obejmuje kod, stos i stertę.",
+   "level": 1,
+   "body": [
+    {
+     "type": "table",
+     "headers": [
+      "Co",
+      "XXXIV OI"
+     ],
+     "rows": [
+      [
+       "Kompilator C++",
+       "G++ 14.2.0"
+      ],
+      [
+       "Polecenie (zadanie abc)",
+       "g++ -O3 -static abc.cpp -std=c++23"
+      ],
+      [
+       "Python",
+       "3.13.5, uruchamiany: python3 abc.py; wolno NumPy 2.2.4"
+      ],
+      [
+       "Kod źródłowy / plik wykonywalny",
+       "≤ 100 KB / ≤ 10 MB (chyba że treść mówi inaczej)"
+      ],
+      [
+       "Kompilacja",
+       "≤ 30 s, ≤ 512 MB pamięci"
+      ],
+      [
+       "Limit pamięci",
+       "z treści zadania; liczy się wszystko: kod, stos, sterta"
+      ],
+      [
+       "Limity czasu",
+       "SIO pokazuje maks. i min. limit czasu testów dla każdego podzadania"
+      ],
+      [
+       "Procesor",
+       "64-bitowy x86-64 (wirtualne środowisko, czas liczony z instrukcji)"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Rozwiązanie powinno:** składać się z jednego pliku o nazwie z treści (`.cpp` lub `.py`), czytać ze standardowego wejścia i pisać na standardowe wyjście, kończyć się **kodem wyjścia 0** (inny kod = błąd wykonania) i zakładać 64-bitowy procesor.\n\n**Wolno:** bibliotekę standardową, standard C++23, NumPy w Pythonie, wypisywanie na `stderr` (ignorowane).\n\n**Nie wolno:** otwierać żadnych plików (też tymczasowych), tworzyć procesów ani wątków, używać sieci, uruchamiać innych programów, czekać na użytkownika ani używać zewnętrznych bibliotek (także dołączanych opcjami kompilatora). Inny sposób kompilacji (np. Makefile) nie istnieje — kod, który nie kompiluje się tym poleceniem, nie jest oceniany. W Pythonie „błąd kompilacji” oznacza błąd składni.\n\n**C++:** bez nagłówków z Windows (`conio.h`, `windows.h`) i bez niestandardowych formatów `printf` (`%D`, `%F`). Przy `iostream` organizatorzy radzą `std::ios_base::sync_with_stdio(false); std::cin.tie(NULL);` i `\"\\n\"` zamiast `endl`."
+    },
+    {
+     "type": "code",
+     "lang": "cpp",
+     "code": "#include <bits/stdc++.h>   // działa: G++ na Linuksie\nusing namespace std;\n\nint main() {\n    ios_base::sync_with_stdio(false);\n    cin.tie(NULL);\n    int n;\n    cin >> n;\n    long long s = 0;\n    for (int i = 0; i < n; i++) { long long x; cin >> x; s += x; }\n    cout << s << \"\\n\";  // \\n zamiast endl\n    return 0;            // inny kod wyjścia = błąd wykonania\n}\n"
+    },
+    {
+     "type": "tip",
+     "md": "Lokalnie kompiluj tak jak na OI: `g++ -O3 -static -std=c++23 abc.cpp -o abc` (na macOS `-static` nie działa — pomiń tę flagę). Do szukania błędów dodaj osobno sanitizery, ale wysyłaj zwykły kod.\n\nŹródło: regulamin i „Zasady organizacji zawodów” XXXIV OI (rok szkolny 2026/2027) ze strony `oi.edu.pl` (zakładka **Przepisy**), stan na 19.11.2026. Daty, wersje kompilatorów i limity zmieniają się co roku — przed zawodami sprawdź aktualną wersję."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jaki kompilator jest na oi",
+      "jakie flagi kompilacji na oi",
+      "jak kompilowane sa rozwiazania na oi",
+      "jaka komenda kompilacji na olimpiadzie",
+      "czy na oi jest o2 czy o3"
+     ],
+     "a": "W XXXIV OI rozwiązania w C++ kompiluje G++ 14.2.0 poleceniem `g++ -O3 -static abc.cpp -std=c++23`. Innego sposobu kompilacji nie ma — kod, który się tak nie kompiluje, nie jest oceniany."
+    },
+    {
+     "q": [
+      "jaki standard c++ na oi",
+      "czy na oi jest c++20",
+      "czy moge uzywac c++23 na oi",
+      "czy ranges dzialaja na oi"
+     ],
+     "a": "Tak: w XXXIV OI kompilacja jest z `-std=c++23` (G++ 14.2.0), więc działa wszystko z C++20 i większość C++23, np. `ranges`, `contains`, `views`."
+    },
+    {
+     "q": [
+      "jaka wersja pythona na oi",
+      "czy na oi mozna uzywac numpy",
+      "czy python jest na oi",
+      "jak uruchamiaja pythona na oi"
+     ],
+     "a": "W XXXIV OI Python to wersja 3.13.5 uruchamiana jako `python3 abc.py`, i wolno użyć NumPy 2.2.4. Limity czasu są jednak dobierane pod C++, więc w Pythonie łatwiej o przekroczenie czasu."
+    },
+    {
+     "q": [
+      "czy mozna otwierac pliki na oi",
+      "czy moge czytac z pliku na oi",
+      "freopen na oi",
+      "czy moge zapisywac do pliku"
+     ],
+     "a": "Nie. Ustalenia techniczne zabraniają otwierania jakichkolwiek plików, także tymczasowych — czytaj ze stdin i pisz na stdout (chyba że treść zadania mówi inaczej). Jeśli lokalnie używasz `freopen`, usuń go przed wysłaniem."
+    },
+    {
+     "q": [
+      "czy mozna uzywac watkow na oi",
+      "wielowatkowosc na oi",
+      "czy moge uzyc thread na olimpiadzie",
+      "fork na oi"
+     ],
+     "a": "Nie. Rozwiązanie nie może tworzyć nowych procesów ani wątków, używać sieci ani uruchamiać innych programów."
+    },
+    {
+     "q": [
+      "czy return 1 to blad na oi",
+      "kod wyjscia na oi",
+      "czy exit 1 daje re",
+      "czy main musi zwracac 0"
+     ],
+     "a": "Tak, to błąd: program musi kończyć się kodem wyjścia 0, a każdy inny kod jest traktowany jak błąd wykonania (RE). W C++ `main` bez `return` też zwraca 0; nie wychodź przez `exit(1)` ani `return 1`."
+    },
+    {
+     "q": [
+      "czy stos liczy sie do limitu pamieci",
+      "czy limit pamieci obejmuje stos",
+      "ile pamieci ma program na oi"
+     ],
+     "a": "Tak. Limit pamięci z treści dotyczy łącznego zużycia: kodu wykonywalnego, stosu, sterty itd. Głęboka rekurencja zużywa ten sam limit co tablice."
+    },
+    {
+     "q": [
+      "maksymalny rozmiar kodu na oi",
+      "ile moze miec kod zrodlowy na oi",
+      "limit kodu zrodlowego"
+     ],
+     "a": "Kod źródłowy może mieć do 100 KB, a plik wykonywalny do 10 MB (chyba że treść mówi inaczej). Kompilacja może trwać do 30 s i zużyć do 512 MB pamięci."
+    },
+    {
+     "q": [
+      "czy bits/stdc++.h dziala na oi",
+      "czy mozna uzywac bits stdc++ na olimpiadzie"
+     ],
+     "a": "Tak — na OI kompiluje G++ na Linuksie, więc `#include <bits/stdc++.h>` działa. Nie używaj tylko nagłówków z Windows (`conio.h`, `windows.h`)."
+    },
+    {
+     "q": [
+      "czy mozna uzywac zewnetrznych bibliotek na oi",
+      "czy moge uzyc boost na oi",
+      "czy jest atcoder library na oi"
+     ],
+     "a": "Nie. Wolno korzystać tylko z biblioteki standardowej (w Pythonie dodatkowo z NumPy). Zakaz obejmuje też biblioteki dołączane opcjami kompilatora; wyjątkiem jest sytuacja, gdy treść zadania mówi inaczej."
+    }
+   ],
+   "related": [
+    "oi-rules-overview",
+    "oi-rules-timing",
+    "oi-compile-flags",
+    "oi-template",
+    "oi-rules-scoring"
+   ]
+  },
+  {
+   "id": "oi-rules-timing",
+   "title": "Jak OI mierzy czas: wirtualny procesor, zliczanie instrukcji (2 GHz), sio2jail i oiejq",
+   "category": "OI praktyka",
+   "tags": [
+    "regulamin",
+    "środowisko testowe",
+    "pomiar czasu",
+    "sio2jail",
+    "oiejq",
+    "oitimetool",
+    "instrukcje",
+    "2 GHz",
+    "pamięć podręczna",
+    "cache"
+   ],
+   "aliases": [
+    "jak oi mierzy czas",
+    "sio2jail",
+    "oiejq",
+    "srodowisko testowe oi",
+    "czy czas na oi zalezy od komputera",
+    "liczenie instrukcji oi",
+    "oitimetool",
+    "jak sprawdzic czas jak na oi",
+    "ile instrukcji na sekunde oi"
+   ],
+   "summary": "Na OI czas nie jest mierzony zegarem: wirtualny procesor x86-64 zlicza wykonane instrukcje, każda trwa 1 cykl przy 2 GHz (2·10⁹ instrukcji = 1 s). Pamięć zachowuje się jak przy ogromnym cache. Lokalnie ten sam pomiar daje sio2jail ze skryptem oiejq (tylko Linux).",
+   "level": 2,
+   "body": [
+    {
+     "type": "text",
+     "md": "Strona **Środowisko testowe** (dział „Dla uczestników”) opisuje model: program działa w wirtualnym środowisku modelującym 64-bitowy procesor x86. Model **zlicza instrukcje**: każda trwa jeden cykl, zegar ma 2 GHz. Dzięki temu wynik nie zależy od obciążenia komputera sprawdzającego.\n\n**Co z tego wynika w praktyce:**\n- 1 s limitu ≈ 2·10⁹ instrukcji maszynowych (nie „operacji” z pseudokodu — jedna linijka C++ to często kilka instrukcji).\n- Wirtualny procesor zachowuje się, jakby miał **bardzo dużo pamięci podręcznej**: dostępy do pamięci są szybsze niż na prawdziwym komputerze. Optymalizacje pod cache dają mniej niż lokalnie, a liczy się liczba wykonanych instrukcji.\n- Wersja i konfiguracja kompilatora nieznacznie wpływają na wynik, ale żadne specjalne flagi nie są potrzebne."
+    },
+    {
+     "type": "text",
+     "md": "**Pomiar u siebie:** `sio2jail` (repozytorium sio2jail na GitHubie) albo gotowa wersja ze skryptem `oiejq` ze strony OI — mierzy czas tak samo jak SIO i może liczyć pamięć, ale działa **tylko na Linuksie**. Starszy `oitimetool` działa na Windows i Linuksie. Na macOS potrzebujesz maszyny wirtualnej albo kontenera z Linuksem."
+    },
+    {
+     "type": "tip",
+     "md": "Źródło: regulamin i „Zasady organizacji zawodów” XXXIV OI (rok szkolny 2026/2027) ze strony `oi.edu.pl` (zakładka **Przepisy**), stan na 19.11.2026. Daty, wersje kompilatorów i limity zmieniają się co roku — przed zawodami sprawdź aktualną wersję."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak oi mierzy czas",
+      "czy czas na oi zalezy od komputera",
+      "czemu na oi czas jest inny niz u mnie",
+      "jak dziala pomiar czasu w sio"
+     ],
+     "a": "Na OI czas jest liczony z liczby wykonanych instrukcji w wirtualnym procesorze x86-64: każda instrukcja to 1 cykl, zegar 2 GHz, czyli 2·10⁹ instrukcji = 1 s. Nie zależy to od obciążenia komputera, ale może się różnić od czasu u Ciebie, bo model ma „nieskończony” cache, a liczy się liczba instrukcji."
+    },
+    {
+     "q": [
+      "co to jest sio2jail",
+      "co to jest oiejq",
+      "jak zmierzyc czas jak na oi",
+      "jak uruchomic oiejq"
+     ],
+     "a": "`sio2jail` to środowisko, w którym SIO mierzy czas; `oiejq` to wygodny skrypt do niego udostępniony na stronie OI (Dla uczestników → Środowisko testowe). Uruchomisz program „jak na OI” i dostaniesz ten sam pomiar czasu (opcjonalnie też pamięci). Działa tylko na Linuksie; starszy `oitimetool` także na Windows."
+    },
+    {
+     "q": [
+      "ile instrukcji na sekunde na oi",
+      "ile operacji miesci sie w sekundzie na oi"
+     ],
+     "a": "Model OI zakłada 2 GHz i 1 cykl na instrukcję: 1 s = 2·10⁹ instrukcji maszynowych. Jedna linijka C++ to zwykle kilka instrukcji, więc praktycznie myśl o ok. 10⁸–10⁹ prostych operacji na sekundę."
+    },
+    {
+     "q": [
+      "czy optymalizacja cache pomaga na oi",
+      "czy cache misses licza sie na oi"
+     ],
+     "a": "Mniej niż na prawdziwym komputerze: wirtualny procesor OI zachowuje się jak przy bardzo dużej pamięci podręcznej, a liczy się liczba wykonanych instrukcji. Dużo daje zmniejszenie liczby operacji, mało — układanie danych pod cache."
+    },
+    {
+     "q": [
+      "czy oiejq dziala na macu",
+      "sio2jail na macos",
+      "jak mierzyc czas oi na windowsie"
+     ],
+     "a": "`sio2jail` i `oiejq` działają tylko na Linuksie — na macOS potrzebna jest maszyna wirtualna lub kontener z Linuksem. Na Windows i Linuksie działa starszy `oitimetool` (ten sam model, zbliżone wyniki)."
+    }
+   ],
+   "related": [
+    "oi-rules-scoring",
+    "oi-rules-technical",
+    "oi-complexity-limits"
+   ]
+  },
+  {
+   "id": "oi-rules-stage1",
+   "title": "I etap OI: tura zdalna i tura szkolna — co wolno, czego nie, ile zgłoszeń (XXXIV OI)",
+   "category": "OI praktyka",
+   "tags": [
+    "regulamin",
+    "I etap",
+    "tura zdalna",
+    "tura szkolna",
+    "pierwszy etap",
+    "Edytor OI",
+    "aplikacja OI",
+    "sesja próbna",
+    "forum",
+    "źródła",
+    "zgłoszenia",
+    "uruchomienia próbne"
+   ],
+   "aliases": [
+    "pierwszy etap oi zasady",
+    "tura szkolna oi",
+    "tura zdalna oi",
+    "co wolno na turze szkolnej",
+    "co wolno w pierwszym etapie oi",
+    "czy w pierwszym etapie mozna korzystac z internetu",
+    "czy mozna korzystac z gotowych kodow w i etapie",
+    "edytor oi",
+    "aplikacja oi",
+    "sio2qr",
+    "co mozna zabrac na ture szkolna",
+    "czy moge wgrac swoje pliki na zawody",
+    "ile zgloszen w pierwszym etapie"
+   ],
+   "summary": "I etap = tura zdalna (w domu, 12.10–16.11.2026, wolno korzystać ze źródeł z podaniem ich w komentarzu) + tura szkolna (20.11.2026, 12:00–15:00, 2 zadania, komputer od szkoły, internet tylko SIO/OI/Edytor OI i dokumentacja, zakaz AI). Wynik I etapu = suma obu tur; 50 zgłoszeń na zadanie.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Rejestracja:** w SIO olimpiady (`sio2.mimuw.edu.pl`) — szkoła i uczeń, do 12.11.2026, 23:59. Jedno konto na osobę (więcej kont = ryzyko dyskwalifikacji).\n\n**Tura zdalna (12.10–16.11.2026):**\n- Rozwiązujesz w domu wybrane zadania (nie musisz wszystkich), samodzielnie.\n- Wysyłasz przez SIO do **16.11.2026, 12:00** (awaryjnie list polecony nadany do 16.11). Zachowaj e-mail z potwierdzeniem.\n- Wolno korzystać z **dowolnych ogólnodostępnych źródeł** (literatura, kody, narzędzia z internetu), pod warunkiem że w komentarzu w rozwiązaniu **dokładnie podasz źródła**.\n- Na Forum w SIO nie wolno dyskutować metod rozwiązań ani złożoności (grozi dyskwalifikacja). Testy można wymieniać tylko na Forum; programy sprawdzające wolno publikować, jeśli nie są istotną częścią rozwiązania. Nie wolno używać cudzych serwisów sprawdzających te zadania."
+    },
+    {
+     "type": "text",
+     "md": "**Tura szkolna (20.11.2026):** wgrywanie danych 10:30–11:00, sesja próbna 11:00–11:30 (nie liczy się), zawody **12:00–15:00**. Dwa zadania po 100 pkt; po wysłaniu widzisz tylko wynik na testach przykładowych. Wynik I etapu = tura zdalna + tura szkolna. Startować może tylko ktoś, kto wysłał co najmniej jedno rozwiązanie w turze zdalnej. Potrzebna legitymacja szkolna."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Tura szkolna: wolno",
+      "Tura szkolna: nie wolno"
+     ],
+     "rows": [
+      [
+       "Komputer od szkoły (koordynatora) i zainstalowane na nim programy: IDE, kompilator C++, Python, debuger, edytory, kalkulator, aplikacja OI",
+       "Narzędzia i strony oparte na sztucznej inteligencji (także zainstalowane na komputerze)"
+      ],
+      [
+       "Internet: SIO, oi.edu.pl, Edytor OI (ide.sio2.mimuw.edu.pl) i dokumentacja C++/biblioteki standardowej/Pythona",
+       "Inne strony internetowe"
+      ],
+      [
+       "Wgranie własnych danych przed sesją próbną (pliki tekstowe, kody źródłowe, PDF — rzędu kilkunastu MB)",
+       "Instalowanie własnych aplikacji"
+      ],
+      [
+       "Własne puste kartki, notes, długopisy, ołówki",
+       "Książki, notatki, dyski, własny kalkulator, telefon i inne własne urządzenia, drukarka"
+      ],
+      [
+       "Pytania i ogłoszenia przez SIO",
+       "Komunikowanie się z innymi zawodnikami"
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "md": "**Zgłoszenia w I etapie:** każde zadanie można zgłosić w SIO najwyżej **50 razy** (zgłoszenia, które się nie skompilowały, też się liczą) i wykonać do **50 uruchomień próbnych** na własnym teście (nie liczą się do limitu, SIO nie sprawdza wtedy poprawności). Zgłoszenia są sprawdzane na testach przykładowych; przy niektórych zadaniach od razu widać punkty.\n\n**Aplikacja OI (sio2qr):** awaryjne wysyłanie, gdy SIO nie działa lub nie ma internetu. Po zawodach trzeba wysłać dokładnie ten sam plik na adres podany w instrukcji. Zapoznaj się z nią **przed** zawodami.\n\n**Awaria komputera:** zgłoś osobie pilnującej — czas zostanie przedłużony o czas naprawy. Wysyłaj często (zgłoszenie w SIO to też kopia zapasowa).\n\n**Po zawodach:** wstępna ocena od 27.11.2026, reklamacje do 2.12.2026 (włącznie), wyniki 4.12.2026 po 20:00."
+    },
+    {
+     "type": "tip",
+     "md": "Źródło: regulamin i „Zasady organizacji zawodów” XXXIV OI (rok szkolny 2026/2027) ze strony `oi.edu.pl` (zakładka **Przepisy**), stan na 19.11.2026. Daty, wersje kompilatorów i limity zmieniają się co roku — przed zawodami sprawdź aktualną wersję."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "co wolno na turze szkolnej",
+      "zasady tury szkolnej",
+      "co jest zabronione na turze szkolnej oi",
+      "czy na turze szkolnej jest internet",
+      "tura szkolna oi zasady"
+     ],
+     "a": "Na turze szkolnej (20.11.2026, 12:00–15:00) pracujesz tylko na komputerze od szkoły. Z internetu wolno używać SIO, oi.edu.pl, Edytora OI (ide.sio2.mimuw.edu.pl) i dokumentacji C++/Pythona. Zabronione są narzędzia AI, inne strony, książki, notatki, własne urządzenia (telefon, dyski, kalkulator) i rozmowy z innymi. Wolno korzystać z programów na komputerze, z własnych pustych kartek i długopisów oraz z danych wgranych przed sesją próbną."
+    },
+    {
+     "q": [
+      "co moge zabrac na ture szkolna",
+      "czy moge wgrac swoje pliki na ture szkolna",
+      "czy moge miec swoj szablon na zawodach",
+      "czy moge wgrac biblioteczke kodow na oi",
+      "czy moge przyniesc swoje programy na ture szkolna"
+     ],
+     "a": "Tak, ale tylko jako dane: przed sesją próbną możesz wgrać na komputer swoje pliki (teksty, kody źródłowe, PDF) o łącznej objętości rzędu kilkunastu MB — na wgrywanie danych z internetu jest czas 10:30–11:00, jeśli nie zrobiłeś tego wcześniej. Nie wolno instalować własnych aplikacji, a w trakcie zawodów korzystać z własnych dysków i urządzeń. Wgraj np. szablon, sprawdzone implementacje i krótką ściągę."
+    },
+    {
+     "q": [
+      "czy w pierwszym etapie mozna korzystac z internetu",
+      "czy w turze zdalnej mozna korzystac z gotowych kodow",
+      "czy mozna kopiowac kod z internetu na oi",
+      "czy moge uzyc kodu z ksiazki w i etapie",
+      "zrodla w turze zdalnej"
+     ],
+     "a": "W turze zdalnej wolno korzystać z dowolnych ogólnodostępnych źródeł (literatura, kody, narzędzia z internetu), ale w komentarzu w rozwiązaniu trzeba precyzyjnie podać, z czego korzystałeś. Rozwiązanie musi być samodzielne: nie wolno pracować w zespole ani dyskutować metod rozwiązania z innymi."
+    },
+    {
+     "q": [
+      "ile razy moge wyslac rozwiazanie w pierwszym etapie",
+      "limit zgloszen i etap",
+      "ile zgloszen na zadanie oi",
+      "czy bledy kompilacji licza sie do limitu"
+     ],
+     "a": "W I etapie każde zadanie można zgłosić w SIO najwyżej 50 razy; zgłoszenia, które się nie skompilowały, też się liczą. Dodatkowo masz do 50 uruchomień próbnych na własnym teście i one nie wliczają się do limitu."
+    },
+    {
+     "q": [
+      "co to jest edytor oi",
+      "ide sio2",
+      "czy na turze szkolnej jest debugger"
+     ],
+     "a": "Edytor OI (`ide.sio2.mimuw.edu.pl`) to środowisko w przeglądarce dostępne podczas tury szkolnej: piszesz w nim w C++ lub Pythonie, kompilujesz i uruchamiasz na własnych danych, a wbudowany debuger pozwala iść krok po kroku i podglądać zmienne. Na komputerze są też lokalne IDE, kompilator i debuger."
+    },
+    {
+     "q": [
+      "co to jest aplikacja oi",
+      "sio2qr",
+      "co jak sio nie dziala na zawodach",
+      "jak wyslac rozwiazanie bez internetu"
+     ],
+     "a": "Aplikacja OI (sio2qr) służy do awaryjnego wysłania rozwiązania, gdy SIO nie działa lub nie ma internetu. Zapisz plik, którego już nie będziesz zmieniać, i podaj go aplikacji. Po zawodach wyślij dokładnie ten plik na adres z instrukcji na stronie „Aplikacja OI”. Poznaj ją przed zawodami."
+    },
+    {
+     "q": [
+      "kto moze wziac udzial w turze szkolnej",
+      "czy musze cos wyslac w turze zdalnej zeby pisac ture szkolna"
+     ],
+     "a": "Do tury szkolnej może przystąpić tylko uczestnik, który wysłał co najmniej jedno rozwiązanie w turze zdalnej. Trzeba mieć legitymację szkolną."
+    },
+    {
+     "q": [
+      "ile zadan jest na turze szkolnej",
+      "ile trwa tura szkolna",
+      "o ktorej jest tura szkolna"
+     ],
+     "a": "W XXXIV OI tura szkolna to dwa zadania po 100 pkt, 20.11.2026 w godz. 12:00–15:00. Wcześniej jest wgrywanie danych (10:30–11:00) i sesja próbna (11:00–11:30), która się nie liczy."
+    },
+    {
+     "q": [
+      "czy na forum sio mozna rozmawiac o zadaniach",
+      "forum oi zasady",
+      "czy moge wymieniac testy z innymi"
+     ],
+     "a": "Na Forum SIO nie wolno rozmawiać o metodach rozwiązania ani złożoności zadań tury zdalnej — grozi za to dyskwalifikacja. Testy można wymieniać tylko na Forum, a programy sprawdzające wolno publikować, jeśli nie są istotną częścią rozwiązania. Nie wolno używać cudzych serwisów sprawdzających te zadania."
+    },
+    {
+     "q": [
+      "kiedy wyniki pierwszego etapu",
+      "kiedy reklamacje pierwszy etap"
+     ],
+     "a": "Wstępną ocenę zobaczysz w SIO od 27.11.2026, reklamacje można składać do 2.12.2026 włącznie, a wyniki I etapu będą 4.12.2026 po 20:00. Reklamacje nie mogą dotyczyć doboru testów, limitów, kompilatorów ani sposobu oceny."
+    }
+   ],
+   "related": [
+    "oi-rules-overview",
+    "oi-rules-conduct",
+    "oi-rules-stage23",
+    "oi-rules-participation",
+    "oi-sio2"
+   ]
+  },
+  {
+   "id": "oi-rules-stage23",
+   "title": "II i III etap OI (finał): sesje po 5 godzin, pytania do Jury, 25 zgłoszeń, reklamacje",
+   "category": "OI praktyka",
+   "tags": [
+    "regulamin",
+    "II etap",
+    "III etap",
+    "finał",
+    "sesja próbna",
+    "Jury",
+    "pytania",
+    "reklamacje",
+    "submit",
+    "ocen",
+    "Komisja Regulaminowa"
+   ],
+   "aliases": [
+    "drugi etap oi zasady",
+    "final oi zasady",
+    "trzeci etap oi",
+    "jak wyglada drugi etap oi",
+    "jak wyglada final oi",
+    "pytania do jury oi",
+    "ile zgloszen w drugim etapie",
+    "skrypt ocen",
+    "skrypt submit",
+    "co wolno na drugim etapie",
+    "ile trwa sesja na oi"
+   ],
+   "summary": "II etap (9–11.02.2027) i finał (6–9.04.2027): trzygodzinna sesja próbna i dwie sesje po 5 godzin w różnych dniach, na komputerze z Linuksem od organizatora. Pytania o treść tylko w pierwszych 2 godz. (odpowiedzi Tak/Nie…), 25 zgłoszeń i 25 uruchomień próbnych na zadanie.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Przebieg:** trzygodzinna sesja próbna (nie liczy się), potem dwie **pięciogodzinne** sesje w różnych dniach. Przed sesją próbną masz 45 minut na sprawdzenie sprzętu i oprogramowania, a po niej podpisujesz akceptację stanowiska. Komputer z **Linuksem**, stanowiska losowane, wolno używać tylko sprzętu, oprogramowania i materiałów od organizatora i niczego nie wolno wynosić z sali. Potrzebna legitymacja szkolna.\n\n**Podczas sesji:**\n- przez pierwszą godzinę nie wolno wyjść z sali; spóźnienie ponad godzinę = brak dopuszczenia tego dnia;\n- pytania o treść zadań tylko w **pierwszych dwóch godzinach**; odpowiedź to jedna z: „Tak”, „Nie”, „Niepoprawne pytanie”, „Patrz ogłoszenie publiczne”, „Odpowiedź wynika z treści zadania lub Jury nie może udzielić odpowiedzi”; pytania techniczne przez całą sesję;\n- czytaj publiczne odpowiedzi w SIO;\n- rozmowy z innymi zawodnikami są zabronione pod rygorem dyskwalifikacji;\n- wolno drukować i robić kopie zapasowe (jak w dokumencie „Wybrane polecenia”);\n- wysyłasz przez przeglądarkę albo skryptem **`submit`** (działa też bez sieci — wyśle, gdy łączność wróci);\n- po zgłoszeniu SIO sprawdza program na testach przykładowych (te same testy sprawdza lokalny skrypt **`ocen`**); wyniki tych testów nie liczą się do klasyfikacji;\n- każde zadanie można zgłosić **najwyżej 25 razy**, plus do 25 uruchomień próbnych na własnym teście;\n- w **finale** zwykle od razu widać punkty za zgłoszenie (pod koniec zawodów może to być wyłączone)."
+    },
+    {
+     "type": "text",
+     "md": "**Reklamacje:** przed wyjściem z sali przez członka Komisji Regulaminowej; ok. 2 godzin po każdej sesji dostajesz raport na wybranym zestawie testów (w finale masz pół godziny na reklamacje). Po II etapie pełną ocenę zobaczysz w SIO od 11.02.2027, 20:00, a reklamacje składasz do 16.02.2027, 24:00. Nie są uwzględniane reklamacje dotyczące doboru testów, limitów czasu, kompilatorów i sposobu oceny ani awarii sieci, wydruków czy kopii zapasowych.\n\n**Organizacja:** jesteś zwolniony z zajęć szkolnych; przy zawodach stacjonarnych masz bezpłatne zakwaterowanie, wyżywienie i zwrot kosztów przejazdu."
+    },
+    {
+     "type": "tip",
+     "md": "Źródło: regulamin i „Zasady organizacji zawodów” XXXIV OI (rok szkolny 2026/2027) ze strony `oi.edu.pl` (zakładka **Przepisy**), stan na 19.11.2026. Daty, wersje kompilatorów i limity zmieniają się co roku — przed zawodami sprawdź aktualną wersję."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "jak wyglada drugi etap oi",
+      "jak wyglada final oi",
+      "ile trwa sesja na drugim etapie",
+      "ile dni trwa final oi",
+      "zasady drugiego etapu"
+     ],
+     "a": "II etap i finał to trzygodzinna sesja próbna i dwie sesje po 5 godzin w różnych dniach, na komputerze z Linuksem od organizatora. W XXXIV OI II etap jest 9–11.02.2027, a finał 6–9.04.2027. Wolno korzystać tylko ze sprzętu, oprogramowania i materiałów od organizatora."
+    },
+    {
+     "q": [
+      "czy mozna zadawac pytania na oi",
+      "pytania do jury",
+      "co odpowiada jury",
+      "do kiedy mozna pytac o tresc"
+     ],
+     "a": "Tak, ale pytania o treść tylko w pierwszych dwóch godzinach sesji. Jury odpowiada jednym z: „Tak”, „Nie”, „Niepoprawne pytanie”, „Patrz ogłoszenie publiczne” albo „Odpowiedź wynika z treści zadania lub Jury nie może udzielić odpowiedzi”. Pytania techniczne możesz zadawać przez całą sesję."
+    },
+    {
+     "q": [
+      "ile zgloszen w drugim etapie",
+      "limit zgloszen w finale",
+      "ile razy moge wyslac na finale"
+     ],
+     "a": "W II i III etapie każde zadanie możesz zgłosić najwyżej 25 razy. Dodatkowo masz do 25 uruchomień próbnych na własnym teście, które nie liczą się do limitu."
+    },
+    {
+     "q": [
+      "co to jest skrypt ocen",
+      "co to jest skrypt submit",
+      "jak wysylac na drugim etapie"
+     ],
+     "a": "`ocen` sprawdza Twój program lokalnie na tych samych testach przykładowych, których używa SIO przy wstępnym sprawdzeniu. `submit` wysyła rozwiązanie do SIO, także gdy sieć chwilowo nie działa (wyśle po odzyskaniu łączności). Wysyłać można też przez przeglądarkę."
+    },
+    {
+     "q": [
+      "czy na finale widac punkty od razu",
+      "czy w drugim etapie widac wynik"
+     ],
+     "a": "W finale zwykle od razu widać punkty za zgłoszenie (przy dużym obciążeniu, zwłaszcza pod koniec, może to być wyłączone). W II etapie po zgłoszeniu widzisz wynik na testach przykładowych."
+    },
+    {
+     "q": [
+      "czy mozna sie spoznic na oi",
+      "czy moge wyjsc z sali na oi"
+     ],
+     "a": "Przez pierwszą godzinę sesji nie wolno opuszczać sali. Kto spóźni się ponad godzinę, nie zostanie tego dnia dopuszczony do zawodów."
+    },
+    {
+     "q": [
+      "jak zlozyc reklamacje na oi",
+      "reklamacje drugi etap",
+      "kiedy reklamacje w finale"
+     ],
+     "a": "Reklamację złożysz przed wyjściem z sali (przez członka Komisji Regulaminowej) albo po raporcie, który pojawia się ok. 2 godziny po sesji (w finale masz na to pół godziny). Po II etapie reklamacje przez SIO od 11.02.2027 20:00 do 16.02.2027 24:00. Nie dotyczą doboru testów, limitów, kompilatorów ani sposobu oceny."
+    },
+    {
+     "q": [
+      "czy za drugi etap trzeba placic",
+      "czy oi zwraca koszty przejazdu",
+      "czy jest nocleg na oi"
+     ],
+     "a": "Nie płacisz. Przy zawodach stacjonarnych II i III etapu masz bezpłatne zakwaterowanie, wyżywienie i zwrot kosztów przejazdu, a na czas zawodów jesteś zwolniony z zajęć szkolnych."
+    }
+   ],
+   "related": [
+    "oi-rules-overview",
+    "oi-rules-stage1",
+    "oi-rules-titles",
+    "oi-strategy"
+   ]
+  },
+  {
+   "id": "oi-rules-titles",
+   "title": "Finalista i laureat OI: uprawnienia (matura, ocena, studia), medale, reprezentacja, obóz",
+   "category": "OI praktyka",
+   "tags": [
+    "regulamin",
+    "finalista",
+    "laureat",
+    "uprawnienia",
+    "matura",
+    "zwolnienie z matury",
+    "studia",
+    "IOI",
+    "CEOI",
+    "BOI",
+    "EGOI",
+    "obóz",
+    "medale",
+    "wyróżnienie"
+   ],
+   "aliases": [
+    "kto to jest finalista oi",
+    "kto to jest laureat oi",
+    "co daje finalista oi",
+    "co daje laureat oi",
+    "czy finalista jest zwolniony z matury",
+    "zwolnienie z matury z informatyki",
+    "olimpiada a studia",
+    "jak sie dostac na ioi",
+    "oboz kreczmara",
+    "czy finalista dostaje szostke",
+    "uprawnienia laureatow"
+   ],
+   "summary": "Finalista = zakwalifikowany do III etapu. Laureat (I, II, III miejsca; medale złote, srebrne, brązowe) = finalista z pierwszej połowy wyników z wyraźnie wyróżniającym się wynikiem. Laureaci i finaliści mają najwyższą ocenę z informatyki, zwolnienie z matury z informatyki i ułatwiony lub wolny wstęp na studia.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Tytuły:**\n- **Finalista** — każdy zakwalifikowany do zawodów III stopnia (finału).\n- **Laureat** — uczestnik finału z pierwszej połowy klasyfikacji, którego wynik Komitet uzna za zdecydowanie wyróżniający się; laureaci I, II i III miejsca dostają medale złote, srebrne i brązowe. Laureatów jest najwyżej połowa finalistów.\n- **Zwycięzca** — osoba z najlepszym wynikiem w finale.\n- Komitet może też wyróżnić uczestników II etapu oraz (przy bardzo wysokim poziomie) finalistów niebędących laureatami."
+    },
+    {
+     "type": "text",
+     "md": "**Uprawnienia laureatów i finalistów (ZOZ § 6):**\n- najwyższa roczna (lub końcowa) ocena klasyfikacyjna z informatyki;\n- **zwolnienie z egzaminu maturalnego z informatyki**, także gdy szkoła nie uczy informatyki;\n- ułatwiony lub wolny wstęp na uczelnie, których senaty podjęły taką uchwałę (zasady w tych uchwałach);\n- zaświadczenie od Komitetu.\n\n**Dalej:** na podstawie wyników Komitet wybiera reprezentację na IOI (Międzynarodowa Olimpiada Informatyczna), CEOI (Środkowoeuropejska), BOI (Bałtycka), EGOI (Europejska Olimpiada Informatyczna Dziewcząt) i inne zawody. Reprezentanci są zapraszani na bezpłatny **Obóz Naukowo-Treningowy im. Antoniego Kreczmara** w wakacje; Komitet może zaprosić też innych finalistów, którzy nie są w ostatniej klasie. Finaliści i laureaci mogą też dostać nagrody i stypendia."
+    },
+    {
+     "type": "table",
+     "headers": [
+      "Zawody międzynarodowe 2027",
+      "Gdzie i kiedy (terminarz OI)"
+     ],
+     "rows": [
+      [
+       "BOI (Bałtycka)",
+       "Bergen, Norwegia, 14–18.04.2027"
+      ],
+      [
+       "CEOI (Środkowoeuropejska)",
+       "Poznań, 30.08–5.09.2027"
+      ],
+      [
+       "IOI (Międzynarodowa)",
+       "Poczdam, Niemcy, 12–19.09.2027"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "md": "Źródło: regulamin i „Zasady organizacji zawodów” XXXIV OI (rok szkolny 2026/2027) ze strony `oi.edu.pl` (zakładka **Przepisy**), stan na 19.11.2026. Daty, wersje kompilatorów i limity zmieniają się co roku — przed zawodami sprawdź aktualną wersję."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "kto to jest finalista oi",
+      "jak zostac finalista oi",
+      "co to znaczy finalista olimpiady"
+     ],
+     "a": "Finalistą OI zostaje każdy, kto zakwalifikował się do zawodów III stopnia (finału). W XXXIV OI to ok. 100 osób z najlepszymi wynikami II etapu (liczba może się zmienić najwyżej o 30%)."
+    },
+    {
+     "q": [
+      "kto to jest laureat oi",
+      "jak zostac laureatem oi",
+      "ilu jest laureatow oi",
+      "laureat a finalista roznica"
+     ],
+     "a": "Laureat to uczestnik finału z pierwszej połowy klasyfikacji, którego wynik Komitet uzna za zdecydowanie wyróżniający się. Laureatów jest najwyżej połowa finalistów; dzielą się na laureatów I, II i III miejsca (medale złote, srebrne, brązowe). Finalistą jest każdy, kto dostał się do finału."
+    },
+    {
+     "q": [
+      "co daje finalista oi",
+      "co daje laureat oi",
+      "czy finalista jest zwolniony z matury",
+      "czy oi zwalnia z matury",
+      "zwolnienie z matury z informatyki",
+      "czy finalista dostaje szostke z informatyki"
+     ],
+     "a": "Laureaci i finaliści OI dostają najwyższą roczną (lub końcową) ocenę z informatyki, są zwolnieni z matury z informatyki (nawet jeśli szkoła jej nie uczy) i mają ułatwiony lub wolny wstęp na uczelnie, które podjęły taką uchwałę. Zaświadczenie wydaje Komitet."
+    },
+    {
+     "q": [
+      "czy oi pomaga dostac sie na studia",
+      "olimpiada informatyczna a studia",
+      "czy finalista dostaje sie na studia"
+     ],
+     "a": "Tak. Laureaci i finaliści mają ułatwiony lub wolny wstęp na uczelnie, których senaty podjęły taką uchwałę — szczegóły (kierunki, lata) są w uchwałach rekrutacyjnych konkretnej uczelni."
+    },
+    {
+     "q": [
+      "jak sie dostac na ioi",
+      "jak trafic do reprezentacji polski",
+      "kto jedzie na ceoi",
+      "kto jedzie na boi"
+     ],
+     "a": "Reprezentację na IOI, CEOI, BOI, EGOI i inne zawody międzynarodowe wybiera Komitet na podstawie wyników Olimpiady i regulaminów tych zawodów. W 2027 r.: BOI w Bergen (14–18.04), CEOI w Poznaniu (30.08–5.09), IOI w Poczdamie (12–19.09)."
+    },
+    {
+     "q": [
+      "co to jest oboz kreczmara",
+      "oboz olimpiady informatycznej",
+      "kto jedzie na oboz oi"
+     ],
+     "a": "To bezpłatny Obóz Naukowo-Treningowy im. Antoniego Kreczmara w wakacje. Zaproszenie dostają reprezentanci Polski na olimpiady międzynarodowe, a Komitet może zaprosić też innych finalistów, którzy nie są w ostatniej klasie szkoły."
+    },
+    {
+     "q": [
+      "kto wygrywa oi",
+      "kto jest zwyciezca olimpiady"
+     ],
+     "a": "Zwycięzcą Olimpiady zostaje każda osoba, która osiągnęła najlepszy wynik w finale (III etapie)."
+    }
+   ],
+   "related": [
+    "oi-rules-overview",
+    "oi-rules-stage23",
+    "oi-rules-participation"
+   ]
+  },
+  {
+   "id": "oi-rules-conduct",
+   "title": "Samodzielność na OI: dyskwalifikacja, AI, jedno konto, tajemnica rozwiązań, reklamacje i odwołania",
+   "category": "OI praktyka",
+   "tags": [
+    "regulamin",
+    "samodzielność",
+    "dyskwalifikacja",
+    "sztuczna inteligencja",
+    "AI",
+    "ChatGPT",
+    "ściąganie",
+    "plagiat",
+    "konto SIO",
+    "reklamacje",
+    "odwołanie",
+    "tajemnica"
+   ],
+   "aliases": [
+    "czy mozna uzywac ai na oi",
+    "czy mozna uzywac chatgpt na oi",
+    "za co dyskwalifikacja na oi",
+    "czy mozna rozwiazywac oi z kolega",
+    "dyskwalifikacja oi",
+    "czy moge miec dwa konta w sio",
+    "jak zlozyc reklamacje oi",
+    "odwolanie od wyniku oi",
+    "sciaganie na oi",
+    "plagiat na oi"
+   ],
+   "summary": "Zawody są indywidualne: rozwiązania zespołowe, niesamodzielne lub o nieustalonym autorstwie nie są oceniane, grozi dyskwalifikacja (i informacja do dyrektora szkoły). Jedno konto w SIO, tajemnica rozwiązań do końca zawodów, zakaz AI na turze szkolnej. Reklamacje — po każdym etapie, decyzje Komitetu są ostateczne.",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Samodzielność (Regulamin § 15, ZOZ § 3):**\n- Rozwiązania zespołowe, niesamodzielne, niezgodne z ZOZ lub takie, których autorstwa nie da się ustalić, **nie są oceniane**. Za pracę niesamodzielną lub zespołową grozi dyskwalifikacja, a Komitet może powiadomić dyrektora szkoły.\n- Dyskwalifikacja grozi też za inne rażące łamanie Regulaminu lub ZOZ.\n- Do końca zawodów musisz zachować swoje rozwiązania w tajemnicy (nie publikuj kodu, nie pokazuj go innym).\n- Jedno konto w SIO na osobę — korzystanie z kilku kont może skończyć się dyskwalifikacją.\n- Tura zdalna: źródła wolno wykorzystywać, ale trzeba je precyzyjnie wymienić w komentarzu; nie wolno dyskutować metod rozwiązań na Forum ani używać cudzych serwisów sprawdzających te zadania.\n- Tura szkolna: zakaz narzędzi i stron opartych na **sztucznej inteligencji** (także zainstalowanych na komputerze) i komunikowania się z innymi. II i III etap: tylko materiały i oprogramowanie od organizatora, rozmowy z innymi grożą dyskwalifikacją."
+    },
+    {
+     "type": "text",
+     "md": "**Reklamacje i odwołania (Regulamin § 16):** po każdym etapie możesz zobaczyć wstępną ocenę i złożyć reklamację w terminie z ZOZ. Nie są uwzględniane reklamacje dotyczące doboru testów, limitów czasu, kompilatorów i sposobu oceny. Rozpatruje je Komitet, a jego decyzje są ostateczne."
+    },
+    {
+     "type": "tip",
+     "md": "Źródło: regulamin i „Zasady organizacji zawodów” XXXIV OI (rok szkolny 2026/2027) ze strony `oi.edu.pl` (zakładka **Przepisy**), stan na 19.11.2026. Daty, wersje kompilatorów i limity zmieniają się co roku — przed zawodami sprawdź aktualną wersję."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "czy mozna uzywac ai na oi",
+      "czy mozna uzywac chatgpt na oi",
+      "czy moge uzyc sztucznej inteligencji na olimpiadzie",
+      "czy copilot jest dozwolony na oi",
+      "ai na turze szkolnej"
+     ],
+     "a": "Na turze szkolnej wprost zabronione są narzędzia i strony oparte na sztucznej inteligencji (także zainstalowane na komputerze). Na II i III etapie wolno używać tylko oprogramowania od organizatora. W turze zdalnej obowiązuje samodzielność, a każde wykorzystane źródło trzeba precyzyjnie podać w komentarzu — rozwiązanie, którego autorstwa nie da się ustalić, nie jest oceniane."
+    },
+    {
+     "q": [
+      "za co mozna zostac zdyskwalifikowanym na oi",
+      "dyskwalifikacja oi",
+      "co grozi za sciaganie na oi"
+     ],
+     "a": "Za rozwiązania zespołowe lub niesamodzielne, korzystanie z kilku kont w SIO, dyskusje o metodach rozwiązań na Forum w trakcie tury zdalnej, komunikowanie się z innymi podczas zawodów i inne rażące łamanie Regulaminu lub ZOZ. Komitet może też powiadomić dyrektora szkoły."
+    },
+    {
+     "q": [
+      "czy mozna rozwiazywac oi z kolega",
+      "czy moge konsultowac zadania z innymi",
+      "czy moge pokazac komus swoj kod w trakcie oi"
+     ],
+     "a": "Nie. OI jest indywidualna: rozwiązania zespołowe lub niesamodzielne nie są oceniane i grożą dyskwalifikacją, a swoje rozwiązania musisz trzymać w tajemnicy do końca zawodów."
+    },
+    {
+     "q": [
+      "czy moge miec dwa konta w sio",
+      "drugie konto sio oi"
+     ],
+     "a": "Nie. Każdy uczestnik powinien korzystać z dokładnie jednego konta w SIO; więcej kont może skończyć się dyskwalifikacją."
+    },
+    {
+     "q": [
+      "czy moge opublikowac rozwiazanie zadania z oi",
+      "kiedy moge pokazac swoj kod z oi"
+     ],
+     "a": "Dopiero po zakończeniu zawodów — do tego czasu obowiązuje tajemnica rozwiązań. Komitet może też sam opublikować rozwiązania osób zakwalifikowanych dalej, wyróżnionych lub laureatów."
+    },
+    {
+     "q": [
+      "jak zlozyc reklamacje na oi",
+      "odwolanie od wyniku oi",
+      "czy mozna reklamowac limit czasu",
+      "reklamacja testow oi"
+     ],
+     "a": "Po każdym etapie widzisz wstępną ocenę i możesz złożyć reklamację w terminie z ZOZ (w I etapie przez SIO do 2.12.2026). Reklamacje dotyczące doboru testów, limitów czasu, kompilatorów i sposobu oceny nie są uwzględniane. Decyzje Komitetu są ostateczne."
+    }
+   ],
+   "related": [
+    "oi-rules-overview",
+    "oi-rules-stage1",
+    "oi-rules-stage23"
+   ]
+  },
+  {
+   "id": "oi-rules-participation",
+   "title": "Kto może startować w OI i jak się zarejestrować (SIO olimpiady, termin, szkoła)",
+   "category": "OI praktyka",
+   "tags": [
+    "regulamin",
+    "rejestracja",
+    "uczestnicy",
+    "kto może startować",
+    "szkoła podstawowa",
+    "liceum",
+    "technikum",
+    "SIO",
+    "sio2.mimuw.edu.pl",
+    "zgoda rodziców",
+    "dane osobowe"
+   ],
+   "aliases": [
+    "kto moze startowac w oi",
+    "jak sie zapisac na oi",
+    "rejestracja oi",
+    "czy podstawowka moze startowac w oi",
+    "czy technikum moze startowac w oi",
+    "na jakim sio jest oi",
+    "gdzie wysyla sie rozwiazania oi",
+    "do kiedy rejestracja na oi",
+    "czy trzeba zgody rodzicow na oi"
+   ],
+   "summary": "Startują uczniowie liceów, techników i szkół branżowych, a także szkół podstawowych. Rejestracja w SIO olimpiady (`sio2.mimuw.edu.pl`) — szkoła i uczeń, w XXXIV OI do 12.11.2026, 23:59. Jedno konto, zgoda na przetwarzanie danych (u niepełnoletnich — rodziców).",
+   "level": 1,
+   "body": [
+    {
+     "type": "text",
+     "md": "**Kto:** uczniowie czteroletnich liceów, pięcioletnich techników, szkół branżowych I i II stopnia; mogą też startować uczniowie szkół podstawowych (zwłaszcza z indywidualnym tokiem nauki).\n\n**Rejestracja:** w Systemie Internetowym Olimpiady — **`sio2.mimuw.edu.pl`** (to inny serwer niż szkolne SIO2 czy Szkopuł). Rejestruje się **i szkoła, i uczeń**. W XXXIV OI termin minął 12.11.2026 o 23:59 (w szczególnych przypadkach do 14.11, 12:00, po kontakcie z organizatorami). Bez rejestracji nie można wziąć udziału.\n\n**Dane:** rejestracja wymaga zgody na przetwarzanie danych osobowych (u osoby niepełnoletniej — zgody rodziców lub opiekunów). Bez zgody prace nie są brane pod uwagę. Do kwalifikacji dalej trzeba uzupełnić w SIO wszystkie wymagane dane. Jedno konto na osobę."
+    },
+    {
+     "type": "tip",
+     "md": "Źródło: regulamin i „Zasady organizacji zawodów” XXXIV OI (rok szkolny 2026/2027) ze strony `oi.edu.pl` (zakładka **Przepisy**), stan na 19.11.2026. Daty, wersje kompilatorów i limity zmieniają się co roku — przed zawodami sprawdź aktualną wersję."
+    }
+   ],
+   "qa": [
+    {
+     "q": [
+      "kto moze startowac w oi",
+      "czy uczen podstawowki moze startowac w oi",
+      "czy technikum moze brac udzial w oi",
+      "dla kogo jest olimpiada informatyczna"
+     ],
+     "a": "OI jest dla uczniów czteroletnich liceów, pięcioletnich techników i szkół branżowych I i II stopnia. Mogą w niej startować także uczniowie szkół podstawowych. Młodsi mają też osobną Olimpiadę Informatyczną Juniorów (OIJ)."
+    },
+    {
+     "q": [
+      "jak sie zapisac na oi",
+      "rejestracja na oi",
+      "do kiedy rejestracja na oi",
+      "jak zarejestrowac sie na olimpiade"
+     ],
+     "a": "Rejestracja jest w SIO olimpiady: `sio2.mimuw.edu.pl`. Muszą się zarejestrować zarówno szkoła, jak i uczeń. W XXXIV OI termin minął 12.11.2026 o 23:59 (w szczególnych przypadkach do 14.11, 12:00, po kontakcie z organizatorami). Bez rejestracji nie można startować."
+    },
+    {
+     "q": [
+      "na jakim sio jest oi",
+      "gdzie wysyla sie rozwiazania na oi",
+      "czy oi jest na szkopule",
+      "sio2 mimuw"
+     ],
+     "a": "Zawody OI odbywają się w SIO olimpiady: `sio2.mimuw.edu.pl` — to inny serwer niż szkolne SIO2 (np. sio2.staszic.waw.pl) czy Szkopuł. Na Szkopule jest archiwum starych zadań do treningu."
+    },
+    {
+     "q": [
+      "czy trzeba zgody rodzicow na oi",
+      "dane osobowe oi",
+      "rodo oi"
+     ],
+     "a": "Tak, jeśli jesteś niepełnoletni: rejestracja wymaga zgody rodziców lub opiekunów na przetwarzanie danych osobowych (pełnoletni wyrażają ją sami). Bez zgody prace nie są oceniane. Żeby zakwalifikować się dalej, trzeba uzupełnić w SIO wszystkie wymagane dane."
+    },
+    {
+     "q": [
+      "czy oi jest platne",
+      "ile kosztuje udzial w oi"
+     ],
+     "a": "Regulamin nie przewiduje opłat za udział. Na zawodach stacjonarnych II i III etapu zakwaterowanie i wyżywienie są bezpłatne, a koszty przejazdu zwracane."
+    }
+   ],
+   "related": [
+    "oi-rules-overview",
+    "oi-rules-stage1",
+    "oi-sio2"
+   ]
+  }
+ ]
+}

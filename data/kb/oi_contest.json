@@ -24,19 +24,18 @@
     "co to sa podzadania",
     "grupy testow oi",
     "jak sa liczone punkty",
-    "olimpiada informatyczna zasady",
     "oi pierwszy etap"
    ],
-   "summary": "OI ma trzy etapy: I (zdalny, zadania rozwiązywane w domu przez kilka tygodni), II (zawody w okręgach) i III (finał). Każde zadanie jest warte zwykle 100 punktów, rozdzielonych na grupy testów; punkty za grupę dostajesz, gdy program przejdzie wszystkie jej testy w limicie czasu i pamięci.",
+   "summary": "OI ma trzy etapy: I (tura zdalna w domu przez kilka tygodni + trzygodzinna tura szkolna), II (zawody w okręgach) i III (finał). Za zadanie 0–100 punktów w grupach testów; grupę zaliczasz, gdy program przejdzie wszystkie jej testy w limicie czasu i pamięci. Szczegółowe przepisy: artykuły „Regulamin OI…”.",
    "level": 1,
    "body": [
     {
      "type": "text",
-     "md": "**Etapy (w ogólnym zarysie — szczegóły co roku w regulaminie i „Zasadach organizacji zawodów” na stronie OI):**\n- **I etap** — zdalny: kilka zadań do rozwiązania w domu w ciągu kilku tygodni, rozwiązania wysyła się przez system SIO2.\n- **II etap** — zawody stacjonarne w okręgach: sesja próbna i zwykle dwa dni zawodów po kilka godzin.\n- **III etap (finał)** — ogólnopolski, podobny format; najlepsi zostają laureatami i mogą trafić do reprezentacji\n  na olimpiady międzynarodowe (IOI, CEOI, BOI)."
+     "md": "**Etapy (XXXIV OI, 2026/2027 — szczegóły w artykule „Regulamin OI w pigułce”):**\n- **I etap** — **tura zdalna** (zadania rozwiązywane w domu przez kilka tygodni, wysyłane przez SIO) i **tura szkolna** (3 godziny w szkole, 2 zadania). Wynik I etapu to suma obu tur.\n- **II etap** — zawody stacjonarne w okręgach: sesja próbna i dwie sesje po 5 godzin.\n- **III etap (finał)** — ogólnopolski, ten sam format; najlepsi zostają laureatami i mogą trafić do reprezentacji\n  na olimpiady międzynarodowe (IOI, CEOI, BOI, EGOI)."
     },
     {
      "type": "text",
-     "md": "**Jak oceniane są zadania:**\n- Rozwiązanie to program, który czyta dane ze standardowego wejścia i wypisuje wynik na standardowe wyjście.\n- Sprawdzarka uruchamia go na wielu testach. Testy są pogrupowane; **grupa** jest zaliczona tylko wtedy, gdy wszystkie jej\n  testy dadzą poprawny wynik w limicie czasu i pamięci.\n- W treści zwykle jest sekcja o **podzadaniach**: np. „w testach wartych 30% punktów zachodzi n ≤ 1000”. Dzięki temu\n  prostsze (wolniejsze) rozwiązanie też zdobywa punkty.\n- Limity czasu i pamięci są podane w treści dla każdego zadania. Regulamin może przewidywać obniżanie punktów, gdy czas\n  działania zbliża się do limitu — sprawdź aktualne zasady."
+     "md": "**Jak oceniane są zadania:**\n- Rozwiązanie to program w C++ lub Pythonie, który czyta dane ze standardowego wejścia i wypisuje wynik na standardowe wyjście.\n- Sprawdzarka uruchamia go na wielu testach. Testy są pogrupowane; **grupa** jest zaliczona tylko wtedy, gdy wszystkie jej\n  testy dadzą poprawny wynik w limicie czasu i pamięci.\n- W treści zwykle jest sekcja o **podzadaniach**: np. „w testach wartych 30% punktów zachodzi n ≤ 1000”. Dzięki temu\n  prostsze (wolniejsze) rozwiązanie też zdobywa punkty.\n- Limity czasu i pamięci są podane w treści dla każdego zadania. Gdy czas przekroczy **połowę limitu**, punkty za test\n  maleją liniowo do zera — szczegóły w artykule o punktacji według regulaminu."
     },
     {
      "type": "tip",
@@ -49,10 +48,9 @@
       "jak wyglada olimpiada informatyczna",
       "etapy oi",
       "ile jest etapow olimpiady informatycznej",
-      "olimpiada informatyczna zasady",
       "co to jest OI"
      ],
-     "a": "Olimpiada Informatyczna ma trzy etapy: **I** — zdalny (kilka zadań do rozwiązania w domu przez kilka tygodni), **II** —\nzawody w okręgach (sesja próbna + zwykle dwa dni zawodów), **III** — finał ogólnopolski. Zadania są algorytmiczne:\npiszesz program, który dla danych z wejścia wypisuje wynik, a sprawdzarka testuje go automatycznie. Dokładne terminy\ni zasady publikuje co roku komitet na stronie OI."
+     "a": "Olimpiada Informatyczna ma trzy etapy: **I** — tura zdalna (zadania w domu przez kilka tygodni) i tura szkolna (3 godziny w szkole), **II** — zawody w okręgach (sesja próbna + dwie sesje po 5 godzin), **III** — finał. Zadania są algorytmiczne: piszesz program, który dla danych z wejścia wypisuje wynik, a sprawdzarka testuje go automatycznie. Terminy i zasady XXXIV OI są w artykule „Regulamin OI w pigułce”."
     },
     {
      "q": [
@@ -61,7 +59,7 @@
       "ile punktow za zadanie",
       "jak dziala ocenianie zadan"
      ],
-     "a": "Każde zadanie jest warte zwykle 100 punktów. Testy są podzielone na grupy, a każda grupa ma przypisaną liczbę punktów.\nGrupę zaliczasz tylko wtedy, gdy program przejdzie **wszystkie** jej testy (dobra odpowiedź w limicie czasu i pamięci).\nWynik zadania to suma punktów za zaliczone grupy. Szczegóły (np. ewentualne obniżanie punktów za czas bliski limitowi)\nsą w regulaminie danej edycji."
+     "a": "Każde zadanie jest warte 100 punktów, podzielonych na grupy testów. Grupę zaliczasz tylko wtedy, gdy program przejdzie **wszystkie** jej testy (dobra odpowiedź w limicie czasu i pamięci). Gdy czas na teście przekroczy połowę limitu, punkty maleją liniowo do zera, a za grupę liczy się minimum z testów. Twój wynik za zadanie to najlepsze z Twoich zgłoszeń."
     },
     {
      "q": [
@@ -97,7 +95,7 @@
       "czy na oi mozna pisac w pythonie",
       "c++ czy python na olimpiade"
      ],
-     "a": "Lista dozwolonych języków jest w regulaminie danej edycji — C++ jest zawsze dostępny i zdecydowanie najpopularniejszy.\nPython bywa dopuszczony, ale jest wielokrotnie wolniejszy, więc przy ciasnych limitach trudno w nim zdobyć pełne punkty.\nDo zawodów polecamy C++."
+     "a": "W XXXIV OI dozwolone są tylko **C++** (G++ 14.2.0, `-O3 -static -std=c++23`) i **Python** (3.13.5, z NumPy). Limity czasu są wspólne i dobierane pod C++, więc w Pythonie przy ciasnych limitach trudno o pełne punkty. Do zawodów polecamy C++."
     },
     {
      "q": [
@@ -113,7 +111,7 @@
       "co wolno na zawodach",
       "czy mozna korzystac z dokumentacji na oi"
      ],
-     "a": "Na zawodach stacjonarnych (II i III etap) zasady korzystania z materiałów i sieci określa regulamin — zwykle nie ma dostępu\ndo internetu, a dozwolona bywa dokumentacja języka udostępniona na komputerach. W I etapie (w domu) obowiązuje\nsamodzielność rozwiązań. Zawsze sprawdź aktualny regulamin."
+     "a": "Na turze szkolnej I etapu wolno korzystać tylko z SIO, oi.edu.pl, Edytora OI i dokumentacji C++/Pythona; narzędzia AI są zabronione. Na II i III etapie używasz wyłącznie sprzętu, oprogramowania i materiałów od organizatora. W turze zdalnej (w domu) wolno korzystać ze źródeł, ale trzeba je podać w komentarzu. Szczegóły: artykuły „I etap OI…” i „II i III etap OI…”."
     },
     {
      "q": [
@@ -125,12 +123,16 @@
     }
    ],
    "related": [
+    "oi-rules-overview",
     "oi-sio2",
     "oi-strategy",
     "oi-complexity-limits",
     "oi-reading-statement",
     "oi-py-cpp-equivalents",
-    "oi-py-performance"
+    "oi-py-performance",
+    "oi-rules-scoring",
+    "oi-rules-technical",
+    "oi-rules-stage1"
    ]
   },
   {
